@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análise Tributária Pro — Artecon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --primary:#1a5276; --primary-dark:#12405e; --primary-light:#2e86ab;
+  --bg:#f4f6f8; --card:#ffffff; --border:#e3e8ee;
+  --text:#1f2d3d; --muted:#6b7a8d;
+  --ok:#1e8449; --ok-bg:#e8f6ee; --warn:#b9770e; --warn-bg:#fdf3e3;
+  --err:#c0392b; --err-bg:#fdecea; --info-bg:#eaf2f8;
+  --font:'DM Sans',sans-serif; --display:'Playfair Display',serif;
+  --radius:12px; --shadow:0 1px 3px rgba(26,82,118,.08),0 4px 16px rgba(26,82,118,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px}
+h1,h2,h3{font-family:var(--display);color:var(--primary);font-weight:600}
+button{font-family:var(--font);cursor:pointer}
+input,select,textarea{font-family:var(--font);font-size:14px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(46,134,171,.12)}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+
+/* ── AUTH ── */
+#auth-screen{display:none;min-height:100vh;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a5c 0%,#1a5276 50%,#2e86ab 100%)}
+.auth-card{background:#fff;border-radius:16px;padding:38px 34px;width:380px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.auth-card .logo{text-align:center;margin-bottom:6px;font-family:var(--display);font-size:26px;color:var(--primary)}
+.auth-card .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:26px}
+.field{margin-bottom:14px}
+.btn-primary{width:100%;padding:11px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;transition:background .15s}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-primary:disabled{opacity:.55;cursor:default}
+.auth-err{color:var(--err);font-size:13px;text-align:center;margin-top:10px;min-height:16px}
+
+/* ── LAYOUT ── */
+#app{display:none;min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:230px;background:var(--primary);color:#fff;display:flex;flex-direction:column;z-index:20}
+.sidebar .brand{padding:22px 20px 16px;font-family:var(--display);font-size:19px;line-height:1.25;border-bottom:1px solid rgba(255,255,255,.12)}
+.sidebar .brand small{display:block;font-family:var(--font);font-size:11px;opacity:.65;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.nav{flex:1;padding:14px 10px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;color:rgba(255,255,255,.82);font-size:14px;margin-bottom:3px;cursor:pointer;transition:background .12s}
+.nav-item:hover{background:rgba(255,255,255,.09)}
+.nav-item.active{background:rgba(255,255,255,.16);color:#fff;font-weight:600}
+.nav-item .tag{margin-left:auto;font-size:9px;background:rgba(255,255,255,.18);padding:2px 7px;border-radius:20px;letter-spacing:.5px}
+.sidebar .foot{padding:14px 20px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;opacity:.8}
+.sidebar .foot .sair{cursor:pointer;text-decoration:underline;margin-top:4px;display:inline-block}
+.main{margin-left:230px;padding:28px 34px;max-width:1250px}
+.page-title{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px}
+.page-title h1{font-size:24px}
+.page-title .crumb{color:var(--muted);font-size:13px}
+
+/* ── CARDS / TABELAS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;margin-bottom:18px}
+.card h3{font-size:16px;margin-bottom:14px}
+.grid{display:grid;gap:16px}
+.grid.c4{grid-template-columns:repeat(4,1fr)}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.stat .n{font-size:26px;font-weight:700;color:var(--primary)}
+.stat .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border)}
+td{padding:9px 10px;border-bottom:1px solid var(--border)}
+tr:hover td{background:#f8fafc}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.err{background:var(--err-bg);color:var(--err)}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.info{background:var(--info-bg);color:var(--primary)}
+.btn{padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:13px;font-weight:600;transition:all .12s}
+.btn:hover{border-color:var(--primary-light);color:var(--primary)}
+.btn.solid{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.solid:hover{background:var(--primary-dark)}
+.btn:disabled{opacity:.5;cursor:default}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.progress{height:8px;background:var(--border);border-radius:20px;overflow:hidden;flex:1;min-width:160px}
+.progress .bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-light));width:0%;transition:width .25s}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.55}
+.placeholder{padding:60px 20px;text-align:center;color:var(--muted)}
+.placeholder h2{font-size:20px;margin-bottom:8px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--primary-dark);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.25);opacity:0;transform:translateY(8px);transition:all .25s;z-index:99}
+.toast.show{opacity:1;transform:none}
+@media(max-width:960px){.sidebar{width:64px}.sidebar .brand,.nav-item span,.sidebar .foot{display:none}.main{margin-left:64px;padding:20px}}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="logo">Análise Tributária Pro</div>
+    <div class="sub">Artecon Artes Contábeis</div>
+    <div class="field"><label>E-mail</label><input type="email" id="l-email" placeholder="voce@artecon.com.br" autocomplete="username"></div>
+    <div class="field"><label>Senha</label><input type="password" id="l-senha" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-primary" id="btn-login" onclick="doLogin()">Entrar</button>
+    <div class="auth-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <div class="sidebar">
+    <div class="brand">Análise Tributária Pro<small>Artecon</small></div>
+    <div class="nav">
+      <div class="nav-item active" data-page="dashboard" onclick="go('dashboard')">📊 <span>Dashboard</span></div>
+      <div class="nav-item" data-page="cnpj" onclick="go('cnpj')">🔍 <span>Consulta CNPJ</span></div>
+      <div class="nav-item" data-page="analise" onclick="go('analise')">🧮 <span>Análise Atual</span><span class="tag">FASE 2</span></div>
+      <div class="nav-item" data-page="reforma" onclick="go('reforma')">🏛️ <span>Reforma</span><span class="tag">FASE 3</span></div>
+      <div class="nav-item" data-page="parametros" onclick="go('parametros')">⚙️ <span>Parâmetros</span><span class="tag">FASE 2</span></div>
+    </div>
+    <div class="foot"><span id="user-email"></span><br><span class="sair" onclick="doLogout()">Sair</span></div>
+  </div>
+
+  <div class="main">
+    <!-- DASHBOARD -->
+    <div id="page-dashboard">
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Visão geral da carteira</span></div>
+      <div class="grid c4">
+        <div class="stat"><div class="n" id="st-total">–</div><div class="l">Empresas consultadas</div></div>
+        <div class="stat"><div class="n" id="st-simples">–</div><div class="l">Optantes Simples</div></div>
+        <div class="stat"><div class="n" id="st-simei">–</div><div class="l">Optantes SIMEI</div></div>
+        <div class="stat"><div class="n" id="st-nao">–</div><div class="l">Não optantes</div></div>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <h3>Últimas consultas</h3>
+        <div id="dash-recentes" class="hint">Nenhuma consulta realizada ainda. Comece pela aba <b>Consulta CNPJ</b>.</div>
+      </div>
+    </div>
+
+    <!-- CONSULTA CNPJ -->
+    <div id="page-cnpj" style="display:none">
+      <div class="page-title"><h1>Consulta CNPJ — Simples Nacional</h1><span class="crumb">Módulo 1</span></div>
+      <div class="card">
+        <h3>1. Informe os CNPJs da relação</h3>
+        <div style="display:grid;grid-template-columns:1fr 260px;gap:20px">
+          <div>
+            <label>Colar lista (um CNPJ por linha, com ou sem pontuação)</label>
+            <textarea id="cnpj-lista" rows="6" placeholder="00.000.000/0001-00&#10;11111111000111&#10;..."></textarea>
+          </div>
+          <div>
+            <label>Ou importar arquivo (CSV / Excel)</label>
+            <input type="file" id="cnpj-file" accept=".csv,.xlsx,.xls,.xlsm" onchange="importarArquivo(this)">
+            <div class="hint" style="margin-top:10px">O sistema localiza automaticamente a coluna de CNPJs no arquivo. Duplicados e CNPJs com dígito verificador inválido são descartados com aviso.</div>
+          </div>
+        </div>
+        <div class="toolbar" style="margin-top:16px;margin-bottom:0">
+          <button class="btn solid" id="btn-consultar" onclick="iniciarConsulta()">Consultar na base da Receita</button>
+          <button class="btn" onclick="limparConsulta()">Limpar</button>
+          <div class="progress" id="prog-wrap" style="display:none"><div class="bar" id="prog-bar"></div></div>
+          <span class="hint" id="prog-txt"></span>
+        </div>
+        <div class="hint" style="margin-top:12px">Fonte: dados abertos do CNPJ da Receita Federal (minhareceita.org, com contingência BrasilAPI). Os dados de opção pelo Simples seguem a carga mensal da RFB — para decisões formais, confirme casos individuais no portal do Simples Nacional. A data de referência aparece em cada registro.</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="margin:0">2. Resultado da triagem</h3>
+          <div style="display:flex;gap:10px">
+            <button class="btn" onclick="exportarCSV()">Exportar CSV</button>
+            <button class="btn solid" onclick="salvarCarteira()" id="btn-salvar" disabled>Salvar na carteira</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+        <table id="tbl-result">
+          <thead><tr><th>CNPJ</th><th>Razão Social</th><th>Situação</th><th>Simples</th><th>SIMEI</th><th>Opção desde</th><th>UF/Município</th><th>Porte</th></tr></thead>
+          <tbody id="tbl-result-body"><tr><td colspan="8" class="hint" style="text-align:center;padding:24px">Nenhuma consulta realizada.</td></tr></tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLACEHOLDERS -->
+    <div id="page-analise" style="display:none">
+      <div class="page-title"><h1>Análise Tributária — Regime Atual</h1><span class="crumb">Fase 2</span></div>
+      <div class="card placeholder"><h2>Em construção — quarta-feira</h2><p>Motor de cálculo Simples Nacional (Anexos I a V, Fator R, ST, monofásico) × Lucro Presumido × Lucro Real, portado da planilha base.</p></div>
+    </div>
+    <div id="page-reforma" style="display:none">
+      <div class="page-title"><h1>Reforma Tributária</h1><span class="crumb">Fase 3</span></div>
+      <div class="card placeholder"><h2>Em construção — quinta-feira</h2><p>CBS · IS · IBS Estado · IBS Município (2027–2033), parcelas com benefícios/reduções e análise por contraparte, conforme especificação.</p></div>
+    </div>
+    <div id="page-parametros" style="display:none">
+      <div class="page-title"><h1>Parâmetros</h1><span class="crumb">Fase 2</span></div>
+      <div class="card placeholder"><h2>Em construção</h2><p>Tabelas editáveis: Anexos do Simples, presunções do Lucro Presumido e alíquotas da Reforma (2026–2033).</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG (projeto Supabase PRÓPRIO do Análise Tributária Pro) ────────
+const SUPA_URL = 'https://kmdrqkiyhdmdtufrogke.supabase.co';
+const SUPA_KEY = 'sb_publishable_4eHrESOoQYRC7bR9rYKGBg_If2lOjnE';
+const TBL = 'atp_empresas';
+
+const APP = { token:null, user:null, page:'dashboard' };
+let RESULTADOS = [];       // resultados da consulta corrente
+const $id = id => document.getElementById(id);
+
+// ── SUPABASE (PostgREST helper, padrão Artecon) ────────────────────────
+async function supa(method, table, opts = {}) {
+  const { body, params, returning=false } = opts;
+  const url = new URL(`${SUPA_URL}/rest/v1/${table}`);
+  if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.append(k,v));
+  const headers = { 'apikey':SUPA_KEY, 'Content-Type':'application/json' };
+  if (APP.token) headers['Authorization'] = `Bearer ${APP.token}`;
+  if (returning) headers['Prefer'] = 'return=representation,resolution=merge-duplicates';
+  else if (method==='POST') headers['Prefer'] = 'resolution=merge-duplicates';
+  const res = await fetch(url, { method, headers, body: body?JSON.stringify(body):undefined });
+  if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t}`); }
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : null;
+}
+
+// ── AUTH ───────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = $id('l-email').value.trim(), senha = $id('l-senha').value;
+  const btn = $id('btn-login'); btn.disabled = true; $id('login-err').textContent = '';
+  try {
+    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+      method:'POST', headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password: senha })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || 'Credenciais inválidas');
+    APP.token = data.access_token; APP.user = data.user;
+    localStorage.setItem('atp_token', data.access_token);
+    localStorage.setItem('atp_refresh', data.refresh_token);
+    entrar();
+  } catch(e) { $id('login-err').textContent = e.message; }
+  btn.disabled = false;
+}
+
+async function tentarSessao() {
+  const rt = localStorage.getItem('atp_refresh');
+  if (!rt) return false;
+  try {
+    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method:'POST', headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({ refresh_token: rt })
+    });
+    const data = await res.json();
+    if (!res.ok) throw 0;
+    APP.token = data.access_token; APP.user = data.user;
+    localStorage.setItem('atp_token', data.access_token);
+    localStorage.setItem('atp_refresh', data.refresh_token);
+    return true;
+  } catch { localStorage.removeItem('atp_token'); localStorage.removeItem('atp_refresh'); return false; }
+}
+
+function doLogout() {
+  localStorage.removeItem('atp_token'); localStorage.removeItem('atp_refresh');
+  location.reload();
+}
+
+function entrar() {
+  $id('auth-screen').style.display = 'none';
+  $id('app').style.display = 'block';
+  $id('user-email').textContent = APP.user?.email || '';
+  carregarDashboard();
+}
+
+// ── NAVEGAÇÃO ──────────────────────────────────────────────────────────
+function go(page) {
+  APP.page = page;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page===page));
+  ['dashboard','cnpj','analise','reforma','parametros'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
+  if (page==='dashboard') carregarDashboard();
+}
+
+function toast(msg) {
+  const t = $id('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+// ── CNPJ: utilidades ───────────────────────────────────────────────────
+function limparCNPJ(s) { return String(s||'').replace(/\D/g,''); }
+function fmtCNPJ(c) { return c.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5'); }
+function validaCNPJ(c) {
+  if (!/^\d{14}$/.test(c) || /^(\d)\1{13}$/.test(c)) return false;
+  const calc = n => { let s=0,p=n-7; for(let i=n;i>=1;i--){ s+=c[n-i]*p--; if(p<2)p=9; } const r=s%11; return r<2?0:11-r; };
+  return calc(12)==c[12] && calc(13)==c[13];
+}
+
+function extrairCNPJs(texto) {
+  const brutos = String(texto).split(/[\n;,\t]+/).map(limparCNPJ).filter(x=>x.length>0);
+  const vistos = new Set(), validos = [], invalidos = [];
+  for (const c of brutos) {
+    if (c.length!==14 || !validaCNPJ(c)) { invalidos.push(c); continue; }
+    if (!vistos.has(c)) { vistos.add(c); validos.push(c); }
+  }
+  return { validos, invalidos };
+}
+
+function importarArquivo(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type:'array' });
+      let achados = [];
+      wb.SheetNames.forEach(sn => {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header:1, raw:false });
+        rows.forEach(r => (r||[]).forEach(cel => {
+          const c = limparCNPJ(cel);
+          if (c.length===14 && validaCNPJ(c)) achados.push(fmtCNPJ(c));
+        }));
+      });
+      achados = [...new Set(achados)];
+      if (!achados.length) { toast('Nenhum CNPJ válido encontrado no arquivo.'); return; }
+      $id('cnpj-lista').value = achados.join('\n');
+      toast(`${achados.length} CNPJs localizados no arquivo.`);
+    } catch(err) { toast('Erro ao ler o arquivo: '+err.message); }
+    inp.value = '';
+  };
+  reader.readAsArrayBuffer(f);
+}
+
+// ── CNPJ: consulta com fila e contingência ─────────────────────────────
+async function consultarUm(cnpj) {
+  // 1ª fonte: minhareceita.org
+  try {
+    const r = await fetch(`https://minhareceita.org/${cnpj}`);
+    if (r.ok) {
+      const d = await r.json();
+      return {
+        cnpj, razao_social: d.razao_social || '',
+        situacao: d.descricao_situacao_cadastral || '',
+        simples: d.opcao_pelo_simples===true, simei: d.opcao_pelo_mei===true,
+        data_opcao_simples: d.data_opcao_pelo_simples || null,
+        uf: d.uf || '', municipio: d.municipio || '',
+        cnae: d.cnae_fiscal_descricao || '', porte: d.porte || '',
+        fonte: 'minhareceita', erro: null
+      };
+    }
+  } catch {}
+  // Contingência: BrasilAPI
+  try {
+    const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+    if (r.ok) {
+      const d = await r.json();
+      return {
+        cnpj, razao_social: d.razao_social || '',
+        situacao: d.descricao_situacao_cadastral || '',
+        simples: d.opcao_pelo_simples===true, simei: d.opcao_pelo_mei===true,
+        data_opcao_simples: d.data_opcao_pelo_simples || null,
+        uf: d.uf || '', municipio: d.municipio || '',
+        cnae: d.cnae_fiscal_descricao || '', porte: d.porte || '',
+        fonte: 'brasilapi', erro: null
+      };
+    }
+    if (r.status===404) return { cnpj, erro:'CNPJ não encontrado na base' };
+  } catch {}
+  return { cnpj, erro:'Falha de comunicação com as fontes' };
+}
+
+async function iniciarConsulta() {
+  const { validos, invalidos } = extrairCNPJs($id('cnpj-lista').value);
+  if (!validos.length) { toast('Informe ao menos um CNPJ válido.'); return; }
+  if (invalidos.length) toast(`${invalidos.length} entrada(s) inválida(s) descartada(s).`);
+
+  const btn = $id('btn-consultar'); btn.disabled = true;
+  $id('prog-wrap').style.display = 'block';
+  RESULTADOS = [];
+  renderResultados();
+
+  for (let i=0; i<validos.length; i++) {
+    $id('prog-txt').textContent = `${i+1} de ${validos.length}`;
+    $id('prog-bar').style.width = `${((i+1)/validos.length)*100}%`;
+    const res = await consultarUm(validos[i]);
+    res.consultado_em = new Date().toISOString();
+    RESULTADOS.push(res);
+    renderResultados();
+    if (i < validos.length-1) await new Promise(r=>setTimeout(r, 350)); // throttle
+  }
+  $id('prog-txt').textContent = `Concluído: ${RESULTADOS.length} consultas`;
+  $id('btn-salvar').disabled = RESULTADOS.filter(r=>!r.erro).length===0;
+  btn.disabled = false;
+}
+
+function renderResultados() {
+  const tb = $id('tbl-result-body');
+  if (!RESULTADOS.length) { tb.innerHTML = '<tr><td colspan="8" class="hint" style="text-align:center;padding:24px">Nenhuma consulta realizada.</td></tr>'; return; }
+  tb.innerHTML = RESULTADOS.map(r => {
+    if (r.erro) return `<tr><td>${fmtCNPJ(r.cnpj)}</td><td colspan="7"><span class="badge err">${r.erro}</span></td></tr>`;
+    const ativa = /ativa/i.test(r.situacao);
+    return `<tr>
+      <td style="white-space:nowrap">${fmtCNPJ(r.cnpj)}</td>
+      <td>${r.razao_social}</td>
+      <td><span class="badge ${ativa?'ok':'warn'}">${r.situacao||'—'}</span></td>
+      <td>${r.simples?'<span class="badge ok">Optante</span>':'<span class="badge info">Não optante</span>'}</td>
+      <td>${r.simei?'<span class="badge ok">SIMEI</span>':'—'}</td>
+      <td>${r.data_opcao_simples||'—'}</td>
+      <td>${r.uf?`${r.uf} / ${r.municipio}`:'—'}</td>
+      <td>${r.porte||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function limparConsulta() {
+  $id('cnpj-lista').value=''; RESULTADOS=[]; renderResultados();
+  $id('prog-wrap').style.display='none'; $id('prog-txt').textContent='';
+  $id('btn-salvar').disabled = true;
+}
+
+function exportarCSV() {
+  if (!RESULTADOS.length) { toast('Nada para exportar.'); return; }
+  const head = ['CNPJ','Razão Social','Situação','Simples','SIMEI','Opção desde','UF','Município','CNAE','Porte','Consultado em','Fonte','Erro'];
+  const csv = [head.join(';')].concat(RESULTADOS.map(r => [
+    fmtCNPJ(r.cnpj), (r.razao_social||'').replace(/;/g,','), r.situacao||'',
+    r.erro?'':(r.simples?'SIM':'NÃO'), r.erro?'':(r.simei?'SIM':'NÃO'),
+    r.data_opcao_simples||'', r.uf||'', r.municipio||'', (r.cnae||'').replace(/;/g,','),
+    r.porte||'', r.consultado_em||'', r.fonte||'', r.erro||''
+  ].join(';'))).join('\n');
+  const blob = new Blob(['\ufeff'+csv], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `triagem_simples_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+async function salvarCarteira() {
+  const validos = RESULTADOS.filter(r=>!r.erro);
+  if (!validos.length) return;
+  const btn = $id('btn-salvar'); btn.disabled = true;
+  try {
+    const body = validos.map(r => ({
+      cnpj: r.cnpj, razao_social: r.razao_social, situacao: r.situacao,
+      simples: r.simples, simei: r.simei, data_opcao_simples: r.data_opcao_simples,
+      uf: r.uf, municipio: r.municipio, cnae: r.cnae, porte: r.porte,
+      fonte: r.fonte, consultado_em: r.consultado_em
+    }));
+    await supa('POST', TBL + '?on_conflict=cnpj', { body });
+    toast(`${validos.length} empresas salvas na carteira.`);
+    carregarDashboard();
+  } catch(e) { toast('Erro ao salvar: '+e.message); }
+  btn.disabled = false;
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────────
+async function carregarDashboard() {
+  try {
+    const rows = await supa('GET', TBL, { params:{ select:'cnpj,razao_social,simples,simei,situacao,consultado_em', order:'consultado_em.desc', limit:'500' } });
+    const total = rows.length;
+    const nSimples = rows.filter(r=>r.simples).length;
+    const nSimei = rows.filter(r=>r.simei).length;
+    $id('st-total').textContent = total;
+    $id('st-simples').textContent = nSimples;
+    $id('st-simei').textContent = nSimei;
+    $id('st-nao').textContent = total - nSimples;
+    const rec = rows.slice(0,8);
+    $id('dash-recentes').innerHTML = rec.length
+      ? '<table><thead><tr><th>CNPJ</th><th>Razão Social</th><th>Simples</th><th>Consultado em</th></tr></thead><tbody>' +
+        rec.map(r=>`<tr><td>${fmtCNPJ(r.cnpj)}</td><td>${r.razao_social||''}</td><td>${r.simples?'<span class="badge ok">Optante</span>':'<span class="badge info">Não</span>'}</td><td>${(r.consultado_em||'').slice(0,10)}</td></tr>`).join('') +
+        '</tbody></table>'
+      : 'Nenhuma consulta realizada ainda. Comece pela aba <b>Consulta CNPJ</b>.';
+  } catch(e) {
+    $id('dash-recentes').innerHTML = `<span class="badge warn">Tabela ainda não criada no Supabase</span> — execute o script <b>setup_supabase.sql</b> no SQL Editor do projeto e recarregue.`;
+  }
+}
+
+// ── BOOT ───────────────────────────────────────────────────────────────
+(async () => {
+  if (await tentarSessao()) entrar();
+  else $id('auth-screen').style.display = 'flex';
+})();
+</script>
+
+</body>
+</html>
