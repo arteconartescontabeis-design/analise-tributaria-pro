@@ -137,7 +137,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.8</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.9</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -373,7 +373,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v5.8</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Excluir empresa (com as análises salvas) na aba Empresas; Editar nome, Redefinir senha (e-mail) e Excluir na aba Usuários; recálculo automático ao alterar qualquer alíquota/percentual nos Parâmetros; Comparativo de Regimes com todos os quadros da Reforma: composição do híbrido ano a ano, cenário fora do Simples ano a ano (Presumido × Real) e gráfico débito × crédito de IBS/CBS.</td></tr>\n          <tr><td><b>v5.7</b></td><td>22/07/2026</td><td>Cenários da Reforma (por dentro × híbrido × fora do Simples) agora visíveis em três lugares: veredito da Análise, Relatório Comparativo de Regimes e Relatório Reforma; cálculo centralizado em calcCenariosReforma com mescla ano a ano dos dados salvos (análises antigas sem todos os campos não quebram mais) e try/catch para nunca derrubar o restante da tela.</td></tr>\n          <tr><td><b>v5.6</b></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
+          <tr><td><b>v5.9</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Painel executivo no Comparativo de Regimes: os seis cenários lado a lado (Simples, Presumido, Real, Simples "por dentro" 2033, híbrido 2033 e fora do Simples 2033) com economia anual do regime atual e da Reforma, gráfico de barras horizontais unificado com % da receita e resumo executivo com ranking e diferença para o melhor cenário.</td></tr>\n          <tr><td><b>v5.8</b></td><td>22/07/2026</td><td>Excluir empresa (com as análises salvas) na aba Empresas; Editar nome, Redefinir senha (e-mail) e Excluir na aba Usuários; recálculo automático ao alterar qualquer alíquota/percentual nos Parâmetros; Comparativo de Regimes com todos os quadros da Reforma: composição do híbrido ano a ano, cenário fora do Simples ano a ano (Presumido × Real) e gráfico débito × crédito de IBS/CBS.</td></tr>\n          <tr><td><b>v5.7</b></td><td>22/07/2026</td><td>Cenários da Reforma (por dentro × híbrido × fora do Simples) agora visíveis em três lugares: veredito da Análise, Relatório Comparativo de Regimes e Relatório Reforma; cálculo centralizado em calcCenariosReforma com mescla ano a ano dos dados salvos (análises antigas sem todos os campos não quebram mais) e try/catch para nunca derrubar o restante da tela.</td></tr>\n          <tr><td><b>v5.6</b></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
           <tr><td><b>v5.3</b></td><td>22/07/2026</td><td>Correção do parser numérico para valores com pontos de milhar sem vírgula ("1.546.923" era lido como 1,546); aceita "R$" e espaços na digitação. Motor revalidado 100% (228 verificações) contra a Preenchida_01.</td></tr>
           <tr><td><b>v5.2</b></td><td>24/07/2026</td><td>Correção crítica do parser numérico (ponto decimal virava milhar e corrompia alíquotas/valores reeditados); Config com gravação automática e formato brasileiro; carteira consultada devolvida à Consulta CNPJ; empresas em análise no topo do Dashboard; aba Versões.</td></tr>
           <tr><td><b>v5.1</b></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
@@ -1809,13 +1809,46 @@ function rlRegimes(rot, n) {
   const menor = Math.min(T.simples, T.lp, T.lr);
   const nomeMenor = menor===T.simples?'Simples Nacional':menor===T.lp?'Lucro Presumido':'Lucro Real';
   const ord = [T.simples,T.lp,T.lr].sort((a,b)=>a-b);
+
+  // cenários da Reforma (2033) — calculados já no topo para o painel executivo
+  let REF=null, usouFallback=true, rfxInfo=null;
+  try { const C = calcCenariosReforma(RL.res, RL.reforma); REF=C.REF; usouFallback=C.usouFallback; rfxInfo=C.rfx; }
+  catch(e){ console.error('Cenários da Reforma:', e); }
+  const R33 = REF ? REF[REF.length-1] : null;
+
+  const pctR = v => (v/T.receita*100||0).toFixed(2)+'% da receita';
+  const CEN = [
+    { nome:'Simples Nacional', sub:'regime atual · '+RL.dados.ano, v:T.simples, cor:'#1a5276' },
+    { nome:'Lucro Presumido', sub:'regime atual · '+RL.dados.ano, v:T.lp, cor:'#b9770e' },
+    { nome:'Lucro Real', sub:'regime atual · '+RL.dados.ano, v:T.lr, cor:'#943126' },
+    ...(R33 ? [
+    { nome:'Simples "por dentro"', sub:'Reforma · pleno 2033', v:T.simples, cor:'#2874a6' },
+    { nome:'Simples híbrido', sub:'Reforma · pleno 2033 (LC 214)', v:R33.hib, cor:'#7d3c98' },
+    { nome:'Fora do Simples', sub:'Reforma · pleno 2033 ('+R33.regNome+')', v:R33.regular, cor:'#117864' } ] : []),
+  ];
+  const melhorGeral = Math.min(...CEN.map(c=>c.v));
+  const ordGeral = CEN.map(c=>c.v).sort((a,b)=>a-b);
+  const ord33 = R33 ? [T.simples,R33.hib,R33.regular].sort((a,b)=>a-b) : null;
+  const nome33 = R33 ? (ord33[0]===T.simples?'Simples "por dentro"':ord33[0]===R33.hib?'Simples híbrido':'Fora do Simples') : '';
+
   let h = `<div class="grid c4">
-    <div class="stat ${menor===T.simples?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(T.simples)}</div><div class="l">Simples Nacional</div><div class="sub">${(T.simples/T.receita*100||0).toFixed(2)}% da receita</div></div>
-    <div class="stat ${menor===T.lp?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(T.lp)}</div><div class="l">Lucro Presumido</div><div class="sub">${(T.lp/T.receita*100||0).toFixed(2)}% da receita</div></div>
-    <div class="stat ${menor===T.lr?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(T.lr)}</div><div class="l">Lucro Real</div><div class="sub">${(T.lr/T.receita*100||0).toFixed(2)}% da receita</div></div>
-    <div class="stat"><div class="n" style="font-size:19px;color:var(--ok)">${fmtR(ord[1]-ord[0])}</div><div class="l">Economia anual — ${nomeMenor}</div><div class="sub">frente à 2ª melhor opção</div></div>
+    ${CEN.slice(0,3).map(c=>`<div class="stat ${c.v===menor?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(c.v)}</div><div class="l">${c.nome}</div><div class="sub">${c.sub} · ${pctR(c.v)}</div></div>`).join('')}
+    <div class="stat"><div class="n" style="font-size:19px;color:var(--ok)">${fmtR(ord[1]-ord[0])}</div><div class="l">Economia anual hoje — ${nomeMenor}</div><div class="sub">frente à 2ª melhor opção do regime atual</div></div>
   </div>
-  <div class="rl-grid" style="margin-top:18px">
+  ${R33 ? `<div class="grid c4" style="margin-top:12px">
+    ${CEN.slice(3).map(c=>`<div class="stat ${c.v===ord33[0]?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(c.v)}</div><div class="l">${c.nome} (2033)</div><div class="sub">${c.sub} · ${pctR(c.v)}</div></div>`).join('')}
+    <div class="stat"><div class="n" style="font-size:19px;color:var(--ok)">${fmtR(ord33[1]-ord33[0])}</div><div class="l">Economia anual 2033 — ${nome33}</div><div class="sub">frente ao 2º melhor cenário da Reforma</div></div>
+  </div>` : ''}
+
+  <div class="card" style="margin-top:14px"><h3>Todos os cenários lado a lado — carga anual</h3><canvas id="ch-seis" style="max-height:340px"></canvas></div>
+
+  <div class="card" style="margin-top:14px"><h3>Resumo executivo — ranking dos cenários</h3><div style="overflow-x:auto"><table>
+    <thead><tr><th>#</th><th>Cenário</th><th>Contexto</th><th class="num">Carga anual</th><th class="num">% da receita</th><th class="num">Diferença p/ o melhor</th></tr></thead><tbody>
+    ${CEN.slice().sort((a,b)=>a.v-b.v).map((c,i)=>`<tr${i===0?' style="font-weight:700"':''}><td>${i+1}º</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${c.cor};margin-right:6px"></span>${c.nome}</td><td>${c.sub}</td><td class="num">${fmtR(c.v)}</td><td class="num">${(c.v/T.receita*100||0).toFixed(2)}%</td><td class="num">${c.v===melhorGeral?'—':'+'+fmtR(c.v-melhorGeral)}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="hint" style="margin-top:6px">Os cenários do regime atual referem-se ao ano-base ${RL.dados.ano}; os da Reforma, ao regime pleno (2033). O "por dentro" assume manutenção da carga do Simples no patamar atual, conforme a leitura corrente da LC 214 — as repartições definitivas dependem de regulamentação do CGSN.</div></div>`;
+
+  h += `<div class="rl-grid" style="margin-top:18px">
     <div class="card"><h3>Carga por regime e período</h3><canvas id="ch-reg"></canvas></div>
     <div class="card"><h3>Composição do ${nomeMenor==='Simples Nacional'?'Lucro Presumido':nomeMenor} (tributo a tributo)</h3><canvas id="ch-comp"></canvas></div>
   </div>
@@ -1838,11 +1871,7 @@ function rlRegimes(rot, n) {
   <div class="hint" style="margin-top:8px">Simples: DAS + FGTS${RL.dados.receitas?.a4?.some(v=>v>0)?' — atenção: receitas do Anexo IV têm CPP fora do DAS':''}. Valores simulados pelo motor validado contra a planilha de planejamento.</div></div>`;
 
   // ── Reforma Tributária no comparativo: por dentro × híbrido × fora do Simples ──
-  let REF=null, usouFallback=true, rfxInfo=null;
-  try { const C = calcCenariosReforma(RL.res, RL.reforma); REF=C.REF; usouFallback=C.usouFallback; rfxInfo=C.rfx; }
-  catch(e){ console.error('Cenários da Reforma:', e); }
   if (REF) {
-  const R33 = REF[REF.length-1];
   const melhor33 = Math.min(T.simples, R33.hib, R33.regular);
   h += `<div class="card"><h3>Reforma Tributária no comparativo — cenários do Simples (2026–2033)</h3>
   <div class="grid c3" style="margin-top:10px">
@@ -1879,6 +1908,11 @@ function rlRegimes(rot, n) {
   ${(rfxInfo?.contra?.compras_lrlp||0)+(rfxInfo?.contra?.compras_simples||0)>0?'Créditos de IBS/CBS calculados sobre as compras informadas na aba Reforma.':''}</div></div></div></div>`;
   }
   $id('rl-corpo').innerHTML = h;
+  rlChart('ch-seis', { type:'bar', data:{ labels:CEN.map(c=>c.nome+(c.sub.includes('2033')?' (2033)':'')),
+    datasets:[{ label:'Carga anual (R$)', data:CEN.map(c=>c.v), backgroundColor:CEN.map(c=>c.cor) }]},
+    options:{ responsive:true, indexAxis:'y', plugins:{ legend:{display:false},
+      tooltip:{ callbacks:{ label:(ctx)=>fmtR(ctx.parsed.x)+' · '+((ctx.parsed.x/T.receita*100)||0).toFixed(2)+'% da receita' } } },
+      scales:{ x:{ ticks:{ callback:(v)=>'R$ '+(v/1000).toFixed(0)+' mil' } } } } });
   if (REF) rlChart('ch-ref-dc', { type:'bar', data:{ labels:RF_ANOS, datasets:[
     {label:'Débito', data:REF.map(x=>x.deb), backgroundColor:'#943126'},
     {label:'Crédito', data:REF.map(x=>x.cred), backgroundColor:'#1e8449'},
