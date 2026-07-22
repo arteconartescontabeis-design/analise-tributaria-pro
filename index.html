@@ -137,7 +137,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.2</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.3</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -373,7 +373,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v5.2</b> <span class="badge ok">atual</span></td><td>24/07/2026</td><td>Correção crítica do parser numérico (ponto decimal virava milhar e corrompia alíquotas/valores reeditados); Config com gravação automática e formato brasileiro; carteira consultada devolvida à Consulta CNPJ; empresas em análise no topo do Dashboard; aba Versões.</td></tr>
+          <tr><td><b>v5.3</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Correção do parser numérico para valores com pontos de milhar sem vírgula ("1.546.923" era lido como 1,546); aceita "R$" e espaços na digitação. Motor revalidado 100% (228 verificações) contra a Preenchida_01.</td></tr>
+          <tr><td><b>v5.2</b></td><td>24/07/2026</td><td>Correção crítica do parser numérico (ponto decimal virava milhar e corrompia alíquotas/valores reeditados); Config com gravação automática e formato brasileiro; carteira consultada devolvida à Consulta CNPJ; empresas em análise no topo do Dashboard; aba Versões.</td></tr>
           <tr><td><b>v5.1</b></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
           <tr><td><b>v5.0</b></td><td>24/07/2026</td><td>Aba Relatórios (detalhamento de registros, comparativo de regimes com DAS declarado, Reforma) com gráficos e periodicidade mensal a anual; impressão/PDF; Dashboard de análises; estatísticas de consulta movidas para a Consulta CNPJ.</td></tr>
           <tr><td><b>v4.2</b></td><td>23/07/2026</td><td>Cadastro automático da empresa ao importar PGDAS/Faturamento/balancete; abas da análise sempre disponíveis para preenchimento manual; identificação do período do PGDAS com tripla redundância.</td></tr>
@@ -954,7 +955,9 @@ function anRenderGrid() {
 }
 
 const num = s => { s = String(s??'').trim(); if (!s) return 0;
+  s = s.replace(/[R$\s]/g,'');
   if (s.includes(',')) s = s.replace(/\./g,'').replace(',','.');   // formato brasileiro 1.234,56
+  else if ((s.match(/\./g)||[]).length > 1) s = s.replace(/\./g,''); // 1.546.923 = milhares (sem vírgula)
   const v = parseFloat(s); return isNaN(v)?0:v; };
 function anSet(path, m, val, tipo) {
   const { o,k } = anPath(AN, path);
