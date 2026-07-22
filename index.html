@@ -137,7 +137,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.9</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.10</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -373,7 +373,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v5.9</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Painel executivo no Comparativo de Regimes: os seis cenários lado a lado (Simples, Presumido, Real, Simples "por dentro" 2033, híbrido 2033 e fora do Simples 2033) com economia anual do regime atual e da Reforma, gráfico de barras horizontais unificado com % da receita e resumo executivo com ranking e diferença para o melhor cenário.</td></tr>\n          <tr><td><b>v5.8</b></td><td>22/07/2026</td><td>Excluir empresa (com as análises salvas) na aba Empresas; Editar nome, Redefinir senha (e-mail) e Excluir na aba Usuários; recálculo automático ao alterar qualquer alíquota/percentual nos Parâmetros; Comparativo de Regimes com todos os quadros da Reforma: composição do híbrido ano a ano, cenário fora do Simples ano a ano (Presumido × Real) e gráfico débito × crédito de IBS/CBS.</td></tr>\n          <tr><td><b>v5.7</b></td><td>22/07/2026</td><td>Cenários da Reforma (por dentro × híbrido × fora do Simples) agora visíveis em três lugares: veredito da Análise, Relatório Comparativo de Regimes e Relatório Reforma; cálculo centralizado em calcCenariosReforma com mescla ano a ano dos dados salvos (análises antigas sem todos os campos não quebram mais) e try/catch para nunca derrubar o restante da tela.</td></tr>\n          <tr><td><b>v5.6</b></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
+          <tr><td><b>v5.10</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Exclusão de empresa agora remove de fato os relatórios: verifica quantas linhas foram apagadas em atp_analises/atp_empresas (RLS sem política de DELETE falhava em silêncio) e orienta a rodar o setup_v4.sql quando faltar permissão; limpa os seletores e o estado das abas Relatórios e Reforma quando apontavam para a empresa excluída.</td></tr>\n          <tr><td><b>v5.9</b></td><td>22/07/2026</td><td>Painel executivo no Comparativo de Regimes: os seis cenários lado a lado (Simples, Presumido, Real, Simples "por dentro" 2033, híbrido 2033 e fora do Simples 2033) com economia anual do regime atual e da Reforma, gráfico de barras horizontais unificado com % da receita e resumo executivo com ranking e diferença para o melhor cenário.</td></tr>\n          <tr><td><b>v5.8</b></td><td>22/07/2026</td><td>Excluir empresa (com as análises salvas) na aba Empresas; Editar nome, Redefinir senha (e-mail) e Excluir na aba Usuários; recálculo automático ao alterar qualquer alíquota/percentual nos Parâmetros; Comparativo de Regimes com todos os quadros da Reforma: composição do híbrido ano a ano, cenário fora do Simples ano a ano (Presumido × Real) e gráfico débito × crédito de IBS/CBS.</td></tr>\n          <tr><td><b>v5.7</b></td><td>22/07/2026</td><td>Cenários da Reforma (por dentro × híbrido × fora do Simples) agora visíveis em três lugares: veredito da Análise, Relatório Comparativo de Regimes e Relatório Reforma; cálculo centralizado em calcCenariosReforma com mescla ano a ano dos dados salvos (análises antigas sem todos os campos não quebram mais) e try/catch para nunca derrubar o restante da tela.</td></tr>\n          <tr><td><b>v5.6</b></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
           <tr><td><b>v5.3</b></td><td>22/07/2026</td><td>Correção do parser numérico para valores com pontos de milhar sem vírgula ("1.546.923" era lido como 1,546); aceita "R$" e espaços na digitação. Motor revalidado 100% (228 verificações) contra a Preenchida_01.</td></tr>
           <tr><td><b>v5.2</b></td><td>24/07/2026</td><td>Correção crítica do parser numérico (ponto decimal virava milhar e corrompia alíquotas/valores reeditados); Config com gravação automática e formato brasileiro; carteira consultada devolvida à Consulta CNPJ; empresas em análise no topo do Dashboard; aba Versões.</td></tr>
           <tr><td><b>v5.1</b></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
@@ -1203,12 +1203,28 @@ async function empConsultarReceita() {
 }
 async function empExcluir(cnpj) {
   const e = EMPRESAS.find(x=>x.cnpj===cnpj);
-  if (!confirm(`Excluir a empresa ${e?.razao_social||fmtCNPJ(cnpj)}?\n\nAs análises salvas desta empresa também serão removidas. Esta ação não pode ser desfeita.`)) return;
+  if (!confirm(`Excluir a empresa ${e?.razao_social||fmtCNPJ(cnpj)}?\n\nAs análises e relatórios salvos desta empresa também serão removidos. Esta ação não pode ser desfeita.`)) return;
   try {
-    await supa('DELETE','atp_analises',{ params:{ cnpj:`eq.${cnpj}` } });
-    await supa('DELETE','atp_empresas',{ params:{ cnpj:`eq.${cnpj}` } });
+    // apaga verificando quantas linhas realmente saíram (RLS sem política de DELETE falha em silêncio)
+    const antes = await supa('GET','atp_analises',{ params:{ select:'ano', cnpj:`eq.${cnpj}` } }).catch(()=>[]);
+    const delAn = await supa('DELETE','atp_analises',{ params:{ cnpj:`eq.${cnpj}` }, returning:true }).catch(()=>null);
+    const delEmp = await supa('DELETE','atp_empresas',{ params:{ cnpj:`eq.${cnpj}` }, returning:true }).catch(()=>null);
+    const okAn = !antes.length || (Array.isArray(delAn) && delAn.length >= antes.length);
+    const okEmp = Array.isArray(delEmp) && delEmp.length > 0;
+    if (!okAn || !okEmp) {
+      alert('A exclusão não foi concluída por falta de permissão no banco (RLS sem política de DELETE em '+(!okAn?'atp_analises':'')+(!okAn&&!okEmp?' e ':'')+(!okEmp?'atp_empresas':'')+').\n\nExecute o setup_v4.sql no SQL Editor do Supabase e tente novamente.');
+      empCarregar(); return;
+    }
+    // limpa estados e telas que apontavam para a empresa excluída
     if (AN && AN.cnpj===cnpj) { AN = null; }
-    toast('Empresa excluída.'); empCarregar(); carregarDashboard(); dashAnalises();
+    if (typeof RL==='object' && RL && RL.dados && RL.dados.cnpj===cnpj) { RL.dados=null; RL.res=null; RL.reforma=null; RL.empresa=null; }
+    const selRL = $id('rl-empresa'); if (selRL && selRL.value===cnpj) { selRL.value=''; try{ rlRender(); }catch{} }
+    const selRF = $id('rf-empresa'); if (selRF && selRF.value===cnpj) { selRF.value=''; RF=null; }
+    toast('Empresa e relatórios excluídos.');
+    await empCarregar();
+    if (selRL) { const at=selRL.value; selRL.innerHTML=$id('an-empresa').innerHTML; selRL.value=at||''; }
+    if (selRF) { const at=selRF.value; selRF.innerHTML=$id('an-empresa').innerHTML; selRF.value=at||''; }
+    carregarDashboard(); dashAnalises();
   } catch(err){ toast('Erro ao excluir: '+err.message); }
 }
 function empAnalisar(cnpj){ go('analise'); $id('an-empresa').value = cnpj; anTrocarEmpresa(); }
