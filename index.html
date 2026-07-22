@@ -137,7 +137,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.3</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.4</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -373,7 +373,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v5.3</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Correção do parser numérico para valores com pontos de milhar sem vírgula ("1.546.923" era lido como 1,546); aceita "R$" e espaços na digitação. Motor revalidado 100% (228 verificações) contra a Preenchida_01.</td></tr>
+          <tr><td><b>v5.4</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
+          <tr><td><b>v5.3</b></td><td>22/07/2026</td><td>Correção do parser numérico para valores com pontos de milhar sem vírgula ("1.546.923" era lido como 1,546); aceita "R$" e espaços na digitação. Motor revalidado 100% (228 verificações) contra a Preenchida_01.</td></tr>
           <tr><td><b>v5.2</b></td><td>24/07/2026</td><td>Correção crítica do parser numérico (ponto decimal virava milhar e corrompia alíquotas/valores reeditados); Config com gravação automática e formato brasileiro; carteira consultada devolvida à Consulta CNPJ; empresas em análise no topo do Dashboard; aba Versões.</td></tr>
           <tr><td><b>v5.1</b></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
           <tr><td><b>v5.0</b></td><td>24/07/2026</td><td>Aba Relatórios (detalhamento de registros, comparativo de regimes com DAS declarado, Reforma) com gráficos e periodicidade mensal a anual; impressão/PDF; Dashboard de análises; estatísticas de consulta movidas para a Consulta CNPJ.</td></tr>
@@ -728,16 +729,22 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   const F13 = { prolabore13:+(inp.folha13?.prolabore13)||0, salarios13:+(inp.folha13?.salarios13)||0, baseFgts13:+(inp.folha13?.baseFgts13)||0 };
 
   const rbt12Cfg = S(cfg.rbt12Lanc), folha12Cfg = S(cfg.folha12Lanc);
-  const fatorR = rbt12Cfg > 0 ? folha12Cfg / rbt12Cfg : 0;
-  out.fatorR = fatorR;
+  out.fatorRMensal = [];
 
   const totalRec = m => K.reduce((s,k)=>s+R[k][m],0);
   const totalPrev = [];   // receitas acumuladas dos meses anteriores do ano corrente
+  const folhaPrev = [];   // folha (pró-labore+salários+FGTS) dos meses anteriores — Fator R dinâmico
+  const folhaMesFR = m => F.prolabore[m] + F.salarios[m] + F.baseFgts[m]*fp.fgts;
 
   for (let m=0; m<12; m++) {
     const rbt12 = m===0
       ? (cfg.rbt12Direto>0 ? cfg.rbt12Direto : rbt12Cfg)
       : S(cfg.rbt12Lanc.slice(m)) + S(totalPrev);
+    // Fator R do mês: folha dos 12 meses anteriores ÷ RBT12 do mês (planilha linha 144)
+    const folha12m = m===0 ? folha12Cfg : S(cfg.folha12Lanc.slice(m)) + S(folhaPrev);
+    const fatorR = rbt12 > 0 ? folha12m / rbt12 : 0;
+    out.fatorRMensal.push(fatorR);
+    if (m===0) out.fatorR = fatorR;
     const fx = faixaDe(rbt12);
     const ef = A => rbt12>0 ? (rbt12*A.aliq[fx] - A.ded[fx])/rbt12 : 0;
     const A1=anexos.I, A2=anexos.II, A3=anexos.III, A4=anexos.IV, A5=anexos.V;
@@ -765,6 +772,28 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const das = K.reduce((s,k)=>s + R[k][m]*efb[k], 0);
     const receita = totalRec(m);
     totalPrev.push(receita);
+    folhaPrev.push(folhaMesFR(m));
+
+    // ── SUBLIMITE ICMS/ISS (Res. CGSN 140/2018, art. 24) ──
+    // RBT12 acima de R$ 3,6 mi: ICMS/ISS saem da repartição da 6ª faixa, mas continuam
+    // devidos no DAS pela alíquota efetiva travada na 5ª faixa. ISS limitado a 5% (LC 116).
+    let subIcms = 0, subIss = 0;
+    const subLim = +cfg.sublimiteValor || 3600000;
+    if ((cfg.sublimite||'auto') !== 'off' && rbt12 > subLim) {
+      const ef5 = A => (subLim*A.aliq[4] - A.ded[4])/subLim;
+      const pIcms1 = ef5(A1)*A1.icms[4], pIcms2 = ef5(A2)*A2.icms[4];
+      subIcms = (R.a1_semst[m]+R.a1_mono[m]+R.comtransp[m])*pIcms1
+              + R.a1_red[m]*pIcms1*(1 - R.a1_red_pct[m])
+              + (R.a2_semst[m]+R.a2_mono[m])*pIcms2
+              + R.a2_red[m]*pIcms2*(1 - R.a2_red_pct[m]);
+      const capIss = p => Math.min(p, .05);
+      const pIss3 = capIss(ef5(A3)*A3.iss[4]);
+      const pIss4 = capIss(ef5(A4)*.40);          // Anexo IV 5ª faixa: 40%, com ISS fixo em 5%
+      const pIss5 = capIss(ef5(A5)*.235);         // Anexo V 5ª faixa: repartição ISS 23,5%
+      subIss = R.a3_semret[m]*pIss3 + R.a4[m]*pIss4
+             + R.a5r[m]*(fatorR >= .28 ? pIss3 : pIss5);
+      // receitas com ST e com retenção de ISS ficam de fora (ICMS-ST recolhido antes; ISS retido pelo tomador)
+    }
 
     // Folha (dezembro agrega 13º: FGTS e patronal por fora do total da folha)
     const fgts13 = m===11 ? F13.baseFgts13*fp.fgts : 0;
@@ -810,9 +839,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const lr_csll = baseIRCS>0 ? baseIRCS*.09 : 0;
     const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
 
-    out.meses.push({ m, rbt12, faixa: fx+1, receita, das, efb,
+    out.meses.push({ m, rbt12, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss,
       fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal,
-      simples: { das, inssPatrForaDAS: 0, fgts, total: das + fgts },
+      simples: { das, inssPatrForaDAS: 0, fgts, sublimite: subIcms+subIss, total: das + fgts + subIcms + subIss },
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
             baseAdic: base32+base8 },
       lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
@@ -845,6 +874,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     lp: S(out.meses.map(x=>x.lp.total)),
     lr: S(out.meses.map(x=>x.lr.total)),
     das: S(out.meses.map(x=>x.das)),
+    sublimite: S(out.meses.map(x=>x.simples.sublimite)),
   };
   return out;
 }
@@ -863,7 +893,7 @@ const z12 = () => Array(12).fill(0);
 function anNovo(cnpj, ano) {
   return { cnpj: cnpj||'', ano: ano||new Date().getFullYear(),
     cfg: { iss:0, icmsV:0, icmsC:0, ipiV:0, ipiC:0, rbt12Direto:0, rbt12Lanc:z12(), folha12Lanc:z12(),
-           lpBaseServ:.32, lpBaseCom:.08, adicionalIR:'trimestral' },
+           lpBaseServ:.32, lpBaseCom:.08, adicionalIR:'trimestral', sublimite:'auto' },
     receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','fin','comtransp'].map(k=>[k,z12()])),
     folha: Object.fromEntries(['prolabore','salarios','baseFgts','prov13','provFerias'].map(k=>[k,z12()])),
     folha13: { prolabore13:0, salarios13:0, baseFgts13:0 },
@@ -976,6 +1006,7 @@ function anRenderConfig() {
     <div><label>Base IRPJ serviços (LP)</label><select id="cf-bserv" onchange="anAplicarConfig(true)"><option value="0.32" ${c.lpBaseServ==.32?'selected':''}>32%</option><option value="0.16" ${c.lpBaseServ==.16?'selected':''}>16%</option><option value="0.08" ${c.lpBaseServ==.08?'selected':''}>8%</option></select></div>
     <div><label>Base IRPJ comércio (LP)</label><select id="cf-bcom" onchange="anAplicarConfig(true)"><option value="0.08" ${c.lpBaseCom==.08?'selected':''}>8%</option><option value="0.16" ${c.lpBaseCom==.16?'selected':''}>16%</option></select></div>
     <div><label>Adicional de IRPJ</label><select id="cf-adic" onchange="anAplicarConfig(true)"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
+    <div><label>Sublimite ICMS/ISS (R$ 3,6 mi)</label><select id="cf-sublim" onchange="anAplicarConfig(true)"><option value="auto" ${(c.sublimite||'auto')=='auto'?'selected':''}>Aplicar trava da 5ª faixa</option><option value="off" ${c.sublimite=='off'?'selected':''}>Não aplicar</option></select></div>
     <button class="btn solid" onclick="anAplicarConfig()">Aplicar</button>
   </div>
   <div style="margin-top:18px"><b style="font-size:13px">RBT12 — receita e folha dos 12 meses anteriores</b>
@@ -990,7 +1021,7 @@ function anAplicarConfig(silencioso) {
   if (!AN) return;
   const g = id => num($id(id).value)/100;
   Object.assign(AN.cfg, { iss:g('cf-iss'), icmsV:g('cf-icmsv'), icmsC:g('cf-icmsc'), ipiV:g('cf-ipiv'), ipiC:g('cf-ipic'),
-    lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, adicionalIR:$id('cf-adic').value,
+    lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, adicionalIR:$id('cf-adic').value, sublimite:$id('cf-sublim').value,
     rbt12Direto:num($id('cf-rbtd').value) });
   anRecalcular(); if (!silencioso) toast('Configurações aplicadas — lembre de salvar a análise.');
 }
@@ -1006,14 +1037,14 @@ function anRecalcular() {
   const card = (rot, v, sub, on) => `<div class="stat ${on?'melhor':''}"><div class="n" style="font-size:20px">${fmtR(v)}</div><div class="l">${rot}</div><div class="sub">${sub}</div></div>`;
   const pct = v => T.receita>0 ? (v/T.receita*100).toFixed(2)+'% da receita' : '';
   $id('an-resumo').innerHTML =
-    card('Receita anual', T.receita, `Fator R: ${(r.fatorR*100).toFixed(2)}%`) +
+    card('Receita anual', T.receita, (()=>{const fs=r.fatorRMensal||[r.fatorR];const mn=Math.min(...fs),mx=Math.max(...fs);return 'Fator R: '+(mn===mx?(mn*100).toFixed(2)+'%':(mn*100).toFixed(2)+'% a '+(mx*100).toFixed(2)+'% (mensal)');})()) +
     card('Simples Nacional', T.simples, pct(T.simples), menor===T.simples) +
     card('Lucro Presumido', T.lp, pct(T.lp), menor===T.lp) +
     card('Lucro Real', T.lr, pct(T.lr), menor===T.lr);
   const econ2 = [T.simples,T.lp,T.lr].sort((a,b)=>a-b);
   $id('an-veredito').style.display='block';
   $id('an-veredito').innerHTML = `<h3 style="margin-bottom:6px">Melhor regime: ${nomeMenor}</h3>
-    <div class="hint">Economia de <b>${fmtR(econ2[1]-econ2[0])}</b>/ano frente à 2ª melhor opção. ${AN.receitas.a4.some(v=>v>0)?'<br>⚠️ Há receitas do Anexo IV: o CPP é recolhido por fora do DAS — confira o INSS patronal informado na Folha, pois a planilha-base não o soma automaticamente ao total do Simples.':''}</div>`;
+    <div class="hint">Economia de <b>${fmtR(econ2[1]-econ2[0])}</b>/ano frente à 2ª melhor opção.${T.sublimite>0?`<br>⚠️ RBT12 acima de R$ 3,6 mi em parte do ano: o Simples inclui <b>${fmtR(T.sublimite)}</b> de ICMS/ISS pela trava da 5ª faixa (Res. CGSN 140/2018, art. 24) — a 6ª faixa não embute ICMS/ISS na repartição.`:''} ${AN.receitas.a4.some(v=>v>0)?'<br>⚠️ Há receitas do Anexo IV: o CPP é recolhido por fora do DAS — confira o INSS patronal informado na Folha, pois a planilha-base não o soma automaticamente ao total do Simples.':''}</div>`;
   // detalhe mensal
   let h = `<table><thead><tr><th>Mês</th><th class="num">Receita</th><th class="num">RBT12</th><th>Faixa</th><th class="num">DAS</th><th class="num">Simples</th><th class="num">Presumido</th><th class="num">Real</th></tr></thead><tbody>`;
   r.meses.forEach((M,i)=>{ h += `<tr><td>${MESES[i]}</td><td class="num">${fmt(M.receita)}</td><td class="num">${fmt(M.rbt12)}</td><td>${M.faixa}ª</td><td class="num">${fmt(M.das)}</td><td class="num">${fmt(M.simples.total)}</td><td class="num">${fmt(M.lp.total)}</td><td class="num">${fmt(M.lr.total)}</td></tr>`; });
@@ -1687,7 +1718,7 @@ function rlRegimes(rot, n) {
     <thead><tr><th>Tributo</th><th class="num">Simples</th><th class="num">Lucro Presumido</th><th class="num">Lucro Real</th></tr></thead><tbody>`;
   const S = k => M.reduce((s,x)=>s+(x.lp[k]!=null?0:0),0);
   const somaLP = k => M.reduce((s,x)=>s+(+x.lp[k]||0),0), somaLR = k => M.reduce((s,x)=>s+(+x.lr[k]||0),0);
-  const linhas = [['DAS (Simples)', T.das, null, null], ['PIS', null, somaLP('pis'), somaLR('pis')], ['COFINS', null, somaLP('cofins'), somaLR('cofins')],
+  const linhas = [['DAS (Simples)', T.das, null, null], ...(T.sublimite>0?[['ICMS/ISS sublimite (5ª faixa)', T.sublimite, null, null]]:[]), ['PIS', null, somaLP('pis'), somaLR('pis')], ['COFINS', null, somaLP('cofins'), somaLR('cofins')],
     ['CSLL', null, somaLP('csll'), somaLR('csll')], ['IRPJ', null, somaLP('irpj'), somaLR('irpj')], ['Adicional IRPJ', null, somaLP('adicional'), somaLR('adicional')],
     ['INSS patronal', null, somaLP('inssPatr'), somaLR('inssPatr')], ['ICMS', null, somaLP('icms'), somaLR('icms')], ['IPI', null, somaLP('ipi'), somaLR('ipi')],
     ['ISS', null, somaLP('iss'), somaLR('iss')], ['FGTS', M.reduce((s,x)=>s+x.fgts,0), somaLP('fgts'), somaLR('fgts')]];
