@@ -59,7 +59,7 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bot
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;margin-bottom:18px}
 .card h3{font-size:16px;margin-bottom:14px}
 .grid{display:grid;gap:16px}
-.grid.c4{grid-template-columns:repeat(4,1fr)}
+.grid.c4{grid-template-columns:repeat(4,1fr)} .grid.c3{grid-template-columns:repeat(3,1fr)}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
 .stat .n{font-size:26px;font-weight:700;color:var(--primary)}
 .stat .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
@@ -137,7 +137,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.4</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.5</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -373,7 +373,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v5.4</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
+          <tr><td><b>v5.5</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
           <tr><td><b>v5.3</b></td><td>22/07/2026</td><td>Correção do parser numérico para valores com pontos de milhar sem vírgula ("1.546.923" era lido como 1,546); aceita "R$" e espaços na digitação. Motor revalidado 100% (228 verificações) contra a Preenchida_01.</td></tr>
           <tr><td><b>v5.2</b></td><td>24/07/2026</td><td>Correção crítica do parser numérico (ponto decimal virava milhar e corrompia alíquotas/valores reeditados); Config com gravação automática e formato brasileiro; carteira consultada devolvida à Consulta CNPJ; empresas em análise no topo do Dashboard; aba Versões.</td></tr>
           <tr><td><b>v5.1</b></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
@@ -703,9 +703,12 @@ const ANEXOS_DEFAULT = {
   II: { aliq:[.045,.078,.10,.112,.147,.30], ded:[0,5940,13860,22500,85500,720000],
         icms:[.32,.32,.32,.32,.32,0], piscof:[.1151+.0249,.1151+.0249,.1151+.0249,.1151+.0249,.1151+.0249,.2096+.0454] },
   III:{ aliq:[.06,.112,.135,.16,.21,.33], ded:[0,9360,17640,35640,125640,648000],
-        iss:[.335,.32,.325,.325,.335,0], cpp:[.434,.434,.434,.434,.434,.305] },
-  IV: { aliq:[.045,.09,.102,.14,.22,.33], ded:[0,8100,12420,39780,183780,828000] },
-  V:  { aliq:[.155,.18,.195,.205,.23,.305], ded:[0,4500,9900,17100,62100,540000] },
+        iss:[.335,.32,.325,.325,.335,0], cpp:[.434,.434,.434,.434,.434,.305],
+        piscof:[.1282+.0278,.1405+.0305,.1364+.0296,.1364+.0296,.1282+.0278,.1603+.0347] },
+  IV: { aliq:[.045,.09,.102,.14,.22,.33], ded:[0,8100,12420,39780,183780,828000],
+        iss:[.445,.40,.40,.40,.40,0], piscof:[.1767+.0383,.2055+.0445,.1973+.0427,.189+.041,.1808+.0392,.2055+.0445] },
+  V:  { aliq:[.155,.18,.195,.205,.23,.305], ded:[0,4500,9900,17100,62100,540000],
+        iss:[.14,.17,.19,.21,.235,0], piscof:[.141+.0305,.141+.0305,.1492+.0323,.1574+.0341,.141+.0305,.1644+.0356] },
 };
 
 const FOLHA_PERC_DEFAULT = { patronalProLabore:.20, patronalSalarios:.20, rat:.058, terceiros:.02796, fgts:.08 };
@@ -774,6 +777,22 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     totalPrev.push(receita);
     folhaPrev.push(folhaMesFR(m));
 
+    // ── Consumo embutido no DAS (para os cenários da Reforma): PIS/COFINS e ICMS/ISS ──
+    const A3sh = fatorR >= .28 ? A3 : A5, e35 = fatorR >= .28 ? e3 : e5;
+    let dasPisCof =
+        (R.a1_semst[m]+R.a1_red[m]+R.a1_comst[m])*e1*A1.piscof[fx]
+      + (R.a2_semst[m]+R.a2_red[m]+R.a2_comst[m])*e2*A2.piscof[fx]
+      + (R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.comtransp[m])*e3*A3.piscof[fx]
+      + R.a4[m]*e4*A4.piscof[fx]
+      + R.a5r[m]*e35*A3sh.piscof[fx];
+    let dasIcmsIss =
+        R.a1_semst[m]*e1*A1.icms[fx] + R.a1_red[m]*e1*A1.icms[fx]*(1-R.a1_red_pct[m]) + R.a1_mono[m]*e1*A1.icms[fx]*(1-R.a1_mono_pct[m])
+      + R.a2_semst[m]*e2*A2.icms[fx] + R.a2_red[m]*e2*A2.icms[fx]*(1-R.a2_red_pct[m]) + R.a2_mono[m]*e2*A2.icms[fx]
+      + R.a3_semret[m]*e3*A3.iss[fx]
+      + R.a4[m]*e4*A4.iss[fx]
+      + R.a5r[m]*e35*A3sh.iss[fx]
+      + R.comtransp[m]*e1*A1.icms[fx];
+
     // ── SUBLIMITE ICMS/ISS (Res. CGSN 140/2018, art. 24) ──
     // RBT12 acima de R$ 3,6 mi: ICMS/ISS saem da repartição da 6ª faixa, mas continuam
     // devidos no DAS pela alíquota efetiva travada na 5ª faixa. ISS limitado a 5% (LC 116).
@@ -794,6 +813,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
              + R.a5r[m]*(fatorR >= .28 ? pIss3 : pIss5);
       // receitas com ST e com retenção de ISS ficam de fora (ICMS-ST recolhido antes; ISS retido pelo tomador)
     }
+    dasIcmsIss += subIcms + subIss;
 
     // Folha (dezembro agrega 13º: FGTS e patronal por fora do total da folha)
     const fgts13 = m===11 ? F13.baseFgts13*fp.fgts : 0;
@@ -839,7 +859,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const lr_csll = baseIRCS>0 ? baseIRCS*.09 : 0;
     const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
 
-    out.meses.push({ m, rbt12, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss,
+    out.meses.push({ m, rbt12, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss,
       fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal,
       simples: { das, inssPatrForaDAS: 0, fgts, sublimite: subIcms+subIss, total: das + fgts + subIcms + subIss },
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
@@ -874,7 +894,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     lp: S(out.meses.map(x=>x.lp.total)),
     lr: S(out.meses.map(x=>x.lr.total)),
     das: S(out.meses.map(x=>x.das)),
-    sublimite: S(out.meses.map(x=>x.simples.sublimite)),
+    fgts: S(out.meses.map(x=>x.fgts)),    sublimite: S(out.meses.map(x=>x.simples.sublimite)),
+    dasPisCof: S(out.meses.map(x=>x.dasPisCof)),
+    dasIcmsIss: S(out.meses.map(x=>x.dasIcmsIss)),
   };
   return out;
 }
@@ -1253,6 +1275,20 @@ function rfCargaAtual() {
   return { regime, consumo: pis+cof+icms+ipi+iss, pis, cof, icms, ipi, iss };
 }
 
+// Débito/crédito de IBS/CBS por ano a partir dos dados da aba Reforma (compartilhado com o Relatório)
+function rfLinhaBase(rf, a) {
+  const q = rf.aliq[a];
+  const alq = (q.cbs + q.ibse + q.ibsm)/100;
+  const recBenef = RF_REDUCOES.reduce((s,[k])=>s+(rf.benefRec?.[k]||0),0);
+  const credBenefTot = RF_REDUCOES.reduce((s,[k])=>s+(rf.benefCred?.[k]||0),0);
+  let deb = Math.max(0, (rf.receita||0) - recBenef)*alq;
+  for (const [k,,red] of RF_REDUCOES) deb += (rf.benefRec?.[k]||0)*alq*(1-red);
+  let cred = Math.max(0, (rf.contra?.compras_lrlp||0) - credBenefTot)*alq;
+  for (const [k,,red] of RF_REDUCOES) cred += (rf.benefCred?.[k]||0)*alq*(1-red);
+  cred += (rf.contra?.compras_simples||0)*((rf.credSimplesPct||0)/100);
+  return { q, alq, deb, cred, liquido: Math.max(0, deb - cred), is: (rf.baseIS||0)*(q.is/100) };
+}
+
 function rfCalcular() {
   if (!RF) return;
   RF.receita = num($id('rf-receita').value);
@@ -1260,23 +1296,9 @@ function rfCalcular() {
   RF.compras = (RF.contra.compras_lrlp||0) + (RF.contra.compras_simples||0);
   $id('rf-compras').value = RF.compras ? fmt(RF.compras) : '';
   const atual = rfCargaAtual();
-  const recBenef = RF_REDUCOES.reduce((s,[k])=>s+(RF.benefRec[k]||0),0);
-  const credBenefTot = RF_REDUCOES.reduce((s,[k])=>s+(RF.benefCred[k]||0),0);
-  const recCheia = Math.max(0, RF.receita - recBenef);
-  const compCheia = Math.max(0, (RF.contra.compras_lrlp||0) - credBenefTot);
   const linhas = [];
   for (const a of RF_ANOS) {
-    const q = RF.aliq[a];
-    const alq = (q.cbs + q.ibse + q.ibsm)/100;
-    // débito: receita cheia + parcelas com redução
-    let deb = recCheia*alq;
-    for (const [k,,red] of RF_REDUCOES) deb += (RF.benefRec[k]||0)*alq*(1-red);
-    // crédito: compras cheias + parcelas com redução + compras do Simples (% editável)
-    let cred = compCheia*alq;
-    for (const [k,,red] of RF_REDUCOES) cred += (RF.benefCred[k]||0)*alq*(1-red);
-    cred += (RF.contra.compras_simples||0)*(RF.credSimplesPct/100);
-    const liquido = Math.max(0, deb - cred);
-    const is_ = RF.baseIS*(q.is/100);
+    const { q, alq, deb, cred, liquido, is: is_ } = rfLinhaBase(RF, a);
     // remanescentes do sistema atual
     let rem = 0, remDet = '';
     if (atual && atual.consumo!=null) {
@@ -1725,7 +1747,54 @@ function rlRegimes(rot, n) {
   for (const [nm,a,b,c] of linhas) h += `<tr><td>${nm}</td><td class="num">${a==null?'—':fmt(a)}</td><td class="num">${b==null?'—':fmt(b)}</td><td class="num">${c==null?'—':fmt(c)}</td></tr>`;
   h += `<tr style="font-weight:700"><td>TOTAL</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr></tbody></table></div>
   <div class="hint" style="margin-top:8px">Simples: DAS + FGTS${RL.dados.receitas?.a4?.some(v=>v>0)?' — atenção: receitas do Anexo IV têm CPP fora do DAS':''}. Valores simulados pelo motor validado contra a planilha de planejamento.</div></div>`;
+
+  // ── Reforma Tributária no comparativo: por dentro × híbrido × fora do Simples ──
+  const rfx = Object.assign({ aliq: RF_ALIQ_DEFAULT, benefRec:{}, benefCred:{}, contra:{}, receita:0, baseIS:0, credSimplesPct:0 }, RL.reforma||{});
+  if (!(rfx.receita>0)) rfx.receita = T.receita;
+  if (!rfx.aliq) rfx.aliq = RF_ALIQ_DEFAULT;
+  const dasCheio = T.das + T.sublimite;
+  const dasResto = dasCheio - T.dasPisCof - T.dasIcmsIss;   // parcela do DAS que não é tributo de consumo
+  const lpPis=somaLP('pis'), lpCof=somaLP('cofins'), lpIcms=somaLP('icms'), lpIpi=somaLP('ipi'), lpIss=somaLP('iss');
+  const lrPis=somaLR('pis'), lrCof=somaLR('cofins'), lrIcms=somaLR('icms'), lrIpi=somaLR('ipi'), lrIss=somaLR('iss');
+  const lpResto = T.lp - lpPis - lpCof - lpIcms - lpIpi - lpIss;
+  const lrResto = T.lr - lrPis - lrCof - lrIcms - lrIpi - lrIss;
+  const REF = RF_ANOS.map(a=>{
+    const L = rfLinhaBase(rfx, a), q = L.q;
+    const dasHib = dasResto + T.dasPisCof*q.remPisCof + T.dasIcmsIss*q.remIcmsIss;
+    const hib = dasHib + T.fgts + L.liquido + L.is;
+    const regLP = lpResto + (lpIcms+lpIss)*q.remIcmsIss + (lpPis+lpCof)*q.remPisCof + (a<=2026?lpIpi:0) + L.liquido + L.is;
+    const regLR = lrResto + (lrIcms+lrIss)*q.remIcmsIss + (lrPis+lrCof)*q.remPisCof + (a<=2026?lrIpi:0) + L.liquido + L.is;
+    const regular = Math.min(regLP, regLR);
+    return { ano:a, alq:L.alq, liquido:L.liquido, is:L.is, dasHib, hib, regular, regNome: regular===regLP?'Presumido':'Real' };
+  });
+  const R33 = REF[REF.length-1];
+  const melhor33 = Math.min(T.simples, R33.hib, R33.regular);
+  h += `<div class="card"><h3>Reforma Tributária no comparativo — cenários do Simples (2026–2033)</h3>
+  <div class="grid c3" style="margin-top:10px">
+    <div class="stat ${melhor33===T.simples?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(T.simples)}</div><div class="l">Simples "por dentro" (2033)</div><div class="sub">tudo no DAS — crédito reduzido ao cliente</div></div>
+    <div class="stat ${melhor33===R33.hib?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(R33.hib)}</div><div class="l">Simples híbrido (2033)</div><div class="sub">DAS sem consumo + IBS/CBS por fora — crédito integral ao cliente</div></div>
+    <div class="stat ${melhor33===R33.regular?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(R33.regular)}</div><div class="l">Fora do Simples (2033)</div><div class="sub">regime regular pleno (${R33.regNome} + IBS/CBS)</div></div>
+  </div>
+  <div style="overflow-x:auto;margin-top:14px"><table>
+    <thead><tr><th>Ano</th><th class="num">Alíq. IBS+CBS</th><th class="num">Simples por dentro</th><th class="num">DAS ajustado (híbrido)</th><th class="num">IBS/CBS por fora</th><th class="num">Total híbrido</th><th class="num">Fora do Simples</th><th>Melhor</th></tr></thead><tbody>`;
+  for (const L of REF) {
+    const mn = Math.min(T.simples, L.hib, L.regular);
+    h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(L.dasHib+T.fgts)}</td><td class="num">${fmt(L.liquido+L.is)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${mn===T.simples?'Por dentro':mn===L.hib?'Híbrido':'Fora ('+L.regNome+')'}</td></tr>`;
+  }
+  h += `</tbody></table></div>
+  <div class="rl-grid" style="margin-top:14px"><div class="card"><h3>Transição 2026–2033 — carga anual por cenário</h3><canvas id="ch-ref-comp"></canvas></div>
+  <div class="card"><h3>Notas do comparativo</h3><div class="hint">
+  • <b>Por dentro</b>: permanece 100% no DAS (carga mantida no patamar atual${T.sublimite>0?', já com a trava da 5ª faixa':''}); o cliente PJ aproveita crédito de IBS/CBS limitado ao efetivamente recolhido no regime — desvantagem comercial nas vendas B2B.<br>
+  • <b>Híbrido (LC 214/2025)</b>: optante do Simples apura IBS/CBS pelo regime regular; as parcelas de PIS/COFINS e ICMS/ISS saem do DAS conforme a transição e o IBS/CBS entra por fora com débito e crédito — o cliente PJ recebe crédito integral.<br>
+  • <b>Fora do Simples</b>: melhor entre Presumido e Real, trocando PIS/COFINS/ICMS/ISS${''} pelos remanescentes da transição + IBS/CBS por fora.<br>
+  ${RL.reforma?'':'⚠️ Aba Reforma sem dados desta empresa: usei as alíquotas-padrão da transição e a receita da análise, sem créditos de compras nem reduções — preencha a aba Reforma para refinar.'}
+  ${(rfx.contra?.compras_lrlp||0)+(rfx.contra?.compras_simples||0)>0?'Créditos de IBS/CBS calculados sobre as compras informadas na aba Reforma.':''}</div></div></div></div>`;
   $id('rl-corpo').innerHTML = h;
+  rlChart('ch-ref-comp', { type:'line', data:{ labels:RF_ANOS, datasets:[
+    {label:'Por dentro', data:RF_ANOS.map(()=>T.simples), borderColor:CORES.simples, backgroundColor:CORES.simples, tension:.2},
+    {label:'Híbrido', data:REF.map(x=>x.hib), borderColor:'#7d3c98', backgroundColor:'#7d3c98', tension:.2},
+    {label:'Fora do Simples', data:REF.map(x=>x.regular), borderColor:'#943126', backgroundColor:'#943126', tension:.2}]},
+    options:{ responsive:true, plugins:{legend:{position:'bottom'}} } });
   rlChart('ch-reg', { type:'bar', data:{ labels:rot, datasets:[
     {label:'Simples', data:sim, backgroundColor:CORES.simples},
     {label:'Presumido', data:lp, backgroundColor:CORES.lp},
