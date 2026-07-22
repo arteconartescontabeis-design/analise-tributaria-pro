@@ -129,6 +129,7 @@ canvas{max-height:340px}
       <div class="nav-item" data-page="relatorios" onclick="go('relatorios')">📑 <span>Relatórios</span></div>
       <div class="nav-item" data-page="parametros" onclick="go('parametros')">⚙️ <span>Parâmetros</span></div>
       <div class="nav-item" data-page="usuarios" onclick="go('usuarios')">👥 <span>Usuários</span></div>
+      <div class="nav-item" data-page="versoes" onclick="go('versoes')">🕘 <span>Versões</span></div>
     </div>
     <div class="foot"><span id="user-email"></span><br><span class="sair" onclick="doLogout()">Sair</span></div>
   </div>
@@ -136,8 +137,15 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Visão geral da carteira</span><span class="badge ok" style="margin-left:auto;font-size:13px">Análise Tributária Pro v5.1</span></div>
-      <div class="card" style="margin-bottom:18px;padding:10px 16px"><div class="hint">Versão atual: <b>v5.1</b> · 24/07/2026 — gráficos comparativos no Dashboard (com Reforma 2033), Consulta CNPJ reordenada e perfil percentual de regimes da carteira. Histórico completo no fim da página.</div></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.2</span></div>
+      <div class="card" style="margin-bottom:18px">
+        <h3>Empresas cadastradas para análise</h3>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th>Empresa</th><th>Regime atual</th><th>Ano</th><th class="num">Receita</th><th class="num">Simples</th><th class="num">Presumido</th><th class="num">Real</th><th>Melhor regime</th><th class="num">Economia/ano</th><th class="num">Reforma 2033</th><th></th></tr></thead>
+          <tbody id="da-tbody"><tr><td colspan="11" class="hint" style="text-align:center;padding:18px">Nenhuma empresa em análise ainda — cadastre em <b>Empresas</b> ou importe um PGDAS.</td></tr></tbody>
+        </table></div>
+      </div>
+
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -147,26 +155,6 @@ canvas{max-height:340px}
       <div class="rl-grid" style="margin-top:18px">
         <div class="card"><h3>Comparativo por empresa — Simples × Presumido × Real × Reforma 2033</h3><canvas id="ch-da-comp"></canvas></div>
         <div class="card"><h3>Melhor regime na carteira analisada</h3><canvas id="ch-da-melhor" style="max-height:300px"></canvas></div>
-      </div>
-      <div class="card" style="margin-top:18px">
-        <h3>Empresas cadastradas para análise</h3>
-        <div style="overflow-x:auto"><table>
-          <thead><tr><th>Empresa</th><th>Regime atual</th><th>Ano</th><th class="num">Receita</th><th class="num">Simples</th><th class="num">Presumido</th><th class="num">Real</th><th>Melhor regime</th><th class="num">Economia/ano</th><th class="num">Reforma 2033</th><th></th></tr></thead>
-          <tbody id="da-tbody"><tr><td colspan="11" class="hint" style="text-align:center;padding:18px">Nenhuma empresa em análise ainda — cadastre em <b>Empresas</b> ou importe um PGDAS.</td></tr></tbody>
-        </table></div>
-      </div>
-      <div class="card" style="margin-top:18px">
-        <h3>Versões do sistema</h3>
-        <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v5.1</b> <span class="badge ok">atual</span></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
-          <tr><td><b>v5.0</b></td><td>24/07/2026</td><td>Aba Relatórios (detalhamento de registros, comparativo de regimes com DAS declarado, Reforma) com gráficos e periodicidade mensal a anual; impressão/PDF; Dashboard de análises; estatísticas de consulta movidas para a Consulta CNPJ.</td></tr>
-          <tr><td><b>v4.2</b></td><td>23/07/2026</td><td>Cadastro automático da empresa ao importar PGDAS/Faturamento/balancete; abas da análise sempre disponíveis para preenchimento manual; identificação do período do PGDAS com tripla redundância.</td></tr>
-          <tr><td><b>v4.1</b></td><td>23/07/2026</td><td>Importador de Faturamento (Demonstrativo Mensal, por anexo), correção do PGDAS multi-arquivo, versão visível no topo, balancete restrito a folha/compras/despesas.</td></tr>
-          <tr><td><b>v4.0</b></td><td>23/07/2026</td><td>Importação de PGDAS-D (PDF, múltiplos meses) e de balancete Questor com tela de conferência; separação entre carteira de consulta e empresas em análise.</td></tr>
-          <tr><td><b>v3.0</b></td><td>23/07/2026</td><td>Módulo Reforma Tributária (CBS · IS · IBS 2026–2033, benefícios, contrapartes e comparativo de transição) e versões na tela inicial.</td></tr>
-          <tr><td><b>v2.0</b></td><td>22/07/2026</td><td>Motor de análise Simples × Presumido × Real validado contra a planilha, cadastro de empresas, usuários e parâmetros editáveis.</td></tr>
-          <tr><td><b>v1.0</b></td><td>21/07/2026</td><td>Consulta de CNPJs na Receita (Simples/SIMEI), importação em massa e carteira de empresas.</td></tr>
-        </tbody></table>
       </div>
     </div>
 
@@ -317,7 +305,6 @@ canvas{max-height:340px}
         <button class="btn" onclick="prRestaurar()">Restaurar padrão</button>
       </div></div>
       <div id="pr-container"></div>
-    </div>
       <div class="card" style="margin-top:18px">
         <h3>3. Carteira consultada — Simples Nacional</h3>
         <div class="grid c4" style="margin:12px 0">
@@ -333,6 +320,7 @@ canvas{max-height:340px}
             <div id="dash-recentes" class="hint" style="max-height:300px;overflow-y:auto">Nenhuma consulta realizada ainda.</div></div>
         </div>
       </div>
+    </div>
     <div id="page-empresas" style="display:none">
       <div class="page-title"><h1>Empresas</h1><span class="crumb">Somente empresas em análise — cadastro manual</span></div>
       <div class="card">
@@ -379,6 +367,23 @@ canvas{max-height:340px}
       <div class="card"><h3>Equipe</h3><div style="overflow-x:auto"><table>
         <thead><tr><th>Nome</th><th>E-mail</th><th>Criado em</th></tr></thead>
         <tbody id="us-tbody"></tbody></table></div></div>
+    </div>
+    <div id="page-versoes" style="display:none">
+      <div class="page-title"><h1>Versões do sistema</h1><span class="crumb">Histórico de releases</span></div>
+      <div class="card" >
+        <h3>Versões do sistema</h3>
+        <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+          <tr><td><b>v5.2</b> <span class="badge ok">atual</span></td><td>24/07/2026</td><td>Correção crítica do parser numérico (ponto decimal virava milhar e corrompia alíquotas/valores reeditados); Config com gravação automática e formato brasileiro; carteira consultada devolvida à Consulta CNPJ; empresas em análise no topo do Dashboard; aba Versões.</td></tr>
+          <tr><td><b>v5.1</b></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
+          <tr><td><b>v5.0</b></td><td>24/07/2026</td><td>Aba Relatórios (detalhamento de registros, comparativo de regimes com DAS declarado, Reforma) com gráficos e periodicidade mensal a anual; impressão/PDF; Dashboard de análises; estatísticas de consulta movidas para a Consulta CNPJ.</td></tr>
+          <tr><td><b>v4.2</b></td><td>23/07/2026</td><td>Cadastro automático da empresa ao importar PGDAS/Faturamento/balancete; abas da análise sempre disponíveis para preenchimento manual; identificação do período do PGDAS com tripla redundância.</td></tr>
+          <tr><td><b>v4.1</b></td><td>23/07/2026</td><td>Importador de Faturamento (Demonstrativo Mensal, por anexo), correção do PGDAS multi-arquivo, versão visível no topo, balancete restrito a folha/compras/despesas.</td></tr>
+          <tr><td><b>v4.0</b></td><td>23/07/2026</td><td>Importação de PGDAS-D (PDF, múltiplos meses) e de balancete Questor com tela de conferência; separação entre carteira de consulta e empresas em análise.</td></tr>
+          <tr><td><b>v3.0</b></td><td>23/07/2026</td><td>Módulo Reforma Tributária (CBS · IS · IBS 2026–2033, benefícios, contrapartes e comparativo de transição) e versões na tela inicial.</td></tr>
+          <tr><td><b>v2.0</b></td><td>22/07/2026</td><td>Motor de análise Simples × Presumido × Real validado contra a planilha, cadastro de empresas, usuários e parâmetros editáveis.</td></tr>
+          <tr><td><b>v1.0</b></td><td>21/07/2026</td><td>Consulta de CNPJs na Receita (Simples/SIMEI), importação em massa e carteira de empresas.</td></tr>
+        </tbody></table>
+      </div>
     </div>
   </div>
 </div>
@@ -463,7 +468,7 @@ function entrar() {
 function go(page) {
   APP.page = page;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page===page));
-  ['dashboard','cnpj','empresas','analise','reforma','relatorios','parametros','usuarios'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
+  ['dashboard','cnpj','empresas','analise','reforma','relatorios','parametros','usuarios','versoes'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
   if (page==='dashboard') dashAnalises();
   if (page==='cnpj') carregarDashboard();
   if (page==='relatorios') { empCarregar().then(()=>{ const sel=$id('rl-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; if(at) sel.value=at; else if (AN?.cnpj) { sel.value=AN.cnpj; $id('rl-ano').value=AN.ano; } rlCarregar(); }); }
@@ -948,7 +953,9 @@ function anRenderGrid() {
   $id('an-grid').innerHTML = h;
 }
 
-const num = s => { const v = parseFloat(String(s).replace(/\./g,'').replace(',','.')); return isNaN(v)?0:v; };
+const num = s => { s = String(s??'').trim(); if (!s) return 0;
+  if (s.includes(',')) s = s.replace(/\./g,'').replace(',','.');   // formato brasileiro 1.234,56
+  const v = parseFloat(s); return isNaN(v)?0:v; };
 function anSet(path, m, val, tipo) {
   const { o,k } = anPath(AN, path);
   if (tipo==='nul') o[k][m] = String(val).trim()==='' ? null : num(val);
@@ -959,29 +966,30 @@ function anSet(path, m, val, tipo) {
 
 function anRenderConfig() {
   const c = AN.cfg;
-  const pc = (id,rot,v) => `<div><label>${rot}</label><input id="${id}" value="${v?+(v*100).toFixed(4):''}" style="width:110px"></div>`;
+  const pc = (id,rot,v) => `<div><label>${rot}</label><input id="${id}" value="${v?String(+(v*100).toFixed(4)).replace('.',','):''}" style="width:110px" onchange="anAplicarConfig(true)"></div>`;
   let h = `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
     ${pc('cf-iss','% ISS',c.iss)} ${pc('cf-icmsv','% ICMS vendas',c.icmsV)} ${pc('cf-icmsc','% ICMS compras',c.icmsC)}
     ${pc('cf-ipiv','% IPI vendas',c.ipiV)} ${pc('cf-ipic','% IPI compras',c.ipiC)}
-    <div><label>Base IRPJ serviços (LP)</label><select id="cf-bserv"><option value="0.32" ${c.lpBaseServ==.32?'selected':''}>32%</option><option value="0.16" ${c.lpBaseServ==.16?'selected':''}>16%</option><option value="0.08" ${c.lpBaseServ==.08?'selected':''}>8%</option></select></div>
-    <div><label>Base IRPJ comércio (LP)</label><select id="cf-bcom"><option value="0.08" ${c.lpBaseCom==.08?'selected':''}>8%</option><option value="0.16" ${c.lpBaseCom==.16?'selected':''}>16%</option></select></div>
-    <div><label>Adicional de IRPJ</label><select id="cf-adic"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
+    <div><label>Base IRPJ serviços (LP)</label><select id="cf-bserv" onchange="anAplicarConfig(true)"><option value="0.32" ${c.lpBaseServ==.32?'selected':''}>32%</option><option value="0.16" ${c.lpBaseServ==.16?'selected':''}>16%</option><option value="0.08" ${c.lpBaseServ==.08?'selected':''}>8%</option></select></div>
+    <div><label>Base IRPJ comércio (LP)</label><select id="cf-bcom" onchange="anAplicarConfig(true)"><option value="0.08" ${c.lpBaseCom==.08?'selected':''}>8%</option><option value="0.16" ${c.lpBaseCom==.16?'selected':''}>16%</option></select></div>
+    <div><label>Adicional de IRPJ</label><select id="cf-adic" onchange="anAplicarConfig(true)"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
     <button class="btn solid" onclick="anAplicarConfig()">Aplicar</button>
   </div>
   <div style="margin-top:18px"><b style="font-size:13px">RBT12 — receita e folha dos 12 meses anteriores</b>
-  <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto||''}"></div>
+  <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto||''}" onchange="anAplicarConfig(true)"></div>
   <div style="overflow-x:auto;margin-top:8px"><table class="gtable"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m} (ant.)</th>`).join('')}</tr></thead><tbody>
   <tr><td class="rot">Receita</td>${MESES.map((_,m)=>`<td><input value="${c.rbt12Lanc[m]||''}" onchange="AN.cfg.rbt12Lanc[${m}]=num(this.value);anRecalcular()"></td>`).join('')}</tr>
   <tr><td class="rot">Folha (Fator R)</td>${MESES.map((_,m)=>`<td><input value="${c.folha12Lanc[m]||''}" onchange="AN.cfg.folha12Lanc[${m}]=num(this.value);anRecalcular()"></td>`).join('')}</tr>
   </tbody></table></div></div>`;
   $id('an-grid').innerHTML = h;
 }
-function anAplicarConfig() {
+function anAplicarConfig(silencioso) {
+  if (!AN) return;
   const g = id => num($id(id).value)/100;
   Object.assign(AN.cfg, { iss:g('cf-iss'), icmsV:g('cf-icmsv'), icmsC:g('cf-icmsc'), ipiV:g('cf-ipiv'), ipiC:g('cf-ipic'),
     lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, adicionalIR:$id('cf-adic').value,
     rbt12Direto:num($id('cf-rbtd').value) });
-  anRecalcular(); toast('Configurações aplicadas.');
+  anRecalcular(); if (!silencioso) toast('Configurações aplicadas — lembre de salvar a análise.');
 }
 
 function anRecalcular() {
