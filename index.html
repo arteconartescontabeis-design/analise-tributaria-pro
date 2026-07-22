@@ -137,7 +137,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.5</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.6</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -373,7 +373,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v5.5</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
+          <tr><td><b>v5.6</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
           <tr><td><b>v5.3</b></td><td>22/07/2026</td><td>Correção do parser numérico para valores com pontos de milhar sem vírgula ("1.546.923" era lido como 1,546); aceita "R$" e espaços na digitação. Motor revalidado 100% (228 verificações) contra a Preenchida_01.</td></tr>
           <tr><td><b>v5.2</b></td><td>24/07/2026</td><td>Correção crítica do parser numérico (ponto decimal virava milhar e corrompia alíquotas/valores reeditados); Config com gravação automática e formato brasileiro; carteira consultada devolvida à Consulta CNPJ; empresas em análise no topo do Dashboard; aba Versões.</td></tr>
           <tr><td><b>v5.1</b></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
@@ -723,6 +723,11 @@ const arr12 = a => Array.from({length:12},(_,i)=>+((a||[])[i])||0);
 // icms {cred:[12]|null, deb:[12]|null}  (null = automático)  ipi {cred, deb}
 // despesas {adm, vendas, fiscais, financeiras, outras, credLR}
 function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
+  // Retrocompatibilidade: parâmetros salvos antes da v5.5 não trazem piscof/iss dos Anexos III/IV/V —
+  // completa qualquer campo ausente com os padrões, preservando o que o usuário editou.
+  const _anx = {}; for (const _k of Object.keys(ANEXOS_DEFAULT)) _anx[_k] = Object.assign({}, ANEXOS_DEFAULT[_k], (anexos&&anexos[_k])||{});
+  anexos = _anx;
+  fp = Object.assign({}, FOLHA_PERC_DEFAULT, fp||{});
   const cfg = inp.cfg, R = {}, out = { meses: [] };
   const K = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','comtransp'];
   for (const k of [...K,'a1_red_pct','a1_mono_pct','a2_red_pct','fin']) R[k] = arr12(inp.receitas[k]);
@@ -1127,7 +1132,11 @@ async function prSalvar() {
 function prRestaurar(){ PARAMS = { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha:{...FOLHA_PERC_DEFAULT} }; prRender(); toast('Padrão restaurado (salve para persistir).'); }
 async function prCarregar() {
   try { const r = await supa('GET','atp_parametros',{ params:{ select:'valor', chave:'eq.default', limit:'1' } });
-    if (r.length && r[0].valor?.anexos) PARAMS = r[0].valor; } catch {}
+    if (r.length && r[0].valor?.anexos) {
+      PARAMS = r[0].valor;
+      for (const k of Object.keys(ANEXOS_DEFAULT)) PARAMS.anexos[k] = Object.assign({}, ANEXOS_DEFAULT[k], PARAMS.anexos[k]||{});
+      PARAMS.folha = Object.assign({}, FOLHA_PERC_DEFAULT, PARAMS.folha||{});
+    } } catch {}
 }
 
 // ═══════════ EMPRESAS (cadastro) ═══════════
