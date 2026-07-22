@@ -121,7 +121,7 @@ tr:hover td{background:#f8fafc}
       <div class="nav-item" data-page="cnpj" onclick="go('cnpj')">🔍 <span>Consulta CNPJ</span></div>
       <div class="nav-item" data-page="empresas" onclick="go('empresas')">🏢 <span>Empresas</span></div>
       <div class="nav-item" data-page="analise" onclick="go('analise')">🧮 <span>Análise Atual</span></div>
-      <div class="nav-item" data-page="reforma" onclick="go('reforma')">🏛️ <span>Reforma</span><span class="tag">FASE 3</span></div>
+      <div class="nav-item" data-page="reforma" onclick="go('reforma')">🏛️ <span>Reforma</span></div>
       <div class="nav-item" data-page="parametros" onclick="go('parametros')">⚙️ <span>Parâmetros</span></div>
       <div class="nav-item" data-page="usuarios" onclick="go('usuarios')">👥 <span>Usuários</span></div>
     </div>
@@ -131,7 +131,8 @@ tr:hover td{background:#f8fafc}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Visão geral da carteira</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Visão geral da carteira</span><span class="badge ok" style="margin-left:auto;font-size:13px">Análise Tributária Pro v4.1</span></div>
+      <div class="card" style="margin-bottom:18px;padding:10px 16px"><div class="hint">Versão atual: <b>v4.1</b> · 23/07/2026 — importação de Faturamento por anexo, correção do importador PGDAS multi-arquivo. Histórico completo no fim da página.</div></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="st-total">–</div><div class="l">Empresas consultadas</div></div>
         <div class="stat"><div class="n" id="st-simples">–</div><div class="l">Optantes Simples</div></div>
@@ -145,7 +146,8 @@ tr:hover td{background:#f8fafc}
       <div class="card" style="margin-top:18px">
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v4.0</b> <span class="badge ok">atual</span></td><td>23/07/2026</td><td>Importação de PGDAS-D (PDF, múltiplos meses) e de balancete Questor com tela de conferência; separação entre carteira de consulta e empresas em análise.</td></tr>
+          <tr><td><b>v4.1</b> <span class="badge ok">atual</span></td><td>23/07/2026</td><td>Importador de Faturamento (Demonstrativo Mensal, por anexo), correção do PGDAS multi-arquivo, versão visível no topo, balancete restrito a folha/compras/despesas.</td></tr>
+          <tr><td><b>v4.0</b></td><td>23/07/2026</td><td>Importação de PGDAS-D (PDF, múltiplos meses) e de balancete Questor com tela de conferência; separação entre carteira de consulta e empresas em análise.</td></tr>
           <tr><td><b>v3.0</b></td><td>23/07/2026</td><td>Módulo Reforma Tributária (CBS · IS · IBS 2026–2033, benefícios, contrapartes e comparativo de transição) e versões na tela inicial.</td></tr>
           <tr><td><b>v2.0</b></td><td>22/07/2026</td><td>Motor de análise Simples × Presumido × Real validado contra a planilha, cadastro de empresas, usuários e parâmetros editáveis.</td></tr>
           <tr><td><b>v1.0</b></td><td>21/07/2026</td><td>Consulta de CNPJs na Receita (Simples/SIMEI), importação em massa e carteira de empresas.</td></tr>
@@ -205,6 +207,7 @@ tr:hover td{background:#f8fafc}
             <button class="btn solid" onclick="anSalvar()">💾 Salvar análise</button>
             <button class="btn" onclick="anRecalcular()">Recalcular</button>
             <button class="btn" onclick="$id('imp-pgdas-card').style.display='block'">📄 Importar PGDAS</button>
+            <button class="btn" onclick="$id('imp-fat-card').style.display='block'">🧾 Importar Faturamento</button>
             <button class="btn" onclick="$id('imp-bal-card').style.display='none';$id('imp-bal-card').style.display='block'">📊 Importar balancete</button>
           </div>
         </div>
@@ -214,8 +217,13 @@ tr:hover td{background:#f8fafc}
         <input type="file" id="imp-pgdas-files" accept=".pdf" multiple onchange="pgdasLer(this)">
         <div id="imp-pgdas-review" style="margin-top:12px"></div>
       </div>
+      <div class="card" id="imp-fat-card" style="display:none">
+        <h3>Importar Faturamento <span class="hint" style="font-weight:400">— Demonstrativo Mensal de Faturamento (PDF do Questor); escolha o anexo/bloco de destino</span></h3>
+        <input type="file" id="imp-fat-file" accept=".pdf" onchange="fatLer(this)">
+        <div id="imp-fat-review" style="margin-top:12px"></div>
+      </div>
       <div class="card" id="imp-bal-card" style="display:none">
-        <h3>Importar balancete (Questor) <span class="hint" style="font-weight:400">— .xls/.xlsx mensal ou anual; confira o mapeamento antes de aplicar</span></h3>
+        <h3>Importar balancete (Questor) <span class="hint" style="font-weight:400">— .xls/.xlsx mensal ou anual; alimenta folha, compras e despesas (receitas entram pelo Faturamento ou PGDAS)</span></h3>
         <input type="file" id="imp-bal-file" accept=".xls,.xlsx" onchange="balLer(this)">
         <div id="imp-bal-review" style="margin-top:12px"></div>
       </div>
@@ -1253,7 +1261,7 @@ async function pgdasLer(input) {
   if (!window.pdfjsLib) { toast('Biblioteca PDF não carregou — verifique a internet.'); return; }
   toast(`Lendo ${input.files.length} PDF(s)...`);
   const meses = {};   // pa 'MM/AAAA' -> { receita, atividades:[{texto, valor, bloco}], das, tributos, rbt12ant }
-  let cnpjPdf = null, nomePdf = null;
+  let cnpjPdf = null, nomePdf = null; const erros = [];
   for (const f of input.files) {
     try {
       const buf = await f.arrayBuffer();
@@ -1264,9 +1272,8 @@ async function pgdasLer(input) {
         const tc = await pg.getTextContent();
         txt += tc.items.map(i=>i.str).join(' ') + '\n';
       }
-      txt = txt.replace(/(\d{2}\/\d{4})/g, ' $1 ');   // descola valores grudados em MM/AAAA
-      const pa = (txt.match(/Período de Apuração:\s*01\/(\d{2})\/(\d{4})/)||[])[0] ? txt.match(/Período de Apuração:\s*01\/(\d{2})\/(\d{4})/) : null;
-      if (!pa) { toast(`${f.name}: não parece um PGDAS-D.`); continue; }
+      const pa = txt.match(/Per[ií]odo de Apura[çc][ãa]o:?\s*0?1\/(\d{2})\/(\d{4})/i);
+      if (!pa) { erros.push(f.name); continue; }
       const chave = `${pa[1]}/${pa[2]}`;
       cnpjPdf = (txt.match(/CNPJ Matriz:\s*([\d.\/\-]+)/)||[])[1] || cnpjPdf;
       nomePdf = (txt.match(/Nome empresarial:\s*(.+?)\s+Data de abertura/)||[])[1] || nomePdf;
@@ -1282,12 +1289,14 @@ async function pgdasLer(input) {
       if (nums.length) { const v = nums[nums.length-1][1].trim().split(/\s+/).map(brNum);
         trib = { irpj:v[0], csll:v[1], cofins:v[2], pis:v[3], inss:v[4], icms:v[5], ipi:v[6], iss:v[7], total:v[8] }; }
       // receitas brutas anteriores (mercado interno) p/ Config
-      const antSec = (txt.match(/2\.2\.1\) Mercado Interno(.+?)2\.2\.2\)/s)||[])[1] || '';
+      let antSec = (txt.match(/2\.2\.1\) Mercado Interno(.+?)2\.2\.2\)/s)||[])[1] || '';
+      antSec = antSec.replace(/(\d{2}\/\d{4})/g, ' $1 ');   // descola valores grudados em MM/AAAA (só aqui)
       const rbtAnt = {}; for (const mm of antSec.matchAll(/(\d{2})\/(\d{4})\s+([\d.]+,\d{2})/g)) rbtAnt[`${mm[1]}/${mm[2]}`] = brNum(mm[3]);
       meses[chave] = { receita: rpa, das, atividades: atividades.map(a=>({...a, bloco: pgdasBloco(a.texto)})), tributos: trib, rbtAnt };
-    } catch(e) { console.error(e); toast(`Erro lendo ${f.name}`); }
+    } catch(e) { console.error(e); erros.push(f.name+' ('+e.message+')'); }
   }
-  if (!Object.keys(meses).length) { toast('Nenhum PGDAS válido encontrado.'); return; }
+  if (!Object.keys(meses).length) { toast('Nenhum PGDAS válido encontrado. Arquivos com problema: '+(erros.join(', ')||'—')); return; }
+  if (erros.length) toast(erros.length+' arquivo(s) ignorado(s): '+erros.join(', '));
   PG_DADOS = { cnpj: cnpjPdf, nome: nomePdf, meses };
   pgdasReview();
 }
@@ -1338,9 +1347,57 @@ function pgdasAplicar() {
   toast(`PGDAS aplicado: ${chaves.length} mês(es), ${aplicados} lançamento(s). Salve a análise para persistir.`);
 }
 
+
+// ═══════════ IMPORTADOR FATURAMENTO (Demonstrativo Mensal — Questor) ═══════════
+const FAT_MESES = {JANEIRO:0,FEVEREIRO:1,MARCO:2,MARÇO:2,ABRIL:3,MAIO:4,JUNHO:5,JULHO:6,AGOSTO:7,SETEMBRO:8,OUTUBRO:9,NOVEMBRO:10,DEZEMBRO:11};
+let FAT = null;
+
+async function fatLer(input) {
+  const f = input.files[0]; if (!f) return;
+  if (!window.pdfjsLib) { toast('Biblioteca PDF não carregou.'); return; }
+  try {
+    const pdf = await pdfjsLib.getDocument({data: await f.arrayBuffer()}).promise;
+    let txt = '';
+    for (let p=1; p<=pdf.numPages; p++) {
+      const tc = await (await pdf.getPage(p)).getTextContent();
+      txt += tc.items.map(i=>i.str).join(' ') + '\n';
+    }
+    const cnpj = (txt.match(/CNPJ:\s*([\d.\/\-]+)/)||[])[1];
+    const ano = +((txt.match(/Período:\s*\d{2}\/\d{2}\/(\d{4})/)||[])[1]) || null;
+    const valores = z12(); let achou = 0;
+    for (const m of txt.toUpperCase().matchAll(/(JANEIRO|FEVEREIRO|MAR[ÇC]O|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO)\s+(\d{4})\s+([\d.]+,\d{2})/g)) {
+      const idx = FAT_MESES[m[1]]; if (idx==null) continue;
+      valores[idx] = brNum(m[3]); achou++;
+    }
+    const total = brNum((txt.match(/TOTAL\s+([\d.]+,\d{2})/i)||[])[1]);
+    if (!achou) { toast('Não encontrei o quadro mensal — é o "Demonstrativo Mensal do Faturamento"?'); return; }
+    FAT = { cnpj, ano, valores, total };
+    const soma = valores.reduce((a,b)=>a+b,0);
+    let h = `<div class="hint" style="margin-bottom:8px">CNPJ ${cnpj||'?'} · ano ${ano||'?'} · ${achou} meses lidos · soma ${fmt(soma)}${total?` (total do relatório: ${fmt(total)} ${Math.abs(soma-total)<0.02?'✓':'⚠️ difere'})`:''}</div>
+    <table class="gtable"><thead><tr>${MESES.map(m=>`<th class="num">${m}</th>`).join('')}</tr></thead><tbody><tr>${valores.map(v=>`<td class="num">${fmt(v)}</td>`).join('')}</tr></tbody></table>
+    <div class="toolbar" style="margin:12px 0 0">
+      <div><label>Anexo / bloco de destino</label><select id="fat-bloco">${PG_BLOCOS.map(([k,r])=>`<option value="${k}">${r}</option>`).join('')}</select></div>
+      <div><label>Modo</label><select id="fat-modo"><option value="substituir">Substituir valores do bloco</option><option value="somar">Somar aos valores existentes</option></select></div>
+      <span style="flex:1"></span>
+      <button class="btn solid" onclick="fatAplicar()">✅ Aplicar à análise</button>
+    </div>`;
+    $id('imp-fat-review').innerHTML = h;
+  } catch(e) { console.error(e); toast('Erro ao ler o PDF: '+e.message); }
+}
+
+function fatAplicar() {
+  if (!AN) { toast('Abra uma análise primeiro (selecione a empresa).'); return; }
+  if (FAT.ano && +AN.ano !== FAT.ano) { AN.ano = FAT.ano; $id('an-ano').value = FAT.ano; }
+  const bloco = $id('fat-bloco').value, modo = $id('fat-modo').value;
+  for (let m=0;m<12;m++) AN.receitas[bloco][m] = (modo==='somar' ? (AN.receitas[bloco][m]||0) : 0) + FAT.valores[m];
+  $id('imp-fat-card').style.display='none';
+  anRenderTabs(); anRenderGrid(); anRecalcular();
+  toast('Faturamento aplicado no bloco selecionado. Salve a análise para persistir.');
+}
+
 // ═══════════ IMPORTADOR BALANCETE (QUESTOR) ═══════════
 const BAL_DESTINOS = [['ignorar','— Ignorar —'],
-  ['receitas.a1_semst','Receita — Anexo I sem ST'],['receitas.a2_semst','Receita — Anexo II sem ST'],['receitas.a3_semret','Receita — Anexo III'],['receitas.a4','Receita — Anexo IV'],['receitas.a5r','Receita — Anexo V/III (Fator R)'],['receitas.fin','Receita financeira'],
+  ['receitas.fin','Receita financeira'],
   ['folha.prolabore','Folha — Pró-labore'],['folha.salarios','Folha — Salários/férias/13º (proventos)'],['folha.fgtsValor','Folha — FGTS (valor → converte p/ base)'],['folha.prov13','Folha — Provisão 13º'],['folha.provFerias','Folha — Provisão férias'],
   ['compras.semst','Compras revenda sem ST'],['compras.comst','Compras revenda com ST'],['compras.baixaSemst','Baixa de custos (CMV)'],
   ['despesas.adm','Despesa administrativa'],['despesas.vendas','Despesa com vendas'],['despesas.fiscais','Despesa fiscal/tributária'],['despesas.financeiras','Despesa financeira'],['despesas.outras','Outras despesas'],['despesas.credLR','Despesa c/ crédito no Lucro Real']];
@@ -1349,12 +1406,8 @@ let BAL = null;
 function balDestino(cls, desc) {
   const d = desc.toLowerCase();
   if (cls.startsWith('4')) {
-    if (d.includes('simples') || d.startsWith('(-)')) return 'ignorar';
     if (d.includes('financeir') || d.includes('aplicaç') || d.includes('descontos obtidos') || d.includes('juros ativ')) return 'receitas.fin';
-    if (d.includes('serviço')) return 'receitas.a3_semret';
-    if (d.includes('produto')) return 'receitas.a2_semst';
-    if (d.includes('mercadoria') || d.includes('venda')) return 'receitas.a1_semst';
-    return 'ignorar';
+    return 'ignorar';   // receitas operacionais entram pelo Faturamento/PGDAS, não pelo balancete
   }
   if (d.includes('pró labore') || d.includes('pro labore') || d.includes('pró-labore')) return 'folha.prolabore';
   if (d.includes('fgts')) return 'folha.fgtsValor';
