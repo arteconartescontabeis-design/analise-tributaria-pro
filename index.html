@@ -83,6 +83,17 @@ tr:hover td{background:#f8fafc}
 .placeholder h2{font-size:20px;margin-bottom:8px}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--primary-dark);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.25);opacity:0;transform:translateY(8px);transition:all .25s;z-index:99}
 .toast.show{opacity:1;transform:none}
+.an-tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid var(--border);padding-bottom:10px}
+.an-tab{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.an-tab.on{background:var(--info-bg);color:var(--primary)}
+.gtable td{padding:3px 4px;border-bottom:1px solid #eef2f6}
+.gtable th{position:sticky;top:0;background:#fff}
+.gtable input{padding:5px 6px;font-size:12.5px;text-align:right;border-radius:6px;min-width:86px}
+.gtable .rot{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;padding-right:10px}
+.gtable .grupo td{padding-top:12px;font-family:var(--display);color:var(--primary);font-size:13.5px;border-bottom:none}
+.melhor{outline:3px solid var(--ok);outline-offset:-3px}
+.stat .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.num{text-align:right;white-space:nowrap}
 @media(max-width:960px){.sidebar{width:64px}.sidebar .brand,.nav-item span,.sidebar .foot{display:none}.main{margin-left:64px;padding:20px}}
 </style>
 </head>
@@ -107,9 +118,11 @@ tr:hover td{background:#f8fafc}
     <div class="nav">
       <div class="nav-item active" data-page="dashboard" onclick="go('dashboard')">📊 <span>Dashboard</span></div>
       <div class="nav-item" data-page="cnpj" onclick="go('cnpj')">🔍 <span>Consulta CNPJ</span></div>
-      <div class="nav-item" data-page="analise" onclick="go('analise')">🧮 <span>Análise Atual</span><span class="tag">FASE 2</span></div>
+      <div class="nav-item" data-page="empresas" onclick="go('empresas')">🏢 <span>Empresas</span></div>
+      <div class="nav-item" data-page="analise" onclick="go('analise')">🧮 <span>Análise Atual</span></div>
       <div class="nav-item" data-page="reforma" onclick="go('reforma')">🏛️ <span>Reforma</span><span class="tag">FASE 3</span></div>
-      <div class="nav-item" data-page="parametros" onclick="go('parametros')">⚙️ <span>Parâmetros</span><span class="tag">FASE 2</span></div>
+      <div class="nav-item" data-page="parametros" onclick="go('parametros')">⚙️ <span>Parâmetros</span></div>
+      <div class="nav-item" data-page="usuarios" onclick="go('usuarios')">👥 <span>Usuários</span></div>
     </div>
     <div class="foot"><span id="user-email"></span><br><span class="sair" onclick="doLogout()">Sair</span></div>
   </div>
@@ -173,16 +186,84 @@ tr:hover td{background:#f8fafc}
 
     <!-- PLACEHOLDERS -->
     <div id="page-analise" style="display:none">
-      <div class="page-title"><h1>Análise Tributária — Regime Atual</h1><span class="crumb">Fase 2</span></div>
-      <div class="card placeholder"><h2>Em construção — quarta-feira</h2><p>Motor de cálculo Simples Nacional (Anexos I a V, Fator R, ST, monofásico) × Lucro Presumido × Lucro Real, portado da planilha base.</p></div>
+      <div class="page-title"><h1>Análise Tributária — Regime Atual</h1><span class="crumb">Simples × Presumido × Real</span></div>
+      <div class="card">
+        <div class="toolbar" style="margin-bottom:0">
+          <div style="min-width:280px;flex:1"><label>Empresa</label><select id="an-empresa" onchange="anTrocarEmpresa()"></select></div>
+          <div style="width:110px"><label>Ano</label><input type="number" id="an-ano" value="2026" onchange="anMudou()"></div>
+          <div style="align-self:flex-end;display:flex;gap:8px">
+            <button class="btn solid" onclick="anSalvar()">💾 Salvar análise</button>
+            <button class="btn" onclick="anRecalcular()">Recalcular</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid c4" id="an-resumo" style="margin-bottom:18px"></div>
+      <div class="card" id="an-veredito" style="display:none"></div>
+      <div class="card">
+        <div class="an-tabs" id="an-tabs"></div>
+        <div id="an-grid" style="overflow-x:auto;margin-top:14px"></div>
+      </div>
+      <div class="card"><h3>Resultado mês a mês</h3><div id="an-detalhe" style="overflow-x:auto"></div></div>
     </div>
     <div id="page-reforma" style="display:none">
       <div class="page-title"><h1>Reforma Tributária</h1><span class="crumb">Fase 3</span></div>
       <div class="card placeholder"><h2>Em construção — quinta-feira</h2><p>CBS · IS · IBS Estado · IBS Município (2027–2033), parcelas com benefícios/reduções e análise por contraparte, conforme especificação.</p></div>
     </div>
     <div id="page-parametros" style="display:none">
-      <div class="page-title"><h1>Parâmetros</h1><span class="crumb">Fase 2</span></div>
-      <div class="card placeholder"><h2>Em construção</h2><p>Tabelas editáveis: Anexos do Simples, presunções do Lucro Presumido e alíquotas da Reforma (2026–2033).</p></div>
+      <div class="page-title"><h1>Parâmetros</h1><span class="crumb">Tabelas editáveis do motor</span></div>
+      <div class="card"><div class="toolbar" style="margin-bottom:0">
+        <span class="hint" style="flex:1">Alterações valem para novas análises e recálculos. Os valores padrão seguem a LC 123/2006 (Anexos I a V) e os percentuais usuais de folha.</span>
+        <button class="btn solid" onclick="prSalvar()">💾 Salvar parâmetros</button>
+        <button class="btn" onclick="prRestaurar()">Restaurar padrão</button>
+      </div></div>
+      <div id="pr-container"></div>
+    </div>
+    <div id="page-empresas" style="display:none">
+      <div class="page-title"><h1>Empresas</h1><span class="crumb">Cadastro da carteira</span></div>
+      <div class="card">
+        <div class="toolbar" style="margin-bottom:0">
+          <input id="emp-busca" placeholder="Buscar por nome ou CNPJ..." style="max-width:320px" oninput="empRender()">
+          <span style="flex:1"></span>
+          <button class="btn solid" onclick="empNova()">+ Nova empresa</button>
+        </div>
+      </div>
+      <div class="card" id="emp-form-card" style="display:none">
+        <h3 id="emp-form-titulo">Nova empresa</h3>
+        <div style="display:grid;grid-template-columns:180px 1fr 140px 160px;gap:14px">
+          <div><label>CNPJ</label><input id="emp-cnpj" placeholder="00.000.000/0001-00"></div>
+          <div><label>Razão social</label><input id="emp-razao"></div>
+          <div><label>Optante Simples</label><select id="emp-simples"><option value="false">Não</option><option value="true">Sim</option></select></div>
+          <div><label>Regime atual</label><select id="emp-regime"><option>Simples Nacional</option><option>Lucro Presumido</option><option>Lucro Real</option><option>MEI</option></select></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
+          <div><label>UF / Município</label><input id="emp-ufmun" placeholder="SC / Palhoça"></div>
+          <div><label>Observações</label><input id="emp-obs"></div>
+        </div>
+        <div class="toolbar" style="margin-top:14px;margin-bottom:0">
+          <button class="btn solid" onclick="empSalvar()">Salvar</button>
+          <button class="btn" onclick="$id('emp-form-card').style.display='none'">Cancelar</button>
+          <button class="btn" onclick="empConsultarReceita()">Preencher pela Receita</button>
+        </div>
+      </div>
+      <div class="card" style="overflow-x:auto"><table>
+        <thead><tr><th>CNPJ</th><th>Razão Social</th><th>Regime</th><th>Simples</th><th>UF/Mun.</th><th>Obs.</th><th></th></tr></thead>
+        <tbody id="emp-tbody"></tbody></table></div>
+    </div>
+    <div id="page-usuarios" style="display:none">
+      <div class="page-title"><h1>Usuários</h1><span class="crumb">Equipe Artecon</span></div>
+      <div class="card">
+        <h3>Criar acesso</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 200px 140px;gap:14px;align-items:end">
+          <div><label>Nome</label><input id="us-nome"></div>
+          <div><label>E-mail</label><input id="us-email" type="email"></div>
+          <div><label>Senha inicial</label><input id="us-senha" type="text" placeholder="mín. 6 caracteres"></div>
+          <button class="btn solid" onclick="usCriar()">Criar usuário</button>
+        </div>
+        <div class="hint" style="margin-top:10px">O usuário entra com e-mail e senha e pode trocá-la depois. A criação usa o cadastro do próprio Supabase deste projeto.</div>
+      </div>
+      <div class="card"><h3>Equipe</h3><div style="overflow-x:auto"><table>
+        <thead><tr><th>Nome</th><th>E-mail</th><th>Criado em</th></tr></thead>
+        <tbody id="us-tbody"></tbody></table></div></div>
     </div>
   </div>
 </div>
@@ -256,6 +337,7 @@ function doLogout() {
 }
 
 function entrar() {
+  prCarregar();
   $id('auth-screen').style.display = 'none';
   $id('app').style.display = 'block';
   $id('user-email').textContent = APP.user?.email || '';
@@ -266,8 +348,13 @@ function entrar() {
 function go(page) {
   APP.page = page;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page===page));
-  ['dashboard','cnpj','analise','reforma','parametros'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
+  ['dashboard','cnpj','empresas','analise','reforma','parametros','usuarios'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
   if (page==='dashboard') carregarDashboard();
+  if (page==='empresas') empCarregar();
+  if (page==='analise') { empCarregar().then(()=>{ if(!AN){ anRenderTabs(); anRenderGrid(); } });
+    if (AN) { anRenderTabs(); anRenderGrid(); anRecalcular(); } }
+  if (page==='parametros') prRender();
+  if (page==='usuarios') usCarregar();
 }
 
 function toast(msg) {
@@ -459,6 +546,464 @@ async function carregarDashboard() {
   } catch(e) {
     $id('dash-recentes').innerHTML = `<span class="badge warn">Tabela ainda não criada no Supabase</span> — execute o script <b>setup_supabase.sql</b> no SQL Editor do projeto e recarregue.`;
   }
+}
+
+
+// ═══════════ MOTOR DE CÁLCULO (validado contra gabaritos 100%) ═══════════
+// ═══ ANÁLISE TRIBUTÁRIA PRO — Motor de cálculo (port fiel da Planilha v15) ═══
+const FAIXAS_LIM = [180000, 360000, 720000, 1800000, 3600000, 4800000];
+
+const ANEXOS_DEFAULT = {
+  I:  { aliq:[.04,.073,.095,.107,.143,.19], ded:[0,5940,13860,22500,87300,378000],
+        icms:[.34,.34,.335,.335,.335,0], piscof:[.1274+.0276,.1274+.0276,.1274+.0276,.1274+.0276,.1274+.0276,.2827+.0613] },
+  II: { aliq:[.045,.078,.10,.112,.147,.30], ded:[0,5940,13860,22500,85500,720000],
+        icms:[.32,.32,.32,.32,.32,0], piscof:[.1151+.0249,.1151+.0249,.1151+.0249,.1151+.0249,.1151+.0249,.2096+.0454] },
+  III:{ aliq:[.06,.112,.135,.16,.21,.33], ded:[0,9360,17640,35640,125640,648000],
+        iss:[.335,.32,.325,.325,.335,0], cpp:[.434,.434,.434,.434,.434,.305] },
+  IV: { aliq:[.045,.09,.102,.14,.22,.33], ded:[0,8100,12420,39780,183780,828000] },
+  V:  { aliq:[.155,.18,.195,.205,.23,.305], ded:[0,4500,9900,17100,62100,540000] },
+};
+
+const FOLHA_PERC_DEFAULT = { patronalProLabore:.20, patronalSalarios:.20, rat:.058, terceiros:.02796, fgts:.08 };
+
+const faixaDe = r => { for (let i=0;i<6;i++) if (r <= FAIXAS_LIM[i]) return i; return 5; };
+const S = a => (a||[]).reduce((x,y)=>x+(+y||0),0);
+const arr12 = a => Array.from({length:12},(_,i)=>+((a||[])[i])||0);
+
+// entrada: cfg {ano, iss, icmsV, icmsC, ipiV, ipiC, rbt12Direto, rbt12Lanc[12], folha12Lanc[12], lpBaseServ, lpBaseCom, adicionalIR:'off'|'mensal'|'trimestral'}
+// receitas {a1_semst, a1_red, a1_red_pct, a1_mono, a1_mono_pct, a1_comst, a1_comst_mono, a2_semst, a2_red, a2_red_pct, a2_mono, a2_comst, a2_comst_mono, a3_semret, a3_retiss, a3_retissinss, a4, a5r, fin, comtransp}  (todas [12])
+// folha {prolabore, salarios, baseFgts, prov13, provFerias}; compras {semst, baixaSemst, mono, baixaMono, comst, baixaComst, comstMono, baixaComstMono, baseIpiCred}
+// icms {cred:[12]|null, deb:[12]|null}  (null = automático)  ipi {cred, deb}
+// despesas {adm, vendas, fiscais, financeiras, outras, credLR}
+function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
+  const cfg = inp.cfg, R = {}, out = { meses: [] };
+  const K = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','comtransp'];
+  for (const k of [...K,'a1_red_pct','a1_mono_pct','a2_red_pct','fin']) R[k] = arr12(inp.receitas[k]);
+  const F = {}; for (const k of ['prolabore','salarios','baseFgts','prov13','provFerias']) F[k] = arr12(inp.folha[k]);
+  const C = {}; for (const k of ['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred']) C[k] = arr12(inp.compras[k]);
+  const D = {}; for (const k of ['adm','vendas','fiscais','financeiras','outras','credLR']) D[k] = arr12(inp.despesas[k]);
+  const F13 = { prolabore13:+(inp.folha13?.prolabore13)||0, salarios13:+(inp.folha13?.salarios13)||0, baseFgts13:+(inp.folha13?.baseFgts13)||0 };
+
+  const rbt12Cfg = S(cfg.rbt12Lanc), folha12Cfg = S(cfg.folha12Lanc);
+  const fatorR = rbt12Cfg > 0 ? folha12Cfg / rbt12Cfg : 0;
+  out.fatorR = fatorR;
+
+  const totalRec = m => K.reduce((s,k)=>s+R[k][m],0);
+  const totalPrev = [];   // receitas acumuladas dos meses anteriores do ano corrente
+
+  for (let m=0; m<12; m++) {
+    const rbt12 = m===0
+      ? (cfg.rbt12Direto>0 ? cfg.rbt12Direto : rbt12Cfg)
+      : S(cfg.rbt12Lanc.slice(m)) + S(totalPrev);
+    const fx = faixaDe(rbt12);
+    const ef = A => rbt12>0 ? (rbt12*A.aliq[fx] - A.ded[fx])/rbt12 : 0;
+    const A1=anexos.I, A2=anexos.II, A3=anexos.III, A4=anexos.IV, A5=anexos.V;
+    const e1=ef(A1), e2=ef(A2), e3=ef(A3), e4=ef(A4), e5=ef(A5);
+
+    const efb = {
+      a1_semst: e1,
+      a1_red: R.a1_red_pct[m]>0 ? e1*(1 - A1.icms[fx]*R.a1_red_pct[m]) : e1,
+      a1_mono: (()=>{ const adj = A1.icms[fx]*R.a1_mono_pct[m] + A1.piscof[fx]; return adj>0 ? e1*(1-adj) : e1; })(),
+      a1_comst: A1.icms[fx]>0 ? e1*(1-A1.icms[fx]) : e1,
+      a1_comst_mono: (()=>{ const adj = A1.icms[fx]+A1.piscof[fx]; return adj>0 ? e1*(1-adj) : e1; })(),
+      a2_semst: e2,
+      a2_red: R.a2_red_pct[m]>0 ? e2*(1 - A2.icms[fx]*R.a2_red_pct[m]) : e2,
+      a2_mono: A2.piscof[fx]>0 ? e2*(1-A2.piscof[fx]) : e2,
+      a2_comst: A2.icms[fx]>0 ? e2*(1-A2.icms[fx]) : e2,
+      a2_comst_mono: (()=>{ const adj = A2.icms[fx]+A2.piscof[fx]; return adj>0 ? e2*(1-adj) : e2; })(),
+      a3_semret: e3,
+      a3_retiss: A3.iss[fx]>0 ? e3*(1-A3.iss[fx]) : e3,
+      a3_retissinss: (()=>{ const adj = A3.iss[fx]+A3.cpp[fx]; return adj>0 ? e3*(1-adj) : e3; })(),
+      a4: e4,
+      a5r: fatorR < .28 ? e5 : e3,
+      comtransp: (A3.iss[fx]>0 ? e3*(1-A3.iss[fx]) : e3) + e1*A1.icms[fx],
+    };
+
+    const das = K.reduce((s,k)=>s + R[k][m]*efb[k], 0);
+    const receita = totalRec(m);
+    totalPrev.push(receita);
+
+    // Folha (dezembro agrega 13º: FGTS e patronal por fora do total da folha)
+    const fgts13 = m===11 ? F13.baseFgts13*fp.fgts : 0;
+    const inss13 = m===11 ? F13.salarios13*(fp.patronalSalarios+fp.rat+fp.terceiros) + F13.prolabore13*fp.patronalProLabore : 0;
+    const fgts = F.baseFgts[m]*fp.fgts + fgts13;
+    const inssPatr = F.salarios[m]*(fp.patronalSalarios+fp.rat+fp.terceiros) + F.prolabore[m]*fp.patronalProLabore + inss13;
+    const folhaTotal = F.prolabore[m]+F.salarios[m]+(fgts-fgts13)+F.prov13[m]+F.provFerias[m];
+
+    // ICMS / IPI (automático com override)
+    const icmsCred = inp.icms?.cred?.[m] != null ? +inp.icms.cred[m] : (C.semst[m]+C.mono[m])*cfg.icmsC;
+    const icmsDeb  = inp.icms?.deb?.[m]  != null ? +inp.icms.deb[m]  : (R.a1_semst[m]+R.a1_red[m]+R.a1_mono[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m])*cfg.icmsV;
+    const icmsPagar = icmsDeb - icmsCred;
+    const ipiCred = inp.ipi?.cred?.[m] != null ? +inp.ipi.cred[m] : C.baseIpiCred[m]*cfg.ipiC;
+    const ipiDebBase = R.a1_semst[m]+R.a1_red[m]+R.a1_mono[m]+R.a1_comst[m]+R.a1_comst_mono[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m]+R.a2_comst[m]+R.a2_comst_mono[m];
+    const ipiDeb = inp.ipi?.deb?.[m] != null ? +inp.ipi.deb[m] : ipiDebBase*cfg.ipiV;
+    const ipiPagar = ipiDeb - ipiCred;
+
+    const serv = R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]+R.a5r[m];
+    const com  = R.a1_semst[m]+R.a1_red[m]+R.a1_mono[m]+R.a1_comst[m]+R.a1_comst_mono[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m]+R.a2_comst[m]+R.a2_comst_mono[m]+R.comtransp[m];
+    const custos = C.baixaSemst[m]+C.baixaMono[m]+C.baixaComst[m]+C.baixaComstMono[m];
+    const despTotal = D.adm[m]+D.vendas[m]+D.fiscais[m]+D.financeiras[m]+D.outras[m]+D.credLR[m];
+    const iss = serv*cfg.iss;
+
+    // ── LUCRO PRESUMIDO ──
+    const basePisCofLP = receita - R.a1_comst_mono[m] - R.a2_comst_mono[m];
+    const lp_pis = (basePisCofLP - icmsDeb)*.0065;
+    const lp_cof = (basePisCofLP - icmsDeb)*.03;
+    const base32 = serv*cfg.lpBaseServ;
+    const base8  = com*cfg.lpBaseCom + R.fin[m];
+    const base12 = com*.12 + R.fin[m];
+    const baseCsllServ = serv*(cfg.lpBaseServ !== .32 ? .12 : .32);
+    const lp_csll = (baseCsllServ + base12)*.09;
+    const lp_irpj = (base32 + base8)*.15;
+
+    // ── LUCRO REAL ──
+    const basePisCofLR = R.a1_semst[m]+R.a1_red[m]+R.a1_comst[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_comst[m]
+      + R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]
+      + (fatorR<.28 ? R.a5r[m] : 0) + (fatorR>=.28 ? R.a5r[m] : 0)
+      + R.comtransp[m] - C.semst[m] - C.comst[m] - D.credLR[m];
+    const lr_pis = basePisCofLR*.0165 + R.fin[m]*.0065;
+    const lr_cof = basePisCofLR*.076  + R.fin[m]*.04;
+    const baseIRCS = receita + R.fin[m] - custos - folhaTotal - despTotal - inssPatr - lr_pis - lr_cof - icmsPagar - ipiPagar - iss;
+    const lr_csll = baseIRCS>0 ? baseIRCS*.09 : 0;
+    const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
+
+    out.meses.push({ m, rbt12, faixa: fx+1, receita, das, efb,
+      fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal,
+      simples: { das, inssPatrForaDAS: 0, fgts, total: das + fgts },
+      lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
+            baseAdic: base32+base8 },
+      lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
+            baseIRCS, credCsll: baseIRCS<0 ? baseIRCS*.09 : 0, credIrpj: baseIRCS<0 ? baseIRCS*.15 : 0 },
+    });
+  }
+
+  // Adicional de IRPJ (modo: off | mensal | trimestral)
+  const modo = cfg.adicionalIR || 'off';
+  if (modo === 'mensal') {
+    for (const M of out.meses) {
+      M.lp.adicional = Math.max(0, (M.lp.baseAdic - 20000))*.10;
+      M.lr.adicional = Math.max(0, (M.lr.baseIRCS - 20000))*.10;
+    }
+  } else if (modo === 'trimestral') {
+    for (let t=0; t<4; t++) {
+      const ms = out.meses.slice(t*3, t*3+3);
+      const bLP = S(ms.map(x=>x.lp.baseAdic)), bLR = S(ms.map(x=>x.lr.baseIRCS));
+      ms[2].lp.adicional = bLP>60000 ? (bLP-60000)*.10 : 0;
+      ms[2].lr.adicional = bLR>60000 ? (bLR-60000)*.10 : 0;
+    }
+  }
+  for (const M of out.meses) {
+    M.lp.total = M.lp.pis+M.lp.cofins+M.lp.csll+M.lp.irpj+M.lp.adicional+M.lp.inssPatr+M.lp.icms+M.lp.ipi+M.lp.iss+M.lp.fgts;
+    M.lr.total = M.lr.pis+M.lr.cofins+M.lr.csll+M.lr.irpj+M.lr.adicional+M.lr.inssPatr+M.lr.icms+M.lr.ipi+M.lr.iss+M.lr.fgts;
+  }
+  out.totais = {
+    receita: S(out.meses.map(x=>x.receita)),
+    simples: S(out.meses.map(x=>x.simples.total)),
+    lp: S(out.meses.map(x=>x.lp.total)),
+    lr: S(out.meses.map(x=>x.lr.total)),
+    das: S(out.meses.map(x=>x.das)),
+  };
+  return out;
+}
+
+
+
+// ═══════════ ESTADO E PARÂMETROS ═══════════
+let PARAMS = { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha: {...FOLHA_PERC_DEFAULT} };
+let AN = null;          // análise corrente
+let EMPRESAS = [];      // cadastro
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const fmt = v => (v==null||isNaN(v)) ? '—' : v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtR = v => 'R$ ' + fmt(v);
+const z12 = () => Array(12).fill(0);
+
+function anNovo(cnpj, ano) {
+  return { cnpj: cnpj||'', ano: ano||new Date().getFullYear(),
+    cfg: { iss:0, icmsV:0, icmsC:0, ipiV:0, ipiC:0, rbt12Direto:0, rbt12Lanc:z12(), folha12Lanc:z12(),
+           lpBaseServ:.32, lpBaseCom:.08, adicionalIR:'trimestral' },
+    receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','fin','comtransp'].map(k=>[k,z12()])),
+    folha: Object.fromEntries(['prolabore','salarios','baseFgts','prov13','provFerias'].map(k=>[k,z12()])),
+    folha13: { prolabore13:0, salarios13:0, baseFgts13:0 },
+    compras: Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred'].map(k=>[k,z12()])),
+    icms: { cred:Array(12).fill(null), deb:Array(12).fill(null) },
+    ipi:  { cred:Array(12).fill(null), deb:Array(12).fill(null) },
+    despesas: Object.fromEntries(['adm','vendas','fiscais','financeiras','outras','credLR'].map(k=>[k,z12()])) };
+}
+
+// ═══════════ ANÁLISE: DEFINIÇÃO DAS SEÇÕES/LINHAS ═══════════
+const AN_SECOES = [
+  { id:'config', nome:'⚙️ Config' },
+  { id:'receitas', nome:'💰 Receitas', linhas:[
+    ['Vendas Anexo I (Comércio)'],
+    ['receitas.a1_semst','Sem ST'], ['receitas.a1_red','Sem ST c/ redução ICMS'], ['receitas.a1_red_pct','% da redução ICMS','pct'],
+    ['receitas.a1_mono','Sem ST e monofásico'], ['receitas.a1_mono_pct','% redução ICMS (monof.)','pct'],
+    ['receitas.a1_comst','Com ST'], ['receitas.a1_comst_mono','Com ST e monofásico'],
+    ['Vendas Anexo II (Indústria)'],
+    ['receitas.a2_semst','Sem ST'], ['receitas.a2_red','Sem ST c/ redução ICMS'], ['receitas.a2_red_pct','% da redução ICMS','pct'],
+    ['receitas.a2_mono','Sem ST e monofásico'], ['receitas.a2_comst','Com ST'], ['receitas.a2_comst_mono','Com ST e monofásico'],
+    ['Serviços Anexo III'],
+    ['receitas.a3_semret','Sem retenção'], ['receitas.a3_retiss','Com retenção de ISS'], ['receitas.a3_retissinss','Com retenção ISS e INSS'],
+    ['Serviços Anexo IV'], ['receitas.a4','Serviços (construção, vigilância...)'],
+    ['Anexo V ou III — Fator R'], ['receitas.a5r','Receita (o motor aplica o Fator R)'],
+    ['Outras'], ['receitas.fin','Receitas financeiras'], ['receitas.comtransp','Comunicação / Transporte interm.'],
+  ]},
+  { id:'folha', nome:'👷 Folha', linhas:[
+    ['Folha mensal'],
+    ['folha.prolabore','Pró-labore'], ['folha.salarios','Salários + férias (proventos)'],
+    ['folha.baseFgts','Base do FGTS'], ['folha.prov13','Provisão 13º'], ['folha.provFerias','Provisão férias'],
+  ]},
+  { id:'compras', nome:'📦 Compras', linhas:[
+    ['Compras para revenda'],
+    ['compras.semst','Sem ST'], ['compras.baixaSemst','Baixa dos custos — sem ST'],
+    ['compras.mono','Sem ST e monofásica'], ['compras.baixaMono','Baixa dos custos — monofásica'],
+    ['compras.comst','Com ST'], ['compras.baixaComst','Baixa dos custos — com ST'],
+    ['compras.comstMono','Com ST e monofásica'], ['compras.baixaComstMono','Baixa — com ST e monofásica'],
+    ['IPI'], ['compras.baseIpiCred','Base p/ crédito de IPI'],
+  ]},
+  { id:'impostos', nome:'🧾 ICMS · IPI', linhas:[
+    ['ICMS (vazio = automático pelas bases × % da Config)'],
+    ['icms.cred','Crédito de ICMS (override)','nul'], ['icms.deb','Débito de ICMS (override)','nul'],
+    ['IPI (vazio = automático)'],
+    ['ipi.cred','Crédito de IPI (override)','nul'], ['ipi.deb','Débito de IPI (override)','nul'],
+  ]},
+  { id:'despesas', nome:'📉 Despesas', linhas:[
+    ['Despesas mensais'],
+    ['despesas.adm','Administrativas'], ['despesas.vendas','Com vendas'], ['despesas.fiscais','Fiscais e tributárias'],
+    ['despesas.financeiras','Financeiras'], ['despesas.outras','Outras'], ['despesas.credLR','Com crédito no Lucro Real'],
+  ]},
+];
+let AN_TAB = 'config';
+
+function anPath(obj, path) { const p = path.split('.'); return { o: obj[p[0]], k: p[1] }; }
+
+function anRenderTabs() {
+  $id('an-tabs').innerHTML = AN_SECOES.map(s=>`<div class="an-tab ${AN_TAB===s.id?'on':''}" onclick="AN_TAB='${s.id}';anRenderTabs();anRenderGrid()">${s.nome}</div>`).join('');
+}
+
+function anRenderGrid() {
+  if (!AN) return;
+  const sec = AN_SECOES.find(s=>s.id===AN_TAB);
+  if (sec.id==='config') { anRenderConfig(); return; }
+  let h = '<table class="gtable"><thead><tr><th></th>' + MESES.map(m=>`<th class="num">${m}</th>`).join('') + '</tr></thead><tbody>';
+  for (const L of sec.linhas) {
+    if (L.length===1) { h += `<tr class="grupo"><td colspan="13">${L[0]}</td></tr>`; continue; }
+    const [path, rot, tipo] = L;
+    h += `<tr><td class="rot">${rot}</td>`;
+    for (let m=0;m<12;m++) {
+      const { o,k } = anPath(AN, path);
+      const v = o[k][m];
+      const shown = tipo==='nul' ? (v==null?'':v) : (tipo==='pct' ? (v?+(v*100).toFixed(4):'') : (v||''));
+      h += `<td><input inputmode="decimal" value="${shown}" onchange="anSet('${path}',${m},this.value,'${tipo||''}')"></td>`;
+    }
+    h += '</tr>';
+  }
+  h += '</tbody></table>';
+  if (sec.id==='folha') {
+    const f = AN.folha13;
+    h += `<div style="margin-top:14px;padding:12px;background:var(--info-bg);border-radius:10px">
+      <b style="font-size:13px">13º salário (coluna extra de dezembro)</b>
+      <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap">
+        <div><label>Pró-labore 13º</label><input style="width:140px" value="${f.prolabore13||''}" onchange="AN.folha13.prolabore13=num(this.value);anRecalcular()"></div>
+        <div><label>Proventos 13º</label><input style="width:140px" value="${f.salarios13||''}" onchange="AN.folha13.salarios13=num(this.value);anRecalcular()"></div>
+        <div><label>Base FGTS 13º</label><input style="width:140px" value="${f.baseFgts13||''}" onchange="AN.folha13.baseFgts13=num(this.value);anRecalcular()"></div>
+      </div></div>`;
+  }
+  $id('an-grid').innerHTML = h;
+}
+
+const num = s => { const v = parseFloat(String(s).replace(/\./g,'').replace(',','.')); return isNaN(v)?0:v; };
+function anSet(path, m, val, tipo) {
+  const { o,k } = anPath(AN, path);
+  if (tipo==='nul') o[k][m] = String(val).trim()==='' ? null : num(val);
+  else if (tipo==='pct') o[k][m] = num(val)/100;
+  else o[k][m] = num(val);
+  anRecalcular();
+}
+
+function anRenderConfig() {
+  const c = AN.cfg;
+  const pc = (id,rot,v) => `<div><label>${rot}</label><input id="${id}" value="${v?+(v*100).toFixed(4):''}" style="width:110px"></div>`;
+  let h = `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
+    ${pc('cf-iss','% ISS',c.iss)} ${pc('cf-icmsv','% ICMS vendas',c.icmsV)} ${pc('cf-icmsc','% ICMS compras',c.icmsC)}
+    ${pc('cf-ipiv','% IPI vendas',c.ipiV)} ${pc('cf-ipic','% IPI compras',c.ipiC)}
+    <div><label>Base IRPJ serviços (LP)</label><select id="cf-bserv"><option value="0.32" ${c.lpBaseServ==.32?'selected':''}>32%</option><option value="0.16" ${c.lpBaseServ==.16?'selected':''}>16%</option><option value="0.08" ${c.lpBaseServ==.08?'selected':''}>8%</option></select></div>
+    <div><label>Base IRPJ comércio (LP)</label><select id="cf-bcom"><option value="0.08" ${c.lpBaseCom==.08?'selected':''}>8%</option><option value="0.16" ${c.lpBaseCom==.16?'selected':''}>16%</option></select></div>
+    <div><label>Adicional de IRPJ</label><select id="cf-adic"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
+    <button class="btn solid" onclick="anAplicarConfig()">Aplicar</button>
+  </div>
+  <div style="margin-top:18px"><b style="font-size:13px">RBT12 — receita e folha dos 12 meses anteriores</b>
+  <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto||''}"></div>
+  <div style="overflow-x:auto;margin-top:8px"><table class="gtable"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m} (ant.)</th>`).join('')}</tr></thead><tbody>
+  <tr><td class="rot">Receita</td>${MESES.map((_,m)=>`<td><input value="${c.rbt12Lanc[m]||''}" onchange="AN.cfg.rbt12Lanc[${m}]=num(this.value);anRecalcular()"></td>`).join('')}</tr>
+  <tr><td class="rot">Folha (Fator R)</td>${MESES.map((_,m)=>`<td><input value="${c.folha12Lanc[m]||''}" onchange="AN.cfg.folha12Lanc[${m}]=num(this.value);anRecalcular()"></td>`).join('')}</tr>
+  </tbody></table></div></div>`;
+  $id('an-grid').innerHTML = h;
+}
+function anAplicarConfig() {
+  const g = id => num($id(id).value)/100;
+  Object.assign(AN.cfg, { iss:g('cf-iss'), icmsV:g('cf-icmsv'), icmsC:g('cf-icmsc'), ipiV:g('cf-ipiv'), ipiC:g('cf-ipic'),
+    lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, adicionalIR:$id('cf-adic').value,
+    rbt12Direto:num($id('cf-rbtd').value) });
+  anRecalcular(); toast('Configurações aplicadas.');
+}
+
+function anRecalcular() {
+  if (!AN) return;
+  let r;
+  try { r = calcular(AN, PARAMS.anexos, PARAMS.folha); } catch(e) { console.error(e); return; }
+  AN._res = r;
+  const T = r.totais;
+  const menor = Math.min(T.simples, T.lp, T.lr);
+  const nomeMenor = menor===T.simples ? 'Simples Nacional' : menor===T.lp ? 'Lucro Presumido' : 'Lucro Real';
+  const card = (rot, v, sub, on) => `<div class="stat ${on?'melhor':''}"><div class="n" style="font-size:20px">${fmtR(v)}</div><div class="l">${rot}</div><div class="sub">${sub}</div></div>`;
+  const pct = v => T.receita>0 ? (v/T.receita*100).toFixed(2)+'% da receita' : '';
+  $id('an-resumo').innerHTML =
+    card('Receita anual', T.receita, `Fator R: ${(r.fatorR*100).toFixed(2)}%`) +
+    card('Simples Nacional', T.simples, pct(T.simples), menor===T.simples) +
+    card('Lucro Presumido', T.lp, pct(T.lp), menor===T.lp) +
+    card('Lucro Real', T.lr, pct(T.lr), menor===T.lr);
+  const econ2 = [T.simples,T.lp,T.lr].sort((a,b)=>a-b);
+  $id('an-veredito').style.display='block';
+  $id('an-veredito').innerHTML = `<h3 style="margin-bottom:6px">Melhor regime: ${nomeMenor}</h3>
+    <div class="hint">Economia de <b>${fmtR(econ2[1]-econ2[0])}</b>/ano frente à 2ª melhor opção. ${AN.receitas.a4.some(v=>v>0)?'<br>⚠️ Há receitas do Anexo IV: o CPP é recolhido por fora do DAS — confira o INSS patronal informado na Folha, pois a planilha-base não o soma automaticamente ao total do Simples.':''}</div>`;
+  // detalhe mensal
+  let h = `<table><thead><tr><th>Mês</th><th class="num">Receita</th><th class="num">RBT12</th><th>Faixa</th><th class="num">DAS</th><th class="num">Simples</th><th class="num">Presumido</th><th class="num">Real</th></tr></thead><tbody>`;
+  r.meses.forEach((M,i)=>{ h += `<tr><td>${MESES[i]}</td><td class="num">${fmt(M.receita)}</td><td class="num">${fmt(M.rbt12)}</td><td>${M.faixa}ª</td><td class="num">${fmt(M.das)}</td><td class="num">${fmt(M.simples.total)}</td><td class="num">${fmt(M.lp.total)}</td><td class="num">${fmt(M.lr.total)}</td></tr>`; });
+  h += `<tr style="font-weight:700"><td>TOTAL</td><td class="num">${fmt(T.receita)}</td><td></td><td></td><td class="num">${fmt(T.das)}</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr></tbody></table>`;
+  $id('an-detalhe').innerHTML = h;
+}
+
+async function anTrocarEmpresa() {
+  const cnpj = $id('an-empresa').value;
+  if (!cnpj) return;
+  const ano = +$id('an-ano').value;
+  try {
+    const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
+    AN = rows.length ? rows[0].dados : anNovo(cnpj, ano);
+    AN.cnpj = cnpj; AN.ano = ano;
+  } catch { AN = anNovo(cnpj, ano); }
+  anRenderTabs(); anRenderGrid(); anRecalcular();
+}
+function anMudou(){ anTrocarEmpresa(); }
+async function anSalvar() {
+  if (!AN || !AN.cnpj) { toast('Selecione uma empresa.'); return; }
+  const T = AN._res?.totais || {};
+  const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined},
+    resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr }, atualizado_em:new Date().toISOString() }];
+  try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); toast('Análise salva.'); }
+  catch(e){ toast('Erro ao salvar: '+e.message); }
+}
+
+// ═══════════ PARÂMETROS ═══════════
+function prRender() {
+  const A = PARAMS.anexos, F = PARAMS.folha;
+  const tab = (nome, key, extras) => {
+    let h = `<div class="card"><h3>Anexo ${nome}</h3><div style="overflow-x:auto"><table class="gtable"><thead><tr><th>Faixa</th><th class="num">Alíquota %</th><th class="num">Dedução R$</th>${(extras||[]).map(e=>`<th class="num">${e[1]} %</th>`).join('')}</tr></thead><tbody>`;
+    for (let f=0; f<6; f++) {
+      h += `<tr><td class="rot">${f+1}ª</td>
+        <td><input value="${+(A[key].aliq[f]*100).toFixed(4)}" onchange="PARAMS.anexos['${key}'].aliq[${f}]=num(this.value)/100"></td>
+        <td><input value="${A[key].ded[f]}" onchange="PARAMS.anexos['${key}'].ded[${f}]=num(this.value)"></td>`;
+      for (const [ek] of (extras||[])) h += `<td><input value="${+((A[key][ek][f]||0)*100).toFixed(4)}" onchange="PARAMS.anexos['${key}'].${ek}[${f}]=num(this.value)/100"></td>`;
+      h += '</tr>';
+    }
+    return h + '</tbody></table></div></div>';
+  };
+  $id('pr-container').innerHTML =
+    tab('I — Comércio','I',[['icms','Parte ICMS'],['piscof','Parte PIS+COFINS']]) +
+    tab('II — Indústria','II',[['icms','Parte ICMS'],['piscof','Parte PIS+COFINS']]) +
+    tab('III — Serviços','III',[['iss','Parte ISS'],['cpp','Parte CPP']]) +
+    tab('IV — Serviços','IV') + tab('V — Serviços','V') +
+    `<div class="card"><h3>Percentuais de folha</h3><div style="display:flex;gap:16px;flex-wrap:wrap">
+      ${[['patronalProLabore','INSS patronal pró-labore'],['patronalSalarios','INSS patronal salários'],['rat','RAT/FAP'],['terceiros','Terceiros'],['fgts','FGTS']]
+        .map(([k,rot])=>`<div><label>${rot} %</label><input style="width:130px" value="${+(F[k]*100).toFixed(4)}" onchange="PARAMS.folha['${k}']=num(this.value)/100"></div>`).join('')}
+    </div></div>`;
+}
+async function prSalvar() {
+  try { await supa('POST','atp_parametros?on_conflict=chave',{ body:[{ chave:'default', valor:PARAMS, atualizado_em:new Date().toISOString() }] });
+    toast('Parâmetros salvos.'); anRecalcular(); }
+  catch(e){ toast('Erro: '+e.message); }
+}
+function prRestaurar(){ PARAMS = { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha:{...FOLHA_PERC_DEFAULT} }; prRender(); toast('Padrão restaurado (salve para persistir).'); }
+async function prCarregar() {
+  try { const r = await supa('GET','atp_parametros',{ params:{ select:'valor', chave:'eq.default', limit:'1' } });
+    if (r.length && r[0].valor?.anexos) PARAMS = r[0].valor; } catch {}
+}
+
+// ═══════════ EMPRESAS (cadastro) ═══════════
+let EMP_EDIT = null;
+async function empCarregar() {
+  try { EMPRESAS = await supa('GET','atp_empresas',{ params:{ select:'*', order:'razao_social.asc', limit:'1000' } }); }
+  catch { EMPRESAS = []; }
+  empRender(); anPreencherEmpresas();
+}
+function empRender() {
+  const q = ($id('emp-busca')?.value||'').toLowerCase();
+  const rows = EMPRESAS.filter(e => !q || (e.razao_social||'').toLowerCase().includes(q) || (e.cnpj||'').includes(q.replace(/\D/g,'')));
+  $id('emp-tbody').innerHTML = rows.length ? rows.map(e=>`<tr>
+    <td style="white-space:nowrap">${fmtCNPJ(e.cnpj)}</td><td>${e.razao_social||''}</td>
+    <td>${e.regime||'—'}</td><td>${e.simples?'<span class="badge ok">Sim</span>':'<span class="badge info">Não</span>'}</td>
+    <td>${e.uf?e.uf+' / '+(e.municipio||''):'—'}</td><td>${e.obs||''}</td>
+    <td style="white-space:nowrap"><button class="btn" onclick="empEditar('${e.cnpj}')">Editar</button>
+    <button class="btn" onclick="empAnalisar('${e.cnpj}')">Analisar</button></td></tr>`).join('')
+  : '<tr><td colspan="7" class="hint" style="text-align:center;padding:20px">Nenhuma empresa. Cadastre manualmente ou use a Consulta CNPJ.</td></tr>';
+}
+function empNova(){ EMP_EDIT=null; ['emp-cnpj','emp-razao','emp-ufmun','emp-obs'].forEach(i=>$id(i).value='');
+  $id('emp-simples').value='false'; $id('emp-regime').value='Simples Nacional';
+  $id('emp-form-titulo').textContent='Nova empresa'; $id('emp-form-card').style.display='block'; }
+function empEditar(cnpj){ const e = EMPRESAS.find(x=>x.cnpj===cnpj); if(!e) return;
+  EMP_EDIT=cnpj; $id('emp-cnpj').value=fmtCNPJ(e.cnpj); $id('emp-razao').value=e.razao_social||'';
+  $id('emp-simples').value=String(!!e.simples); $id('emp-regime').value=e.regime||'Simples Nacional';
+  $id('emp-ufmun').value=e.uf?`${e.uf} / ${e.municipio||''}`:''; $id('emp-obs').value=e.obs||'';
+  $id('emp-form-titulo').textContent='Editar empresa'; $id('emp-form-card').style.display='block'; }
+async function empSalvar() {
+  const cnpj = limparCNPJ($id('emp-cnpj').value);
+  if (cnpj.length!==14 || !validaCNPJ(cnpj)) { toast('CNPJ inválido.'); return; }
+  const [uf, municipio] = ($id('emp-ufmun').value||'').split('/').map(s=>s.trim());
+  const body = [{ cnpj, razao_social:$id('emp-razao').value.trim(), simples:$id('emp-simples').value==='true',
+    regime:$id('emp-regime').value, uf:uf||null, municipio:municipio||null, obs:$id('emp-obs').value.trim()||null }];
+  try { await supa('POST','atp_empresas?on_conflict=cnpj',{ body }); toast('Empresa salva.');
+    $id('emp-form-card').style.display='none'; empCarregar(); carregarDashboard(); }
+  catch(e){ toast('Erro: '+e.message); }
+}
+async function empConsultarReceita() {
+  const cnpj = limparCNPJ($id('emp-cnpj').value);
+  if (cnpj.length!==14) { toast('Informe o CNPJ primeiro.'); return; }
+  toast('Consultando...');
+  const r = await consultarUm(cnpj);
+  if (r.erro) { toast(r.erro); return; }
+  $id('emp-razao').value = r.razao_social; $id('emp-simples').value = String(!!r.simples);
+  $id('emp-ufmun').value = r.uf ? `${r.uf} / ${r.municipio}` : '';
+  if (r.simples) $id('emp-regime').value = 'Simples Nacional';
+  toast('Dados preenchidos pela Receita.');
+}
+function empAnalisar(cnpj){ go('analise'); $id('an-empresa').value = cnpj; anTrocarEmpresa(); }
+function anPreencherEmpresas() {
+  const sel = $id('an-empresa'); const atual = sel.value;
+  sel.innerHTML = '<option value="">— selecione a empresa —</option>' +
+    EMPRESAS.map(e=>`<option value="${e.cnpj}">${e.razao_social||fmtCNPJ(e.cnpj)}</option>`).join('');
+  if (atual) sel.value = atual;
+}
+
+// ═══════════ USUÁRIOS ═══════════
+async function usCriar() {
+  const nome = $id('us-nome').value.trim(), email = $id('us-email').value.trim(), senha = $id('us-senha').value;
+  if (!nome || !email || senha.length<6) { toast('Preencha nome, e-mail e senha (mín. 6).'); return; }
+  try {
+    const res = await fetch(`${SUPA_URL}/auth/v1/signup`, { method:'POST',
+      headers:{ 'apikey':SUPA_KEY, 'Content-Type':'application/json' },
+      body: JSON.stringify({ email, password:senha, data:{ nome } }) });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error_description||d.msg||'Falha no cadastro');
+    await supa('POST','atp_usuarios?on_conflict=email',{ body:[{ email, nome }] });
+    toast('Usuário criado.'); ['us-nome','us-email','us-senha'].forEach(i=>$id(i).value='');
+    usCarregar();
+  } catch(e){ toast('Erro: '+e.message); }
+}
+async function usCarregar() {
+  try { const rows = await supa('GET','atp_usuarios',{ params:{ select:'*', order:'criado_em.asc' } });
+    $id('us-tbody').innerHTML = rows.length ? rows.map(u=>`<tr><td>${u.nome||'—'}</td><td>${u.email}</td><td>${(u.criado_em||'').slice(0,10)}</td></tr>`).join('')
+      : '<tr><td colspan="3" class="hint" style="padding:16px;text-align:center">Nenhum usuário listado ainda.</td></tr>';
+  } catch { $id('us-tbody').innerHTML = '<tr><td colspan="3" class="hint" style="padding:16px">Execute o setup_v2.sql para habilitar a lista.</td></tr>'; }
 }
 
 // ── BOOT ───────────────────────────────────────────────────────────────
