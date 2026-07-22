@@ -137,7 +137,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.7</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.8</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -365,7 +365,7 @@ canvas{max-height:340px}
         <div class="hint" style="margin-top:10px">O usuário entra com e-mail e senha e pode trocá-la depois. A criação usa o cadastro do próprio Supabase deste projeto.</div>
       </div>
       <div class="card"><h3>Equipe</h3><div style="overflow-x:auto"><table>
-        <thead><tr><th>Nome</th><th>E-mail</th><th>Criado em</th></tr></thead>
+        <thead><tr><th>Nome</th><th>E-mail</th><th>Criado em</th><th>Ações</th></tr></thead>
         <tbody id="us-tbody"></tbody></table></div></div>
     </div>
     <div id="page-versoes" style="display:none">
@@ -373,7 +373,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v5.7</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Cenários da Reforma (por dentro × híbrido × fora do Simples) agora visíveis em três lugares: veredito da Análise, Relatório Comparativo de Regimes e Relatório Reforma; cálculo centralizado em calcCenariosReforma com mescla ano a ano dos dados salvos (análises antigas sem todos os campos não quebram mais) e try/catch para nunca derrubar o restante da tela.</td></tr>\n          <tr><td><b>v5.6</b></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
+          <tr><td><b>v5.8</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Excluir empresa (com as análises salvas) na aba Empresas; Editar nome, Redefinir senha (e-mail) e Excluir na aba Usuários; recálculo automático ao alterar qualquer alíquota/percentual nos Parâmetros; Comparativo de Regimes com todos os quadros da Reforma: composição do híbrido ano a ano, cenário fora do Simples ano a ano (Presumido × Real) e gráfico débito × crédito de IBS/CBS.</td></tr>\n          <tr><td><b>v5.7</b></td><td>22/07/2026</td><td>Cenários da Reforma (por dentro × híbrido × fora do Simples) agora visíveis em três lugares: veredito da Análise, Relatório Comparativo de Regimes e Relatório Reforma; cálculo centralizado em calcCenariosReforma com mescla ano a ano dos dados salvos (análises antigas sem todos os campos não quebram mais) e try/catch para nunca derrubar o restante da tela.</td></tr>\n          <tr><td><b>v5.6</b></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
           <tr><td><b>v5.3</b></td><td>22/07/2026</td><td>Correção do parser numérico para valores com pontos de milhar sem vírgula ("1.546.923" era lido como 1,546); aceita "R$" e espaços na digitação. Motor revalidado 100% (228 verificações) contra a Preenchida_01.</td></tr>
           <tr><td><b>v5.2</b></td><td>24/07/2026</td><td>Correção crítica do parser numérico (ponto decimal virava milhar e corrompia alíquotas/valores reeditados); Config com gravação automática e formato brasileiro; carteira consultada devolvida à Consulta CNPJ; empresas em análise no topo do Dashboard; aba Versões.</td></tr>
           <tr><td><b>v5.1</b></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
@@ -1114,15 +1114,16 @@ async function anSalvar() {
 }
 
 // ═══════════ PARÂMETROS ═══════════
+function prAuto(){ if (AN) anRecalcular(); if (RL && RL.dados) { RL.res = calcular(RL.dados, PARAMS.anexos, PARAMS.folha); } }
 function prRender() {
   const A = PARAMS.anexos, F = PARAMS.folha;
   const tab = (nome, key, extras) => {
     let h = `<div class="card"><h3>Anexo ${nome}</h3><div style="overflow-x:auto"><table class="gtable"><thead><tr><th>Faixa</th><th class="num">Alíquota %</th><th class="num">Dedução R$</th>${(extras||[]).map(e=>`<th class="num">${e[1]} %</th>`).join('')}</tr></thead><tbody>`;
     for (let f=0; f<6; f++) {
       h += `<tr><td class="rot">${f+1}ª</td>
-        <td><input value="${+(A[key].aliq[f]*100).toFixed(4)}" onchange="PARAMS.anexos['${key}'].aliq[${f}]=num(this.value)/100"></td>
-        <td><input value="${A[key].ded[f]}" onchange="PARAMS.anexos['${key}'].ded[${f}]=num(this.value)"></td>`;
-      for (const [ek] of (extras||[])) h += `<td><input value="${+((A[key][ek][f]||0)*100).toFixed(4)}" onchange="PARAMS.anexos['${key}'].${ek}[${f}]=num(this.value)/100"></td>`;
+        <td><input value="${+(A[key].aliq[f]*100).toFixed(4)}" onchange="PARAMS.anexos['${key}'].aliq[${f}]=num(this.value)/100;prAuto()"></td>
+        <td><input value="${A[key].ded[f]}" onchange="PARAMS.anexos['${key}'].ded[${f}]=num(this.value);prAuto()"></td>`;
+      for (const [ek] of (extras||[])) h += `<td><input value="${+((A[key][ek][f]||0)*100).toFixed(4)}" onchange="PARAMS.anexos['${key}'].${ek}[${f}]=num(this.value)/100;prAuto()"></td>`;
       h += '</tr>';
     }
     return h + '</tbody></table></div></div>';
@@ -1134,7 +1135,7 @@ function prRender() {
     tab('IV — Serviços','IV') + tab('V — Serviços','V') +
     `<div class="card"><h3>Percentuais de folha</h3><div style="display:flex;gap:16px;flex-wrap:wrap">
       ${[['patronalProLabore','INSS patronal pró-labore'],['patronalSalarios','INSS patronal salários'],['rat','RAT/FAP'],['terceiros','Terceiros'],['fgts','FGTS']]
-        .map(([k,rot])=>`<div><label>${rot} %</label><input style="width:130px" value="${+(F[k]*100).toFixed(4)}" onchange="PARAMS.folha['${k}']=num(this.value)/100"></div>`).join('')}
+        .map(([k,rot])=>`<div><label>${rot} %</label><input style="width:130px" value="${+(F[k]*100).toFixed(4)}" onchange="PARAMS.folha['${k}']=num(this.value)/100;prAuto()"></div>`).join('')}
     </div></div>`;
 }
 async function prSalvar() {
@@ -1167,7 +1168,8 @@ function empRender() {
     <td>${e.regime||'—'}</td><td>${e.simples?'<span class="badge ok">Sim</span>':'<span class="badge info">Não</span>'}</td>
     <td>${e.uf?e.uf+' / '+(e.municipio||''):'—'}</td><td>${e.obs||''}</td>
     <td style="white-space:nowrap"><button class="btn" onclick="empEditar('${e.cnpj}')">Editar</button>
-    <button class="btn" onclick="empAnalisar('${e.cnpj}')">Analisar</button></td></tr>`).join('')
+    <button class="btn" onclick="empAnalisar('${e.cnpj}')">Analisar</button>
+    <button class="btn" style="color:var(--danger)" onclick="empExcluir('${e.cnpj}')">Excluir</button></td></tr>`).join('')
   : '<tr><td colspan="7" class="hint" style="text-align:center;padding:20px">Nenhuma empresa. Cadastre manualmente ou use a Consulta CNPJ.</td></tr>';
 }
 function empNova(){ EMP_EDIT=null; ['emp-cnpj','emp-razao','emp-ufmun','emp-obs'].forEach(i=>$id(i).value='');
@@ -1199,6 +1201,16 @@ async function empConsultarReceita() {
   if (r.simples) $id('emp-regime').value = 'Simples Nacional';
   toast('Dados preenchidos pela Receita.');
 }
+async function empExcluir(cnpj) {
+  const e = EMPRESAS.find(x=>x.cnpj===cnpj);
+  if (!confirm(`Excluir a empresa ${e?.razao_social||fmtCNPJ(cnpj)}?\n\nAs análises salvas desta empresa também serão removidas. Esta ação não pode ser desfeita.`)) return;
+  try {
+    await supa('DELETE','atp_analises',{ params:{ cnpj:`eq.${cnpj}` } });
+    await supa('DELETE','atp_empresas',{ params:{ cnpj:`eq.${cnpj}` } });
+    if (AN && AN.cnpj===cnpj) { AN = null; }
+    toast('Empresa excluída.'); empCarregar(); carregarDashboard(); dashAnalises();
+  } catch(err){ toast('Erro ao excluir: '+err.message); }
+}
 function empAnalisar(cnpj){ go('analise'); $id('an-empresa').value = cnpj; anTrocarEmpresa(); }
 function anPreencherEmpresas() {
   const sel = $id('an-empresa'); const atual = sel.value;
@@ -1224,9 +1236,36 @@ async function usCriar() {
 }
 async function usCarregar() {
   try { const rows = await supa('GET','atp_usuarios',{ params:{ select:'*', order:'criado_em.asc' } });
-    $id('us-tbody').innerHTML = rows.length ? rows.map(u=>`<tr><td>${u.nome||'—'}</td><td>${u.email}</td><td>${(u.criado_em||'').slice(0,10)}</td></tr>`).join('')
-      : '<tr><td colspan="3" class="hint" style="padding:16px;text-align:center">Nenhum usuário listado ainda.</td></tr>';
-  } catch { $id('us-tbody').innerHTML = '<tr><td colspan="3" class="hint" style="padding:16px">Execute o setup_v2.sql para habilitar a lista.</td></tr>'; }
+    $id('us-tbody').innerHTML = rows.length ? rows.map(u=>`<tr><td>${u.nome||'—'}</td><td>${u.email}</td><td>${(u.criado_em||'').slice(0,10)}</td>
+      <td style="white-space:nowrap"><button class="btn" onclick="usEditar('${u.email}')">Editar</button>
+      <button class="btn" onclick="usSenha('${u.email}')">Redefinir senha</button>
+      <button class="btn" style="color:var(--danger)" onclick="usExcluir('${u.email}')">Excluir</button></td></tr>`).join('')
+      : '<tr><td colspan="4" class="hint" style="padding:16px;text-align:center">Nenhum usuário listado ainda.</td></tr>';
+  } catch { $id('us-tbody').innerHTML = '<tr><td colspan="4" class="hint" style="padding:16px">Execute o setup_v2.sql para habilitar a lista.</td></tr>'; }
+}
+async function usEditar(email) {
+  const rows = await supa('GET','atp_usuarios',{ params:{ select:'*', email:`eq.${email}`, limit:'1' } }).catch(()=>[]);
+  const atual = rows?.[0]?.nome || '';
+  const nome = prompt(`Novo nome para ${email}:`, atual);
+  if (nome==null || !nome.trim()) return;
+  try { await supa('PATCH','atp_usuarios',{ params:{ email:`eq.${email}` }, body:{ nome:nome.trim() } });
+    toast('Usuário atualizado.'); usCarregar(); }
+  catch(e){ toast('Erro: '+e.message); }
+}
+async function usSenha(email) {
+  if (!confirm(`Enviar e-mail de redefinição de senha para ${email}?`)) return;
+  try {
+    const res = await fetch(`${SUPA_URL}/auth/v1/recover`, { method:'POST',
+      headers:{ 'apikey':SUPA_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ email }) });
+    if (!res.ok) { const d = await res.json().catch(()=>({})); throw new Error(d.error_description||d.msg||res.status); }
+    toast('E-mail de redefinição enviado.');
+  } catch(e){ toast('Erro: '+e.message); }
+}
+async function usExcluir(email) {
+  if (!confirm(`Excluir ${email} da lista de usuários do app?\n\nAtenção: isto remove o registro do app; para revogar o LOGIN, exclua a conta também no painel do Supabase (Authentication → Users).`)) return;
+  try { await supa('DELETE','atp_usuarios',{ params:{ email:`eq.${email}` } });
+    toast('Usuário removido da lista.'); usCarregar(); }
+  catch(e){ toast('Erro: '+e.message); }
 }
 
 
@@ -1334,7 +1373,7 @@ function calcCenariosReforma(res, reforma) {
     const regLP = lpResto + (lpIcms+lpIss)*rII + (lpPis+lpCof)*rPC + (a<=2026?lpIpi:0) + L.liquido + L.is;
     const regLR = lrResto + (lrIcms+lrIss)*rII + (lrPis+lrCof)*rPC + (a<=2026?lrIpi:0) + L.liquido + L.is;
     const regular = Math.min(regLP, regLR);
-    return { ano:a, alq:L.alq, liquido:L.liquido, is:L.is, dasHib, hib, regular, regNome: regular===regLP?'Presumido':'Real' };
+    return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, dasHib, hib, regular, regLP, regLR, regNome: regular===regLP?'Presumido':'Real' };
   });
   return { rfx, REF, usouFallback: !reforma };
 }
@@ -1818,7 +1857,20 @@ function rlRegimes(rot, n) {
     h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(L.dasHib+T.fgts)}</td><td class="num">${fmt(L.liquido+L.is)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${mn===T.simples?'Por dentro':mn===L.hib?'Híbrido':'Fora ('+L.regNome+')'}</td></tr>`;
   }
   h += `</tbody></table></div>
-  <div class="rl-grid" style="margin-top:14px"><div class="card"><h3>Transição 2026–2033 — carga anual por cenário</h3><canvas id="ch-ref-comp"></canvas></div>
+
+  <div class="card" style="margin-top:14px"><h3>Composição do cenário híbrido, ano a ano</h3><div style="overflow-x:auto"><table>
+    <thead><tr><th>Ano</th><th class="num">DAS ajustado</th><th class="num">FGTS</th><th class="num">Débito IBS/CBS</th><th class="num">Crédito IBS/CBS</th><th class="num">IBS/CBS líquido</th><th class="num">IS</th><th class="num">Total híbrido</th></tr></thead><tbody>
+    ${REF.map(L=>`<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(L.dasHib)}</td><td class="num">${fmt(T.fgts)}</td><td class="num">${fmt(L.deb)}</td><td class="num">${fmt(L.cred)}</td><td class="num">${fmt(L.liquido)}</td><td class="num">${fmt(L.is)}</td><td class="num">${fmt(L.hib)}</td></tr>`).join('')}
+    </tbody></table></div><div class="hint" style="margin-top:6px">DAS ajustado = DAS atual menos as parcelas de PIS/COFINS e ICMS/ISS conforme os remanescentes de cada ano da transição${T.sublimite>0?' (inclui a trava do sublimite)':''}.</div></div>
+
+  <div class="card" style="margin-top:14px"><h3>Cenário fora do Simples, ano a ano</h3><div style="overflow-x:auto"><table>
+    <thead><tr><th>Ano</th><th class="num">Base Presumido</th><th class="num">Base Real</th><th class="num">Melhor regime regular</th><th>Regime</th></tr></thead><tbody>
+    ${REF.map(L=>`<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(L.regLP)}</td><td class="num">${fmt(L.regLR)}</td><td class="num">${fmt(L.regular)}</td><td>${L.regNome}</td></tr>`).join('')}
+    </tbody></table></div><div class="hint" style="margin-top:6px">Cada coluna = tributos não-consumo do regime + remanescentes de PIS/COFINS/ICMS/ISS do ano + IBS/CBS líquido + IS.</div></div>
+
+  <div class="rl-grid" style="margin-top:14px"><div class="card"><h3>Débito × crédito de IBS/CBS por ano</h3><canvas id="ch-ref-dc"></canvas></div>
+  <div class="card"><h3>Transição 2026–2033 — carga anual por cenário</h3><canvas id="ch-ref-comp"></canvas></div></div>
+  <div style="margin-top:14px">
   <div class="card"><h3>Notas do comparativo</h3><div class="hint">
   • <b>Por dentro</b>: permanece 100% no DAS (carga mantida no patamar atual${T.sublimite>0?', já com a trava da 5ª faixa':''}); o cliente PJ aproveita crédito de IBS/CBS limitado ao efetivamente recolhido no regime — desvantagem comercial nas vendas B2B.<br>
   • <b>Híbrido (LC 214/2025)</b>: optante do Simples apura IBS/CBS pelo regime regular; as parcelas de PIS/COFINS e ICMS/ISS saem do DAS conforme a transição e o IBS/CBS entra por fora com débito e crédito — o cliente PJ recebe crédito integral.<br>
@@ -1827,6 +1879,11 @@ function rlRegimes(rot, n) {
   ${(rfxInfo?.contra?.compras_lrlp||0)+(rfxInfo?.contra?.compras_simples||0)>0?'Créditos de IBS/CBS calculados sobre as compras informadas na aba Reforma.':''}</div></div></div></div>`;
   }
   $id('rl-corpo').innerHTML = h;
+  if (REF) rlChart('ch-ref-dc', { type:'bar', data:{ labels:RF_ANOS, datasets:[
+    {label:'Débito', data:REF.map(x=>x.deb), backgroundColor:'#943126'},
+    {label:'Crédito', data:REF.map(x=>x.cred), backgroundColor:'#1e8449'},
+    {label:'Líquido + IS', data:REF.map(x=>x.liquido+x.is), backgroundColor:'#1a5276'}]},
+    options:{ responsive:true, plugins:{legend:{position:'bottom'}} } });
   if (REF) rlChart('ch-ref-comp', { type:'line', data:{ labels:RF_ANOS, datasets:[
     {label:'Por dentro', data:RF_ANOS.map(()=>T.simples), borderColor:CORES.simples, backgroundColor:CORES.simples, tension:.2},
     {label:'Híbrido', data:REF.map(x=>x.hib), borderColor:'#7d3c98', backgroundColor:'#7d3c98', tension:.2},
