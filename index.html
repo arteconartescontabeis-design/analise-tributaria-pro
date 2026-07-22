@@ -137,7 +137,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.6</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.7</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -373,7 +373,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v5.6</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
+          <tr><td><b>v5.7</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Cenários da Reforma (por dentro × híbrido × fora do Simples) agora visíveis em três lugares: veredito da Análise, Relatório Comparativo de Regimes e Relatório Reforma; cálculo centralizado em calcCenariosReforma com mescla ano a ano dos dados salvos (análises antigas sem todos os campos não quebram mais) e try/catch para nunca derrubar o restante da tela.</td></tr>\n          <tr><td><b>v5.6</b></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
           <tr><td><b>v5.3</b></td><td>22/07/2026</td><td>Correção do parser numérico para valores com pontos de milhar sem vírgula ("1.546.923" era lido como 1,546); aceita "R$" e espaços na digitação. Motor revalidado 100% (228 verificações) contra a Preenchida_01.</td></tr>
           <tr><td><b>v5.2</b></td><td>24/07/2026</td><td>Correção crítica do parser numérico (ponto decimal virava milhar e corrompia alíquotas/valores reeditados); Config com gravação automática e formato brasileiro; carteira consultada devolvida à Consulta CNPJ; empresas em análise no topo do Dashboard; aba Versões.</td></tr>
           <tr><td><b>v5.1</b></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
@@ -1070,8 +1070,21 @@ function anRecalcular() {
     card('Lucro Real', T.lr, pct(T.lr), menor===T.lr);
   const econ2 = [T.simples,T.lp,T.lr].sort((a,b)=>a-b);
   $id('an-veredito').style.display='block';
+  let refHtml = '';
+  try {
+    const C = calcCenariosReforma(r, AN.reforma);
+    const R33 = C.REF[C.REF.length-1];
+    const mn33 = Math.min(T.simples, R33.hib, R33.regular);
+    const st = (rot,v,sub,on) => `<div class="stat ${on?'melhor':''}"><div class="n" style="font-size:17px">${fmtR(v)}</div><div class="l">${rot}</div><div class="sub">${sub}</div></div>`;
+    refHtml = `<div style="margin-top:14px;border-top:1px solid var(--borda,#e5e7eb);padding-top:12px"><b style="font-size:13px">Reforma Tributária — ano pleno (2033)</b>
+      <div class="grid c3" style="margin-top:8px">
+      ${st('Simples "por dentro"', T.simples, 'tudo no DAS — crédito reduzido ao cliente', mn33===T.simples)}
+      ${st('Simples híbrido (LC 214)', R33.hib, 'DAS sem consumo + IBS/CBS por fora — crédito integral', mn33===R33.hib)}
+      ${st('Fora do Simples', R33.regular, 'regime regular pleno ('+R33.regNome+' + IBS/CBS)', mn33===R33.regular)}
+      </div><div class="hint" style="margin-top:6px">Quadro ano a ano (2026–2033) na aba <b>Relatórios → Comparativo de Regimes</b>.${C.usouFallback?' Aba Reforma sem dados: usei alíquotas-padrão e a receita da análise, sem créditos de compras.':''}</div></div>`;
+  } catch(e) { console.error('Cenários da Reforma (análise):', e); }
   $id('an-veredito').innerHTML = `<h3 style="margin-bottom:6px">Melhor regime: ${nomeMenor}</h3>
-    <div class="hint">Economia de <b>${fmtR(econ2[1]-econ2[0])}</b>/ano frente à 2ª melhor opção.${T.sublimite>0?`<br>⚠️ RBT12 acima de R$ 3,6 mi em parte do ano: o Simples inclui <b>${fmtR(T.sublimite)}</b> de ICMS/ISS pela trava da 5ª faixa (Res. CGSN 140/2018, art. 24) — a 6ª faixa não embute ICMS/ISS na repartição.`:''} ${AN.receitas.a4.some(v=>v>0)?'<br>⚠️ Há receitas do Anexo IV: o CPP é recolhido por fora do DAS — confira o INSS patronal informado na Folha, pois a planilha-base não o soma automaticamente ao total do Simples.':''}</div>`;
+    <div class="hint">Economia de <b>${fmtR(econ2[1]-econ2[0])}</b>/ano frente à 2ª melhor opção.${T.sublimite>0?`<br>⚠️ RBT12 acima de R$ 3,6 mi em parte do ano: o Simples inclui <b>${fmtR(T.sublimite)}</b> de ICMS/ISS pela trava da 5ª faixa (Res. CGSN 140/2018, art. 24) — a 6ª faixa não embute ICMS/ISS na repartição.`:''} ${AN.receitas.a4.some(v=>v>0)?'<br>⚠️ Há receitas do Anexo IV: o CPP é recolhido por fora do DAS — confira o INSS patronal informado na Folha, pois a planilha-base não o soma automaticamente ao total do Simples.':''}</div>${refHtml}`;
   // detalhe mensal
   let h = `<table><thead><tr><th>Mês</th><th class="num">Receita</th><th class="num">RBT12</th><th>Faixa</th><th class="num">DAS</th><th class="num">Simples</th><th class="num">Presumido</th><th class="num">Real</th></tr></thead><tbody>`;
   r.meses.forEach((M,i)=>{ h += `<tr><td>${MESES[i]}</td><td class="num">${fmt(M.receita)}</td><td class="num">${fmt(M.rbt12)}</td><td>${M.faixa}ª</td><td class="num">${fmt(M.das)}</td><td class="num">${fmt(M.simples.total)}</td><td class="num">${fmt(M.lp.total)}</td><td class="num">${fmt(M.lr.total)}</td></tr>`; });
@@ -1296,6 +1309,34 @@ function rfLinhaBase(rf, a) {
   for (const [k,,red] of RF_REDUCOES) cred += (rf.benefCred?.[k]||0)*alq*(1-red);
   cred += (rf.contra?.compras_simples||0)*((rf.credSimplesPct||0)/100);
   return { q, alq, deb, cred, liquido: Math.max(0, deb - cred), is: (rf.baseIS||0)*(q.is/100) };
+}
+
+// Cenários da Reforma p/ empresa do Simples: por dentro × híbrido (LC 214) × fora do Simples.
+// Mescla os dados salvos com os padrões ano a ano (análises antigas podem não ter todos os campos).
+function calcCenariosReforma(res, reforma) {
+  const T = res.totais, meses = res.meses;
+  const rfx = Object.assign({ benefRec:{}, benefCred:{}, contra:{}, receita:0, baseIS:0, credSimplesPct:0 }, reforma||{});
+  const aliq = {}; for (const a of RF_ANOS) aliq[a] = Object.assign({}, RF_ALIQ_DEFAULT[a], (rfx.aliq||{})[a]||{});
+  rfx.aliq = aliq;
+  if (!(rfx.receita>0)) rfx.receita = T.receita;
+  const dasCheio = (T.das||0) + (T.sublimite||0);
+  const dasResto = dasCheio - (T.dasPisCof||0) - (T.dasIcmsIss||0);
+  const sLP = k => meses.reduce((s,x)=>s+(+x.lp[k]||0),0), sLR = k => meses.reduce((s,x)=>s+(+x.lr[k]||0),0);
+  const lpPis=sLP('pis'), lpCof=sLP('cofins'), lpIcms=sLP('icms'), lpIpi=sLP('ipi'), lpIss=sLP('iss');
+  const lrPis=sLR('pis'), lrCof=sLR('cofins'), lrIcms=sLR('icms'), lrIpi=sLR('ipi'), lrIss=sLR('iss');
+  const lpResto = T.lp - lpPis - lpCof - lpIcms - lpIpi - lpIss;
+  const lrResto = T.lr - lrPis - lrCof - lrIcms - lrIpi - lrIss;
+  const REF = RF_ANOS.map(a=>{
+    const L = rfLinhaBase(rfx, a), q = L.q;
+    const rPC = +q.remPisCof||0, rII = +q.remIcmsIss||0;
+    const dasHib = dasResto + (T.dasPisCof||0)*rPC + (T.dasIcmsIss||0)*rII;
+    const hib = dasHib + (T.fgts||0) + L.liquido + L.is;
+    const regLP = lpResto + (lpIcms+lpIss)*rII + (lpPis+lpCof)*rPC + (a<=2026?lpIpi:0) + L.liquido + L.is;
+    const regLR = lrResto + (lrIcms+lrIss)*rII + (lrPis+lrCof)*rPC + (a<=2026?lrIpi:0) + L.liquido + L.is;
+    const regular = Math.min(regLP, regLR);
+    return { ano:a, alq:L.alq, liquido:L.liquido, is:L.is, dasHib, hib, regular, regNome: regular===regLP?'Presumido':'Real' };
+  });
+  return { rfx, REF, usouFallback: !reforma };
 }
 
 function rfCalcular() {
@@ -1758,24 +1799,10 @@ function rlRegimes(rot, n) {
   <div class="hint" style="margin-top:8px">Simples: DAS + FGTS${RL.dados.receitas?.a4?.some(v=>v>0)?' — atenção: receitas do Anexo IV têm CPP fora do DAS':''}. Valores simulados pelo motor validado contra a planilha de planejamento.</div></div>`;
 
   // ── Reforma Tributária no comparativo: por dentro × híbrido × fora do Simples ──
-  const rfx = Object.assign({ aliq: RF_ALIQ_DEFAULT, benefRec:{}, benefCred:{}, contra:{}, receita:0, baseIS:0, credSimplesPct:0 }, RL.reforma||{});
-  if (!(rfx.receita>0)) rfx.receita = T.receita;
-  if (!rfx.aliq) rfx.aliq = RF_ALIQ_DEFAULT;
-  const dasCheio = T.das + T.sublimite;
-  const dasResto = dasCheio - T.dasPisCof - T.dasIcmsIss;   // parcela do DAS que não é tributo de consumo
-  const lpPis=somaLP('pis'), lpCof=somaLP('cofins'), lpIcms=somaLP('icms'), lpIpi=somaLP('ipi'), lpIss=somaLP('iss');
-  const lrPis=somaLR('pis'), lrCof=somaLR('cofins'), lrIcms=somaLR('icms'), lrIpi=somaLR('ipi'), lrIss=somaLR('iss');
-  const lpResto = T.lp - lpPis - lpCof - lpIcms - lpIpi - lpIss;
-  const lrResto = T.lr - lrPis - lrCof - lrIcms - lrIpi - lrIss;
-  const REF = RF_ANOS.map(a=>{
-    const L = rfLinhaBase(rfx, a), q = L.q;
-    const dasHib = dasResto + T.dasPisCof*q.remPisCof + T.dasIcmsIss*q.remIcmsIss;
-    const hib = dasHib + T.fgts + L.liquido + L.is;
-    const regLP = lpResto + (lpIcms+lpIss)*q.remIcmsIss + (lpPis+lpCof)*q.remPisCof + (a<=2026?lpIpi:0) + L.liquido + L.is;
-    const regLR = lrResto + (lrIcms+lrIss)*q.remIcmsIss + (lrPis+lrCof)*q.remPisCof + (a<=2026?lrIpi:0) + L.liquido + L.is;
-    const regular = Math.min(regLP, regLR);
-    return { ano:a, alq:L.alq, liquido:L.liquido, is:L.is, dasHib, hib, regular, regNome: regular===regLP?'Presumido':'Real' };
-  });
+  let REF=null, usouFallback=true, rfxInfo=null;
+  try { const C = calcCenariosReforma(RL.res, RL.reforma); REF=C.REF; usouFallback=C.usouFallback; rfxInfo=C.rfx; }
+  catch(e){ console.error('Cenários da Reforma:', e); }
+  if (REF) {
   const R33 = REF[REF.length-1];
   const melhor33 = Math.min(T.simples, R33.hib, R33.regular);
   h += `<div class="card"><h3>Reforma Tributária no comparativo — cenários do Simples (2026–2033)</h3>
@@ -1795,11 +1822,12 @@ function rlRegimes(rot, n) {
   <div class="card"><h3>Notas do comparativo</h3><div class="hint">
   • <b>Por dentro</b>: permanece 100% no DAS (carga mantida no patamar atual${T.sublimite>0?', já com a trava da 5ª faixa':''}); o cliente PJ aproveita crédito de IBS/CBS limitado ao efetivamente recolhido no regime — desvantagem comercial nas vendas B2B.<br>
   • <b>Híbrido (LC 214/2025)</b>: optante do Simples apura IBS/CBS pelo regime regular; as parcelas de PIS/COFINS e ICMS/ISS saem do DAS conforme a transição e o IBS/CBS entra por fora com débito e crédito — o cliente PJ recebe crédito integral.<br>
-  • <b>Fora do Simples</b>: melhor entre Presumido e Real, trocando PIS/COFINS/ICMS/ISS${''} pelos remanescentes da transição + IBS/CBS por fora.<br>
-  ${RL.reforma?'':'⚠️ Aba Reforma sem dados desta empresa: usei as alíquotas-padrão da transição e a receita da análise, sem créditos de compras nem reduções — preencha a aba Reforma para refinar.'}
-  ${(rfx.contra?.compras_lrlp||0)+(rfx.contra?.compras_simples||0)>0?'Créditos de IBS/CBS calculados sobre as compras informadas na aba Reforma.':''}</div></div></div></div>`;
+  • <b>Fora do Simples</b>: melhor entre Presumido e Real, trocando PIS/COFINS/ICMS/ISS pelos remanescentes da transição + IBS/CBS por fora.<br>
+  ${usouFallback?'⚠️ Aba Reforma sem dados desta empresa: usei as alíquotas-padrão da transição e a receita da análise, sem créditos de compras nem reduções — preencha a aba Reforma para refinar.':''}
+  ${(rfxInfo?.contra?.compras_lrlp||0)+(rfxInfo?.contra?.compras_simples||0)>0?'Créditos de IBS/CBS calculados sobre as compras informadas na aba Reforma.':''}</div></div></div></div>`;
+  }
   $id('rl-corpo').innerHTML = h;
-  rlChart('ch-ref-comp', { type:'line', data:{ labels:RF_ANOS, datasets:[
+  if (REF) rlChart('ch-ref-comp', { type:'line', data:{ labels:RF_ANOS, datasets:[
     {label:'Por dentro', data:RF_ANOS.map(()=>T.simples), borderColor:CORES.simples, backgroundColor:CORES.simples, tension:.2},
     {label:'Híbrido', data:REF.map(x=>x.hib), borderColor:'#7d3c98', backgroundColor:'#7d3c98', tension:.2},
     {label:'Fora do Simples', data:REF.map(x=>x.regular), borderColor:'#943126', backgroundColor:'#943126', tension:.2}]},
@@ -1848,9 +1876,23 @@ function rlRegistros(rot, n) {
     options:{ responsive:true, plugins:{legend:{position:'bottom'}} } });
 }
 
+function refCenCard(C, T2) {
+  let x = `<div class="card"><h3>Cenários do Simples na transição (por dentro × híbrido × fora)</h3>
+    <div style="overflow-x:auto;margin-top:10px"><table><thead><tr><th>Ano</th><th class="num">Simples por dentro</th><th class="num">Total híbrido (LC 214)</th><th class="num">Fora do Simples</th><th>Melhor</th></tr></thead><tbody>`;
+  for (const L of C.REF) { const mn = Math.min(T2.simples, L.hib, L.regular);
+    x += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(T2.simples)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${mn===T2.simples?'Por dentro':mn===L.hib?'Híbrido':'Fora ('+L.regNome+')'}</td></tr>`; }
+  x += `</tbody></table></div><div class="hint" style="margin-top:6px">Detalhes, gráfico e notas na aba Relatórios → Comparativo de Regimes.${C.usouFallback?' (alíquotas-padrão; preencha esta aba e salve para usar créditos e reduções)':''}</div></div>`;
+  return x;
+}
+
 function rlReforma() {
+  // (cenários do Simples também neste relatório — mesma conta do Comparativo de Regimes)
+  window.__refCen = null;
+  try { window.__refCen = calcCenariosReforma(RL.res, RL.reforma); } catch(e){ console.error(e); }
   if (!RL.reforma || !RL.reforma.aliq) {
-    $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Sem dados da Reforma</h2><p>Abra a aba Reforma, preencha e salve a análise desta empresa.</p></div>'; return; }
+    let ph = '<div class="card placeholder"><h2>Sem dados da Reforma</h2><p>Abra a aba Reforma, preencha e salve a análise desta empresa.</p></div>';
+    if (window.__refCen) ph += refCenCard(window.__refCen, RL.res.totais);
+    $id('rl-corpo').innerHTML = ph; return; }
   const rf = RL.reforma;
   // recalcula a transição com o motor da aba Reforma (mesma lógica)
   const anos = [2026,2027,2028,2029,2030,2031,2032,2033];
@@ -1890,6 +1932,7 @@ function rlReforma() {
     <thead><tr><th>Ano</th><th class="num">Alíq. IBS+CBS</th><th class="num">Débito</th><th class="num">Crédito</th><th class="num">Líquido</th><th class="num">IS</th><th class="num">Tributos atuais remanesc.</th><th class="num">Total</th></tr></thead><tbody>`;
   for (const L of linhas) h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(L.deb)}</td><td class="num">${fmt(L.cred)}</td><td class="num">${fmt(L.liq)}</td><td class="num">${fmt(L.is)}</td><td class="num">${fmt(L.rem)}</td><td class="num">${fmt(L.total)}</td></tr>`;
   h += `</tbody></table></div><div class="hint" style="margin-top:8px">Estimativas conforme parâmetros editáveis salvos na análise (EC 132/2023 · LC 214/2025). IS sem direito a crédito; créditos limitados nas aquisições do Simples.</div></div>`;
+  if (window.__refCen) h += refCenCard(window.__refCen, RL.res.totais);
   $id('rl-corpo').innerHTML = h;
   rlChart('ch-rf', { type:'line', data:{ labels:anos, datasets:[
     { label:'IBS/CBS líquido + IS', data:linhas.map(l=>l.liq+l.is), borderColor:CORES.simples, backgroundColor:CORES.simples, fill:false },
