@@ -136,13 +136,17 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Visão geral da carteira</span><span class="badge ok" style="margin-left:auto;font-size:13px">Análise Tributária Pro v5.0</span></div>
-      <div class="card" style="margin-bottom:18px;padding:10px 16px"><div class="hint">Versão atual: <b>v5.0</b> · 24/07/2026 — módulo de Relatórios (registros, regimes e Reforma, com gráficos e periodicidade) e novo Dashboard de análises. Histórico completo no fim da página.</div></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Visão geral da carteira</span><span class="badge ok" style="margin-left:auto;font-size:13px">Análise Tributária Pro v5.1</span></div>
+      <div class="card" style="margin-bottom:18px;padding:10px 16px"><div class="hint">Versão atual: <b>v5.1</b> · 24/07/2026 — gráficos comparativos no Dashboard (com Reforma 2033), Consulta CNPJ reordenada e perfil percentual de regimes da carteira. Histórico completo no fim da página.</div></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
         <div class="stat"><div class="n" id="da-rec">–</div><div class="l">Receita anual analisada</div></div>
         <div class="stat"><div class="n" id="da-econ">–</div><div class="l">Economia potencial identificada</div></div>
+      </div>
+      <div class="rl-grid" style="margin-top:18px">
+        <div class="card"><h3>Comparativo por empresa — Simples × Presumido × Real × Reforma 2033</h3><canvas id="ch-da-comp"></canvas></div>
+        <div class="card"><h3>Melhor regime na carteira analisada</h3><canvas id="ch-da-melhor" style="max-height:300px"></canvas></div>
       </div>
       <div class="card" style="margin-top:18px">
         <h3>Empresas cadastradas para análise</h3>
@@ -154,7 +158,8 @@ canvas{max-height:340px}
       <div class="card" style="margin-top:18px">
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v5.0</b> <span class="badge ok">atual</span></td><td>24/07/2026</td><td>Aba Relatórios (detalhamento de registros, comparativo de regimes com DAS declarado, Reforma) com gráficos e periodicidade mensal a anual; impressão/PDF; Dashboard de análises; estatísticas de consulta movidas para a Consulta CNPJ.</td></tr>
+          <tr><td><b>v5.1</b> <span class="badge ok">atual</span></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
+          <tr><td><b>v5.0</b></td><td>24/07/2026</td><td>Aba Relatórios (detalhamento de registros, comparativo de regimes com DAS declarado, Reforma) com gráficos e periodicidade mensal a anual; impressão/PDF; Dashboard de análises; estatísticas de consulta movidas para a Consulta CNPJ.</td></tr>
           <tr><td><b>v4.2</b></td><td>23/07/2026</td><td>Cadastro automático da empresa ao importar PGDAS/Faturamento/balancete; abas da análise sempre disponíveis para preenchimento manual; identificação do período do PGDAS com tripla redundância.</td></tr>
           <tr><td><b>v4.1</b></td><td>23/07/2026</td><td>Importador de Faturamento (Demonstrativo Mensal, por anexo), correção do PGDAS multi-arquivo, versão visível no topo, balancete restrito a folha/compras/despesas.</td></tr>
           <tr><td><b>v4.0</b></td><td>23/07/2026</td><td>Importação de PGDAS-D (PDF, múltiplos meses) e de balancete Questor com tela de conferência; separação entre carteira de consulta e empresas em análise.</td></tr>
@@ -168,14 +173,6 @@ canvas{max-height:340px}
     <!-- CONSULTA CNPJ -->
     <div id="page-cnpj" style="display:none">
       <div class="page-title"><h1>Consulta CNPJ — Simples Nacional</h1><span class="crumb">Módulo 1</span></div>
-      <div class="grid c4" style="margin-bottom:18px">
-        <div class="stat"><div class="n" id="st-total">–</div><div class="l">Empresas consultadas</div></div>
-        <div class="stat"><div class="n" id="st-simples">–</div><div class="l">Optantes Simples</div></div>
-        <div class="stat"><div class="n" id="st-simei">–</div><div class="l">Optantes SIMEI</div></div>
-        <div class="stat"><div class="n" id="st-nao">–</div><div class="l">Não optantes</div></div>
-      </div>
-      <div class="card" style="margin-bottom:18px"><h3>Últimas consultas</h3>
-        <div id="dash-recentes" class="hint">Nenhuma consulta realizada ainda.</div></div>
       <div class="card">
         <h3>1. Informe os CNPJs da relação</h3>
         <div style="display:grid;grid-template-columns:1fr 260px;gap:20px">
@@ -321,6 +318,21 @@ canvas{max-height:340px}
       </div></div>
       <div id="pr-container"></div>
     </div>
+      <div class="card" style="margin-top:18px">
+        <h3>3. Carteira consultada — Simples Nacional</h3>
+        <div class="grid c4" style="margin:12px 0">
+          <div class="stat"><div class="n" id="st-total">–</div><div class="l">Empresas consultadas</div></div>
+          <div class="stat"><div class="n" id="st-simples">–</div><div class="l">Optantes Simples</div></div>
+          <div class="stat"><div class="n" id="st-simei">–</div><div class="l">Optantes SIMEI</div></div>
+          <div class="stat"><div class="n" id="st-nao">–</div><div class="l">Não optantes</div></div>
+        </div>
+        <div class="rl-grid">
+          <div><h3 style="font-size:14px">Distribuição por regime tributário</h3><canvas id="ch-regimes" style="max-height:260px"></canvas>
+            <div class="hint" id="ch-regimes-leg" style="margin-top:6px"></div></div>
+          <div><h3 style="font-size:14px">Últimas consultas <span class="hint" style="font-weight:400">— defina o regime dos não optantes na própria lista</span></h3>
+            <div id="dash-recentes" class="hint" style="max-height:300px;overflow-y:auto">Nenhuma consulta realizada ainda.</div></div>
+        </div>
+      </div>
     <div id="page-empresas" style="display:none">
       <div class="page-title"><h1>Empresas</h1><span class="crumb">Somente empresas em análise — cadastro manual</span></div>
       <div class="card">
@@ -635,23 +647,42 @@ async function salvarCarteira() {
 // ── DASHBOARD ──────────────────────────────────────────────────────────
 async function carregarDashboard() {
   try {
-    const rows = await supa('GET', TBL, { params:{ select:'cnpj,razao_social,simples,simei,situacao,consultado_em', order:'consultado_em.desc', limit:'500' } });
+    const rows = await supa('GET', TBL, { params:{ select:'cnpj,razao_social,simples,simei,situacao,regime,consultado_em', order:'consultado_em.desc', limit:'1000' } });
     const total = rows.length;
-    const nSimples = rows.filter(r=>r.simples).length;
-    const nSimei = rows.filter(r=>r.simei).length;
-    $id('st-total').textContent = total;
-    $id('st-simples').textContent = nSimples;
-    $id('st-simei').textContent = nSimei;
-    $id('st-nao').textContent = total - nSimples;
-    const rec = rows.slice(0,8);
-    $id('dash-recentes').innerHTML = rec.length
-      ? '<table><thead><tr><th>CNPJ</th><th>Razão Social</th><th>Simples</th><th>Consultado em</th></tr></thead><tbody>' +
-        rec.map(r=>`<tr><td>${fmtCNPJ(r.cnpj)}</td><td>${r.razao_social||''}</td><td>${r.simples?'<span class="badge ok">Optante</span>':'<span class="badge info">Não</span>'}</td><td>${(r.consultado_em||'').slice(0,10)}</td></tr>`).join('') +
-        '</tbody></table>'
-      : 'Nenhuma consulta realizada ainda. Comece pela aba <b>Consulta CNPJ</b>.';
-  } catch(e) {
+    const simei = rows.filter(r=>r.simei).length;
+    const simples = rows.filter(r=>r.simples && !r.simei).length;
+    const nao = total - simei - simples;
+    $id('st-total').textContent = total; $id('st-simples').textContent = simples;
+    $id('st-simei').textContent = simei; $id('st-nao').textContent = nao;
+    // percentuais por regime (MEI / Simples / Presumido / Real / não classificado)
+    const lp = rows.filter(r=>!r.simples && !r.simei && r.regime==='Lucro Presumido').length;
+    const lr = rows.filter(r=>!r.simples && !r.simei && r.regime==='Lucro Real').length;
+    const nc = nao - lp - lr;
+    const pct = v => total ? (v/total*100).toFixed(1)+'%' : '0%';
+    if ($id('ch-regimes')) {
+      try { window._chReg?.destroy(); } catch {}
+      if (window.Chart && total) window._chReg = new Chart($id('ch-regimes'), { type:'doughnut',
+        data:{ labels:[`MEI ${pct(simei)}`,`Simples Nacional ${pct(simples)}`,`Lucro Presumido ${pct(lp)}`,`Lucro Real ${pct(lr)}`,`Não classificado ${pct(nc)}`],
+          datasets:[{ data:[simei,simples,lp,lr,nc], backgroundColor:['#7d3c98','#1a5276','#b9770e','#943126','#aab7b8'] }] },
+        options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } } });
+      $id('ch-regimes-leg').innerHTML = `MEI: <b>${simei}</b> (${pct(simei)}) · Simples: <b>${simples}</b> (${pct(simples)}) · Presumido: <b>${lp}</b> (${pct(lp)}) · Real: <b>${lr}</b> (${pct(lr)}) · Não classificado: <b>${nc}</b> (${pct(nc)})`;
+    }
+    const selReg = r => `<select onchange="defRegime('${r.cnpj}', this.value)" style="padding:4px 6px;font-size:12px;width:150px">
+      ${['','Lucro Presumido','Lucro Real','Simples Nacional','MEI'].map(o=>`<option value="${o}" ${((r.regime||'')===o)?'selected':''}>${o||'— regime —'}</option>`).join('')}</select>`;
+    $id('dash-recentes').innerHTML = rows.length
+      ? `<table style="width:100%"><tbody>` + rows.slice(0,50).map(r=>`<tr>
+          <td style="padding:4px 6px"><b style="font-size:12.5px">${r.razao_social||fmtCNPJ(r.cnpj)}</b><div class="hint">${fmtCNPJ(r.cnpj)}</div></td>
+          <td>${r.simei?'<span class="badge ok">SIMEI</span>':r.simples?'<span class="badge ok">Simples</span>':'<span class="badge info">Não optante</span>'}</td>
+          <td>${r.simples||r.simei?'':selReg(r)}</td></tr>`).join('') + '</tbody></table>'
+      : 'Nenhuma consulta realizada ainda.';
+  } catch (e) {
     $id('dash-recentes').innerHTML = `<span class="badge warn">Tabela ainda não criada no Supabase</span> — execute o script <b>setup_supabase.sql</b> no SQL Editor do projeto e recarregue.`;
   }
+}
+async function defRegime(cnpj, regime) {
+  try { await supa('PATCH', TBL+`?cnpj=eq.${cnpj}`, { body:{ regime: regime||null } });
+    toast('Regime definido: '+(regime||'—')); carregarDashboard(); }
+  catch(e){ toast('Erro: '+e.message); }
 }
 
 
@@ -1772,6 +1803,24 @@ async function dashAnalises() {
   }
   $id('da-rec').textContent = recTot ? fmtR(recTot) : '–';
   $id('da-econ').textContent = econTot ? fmtR(econTot) : '–';
+  // gráficos comparativos
+  try { window._chDa1?.destroy(); window._chDa2?.destroy(); } catch {}
+  const comAnalise = linhas.filter(x=>x.a?.resumo && x.a.resumo.simples!=null);
+  if (window.Chart && comAnalise.length) {
+    const nomes = comAnalise.map(x=>(x.e.razao_social||fmtCNPJ(x.e.cnpj)).split(' ').slice(0,2).join(' '));
+    window._chDa1 = new Chart($id('ch-da-comp'), { type:'bar', data:{ labels:nomes, datasets:[
+      { label:'Simples', data:comAnalise.map(x=>+x.a.resumo.simples||0), backgroundColor:'#1a5276' },
+      { label:'Presumido', data:comAnalise.map(x=>+x.a.resumo.lp||0), backgroundColor:'#b9770e' },
+      { label:'Real', data:comAnalise.map(x=>+x.a.resumo.lr||0), backgroundColor:'#943126' },
+      { label:'Reforma 2033', data:comAnalise.map(x=>+x.a.resumo.reforma2033||0), backgroundColor:'#1e8449' } ] },
+      options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } } });
+    const cont = { Simples:0, Presumido:0, Real:0 };
+    for (const x of comAnalise) { const r=x.a.resumo, mn=Math.min(+r.simples,+r.lp,+r.lr);
+      cont[mn===+r.simples?'Simples':mn===+r.lp?'Presumido':'Real']++; }
+    window._chDa2 = new Chart($id('ch-da-melhor'), { type:'doughnut',
+      data:{ labels:Object.keys(cont), datasets:[{ data:Object.values(cont), backgroundColor:['#1a5276','#b9770e','#943126'] }] },
+      options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } } });
+  }
   $id('da-tbody').innerHTML = linhas.length ? linhas.map(({e,a})=>{
     const r = a?.resumo||{};
     let melhor = '—', econ = null;
