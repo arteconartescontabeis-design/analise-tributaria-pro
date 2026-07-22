@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
   --primary:#1a5276; --primary-dark:#12405e; --primary-light:#2e86ab;
@@ -95,6 +96,9 @@ tr:hover td{background:#f8fafc}
 .melhor{outline:3px solid var(--ok);outline-offset:-3px}
 .stat .sub{font-size:11px;color:var(--muted);margin-top:2px}
 .num{text-align:right;white-space:nowrap}
+.rl-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+canvas{max-height:340px}
+@media print{ .sidebar,.no-print,.nav,.toolbar,.tag{display:none!important} .main{margin-left:0!important;padding:0!important} .card{box-shadow:none!important;border:1px solid #ddd;page-break-inside:avoid} body{background:#fff!important} }
 @media(max-width:960px){.sidebar{width:64px}.sidebar .brand,.nav-item span,.sidebar .foot{display:none}.main{margin-left:64px;padding:20px}}
 </style>
 </head>
@@ -122,6 +126,7 @@ tr:hover td{background:#f8fafc}
       <div class="nav-item" data-page="empresas" onclick="go('empresas')">🏢 <span>Empresas</span></div>
       <div class="nav-item" data-page="analise" onclick="go('analise')">🧮 <span>Análise Atual</span></div>
       <div class="nav-item" data-page="reforma" onclick="go('reforma')">🏛️ <span>Reforma</span></div>
+      <div class="nav-item" data-page="relatorios" onclick="go('relatorios')">📑 <span>Relatórios</span></div>
       <div class="nav-item" data-page="parametros" onclick="go('parametros')">⚙️ <span>Parâmetros</span></div>
       <div class="nav-item" data-page="usuarios" onclick="go('usuarios')">👥 <span>Usuários</span></div>
     </div>
@@ -131,22 +136,26 @@ tr:hover td{background:#f8fafc}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Visão geral da carteira</span><span class="badge ok" style="margin-left:auto;font-size:13px">Análise Tributária Pro v4.2</span></div>
-      <div class="card" style="margin-bottom:18px;padding:10px 16px"><div class="hint">Versão atual: <b>v4.2</b> · 23/07/2026 — cadastro automático de empresas na importação e abas de lançamento manual sempre ativas. Histórico completo no fim da página.</div></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Visão geral da carteira</span><span class="badge ok" style="margin-left:auto;font-size:13px">Análise Tributária Pro v5.0</span></div>
+      <div class="card" style="margin-bottom:18px;padding:10px 16px"><div class="hint">Versão atual: <b>v5.0</b> · 24/07/2026 — módulo de Relatórios (registros, regimes e Reforma, com gráficos e periodicidade) e novo Dashboard de análises. Histórico completo no fim da página.</div></div>
       <div class="grid c4">
-        <div class="stat"><div class="n" id="st-total">–</div><div class="l">Empresas consultadas</div></div>
-        <div class="stat"><div class="n" id="st-simples">–</div><div class="l">Optantes Simples</div></div>
-        <div class="stat"><div class="n" id="st-simei">–</div><div class="l">Optantes SIMEI</div></div>
-        <div class="stat"><div class="n" id="st-nao">–</div><div class="l">Não optantes</div></div>
+        <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
+        <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
+        <div class="stat"><div class="n" id="da-rec">–</div><div class="l">Receita anual analisada</div></div>
+        <div class="stat"><div class="n" id="da-econ">–</div><div class="l">Economia potencial identificada</div></div>
       </div>
       <div class="card" style="margin-top:18px">
-        <h3>Últimas consultas</h3>
-        <div id="dash-recentes" class="hint">Nenhuma consulta realizada ainda. Comece pela aba <b>Consulta CNPJ</b>.</div>
+        <h3>Empresas cadastradas para análise</h3>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th>Empresa</th><th>Regime atual</th><th>Ano</th><th class="num">Receita</th><th class="num">Simples</th><th class="num">Presumido</th><th class="num">Real</th><th>Melhor regime</th><th class="num">Economia/ano</th><th class="num">Reforma 2033</th><th></th></tr></thead>
+          <tbody id="da-tbody"><tr><td colspan="11" class="hint" style="text-align:center;padding:18px">Nenhuma empresa em análise ainda — cadastre em <b>Empresas</b> ou importe um PGDAS.</td></tr></tbody>
+        </table></div>
       </div>
       <div class="card" style="margin-top:18px">
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v4.2</b> <span class="badge ok">atual</span></td><td>23/07/2026</td><td>Cadastro automático da empresa ao importar PGDAS/Faturamento/balancete; abas da análise sempre disponíveis para preenchimento manual; identificação do período do PGDAS com tripla redundância.</td></tr>
+          <tr><td><b>v5.0</b> <span class="badge ok">atual</span></td><td>24/07/2026</td><td>Aba Relatórios (detalhamento de registros, comparativo de regimes com DAS declarado, Reforma) com gráficos e periodicidade mensal a anual; impressão/PDF; Dashboard de análises; estatísticas de consulta movidas para a Consulta CNPJ.</td></tr>
+          <tr><td><b>v4.2</b></td><td>23/07/2026</td><td>Cadastro automático da empresa ao importar PGDAS/Faturamento/balancete; abas da análise sempre disponíveis para preenchimento manual; identificação do período do PGDAS com tripla redundância.</td></tr>
           <tr><td><b>v4.1</b></td><td>23/07/2026</td><td>Importador de Faturamento (Demonstrativo Mensal, por anexo), correção do PGDAS multi-arquivo, versão visível no topo, balancete restrito a folha/compras/despesas.</td></tr>
           <tr><td><b>v4.0</b></td><td>23/07/2026</td><td>Importação de PGDAS-D (PDF, múltiplos meses) e de balancete Questor com tela de conferência; separação entre carteira de consulta e empresas em análise.</td></tr>
           <tr><td><b>v3.0</b></td><td>23/07/2026</td><td>Módulo Reforma Tributária (CBS · IS · IBS 2026–2033, benefícios, contrapartes e comparativo de transição) e versões na tela inicial.</td></tr>
@@ -159,6 +168,14 @@ tr:hover td{background:#f8fafc}
     <!-- CONSULTA CNPJ -->
     <div id="page-cnpj" style="display:none">
       <div class="page-title"><h1>Consulta CNPJ — Simples Nacional</h1><span class="crumb">Módulo 1</span></div>
+      <div class="grid c4" style="margin-bottom:18px">
+        <div class="stat"><div class="n" id="st-total">–</div><div class="l">Empresas consultadas</div></div>
+        <div class="stat"><div class="n" id="st-simples">–</div><div class="l">Optantes Simples</div></div>
+        <div class="stat"><div class="n" id="st-simei">–</div><div class="l">Optantes SIMEI</div></div>
+        <div class="stat"><div class="n" id="st-nao">–</div><div class="l">Não optantes</div></div>
+      </div>
+      <div class="card" style="margin-bottom:18px"><h3>Últimas consultas</h3>
+        <div id="dash-recentes" class="hint">Nenhuma consulta realizada ainda.</div></div>
       <div class="card">
         <h3>1. Informe os CNPJs da relação</h3>
         <div style="display:grid;grid-template-columns:1fr 260px;gap:20px">
@@ -274,6 +291,26 @@ tr:hover td{background:#f8fafc}
       <div class="grid c4" id="rf-resumo" style="margin-bottom:18px"></div>
       <div class="card"><h3>Transição 2026–2033 — carga sobre o consumo</h3><div id="rf-tabela" style="overflow-x:auto"></div>
         <div class="hint" id="rf-notas" style="margin-top:10px"></div></div>
+    </div>
+    <div id="page-relatorios" style="display:none">
+      <div class="page-title"><h1>Relatórios</h1><span class="crumb">Detalhamento · Regimes · Reforma</span></div>
+      <div class="card no-print"><div class="toolbar" style="margin-bottom:0">
+        <div style="min-width:260px;flex:1"><label>Empresa</label><select id="rl-empresa" onchange="rlCarregar()"></select></div>
+        <div style="width:100px"><label>Ano</label><input type="number" id="rl-ano" value="2025" onchange="rlCarregar()"></div>
+        <div><label>Relatório</label><select id="rl-tipo" onchange="rlRender()">
+          <option value="regimes">Comparativo de regimes</option>
+          <option value="registros">Detalhamento dos registros</option>
+          <option value="reforma">Reforma Tributária</option>
+        </select></div>
+        <div><label>Periodicidade</label><select id="rl-per" onchange="rlRender()">
+          <option value="1">Mensal</option><option value="2">Bimestral</option>
+          <option value="3" selected>Trimestral</option><option value="6">Semestral</option>
+          <option value="12">Anual</option>
+        </select></div>
+        <div style="align-self:flex-end"><button class="btn solid" onclick="window.print()">🖨️ Imprimir / PDF</button></div>
+      </div></div>
+      <div id="rl-cab" style="display:none" class="card"><h2 id="rl-titulo" style="font-family:var(--display);color:var(--primary)"></h2><div class="hint" id="rl-sub"></div></div>
+      <div id="rl-corpo"><div class="card placeholder"><h2>Selecione a empresa</h2><p>O relatório usa a análise salva (ou a análise aberta na aba Análise Atual).</p></div></div>
     </div>
     <div id="page-parametros" style="display:none">
       <div class="page-title"><h1>Parâmetros</h1><span class="crumb">Tabelas editáveis do motor</span></div>
@@ -414,8 +451,10 @@ function entrar() {
 function go(page) {
   APP.page = page;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page===page));
-  ['dashboard','cnpj','empresas','analise','reforma','parametros','usuarios'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
-  if (page==='dashboard') carregarDashboard();
+  ['dashboard','cnpj','empresas','analise','reforma','relatorios','parametros','usuarios'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
+  if (page==='dashboard') dashAnalises();
+  if (page==='cnpj') carregarDashboard();
+  if (page==='relatorios') { empCarregar().then(()=>{ const sel=$id('rl-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; if(at) sel.value=at; else if (AN?.cnpj) { sel.value=AN.cnpj; $id('rl-ano').value=AN.ano; } rlCarregar(); }); }
   if (page==='empresas') empCarregar();
   if (page==='analise') { if (!AN) AN = anNovo('', +($id('an-ano').value||new Date().getFullYear()));
     anRenderTabs(); anRenderGrid(); anRecalcular(); empCarregar(); }
@@ -1534,6 +1573,222 @@ async function balAplicar() {
   $id('imp-bal-card').style.display='none';
   anRenderTabs(); anRenderGrid(); anRecalcular();
   toast(`Balancete aplicado: ${aplicadas} conta(s). Revise a aba Folha/Compras e salve a análise.`);
+}
+
+
+// ═══════════ RELATÓRIOS ═══════════
+let RL = { dados:null, res:null, reforma:null, empresa:null };
+let RL_CHARTS = [];
+const PER_ROTULOS = { 1:['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+  2:['1º Bim','2º Bim','3º Bim','4º Bim','5º Bim','6º Bim'], 3:['1º Trim','2º Trim','3º Trim','4º Trim'],
+  6:['1º Sem','2º Sem'], 12:['Ano'] };
+const agrupar = (arr, n) => { const out=[]; for(let i=0;i<12;i+=n) out.push(arr.slice(i,i+n).reduce((a,b)=>a+(+b||0),0)); return out; };
+
+async function rlCarregar() {
+  const cnpj = $id('rl-empresa').value, ano = +$id('rl-ano').value;
+  if (!cnpj) { RL.dados=null; rlRender(); return; }
+  RL.empresa = EMPRESAS.find(e=>e.cnpj===cnpj) || null;
+  let dados = null;
+  try {
+    const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
+    if (rows.length) dados = rows[0].dados;
+  } catch {}
+  if (!dados && AN && AN.cnpj===cnpj && +AN.ano===ano) dados = AN;   // análise aberta não salva
+  RL.dados = dados;
+  RL.res = dados ? calcular(dados, PARAMS.anexos, PARAMS.folha) : null;
+  RL.reforma = dados?.reforma || null;
+  rlRender();
+}
+
+function rlLimparCharts(){ RL_CHARTS.forEach(c=>{try{c.destroy()}catch{}}); RL_CHARTS=[]; }
+function rlChart(id, cfg){ const el=$id(id); if(!el||!window.Chart) return; RL_CHARTS.push(new Chart(el, cfg)); }
+const CORES = { simples:'#1a5276', lp:'#b9770e', lr:'#943126', ok:'#1e8449', cinza:'#7f8c8d' };
+
+function rlRender() {
+  rlLimparCharts();
+  const tipo = $id('rl-tipo').value, n = +$id('rl-per').value;
+  if (!RL.res) { $id('rl-cab').style.display='none';
+    $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Sem análise para este ano</h2><p>Abra a empresa na aba Análise Atual (ou importe PGDAS/Faturamento) e salve.</p></div>'; return; }
+  const rot = PER_ROTULOS[n], R = RL.res, M = R.meses;
+  const emp = RL.empresa;
+  $id('rl-cab').style.display='block';
+  $id('rl-titulo').textContent = ({regimes:'Comparativo de Regimes Tributários', registros:'Detalhamento dos Registros', reforma:'Reforma Tributária — Transição 2026–2033'})[tipo];
+  $id('rl-sub').innerHTML = `<b>${emp?.razao_social||''}</b> · CNPJ ${fmtCNPJ(RL.dados.cnpj)} · Ano-base ${RL.dados.ano} · Periodicidade: ${$id('rl-per').selectedOptions[0].text} · Artecon Artes Contábeis`;
+  if (tipo==='regimes') rlRegimes(rot,n); else if (tipo==='registros') rlRegistros(rot,n); else rlReforma();
+}
+
+function rlRegimes(rot, n) {
+  const M = RL.res.meses, T = RL.res.totais;
+  const g = f => agrupar(M.map(f), n);
+  const sim = g(x=>x.simples.total), lp = g(x=>x.lp.total), lr = g(x=>x.lr.total), recA = g(x=>x.receita);
+  const dasDecl = RL.dados._pgdas ? agrupar(RL.dados._pgdas.das, n) : null;
+  const menor = Math.min(T.simples, T.lp, T.lr);
+  const nomeMenor = menor===T.simples?'Simples Nacional':menor===T.lp?'Lucro Presumido':'Lucro Real';
+  const ord = [T.simples,T.lp,T.lr].sort((a,b)=>a-b);
+  let h = `<div class="grid c4">
+    <div class="stat ${menor===T.simples?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(T.simples)}</div><div class="l">Simples Nacional</div><div class="sub">${(T.simples/T.receita*100||0).toFixed(2)}% da receita</div></div>
+    <div class="stat ${menor===T.lp?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(T.lp)}</div><div class="l">Lucro Presumido</div><div class="sub">${(T.lp/T.receita*100||0).toFixed(2)}% da receita</div></div>
+    <div class="stat ${menor===T.lr?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(T.lr)}</div><div class="l">Lucro Real</div><div class="sub">${(T.lr/T.receita*100||0).toFixed(2)}% da receita</div></div>
+    <div class="stat"><div class="n" style="font-size:19px;color:var(--ok)">${fmtR(ord[1]-ord[0])}</div><div class="l">Economia anual — ${nomeMenor}</div><div class="sub">frente à 2ª melhor opção</div></div>
+  </div>
+  <div class="rl-grid" style="margin-top:18px">
+    <div class="card"><h3>Carga por regime e período</h3><canvas id="ch-reg"></canvas></div>
+    <div class="card"><h3>Composição do ${nomeMenor==='Simples Nacional'?'Lucro Presumido':nomeMenor} (tributo a tributo)</h3><canvas id="ch-comp"></canvas></div>
+  </div>
+  <div class="card"><h3>Quadro por período</h3><div style="overflow-x:auto"><table>
+    <thead><tr><th>Período</th><th class="num">Receita</th><th class="num">Simples</th>${dasDecl?'<th class="num">DAS declarado (PGDAS)</th><th class="num">Δ simulado×declarado</th>':''}<th class="num">Presumido</th><th class="num">Real</th><th>Melhor</th></tr></thead><tbody>`;
+  rot.forEach((r,i)=>{ const mn=Math.min(sim[i],lp[i],lr[i]);
+    const dasS = agrupar(M.map(x=>x.das), n)[i];
+    h += `<tr><td>${r}</td><td class="num">${fmt(recA[i])}</td><td class="num">${fmt(sim[i])}</td>${dasDecl?`<td class="num">${fmt(dasDecl[i])}</td><td class="num">${fmt(dasS-dasDecl[i])}</td>`:''}<td class="num">${fmt(lp[i])}</td><td class="num">${fmt(lr[i])}</td><td>${mn===sim[i]?'Simples':mn===lp[i]?'Presumido':'Real'}</td></tr>`; });
+  h += `<tr style="font-weight:700"><td>TOTAL</td><td class="num">${fmt(T.receita)}</td><td class="num">${fmt(T.simples)}</td>${dasDecl?`<td class="num">${fmt(dasDecl.reduce((a,b)=>a+b,0))}</td><td></td>`:''}<td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td><td>${nomeMenor}</td></tr></tbody></table></div></div>
+  <div class="card"><h3>Detalhamento tributo a tributo (ano)</h3><div style="overflow-x:auto"><table>
+    <thead><tr><th>Tributo</th><th class="num">Simples</th><th class="num">Lucro Presumido</th><th class="num">Lucro Real</th></tr></thead><tbody>`;
+  const S = k => M.reduce((s,x)=>s+(x.lp[k]!=null?0:0),0);
+  const somaLP = k => M.reduce((s,x)=>s+(+x.lp[k]||0),0), somaLR = k => M.reduce((s,x)=>s+(+x.lr[k]||0),0);
+  const linhas = [['DAS (Simples)', T.das, null, null], ['PIS', null, somaLP('pis'), somaLR('pis')], ['COFINS', null, somaLP('cofins'), somaLR('cofins')],
+    ['CSLL', null, somaLP('csll'), somaLR('csll')], ['IRPJ', null, somaLP('irpj'), somaLR('irpj')], ['Adicional IRPJ', null, somaLP('adicional'), somaLR('adicional')],
+    ['INSS patronal', null, somaLP('inssPatr'), somaLR('inssPatr')], ['ICMS', null, somaLP('icms'), somaLR('icms')], ['IPI', null, somaLP('ipi'), somaLR('ipi')],
+    ['ISS', null, somaLP('iss'), somaLR('iss')], ['FGTS', M.reduce((s,x)=>s+x.fgts,0), somaLP('fgts'), somaLR('fgts')]];
+  for (const [nm,a,b,c] of linhas) h += `<tr><td>${nm}</td><td class="num">${a==null?'—':fmt(a)}</td><td class="num">${b==null?'—':fmt(b)}</td><td class="num">${c==null?'—':fmt(c)}</td></tr>`;
+  h += `<tr style="font-weight:700"><td>TOTAL</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr></tbody></table></div>
+  <div class="hint" style="margin-top:8px">Simples: DAS + FGTS${RL.dados.receitas?.a4?.some(v=>v>0)?' — atenção: receitas do Anexo IV têm CPP fora do DAS':''}. Valores simulados pelo motor validado contra a planilha de planejamento.</div></div>`;
+  $id('rl-corpo').innerHTML = h;
+  rlChart('ch-reg', { type:'bar', data:{ labels:rot, datasets:[
+    {label:'Simples', data:sim, backgroundColor:CORES.simples},
+    {label:'Presumido', data:lp, backgroundColor:CORES.lp},
+    {label:'Real', data:lr, backgroundColor:CORES.lr}]},
+    options:{ responsive:true, plugins:{legend:{position:'bottom'}} } });
+  const alvo = RL.res.totais.lp <= RL.res.totais.lr ? 'lp' : 'lr';
+  const comp = ['pis','cofins','csll','irpj','adicional','inssPatr','icms','ipi','iss','fgts'].map(k=>M.reduce((s,x)=>s+(+x[alvo][k]||0),0));
+  rlChart('ch-comp', { type:'doughnut', data:{ labels:['PIS','COFINS','CSLL','IRPJ','Adic. IRPJ','INSS patr.','ICMS','IPI','ISS','FGTS'],
+    datasets:[{ data:comp, backgroundColor:['#1a5276','#2874a6','#b9770e','#d68910','#943126','#1e8449','#7d3c98','#117864','#7f8c8d','#4d5656'] }]},
+    options:{ responsive:true, plugins:{legend:{position:'right'}} } });
+}
+
+function rlRegistros(rot, n) {
+  const D = RL.dados, M = RL.res.meses;
+  const linhaT = (nome, arr) => { const a = agrupar(arr, n); const tot = a.reduce((x,y)=>x+y,0);
+    return tot ? `<tr><td class="rot">${nome}</td>${a.map(v=>`<td class="num">${fmt(v)}</td>`).join('')}<td class="num" style="font-weight:600">${fmt(tot)}</td></tr>` : ''; };
+  const bloco = (titulo, linhas) => {
+    const corpo = linhas.join(''); if (!corpo) return '';
+    return `<div class="card"><h3>${titulo}</h3><div style="overflow-x:auto"><table class="gtable">
+      <thead><tr><th></th>${rot.map(r=>`<th class="num">${r}</th>`).join('')}<th class="num">Total</th></tr></thead><tbody>${corpo}</tbody></table></div></div>`; };
+  const RLB = { a1_semst:'Anexo I — sem ST', a1_red:'Anexo I — red. ICMS', a1_mono:'Anexo I — monofásico', a1_comst:'Anexo I — com ST', a1_comst_mono:'Anexo I — ST+mono',
+    a2_semst:'Anexo II — sem ST', a2_red:'Anexo II — red. ICMS', a2_mono:'Anexo II — monofásico', a2_comst:'Anexo II — com ST', a2_comst_mono:'Anexo II — ST+mono',
+    a3_semret:'Anexo III — sem retenção', a3_retiss:'Anexo III — ret. ISS', a3_retissinss:'Anexo III — ret. ISS+INSS', a4:'Anexo IV', a5r:'Anexo V/III (Fator R)', fin:'Receitas financeiras', comtransp:'Comunicação/Transporte' };
+  let h = bloco('Receitas por enquadramento', Object.entries(RLB).map(([k,nm])=>linhaT(nm, D.receitas[k]||[])));
+  h += bloco('Folha de pagamento', [ linhaT('Pró-labore', D.folha.prolabore), linhaT('Salários e férias', D.folha.salarios),
+    linhaT('Base FGTS', D.folha.baseFgts), linhaT('Provisão 13º', D.folha.prov13), linhaT('Provisão férias', D.folha.provFerias),
+    linhaT('FGTS apurado', M.map(x=>x.fgts)), linhaT('INSS patronal apurado', M.map(x=>x.inssPatr)) ]);
+  h += bloco('Compras e custos', [ linhaT('Compras sem ST', D.compras.semst), linhaT('Compras monofásicas', D.compras.mono),
+    linhaT('Compras com ST', D.compras.comst), linhaT('Baixa de custos (CMV)', D.compras.baixaSemst),
+    linhaT('Baixas — mono/ST', D.compras.baixaMono.map((v,i)=>v+D.compras.baixaComst[i]+D.compras.baixaComstMono[i])), linhaT('Base crédito IPI', D.compras.baseIpiCred) ]);
+  h += bloco('Despesas', [ linhaT('Administrativas', D.despesas.adm), linhaT('Com vendas', D.despesas.vendas), linhaT('Fiscais e tributárias', D.despesas.fiscais),
+    linhaT('Financeiras', D.despesas.financeiras), linhaT('Outras', D.despesas.outras), linhaT('Com crédito no Lucro Real', D.despesas.credLR) ]);
+  h += bloco('Impostos apurados', [ linhaT('ICMS a pagar', M.map(x=>x.icmsPagar)), linhaT('IPI a pagar', M.map(x=>x.ipiPagar)), linhaT('ISS', M.map(x=>x.iss)), linhaT('DAS', M.map(x=>x.das)) ]);
+  h += `<div class="card"><h3>Receita × carga por período</h3><canvas id="ch-det"></canvas></div>`;
+  $id('rl-corpo').innerHTML = h || '<div class="card placeholder"><h2>Sem registros</h2></div>';
+  const rec = agrupar(M.map(x=>x.receita), n);
+  rlChart('ch-det', { type:'bar', data:{ labels:rot, datasets:[
+    { label:'Receita', data:rec, backgroundColor:'#aab7b8' },
+    { label:'Simples', data:agrupar(M.map(x=>x.simples.total),n), backgroundColor:CORES.simples },
+    { label:'Presumido', data:agrupar(M.map(x=>x.lp.total),n), backgroundColor:CORES.lp },
+    { label:'Real', data:agrupar(M.map(x=>x.lr.total),n), backgroundColor:CORES.lr } ] },
+    options:{ responsive:true, plugins:{legend:{position:'bottom'}} } });
+}
+
+function rlReforma() {
+  if (!RL.reforma || !RL.reforma.aliq) {
+    $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Sem dados da Reforma</h2><p>Abra a aba Reforma, preencha e salve a análise desta empresa.</p></div>'; return; }
+  const rf = RL.reforma;
+  // recalcula a transição com o motor da aba Reforma (mesma lógica)
+  const anos = [2026,2027,2028,2029,2030,2031,2032,2033];
+  const reds = [['r30',.30],['r40',.40],['r50',.50],['r60',.60],['r70',.70],['r80',.80],['r100',1],['isencao',1]];
+  const recBenef = reds.reduce((s,[k])=>s+(+rf.benefRec?.[k]||0),0);
+  const credBenefTot = reds.reduce((s,[k])=>s+(+rf.benefCred?.[k]||0),0);
+  const recCheia = Math.max(0, (+rf.receita||0) - recBenef);
+  const compCheia = Math.max(0, (+rf.contra?.compras_lrlp||0) - credBenefTot);
+  const atualCons = (()=>{ const M = RL.res.meses; const emp = RL.empresa; const regime = emp?.regime||'Lucro Presumido';
+    if (regime==='Simples Nacional'||regime==='MEI') return { das: M.reduce((s,x)=>s+x.das,0), consumo:null, regime };
+    const isLR = regime==='Lucro Real';
+    return { regime, pis:M.reduce((s,x)=>s+(isLR?x.lr.pis:x.lp.pis),0), cof:M.reduce((s,x)=>s+(isLR?x.lr.cofins:x.lp.cofins),0),
+      icms:M.reduce((s,x)=>s+x.icmsPagar,0), ipi:M.reduce((s,x)=>s+x.ipiPagar,0), iss:M.reduce((s,x)=>s+x.iss,0),
+      get consumo(){ return this.pis+this.cof+this.icms+this.ipi+this.iss; } }; })();
+  const linhas = anos.map(a=>{ const q = rf.aliq[a]||{cbs:0,is:0,ibse:0,ibsm:0,remIcmsIss:0,remPisCof:0};
+    const alq = (+q.cbs + +q.ibse + +q.ibsm)/100;
+    let deb = recCheia*alq; for (const [k,r] of reds) deb += (+rf.benefRec?.[k]||0)*alq*(1-r);
+    let cred = compCheia*alq; for (const [k,r] of reds) cred += (+rf.benefCred?.[k]||0)*alq*(1-r);
+    cred += (+rf.contra?.compras_simples||0)*((+rf.credSimplesPct||0)/100);
+    const liq = Math.max(0, deb-cred), is_ = (+rf.baseIS||0)*(+q.is/100);
+    let rem = 0; if (atualCons.consumo!=null) rem = (atualCons.icms+atualCons.iss)*(+q.remIcmsIss||0) + (atualCons.pis+atualCons.cof)*(+q.remPisCof||0) + (a<=2026?atualCons.ipi:0);
+    return { ano:a, alq, deb, cred, liq, is:is_, rem, total: liq+is_+rem }; });
+  const l33 = linhas.at(-1);
+  let h = `<div class="grid c4">
+    <div class="stat"><div class="n" style="font-size:19px">${fmtR(linhas[0].total)}</div><div class="l">2026 — ano-teste</div></div>
+    <div class="stat"><div class="n" style="font-size:19px">${fmtR(l33.total)}</div><div class="l">2033 — regime pleno</div><div class="sub">alíquota ${(l33.alq*100).toFixed(2)}%</div></div>`;
+  if (atualCons.consumo!=null) { const d = l33.total-atualCons.consumo;
+    h += `<div class="stat"><div class="n" style="font-size:19px">${fmtR(atualCons.consumo)}</div><div class="l">Carga de consumo hoje</div><div class="sub">${atualCons.regime}</div></div>
+    <div class="stat"><div class="n" style="font-size:19px;color:${d>0?'var(--danger)':'var(--ok)'}">${d>0?'+':''}${fmtR(d)}</div><div class="l">Variação no pleno</div></div>`; }
+  else h += `<div class="stat"><div class="n" style="font-size:19px">${fmtR(atualCons.das)}</div><div class="l">DAS anual (referência)</div></div><div class="stat"><div class="n">—</div><div class="l"></div></div>`;
+  h += `</div>
+  <div class="rl-grid" style="margin-top:18px">
+    <div class="card"><h3>Transição da carga de consumo (2026–2033)</h3><canvas id="ch-rf"></canvas></div>
+    <div class="card"><h3>Débito × crédito de IBS/CBS por ano</h3><canvas id="ch-rf2"></canvas></div>
+  </div>
+  <div class="card"><h3>Quadro da transição</h3><div style="overflow-x:auto"><table>
+    <thead><tr><th>Ano</th><th class="num">Alíq. IBS+CBS</th><th class="num">Débito</th><th class="num">Crédito</th><th class="num">Líquido</th><th class="num">IS</th><th class="num">Tributos atuais remanesc.</th><th class="num">Total</th></tr></thead><tbody>`;
+  for (const L of linhas) h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(L.deb)}</td><td class="num">${fmt(L.cred)}</td><td class="num">${fmt(L.liq)}</td><td class="num">${fmt(L.is)}</td><td class="num">${fmt(L.rem)}</td><td class="num">${fmt(L.total)}</td></tr>`;
+  h += `</tbody></table></div><div class="hint" style="margin-top:8px">Estimativas conforme parâmetros editáveis salvos na análise (EC 132/2023 · LC 214/2025). IS sem direito a crédito; créditos limitados nas aquisições do Simples.</div></div>`;
+  $id('rl-corpo').innerHTML = h;
+  rlChart('ch-rf', { type:'line', data:{ labels:anos, datasets:[
+    { label:'IBS/CBS líquido + IS', data:linhas.map(l=>l.liq+l.is), borderColor:CORES.simples, backgroundColor:CORES.simples, fill:false },
+    { label:'Tributos atuais remanescentes', data:linhas.map(l=>l.rem), borderColor:CORES.lp, backgroundColor:CORES.lp, fill:false },
+    { label:'Total', data:linhas.map(l=>l.total), borderColor:CORES.lr, backgroundColor:CORES.lr, borderWidth:3, fill:false } ] },
+    options:{ responsive:true, plugins:{legend:{position:'bottom'}} } });
+  rlChart('ch-rf2', { type:'bar', data:{ labels:anos, datasets:[
+    { label:'Débito', data:linhas.map(l=>l.deb), backgroundColor:CORES.lr },
+    { label:'Crédito', data:linhas.map(l=>l.cred), backgroundColor:CORES.ok } ] },
+    options:{ responsive:true, plugins:{legend:{position:'bottom'}} } });
+}
+
+// ═══════════ DASHBOARD DE ANÁLISES ═══════════
+async function dashAnalises() {
+  let emps = [], anals = [];
+  try { emps = await supa('GET','atp_empresas',{ params:{ select:'*', analise:'is.true', order:'razao_social.asc', limit:'500' } }); } catch {}
+  try { anals = await supa('GET','atp_analises',{ params:{ select:'cnpj,ano,resumo,atualizado_em', order:'atualizado_em.desc', limit:'500' } }); } catch {}
+  $id('da-emp').textContent = emps.length;
+  $id('da-anal').textContent = anals.length;
+  let recTot = 0, econTot = 0;
+  const linhas = [];
+  for (const e of emps) {
+    const as = anals.filter(a=>a.cnpj===e.cnpj).sort((a,b)=>b.ano-a.ano);
+    if (!as.length) { linhas.push({e, a:null}); continue; }
+    const a = as[0], r = a.resumo||{};
+    recTot += +r.receita||0;
+    if (r.simples!=null && r.lp!=null && r.lr!=null) {
+      const ord = [+r.simples,+r.lp,+r.lr].sort((x,y)=>x-y); econTot += ord[1]-ord[0];
+    }
+    linhas.push({e, a});
+  }
+  $id('da-rec').textContent = recTot ? fmtR(recTot) : '–';
+  $id('da-econ').textContent = econTot ? fmtR(econTot) : '–';
+  $id('da-tbody').innerHTML = linhas.length ? linhas.map(({e,a})=>{
+    const r = a?.resumo||{};
+    let melhor = '—', econ = null;
+    if (r.simples!=null && r.lp!=null && r.lr!=null) {
+      const mn = Math.min(+r.simples,+r.lp,+r.lr);
+      melhor = mn===+r.simples?'Simples':mn===+r.lp?'Presumido':'Real';
+      const ord = [+r.simples,+r.lp,+r.lr].sort((x,y)=>x-y); econ = ord[1]-ord[0];
+    }
+    return `<tr><td><b>${e.razao_social||fmtCNPJ(e.cnpj)}</b><div class="hint">${fmtCNPJ(e.cnpj)}</div></td>
+      <td>${e.regime||'—'}</td><td>${a?a.ano:'<span class="hint">sem análise</span>'}</td>
+      <td class="num">${r.receita!=null?fmt(r.receita):'—'}</td><td class="num">${r.simples!=null?fmt(r.simples):'—'}</td>
+      <td class="num">${r.lp!=null?fmt(r.lp):'—'}</td><td class="num">${r.lr!=null?fmt(r.lr):'—'}</td>
+      <td>${melhor!=='—'?`<span class="badge ok">${melhor}</span>`:'—'}</td><td class="num">${econ!=null?fmt(econ):'—'}</td>
+      <td class="num">${r.reforma2033!=null?fmt(r.reforma2033):'—'}</td>
+      <td style="white-space:nowrap"><button class="btn" onclick="empAnalisar('${e.cnpj}')">Análise</button>
+      <button class="btn" onclick="go('relatorios');$id('rl-empresa').value='${e.cnpj}';${a?`$id('rl-ano').value=${a.ano};`:''}rlCarregar()">Relatório</button></td></tr>`;
+  }).join('') : '<tr><td colspan="11" class="hint" style="text-align:center;padding:18px">Nenhuma empresa em análise ainda — cadastre em <b>Empresas</b> ou importe um PGDAS.</td></tr>';
 }
 
 // ── BOOT ───────────────────────────────────────────────────────────────
