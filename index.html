@@ -141,6 +141,14 @@ tr:hover td{background:#f8fafc}
         <h3>Últimas consultas</h3>
         <div id="dash-recentes" class="hint">Nenhuma consulta realizada ainda. Comece pela aba <b>Consulta CNPJ</b>.</div>
       </div>
+      <div class="card" style="margin-top:18px">
+        <h3>Versões do sistema</h3>
+        <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+          <tr><td><b>v3.0</b> <span class="badge ok">atual</span></td><td>23/07/2026</td><td>Módulo Reforma Tributária (CBS · IS · IBS 2026–2033, benefícios, contrapartes e comparativo de transição) e versões na tela inicial.</td></tr>
+          <tr><td><b>v2.0</b></td><td>22/07/2026</td><td>Motor de análise Simples × Presumido × Real validado contra a planilha, cadastro de empresas, usuários e parâmetros editáveis.</td></tr>
+          <tr><td><b>v1.0</b></td><td>21/07/2026</td><td>Consulta de CNPJs na Receita (Simples/SIMEI), importação em massa e carteira de empresas.</td></tr>
+        </tbody></table>
+      </div>
     </div>
 
     <!-- CONSULTA CNPJ -->
@@ -206,8 +214,43 @@ tr:hover td{background:#f8fafc}
       <div class="card"><h3>Resultado mês a mês</h3><div id="an-detalhe" style="overflow-x:auto"></div></div>
     </div>
     <div id="page-reforma" style="display:none">
-      <div class="page-title"><h1>Reforma Tributária</h1><span class="crumb">Fase 3</span></div>
-      <div class="card placeholder"><h2>Em construção — quinta-feira</h2><p>CBS · IS · IBS Estado · IBS Município (2027–2033), parcelas com benefícios/reduções e análise por contraparte, conforme especificação.</p></div>
+      <div class="page-title"><h1>Reforma Tributária</h1><span class="crumb">CBS · IS · IBS — LC 214/2025</span></div>
+      <div class="card"><div class="toolbar" style="margin-bottom:0">
+        <div style="min-width:280px;flex:1"><label>Empresa (usa a análise do regime atual como base)</label><select id="rf-empresa" onchange="rfTrocar()"></select></div>
+        <div style="width:110px"><label>Ano-base</label><input type="number" id="rf-ano" value="2026" onchange="rfTrocar()"></div>
+        <div style="align-self:flex-end;display:flex;gap:8px">
+          <button class="btn solid" onclick="rfSalvar()">💾 Salvar</button>
+          <button class="btn" onclick="rfCalcular()">Recalcular</button>
+        </div>
+      </div></div>
+      <div class="card">
+        <h3>Alíquotas por ano da transição <span class="hint" style="font-weight:400">(editáveis — estimativas de referência; ajuste conforme a regulamentação)</span></h3>
+        <div style="overflow-x:auto"><table class="gtable" id="rf-aliq"></table></div>
+        <div class="toolbar" style="margin:10px 0 0"><button class="btn" onclick="rfSalvarAliq()">Salvar alíquotas como padrão</button><span class="hint">2026 é o ano-teste (CBS 0,9% + IBS 0,1%). Em 2027 a CBS substitui PIS/COFINS e começa o IS; de 2029 a 2032 o IBS sobe enquanto ICMS/ISS caem 10% ao ano; 2033 é o regime pleno.</span></div>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:18px">
+        <div class="card">
+          <h3>Parcela da receita com benefícios <span class="hint" style="font-weight:400">(valores anuais, R$)</span></h3>
+          <div id="rf-benef-rec"></div>
+        </div>
+        <div class="card">
+          <h3>Parcela do crédito com reduções <span class="hint" style="font-weight:400">(compras anuais nessas categorias, R$)</span></h3>
+          <div id="rf-benef-cred"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Compras e vendas por contraparte <span class="hint" style="font-weight:400">(valores anuais, R$)</span></h3>
+        <div id="rf-contrapartes" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px"></div>
+        <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap">
+          <div><label>Receita anual total</label><input id="rf-receita" style="width:160px" onchange="rfCalcular()"></div>
+          <div><label>Compras com crédito (auto: LR/LP + Simples)</label><input id="rf-compras" style="width:160px" disabled></div>
+          <div><label>Base anual do Imposto Seletivo</label><input id="rf-baseis" style="width:160px" onchange="rfCalcular()"></div>
+          <div><label>% crédito s/ compras do Simples</label><input id="rf-credsimples" style="width:120px" value="0" onchange="rfCalcular()"></div>
+        </div>
+      </div>
+      <div class="grid c4" id="rf-resumo" style="margin-bottom:18px"></div>
+      <div class="card"><h3>Transição 2026–2033 — carga sobre o consumo</h3><div id="rf-tabela" style="overflow-x:auto"></div>
+        <div class="hint" id="rf-notas" style="margin-top:10px"></div></div>
     </div>
     <div id="page-parametros" style="display:none">
       <div class="page-title"><h1>Parâmetros</h1><span class="crumb">Tabelas editáveis do motor</span></div>
@@ -354,6 +397,7 @@ function go(page) {
   if (page==='analise') { empCarregar().then(()=>{ if(!AN){ anRenderTabs(); anRenderGrid(); } });
     if (AN) { anRenderTabs(); anRenderGrid(); anRecalcular(); } }
   if (page==='parametros') prRender();
+  if (page==='reforma') { empCarregar().then(()=>{ const sel=$id('rf-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; if(at) sel.value=at; if(!RF){ RF=rfNovo('', +$id('rf-ano').value); rfRenderAliq(); rfRenderBenef(); rfCalcular(); } }); }
   if (page==='usuarios') usCarregar();
 }
 
@@ -1004,6 +1048,162 @@ async function usCarregar() {
     $id('us-tbody').innerHTML = rows.length ? rows.map(u=>`<tr><td>${u.nome||'—'}</td><td>${u.email}</td><td>${(u.criado_em||'').slice(0,10)}</td></tr>`).join('')
       : '<tr><td colspan="3" class="hint" style="padding:16px;text-align:center">Nenhum usuário listado ainda.</td></tr>';
   } catch { $id('us-tbody').innerHTML = '<tr><td colspan="3" class="hint" style="padding:16px">Execute o setup_v2.sql para habilitar a lista.</td></tr>'; }
+}
+
+
+// ═══════════ REFORMA TRIBUTÁRIA (LC 214/2025) ═══════════
+const RF_ANOS = [2026,2027,2028,2029,2030,2031,2032,2033];
+// Defaults de referência (TUDO editável na tela): CBS/IBS plenos estimados; transição do IBS e do ICMS/ISS conforme EC 132/LC 214.
+const RF_ALIQ_DEFAULT = {
+  2026:{cbs:0.9, is:0,   ibse:0.05, ibsm:0.05, remIcmsIss:1.00, remPisCof:1.00},
+  2027:{cbs:8.8, is:0,   ibse:0.05, ibsm:0.05, remIcmsIss:1.00, remPisCof:0},
+  2028:{cbs:8.8, is:0,   ibse:0.05, ibsm:0.05, remIcmsIss:1.00, remPisCof:0},
+  2029:{cbs:8.8, is:0,   ibse:1.60, ibsm:0.20, remIcmsIss:0.90, remPisCof:0},
+  2030:{cbs:8.8, is:0,   ibse:3.20, ibsm:0.40, remIcmsIss:0.80, remPisCof:0},
+  2031:{cbs:8.8, is:0,   ibse:4.80, ibsm:0.60, remIcmsIss:0.70, remPisCof:0},
+  2032:{cbs:8.8, is:0,   ibse:6.40, ibsm:0.80, remIcmsIss:0.60, remPisCof:0},
+  2033:{cbs:8.8, is:0,   ibse:16.00,ibsm:2.00, remIcmsIss:0,    remPisCof:0},
+};
+const RF_REDUCOES = [['r30','Redução 30%',.30],['r40','Redução 40%',.40],['r50','Redução 50%',.50],['r60','Redução 60%',.60],['r70','Redução 70%',.70],['r80','Redução 80%',.80],['r100','Redução 100%',1],['isencao','Isenção',1]];
+const RF_CONTRA = [['compras_simples','Compras de PJ Simples/SIMEI','Valor de compras'],['compras_lrlp','Compras de PJ Lucro Real/Presumido','Valor de compras'],['vendas_pf','Vendas para Pessoas Físicas','Valor de vendas'],['vendas_simples','Vendas para PJ Simples/SIMEI','Valor de vendas'],['vendas_lrlp','Vendas para PJ Lucro Real/Presumido','Valor de vendas']];
+
+let RF = null; // estado do módulo
+function rfNovo(cnpj, ano) {
+  return { cnpj:cnpj||'', ano:ano||2026,
+    aliq: JSON.parse(JSON.stringify(PARAMS.reforma||RF_ALIQ_DEFAULT)),
+    benefRec: Object.fromEntries(RF_REDUCOES.map(([k])=>[k,0])),
+    benefCred: Object.fromEntries(RF_REDUCOES.map(([k])=>[k,0])),
+    contra: Object.fromEntries(RF_CONTRA.map(([k])=>[k,0])),
+    receita:0, compras:0, baseIS:0, credSimplesPct:0 };
+}
+
+function rfRenderAliq() {
+  const cab = ['Ano','CBS %','IS %','IBS Estado %','IBS Município %','ICMS/ISS remanesc. %','PIS/COFINS remanesc. %'];
+  let h = '<thead><tr>'+cab.map(c=>`<th class="num">${c}</th>`).join('')+'</tr></thead><tbody>';
+  for (const a of RF_ANOS) {
+    const r = RF.aliq[a];
+    h += `<tr><td class="rot">${a}${a===2026?' <span class="badge info">teste</span>':''}${a===2033?' <span class="badge ok">pleno</span>':''}</td>`;
+    for (const k of ['cbs','is','ibse','ibsm']) h += `<td><input value="${r[k]}" onchange="RF.aliq[${a}].${k}=num(this.value);rfCalcular()"></td>`;
+    for (const k of ['remIcmsIss','remPisCof']) h += `<td><input value="${+(r[k]*100).toFixed(2)}" onchange="RF.aliq[${a}].${k}=num(this.value)/100;rfCalcular()"></td>`;
+    h += '</tr>';
+  }
+  $id('rf-aliq').innerHTML = h + '</tbody>';
+}
+function rfRenderBenef() {
+  const bloco = (cont, obj, id) => {
+    $id(cont).innerHTML = '<table class="gtable"><tbody>' + RF_REDUCOES.map(([k,rot]) =>
+      `<tr><td class="rot">${rot}</td><td><input value="${obj[k]||''}" onchange="RF.${id}.${k}=num(this.value);rfCalcular()"></td></tr>`).join('') + '</tbody></table>';
+  };
+  bloco('rf-benef-rec', RF.benefRec, 'benefRec');
+  bloco('rf-benef-cred', RF.benefCred, 'benefCred');
+  $id('rf-contrapartes').innerHTML = RF_CONTRA.map(([k,rot,sub]) =>
+    `<div><label>${rot}</label><input value="${RF.contra[k]||''}" onchange="RF.contra.${k}=num(this.value);rfCalcular()"><div class="hint">${sub} (anual)</div></div>`).join('');
+  $id('rf-receita').value = RF.receita||''; $id('rf-compras').value = RF.compras||'';
+  $id('rf-baseis').value = RF.baseIS||''; $id('rf-credsimples').value = RF.credSimplesPct||0;
+}
+
+function rfCargaAtual() {
+  // extrai da análise do regime atual (AN._res) os tributos de consumo anuais
+  if (!AN || !AN._res) return null;
+  const soma = f => AN._res.meses.reduce((s,M)=>s+f(M),0);
+  const emp = EMPRESAS.find(e=>e.cnpj===AN.cnpj);
+  const regime = emp?.regime || 'Lucro Presumido';
+  if (regime==='Simples Nacional' || regime==='MEI') {
+    return { regime, das: soma(M=>M.das), consumo:null,
+      nota:'Empresa do Simples: o DAS engloba os tributos de consumo. O comparativo mostra a carga do regime regular de IBS/CBS caso a empresa migre ou para avaliar a manutenção no Simples (crédito reduzido ao cliente).' };
+  }
+  const isLR = regime==='Lucro Real';
+  const pis = soma(M=>isLR?M.lr.pis:M.lp.pis), cof = soma(M=>isLR?M.lr.cofins:M.lp.cofins);
+  const icms = soma(M=>M.icmsPagar), ipi = soma(M=>M.ipiPagar), iss = soma(M=>M.iss);
+  return { regime, consumo: pis+cof+icms+ipi+iss, pis, cof, icms, ipi, iss };
+}
+
+function rfCalcular() {
+  if (!RF) return;
+  RF.receita = num($id('rf-receita').value);
+  RF.baseIS = num($id('rf-baseis').value); RF.credSimplesPct = num($id('rf-credsimples').value);
+  RF.compras = (RF.contra.compras_lrlp||0) + (RF.contra.compras_simples||0);
+  $id('rf-compras').value = RF.compras ? fmt(RF.compras) : '';
+  const atual = rfCargaAtual();
+  const recBenef = RF_REDUCOES.reduce((s,[k])=>s+(RF.benefRec[k]||0),0);
+  const credBenefTot = RF_REDUCOES.reduce((s,[k])=>s+(RF.benefCred[k]||0),0);
+  const recCheia = Math.max(0, RF.receita - recBenef);
+  const compCheia = Math.max(0, (RF.contra.compras_lrlp||0) - credBenefTot);
+  const linhas = [];
+  for (const a of RF_ANOS) {
+    const q = RF.aliq[a];
+    const alq = (q.cbs + q.ibse + q.ibsm)/100;
+    // débito: receita cheia + parcelas com redução
+    let deb = recCheia*alq;
+    for (const [k,,red] of RF_REDUCOES) deb += (RF.benefRec[k]||0)*alq*(1-red);
+    // crédito: compras cheias + parcelas com redução + compras do Simples (% editável)
+    let cred = compCheia*alq;
+    for (const [k,,red] of RF_REDUCOES) cred += (RF.benefCred[k]||0)*alq*(1-red);
+    cred += (RF.contra.compras_simples||0)*(RF.credSimplesPct/100);
+    const liquido = Math.max(0, deb - cred);
+    const is_ = RF.baseIS*(q.is/100);
+    // remanescentes do sistema atual
+    let rem = 0, remDet = '';
+    if (atual && atual.consumo!=null) {
+      rem = (atual.icms + atual.iss)*q.remIcmsIss + (atual.pis + atual.cof)*q.remPisCof + (a<=2026 ? atual.ipi : 0);
+      remDet = 'ICMS/ISS×'+(q.remIcmsIss*100).toFixed(0)+'%';
+    }
+    linhas.push({ ano:a, alq, deb, cred, liquido, is:is_, rem, total: liquido + is_ + rem });
+  }
+  RF._res = { linhas, atual };
+  // resumo
+  const l26 = linhas[0], l33 = linhas[linhas.length-1];
+  const cards = [];
+  cards.push(`<div class="stat"><div class="n" style="font-size:20px">${fmtR(l26.total)}</div><div class="l">2026 (ano-teste)</div><div class="sub">CBS 0,9% + IBS 0,1% compensáveis</div></div>`);
+  cards.push(`<div class="stat"><div class="n" style="font-size:20px">${fmtR(l33.total)}</div><div class="l">2033 (regime pleno)</div><div class="sub">alíquota combinada ${(l33.alq*100).toFixed(2)}%</div></div>`);
+  if (atual && atual.consumo!=null) {
+    const delta = l33.total - atual.consumo;
+    cards.push(`<div class="stat"><div class="n" style="font-size:20px">${fmtR(atual.consumo)}</div><div class="l">Carga de consumo hoje (${atual.regime})</div><div class="sub">PIS+COFINS+ICMS+IPI+ISS</div></div>`);
+    cards.push(`<div class="stat ${delta<=0?'melhor':''}"><div class="n" style="font-size:20px;color:${delta>0?'var(--danger)':'var(--ok)'}">${delta>0?'+':''}${fmtR(delta)}</div><div class="l">Variação no regime pleno</div><div class="sub">${delta>0?'aumento':'redução'} estimado da carga anual</div></div>`);
+  } else if (atual) {
+    cards.push(`<div class="stat"><div class="n" style="font-size:20px">${fmtR(atual.das)}</div><div class="l">DAS anual (Simples)</div><div class="sub">referência do regime atual</div></div>`);
+  }
+  $id('rf-resumo').innerHTML = cards.join('');
+  // tabela
+  let h = '<table><thead><tr><th>Ano</th><th class="num">Alíq. IBS+CBS</th><th class="num">Débito</th><th class="num">Crédito</th><th class="num">IBS/CBS líquido</th><th class="num">IS</th><th class="num">Tributos atuais remanesc.</th><th class="num">Total consumo</th></tr></thead><tbody>';
+  for (const L of linhas) h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(L.deb)}</td><td class="num">${fmt(L.cred)}</td><td class="num">${fmt(L.liquido)}</td><td class="num">${fmt(L.is)}</td><td class="num">${fmt(L.rem)}</td><td class="num">${fmt(L.total)}</td></tr>`;
+  $id('rf-tabela').innerHTML = h + '</tbody></table>';
+  // notas técnicas
+  const notas = [];
+  notas.push('Débitos e créditos "por fora": alíquotas aplicadas sobre os valores informados, com reduções da EC 132/LC 214 nas parcelas indicadas. O IS não gera crédito.');
+  if ((RF.contra.vendas_lrlp||0) > 0) notas.push('Vendas a PJ do Lucro Real/Presumido: o IBS/CBS destacado gera crédito integral ao cliente — tende a ser neutro na cadeia.');
+  if ((RF.contra.vendas_pf||0) > 0 || (RF.contra.vendas_simples||0) > 0) notas.push('Vendas a PF e a optantes do Simples: o imposto é custo final do comprador — atenção ao impacto no preço.');
+  if ((RF.contra.compras_simples||0) > 0) notas.push('Compras de fornecedores do Simples: crédito limitado ao montante de IBS/CBS efetivamente recolhido no DAS (ajuste o % conforme o fornecedor).');
+  if (atual?.nota) notas.push(atual.nota);
+  $id('rf-notas').innerHTML = '• ' + notas.join('<br>• ');
+}
+
+async function rfTrocar() {
+  const cnpj = $id('rf-empresa').value, ano = +$id('rf-ano').value;
+  if (!cnpj) { RF = rfNovo('', ano); rfRenderAliq(); rfRenderBenef(); rfCalcular(); return; }
+  // carrega análise (regime atual) da empresa para servir de base
+  try {
+    const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
+    if (rows.length) { AN = rows[0].dados; AN.cnpj = cnpj; AN.ano = ano; anRecalcular?.(); RF = rows[0].dados?.reforma || rfNovo(cnpj, ano); }
+    else RF = rfNovo(cnpj, ano);
+  } catch { RF = rfNovo(cnpj, ano); }
+  RF.cnpj = cnpj; RF.ano = ano;
+  if (!RF.receita && AN?._res) RF.receita = AN._res.totais.receita;
+  rfRenderAliq(); rfRenderBenef(); rfCalcular();
+}
+async function rfSalvar() {
+  if (!RF || !RF.cnpj) { toast('Selecione uma empresa.'); return; }
+  const dados = (AN && AN.cnpj===RF.cnpj) ? {...AN, _res:undefined, reforma:{...RF, _res:undefined}} : { ...(anNovo(RF.cnpj, RF.ano)), reforma:{...RF, _res:undefined} };
+  const T = AN?._res?.totais || {};
+  try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body:[{ cnpj:RF.cnpj, ano:RF.ano, dados,
+    resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr, reforma2033: RF._res?.linhas?.at(-1)?.total },
+    atualizado_em:new Date().toISOString() }] });
+    toast('Análise da Reforma salva.'); } catch(e){ toast('Erro: '+e.message); }
+}
+async function rfSalvarAliq() {
+  PARAMS.reforma = RF.aliq;
+  try { await supa('POST','atp_parametros?on_conflict=chave',{ body:[{ chave:'default', valor:PARAMS, atualizado_em:new Date().toISOString() }] });
+    toast('Alíquotas salvas como padrão para novas análises.'); } catch(e){ toast('Erro: '+e.message); }
 }
 
 // ── BOOT ───────────────────────────────────────────────────────────────
