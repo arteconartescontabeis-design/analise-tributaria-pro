@@ -131,8 +131,8 @@ tr:hover td{background:#f8fafc}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Visão geral da carteira</span><span class="badge ok" style="margin-left:auto;font-size:13px">Análise Tributária Pro v4.1</span></div>
-      <div class="card" style="margin-bottom:18px;padding:10px 16px"><div class="hint">Versão atual: <b>v4.1</b> · 23/07/2026 — importação de Faturamento por anexo, correção do importador PGDAS multi-arquivo. Histórico completo no fim da página.</div></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Visão geral da carteira</span><span class="badge ok" style="margin-left:auto;font-size:13px">Análise Tributária Pro v4.2</span></div>
+      <div class="card" style="margin-bottom:18px;padding:10px 16px"><div class="hint">Versão atual: <b>v4.2</b> · 23/07/2026 — cadastro automático de empresas na importação e abas de lançamento manual sempre ativas. Histórico completo no fim da página.</div></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="st-total">–</div><div class="l">Empresas consultadas</div></div>
         <div class="stat"><div class="n" id="st-simples">–</div><div class="l">Optantes Simples</div></div>
@@ -146,7 +146,8 @@ tr:hover td{background:#f8fafc}
       <div class="card" style="margin-top:18px">
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v4.1</b> <span class="badge ok">atual</span></td><td>23/07/2026</td><td>Importador de Faturamento (Demonstrativo Mensal, por anexo), correção do PGDAS multi-arquivo, versão visível no topo, balancete restrito a folha/compras/despesas.</td></tr>
+          <tr><td><b>v4.2</b> <span class="badge ok">atual</span></td><td>23/07/2026</td><td>Cadastro automático da empresa ao importar PGDAS/Faturamento/balancete; abas da análise sempre disponíveis para preenchimento manual; identificação do período do PGDAS com tripla redundância.</td></tr>
+          <tr><td><b>v4.1</b></td><td>23/07/2026</td><td>Importador de Faturamento (Demonstrativo Mensal, por anexo), correção do PGDAS multi-arquivo, versão visível no topo, balancete restrito a folha/compras/despesas.</td></tr>
           <tr><td><b>v4.0</b></td><td>23/07/2026</td><td>Importação de PGDAS-D (PDF, múltiplos meses) e de balancete Questor com tela de conferência; separação entre carteira de consulta e empresas em análise.</td></tr>
           <tr><td><b>v3.0</b></td><td>23/07/2026</td><td>Módulo Reforma Tributária (CBS · IS · IBS 2026–2033, benefícios, contrapartes e comparativo de transição) e versões na tela inicial.</td></tr>
           <tr><td><b>v2.0</b></td><td>22/07/2026</td><td>Motor de análise Simples × Presumido × Real validado contra a planilha, cadastro de empresas, usuários e parâmetros editáveis.</td></tr>
@@ -416,8 +417,8 @@ function go(page) {
   ['dashboard','cnpj','empresas','analise','reforma','parametros','usuarios'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
   if (page==='dashboard') carregarDashboard();
   if (page==='empresas') empCarregar();
-  if (page==='analise') { empCarregar().then(()=>{ if(!AN){ anRenderTabs(); anRenderGrid(); } });
-    if (AN) { anRenderTabs(); anRenderGrid(); anRecalcular(); } }
+  if (page==='analise') { if (!AN) AN = anNovo('', +($id('an-ano').value||new Date().getFullYear()));
+    anRenderTabs(); anRenderGrid(); anRecalcular(); empCarregar(); }
   if (page==='parametros') prRender();
   if (page==='reforma') { empCarregar().then(()=>{ const sel=$id('rf-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; if(at) sel.value=at; if(!RF){ RF=rfNovo('', +$id('rf-ano').value); rfRenderAliq(); rfRenderBenef(); rfCalcular(); } }); }
   if (page==='usuarios') usCarregar();
@@ -941,7 +942,7 @@ function anRecalcular() {
 
 async function anTrocarEmpresa() {
   const cnpj = $id('an-empresa').value;
-  if (!cnpj) return;
+  if (!cnpj) { if (!AN) { AN = anNovo('', +$id('an-ano').value); anRenderTabs(); anRenderGrid(); anRecalcular(); } return; }
   const ano = +$id('an-ano').value;
   try {
     const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
@@ -952,7 +953,7 @@ async function anTrocarEmpresa() {
 }
 function anMudou(){ anTrocarEmpresa(); }
 async function anSalvar() {
-  if (!AN || !AN.cnpj) { toast('Selecione uma empresa.'); return; }
+  if (!AN || !AN.cnpj) { toast('Selecione a empresa no topo (ou importe PGDAS/Faturamento, que o cadastro é automático).'); return; }
   const T = AN._res?.totais || {};
   const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined},
     resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr }, atualizado_em:new Date().toISOString() }];
@@ -1229,6 +1230,26 @@ async function rfSalvarAliq() {
 }
 
 
+
+async function garantirEmpresa(cnpjBruto, nome, regime) {
+  const cnpj = limparCNPJ(cnpjBruto||'');
+  if (cnpj.length !== 14) return null;
+  if (!EMPRESAS.length) await empCarregar();
+  if (!EMPRESAS.find(e=>e.cnpj===cnpj)) {
+    try {
+      await supa('POST','atp_empresas?on_conflict=cnpj',{ body:[{ cnpj, razao_social: nome || ('Empresa '+fmtCNPJ(cnpj)),
+        simples: regime==='Simples Nacional' ? true : null, regime: regime||null, analise:true }] });
+      await empCarregar();
+      toast('Empresa cadastrada automaticamente: '+(nome||fmtCNPJ(cnpj)));
+    } catch(e) { console.error(e); }
+  }
+  // adota a empresa na análise corrente
+  if (!AN) AN = anNovo(cnpj, +$id('an-ano').value);
+  if (!AN.cnpj) AN.cnpj = cnpj;
+  if (AN.cnpj === cnpj) { anPreencherEmpresas(); $id('an-empresa').value = cnpj; }
+  return cnpj;
+}
+
 // ═══════════ IMPORTADOR PGDAS-D (PDF) ═══════════
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const PG_BLOCOS = [['a1_semst','Anexo I — Sem ST'],['a1_comst','Anexo I — Com ST'],['a1_mono','Anexo I — Monofásico'],['a1_comst_mono','Anexo I — ST + Mono'],
@@ -1272,8 +1293,10 @@ async function pgdasLer(input) {
         const tc = await pg.getTextContent();
         txt += tc.items.map(i=>i.str).join(' ') + '\n';
       }
-      const pa = txt.match(/Per[ií]odo de Apura[çc][ãa]o:?\s*0?1\/(\d{2})\/(\d{4})/i);
-      if (!pa) { erros.push(f.name); continue; }
+      let pa = txt.match(/Per[ií]odo\s+de\s+Apura[çc][ãa]o\s*:?\s*0?1\/(\d{2})\/(\d{4})/i);
+      if (!pa) { const nd = txt.match(/da\s+Declara[çc][ãa]o\s*:?\s*\d{8}(\d{4})(\d{2})001/); if (nd) pa = [nd[0], nd[2], nd[1]]; }
+      if (!pa) { const nf = f.name.match(/(\d{4})(\d{2})001\.pdf$/i); if (nf) pa = [nf[0], nf[2], nf[1]]; }
+      if (!pa) { erros.push(f.name+' (período não identificado)'); continue; }
       const chave = `${pa[1]}/${pa[2]}`;
       cnpjPdf = (txt.match(/CNPJ Matriz:\s*([\d.\/\-]+)/)||[])[1] || cnpjPdf;
       nomePdf = (txt.match(/Nome empresarial:\s*(.+?)\s+Data de abertura/)||[])[1] || nomePdf;
@@ -1323,8 +1346,9 @@ function pgdasReview() {
   $id('imp-pgdas-review').innerHTML = h;
 }
 
-function pgdasAplicar() {
-  if (!AN) { toast('Abra uma análise primeiro (selecione a empresa).'); return; }
+async function pgdasAplicar() {
+  await garantirEmpresa(PG_DADOS.cnpj, PG_DADOS.nome, 'Simples Nacional');
+  if (!AN) AN = anNovo('', +$id('an-ano').value);
   const chaves = Object.keys(PG_DADOS.meses);
   const anoImp = +chaves[0].split('/')[1];
   if (+AN.ano !== anoImp) { AN.ano = anoImp; $id('an-ano').value = anoImp; }
@@ -1363,6 +1387,7 @@ async function fatLer(input) {
       txt += tc.items.map(i=>i.str).join(' ') + '\n';
     }
     const cnpj = (txt.match(/CNPJ:\s*([\d.\/\-]+)/)||[])[1];
+    const nomeF = (txt.match(/\d{3,4}\s+(.+?)\s*-\s*Matriz/)||txt.match(/\d{3,4}\s*-?\s*(.+?)\s+CNPJ/)||[])[1];
     const ano = +((txt.match(/Período:\s*\d{2}\/\d{2}\/(\d{4})/)||[])[1]) || null;
     const valores = z12(); let achou = 0;
     for (const m of txt.toUpperCase().matchAll(/(JANEIRO|FEVEREIRO|MAR[ÇC]O|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO)\s+(\d{4})\s+([\d.]+,\d{2})/g)) {
@@ -1371,7 +1396,7 @@ async function fatLer(input) {
     }
     const total = brNum((txt.match(/TOTAL\s+([\d.]+,\d{2})/i)||[])[1]);
     if (!achou) { toast('Não encontrei o quadro mensal — é o "Demonstrativo Mensal do Faturamento"?'); return; }
-    FAT = { cnpj, ano, valores, total };
+    FAT = { cnpj, nome: (nomeF||'').trim(), ano, valores, total };
     const soma = valores.reduce((a,b)=>a+b,0);
     let h = `<div class="hint" style="margin-bottom:8px">CNPJ ${cnpj||'?'} · ano ${ano||'?'} · ${achou} meses lidos · soma ${fmt(soma)}${total?` (total do relatório: ${fmt(total)} ${Math.abs(soma-total)<0.02?'✓':'⚠️ difere'})`:''}</div>
     <table class="gtable"><thead><tr>${MESES.map(m=>`<th class="num">${m}</th>`).join('')}</tr></thead><tbody><tr>${valores.map(v=>`<td class="num">${fmt(v)}</td>`).join('')}</tr></tbody></table>
@@ -1385,8 +1410,9 @@ async function fatLer(input) {
   } catch(e) { console.error(e); toast('Erro ao ler o PDF: '+e.message); }
 }
 
-function fatAplicar() {
-  if (!AN) { toast('Abra uma análise primeiro (selecione a empresa).'); return; }
+async function fatAplicar() {
+  await garantirEmpresa(FAT.cnpj, FAT.nome, null);
+  if (!AN) AN = anNovo('', +$id('an-ano').value);
   if (FAT.ano && +AN.ano !== FAT.ano) { AN.ano = FAT.ano; $id('an-ano').value = FAT.ano; }
   const bloco = $id('fat-bloco').value, modo = $id('fat-modo').value;
   for (let m=0;m<12;m++) AN.receitas[bloco][m] = (modo==='somar' ? (AN.receitas[bloco][m]||0) : 0) + FAT.valores[m];
@@ -1459,7 +1485,8 @@ function balLer(input) {
         if (!valor) continue;
         contas.push({ cls, desc: desc.trim(), valor, destino: balDestino(cls, desc) });
       }
-      BAL = { cnpj: cnpjB, contas,
+      const nomeB = (txtCab.match(/\d{3,4}\s*-\s*(.+?)(?:\s{2,}|Emissão|CNPJ)/)||[])[1];
+      BAL = { cnpj: cnpjB, nome: (nomeB||'').trim(), contas,
         mesIni: per ? +per[2]-1 : 0, mesFim: per ? +per[5]-1 : 11, ano: per ? +per[3] : null };
       balReview();
     } catch(err) { console.error(err); toast('Erro ao ler o balancete: '+err.message); }
@@ -1483,8 +1510,9 @@ function balReview() {
   $id('imp-bal-review').innerHTML = h;
 }
 
-function balAplicar() {
-  if (!AN) { toast('Abra uma análise primeiro (selecione a empresa).'); return; }
+async function balAplicar() {
+  await garantirEmpresa(BAL.cnpj, BAL.nome, null);
+  if (!AN) AN = anNovo('', +$id('an-ano').value);
   if (BAL.ano && +AN.ano !== BAL.ano) { AN.ano = BAL.ano; $id('an-ano').value = BAL.ano; }
   const modo = $id('bal-modo').value;
   const meses = []; for (let m=BAL.mesIni; m<=BAL.mesFim; m++) meses.push(m);
