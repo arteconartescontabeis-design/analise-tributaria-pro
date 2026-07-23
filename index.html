@@ -137,7 +137,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v5.10</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v6.0</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -162,6 +162,18 @@ canvas{max-height:340px}
     <div id="page-cnpj" style="display:none">
       <div class="page-title"><h1>Consulta CNPJ — Simples Nacional</h1><span class="crumb">Módulo 1</span></div>
       <div class="card">
+        <h3>Consulta individual <span class="hint" style="font-weight:400">— cartão completo de um CNPJ (dados abertos da RFB; defasagem de até ~1 mês)</span></h3>
+        <div class="toolbar" style="margin:0">
+          <div style="width:240px"><label>CNPJ</label><input id="ci-cnpj" placeholder="00.000.000/0001-00" onkeydown="if(event.key==='Enter')consultaIndividual()"></div>
+          <div style="align-self:flex-end;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn solid" onclick="consultaIndividual()">🔎 Consultar</button>
+            <a class="btn" href="https://solucoes.receitafederal.gov.br/servicos/cnpjreva/cnpjreva_solicitacao.asp" target="_blank" rel="noopener" title="Para fé pública, confirme no site oficial">Cartão CNPJ oficial (RFB)</a>
+            <a class="btn" href="https://consultaoptantes.app.receitafederal.gov.br/#/home" target="_blank" rel="noopener">Consulta Simples oficial</a>
+          </div>
+        </div>
+        <div id="ci-result" style="margin-top:12px"></div>
+      </div>
+      <div class="card">
         <h3>1. Informe os CNPJs da relação</h3>
         <div style="display:grid;grid-template-columns:1fr 260px;gap:20px">
           <div>
@@ -176,7 +188,7 @@ canvas{max-height:340px}
         </div>
         <div class="toolbar" style="margin-top:16px;margin-bottom:0">
           <button class="btn solid" id="btn-consultar" onclick="iniciarConsulta()">Consultar na base da Receita</button>
-          <button class="btn" onclick="limparConsulta()">Limpar</button>
+          <button class="btn" onclick="limparConsulta()">🧹 Limpar dados</button>
           <div class="progress" id="prog-wrap" style="display:none"><div class="bar" id="prog-bar"></div></div>
           <span class="hint" id="prog-txt"></span>
         </div>
@@ -212,6 +224,9 @@ canvas{max-height:340px}
             <button class="btn" onclick="$id('imp-pgdas-card').style.display='block'">📄 Importar PGDAS</button>
             <button class="btn" onclick="$id('imp-fat-card').style.display='block'">🧾 Importar Faturamento</button>
             <button class="btn" onclick="$id('imp-bal-card').style.display='none';$id('imp-bal-card').style.display='block'">📊 Importar balancete</button>
+            <button class="btn" onclick="$id('imp-dem-card').style.display='block'">📑 Importar Demonst. Simples</button>
+            <button class="btn" onclick="$id('imp-xml-card').style.display='block'">🗂️ Importar XMLs</button>
+            <button class="btn" onclick="anLimparDados()">🧹 Limpar dados</button>
           </div>
         </div>
       </div>
@@ -230,6 +245,16 @@ canvas{max-height:340px}
         <input type="file" id="imp-bal-file" accept=".xls,.xlsx" onchange="balLer(this)">
         <div id="imp-bal-review" style="margin-top:12px"></div>
       </div>
+      <div class="card" id="imp-dem-card" style="display:none">
+        <h3>Importar Demonstrativo do Simples (Questor) <span class="hint" style="font-weight:400">— relatório "Demonstrativo das Receitas e Simples Nacional a Pagar"; um ou vários PDFs. Preenche receita e folha mês a mês, RBT12/Fator R e confere com o PGDAS.</span></h3>
+        <input type="file" id="imp-dem-files" accept=".pdf" multiple onchange="demLer(this)">
+        <div id="imp-dem-review" style="margin-top:12px"></div>
+      </div>
+      <div class="card" id="imp-xml-card" style="display:none">
+        <h3>Importar XMLs de notas <span class="hint" style="font-weight:400">— NFS-e (Palhoça/Atende.net, ABRASF 2.03, Florianópolis) e NF-e modelo 55, juntos no mesmo lote. Classifica item LC 116 → cClassTrib e calcula as reduções de IBS/CBS da Reforma. Notas canceladas são descartadas.</span></h3>
+        <input type="file" id="imp-xml-files" accept=".xml" multiple onchange="xmlLer(this)">
+        <div id="imp-xml-review" style="margin-top:12px"></div>
+      </div>
       <div class="grid c4" id="an-resumo" style="margin-bottom:18px"></div>
       <div class="card" id="an-veredito" style="display:none"></div>
       <div class="card">
@@ -243,6 +268,7 @@ canvas{max-height:340px}
       <div class="card"><div class="toolbar" style="margin-bottom:0">
         <div style="min-width:280px;flex:1"><label>Empresa (usa a análise do regime atual como base)</label><select id="rf-empresa" onchange="rfTrocar()"></select></div>
         <div style="width:110px"><label>Ano-base</label><input type="number" id="rf-ano" value="2026" onchange="rfTrocar()"></div>
+        <div style="align-self:flex-end"><button class="btn" onclick="rfAutoPreencher()" title="Preenche receita, compras, contrapartes e — quando houver XMLs importados — as parcelas de receita com redução">⚡ Preencher da análise</button></div>
         <div style="align-self:flex-end;display:flex;gap:8px">
           <button class="btn solid" onclick="rfSalvar()">💾 Salvar</button>
           <button class="btn" onclick="rfCalcular()">Recalcular</button>
@@ -284,6 +310,7 @@ canvas{max-height:340px}
         <div style="width:100px"><label>Ano</label><input type="number" id="rl-ano" value="2025" onchange="rlCarregar()"></div>
         <div><label>Relatório</label><select id="rl-tipo" onchange="rlRender()">
           <option value="regimes">Comparativo de regimes</option>
+          <option value="consolidado">Consolidado analítico (4 regimes)</option>
           <option value="registros">Detalhamento dos registros</option>
           <option value="reforma">Reforma Tributária</option>
         </select></div>
@@ -373,7 +400,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v5.10</b> <span class="badge ok">atual</span></td><td>22/07/2026</td><td>Exclusão de empresa agora remove de fato os relatórios: verifica quantas linhas foram apagadas em atp_analises/atp_empresas (RLS sem política de DELETE falhava em silêncio) e orienta a rodar o setup_v4.sql quando faltar permissão; limpa os seletores e o estado das abas Relatórios e Reforma quando apontavam para a empresa excluída.</td></tr>\n          <tr><td><b>v5.9</b></td><td>22/07/2026</td><td>Painel executivo no Comparativo de Regimes: os seis cenários lado a lado (Simples, Presumido, Real, Simples "por dentro" 2033, híbrido 2033 e fora do Simples 2033) com economia anual do regime atual e da Reforma, gráfico de barras horizontais unificado com % da receita e resumo executivo com ranking e diferença para o melhor cenário.</td></tr>\n          <tr><td><b>v5.8</b></td><td>22/07/2026</td><td>Excluir empresa (com as análises salvas) na aba Empresas; Editar nome, Redefinir senha (e-mail) e Excluir na aba Usuários; recálculo automático ao alterar qualquer alíquota/percentual nos Parâmetros; Comparativo de Regimes com todos os quadros da Reforma: composição do híbrido ano a ano, cenário fora do Simples ano a ano (Presumido × Real) e gráfico débito × crédito de IBS/CBS.</td></tr>\n          <tr><td><b>v5.7</b></td><td>22/07/2026</td><td>Cenários da Reforma (por dentro × híbrido × fora do Simples) agora visíveis em três lugares: veredito da Análise, Relatório Comparativo de Regimes e Relatório Reforma; cálculo centralizado em calcCenariosReforma com mescla ano a ano dos dados salvos (análises antigas sem todos os campos não quebram mais) e try/catch para nunca derrubar o restante da tela.</td></tr>\n          <tr><td><b>v5.6</b></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
+          <tr><td><b>v6.0</b> <span class="badge ok">atual</span></td><td>23/07/2026</td><td>Receita mensal do PGDAS garantida pela RPA (destino selecionável e alerta quando as atividades divergem); alíquota do ISS com aviso na Config e preenchimento automático pelas NFS-e importadas; base da CSLL de serviços no Presumido com seletor próprio (origem visível); novo importador do Demonstrativo do Simples (Questor) — receita e folha mês a mês, RBT12/Fator R e conferência cruzada com o PGDAS; importador de XMLs (NFS-e Palhoça/ABRASF/Florianópolis e NF-e modelo 55, juntos) com classificação item LC 116 → cClassTrib e reduções de IBS/CBS embutidas; aba Reforma com "Preencher da análise" (receita, compras, contrapartes e parcelas com redução vindas das notas); nota técnica da transição (tributos que saem × que entram) no cálculo da Reforma; relatório Consolidado Analítico com os 4 regimes (memória de cálculo, comparativo detalhado e sintético); consulta individual de CNPJ com cartão completo e links oficiais da RFB; balancete passa a identificar a empresa pelo cabeçalho interno da aba (arquivos com várias abas/empresas); botões Limpar dados na Consulta CNPJ e na Análise.</td></tr>
+          <tr><td><b>v5.10</b></td><td>22/07/2026</td><td>Exclusão de empresa agora remove de fato os relatórios: verifica quantas linhas foram apagadas em atp_analises/atp_empresas (RLS sem política de DELETE falhava em silêncio) e orienta a rodar o setup_v4.sql quando faltar permissão; limpa os seletores e o estado das abas Relatórios e Reforma quando apontavam para a empresa excluída.</td></tr>\n          <tr><td><b>v5.9</b></td><td>22/07/2026</td><td>Painel executivo no Comparativo de Regimes: os seis cenários lado a lado (Simples, Presumido, Real, Simples "por dentro" 2033, híbrido 2033 e fora do Simples 2033) com economia anual do regime atual e da Reforma, gráfico de barras horizontais unificado com % da receita e resumo executivo com ranking e diferença para o melhor cenário.</td></tr>\n          <tr><td><b>v5.8</b></td><td>22/07/2026</td><td>Excluir empresa (com as análises salvas) na aba Empresas; Editar nome, Redefinir senha (e-mail) e Excluir na aba Usuários; recálculo automático ao alterar qualquer alíquota/percentual nos Parâmetros; Comparativo de Regimes com todos os quadros da Reforma: composição do híbrido ano a ano, cenário fora do Simples ano a ano (Presumido × Real) e gráfico débito × crédito de IBS/CBS.</td></tr>\n          <tr><td><b>v5.7</b></td><td>22/07/2026</td><td>Cenários da Reforma (por dentro × híbrido × fora do Simples) agora visíveis em três lugares: veredito da Análise, Relatório Comparativo de Regimes e Relatório Reforma; cálculo centralizado em calcCenariosReforma com mescla ano a ano dos dados salvos (análises antigas sem todos os campos não quebram mais) e try/catch para nunca derrubar o restante da tela.</td></tr>\n          <tr><td><b>v5.6</b></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
           <tr><td><b>v5.3</b></td><td>22/07/2026</td><td>Correção do parser numérico para valores com pontos de milhar sem vírgula ("1.546.923" era lido como 1,546); aceita "R$" e espaços na digitação. Motor revalidado 100% (228 verificações) contra a Preenchida_01.</td></tr>
           <tr><td><b>v5.2</b></td><td>24/07/2026</td><td>Correção crítica do parser numérico (ponto decimal virava milhar e corrompia alíquotas/valores reeditados); Config com gravação automática e formato brasileiro; carteira consultada devolvida à Consulta CNPJ; empresas em análise no topo do Dashboard; aba Versões.</td></tr>
           <tr><td><b>v5.1</b></td><td>24/07/2026</td><td>Dashboard com gráficos Simples × Presumido × Real × Reforma 2033 por empresa e melhor regime da carteira; Consulta CNPJ na ordem 1-Informe → 2-Triagem → 3-Carteira, com percentuais MEI/Simples/Presumido/Real e definição de regime linha a linha.</td></tr>
@@ -849,7 +877,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const base32 = serv*cfg.lpBaseServ;
     const base8  = com*cfg.lpBaseCom + R.fin[m];
     const base12 = com*.12 + R.fin[m];
-    const baseCsllServ = serv*(cfg.lpBaseServ !== .32 ? .12 : .32);
+    const baseCsllServ = serv*((+cfg.lpBaseServCsll||0) > 0 ? +cfg.lpBaseServCsll : (cfg.lpBaseServ !== .32 ? .12 : .32));
     const lp_csll = (baseCsllServ + base12)*.09;
     const lp_irpj = (base32 + base8)*.15;
 
@@ -920,7 +948,7 @@ const z12 = () => Array(12).fill(0);
 function anNovo(cnpj, ano) {
   return { cnpj: cnpj||'', ano: ano||new Date().getFullYear(),
     cfg: { iss:0, icmsV:0, icmsC:0, ipiV:0, ipiC:0, rbt12Direto:0, rbt12Lanc:z12(), folha12Lanc:z12(),
-           lpBaseServ:.32, lpBaseCom:.08, adicionalIR:'trimestral', sublimite:'auto' },
+           lpBaseServ:.32, lpBaseCom:.08, lpBaseServCsll:0, adicionalIR:'trimestral', sublimite:'auto' },
     receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','fin','comtransp'].map(k=>[k,z12()])),
     folha: Object.fromEntries(['prolabore','salarios','baseFgts','prov13','provFerias'].map(k=>[k,z12()])),
     folha13: { prolabore13:0, salarios13:0, baseFgts13:0 },
@@ -1026,16 +1054,19 @@ function anSet(path, m, val, tipo) {
 
 function anRenderConfig() {
   const c = AN.cfg;
+  const _servTot = ['a3_semret','a3_retiss','a3_retissinss','a4','a5r'].reduce((s,k)=>s+((AN.receitas&&AN.receitas[k])||[]).reduce((a,b)=>a+(+b||0),0),0);
+  const avisoIss = (_servTot>0 && !(+c.iss)) ? `<div class="hint" style="color:var(--danger);margin-top:10px">⚠️ Há receitas de serviços lançadas e o <b>% ISS está zerado</b> — o Presumido e o Real sairão sem ISS. Informe a alíquota do município (a importação de XMLs de NFS-e preenche automaticamente).</div>` : '';
   const pc = (id,rot,v) => `<div><label>${rot}</label><input id="${id}" value="${v?String(+(v*100).toFixed(4)).replace('.',','):''}" style="width:110px" onchange="anAplicarConfig(true)"></div>`;
   let h = `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
     ${pc('cf-iss','% ISS',c.iss)} ${pc('cf-icmsv','% ICMS vendas',c.icmsV)} ${pc('cf-icmsc','% ICMS compras',c.icmsC)}
     ${pc('cf-ipiv','% IPI vendas',c.ipiV)} ${pc('cf-ipic','% IPI compras',c.ipiC)}
     <div><label>Base IRPJ serviços (LP)</label><select id="cf-bserv" onchange="anAplicarConfig(true)"><option value="0.32" ${c.lpBaseServ==.32?'selected':''}>32%</option><option value="0.16" ${c.lpBaseServ==.16?'selected':''}>16%</option><option value="0.08" ${c.lpBaseServ==.08?'selected':''}>8%</option></select></div>
+    <div><label>Base CSLL serviços (LP)</label><select id="cf-bcsll" onchange="anAplicarConfig(true)" title="Origem da presunção da CSLL: no modo Auto, serviços usam 32%; se a base do IRPJ de serviços for 16% ou 8% (transporte/hospitalar), a CSLL fica em 12% (art. 20 da Lei 9.249/95)."><option value="0" ${!(+c.lpBaseServCsll)?'selected':''}>Auto — 32% (12% se IRPJ 16%/8%)</option><option value="0.32" ${+c.lpBaseServCsll===.32?'selected':''}>32%</option><option value="0.12" ${+c.lpBaseServCsll===.12?'selected':''}>12%</option></select></div>
     <div><label>Base IRPJ comércio (LP)</label><select id="cf-bcom" onchange="anAplicarConfig(true)"><option value="0.08" ${c.lpBaseCom==.08?'selected':''}>8%</option><option value="0.16" ${c.lpBaseCom==.16?'selected':''}>16%</option></select></div>
     <div><label>Adicional de IRPJ</label><select id="cf-adic" onchange="anAplicarConfig(true)"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
     <div><label>Sublimite ICMS/ISS (R$ 3,6 mi)</label><select id="cf-sublim" onchange="anAplicarConfig(true)"><option value="auto" ${(c.sublimite||'auto')=='auto'?'selected':''}>Aplicar trava da 5ª faixa</option><option value="off" ${c.sublimite=='off'?'selected':''}>Não aplicar</option></select></div>
     <button class="btn solid" onclick="anAplicarConfig()">Aplicar</button>
-  </div>
+  </div>${avisoIss}
   <div style="margin-top:18px"><b style="font-size:13px">RBT12 — receita e folha dos 12 meses anteriores</b>
   <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto||''}" onchange="anAplicarConfig(true)"></div>
   <div style="overflow-x:auto;margin-top:8px"><table class="gtable"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m} (ant.)</th>`).join('')}</tr></thead><tbody>
@@ -1048,7 +1079,7 @@ function anAplicarConfig(silencioso) {
   if (!AN) return;
   const g = id => num($id(id).value)/100;
   Object.assign(AN.cfg, { iss:g('cf-iss'), icmsV:g('cf-icmsv'), icmsC:g('cf-icmsc'), ipiV:g('cf-ipiv'), ipiC:g('cf-ipic'),
-    lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, adicionalIR:$id('cf-adic').value, sublimite:$id('cf-sublim').value,
+    lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, lpBaseServCsll:+($id('cf-bcsll')?.value||0), adicionalIR:$id('cf-adic').value, sublimite:$id('cf-sublim').value,
     rbt12Direto:num($id('cf-rbtd').value) });
   anRecalcular(); if (!silencioso) toast('Configurações aplicadas — lembre de salvar a análise.');
 }
@@ -1433,6 +1464,7 @@ function rfCalcular() {
   // notas técnicas
   const notas = [];
   notas.push('Débitos e créditos "por fora": alíquotas aplicadas sobre os valores informados, com reduções da EC 132/LC 214 nas parcelas indicadas. O IS não gera crédito.');
+  notas.push('<b>Transição (auditada):</b> os tributos que saem são descontados ano a ano pelos percentuais remanescentes — PIS/COFINS deixam de existir em 2027 (substituídos pela CBS plena); ICMS e ISS caem 10% ao ano de 2029 a 2032 e zeram em 2033 (substituídos pelo IBS); o IPI permanece apenas até 2026 (depois, zerado exceto ZFM). Os novos (CBS/IBS/IS) entram pelas alíquotas da tabela acima. Em 2026 (ano-teste), a CBS de 0,9% e o IBS de 0,1% são compensáveis com o PIS/COFINS devidos.');
   if ((RF.contra.vendas_lrlp||0) > 0) notas.push('Vendas a PJ do Lucro Real/Presumido: o IBS/CBS destacado gera crédito integral ao cliente — tende a ser neutro na cadeia.');
   if ((RF.contra.vendas_pf||0) > 0 || (RF.contra.vendas_simples||0) > 0) notas.push('Vendas a PF e a optantes do Simples: o imposto é custo final do comprador — atenção ao impacto no preço.');
   if ((RF.contra.compras_simples||0) > 0) notas.push('Compras de fornecedores do Simples: crédito limitado ao montante de IBS/CBS efetivamente recolhido no DAS (ajuste o % conforme o fornecedor).');
@@ -1532,10 +1564,12 @@ async function pgdasLer(input) {
         const tc = await pg.getTextContent();
         txt += tc.items.map(i=>i.str).join(' ') + '\n';
       }
+      txt = txt.replace(/[ \t\u00A0]+/g, ' ');   // v6: o pdf.js pode emitir espaços múltiplos dentro dos rótulos — sem normalizar, RPA/atividades falham em alguns PDFs
       let pa = txt.match(/Per[ií]odo\s+de\s+Apura[çc][ãa]o\s*:?\s*0?1\/(\d{2})\/(\d{4})/i);
       if (!pa) { const nd = txt.match(/da\s+Declara[çc][ãa]o\s*:?\s*\d{8}(\d{4})(\d{2})001/); if (nd) pa = [nd[0], nd[2], nd[1]]; }
       if (!pa) { const nf = f.name.match(/(\d{4})(\d{2})001\.pdf$/i); if (nf) pa = [nf[0], nf[2], nf[1]]; }
       if (!pa) { erros.push(f.name+' (período não identificado)'); continue; }
+      if (!/Receita Bruta do PA/.test(txt)) { erros.push(f.name+' (não é a declaração completa — recibo/extrato ignorado)'); continue; }
       const chave = `${pa[1]}/${pa[2]}`;
       cnpjPdf = (txt.match(/CNPJ Matriz:\s*([\d.\/\-]+)/)||[])[1] || cnpjPdf;
       nomePdf = (txt.match(/Nome empresarial:\s*(.+?)\s+Data de abertura/)||[])[1] || nomePdf;
@@ -1570,11 +1604,22 @@ function pgdasReview() {
     PG_BLOCOS.map(([k,r])=>`<option value="${k}" ${k===b?'selected':''}>${r}</option>`).join('') + '</select>';
   let h = `<div class="hint" style="margin-bottom:8px"><b>${PG_DADOS.nome||''}</b> — CNPJ ${PG_DADOS.cnpj||'?'} · ${chaves.length} mês(es) do ano <b>${anoImp}</b>. Confira o enquadramento de cada atividade e aplique.</div>
   <table class="gtable"><thead><tr><th>PA</th><th class="num">Receita (RPA)</th><th>Atividade → bloco do Simples</th><th class="num">DAS declarado</th></tr></thead><tbody>`;
+  const selRpa = pa => `<select onchange="PG_DADOS.meses['${pa}'].rpaBloco=this.value" style="min-width:190px">` +
+    PG_BLOCOS.map(([k,r])=>`<option value="${k}" ${k===(PG_DADOS.meses[pa].rpaBloco||'a2_semst')?'selected':''}>${r}</option>`).join('') + '</select>';
   for (const pa of chaves) {
     const M = PG_DADOS.meses[pa];
-    h += `<tr><td class="rot">${pa}</td><td class="num">${fmt(M.receita)}</td><td>` +
-      (M.atividades.length ? M.atividades.map((a,i)=>`<div style="margin:3px 0"><span class="hint" title="${a.texto}">${a.texto.slice(0,60)}...</span> ${sel(pa,i,a.bloco)} <b>${fmt(a.valor)}</b></div>`).join('') : '<span class="hint">sem movimento</span>') +
-      `</td><td class="num">${fmt(M.das)}</td></tr>`;
+    const somaAtv = M.atividades.reduce((s,a)=>s+(+a.valor||0),0);
+    const difRpa = (M.receita||0) - somaAtv;
+    let corpo;
+    if (M.atividades.length) {
+      corpo = M.atividades.map((a,i)=>`<div style="margin:3px 0"><span class="hint" title="${a.texto}">${a.texto.slice(0,60)}...</span> ${sel(pa,i,a.bloco)} <b>${fmt(a.valor)}</b></div>`).join('');
+      if (Math.abs(difRpa) > 0.02) { M.rpaBloco = M.rpaBloco || M.atividades[0].bloco || 'a2_semst';
+        corpo += `<div style="margin:4px 0;color:var(--danger)">⚠️ Atividades somam ${fmt(somaAtv)} e a RPA é ${fmt(M.receita)} — a diferença de <b>${fmt(difRpa)}</b> será aplicada em: ${selRpa(pa)}</div>`; }
+    } else if ((M.receita||0) > 0.005) {
+      M.rpaBloco = M.rpaBloco || 'a2_semst';
+      corpo = `<div class="hint">PDF sem o bloco de atividades — a receita será aplicada pela RPA.</div><div style="margin:4px 0">Destino da RPA: ${selRpa(pa)}</div>`;
+    } else corpo = '<span class="hint">sem movimento</span>';
+    h += `<tr><td class="rot">${pa}</td><td class="num">${fmt(M.receita)}</td><td>${corpo}</td><td class="num">${fmt(M.das)}</td></tr>`;
   }
   h += `</tbody></table>
   <div class="toolbar" style="margin:12px 0 0">
@@ -1592,11 +1637,14 @@ async function pgdasAplicar() {
   const anoImp = +chaves[0].split('/')[1];
   if (+AN.ano !== anoImp) { AN.ano = anoImp; $id('an-ano').value = anoImp; }
   AN._pgdas = { das: z12(), tributos: {} };
-  let aplicados = 0;
+  let aplicados = 0, rpaFallback = 0;
   for (const pa of chaves) {
     const [mm, aa] = pa.split('/'); const m = +mm - 1;
     const M = PG_DADOS.meses[pa];
     for (const atv of M.atividades) { AN.receitas[atv.bloco][m] = (AN.receitas[atv.bloco][m]||0) + atv.valor; aplicados++; }
+    const _somaAtv = M.atividades.reduce((s,a)=>s+(+a.valor||0),0);
+    const _difRpa = (M.receita||0) - _somaAtv;
+    if (_difRpa > 0.02) { const bl = M.rpaBloco||'a2_semst'; AN.receitas[bl][m] = (AN.receitas[bl][m]||0) + _difRpa; aplicados++; rpaFallback++; }
     AN._pgdas.das[m] = M.das||0; AN._pgdas.tributos[m] = M.tributos;
   }
   if ($id('pg-rbt').checked) {
@@ -1607,7 +1655,7 @@ async function pgdasAplicar() {
   }
   $id('imp-pgdas-card').style.display='none';
   anRenderTabs(); anRenderGrid(); anRecalcular();
-  toast(`PGDAS aplicado: ${chaves.length} mês(es), ${aplicados} lançamento(s). Salve a análise para persistir.`);
+  toast(`PGDAS aplicado: ${chaves.length} mês(es), ${aplicados} lançamento(s)${rpaFallback?` — ${rpaFallback} mês(es) pela RPA (confira o bloco de destino)`:''}. Salve a análise para persistir.`);
 }
 
 
@@ -1691,15 +1739,9 @@ function balDestino(cls, desc) {
   return 'ignorar';
 }
 
-function balLer(input) {
-  const f = input.files[0]; if (!f) return;
-  const rd = new FileReader();
-  rd.onload = e => {
-    try {
-      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-      let ws = null, nome = '';
-      for (const n of wb.SheetNames) { const s = XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1}); if (s.length>4) { ws = s; nome = n; break; } }
-      if (!ws) { toast('Planilha vazia.'); return; }
+let BAL_ABAS = null;
+function balParseRows(ws) {
+  try {
       // cabeçalho: CNPJ e período
       const plano = ws.map(r=>(r||[]).map(c=>String(c??'')));
       const txtCab = plano.slice(0,4).flat().join(' ');
@@ -1728,6 +1770,39 @@ function balLer(input) {
       BAL = { cnpj: cnpjB, nome: (nomeB||'').trim(), contas,
         mesIni: per ? +per[2]-1 : 0, mesFim: per ? +per[5]-1 : 11, ano: per ? +per[3] : null };
       balReview();
+  } catch(err) { console.error(err); toast('Erro ao ler o balancete: '+err.message); }
+}
+function balEscolherAba(i) { if (BAL_ABAS && BAL_ABAS[i]) balParseRows(BAL_ABAS[i].s); }
+function balLer(input) {
+  const f = input.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = e => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      // v6: identifica a empresa pelo CABEÇALHO INTERNO de cada aba (nunca pelo nome da aba),
+      // deduplica abas repetidas e, havendo empresas distintas no mesmo arquivo, pede a escolha.
+      const cands = [];
+      for (const n of wb.SheetNames) {
+        const s = XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1});
+        if (s.length>4 && s.slice(0,10).some(r=>(r||[]).join('|').includes('Classificação'))) {
+          const cab = s.slice(0,3).map(r=>(r||[]).map(c=>String(c??'')).join(' ')).join(' ');
+          const cnpjA = (cab.match(/CNPJ:\s*([\d.\/\-]+)/)||[])[1]||'';
+          const empA = (cab.match(/\d{1,5}\s*-\s*(.+?)(?:\s{2,}|Emissão|CNPJ|$)/)||[])[1]||n;
+          cands.push({ aba:n, s, cnpj:cnpjA, emp:String(empA).trim(), linhas:s.length });
+        }
+      }
+      if (!cands.length) { toast('Planilha vazia ou sem a coluna "Classificação Conta".'); return; }
+      const vistos = {}, unicos = [];
+      for (const c of cands) { const k = (c.cnpj||c.emp)+'|'+c.linhas; if (!vistos[k]) { vistos[k]=1; unicos.push(c); } }
+      const cnpjsDist = [...new Set(unicos.map(c=>c.cnpj||c.emp))];
+      if (cnpjsDist.length > 1) {
+        BAL_ABAS = unicos;
+        $id('imp-bal-review').innerHTML = '<div class="hint" style="margin-bottom:8px">⚠️ O arquivo contém <b>'+cnpjsDist.length+' empresas</b> (identificação pelo cabeçalho interno de cada aba, não pelo nome da aba). Escolha qual importar:</div>' +
+          unicos.map((c,i)=>`<button class="btn" style="margin:4px" onclick="balEscolherAba(${i})">${c.emp} — CNPJ ${c.cnpj||'?'} · ${c.linhas} linhas</button>`).join('');
+        return;
+      }
+      if (cands.length > unicos.length) toast('Aviso: o arquivo tem '+cands.length+' abas, mas todas com a mesma empresa — usando uma só.');
+      balParseRows(unicos[0].s);
     } catch(err) { console.error(err); toast('Erro ao ler o balancete: '+err.message); }
   };
   rd.readAsArrayBuffer(f);
@@ -1776,6 +1851,458 @@ async function balAplicar() {
 }
 
 
+
+// ═══════════ v6: MAPA cClassTrib (Tabelas 01/02 do usuário — item LC 116 → cClassTrib → % redução IBS/CBS) ═══════════
+// lc: item → lista de cClassTrib possíveis (o 1º é o padrão) · lcN: descrição do item · ct: código → [redIBS, redCBS, nome]
+const MAPA_CLASSTRIB = {"lc":{"01.01":["000001","200043","200044"],"01.02":["000001","200043","200044"],"01.03":["000001"],"01.04":["000001","200043","200044"],"01.05":["000001"],"01.06":["000001","200043","200044"],"01.07":["000001"],"01.08":["000001","200040"],"01.09":["000001"],"02.01":["000001","200016"],"03.02":["000001"],"03.03":["200027"],"03.04":["200027"],"03.05":["000001","200039"],"04.01":["200029"],"04.22":["011002"],"04.23":["011002"],"05.01":["200052","200038"],"05.02":["000001","200038"],"05.03":["000001"],"05.04":["000001"],"05.05":["000001"],"05.06":["000001"],"05.07":["000001","200038"],"05.08":["000001"],"05.09":["011005"],"06.01":["000001"],"06.02":["000001"],"06.03":["000001"],"06.04":["200041","000001"],"06.05":["000001"],"06.06":["000001"],"07.01":["200052","000001","200038"],"07.02":["200046","200045","200038"],"07.03":["000001","200045"],"07.04":["200046","200045"],"07.05":["200046","200045","200038"],"07.06":["200046","200045"],"07.07":["200046","200045"],"07.08":["200046","200045"],"07.09":["000001"],"07.10":["000001","200045"],"07.11":["000001"],"07.12":["000001"],"07.13":["000001","200038"],"07.16":["000001","200038","200037"],"07.17":["200046","200045"],"07.18":["000001","200045"],"07.19":["200052","200045"],"07.20":["000001","200045"],"07.21":["000001"],"07.22":["000001"],"08.01":["200028","200025"],"08.02":["000001","200028"],"09.01":["200048"],"09.02":["000001","200051"],"09.03":["200051"],"10.01":["000001","011003"],"10.02":["000001"],"10.03":["000001"],"10.04":["000001"],"10.05":["200046","000001"],"10.06":["000001"],"10.07":["000001"],"10.08":["000001"],"10.09":["000001"],"10.10":["000001"],"11.01":["000001"],"11.02":["000001"],"11.03":["000001"],"11.04":["000001"],"11.05":["000001"],"12.01":["200039","000001"],"12.02":["200039","000001"],"12.03":["200039","000001"],"12.04":["200039","000001"],"12.05":["200048"],"12.06":["000001"],"12.07":["200039","000001"],"12.08":["200039","000001"],"12.09":["000001"],"12.10":["000001"],"12.11":["200042","000001"],"12.12":["200039","000001"],"12.13":["200039","000001"],"12.14":["200039","000001"],"12.15":["200039","000001"],"12.16":["200039","000001"],"12.17":["000001"],"13.02":["200039","000001"],"13.03":["000001","200039"],"13.04":["000001"],"13.05":["000001"],"14.01":["000001","200044"],"14.02":["000001","200044"],"14.03":["000001"],"14.04":["000001"],"14.05":["000001"],"14.06":["000001"],"14.07":["000001"],"14.08":["000001"],"14.09":["000001"],"14.10":["000001"],"14.11":["000001"],"14.12":["000001"],"14.13":["000001"],"14.14":["000001"],"15.01":["010002"],"15.02":["000001"],"15.03":["000001"],"15.04":["000001"],"15.05":["000001"],"15.06":["000001"],"15.07":["000001"],"15.08":["000001"],"15.09":["010002"],"15.10":["000001"],"15.11":["000001"],"15.12":["000001"],"15.13":["000001"],"15.14":["000001"],"15.15":["000001"],"15.16":["000001"],"15.17":["000001"],"15.18":["000001"],"16.01":["400001","200021","000001"],"16.02":["000001"],"17.01":["000001"],"17.02":["000001"],"17.03":["000001"],"17.04":["000001"],"17.05":["000001"],"17.06":["000001"],"17.08":["000001"],"17.09":["200038","000001"],"17.10":["000001"],"17.11":["000001"],"17.12":["200046","000001"],"17.13":["000001"],"17.14":["200052"],"17.15":["000001"],"17.16":["200052","000001"],"17.17":["000001"],"17.18":["000001"],"17.19":["200052"],"17.20":["200052"],"17.21":["200052"],"17.22":["000001"],"17.23":["000001"],"17.24":["000001"],"17.25":["000001"],"18.01":["000001"],"19.01":["000001"],"20.01":["000001"],"20.02":["000001"],"20.03":["000001"],"21.01":["000001"],"22.01":["000002"],"23.01":["000001"],"24.01":["000001"],"25.01":["000001","200029"],"25.02":["000001","200029"],"25.03":["011001"],"25.04":["000001"],"25.05":["000001"],"26.01":["000001"],"27.01":["200052"],"28.01":["000001"],"29.01":["200052"],"30.01":["200052"],"31.01":["200052"],"32.01":["000001"],"33.01":["000001"],"34.01":["000001"],"35.01":["000001","200040","200052"],"36.01":["000001"],"37.01":["000001","200039"],"38.01":["200039","000001"],"39.01":["000001"],"40.01":["000001"]},"lcN":{"01.01":"Análise E Desenvolvimento De Sistemas.","01.02":"Programação.","01.03":"Processamento, Armazenamento Ou Hospedagem De ","01.04":"Elaboração De Programas De Computadores, Inclu","01.05":"Licenciamento Ou Cessão De Direito De Uso De P","01.06":"Assessoria E Consultoria Em Informática.","01.07":"Suporte Técnico Em Informática, Inclusive Inst","01.08":"Planejamento, Confecção, Manutenção E Atualiza","01.09":"Disponibilização, Sem Cessão Definitiva, De Co","02.01":"Serviços De Pesquisas E Desenvolvimento De Qua","03.02":"Cessão De Direito De Uso De Marcas E De Sinais","03.03":"Exploração De Salões De Festas, Centro De Conv","03.04":"Locação, Sublocação, Arrendamento, Direito De ","03.05":"Cessão De Andaimes, Palcos, Coberturas E Outra","04.01":"Medicina E Biomedicina.","04.02":"Análises Clínicas, Patologia, Eletricidade Méd","04.03":"Hospitais, Clínicas, Laboratórios, Sanatórios,","04.04":"Instrumentação Cirúrgica.","04.05":"Acupuntura.","04.06":"Enfermagem, Inclusive Serviços Auxiliares.","04.07":"Serviços farmacêuticos","04.08":"Terapia Ocupacional, Fisioterapia E Fonoaudiol","04.09":"Terapias De Qualquer Espécie Destinadas Ao Tra","04.10":"Nutrição.","04.11":"Obstetrícia.","04.12":"Odontologia.","04.13":"Ortóptica.","04.14":"Próteses Sob Encomenda.","04.15":"Psicanálise.","04.16":"Psicologia.","04.17":"Casas De Repouso E De Recuperação, Creches, As","04.18":"Inseminação Artificial, Fertilização In Vitro ","04.19":"Bancos De Sangue, Leite, Pele, Olhos, Óvulos, ","04.20":"Coleta De Sangue, Leite, Tecidos, Sêmen, Órgão","04.21":"Unidade De Atendimento, Assistência Ou Tratame","04.22":"Planos De Medicina De Grupo Ou Individual E Co","04.23":"Outros Planos De Saúde Que Se Cumpram Através ","05.01":"Medicina Veterinária E Zootecnia.","05.02":"Hospitais, Clínicas, Ambulatórios, Prontos-Soc","05.03":"Laboratórios De Análise Na Área Veterinária.","05.04":"Inseminação Artificial, Fertilização In Vitro ","05.05":"Bancos De Sangue E De Órgãos E Congêneres.","05.06":"Coleta De Sangue, Leite, Tecidos, Sêmen, Órgão","05.07":"Unidade De Atendimento, Assistência Ou Tratame","05.08":"Guarda, Tratamento, Amestramento, Embelezament","05.09":"Planos De Atendimento E Assistência Médico-Vet","06.01":"Barbearia, Cabeleireiros, Manicuros, Pedicuros","06.02":"Esteticistas, Tratamento De Pele, Depilação E ","06.03":"Banhos, Duchas, Sauna, Massagens E Congêneres.","06.04":"Ginástica, Dança, Esportes, Natação, Artes Mar","06.05":"Centros De Emagrecimento, Spa E Congêneres.","06.06":"Aplicação De Tatuagens, Piercings E Congêneres","07.01":"Engenharia, Agronomia, Agrimensura, Arquitetur","07.02":"Execução, Por Administração, Empreitada Ou Sub","07.03":"Elaboração De Planos Diretores, Estudos De Via","07.04":"Demolição.","07.05":"Reparação, Conservação E Reforma De Edifícios,","07.06":"Colocação E Instalação De Tapetes, Carpetes, A","07.07":"Recuperação, Raspagem, Polimento E Lustração D","07.08":"Calafetação.","07.09":"Varrição, Coleta, Remoção, Incineração, Tratam","07.10":"Limpeza, Manutenção E Conservação De Vias E Lo","07.11":"Decoração E Jardinagem, Inclusive Corte E Poda","07.12":"Controle E Tratamento De Efluentes De Qualquer","07.13":"Dedetização, Desinfecção, Desinsetização, Imun","07.16":"Florestamento, Reflorestamento, Semeadura, Adu","07.17":"Escoramento, Contenção De Encostas E Serviços ","07.18":"Limpeza E Dragagem De Rios, Portos, Canais, Ba","07.19":"Acompanhamento E Fiscalização Da Execução De O","07.20":"Aerofotogrametria (Inclusive Interpretação), C","07.21":"Pesquisa, Perfuração, Cimentação, Mergulho, Pe","07.22":"Nucleação E Bombardeamento De Nuvens E Congêne","08.01":"Ensino Regular Pré-Escolar, Fundamental, Médio","08.02":"Instrução, Treinamento, Orientação Pedagógica ","09.01":"Hospedagem De Qualquer Natureza Em Hotéis, Apa","09.02":"Agenciamento, Organização, Promoção, Intermedi","09.03":"Guias De Turismo.","10.01":"Agenciamento, Corretagem Ou Intermediação De C","10.02":"Agenciamento, Corretagem Ou Intermediação De T","10.03":"Agenciamento, Corretagem Ou Intermediação De D","10.04":"Agenciamento, Corretagem Ou Intermediação De C","10.05":"Agenciamento, Corretagem Ou Intermediação De B","10.06":"Agenciamento Marítimo.","10.07":"Agenciamento De Notícias.","10.08":"Agenciamento De Publicidade E Propaganda, Incl","10.09":"Representação De Qualquer Natureza, Inclusive ","10.10":"Distribuição De Bens De Terceiros.","11.01":"Guarda E Estacionamento De Veículos Terrestres","11.02":"Vigilância, Segurança Ou Monitoramento De Bens","11.03":"Escolta, Inclusive De Veículos E Cargas.","11.04":"Armazenamento, Depósito, Carga, Descarga, Arru","11.05":"Vigilância, Segurança Ou Monitoramento De Bens","12.01":"Espetáculos Teatrais.","12.02":"Exibições Cinematográficas.","12.03":"Espetáculos Circenses.","12.04":"Programas De Auditório.","12.05":"Parques De Diversões, Centros De Lazer E Congê","12.06":"Boates, taxi-dancing e congêneres.","12.07":"Shows, ballet, danças, desfiles, bailes, ópera","12.08":"Feiras, exposições, congressos e congêneres.","12.09":"Bilhares, boliches e diversões eletrônicas ou ","12.10":"Corridas e competições de animais.","12.11":"Competições esportivas ou de destreza física o","12.12":"Execução de música.","12.13":"Produção, mediante ou sem encomenda prévia, de","12.14":"Fornecimento de música para ambientes fechados","12.15":"Desfiles de blocos carnavalescos ou folclórico","12.16":"Exibição de filmes, entrevistas, musicais, esp","12.17":"Recreação e animação, inclusive em festas e ev","13.02":"Fonografia ou gravação de sons, inclusive truc","13.03":"Fotografia e cinematografia, inclusive revelaç","13.04":"Reprografia, microfilmagem e digitalização.","13.05":"Composição Gráfica, Inclusive Confecção De Imp","14.01":"Lubrificação, limpeza, lustração, revisão, car","14.02":"Assistência técnica.","14.03":"Recondicionamento de motores (exceto peças e p","14.04":"Recauchutagem ou regeneração de pneus.","14.05":"Restauração, Recondicionamento, Acondicionamen","14.06":"Instalação E Montagem De Aparelhos, Máquinas E","14.07":"Colocação de molduras e congêneres.","14.08":"Encadernação, gravação e douração de livros, r","14.09":"Alfaiataria e costura, quando o material for f","14.10":"Tinturaria e lavanderia.","14.11":"Tapeçaria e reforma de estofamentos em geral.","14.12":"Funilaria e lanternagem.","14.13":"Carpintaria e serralheria.","14.14":"Guincho Intramunicipal, Guindaste E Içamento. ","15.01":"Administração De Fundos Quaisquer, De Consórci","15.02":"Abertura De Contas Em Geral, Inclusive Conta-C","15.03":"Locação E Manutenção De Cofres Particulares, D","15.04":"Fornecimento Ou Emissão De Atestados Em Geral,","15.05":"Cadastro, Elaboração De Ficha Cadastral, Renov","15.06":"Emissão, Reemissão E Fornecimento De Avisos, C","15.07":"Acesso, Movimentação, Atendimento E Consulta A","15.08":"Emissão, Reemissão, Alteração, Cessão, Substit","15.09":"Arrendamento Mercantil (Leasing) De Quaisquer ","15.10":"Serviços Relacionados A Cobranças, Recebimento","15.11":"Devolução De Títulos, Protesto De Títulos, Sus","15.12":"Custódia Em Geral, Inclusive De Títulos E Valo","15.13":"Serviços Relacionados A Operações De Câmbio Em","15.14":"Fornecimento, Emissão, Reemissão, Renovação E ","15.15":"Compensação De Cheques E Títulos Quaisquer; Se","15.16":"Emissão, Reemissão, Liquidação, Alteração, Can","15.17":"Emissão, Fornecimento, Devolução, Sustação, Ca","15.18":"Serviços Relacionados A Crédito Imobiliário, A","16.01":"Serviços De Transporte Coletivo Municipal Rodo","16.02":"Outros Serviços De Transporte De Natureza Muni","17.01":"Assessoria Ou Consultoria De Qualquer Natureza","17.02":"Datilografia, Digitação, Estenografia, Expedie","17.03":"Planejamento, Coordenação, Programação Ou Orga","17.04":"Recrutamento, Agenciamento, Seleção E Colocaçã","17.05":"Fornecimento De Mão-De-Obra, Mesmo Em Caráter ","17.06":"Propaganda E Publicidade, Inclusive Promoção D","17.08":"Franquia (Franchising).","17.09":"Perícias, Laudos, Exames Técnicos E Análises T","17.10":"Planejamento, Organização E Administração De F","17.11":"Organização De Festas E Recepções; Bufê (Excet","17.12":"Administração Em Geral, Inclusive De Bens E Ne","17.13":"Leilão E Congêneres.","17.14":"Advocacia.","17.15":"Arbitragem De Qualquer Espécie, Inclusive Jurí","17.16":"Auditoria.","17.17":"Análise De Organização E Métodos.","17.18":"Atuária E Cálculos Técnicos De Qualquer Nature","17.19":"Contabilidade, Inclusive Serviços Técnicos E A","17.20":"Consultoria E Assessoria Econômica Ou Financei","17.21":"Estatística.","17.22":"Cobrança Em Geral.","17.23":"Assessoria, Análise, Avaliação, Atendimento, C","17.24":"Apresentação De Palestras, Conferências, Semin","17.25":"Inserção De Textos, Desenhos E Outros Materiai","18.01":"Serviços De Regulação De Sinistros Vinculados ","19.01":"Serviços De Distribuição E Venda De Bilhetes E","20.01":"Serviços Portuários, Ferroportuários, Utilizaç","20.02":"Serviços Aeroportuários, Utilização De Aeropor","20.03":"Serviços De Terminais Rodoviários, Ferroviário","21.01":"Serviços De Registros Públicos, Cartorários E ","22.01":"Serviços De Exploração De Rodovia Mediante Cob","23.01":"Serviços De Programação E Comunicação Visual, ","24.01":"Serviços De Chaveiros, Confecção De Carimbos, ","25.01":"Funerais, Inclusive Fornecimento De Caixão, Ur","25.02":"Translado Intramunicipal E Cremação De Corpos ","25.03":"Planos Ou Convênio Funerários.","25.04":"Manutenção E Conservação De Jazigos E Cemitéri","25.05":"Cessão De Uso De Espaços Em Cemitérios Para Se","26.01":"Serviços De Coleta, Remessa Ou Entrega De Corr","27.01":"Serviços De Assistência Social.","28.01":"Serviços De Avaliação De Bens E Serviços De Qu","29.01":"Serviços De Biblioteconomia.","30.01":"Serviços De Biologia, Biotecnologia E Química.","31.01":"Serviços Técnicos Em Edificações, Eletrônica, ","32.01":"Serviços De Desenhos Técnicos.","33.01":"Serviços De Desembaraço Aduaneiro, Comissários","34.01":"Serviços De Investigações Particulares, Deteti","35.01":"Serviços De Reportagem, Assessoria De Imprensa","36.01":"Serviços De Meteorologia.","37.01":"Serviços De Artistas, Atletas, Modelos E Maneq","38.01":"Serviços De Museologia","39.01":"Serviços De Ourivesaria E Lapidação (Quando O ","40.01":"Obras De Arte Sob Encomenda."},"ct":{"000001":[0.0,0.0,"Situações tributadas integralmente pelo IBS e CBS."],"000002":[0.0,0.0,"Exploração de via"],"000003":[0.0,0.0,"Regime automotivo - projetos incentivados (art. 311)"],"000004":[0.0,0.0,"Regime automotivo - projetos incentivados (art. 312)"],"010001":[0.0,0.0,"Operações do FGTS não realizadas pela Caixa Econômic"],"010002":[0.0,0.0,"Operações do serviço financeiro"],"011001":[60.0,60.0,"Planos de assistência funerária."],"011002":[60.0,60.0,"Planos de assistência à saúde"],"011003":[60.0,60.0,"Intermediação de planos de assistência à saúde"],"011004":[0.0,0.0,"Concursos e prognósticos"],"011005":[30.0,30.0,"Planos de assistência à saúde de animais domésticos"],"200001":[100.0,100.0,"Aquisições realizadas entre empresas autorizadas a o"],"200002":[100.0,100.0,"Fornecimento ou importação para produtor rural não c"],"200003":[100.0,100.0,"Vendas de produtos destinados à alimentação humana ("],"200004":[100.0,100.0,"Venda de dispositivos médicos (Anexo XII)"],"200005":[100.0,100.0,"Venda de dispositivos médicos adquiridos por órgãos "],"200006":[100.0,100.0,"Situação de emergência de saúde pública reconhecida "],"200007":[100.0,100.0,"Fornecimento dos dispositivos de acessibilidade próp"],"200008":[100.0,100.0,"Fornecimento dos dispositivos de acessibilidade próp"],"200009":[100.0,100.0,"Fornecimento de medicamentos (Anexo XIV)"],"200010":[100.0,100.0,"Fornecimento dos medicamentos registrados na Anvisa,"],"200011":[100.0,100.0,"Fornecimento das composições para nutrição enteral e"],"200012":[100.0,100.0,"Situação de emergência de saúde pública reconhecida "],"200013":[100.0,100.0,"Fornecimento de tampões higiênicos, absorventes higi"],"200014":[100.0,100.0,"Fornecimento dos produtos hortícolas, frutas e ovos "],"200015":[100.0,100.0,"Venda de automóveis de passageiros de fabricação nac"],"200016":[100.0,100.0,"Prestação de serviços de pesquisa e desenvolvimento "],"200017":[100.0,100.0,"Operações relacionadas ao FGTS"],"200018":[100.0,100.0,"Operações de resseguro e retrocessão"],"200019":[100.0,100.0,"Importador dos serviços financeiros contribuinte"],"200020":[100.0,100.0,"Operação praticada por sociedades cooperativas optan"],"200021":[100.0,100.0,"Serviços de transporte público coletivo de passageir"],"200022":[100.0,100.0,"Operação originada fora da ZFM que destine bem mater"],"200023":[100.0,100.0,"Operação realizada por indústria incentivada que des"],"200024":[100.0,100.0,"Operação originada fora das Áreas de Livre Comércio "],"200025":[60.0,100.0,"Fornecimento dos serviços de educação relacionados a"],"200026":[80.0,80.0,"Locação de imóveis localizados nas zonas reabilitada"],"200027":[70.0,70.0,"Operações de locação, cessão onerosa e arrendamento "],"200028":[60.0,60.0,"Fornecimento dos serviços de educação (Anexo II)"],"200029":[60.0,60.0,"Fornecimento dos serviços de saúde humana (Anexo III"],"200030":[60.0,60.0,"Venda dos dispositivos médicos (Anexo IV)"],"200031":[60.0,60.0,"Fornecimento dos dispositivos de acessibilidade próp"],"200032":[60.0,60.0,"Fornecimento dos medicamentos registrados na Anvisa "],"200033":[60.0,60.0,"Fornecimento das composições para nutrição enteral e"],"200034":[60.0,60.0,"Fornecimento dos alimentos destinados ao consumo hum"],"200035":[60.0,60.0,"Fornecimento dos produtos de higiene pessoal e limpe"],"200036":[60.0,60.0,"Fornecimento de produtos agropecuários, aquícolas, p"],"200037":[60.0,60.0,"Fornecimento de serviços ambientais de conservação o"],"200038":[60.0,60.0,"Fornecimento dos insumos agropecuários e aquícolas ("],"200039":[60.0,60.0,"Fornecimento dos serviços e o licenciamento ou cessã"],"200040":[60.0,60.0,"Fornecimento de serviços de comunicação instituciona"],"200041":[60.0,60.0,"Fornecimento de serviço de educação desportiva (art."],"200042":[60.0,60.0,"Fornecimento de serviço de educação desportiva (art."],"200043":[60.0,60.0,"Fornecimento à administração pública dos serviços e "],"200044":[60.0,60.0,"Operações e prestações de serviços de segurança da i"],"200045":[60.0,60.0,"Operações relacionadas a projetos de reabilitação ur"],"200046":[50.0,50.0,"Operações com bens imóveis"],"200047":[40.0,40.0,"Bares e Restaurantes"],"200048":[40.0,40.0,"Hotelaria, Parques de Diversão e Parques Temáticos"],"200049":[40.0,40.0,"Transporte coletivo de passageiros rodoviário, ferro"],"200050":[40.0,40.0,"Serviços de transporte aéreo regional coletivo de pa"],"200051":[40.0,40.0,"Agências de Turismo"],"200052":[30.0,30.0,"Prestação de serviços de profissões intelectuais"],"210001":[50.0,50.0,"Redutor social aplicado uma única vez na alienação d"],"210002":[50.0,50.0,"Redutor social aplicado uma única vez na alienação d"],"210003":[70.0,70.0,"Redutor social em operações de locação, cessão onero"],"220001":[0.0,0.0,"Incorporação imobiliária submetida ao regime especia"],"220002":[0.0,0.0,"Incorporação imobiliária submetida ao regime especia"],"220003":[0.0,0.0,"Alienação de imóvel decorrente de parcelamento do so"],"221001":[0.0,0.0,"Locação, cessão onerosa ou arrendamento de bem imóve"],"222001":[0.0,0.0,"Transporte internacional de passageiros, caso os tre"],"400001":[0.0,0.0,"Fornecimento de serviços de transporte público colet"],"410001":[0.0,0.0,"Fornecimento de bonificações quando constem no docum"],"410002":[0.0,0.0,"Transferências entre estabelecimentos pertencentes a"],"410003":[0.0,0.0,"Doações sem contraprestação em benefício do doador"],"410004":[0.0,0.0,"Exportações de bens e serviços"],"410005":[0.0,0.0,"Fornecimentos realizados pela União, pelos Estados, "],"410006":[0.0,0.0,"Fornecimentos realizados por entidades religiosas e "],"410007":[0.0,0.0,"Fornecimentos realizados por partidos políticos"],"410008":[0.0,0.0,"Fornecimentos de livros, jornais, periódicos e do pa"],"410009":[0.0,0.0,"Fornecimentos de fonogramas e videofonogramas musica"],"410010":[0.0,0.0,"Fornecimentos de serviço de comunicação nas modalida"],"410011":[0.0,0.0,"Fornecimentos de ouro, quando definido em lei como a"],"410012":[0.0,0.0,"Fornecimento de condomínio edilício não optante pelo"],"410013":[0.0,0.0,"Exportações de combustíveis"],"410014":[0.0,0.0,"Fornecimento de produtor rural não contribuinte"],"410015":[0.0,0.0,"Fornecimento por transportador autônomo não contribu"],"410016":[0.0,0.0,"Fornecimento ou aquisição de resíduos sólidos"],"410017":[0.0,0.0,"Aquisição de bem móvel com crédito presumido sob con"],"410018":[0.0,0.0,"Operações relacionadas aos fundos garantidores e exe"],"410019":[0.0,0.0,"Exclusão da gorjeta na base de cálculo no fornecimen"],"410020":[0.0,0.0,"Exclusão do valor de intermediação na base de cálcul"],"410021":[0.0,0.0,"Contribuição de que trata o art. 149-A da Constituiç"],"410022":[0.0,0.0,"Consolidação da propriedade do bem pelo credor"],"410023":[0.0,0.0,"Alienação de bens móveis ou imóveis que tenham sido "],"410024":[0.0,0.0,"Consolidação da propriedade do bem pelo grupo de con"],"410025":[0.0,0.0,"Alienação de bem que tenha sido objeto de garantia e"],"410026":[0.0,0.0,"Doação com anulação de crédito"],"410999":[0.0,0.0,"Operações não onerosas sem previsão de tributação, n"],"5100002":[0.0,0.0,"Operações, sujeitas a diferimento, com insumos agrop"],"510001":[0.0,0.0,"Operações, sujeitas a diferimento, com energia elétr"],"515001":[60.0,60.0,"Operações, sujeitas a diferimento, com insumos agrop"],"550001":[0.0,0.0,"Exportações de bens materiais"],"550002":[0.0,0.0,"Regime de Trânsito"],"550003":[0.0,0.0,"Regimes de Depósito (art. 85)"],"550004":[0.0,0.0,"Regimes de Depósito (art. 87)"],"550005":[0.0,0.0,"Regimes de Depósito (art. 87, Parágrafo único)"],"550006":[0.0,0.0,"Regimes de Permanência Temporária"],"550007":[0.0,0.0,"Regimes de Aperfeiçoamento"],"550008":[0.0,0.0,"Importação de bens para o Regime de Repetro-Temporár"],"550009":[0.0,0.0,"GNL-Temporário"],"550010":[0.0,0.0,"Repetro-Permanente"],"550011":[0.0,0.0,"Repetro-Industrialização"],"550012":[0.0,0.0,"Repetro-Nacional"],"550013":[0.0,0.0,"Repetro-Entreposto"],"550014":[0.0,0.0,"Zona de Processamento de Exportação"],"550015":[0.0,0.0,"Regime Tributário para Incentivo à Modernização e à "],"550016":[0.0,0.0,"Regime Especial de Incentivos para o Desenvolvimento"],"550017":[0.0,0.0,"Regime Tributário para Incentivo à Atividade Econômi"],"550018":[0.0,0.0,"Desoneração da aquisição de bens de capital"],"550019":[0.0,0.0,"Importação de bem material por indústria incentivada"],"550020":[0.0,0.0,"Áreas de livre comércio"],"550021":[0.0,0.0,"Industrialização destinada a exportações"],"620001":[0.0,0.0,"Tributação monofásica sobre combustíveis"],"620002":[0.0,0.0,"Tributação monofásica com responsabilidade pela rete"],"620003":[0.0,0.0,"Tributação monofásica com tributos retidos por respo"],"620004":[0.0,0.0,"Tributação monofásica sobre mistura de EAC com gasol"],"620005":[0.0,0.0,"Tributação monofásica sobre mistura de EAC com gasol"],"620006":[0.0,0.0,"Tributação monofásica sobre combustíveis cobrada ant"],"800001":[0.0,0.0,"Fusão, cisão ou incorporação"],"800002":[0.0,0.0,"Transferência de crédito do associado, inclusive as "],"810001":[0.0,0.0,"Crédito presumido de IBS sobre o valor apurado nos f"],"811001":[0.0,0.0,"Anulação de Crédito por Saídas Imunes/Isentas"],"811002":[0.0,0.0,"Débitos de notas fiscais não processadas na apuração"],"811003":[0.0,0.0,"Desenquadramento do Simples Nacional"],"820001":[0.0,0.0,"Documento com informações de fornecimento de serviço"],"820002":[0.0,0.0,"Documento com informações de fornecimento de serviço"],"820003":[0.0,0.0,"Documento com informações de fornecimento de serviço"],"820004":[0.0,0.0,"Documento com informações de prestação de serviços d"],"820005":[0.0,0.0,"Documento com informações de alienação de bens imóve"],"820006":[0.0,0.0,"Documento com informações de fornecimento de serviço"],"830001":[0.0,0.0,"Documento com exclusão da BC da CBS e do IBS de ener"]}};
+const ctInfo = c => MAPA_CLASSTRIB.ct[c] || [0,0,'(sem correspondência — tributação integral)'];
+const xTag = (t, tag) => { const m = t.match(new RegExp('<'+tag+'[^>]*>([^<]*)</'+tag+'>')); return m ? m[1].trim() : ''; };
+const xSec = (t, tag) => { const m = t.match(new RegExp('<'+tag+'[^>]*>([\\s\\S]*?)</'+tag+'>')); return m ? m[1] : ''; };
+const xNum = s => { s = String(s||'').trim(); if (!s) return 0; return s.includes(',') ? brNum(s) : (parseFloat(s)||0); };
+const aliqNorm = v => { v = xNum(v); return v && v < 1 ? v*100 : v; };  // 0.02 → 2% · 2.0000 → 2% · 2,0100 → 2,01%
+function lcNorm(code) {
+  const d = String(code||'').replace(/\D/g,''); if (!d) return null;
+  let it = d.length >= 5 ? d.slice(0, d.length-2) : d;   // listas municipais acrescentam 2 dígitos de subitem
+  if (it.length === 3) it = '0'+it;
+  if (it.length !== 4) return null;
+  const f = it.slice(0,2)+'.'+it.slice(2,4);
+  return MAPA_CLASSTRIB.lc[f] ? f : null;
+}
+
+// ═══════════ v6: IMPORTADOR DE XMLs (NFS-e Palhoça/ABRASF/Florianópolis + NF-e modelo 55) ═══════════
+let XN = null;
+function xmlParseNota(t, arquivo) {
+  t = t.replace(/\r/g,'');
+  // ── NF-e modelo 55 ──
+  if (/<infNFe/i.test(t)) {
+    const cStat = xTag(t,'cStat');
+    const emit = xSec(t,'emit'), dest = xSec(t,'dest');
+    const dt = (xTag(t,'dhEmi')||xTag(t,'dEmi')||'').slice(0,10);
+    const tomC = xTag(dest,'CNPJ'), tomF = xTag(dest,'CPF');
+    return { arquivo, tipo:'NF-e', layout:'NF-e 55', numero: xTag(t,'nNF'),
+      data: dt, mes: dt?(+dt.slice(5,7))-1:null, ano: dt?+dt.slice(0,4):null,
+      valor: xNum(xTag(t,'vNF')) || xNum(xTag(t,'vProd')),
+      aliqIss: 0, issRetido: false,
+      cancelada: !!(cStat && !['100','150'].includes(cStat)),
+      prestador: xTag(emit,'CNPJ'), prestNome: xTag(emit,'xNome'),
+      tomador: tomC||tomF||'', tomadorPF: !!tomF && !tomC,
+      cfop: [...new Set([...t.matchAll(/<CFOP>(\d+)<\/CFOP>/g)].map(m=>m[1]))].join(', '),
+      ncm: [...new Set([...t.matchAll(/<NCM>(\d+)<\/NCM>/g)].map(m=>m[1]))].slice(0,4).join(', '),
+      item: null, itemFixo: true, ct: '000001',
+      origem: 'mercadoria' };
+  }
+  // ── NFS-e Florianópolis (NFPse) ──
+  if (/<xmlNfpse>/i.test(t)) {
+    const dt = (xTag(t,'dataEmissao')||'').slice(0,10);
+    const tom = xTag(t,'identificacaoTomador').replace(/\D/g,'');
+    const item = lcNorm(xTag(t,'itemServico')) || null;   // raramente presente; em geral só CNAE
+    return { arquivo, tipo:'NFS-e', layout:'Florianópolis', numero: xTag(t,'numeroSerie')||xTag(t,'numeroAEDF'),
+      data: dt, mes: dt?(+dt.slice(5,7))-1:null, ano: dt?+dt.slice(0,4):null,
+      valor: xNum(xTag(t,'valorTotalServicos')) || xNum(xTag(t,'valorTotal')),
+      aliqIss: aliqNorm(xTag(t,'aliquota')), issRetido: xNum(xTag(t,'valorISSQNSubstituicao'))>0,
+      cancelada: /<motivoCancelamento>|<statusNFPSe>\s*[23]\s*</i.test(t),
+      prestador: xTag(t,'cnpjPrestador'), prestNome: xTag(t,'razaoSocialPrestador'),
+      tomador: tom, tomadorPF: tom.length===11,
+      cnae: xTag(t,'codigoCNAE'),
+      item, itemFixo: false, ct: item ? MAPA_CLASSTRIB.lc[item][0] : null,
+      origem: 'serviço' + (item ? '' : ' · CNAE '+xTag(t,'codigoCNAE')+' — escolha o item LC 116') };
+  }
+  // ── NFS-e ABRASF 2.x (CompNfse) ──
+  if (/<CompNfse|<InfNfse/i.test(t)) {
+    const dt = ((xTag(t,'Competencia')||xTag(t,'DataEmissao'))||'').slice(0,10);
+    const serv = xSec(t,'Servico') || t;
+    const item = lcNorm(xTag(serv,'ItemListaServico')||xTag(t,'ItemListaServico'));
+    const tomSec = xSec(t,'Tomador')||xSec(t,'TomadorServico');
+    const tom = (xTag(tomSec,'Cnpj')||xTag(tomSec,'Cpf')||xTag(tomSec,'CpfCnpj')||'').replace(/\D/g,'');
+    const prestSec = xSec(t,'PrestadorServico')||xSec(t,'Prestador');
+    return { arquivo, tipo:'NFS-e', layout:'ABRASF', numero: xTag(t,'Numero'),
+      data: dt, mes: dt?(+dt.slice(5,7))-1:null, ano: dt?+dt.slice(0,4):null,
+      valor: xNum(xTag(serv,'ValorServicos'))||xNum(xTag(t,'ValorServicos'))||xNum(xTag(t,'ValorLiquidoNfse')),
+      aliqIss: aliqNorm(xTag(serv,'Aliquota')||xTag(t,'Aliquota')), issRetido: (xTag(serv,'IssRetido')||xTag(t,'IssRetido'))==='1',
+      cancelada: /<NfseCancelamento|<Cancelamento>/i.test(t),
+      prestador: (xTag(prestSec,'Cnpj')||'').replace(/\D/g,''), prestNome: xTag(prestSec,'RazaoSocial'),
+      tomador: tom, tomadorPF: tom.length===11,
+      item, itemFixo: false, ct: item ? MAPA_CLASSTRIB.lc[item][0] : null,
+      origem: 'serviço' + (item ? '' : ' — escolha o item LC 116') };
+  }
+  // ── NFS-e Atende.net (Palhoça) ──
+  if (/<nfse>\s*<nf>|<numero_nfse>/i.test(t)) {
+    const dt = xTag(t,'data_nfse');  // dd/mm/aaaa
+    const p = dt.split('/');
+    const prest = xSec(t,'prestador'), tomd = xSec(t,'tomador');
+    const tom = (xTag(tomd,'cpfcnpj')||'').replace(/\D/g,'');
+    const item = lcNorm(xTag(t,'codigo_item_lista_servico'));
+    return { arquivo, tipo:'NFS-e', layout:'Palhoça (Atende.net)', numero: xTag(t,'numero_nfse'),
+      data: p.length===3 ? `${p[2]}-${p[1]}-${p[0]}` : '', mes: p.length===3?(+p[1])-1:null, ano: p.length===3?+p[2]:null,
+      valor: brNum(xTag(t,'valor_total')),
+      aliqIss: aliqNorm(xTag(t,'aliquota_item_lista_servico')), issRetido: brNum(xTag(t,'valor_issrf'))>0,
+      cancelada: /cancelad/i.test(xTag(t,'situacao_descricao_nfse')),
+      prestador: (xTag(prest,'cpfcnpj')||'').replace(/\D/g,''), prestNome: xTag(prest,'nome_razao_social'),
+      tomador: tom, tomadorPF: tom.length===11,
+      nbs: xTag(t,'codigo_nbs'),
+      item, itemFixo: false, ct: item ? MAPA_CLASSTRIB.lc[item][0] : null,
+      origem: 'serviço' + (item ? '' : ' — escolha o item LC 116') };
+  }
+  return null;
+}
+
+async function xmlLer(input) {
+  if (!input.files.length) return;
+  const notas = [], erros = [];
+  for (const f of input.files) {
+    try {
+      const t = await f.text();
+      const n = xmlParseNota(t, f.name);
+      if (n) { n.incluir = !n.cancelada; notas.push(n); }
+      else erros.push(f.name+' (formato não reconhecido — é XML de NFS-e ou NF-e?)');
+    } catch(e) { console.error(e); erros.push(f.name+' ('+e.message+')'); }
+  }
+  if (!notas.length) { toast('Nenhum XML válido. '+(erros.join('; ')||'')); return; }
+  if (erros.length) toast(erros.length+' arquivo(s) ignorado(s): '+erros.join('; '));
+  notas.sort((a,b)=> (a.data||'') < (b.data||'') ? -1 : 1);
+  XN = { notas };
+  xmlReview();
+}
+
+function xmlReview() {
+  const N = XN.notas;
+  const selItem = i => { const n = N[i];
+    return `<select onchange="XN.notas[${i}].item=this.value||null;XN.notas[${i}].ct=this.value?MAPA_CLASSTRIB.lc[this.value][0]:null;xmlReview()" style="min-width:210px">` +
+      `<option value="">— item LC 116 —</option>` +
+      Object.keys(MAPA_CLASSTRIB.lc).sort().map(k=>`<option value="${k}" ${k===n.item?'selected':''}>${k} · ${MAPA_CLASSTRIB.lcN[k]||''}</option>`).join('') + '</select>'; };
+  const selCt = i => { const n = N[i];
+    const ops = n.item ? MAPA_CLASSTRIB.lc[n.item] : Object.keys(MAPA_CLASSTRIB.ct);
+    return `<select onchange="XN.notas[${i}].ct=this.value;xmlReview()" style="min-width:250px">` +
+      ops.map(c=>{ const [ri,rc,nm]=ctInfo(c); return `<option value="${c}" ${c===n.ct?'selected':''}>${c} · red. ${ri}%${ri!==rc?'/'+rc+'%':''} · ${nm}</option>`; }).join('') + '</select>'; };
+  let h = `<div class="hint" style="margin-bottom:8px"><b>${N.length} nota(s)</b> lida(s). Confira a classificação (item LC 116 → cClassTrib) e as inclusões — canceladas já vêm desmarcadas.</div>
+  <div style="overflow-x:auto"><table class="gtable"><thead><tr><th></th><th>Nota</th><th>Data</th><th class="num">Valor</th><th>Classificação p/ Reforma</th><th>Tomador</th></tr></thead><tbody>`;
+  N.forEach((n,i)=>{
+    const [ri,rc] = ctInfo(n.ct||'');
+    h += `<tr style="${n.cancelada?'opacity:.55':''}">
+      <td><input type="checkbox" ${n.incluir?'checked':''} onchange="XN.notas[${i}].incluir=this.checked;xmlReview()" style="width:auto"></td>
+      <td><b>${n.tipo}</b> nº ${n.numero||'?'} <span class="hint">· ${n.layout}${n.cancelada?' · <b style="color:var(--danger)">CANCELADA</b>':''}${n.issRetido?' · ISS retido':''}${n.aliqIss?' · ISS '+n.aliqIss.toLocaleString('pt-BR')+'%':''}</span><div class="hint" style="font-size:11px">${n.arquivo}</div></td>
+      <td>${n.data||'?'}</td><td class="num">${fmt(n.valor)}</td>
+      <td>${n.tipo==='NF-e' ? `<span class="hint">Mercadoria (CFOP ${n.cfop||'?'} · NCM ${n.ncm||'?'})</span><br>${selCt(i)}` : `${selItem(i)}<br>${selCt(i)}`}</td>
+      <td>${n.tomador ? (n.tomadorPF?'PF':'PJ')+' '+n.tomador : '—'}</td></tr>`;
+  });
+  h += '</tbody></table></div>';
+  // resumo por % de redução (notas incluídas)
+  const inc = N.filter(n=>n.incluir);
+  const porRed = {}; let total = 0, semClasse = 0;
+  for (const n of inc) { total += n.valor;
+    if (n.tipo==='NFS-e' && !n.item) { semClasse += n.valor; continue; }
+    const ri = ctInfo(n.ct||'000001')[0];
+    porRed[ri] = (porRed[ri]||0) + n.valor; }
+  const aliqIssMax = Math.max(0, ...inc.filter(n=>n.tipo==='NFS-e'&&n.aliqIss).map(n=>n.aliqIss));
+  h += `<div class="hint" style="margin:10px 0"><b>Resumo (${inc.length} incluída(s) · ${fmt(total)}):</b> ` +
+    Object.keys(porRed).sort((a,b)=>+a-+b).map(r=>`redução ${r}%: <b>${fmt(porRed[r])}</b>`).join(' · ') +
+    (semClasse?` · <span style="color:var(--danger)">sem item LC 116 (não entram na Reforma): ${fmt(semClasse)}</span>`:'') +
+    (aliqIssMax?` · alíquota de ISS detectada: <b>${aliqIssMax.toLocaleString('pt-BR')}%</b>`:'') + `</div>
+  <div class="toolbar" style="margin:12px 0 0">
+    <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="xml-iss" ${aliqIssMax?'checked':''} style="width:auto"> Preencher o % ISS da Config (${aliqIssMax?aliqIssMax.toLocaleString('pt-BR')+'%':'—'}) se estiver zerado</label>
+    <label style="display:flex;gap:6px;align-items:center;font-size:13px" title="Cuidado com duplicidade: se as receitas já entraram por PGDAS/Faturamento, deixe desmarcado."><input type="checkbox" id="xml-grade" style="width:auto"> Lançar também as receitas nas grades, no bloco:</label>
+    <select id="xml-bloco" style="width:200px">${PG_BLOCOS.map(([k,r])=>`<option value="${k}">${r}</option>`).join('')}</select>
+    <span style="flex:1"></span>
+    <button class="btn solid" onclick="xmlAplicar()">✅ Aplicar classificação</button>
+  </div>
+  <div class="hint" style="margin-top:6px">A classificação alimenta a aba Reforma (parcelas de receita com redução via botão "⚡ Preencher da análise"). Reduções conforme suas Tabelas 01/02 (cClassTrib oficial). O código 200025 tem reduções distintas (IBS 60% / CBS 100%) — o resumo usa a do IBS.</div>`;
+  $id('imp-xml-review').innerHTML = h;
+}
+
+async function xmlAplicar() {
+  const inc = XN.notas.filter(n=>n.incluir);
+  if (!inc.length) { toast('Nenhuma nota incluída.'); return; }
+  if (!AN) AN = anNovo('', +$id('an-ano').value);
+  const porRed = {}; let total=0, vendasPF=0, vendasPJ=0, anos={};
+  for (const n of inc) { total += n.valor; anos[n.ano]=(anos[n.ano]||0)+1;
+    if (n.tomadorPF) vendasPF += n.valor; else if (n.tomador) vendasPJ += n.valor;
+    if (n.tipo==='NFS-e' && !n.item) continue;
+    const ri = ctInfo(n.ct||'000001')[0];
+    porRed[String(ri)] = (porRed[String(ri)]||0) + n.valor; }
+  const aliqIssMax = Math.max(0, ...inc.filter(n=>n.tipo==='NFS-e'&&n.aliqIss).map(n=>n.aliqIss));
+  AN.notas = { qtd: inc.length, total, porReducao: porRed, vendasPF, vendasPJ, aliqIssPct: aliqIssMax, anos };
+  let msg = `Classificação de ${inc.length} nota(s) aplicada`;
+  if ($id('xml-iss')?.checked && aliqIssMax && !(+AN.cfg.iss)) { AN.cfg.iss = aliqIssMax/100; msg += ` · % ISS preenchido (${aliqIssMax.toLocaleString('pt-BR')}%)`; }
+  if ($id('xml-grade')?.checked) {
+    const bloco = $id('xml-bloco').value; let lanc=0;
+    for (const n of inc) { if (n.mes==null || +n.ano !== +AN.ano) continue; AN.receitas[bloco][n.mes] = (AN.receitas[bloco][n.mes]||0) + n.valor; lanc++; }
+    msg += ` · ${lanc} receita(s) lançada(s) no bloco (ano ${AN.ano})`;
+  }
+  $id('imp-xml-card').style.display='none';
+  anRenderTabs(); anRenderGrid(); anRecalcular();
+  toast(msg + '. Use "⚡ Preencher da análise" na aba Reforma e salve a análise.');
+}
+
+// ═══════════ v6: IMPORTADOR DEMONSTRATIVO DO SIMPLES (Questor — "Demonstrativo das Receitas e Simples Nacional a Pagar") ═══════════
+const DEM_MES3 = {Jan:0,Fev:1,Mar:2,Abr:3,Mai:4,Jun:5,Jul:6,Ago:7,Set:8,Out:9,Nov:10,Dez:11};
+let DEM = null;
+
+function demParse(txt, arquivo) {
+  if (!/Demonstrativo das Receitas e Simples Nacional a Pagar/i.test(txt)) return null;
+  const cnpj = (txt.match(/CNPJ:\s*([\d.\/\-]+)/)||[])[1];
+  const nome = (txt.match(/\d{3,5}\s+(.+?)\s+\d{2}\/\d{2}\/\d{4}/)||[])[1];
+  const anoBase = +((txt.match(/Ano Base:\s*(\d{4})/)||[])[1]) || null;
+  let paIdx = FAT_MESES[((txt.match(/([A-Za-zçÇáã]+)\s+Discrimina[çc][ãa]o/i)||[])[1]||'').toUpperCase()];
+  if (paIdx==null) paIdx = FAT_MESES[((txt.match(/Discrimina[çc][ãa]o\s+([A-Za-zçÇáã]+)/i)||[])[1]||'').toUpperCase()];
+  if (anoBase==null || paIdx==null) return { erro: arquivo+' (não identifiquei o mês/ano-base)' };
+  const pa = `${String(paIdx+1).padStart(2,'0')}/${anoBase}`;
+  const deGlue = s => s.replace(/((?:Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\d{4})/g,' $1 ');
+  const pares = sec => { const o={}; for (const m of deGlue(sec).matchAll(/(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)(\d{4})\s+([\d.]+,\d{2})/g)) o[`${String(DEM_MES3[m[1]]+1).padStart(2,'0')}/${m[2]}`] = brNum(m[3]); return o; };
+  const rec = pares((txt.match(/Receita Bruta([\s\S]*?)Folha de sal/i)||[])[1]||'');
+  const fol = pares((txt.match(/Folha de sal[áa]rios([\s\S]*?)(?:\d+\s*-\s*ANEXO|9\s*-\s*OUTROS|$)/i)||[])[1]||'');
+  const num1 = re => brNum((txt.match(re)||[])[1]);
+  const recPA = num1(/9\.01\.01(?:\.01)?\s*-\s*Receita do PA - Total\s+([\d.]+,\d{2})/);
+  const folPA = num1(/9\.01\.02[^0-9]*?([\d.]+,\d{2})/);
+  rec[pa] = recPA; fol[pa] = folPA;
+  const das = (txt.match(/ANEXO[\s\S]*?([\d.]+,\d{2})\s+(\d+,\d{2,4})\s+([\d.]+,\d{2})/)||[]);
+  return { arquivo, cnpj, nome:(nome||'').trim(), anoBase, pa, rec, fol,
+    recPA, folPA,
+    rbt12: num1(/9\.02\.01\s*-\s*RBT12 - Total\s+([\d.]+,\d{2})/),
+    fatorR: num1(/9\.02\.03[\s\S]{0,80}?([\d]+,\d{2})/),
+    rba: num1(/9\.03\.01\s*-\s*RBA -\s*Total\s+([\d.]+,\d{2})/),
+    rbaa: num1(/9\.04\.01\s*-\s*RBAA - Total\s+([\d.]+,\d{2})/),
+    dasBase: das[1]?brNum(das[1]):0, dasAliq: das[2]?brNum(das[2]):0, dasValor: das[3]?brNum(das[3]):0 };
+}
+
+async function demLer(input) {
+  if (!input.files.length) return;
+  if (!window.pdfjsLib) { toast('Biblioteca PDF não carregou — verifique a internet.'); return; }
+  toast(`Lendo ${input.files.length} PDF(s)...`);
+  const arquivos = [], erros = [];
+  for (const f of input.files) {
+    try {
+      const pdf = await pdfjsLib.getDocument({data: await f.arrayBuffer()}).promise;
+      let txt = '';
+      for (let p=1; p<=pdf.numPages; p++) { const tc = await (await pdf.getPage(p)).getTextContent(); txt += tc.items.map(i=>i.str).join(' ') + '\n'; }
+      txt = txt.replace(/[ \t\u00A0]+/g, ' ');
+      const d = demParse(txt, f.name);
+      if (!d) erros.push(f.name+' (não é o Demonstrativo das Receitas e Simples Nacional a Pagar)');
+      else if (d.erro) erros.push(d.erro);
+      else arquivos.push(d);
+    } catch(e) { console.error(e); erros.push(f.name+' ('+e.message+')'); }
+  }
+  if (!arquivos.length) { toast('Nenhum demonstrativo válido. '+(erros.join('; ')||'')); return; }
+  if (erros.length) toast(erros.length+' arquivo(s) ignorado(s): '+erros.join('; '));
+  // mescla: receitas/folhas por competência MM/AAAA (arquivos mais recentes prevalecem)
+  arquivos.sort((a,b)=>a.pa.split('/').reverse().join('') < b.pa.split('/').reverse().join('') ? -1 : 1);
+  const rec={}, fol={}, porPA={};
+  for (const a of arquivos) { Object.assign(rec, a.rec); Object.assign(fol, a.fol); porPA[a.pa]=a; }
+  DEM = { cnpj: arquivos[0].cnpj, nome: arquivos[0].nome, anoBase: arquivos.at(-1).anoBase, rec, fol, porPA, arquivos };
+  demReview();
+}
+
+function demReview() {
+  const ano = DEM.anoBase, antAno = ano-1;
+  const mesKey = (a,m) => `${String(m+1).padStart(2,'0')}/${a}`;
+  const linhaAno = (obj,a) => MESES.map((_,m)=>obj[mesKey(a,m)]);
+  const recAno = linhaAno(DEM.rec, ano), folAno = linhaAno(DEM.fol, ano);
+  const recAnt = linhaAno(DEM.rec, antAno), folAnt = linhaAno(DEM.fol, antAno);
+  const td = v => `<td class="num">${v==null?'<span class="hint">—</span>':fmt(v)}</td>`;
+  let h = `<div class="hint" style="margin-bottom:8px"><b>${DEM.nome||''}</b> — CNPJ ${DEM.cnpj||'?'} · ano-base <b>${ano}</b> · ${DEM.arquivos.length} PDF(s): ${Object.keys(DEM.porPA).join(', ')}</div>
+  <div style="overflow-x:auto"><table class="gtable"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m}</th>`).join('')}</tr></thead><tbody>
+  <tr><td class="rot">Receita ${ano}</td>${recAno.map(td).join('')}</tr>
+  <tr><td class="rot">Folha c/ encargos ${ano}</td>${folAno.map(td).join('')}</tr>
+  <tr><td class="rot">Receita ${antAno} (p/ RBT12)</td>${recAnt.map(td).join('')}</tr>
+  <tr><td class="rot">Folha ${antAno} (p/ Fator R)</td>${folAnt.map(td).join('')}</tr>
+  </tbody></table></div>`;
+  // conferência com o demonstrativo e com o PGDAS
+  const conf = [];
+  for (const pa of Object.keys(DEM.porPA)) { const d = DEM.porPA[pa];
+    if (d.rbt12) { const [mm,aa]=pa.split('/').map(Number); let soma=0;
+      for (let k=1;k<=12;k++){ let m=mm-k, a=aa; while(m<1){m+=12;a--;} soma += DEM.rec[mesKey(a,m-1)]||0; }
+      conf.push(`PA ${pa}: RBT12 ${fmt(d.rbt12)} ${Math.abs(soma-d.rbt12)<0.05?'✓ confere com a soma dos 12 meses':'⚠️ soma dos 12 meses lidos = '+fmt(soma)}${d.fatorR?` · Fator R ${d.fatorR.toLocaleString('pt-BR')}`:''}${d.dasValor?` · DAS do anexo ${fmt(d.dasValor)} (alíq. ${d.dasAliq.toLocaleString('pt-BR')}%)`:''}`); }
+    if (AN?._pgdas) { const m = +pa.split('/')[0]-1;
+      if (+($id('an-ano')?.value||0) === +pa.split('/')[1] && AN._pgdas.das?.[m]) {
+        const dpg = AN._pgdas.das[m];
+        conf.push(`PA ${pa} × PGDAS importado: DAS ${fmt(dpg)} ${d.dasValor?(Math.abs(dpg-d.dasValor)<0.05?'✓ confere':'⚠️ demonstrativo traz '+fmt(d.dasValor)):''}`); } }
+  }
+  if (conf.length) h += `<div class="hint" style="margin:8px 0">${conf.join('<br>')}</div>`;
+  h += `<div class="toolbar" style="margin:12px 0 0;flex-wrap:wrap">
+    <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="dem-rec" checked style="width:auto"> Aplicar receitas de ${ano} no bloco:</label>
+    <select id="dem-bloco" style="width:200px">${PG_BLOCOS.map(([k,r])=>`<option value="${k}">${r}</option>`).join('')}</select>
+    <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="dem-rbt" checked style="width:auto"> Preencher Config: receita/folha de ${antAno} (RBT12 e Fator R)</label>
+    <label style="display:flex;gap:6px;align-items:center;font-size:13px" title="A folha do demonstrativo já inclui encargos; o motor calcula INSS patronal por % sobre a folha lançada — lançar aqui pode superestimar o INSS do Presumido/Real. Prefira o balancete para a folha do ano corrente."><input type="checkbox" id="dem-fol" style="width:auto"> Aplicar folha de ${ano} em "Salários" ⚠️</label>
+    <span style="flex:1"></span>
+    <button class="btn solid" onclick="demAplicar()">✅ Aplicar à análise</button>
+  </div>`;
+  $id('imp-dem-review').innerHTML = h;
+}
+
+async function demAplicar() {
+  await garantirEmpresa(DEM.cnpj, DEM.nome, 'Simples Nacional');
+  if (!AN) AN = anNovo('', +$id('an-ano').value);
+  const ano = DEM.anoBase, antAno = ano-1;
+  if (+AN.ano !== ano) { AN.ano = ano; $id('an-ano').value = ano; }
+  const mesKey = (a,m) => `${String(m+1).padStart(2,'0')}/${a}`;
+  let msg = [];
+  if ($id('dem-rec').checked) { const bloco = $id('dem-bloco').value; let c=0;
+    for (let m=0;m<12;m++){ const v = DEM.rec[mesKey(ano,m)]; if (v!=null){ AN.receitas[bloco][m]=v; c++; } }
+    msg.push(`${c} mês(es) de receita no bloco`); }
+  if ($id('dem-rbt').checked) { let c=0;
+    for (let m=0;m<12;m++){ const r=DEM.rec[mesKey(antAno,m)], f=DEM.fol[mesKey(antAno,m)];
+      if (r!=null){ AN.cfg.rbt12Lanc[m]=r; c++; } if (f!=null) AN.cfg.folha12Lanc[m]=f; }
+    AN.cfg.rbt12Direto = 0; msg.push(`Config ${antAno}: ${c} mês(es)`); }
+  if ($id('dem-fol').checked) { let c=0;
+    for (let m=0;m<12;m++){ const v = DEM.fol[mesKey(ano,m)]; if (v!=null){ AN.folha.salarios[m]=v; c++; } }
+    msg.push(`${c} mês(es) de folha (confira encargos)`); }
+  $id('imp-dem-card').style.display='none';
+  anRenderTabs(); anRenderGrid(); anRecalcular();
+  toast('Demonstrativo aplicado: '+(msg.join(' · ')||'nada selecionado')+'. Salve a análise para persistir.');
+}
+
+// ═══════════ v6: REFORMA — PREENCHER DA ANÁLISE ═══════════
+function rfAutoPreencher() {
+  if (!RF) { toast('Abra a aba Reforma com uma empresa selecionada.'); return; }
+  if (!AN || !AN._res) { toast('Sem análise calculada — abra a empresa na aba Análise Atual (ou selecione-a aqui) e recalcule.'); return; }
+  const T = AN._res.totais;
+  RF.receita = T.receita || RF.receita || 0;
+  const sArr = a => (a||[]).reduce((x,y)=>x+(+y||0),0);
+  const comprasTot = ['semst','mono','comst','comstMono'].reduce((s,k)=>s+sArr(AN.compras?.[k]),0);
+  if (comprasTot > 0) RF.contra.compras_lrlp = Math.round(comprasTot*100)/100;
+  let extra = '';
+  if (AN.notas && AN.notas.total > 0) {
+    const mapB = {'30':'r30','40':'r40','50':'r50','60':'r60','70':'r70','80':'r80','100':'r100'};
+    const fator = (T.receita||0) > 0 ? (T.receita)/AN.notas.total : 1;
+    for (const k of Object.keys(RF.benefRec)) RF.benefRec[k] = RF.benefRec[k]||0;
+    for (const [red,val] of Object.entries(AN.notas.porReducao||{})) {
+      const b = mapB[red]; if (b && val>0) RF.benefRec[b] = Math.round(val*fator*100)/100; }
+    if (AN.notas.vendasPF>0) RF.contra.vendas_pf = Math.round(AN.notas.vendasPF*fator*100)/100;
+    if (AN.notas.vendasPJ>0) RF.contra.vendas_lrlp = Math.round(AN.notas.vendasPJ*fator*100)/100;
+    extra = ' + classificação das notas importadas (amostra extrapolada para a receita anual — revise as parcelas)';
+  }
+  $id('rf-receita').value = RF.receita ? fmt(RF.receita) : '';   // sincroniza o campo antes do recálculo (rfCalcular relê o DOM)
+  rfRenderBenef(); rfCalcular();
+  toast('Reforma preenchida: receita e compras da análise'+extra+'. Ajuste o que precisar e salve.'+(AN.notas?'':' Dica: importe XMLs de notas para preencher também as parcelas com redução.'));
+}
+
+// ═══════════ v6: LIMPAR DADOS DA ANÁLISE ═══════════
+function anLimparDados() {
+  if (!AN) { toast('Nenhuma análise aberta.'); return; }
+  if (!confirm('Limpar TODOS os dados lançados desta análise (receitas, folha, compras, despesas, Config, notas e importações)?\n\nNada é apagado do banco até você salvar — para desfazer, basta recarregar a página sem salvar.')) return;
+  const cnpj = AN.cnpj, ano = AN.ano;
+  AN = anNovo(cnpj, ano);
+  anRenderTabs(); anRenderGrid(); anRecalcular();
+  toast('Dados da análise limpos. Salve para persistir ou recarregue para desfazer.');
+}
+
+// ═══════════ v6: CONSULTA INDIVIDUAL DE CNPJ ═══════════
+async function consultaIndividual() {
+  const cnpj = limparCNPJ($id('ci-cnpj').value||'');
+  const box = $id('ci-result');
+  if (cnpj.length!==14 || !validaCNPJ(cnpj)) { box.innerHTML = '<div class="hint" style="color:var(--danger)">CNPJ inválido — confira os 14 dígitos.</div>'; return; }
+  box.innerHTML = '<div class="hint">Consultando dados abertos da RFB…</div>';
+  let d = null, fonte = '';
+  try { const r = await fetch(`https://minhareceita.org/${cnpj}`); if (r.ok) { d = await r.json(); fonte = 'minhareceita.org'; } } catch {}
+  if (!d) { try { const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+    if (r.ok) { d = await r.json(); fonte = 'BrasilAPI'; }
+    else if (r.status===404) { box.innerHTML = '<div class="hint">CNPJ não encontrado na base de dados abertos.</div>'; return; } } catch {} }
+  if (!d) { box.innerHTML = '<div class="hint" style="color:var(--danger)">Falha de comunicação com as fontes.</div>'; return; }
+  const li = (r,v) => (v!=null && v!=='' && v!=='undefined') ? `<tr><td class="rot" style="white-space:nowrap">${r}</td><td>${v}</td></tr>` : '';
+  const sec = (d.cnaes_secundarios||[]).length;
+  const qsa = (d.qsa||[]).map(s=>`${s.nome_socio||s.nome||''} <span class="hint">(${s.qualificacao_socio||s.qualificacao||''})</span>`).join('<br>');
+  box.innerHTML = `<table class="gtable"><tbody>
+    ${li('Razão social', `<b>${d.razao_social||''}</b>${d.nome_fantasia?' · '+d.nome_fantasia:''}`)}
+    ${li('CNPJ', fmtCNPJ(cnpj))}
+    ${li('Situação cadastral', `${d.descricao_situacao_cadastral||''}${d.data_situacao_cadastral?' desde '+d.data_situacao_cadastral:''}`)}
+    ${li('Abertura', d.data_inicio_atividade)}
+    ${li('Natureza jurídica', d.natureza_juridica||d.descricao_natureza_juridica)}
+    ${li('Porte', d.porte)}
+    ${li('Capital social', d.capital_social!=null ? fmtR(+d.capital_social) : null)}
+    ${li('Simples Nacional', d.opcao_pelo_simples===true ? ('<span class="badge ok">Optante</span>'+(d.data_opcao_pelo_simples?' desde '+d.data_opcao_pelo_simples:'')) : d.opcao_pelo_simples===false ? 'Não optante' : '—')}
+    ${li('SIMEI (MEI)', d.opcao_pelo_mei===true?'<span class="badge ok">Optante</span>':d.opcao_pelo_mei===false?'Não':'—')}
+    ${li('CNAE principal', `${d.cnae_fiscal||''} — ${d.cnae_fiscal_descricao||''}${sec?` <span class="hint">(+${sec} secundários)</span>`:''}`)}
+    ${li('Endereço', [d.descricao_tipo_de_logradouro,d.logradouro,d.numero,d.complemento,d.bairro].filter(Boolean).join(' ')+((d.municipio||d.uf)?' — '+(d.municipio||'')+'/'+(d.uf||''):'')+(d.cep?' · CEP '+d.cep:''))}
+    ${li('Contato', [d.ddd_telefone_1,d.email].filter(Boolean).join(' · '))}
+    ${li('Quadro societário', qsa)}
+  </tbody></table>
+  <div class="hint" style="margin-top:8px">Fonte: ${fonte} (dados abertos da RFB, defasagem de até ~1 mês). Para comprovação com fé pública, use os links oficiais acima.</div>`;
+}
+
+// ═══════════ v6: RELATÓRIO CONSOLIDADO ANALÍTICO ═══════════
+function rlConsolidado(rot, n) {
+  const R = RL.res, M = R.meses, T = R.totais;
+  const g = f => agrupar(M.map(f), n);
+  const cab = `<tr><th></th>${rot.map(r=>`<th class="num">${r}</th>`).join('')}<th class="num">Ano</th></tr>`;
+  const linha = (nome, arr, forte) => `<tr${forte?' style="font-weight:700"':''}><td class="rot">${nome}</td>${arr.map(v=>`<td class="num">${fmt(v)}</td>`).join('')}<td class="num"><b>${fmt(arr.reduce((a,b)=>a+(+b||0),0))}</b></td></tr>`;
+  let REF = null, cen = null;
+  try { cen = calcCenariosReforma(R, RL.dados.reforma); REF = cen.REF; } catch(e) { console.error(e); }
+  const l33 = REF ? REF[REF.length-1] : null;
+
+  // ── 1. SINTÉTICO (1 página) ──
+  const menor = Math.min(T.simples, T.lp, T.lr);
+  const nomeMenor = menor===T.simples?'Simples Nacional':menor===T.lp?'Lucro Presumido':'Lucro Real';
+  const rank = [['Simples Nacional (hoje)',T.simples],['Lucro Presumido (hoje)',T.lp],['Lucro Real (hoje)',T.lr]];
+  if (l33) rank.push(['Reforma 2033 — Simples híbrido (LC 214)', l33.hib], [`Reforma 2033 — regime regular (${l33.regNome})`, l33.regular]);
+  rank.sort((a,b)=>a[1]-b[1]);
+  let h = `<div class="card"><h3>1. Resumo sintético</h3>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:10px 0">
+      <div class="stat"><div class="n" style="font-size:19px">${fmtR(T.receita)}</div><div class="l">Receita bruta anual</div></div>
+      <div class="stat"><div class="n" style="font-size:19px">${fmtR(menor)}</div><div class="l">Menor carga hoje — ${nomeMenor}</div></div>
+      <div class="stat"><div class="n" style="font-size:19px">${fmtR(Math.max(T.simples,T.lp,T.lr)-menor)}</div><div class="l">Economia vs pior regime</div></div>
+      ${l33?`<div class="stat"><div class="n" style="font-size:19px">${fmtR(Math.min(l33.hib,l33.regular))}</div><div class="l">Reforma 2033 — melhor cenário</div></div>`:''}
+    </div>
+    <table><thead><tr><th>#</th><th>Cenário</th><th class="num">Carga anual</th><th class="num">% da receita</th><th class="num">Dif. p/ o melhor</th></tr></thead><tbody>
+    ${rank.map((r,i)=>`<tr${i===0?' style="font-weight:700"':''}><td>${i+1}º</td><td>${r[0]}</td><td class="num">${fmt(r[1])}</td><td class="num">${T.receita?(r[1]/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${i===0?'—':'+'+fmt(r[1]-rank[0][1])}</td></tr>`).join('')}
+    </tbody></table>
+    <div class="hint" style="margin-top:8px">Cenários da Reforma a valores do regime pleno (2033), com as premissas da aba Reforma (editáveis). Documento de trabalho — Artecon Artes Contábeis.</div></div>`;
+
+  // ── 2. COMPARATIVO DETALHADO (tributo × regime) ──
+  const sLP = k => M.reduce((s,x)=>s+(+x.lp[k]||0),0), sLR = k => M.reduce((s,x)=>s+(+x.lr[k]||0),0);
+  const lin3 = (nome,s,p,r) => `<tr><td class="rot">${nome}</td><td class="num">${s==null?'—':fmt(s)}</td><td class="num">${p==null?'—':fmt(p)}</td><td class="num">${r==null?'—':fmt(r)}</td></tr>`;
+  h += `<div class="card" style="page-break-before:always"><h3>2. Comparativo detalhado — tributo a tributo (anual)</h3>
+    <table><thead><tr><th></th><th class="num">Simples Nacional</th><th class="num">Lucro Presumido</th><th class="num">Lucro Real</th></tr></thead><tbody>
+    ${lin3('DAS (inclui trava do sublimite)', (T.das||0)+(T.sublimite||0), null, null)}
+    ${lin3('PIS', null, sLP('pis'), sLR('pis'))}
+    ${lin3('COFINS', null, sLP('cofins'), sLR('cofins'))}
+    ${lin3('IRPJ', null, sLP('irpj'), sLR('irpj'))}
+    ${lin3('Adicional de IRPJ (10%)', null, sLP('adicional'), sLR('adicional'))}
+    ${lin3('CSLL', null, sLP('csll'), sLR('csll'))}
+    ${lin3('INSS patronal', null, sLP('inssPatr'), sLR('inssPatr'))}
+    ${lin3('ICMS', null, sLP('icms'), sLR('icms'))}
+    ${lin3('IPI', null, sLP('ipi'), sLR('ipi'))}
+    ${lin3('ISS', null, sLP('iss'), sLR('iss'))}
+    ${lin3('FGTS', T.fgts, sLP('fgts'), sLR('fgts'))}
+    <tr style="font-weight:700"><td class="rot">TOTAL ANUAL</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr>
+    <tr><td class="rot">% da receita bruta</td><td class="num">${T.receita?(T.simples/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${T.receita?(T.lp/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${T.receita?(T.lr/T.receita*100).toFixed(2)+'%':'—'}</td></tr>
+    </tbody></table></div>`;
+
+  // ── 3. MEMÓRIA SIMPLES ──
+  h += `<div class="card" style="page-break-before:always"><h3>3. Memória de cálculo — Simples Nacional</h3><div style="overflow-x:auto"><table><thead>${cab}</thead><tbody>
+    ${linha('Receita bruta (RPA)', g(x=>x.receita))}
+    ${linha('DAS', g(x=>x.das))}
+    ${linha('ICMS/ISS da trava do sublimite', g(x=>(x.subIcms||0)+(x.subIss||0)))}
+    ${linha('FGTS', g(x=>x.fgts))}
+    ${linha('Total Simples', g(x=>x.simples.total), true)}
+  </tbody></table></div>
+  <div class="hint" style="margin-top:6px">Alíquota efetiva média do DAS: ${T.receita?((T.das||0)/T.receita*100).toFixed(4)+'%':'—'}${RL.dados._pgdas?' · DAS declarado no PGDAS (ano): '+fmt((RL.dados._pgdas.das||[]).reduce((a,b)=>a+(+b||0),0)):''}</div></div>`;
+
+  // ── 4. MEMÓRIA PRESUMIDO ──
+  const bTrib = [['PIS','pis'],['COFINS','cofins'],['IRPJ','irpj'],['Adicional IRPJ','adicional'],['CSLL','csll'],['INSS patronal','inssPatr'],['ICMS','icms'],['IPI','ipi'],['ISS','iss'],['FGTS','fgts']];
+  h += `<div class="card" style="page-break-before:always"><h3>4. Memória de cálculo — Lucro Presumido</h3><div style="overflow-x:auto"><table><thead>${cab}</thead><tbody>
+    ${bTrib.map(([nm,k])=>linha(nm, g(x=>+x.lp[k]||0))).join('')}
+    ${linha('Total Presumido', g(x=>x.lp.total), true)}
+  </tbody></table></div></div>`;
+
+  // ── 5. MEMÓRIA REAL ──
+  h += `<div class="card" style="page-break-before:always"><h3>5. Memória de cálculo — Lucro Real</h3><div style="overflow-x:auto"><table><thead>${cab}</thead><tbody>
+    ${linha('Base IRPJ/CSLL (lucro ajustado)', g(x=>x.lr.baseIRCS))}
+    ${bTrib.map(([nm,k])=>linha(nm, g(x=>+x.lr[k]||0))).join('')}
+    ${linha('Total Real', g(x=>x.lr.total), true)}
+  </tbody></table></div>
+  <div class="hint" style="margin-top:6px">Meses com base negativa não geram IRPJ/CSLL no cálculo (crédito informativo no detalhamento de registros).</div></div>`;
+
+  // ── 6. REFORMA ──
+  if (REF) {
+    h += `<div class="card" style="page-break-before:always"><h3>6. Reforma Tributária — transição 2026–2033</h3>
+      <table><thead><tr><th>Ano</th><th class="num">Alíq. IBS+CBS</th><th class="num">Débito</th><th class="num">Crédito</th><th class="num">IBS/CBS líquido + IS</th><th class="num">Simples híbrido</th><th class="num">Regime regular</th></tr></thead><tbody>
+      ${REF.map(L=>`<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(L.deb)}</td><td class="num">${fmt(L.cred)}</td><td class="num">${fmt((L.liquido||0)+(L.is||0))}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)} <span class="hint">(${L.regNome})</span></td></tr>`).join('')}
+      </tbody></table>
+      <div class="hint" style="margin-top:8px">Transição: PIS/COFINS saem em 2027 (entra a CBS plena); ICMS/ISS caem 10% ao ano de 2029 a 2032 e zeram em 2033 (entra o IBS); IPI apenas até 2026. Reduções de IBS/CBS conforme a classificação cClassTrib das notas importadas.${cen&&cen.usouFallback?' <b>⚠️ Aba Reforma sem dados salvos — usei alíquotas-padrão e a receita da análise; use "⚡ Preencher da análise" e salve.</b>':''}</div>
+    </div>`;
+  }
+  $id('rl-corpo').innerHTML = h;
+}
+
 // ═══════════ RELATÓRIOS ═══════════
 let RL = { dados:null, res:null, reforma:null, empresa:null };
 let RL_CHARTS = [];
@@ -1812,9 +2339,9 @@ function rlRender() {
   const rot = PER_ROTULOS[n], R = RL.res, M = R.meses;
   const emp = RL.empresa;
   $id('rl-cab').style.display='block';
-  $id('rl-titulo').textContent = ({regimes:'Comparativo de Regimes Tributários', registros:'Detalhamento dos Registros', reforma:'Reforma Tributária — Transição 2026–2033'})[tipo];
+  $id('rl-titulo').textContent = ({regimes:'Comparativo de Regimes Tributários', consolidado:'Consolidado Analítico — Simples · Presumido · Real · Reforma', registros:'Detalhamento dos Registros', reforma:'Reforma Tributária — Transição 2026–2033'})[tipo];
   $id('rl-sub').innerHTML = `<b>${emp?.razao_social||''}</b> · CNPJ ${fmtCNPJ(RL.dados.cnpj)} · Ano-base ${RL.dados.ano} · Periodicidade: ${$id('rl-per').selectedOptions[0].text} · Artecon Artes Contábeis`;
-  if (tipo==='regimes') rlRegimes(rot,n); else if (tipo==='registros') rlRegistros(rot,n); else rlReforma();
+  if (tipo==='regimes') rlRegimes(rot,n); else if (tipo==='consolidado') rlConsolidado(rot,n); else if (tipo==='registros') rlRegistros(rot,n); else rlReforma();
 }
 
 function rlRegimes(rot, n) {
