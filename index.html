@@ -111,7 +111,7 @@ canvas{max-height:340px}
 .pp-capa-nome{font-size:21px;font-weight:800;line-height:1.25;margin-bottom:4px}
 .pp-capa-cnpj{font-size:12px;opacity:.9}
 .pp-capa-data{font-size:11px;opacity:.75;margin-top:8px}
-.pp-miolo{position:relative;z-index:2;padding:48mm 18mm 40mm 18mm}
+.pp-miolo{position:relative;z-index:2;padding:56mm 18mm 44mm 18mm}
 .pp-sec{font-size:16px;color:#2b3240;border-bottom:2px solid #d99a2b;padding-bottom:5px;margin:20px 0 8px;font-family:var(--display)}
 .pp-miolo .pp-sec:first-child{margin-top:0}
 .pp-p{font-size:13px;line-height:1.65;text-align:justify;margin:8px 0}
@@ -152,9 +152,19 @@ canvas{max-height:340px}
 .pp-traco{width:62mm;border-top:1px solid #242b38;margin-bottom:5px}
 .pp-notaia{margin-top:16px;font-size:10px;color:#8a93a6;border-top:1px dashed var(--line,#dde1e8);padding-top:8px}
 @media print{
+  @page{size:A4;margin:0}
+  html,body{margin:0!important;padding:0!important;background:#fff!important}
+  body *{visibility:hidden}
+  #rl-corpo, #rl-corpo *{visibility:visible}
+  #rl-corpo{position:absolute;left:0;top:0;width:210mm}
   .pp-tools{display:none!important}
-  .pp-page{border:none;border-radius:0;margin:0;width:210mm;height:297mm;page-break-after:always;box-shadow:none}
-  .pp-miolo{padding:46mm 18mm 38mm 18mm}
+  .pp-page{border:none;border-radius:0;margin:0;width:210mm;height:auto;min-height:296mm;page-break-after:always;box-shadow:none;overflow:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pp-page:last-child{page-break-after:auto}
+  .pp-bg{height:296mm;width:210mm}
+  .pp-capa{height:296mm;min-height:296mm;overflow:hidden}
+  .pp-miolo{padding:56mm 18mm 44mm 18mm}
+  .pp-chartbox{break-inside:avoid}
+  .pp-tab tr{break-inside:avoid}
 }
 @media (max-width:760px){ .pp-duo{grid-template-columns:1fr} .pp-jornada{grid-template-columns:1fr} .pp-jseta{transform:rotate(90deg)} .pp-miolo{padding:24mm 6mm 20mm 6mm} }
 
@@ -2628,25 +2638,24 @@ function rlParecer(){
       <div class="hint" style="margin-top:6px">Consumo (PIS+COFINS+ICMS+ISS+IPI): <b>${(( (D.dasTrib.pis+D.dasTrib.cofins+D.dasTrib.icms+D.dasTrib.iss+D.dasTrib.ipi) / ((D.T.das||0)+(D.T.sublimite||0)) )*100).toFixed(1)}% do DAS</b> — é a parcela em jogo na Reforma.</div></div></div>`:''}
   </div></div>`;
 
-  // ── PÁG: evolução + % receita ──
+  // ── PÁG: evolução (gráfico + tabela) ──
+  let NS = 3;
   if (temREF) {
     h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
-      ${secao(4,'Como fica a carga em cada regime, com a Reforma','Carga anual estimada, ano a ano, na transição 2027–2033.')}
+      ${secao(++NS,'Como fica a carga em cada regime, com a Reforma','Carga anual estimada, ano a ano, na transição 2027–2033.')}
       <div class="pp-chartbox"><canvas id="pc-evo" height="185"></canvas></div>
       <table class="pp-tab pp-tab-f"><thead><tr><th>Ano</th>${D.variante==='simples'?'<th class="num">Por dentro</th><th class="num">Híbrido</th>':''}<th class="num">L. Presumido</th><th class="num">L. Real</th><th>Menor</th></tr></thead><tbody>
       ${D.anos.map((L,i)=>{ const cand = D.variante==='simples' ? [['Por dentro',D.T.simples],['Híbrido',L.hib],['Presumido',L.regLP],['Real',L.regLR]] : [['Presumido',L.regLP],['Real',L.regLR]]; const menor = cand.reduce((a,b)=>b[1]<a[1]?b:a);
         return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td>${D.variante==='simples'?`<td class="num">${fmt(D.T.simples)}</td><td class="num">${fmt(L.hib)}</td>`:''}<td class="num">${fmt(L.regLP)}</td><td class="num">${fmt(L.regLR)}</td><td><span class="pp-pill">${menor[0]}</span></td></tr>`; }).join('')}
       </tbody></table>
-      <div class="pp-chartbox"><div class="pp-ct">Quanto da receita vira imposto · %</div><canvas id="pc-pct" height="130"></canvas></div>
     </div></div>`;
-  }
 
-  // ── PÁG variante: cenários 2033 e/ou evolutivo ──
-  if (temREF) {
-    h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">`;
+    // ── PÁG: % da receita (+ cenários 2033 quando couber) ──
+    h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
+      <div class="pp-chartbox"><div class="pp-ct">Quanto da receita vira imposto · %</div><canvas id="pc-pct" height="130"></canvas></div>`;
     if (D.variante!=='acima' && D.L33) {
-      h += `${secao(5,'Os três caminhos do Simples em 2033 — economiza ou paga a mais?')}
-      <div class="pp-chartbox"><canvas id="pc-cen33" height="170"></canvas></div>
+      h += `${secao(++NS,'Os três caminhos do Simples em 2033 — economiza ou paga a mais?')}
+      <div class="pp-chartbox"><canvas id="pc-cen33" height="150"></canvas></div>
       <table class="pp-tab"><thead><tr><th>Cenário em 2033</th><th class="num">Carga anual</th><th class="num">vs. por dentro</th><th>Quando faz sentido</th></tr></thead><tbody>
         <tr><td><span class="pp-pill">Por dentro</span></td><td class="num"><b>${fmt(D.T.simples)}</b></td><td class="num">—</td><td>Clientela de consumo final; sem split payment</td></tr>
         <tr><td><span class="pp-pill" style="background:#2b3240">Fora do Simples</span></td><td class="num">${fmt(D.L33.regular)}</td><td class="num" style="color:${D.L33.regular>D.T.simples?'#8c2f39':'#0f7a5a'}">${D.L33.regular>D.T.simples?'+':''}${fmt(D.L33.regular-D.T.simples)}</td><td>Crescimento além do teto ou clientela quase toda PJ</td></tr>
@@ -2654,20 +2663,24 @@ function rlParecer(){
       </tbody></table>
       <p class="pp-p">${TX.cenarios}</p>`;
     }
+    h += `</div></div>`;
+
+    // ── PÁG: análise evolutiva (variantes fora do Simples) ──
     if (D.variante!=='simples') {
-      h += `${secao(D.variante==='acima'?5:6,'Análise evolutiva — pagará a mais (+) ou a menos (−) que hoje','Diferença anual, no melhor regime de cada ano, contra a carga atual de '+fmtR(D.hojeAnual)+'/ano ('+D.regimeHojeNome+').')}
+      h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
+      ${secao(++NS,'Análise evolutiva — pagará a mais (+) ou a menos (−) que hoje','Diferença anual, no melhor regime de cada ano, contra a carga atual de '+fmtR(D.hojeAnual)+'/ano ('+D.regimeHojeNome+').')}
       <div class="pp-chartbox"><canvas id="pc-delta" height="165"></canvas></div>
       <table class="pp-tab"><thead><tr><th>Ano</th><th class="num">Carga com a reforma</th><th class="num">vs. hoje (ano)</th><th class="num">% da receita</th></tr></thead><tbody>
       ${D.anos.map(L=>{ const v=L.regular, d=v-D.hojeAnual; return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(v)} <span class="hint">(${L.regNome})</span></td><td class="num" style="color:${d>0?'#8c2f39':'#0f7a5a'}">${d>0?'+':''}${fmt(d)}</td><td class="num">${D.T.receita?(v/D.T.receita*100).toFixed(1)+'%':'—'}</td></tr>`; }).join('')}
-      </tbody></table>`;
+      </tbody></table>
+      </div></div>`;
     }
-    h += `<div class="pp-chartbox"><div class="pp-ct">${D.variante==='simples'?'Economia acumulada ao permanecer "por dentro" (vs. 2º melhor caminho)':'Economia acumulada ao escolher o melhor regime de cada ano (vs. o outro)'}</div><canvas id="pc-acum" height="140"></canvas></div>
-    </div></div>`;
   }
 
   // ── PÁG: split + plano + parecer ──
   h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
-    ${secao(temREF?(D.variante==='eleg'?7:6):4,'Split payment — impacto no caixa')}
+    ${temREF?`<div class="pp-chartbox"><div class="pp-ct">${D.variante==='simples'?'Economia acumulada ao permanecer "por dentro" (vs. 2º melhor caminho)':'Economia acumulada ao escolher o melhor regime de cada ano (vs. o outro)'}</div><canvas id="pc-acum" height="130"></canvas></div>`:''}
+    ${secao(++NS,'Split payment — impacto no caixa')}
     <div class="pp-split">
       ${D.variante==='simples'?`<div class="pp-card"><div class="t">Por dentro · na fonte</div><div class="v" style="color:#0f7a5a">R$ 0</div><div class="s">IBS/CBS segue no DAS — caixa preservado</div></div>`:''}
       <div class="pp-card"><div class="t">${D.variante==='simples'?'Híbrido/Fora · na fonte':'Recolhido na fonte'}</div><div class="v">${fmtR(D.split.fonteMes)}</div><div class="s">por mês (2032) · retido no pagamento</div></div>
@@ -2675,9 +2688,13 @@ function rlParecer(){
       <div class="pp-card"><div class="t">Custo financeiro</div><div class="v">${fmtR(D.split.custoAno)}</div><div class="s">por ano · 15% a.a. (mín. Selic)</div></div>
     </div>
     <p class="pp-p">${TX.split}</p>
-    ${secao(temREF?(D.variante==='eleg'?8:7):5,'Plano de ação sugerido')}
+  </div></div>`;
+
+  // ── PÁG: plano + parecer ──
+  h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
+    ${secao(++NS,'Plano de ação sugerido')}
     <div class="pp-plano">${(TX.plano||[]).map((p,i)=>`<div class="pp-passo"><div class="pp-num" style="background:${['#0f7a5a','#d99a2b','#1a5276','#2b3240'][i%4]}">${i+1}</div><div><div class="pp-quando">${p.quando}</div><b>${p.titulo}</b> — ${p.texto}</div></div>`).join('')}</div>
-    ${secao(temREF?(D.variante==='eleg'?9:8):6,'Parecer e recomendação')}
+    ${secao(++NS,'Parecer e recomendação')}
     <p class="pp-p">${TX.parecer1}</p>
     ${TX.parecer2?`<p class="pp-p">${TX.parecer2}</p>`:''}
     <div class="pp-final">${TX.recomendacao}</div>
