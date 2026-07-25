@@ -740,7 +740,7 @@ function renderResultados() {
     const ativa = /ativa/i.test(r.situacao);
     return `<tr>
       <td style="white-space:nowrap">${fmtCNPJ(r.cnpj)}</td>
-      <td>${r.razao_social}</td>
+      <td>${esc(r.razao_social)}</td>
       <td><span class="badge ${ativa?'ok':'warn'}">${r.situacao||'—'}</span></td>
       <td>${r.simples?'<span class="badge ok">Optante</span>':'<span class="badge info">Não optante</span>'}</td>
       <td>${r.simei?'<span class="badge ok">SIMEI</span>':'—'}</td>
@@ -818,7 +818,7 @@ async function carregarDashboard() {
       ${['','Lucro Presumido','Lucro Real','Simples Nacional','MEI'].map(o=>`<option value="${o}" ${((r.regime||'')===o)?'selected':''}>${o||'— regime —'}</option>`).join('')}</select>`;
     $id('dash-recentes').innerHTML = rows.length
       ? `<table style="width:100%"><tbody>` + rows.slice(0,50).map(r=>`<tr>
-          <td style="padding:4px 6px"><b style="font-size:12.5px">${r.razao_social||fmtCNPJ(r.cnpj)}</b><div class="hint">${fmtCNPJ(r.cnpj)}</div></td>
+          <td style="padding:4px 6px"><b style="font-size:12.5px">${esc(r.razao_social)||fmtCNPJ(r.cnpj)}</b><div class="hint">${fmtCNPJ(r.cnpj)}</div></td>
           <td>${r.simei?'<span class="badge ok">SIMEI</span>':r.simples?'<span class="badge ok">Simples</span>':'<span class="badge info">Não optante</span>'}</td>
           <td>${r.simples||r.simei?'':selReg(r)}</td></tr>`).join('') + '</tbody></table>'
       : 'Nenhuma consulta realizada ainda.';
@@ -1140,6 +1140,8 @@ let PARAMS = { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha: {...FO
 let AN = null;          // análise corrente
 let EMPRESAS = [];      // cadastro
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+// v7.1: escape de HTML para dados de origem externa (BrasilAPI, planilhas, PDFs, IA)
+const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = v => (v==null||isNaN(v)) ? '—' : v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtR = v => 'R$ ' + fmt(v);
 const z12 = () => Array(12).fill(0);
@@ -1409,7 +1411,7 @@ function empRender() {
   const q = ($id('emp-busca')?.value||'').toLowerCase();
   const rows = EMPRESAS.filter(e => !q || (e.razao_social||'').toLowerCase().includes(q) || (e.cnpj||'').includes(q.replace(/\D/g,'')));
   $id('emp-tbody').innerHTML = rows.length ? rows.map(e=>`<tr>
-    <td style="white-space:nowrap">${fmtCNPJ(e.cnpj)}</td><td>${e.razao_social||''}</td>
+    <td style="white-space:nowrap">${fmtCNPJ(e.cnpj)}</td><td>${esc(e.razao_social)||''}</td>
     <td>${e.regime||'—'}</td><td>${e.simples?'<span class="badge ok">Sim</span>':'<span class="badge info">Não</span>'}</td>
     <td>${e.uf?e.uf+' / '+(e.municipio||''):'—'}</td><td>${e.obs||''}</td>
     <td style="white-space:nowrap"><button class="btn" onclick="empEditar('${e.cnpj}')">Editar</button>
@@ -1477,7 +1479,7 @@ function empAnalisar(cnpj){ go('analise'); $id('an-empresa').value = cnpj; anTro
 function anPreencherEmpresas() {
   const sel = $id('an-empresa'); const atual = sel.value;
   sel.innerHTML = '<option value="">— selecione a empresa —</option>' +
-    EMPRESAS.map(e=>`<option value="${e.cnpj}">${e.razao_social||fmtCNPJ(e.cnpj)}</option>`).join('');
+    EMPRESAS.map(e=>`<option value="${e.cnpj}">${esc(e.razao_social)||fmtCNPJ(e.cnpj)}</option>`).join('');
   if (atual) sel.value = atual;
 }
 
@@ -1846,7 +1848,7 @@ function pgdasReview() {
     const difRpa = (M.receita||0) - somaAtv;
     let corpo;
     if (M.atividades.length) {
-      corpo = M.atividades.map((a,i)=>`<div style="margin:3px 0"><span class="hint" title="${a.texto}">${a.texto.slice(0,60)}...</span> ${sel(pa,i,a.bloco)} <b>${fmt(a.valor)}</b></div>`).join('');
+      corpo = M.atividades.map((a,i)=>`<div style="margin:3px 0"><span class="hint" title="${esc(a.texto)}">${esc(a.texto.slice(0,60))}...</span> ${sel(pa,i,a.bloco)} <b>${fmt(a.valor)}</b></div>`).join('');
       if (Math.abs(difRpa) > 0.02) { M.rpaBloco = M.rpaBloco || M.atividades[0].bloco || 'a2_semst';
         corpo += `<div style="margin:4px 0;color:var(--danger)">⚠️ Atividades somam ${fmt(somaAtv)} e a RPA é ${fmt(M.receita)} — a diferença de <b>${fmt(difRpa)}</b> será aplicada em: ${selRpa(pa)}</div>`; }
     } else if ((M.receita||0) > 0.005) {
@@ -2436,7 +2438,7 @@ async function consultaIndividual() {
   const sec = (d.cnaes_secundarios||[]).length;
   const qsa = (d.qsa||[]).map(s=>`${s.nome_socio||s.nome||''} <span class="hint">(${s.qualificacao_socio||s.qualificacao||''})</span>`).join('<br>');
   box.innerHTML = `<table class="gtable"><tbody>
-    ${li('Razão social', `<b>${d.razao_social||''}</b>${d.nome_fantasia?' · '+d.nome_fantasia:''}`)}
+    ${li('Razão social', `<b>${esc(d.razao_social)||''}</b>${d.nome_fantasia?' · '+esc(d.nome_fantasia):''}`)}
     ${li('CNPJ', fmtCNPJ(cnpj))}
     ${li('Situação cadastral', `${d.descricao_situacao_cadastral||''}${d.data_situacao_cadastral?' desde '+d.data_situacao_cadastral:''}`)}
     ${li('Abertura', d.data_inicio_atividade)}
@@ -2649,7 +2651,7 @@ function parecerDados(){
 
 // Textos-padrão (fallback sem IA) — a IA reescreve estes blocos com os mesmos fatos
 function parecerTextosPadrao(D){
-  const emp = RL.empresa?.razao_social || 'a empresa';
+  const emp = esc(RL.empresa?.razao_social) || 'a empresa';
   const b = {};
   b.intro = 'A Emenda Constitucional nº 132/2023 e a Lei Complementar nº 214/2025 substituem PIS, COFINS, ICMS, ISS e IPI por um IVA dual — a CBS (federal) e o IBS (estados e municípios) —, com transição gradual de 2027 a 2033, quando o novo sistema estará pleno. Este estudo projeta, ano a ano, o impacto da reforma sobre '+emp+', com estimativas direcionais que não substituem a apuração formal de cada período.';
   if (D.variante==='simples'){
@@ -2718,7 +2720,7 @@ function rlParecer(){
   // ── CAPA ──
   h += `<div class="pp-page pp-capa"><img class="pp-bg" src="capa.jpg" onerror="this.style.display='none';this.parentNode.classList.add('pp-semarte')">
     <div class="pp-capa-cliente"><div class="pp-capa-lbl">Estudo elaborado para</div>
-      <div class="pp-capa-nome">${emp.razao_social||RL.dados.cnpj||''}</div>
+      <div class="pp-capa-nome">${esc(emp.razao_social)||RL.dados.cnpj||''}</div>
       <div class="pp-capa-cnpj">CNPJ ${fmtCNPJ(RL.dados.cnpj)}${RL.empresa?.regime?' · '+RL.empresa.regime:''}</div>
       <div class="pp-capa-data">Ano-base ${anoTx} · ${hoje}</div></div></div>`;
 
@@ -2884,7 +2886,11 @@ async function parecerIA(){
       throw new Error('Falha na function ('+r.status+'): '+t.slice(0,200)); }
     const data = await r.json();
     if (!data || !data.textos) throw new Error('Resposta da function sem o campo "textos".');
-    RL._ia = { textos: data.textos, quando: new Date().toLocaleString('pt-BR') };
+    const _tx = {};
+    for (const [k,v] of Object.entries(data.textos)) _tx[k] = Array.isArray(v)
+      ? v.map(p=>({ quando:esc(p?.quando), titulo:esc(p?.titulo), texto:esc(p?.texto) }))
+      : esc(v);
+    RL._ia = { textos: _tx, quando: new Date().toLocaleString('pt-BR') };
     toast('✅ Textos do parecer gerados pela IA.');
     rlRender();
   } catch(e) {
