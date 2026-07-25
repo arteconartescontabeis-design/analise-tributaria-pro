@@ -219,7 +219,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.1</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -483,7 +483,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.0</b> <span class="badge ok">atual</span></td><td>24/07/2026</td><td>Impostos do Simples separados (PIS, COFINS, IRPJ, CSLL, CPP, ICMS, ISS e IPI) pela repartição da LC 123 em todos os quadros — Consolidado tributo a tributo, memória mensal do Simples e novo quadro DAS por tributo declarado (PGDAS) × simulado; receitas segregadas em Comércio/Indústria × Serviços na revisão do PGDAS, na grade de Receitas e na memória de cálculo; novo relatório "Parecer Reforma Tributária — com IA": estudo de impacto completo com capa e papel timbrado Artecon, 8 gráficos, miolo condicional por enquadramento (optante do Simples · acima do teto de R$ 4,8 mi · regime regular elegível), alertas de fronteira (teto, sublimite, Fator R, Anexo IV), split payment, plano de ação e parecer final com textos redigidos por IA via Edge Function segura no Supabase (com textos padrão quando a IA estiver indisponível).</td></tr>
+          <tr><td><b>v7.1</b> <span class="badge ok">atual</span></td><td>25/07/2026</td><td>Correções da revisão técnica: CPP do Anexo IV devida fora do DAS somada ao custo do Simples (proxy pela participação da receita); ISS e CPP retidos na fonte recompostos no total do Simples (LC 123, art. 21, §4º) e considerados na transição da Reforma; Lucro Presumido exclui todas as receitas monofásicas da base de PIS/COFINS; cenários da Reforma sem aba preenchida estimam créditos de IBS/CBS pelas compras de revenda da análise, com aviso de premissa no parecer (tela, impresso e payload da IA); repartição do DAS por tributo derivada dos parâmetros em uso (edições das partes fecham 100% com o DAS); trava do sublimite respeita as partes editadas dos Anexos IV e V; tela de Parâmetros ganha as colunas de partes dos Anexos III, IV e V; seleção de empresa unificada — Análise, Reforma e Relatórios acompanham automaticamente a empresa/ano escolhidos em qualquer módulo (com confirmação quando houver análise aberta de outra empresa, para não perder lançamentos não salvos).</td></tr>
+          <tr><td><b>v7.0</b></td><td>24/07/2026</td><td>Impostos do Simples separados (PIS, COFINS, IRPJ, CSLL, CPP, ICMS, ISS e IPI) pela repartição da LC 123 em todos os quadros — Consolidado tributo a tributo, memória mensal do Simples e novo quadro DAS por tributo declarado (PGDAS) × simulado; receitas segregadas em Comércio/Indústria × Serviços na revisão do PGDAS, na grade de Receitas e na memória de cálculo; novo relatório "Parecer Reforma Tributária — com IA": estudo de impacto completo com capa e papel timbrado Artecon, 8 gráficos, miolo condicional por enquadramento (optante do Simples · acima do teto de R$ 4,8 mi · regime regular elegível), alertas de fronteira (teto, sublimite, Fator R, Anexo IV), split payment, plano de ação e parecer final com textos redigidos por IA via Edge Function segura no Supabase (com textos padrão quando a IA estiver indisponível).</td></tr>
           <tr><td><b>v6.0</b></td><td>23/07/2026</td><td>Receita mensal do PGDAS garantida pela RPA (destino selecionável e alerta quando as atividades divergem); alíquota do ISS com aviso na Config e preenchimento automático pelas NFS-e importadas; base da CSLL de serviços no Presumido com seletor próprio (origem visível); novo importador do Demonstrativo do Simples (Questor) — receita e folha mês a mês, RBT12/Fator R e conferência cruzada com o PGDAS; importador de XMLs (NFS-e Palhoça/ABRASF/Florianópolis e NF-e modelo 55, juntos) com classificação item LC 116 → cClassTrib e reduções de IBS/CBS embutidas; aba Reforma com "Preencher da análise" (receita, compras, contrapartes e parcelas com redução vindas das notas); nota técnica da transição (tributos que saem × que entram) no cálculo da Reforma; relatório Consolidado Analítico com os 4 regimes (memória de cálculo, comparativo detalhado e sintético); consulta individual de CNPJ com cartão completo e links oficiais da RFB; balancete passa a identificar a empresa pelo cabeçalho interno da aba (arquivos com várias abas/empresas); botões Limpar dados na Consulta CNPJ e na Análise.</td></tr>
           <tr><td><b>v5.10</b></td><td>22/07/2026</td><td>Exclusão de empresa agora remove de fato os relatórios: verifica quantas linhas foram apagadas em atp_analises/atp_empresas (RLS sem política de DELETE falhava em silêncio) e orienta a rodar o setup_v4.sql quando faltar permissão; limpa os seletores e o estado das abas Relatórios e Reforma quando apontavam para a empresa excluída.</td></tr>\n          <tr><td><b>v5.9</b></td><td>22/07/2026</td><td>Painel executivo no Comparativo de Regimes: os seis cenários lado a lado (Simples, Presumido, Real, Simples "por dentro" 2033, híbrido 2033 e fora do Simples 2033) com economia anual do regime atual e da Reforma, gráfico de barras horizontais unificado com % da receita e resumo executivo com ranking e diferença para o melhor cenário.</td></tr>\n          <tr><td><b>v5.8</b></td><td>22/07/2026</td><td>Excluir empresa (com as análises salvas) na aba Empresas; Editar nome, Redefinir senha (e-mail) e Excluir na aba Usuários; recálculo automático ao alterar qualquer alíquota/percentual nos Parâmetros; Comparativo de Regimes com todos os quadros da Reforma: composição do híbrido ano a ano, cenário fora do Simples ano a ano (Presumido × Real) e gráfico débito × crédito de IBS/CBS.</td></tr>\n          <tr><td><b>v5.7</b></td><td>22/07/2026</td><td>Cenários da Reforma (por dentro × híbrido × fora do Simples) agora visíveis em três lugares: veredito da Análise, Relatório Comparativo de Regimes e Relatório Reforma; cálculo centralizado em calcCenariosReforma com mescla ano a ano dos dados salvos (análises antigas sem todos os campos não quebram mais) e try/catch para nunca derrubar o restante da tela.</td></tr>\n          <tr><td><b>v5.6</b></td><td>22/07/2026</td><td>Correção: análises paravam de calcular quando os Parâmetros salvos no banco eram anteriores à v5.5 (sem as repartições PIS/COFINS e ISS dos Anexos III/IV/V) — o motor agora completa campos ausentes com os padrões, preservando edições do usuário.</td></tr>\n          <tr><td><b>v5.5</b></td><td>22/07/2026</td><td>Reforma no comparativo do Relatório: cenários Simples "por dentro", Simples híbrido (LC 214 — DAS sem as parcelas de consumo + IBS/CBS por fora com créditos) e fora do Simples (regime regular), ano a ano 2026–2033 com gráfico; motor passa a decompor o consumo embutido no DAS (PIS/COFINS e ICMS/ISS por anexo/faixa, incluindo a trava do sublimite).</td></tr>\n          <tr><td><b>v5.4</b></td><td>22/07/2026</td><td>Motor acima da planilha-base: sublimite do ICMS/ISS com trava da 5ª faixa (Res. CGSN 140/2018, art. 24) quando o RBT12 supera R$ 3,6 mi, com opção de desligar na Config; Fator R dinâmico mês a mês (folha rolante de 12 meses, espelho da linha 144 da planilha).</td></tr>
           <tr><td><b>v5.3</b></td><td>22/07/2026</td><td>Correção do parser numérico para valores com pontos de milhar sem vírgula ("1.546.923" era lido como 1,546); aceita "R$" e espaços na digitação. Motor revalidado 100% (228 verificações) contra a Preenchida_01.</td></tr>
@@ -585,15 +586,42 @@ function go(page) {
   ['dashboard','cnpj','empresas','analise','reforma','relatorios','parametros','usuarios','versoes'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
   if (page==='dashboard') dashAnalises();
   if (page==='cnpj') carregarDashboard();
-  if (page==='relatorios') { empCarregar().then(()=>{ const sel=$id('rl-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; if(at) sel.value=at; else if (AN?.cnpj) { sel.value=AN.cnpj; $id('rl-ano').value=AN.ano; } rlCarregar(); }); }
+  if (page==='relatorios') { empCarregar().then(()=>{ const sel=$id('rl-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; sel.value=at||''; if (EMP_GLOBAL.cnpj) empGlobalAplicar('rl-empresa','rl-ano'); else if (AN?.cnpj) { sel.value=AN.cnpj; $id('rl-ano').value=AN.ano; } rlCarregar(); }); }
   if (page==='empresas') empCarregar();
   if (page==='analise') { if (!AN) AN = anNovo('', +($id('an-ano').value||new Date().getFullYear()));
-    anRenderTabs(); anRenderGrid(); anRecalcular(); empCarregar(); }
+    anRenderTabs(); anRenderGrid(); anRecalcular();
+    empCarregar().then(()=>{
+      const alvo = EMP_GLOBAL.cnpj;
+      const anoAlvo = EMP_GLOBAL.ano || +$id('an-ano').value;
+      const difere = alvo && (AN?.cnpj !== alvo || (EMP_GLOBAL.ano && +AN?.ano !== +EMP_GLOBAL.ano));
+      if (!difere) return;
+      if (AN?.cnpj && !confirm('Sincronizar com a empresa/ano selecionados nos outros módulos?\nAlterações não salvas da análise atual serão perdidas.')) {
+        empGlobalSet(AN.cnpj, AN.ano);   // usuário preferiu manter — a análise vira a seleção global
+        return;
+      }
+      empGlobalAplicar('an-empresa','an-ano');
+      if ($id('an-empresa').value === alvo) anTrocarEmpresa();
+    }); }
   if (page==='parametros') prRender();
-  if (page==='reforma') { empCarregar().then(()=>{ const sel=$id('rf-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; if(at) sel.value=at; if(!RF){ RF=rfNovo('', +$id('rf-ano').value); rfRenderAliq(); rfRenderBenef(); rfCalcular(); } }); }
+  if (page==='reforma') { empCarregar().then(()=>{ const sel=$id('rf-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; sel.value=at||''; if (EMP_GLOBAL.cnpj) empGlobalAplicar('rf-empresa','rf-ano');
+    if (sel.value && (!RF || RF.cnpj!==sel.value || +RF.ano!==+$id('rf-ano').value)) { rfTrocar(); }
+    else if(!RF){ RF=rfNovo('', +$id('rf-ano').value); rfRenderAliq(); rfRenderBenef(); rfCalcular(); } }); }
   if (page==='usuarios') usCarregar();
 }
 
+// v7.1: EMPRESA GLOBAL — a empresa (e o ano) selecionados em qualquer módulo valem para todos.
+// A última ação do usuário é a fonte da verdade; os demais módulos sincronizam ao serem abertos.
+let EMP_GLOBAL = { cnpj:'', ano:null };
+function empGlobalSet(cnpj, ano){
+  EMP_GLOBAL.cnpj = cnpj || '';
+  if (ano) EMP_GLOBAL.ano = +ano;
+}
+function empGlobalAplicar(selId, anoId){
+  const s = $id(selId);
+  if (s && EMP_GLOBAL.cnpj && [...s.options].some(o=>o.value===EMP_GLOBAL.cnpj)) s.value = EMP_GLOBAL.cnpj;
+  const a = $id(anoId);
+  if (a && EMP_GLOBAL.ano) a.value = EMP_GLOBAL.ano;
+}
 function toast(msg) {
   const t = $id('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 3200);
@@ -831,6 +859,34 @@ const REP_TRIB = {
   IV: { irpj:[.188,.198,.208,.178,.188,.535], csll:[.152,.152,.152,.192,.192,.215], cofins:[.1767,.2055,.1973,.189,.1808,.2055], pis:[.0383,.0445,.0427,.041,.0392,.0445], iss:[.445,.40,.40,.40,.40,0] },
   V:  { irpj:[.25,.23,.24,.21,.23,.35], csll:[.15,.15,.15,.15,.125,.155], cofins:[.141,.141,.1492,.1574,.141,.1644], pis:[.0305,.0305,.0323,.0341,.0305,.0356], cpp:[.2885,.2785,.2385,.2385,.2385,.295], iss:[.14,.17,.19,.21,.235,0] },
 };
+// v7.1: repartição efetiva — partes de consumo (ICMS/ISS/PIS+COFINS) e CPP vêm dos ANEXOS EM USO
+// (editáveis nos Parâmetros); o residual é distribuído entre os demais tributos na proporção da
+// repartição padrão da LC 123, normalizado para fechar 100% em cada faixa.
+function repEfetiva(anexos){
+  const out = {};
+  for (const ax of Object.keys(REP_TRIB)) {
+    const P = REP_TRIB[ax], A = anexos[ax] || {};
+    const o = {}; for (const t of Object.keys(P)) o[t] = [0,0,0,0,0,0];
+    for (let f=0; f<6; f++) {
+      const pc = (A.piscof && A.piscof[f]!=null) ? A.piscof[f] : (P.pis[f]+P.cofins[f]);
+      const pcPad = P.pis[f]+P.cofins[f];
+      const shPis = pcPad>0 ? P.pis[f]/pcPad : .18;          // proporção interna PIS:COFINS da faixa
+      const direto = { pis: pc*shPis, cofins: pc*(1-shPis) };
+      if (P.icms) direto.icms = (A.icms && A.icms[f]!=null) ? A.icms[f] : P.icms[f];
+      if (P.iss)  direto.iss  = (A.iss  && A.iss[f]!=null)  ? A.iss[f]  : P.iss[f];
+      if (P.cpp && A.cpp && A.cpp[f]!=null) direto.cpp = A.cpp[f];       // III tem CPP editável
+      const somaDireto = Object.values(direto).reduce((a,b)=>a+b,0);
+      const resto = Object.keys(P).filter(t=>direto[t]==null);
+      const somaPadResto = resto.reduce((a,t)=>a+P[t][f],0);
+      const resid = Math.max(0, 1 - somaDireto);
+      const escala = somaDireto>1 ? 1/somaDireto : 1;                    // proteção: partes >100%
+      for (const t of Object.keys(direto)) o[t][f] = direto[t]*escala;
+      for (const t of resto) o[t][f] = somaPadResto>0 ? resid*escala*(P[t][f]/somaPadResto) : 0;
+    }
+    out[ax] = o;
+  }
+  return out;
+}
 const REC_COM_KEYS = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_mono','a2_comst','a2_comst_mono'];
 const REC_SERV_KEYS = ['a3_semret','a3_retiss','a3_retissinss','a4','a5r','comtransp'];
 
@@ -859,6 +915,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   const D = {}; for (const k of ['adm','vendas','fiscais','financeiras','outras','credLR']) D[k] = arr12(inp.despesas[k]);
   const F13 = { prolabore13:+(inp.folha13?.prolabore13)||0, salarios13:+(inp.folha13?.salarios13)||0, baseFgts13:+(inp.folha13?.baseFgts13)||0 };
 
+  const REPX = repEfetiva(anexos);   // v7.1: repartição efetiva acompanha os parâmetros editados
   const rbt12Cfg = S(cfg.rbt12Lanc), folha12Cfg = S(cfg.folha12Lanc);
   out.fatorRMensal = [];
 
@@ -935,8 +992,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
               + R.a2_red[m]*pIcms2*(1 - R.a2_red_pct[m]);
       const capIss = p => Math.min(p, .05);
       const pIss3 = capIss(ef5(A3)*A3.iss[4]);
-      const pIss4 = capIss(ef5(A4)*.40);          // Anexo IV 5ª faixa: 40%, com ISS fixo em 5%
-      const pIss5 = capIss(ef5(A5)*.235);         // Anexo V 5ª faixa: repartição ISS 23,5%
+      const pIss4 = capIss(ef5(A4)*((A4.iss&&A4.iss[4]!=null)?A4.iss[4]:.40));   // parte ISS 5ª fx do Anexo IV (parâmetro)
+      const pIss5 = capIss(ef5(A5)*((A5.iss&&A5.iss[4]!=null)?A5.iss[4]:.235));  // parte ISS 5ª fx do Anexo V (parâmetro)
       subIss = R.a3_semret[m]*pIss3 + R.a4[m]*pIss4
              + R.a5r[m]*(fatorR >= .28 ? pIss3 : pIss5);
       // receitas com ST e com retenção de ISS ficam de fora (ICMS-ST recolhido antes; ISS retido pelo tomador)
@@ -954,17 +1011,30 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         ['III', R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.comtransp[m], e3],
         ['IV', R.a4[m], e4],
         [fatorR>=.28?'III':'V', R.a5r[m], e35] ];
-      for (const [ax, base, e] of _bases) { const rp = REP_TRIB[ax]; if (!rp || !base) continue;
+      for (const [ax, base, e] of _bases) { const rp = REPX[ax]; if (!rp || !base) continue;
         for (const t of Object.keys(dt)) if (rp[t]) dt[t] += base*e*rp[t][fx]; }
-      dt.cpp -= R.a3_retissinss[m]*e3*(REP_TRIB.III.cpp[fx]||0);   // CPP retido pelo tomador fica fora do DAS
+      dt.cpp -= R.a3_retissinss[m]*e3*(REPX.III.cpp[fx]||0);   // CPP retido pelo tomador fica fora do DAS
       const _pc = dt.pis+dt.cofins, _ii = dt.icms+dt.iss;
       dt.pis    = _pc>0 ? dasPisCof*dt.pis/_pc     : 0;
       dt.cofins = _pc>0 ? dasPisCof*dt.cofins/_pc  : 0;
       dt.icms   = _ii>0 ? dasIcmsIss*dt.icms/_ii   : subIcms;
       dt.iss    = _ii>0 ? dasIcmsIss*dt.iss/_ii    : subIss;
+      // v7.1: fechamento garantido — o resíduo (DAS − parcelas de consumo) é distribuído entre
+      // IRPJ/CSLL/CPP/IPI na proporção calculada (k=1 com parâmetros padrão; ajusta edições inconsistentes)
+      const _nc = dt.irpj + dt.csll + dt.cpp + dt.ipi;
+      const _resto = (das + subIcms + subIss) - dasPisCof - dasIcmsIss;
+      if (_nc > 0 && _resto >= 0) { const _k = _resto/_nc; dt.irpj*=_k; dt.csll*=_k; dt.cpp*=_k; dt.ipi*=_k; }
     }
     const recCom  = REC_COM_KEYS.reduce((s,k)=>s+R[k][m],0);
     const recServ = REC_SERV_KEYS.reduce((s,k)=>s+R[k][m],0);
+
+    // v7.1 (A2): retenções sofridas são custo tributário do prestador — recompostas no total do Simples.
+    // ISS retido pela alíquota efetiva do Simples (LC 123, art. 21, §4º); acima do sublimite, pela trava.
+    const _pIssRet = (rbt12 > subLim && (cfg.sublimite||'auto') !== 'off')
+      ? Math.min(((subLim*anexos.III.aliq[4]-anexos.III.ded[4])/subLim)*((anexos.III.iss&&anexos.III.iss[4]!=null)?anexos.III.iss[4]:.335), .05)
+      : e3*((anexos.III.iss&&anexos.III.iss[fx]!=null)?anexos.III.iss[fx]:0);
+    const issRetido = (R.a3_retiss[m] + R.a3_retissinss[m]) * _pIssRet;
+    const cppRetida = R.a3_retissinss[m] * e3 * (REPX.III.cpp[fx]||0);
 
     // Folha (dezembro agrega 13º: FGTS e patronal por fora do total da folha)
     const fgts13 = m===11 ? F13.baseFgts13*fp.fgts : 0;
@@ -989,9 +1059,12 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const iss = serv*cfg.iss;
 
     // ── LUCRO PRESUMIDO ──
-    const basePisCofLP = receita - R.a1_comst_mono[m] - R.a2_comst_mono[m];
-    const lp_pis = (basePisCofLP - icmsDeb)*.0065;
-    const lp_cof = (basePisCofLP - icmsDeb)*.03;
+    // v7.1 (A3): revenda monofásica tem alíquota zero de PIS/COFINS também no cumulativo —
+    // excluídos TODOS os blocos monofásicos (antes só os "com ST e monofásico" saíam da base)
+    const basePisCofLP = receita - R.a1_comst_mono[m] - R.a2_comst_mono[m] - R.a1_mono[m] - R.a2_mono[m];
+    const _baseLPliq = Math.max(0, basePisCofLP - icmsDeb);   // exclusão do ICMS nunca negativa a base
+    const lp_pis = _baseLPliq*.0065;
+    const lp_cof = _baseLPliq*.03;
     const base32 = serv*cfg.lpBaseServ;
     const base8  = com*cfg.lpBaseCom + R.fin[m];
     const base12 = com*.12 + R.fin[m];
@@ -1012,7 +1085,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
 
     out.meses.push({ m, rbt12, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasTrib: dt, recCom, recServ,
       fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal,
-      simples: { das, inssPatrForaDAS: 0, fgts, sublimite: subIcms+subIss, total: das + fgts + subIcms + subIss },
+      simples: { das, fgts, sublimite: subIcms+subIss, issRetido, cppRetida,
+        // v7.1 (A1): CPP do Anexo IV é devida FORA do DAS — proxy pela participação da receita a4 no mês
+        inssPatrForaDAS: (receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0,
+        total: das + fgts + subIcms + subIss + issRetido + cppRetida + ((receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0) },
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
             baseAdic: base32+base8 },
       lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
@@ -1049,6 +1125,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     dasPisCof: S(out.meses.map(x=>x.dasPisCof)),
     dasIcmsIss: S(out.meses.map(x=>x.dasIcmsIss)),
     recCom: S(out.meses.map(x=>x.recCom)), recServ: S(out.meses.map(x=>x.recServ)),
+    issRetido: S(out.meses.map(x=>x.simples.issRetido||0)), cppRetida: S(out.meses.map(x=>x.simples.cppRetida||0)),
+    cppForaDAS: S(out.meses.map(x=>x.simples.inssPatrForaDAS||0)),
+    comprasRevenda: S(out.meses.map((_,i)=>C.semst[i]+C.mono[i]+C.comst[i]+C.comstMono[i])),
     dasTrib: ['pis','cofins','irpj','csll','cpp','icms','iss','ipi'].reduce((o,t)=>(o[t]=S(out.meses.map(x=>x.dasTrib?x.dasTrib[t]:0)),o),{}),
   };
   return out;
@@ -1258,6 +1337,7 @@ function anRecalcular() {
 
 async function anTrocarEmpresa() {
   const cnpj = $id('an-empresa').value;
+  empGlobalSet(cnpj, +$id('an-ano').value);
   if (!cnpj) { if (!AN) { AN = anNovo('', +$id('an-ano').value); anRenderTabs(); anRenderGrid(); anRecalcular(); } return; }
   const ano = +$id('an-ano').value;
   try {
@@ -1295,8 +1375,9 @@ function prRender() {
   $id('pr-container').innerHTML =
     tab('I — Comércio','I',[['icms','Parte ICMS'],['piscof','Parte PIS+COFINS']]) +
     tab('II — Indústria','II',[['icms','Parte ICMS'],['piscof','Parte PIS+COFINS']]) +
-    tab('III — Serviços','III',[['iss','Parte ISS'],['cpp','Parte CPP']]) +
-    tab('IV — Serviços','IV') + tab('V — Serviços','V') +
+    tab('III — Serviços','III',[['iss','Parte ISS'],['cpp','Parte CPP'],['piscof','Parte PIS+COFINS']]) +
+    tab('IV — Serviços','IV',[['iss','Parte ISS'],['piscof','Parte PIS+COFINS']]) +
+    tab('V — Serviços','V',[['iss','Parte ISS'],['piscof','Parte PIS+COFINS']]) +
     `<div class="card"><h3>Percentuais de folha</h3><div style="display:flex;gap:16px;flex-wrap:wrap">
       ${[['patronalProLabore','INSS patronal pró-labore'],['patronalSalarios','INSS patronal salários'],['rat','RAT/FAP'],['terceiros','Terceiros'],['fgts','FGTS']]
         .map(([k,rot])=>`<div><label>${rot} %</label><input style="width:130px" value="${+(F[k]*100).toFixed(4)}" onchange="PARAMS.folha['${k}']=num(this.value)/100;prAuto()"></div>`).join('')}
@@ -1384,6 +1465,7 @@ async function empExcluir(cnpj) {
     if (typeof RL==='object' && RL && RL.dados && RL.dados.cnpj===cnpj) { RL.dados=null; RL.res=null; RL.reforma=null; RL.empresa=null; }
     const selRL = $id('rl-empresa'); if (selRL && selRL.value===cnpj) { selRL.value=''; try{ rlRender(); }catch{} }
     const selRF = $id('rf-empresa'); if (selRF && selRF.value===cnpj) { selRF.value=''; RF=null; }
+    if (EMP_GLOBAL.cnpj===cnpj) EMP_GLOBAL.cnpj='';
     toast('Empresa e relatórios excluídos.');
     await empCarregar();
     if (selRL) { const at=selRL.value; selRL.innerHTML=$id('an-empresa').innerHTML; selRL.value=at||''; }
@@ -1535,6 +1617,13 @@ function rfLinhaBase(rf, a) {
 function calcCenariosReforma(res, reforma) {
   const T = res.totais, meses = res.meses;
   const rfx = Object.assign({ benefRec:{}, benefCred:{}, contra:{}, receita:0, baseIS:0, credSimplesPct:0 }, reforma||{});
+  // v7.1 (A5): sem compras informadas na aba Reforma, usa as compras de revenda da própria análise
+  // como proxy de aquisições de PJ do regime regular — evita cenários híbrido/fora sem NENHUM crédito.
+  let proxyCompras = false;
+  if (!((rfx.contra?.compras_lrlp||0) > 0) && !((rfx.contra?.compras_simples||0) > 0) && (T.comprasRevenda||0) > 0) {
+    rfx.contra = Object.assign({}, rfx.contra, { compras_lrlp: T.comprasRevenda });
+    proxyCompras = true;
+  }
   const aliq = {}; for (const a of RF_ANOS) aliq[a] = Object.assign({}, RF_ALIQ_DEFAULT[a], (rfx.aliq||{})[a]||{});
   rfx.aliq = aliq;
   if (!(rfx.receita>0)) rfx.receita = T.receita;
@@ -1549,13 +1638,14 @@ function calcCenariosReforma(res, reforma) {
     const L = rfLinhaBase(rfx, a), q = L.q;
     const rPC = +q.remPisCof||0, rII = +q.remIcmsIss||0;
     const dasHib = dasResto + (T.dasPisCof||0)*rPC + (T.dasIcmsIss||0)*rII;
-    const hib = dasHib + (T.fgts||0) + L.liquido + L.is;
+    const hib = dasHib + (T.fgts||0) + (T.issRetido||0)*rII + (T.cppRetida||0) + (T.cppForaDAS||0) + L.liquido + L.is;
     const regLP = lpResto + (lpIcms+lpIss)*rII + (lpPis+lpCof)*rPC + (a<=2026?lpIpi:0) + L.liquido + L.is;
     const regLR = lrResto + (lrIcms+lrIss)*rII + (lrPis+lrCof)*rPC + (a<=2026?lrIpi:0) + L.liquido + L.is;
     const regular = Math.min(regLP, regLR);
     return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, dasHib, hib, regular, regLP, regLR, regNome: regular===regLP?'Presumido':'Real' };
   });
-  return { rfx, REF, usouFallback: !reforma };
+  const semCreditos = REF.every(l=>l.cred<=0.005);
+  return { rfx, REF, usouFallback: !reforma, proxyCompras, semCreditos };
 }
 
 function rfCalcular() {
@@ -1607,6 +1697,7 @@ function rfCalcular() {
 
 async function rfTrocar() {
   const cnpj = $id('rf-empresa').value, ano = +$id('rf-ano').value;
+  empGlobalSet(cnpj, ano);
   if (!cnpj) { RF = rfNovo('', ano); rfRenderAliq(); rfRenderBenef(); rfCalcular(); return; }
   // carrega análise (regime atual) da empresa para servir de base
   try {
@@ -2402,15 +2493,15 @@ function rlConsolidado(rot, n) {
     ${lin3('IRPJ', DT?DT.irpj:null, sLP('irpj'), sLR('irpj'))}
     ${lin3('Adicional de IRPJ (10%)', null, sLP('adicional'), sLR('adicional'))}
     ${lin3('CSLL', DT?DT.csll:null, sLP('csll'), sLR('csll'))}
-    ${lin3('INSS patronal / CPP', DT?DT.cpp:null, sLP('inssPatr'), sLR('inssPatr'))}
+    ${lin3('INSS patronal / CPP', DT?DT.cpp + (RL.res.totais.cppRetida||0) + (RL.res.totais.cppForaDAS||0):null, sLP('inssPatr'), sLR('inssPatr'))}
     ${lin3('ICMS', DT?DT.icms:null, sLP('icms'), sLR('icms'))}
     ${lin3('IPI', DT?DT.ipi:null, sLP('ipi'), sLR('ipi'))}
-    ${lin3('ISS', DT?DT.iss:null, sLP('iss'), sLR('iss'))}
+    ${lin3('ISS', DT?DT.iss + (RL.res.totais.issRetido||0):null, sLP('iss'), sLR('iss'))}
     ${lin3('FGTS', T.fgts, sLP('fgts'), sLR('fgts'))}
     <tr style="font-weight:700"><td class="rot">TOTAL ANUAL</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr>
     <tr><td class="rot">% da receita bruta</td><td class="num">${T.receita?(T.simples/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${T.receita?(T.lp/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${T.receita?(T.lr/T.receita*100).toFixed(2)+'%':'—'}</td></tr>
     </tbody></table>
-    <div class="hint" style="margin-top:6px">Coluna do Simples: tributos embutidos no DAS pela repartição da LC 123 (Anexos I–V, por faixa). PIS×COFINS e ICMS×ISS distribuídos na proporção da repartição cheia em meses com ST, monofásico ou retenções. Na coluna do Simples, os totais por tributo somam o DAS (com a trava do sublimite dentro de ICMS/ISS).</div></div>`;
+    <div class="hint" style="margin-top:6px">Coluna do Simples: tributos embutidos no DAS pela repartição da LC 123 (Anexos I–V, por faixa). PIS×COFINS e ICMS×ISS distribuídos na proporção da repartição cheia em meses com ST, monofásico ou retenções. Na coluna do Simples, ISS e CPP incluem também as parcelas retidas na fonte e a CPP do Anexo IV devida fora do DAS (v7.1) — por isso os totais por tributo podem superar o DAS.</div></div>`;
 
   // ── 3. MEMÓRIA SIMPLES ──
   h += `<div class="card" style="page-break-before:always"><h3>3. Memória de cálculo — Simples Nacional</h3><div style="overflow-x:auto"><table><thead>${cab}</thead><tbody>
@@ -2427,6 +2518,9 @@ function rlConsolidado(rot, n) {
     ${linha('· IPI', g(x=>x.dasTrib?x.dasTrib.ipi:0))}
     ${linha('DAS', g(x=>x.das))}
     ${linha('ICMS/ISS da trava do sublimite', g(x=>(x.subIcms||0)+(x.subIss||0)))}
+    ${linha('ISS retido na fonte (custo do prestador)', g(x=>x.simples.issRetido||0))}
+    ${linha('CPP retida na fonte', g(x=>x.simples.cppRetida||0))}
+    ${linha('CPP fora do DAS — Anexo IV (proxy receita)', g(x=>x.simples.inssPatrForaDAS||0))}
     ${linha('FGTS', g(x=>x.fgts))}
     ${linha('Total Simples', g(x=>x.simples.total), true)}
   </tbody></table></div>
@@ -2470,6 +2564,7 @@ const agrupar = (arr, n) => { const out=[]; for(let i=0;i<12;i+=n) out.push(arr.
 
 async function rlCarregar() {
   const cnpj = $id('rl-empresa').value, ano = +$id('rl-ano').value;
+  empGlobalSet(cnpj, ano);
   if (!cnpj) { RL.dados=null; rlRender(); return; }
   RL.empresa = EMPRESAS.find(e=>e.cnpj===cnpj) || null;
   let dados = null;
@@ -2605,6 +2700,10 @@ function rlParecer(){
   const temDT = D.dasTrib && ['pis','cofins','irpj','csll','cpp','icms','iss','ipi'].some(k=>(D.dasTrib[k]||0)>0.005);
   const temREF = D.anos.length>0;
   const statusIA = RL._ia ? '🤖 Textos gerados pela IA em '+RL._ia.quando : 'Textos padrão — clique em “Gerar textos com IA” para o parecer redigido sob medida';
+  const premissaCred = D.cen ? (D.cen.semCreditos
+      ? '⚠️ Cenários da Reforma calculados SEM créditos de IBS/CBS (nenhuma compra informada) — preencha a aba Reforma ou lance as Compras da análise para refinar.'
+      : (D.cen.proxyCompras ? 'ℹ️ Créditos de IBS/CBS estimados pelas compras de revenda da análise (aba Reforma não preenchida) — preencha a aba Reforma para refinar.'
+      : (D.cen.usouFallback ? 'ℹ️ Cenários com as alíquotas padrão da transição (aba Reforma não preenchida).' : ''))) : '';
 
   const secao = (num, tit, sub) => `<h3 class="pp-sec">${num}. ${tit}</h3>${sub?`<div class="hint" style="margin-bottom:8px">${sub}</div>`:''}`;
   const alertasHtml = D.alertas.length ? `<div class="pp-alerta"><b>Alertas de fronteira:</b><ul style="margin:6px 0 0 18px">${D.alertas.map(a=>`<li>${a}</li>`).join('')}</ul></div>` : '';
@@ -2614,7 +2713,7 @@ function rlParecer(){
       <span class="hint">${statusIA}</span><span style="flex:1"></span>
       <button class="btn" onclick="window.print()">🖨️ Imprimir / PDF</button>
       <button class="btn solid" id="pp-ia-btn" onclick="parecerIA()">🤖 Gerar textos com IA</button>
-    </div></div>`;
+    </div>${premissaCred?`<div class="hint" style="margin-top:6px;padding:8px 10px;background:#fbf3e2;border-left:3px solid #d99a2b;border-radius:0 6px 6px 0">${premissaCred}</div>`:''}</div>`;
 
   // ── CAPA ──
   h += `<div class="pp-page pp-capa"><img class="pp-bg" src="capa.jpg" onerror="this.style.display='none';this.parentNode.classList.add('pp-semarte')">
@@ -2714,7 +2813,7 @@ function rlParecer(){
     <div class="pp-final">${TX.recomendacao}</div>
     <p class="pp-p">Colocamo-nos à disposição para esclarecimentos adicionais.</p>
     <div class="pp-assin"><p>Atenciosamente,</p><div style="height:14mm"></div><div class="pp-traco"></div><b>Responsável técnico</b><div class="hint">Artecon Artes Contábeis · Palhoça/SC</div></div>
-    <div class="pp-notaia">Texto interpretativo ${RL._ia?'gerado por inteligência artificial':'padrão do sistema'} a partir dos valores calculados pelo motor do Análise Tributária Pro. Os números não são gerados pela IA. Estimativas direcionais — não substituem a apuração formal de cada período.</div>
+    <div class="pp-notaia">Texto interpretativo ${RL._ia?'gerado por inteligência artificial':'padrão do sistema'} a partir dos valores calculados pelo motor do Análise Tributária Pro. Os números não são gerados pela IA. ${D.cen&&D.cen.semCreditos?'Cenários da Reforma sem créditos de IBS/CBS informados. ':(D.cen&&D.cen.proxyCompras?'Créditos de IBS/CBS estimados pelas compras de revenda da análise. ':'')}Valores em moeda constante do ano-base. Estimativas direcionais — não substituem a apuração formal de cada período.</div>
   </div></div>`;
 
   $id('rl-corpo').innerHTML = h;
@@ -2775,6 +2874,7 @@ async function parecerIA(){
         cenarios2033: D.L33 ? { porDentro: D.T.simples, hibrido: D.L33.hib, foraDoSimples: D.L33.regular, regNome: D.L33.regNome } : null,
         splitPayment: D.split, fatorRMedio: D.frMed,
       },
+      premissas: { reformaFallback: !!(D.cen&&D.cen.usouFallback), creditosProxyCompras: !!(D.cen&&D.cen.proxyCompras), semCreditosIBSCBS: !!(D.cen&&D.cen.semCreditos), moedaConstante: true },
     };
     const r = await fetch(SUPA_URL + '/functions/v1/gerar-parecer', {
       method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPA_KEY, 'Authorization':'Bearer '+(APP.token||SUPA_KEY) },
