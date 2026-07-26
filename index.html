@@ -267,15 +267,12 @@ canvas{max-height:340px}
         <div id="ci-result" style="margin-top:12px"></div>
       </div>
       <div class="card">
-        <h3 style="margin:0 0 4px">🚚 Análise de fornecedores — crédito de IBS/CBS da Reforma</h3>
-        <div class="hint" style="margin-bottom:10px">Importe o relatório <b>Totais ISS por Fornecedor/Cliente</b> (Questor, CSV). O sistema identifica a empresa pelo cabeçalho, consulta o enquadramento de cada fornecedor (MEI / Simples / regime normal) e calcula os percentuais que alimentam o crédito de IBS/CBS na aba Reforma. Cada análise fica no histórico da empresa (botão 📊 em Empresas).</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-          <input type="file" id="fo-arq" accept=".csv,.txt" style="display:none" onchange="fornArquivo(this)">
-          <button class="btn" onclick="$id('fo-arq').click()">📄 Importar relatório (CSV)</button>
-          <span class="hint" id="fo-info">Nenhum relatório carregado.</span>
-        </div>
-        <div id="fo-painel" style="display:none;margin-top:12px">
+        <h3>1. Informe os CNPJs — triagem ou análise de fornecedores</h3>
+        <div class="hint" style="margin-bottom:8px">Cole uma lista de CNPJs (triagem simples) <b>ou importe um arquivo</b> — o sistema detecta sozinho: relatório <b>Totais ISS por Fornecedor/Cliente</b> (Questor) abre a análise de fornecedores 🚚 com valores, percentuais e crédito de IBS/CBS da Reforma; qualquer outro arquivo/lista segue como triagem.</div>
+        <input type="file" id="fo-arq" accept=".csv,.txt" style="display:none" onchange="fornArquivo(this)">
+        <div id="fo-painel" style="display:none;margin:10px 0;border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe">
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+            <b>🚚 Análise de fornecedores</b>
             <div><b id="fo-emp"></b> <span class="hint" id="fo-per"></span></div>
             <button class="btn solid" id="fo-btn" onclick="fornConsultar()">Consultar fornecedores na Receita</button>
             <span class="hint" id="fo-prog"></span>
@@ -284,9 +281,6 @@ canvas{max-height:340px}
           <div id="fo-stats" style="margin-top:10px"></div>
           <div style="margin-top:10px"><button class="btn solid" id="fo-salvar" style="display:none" onclick="fornSalvar()">💾 Salvar análise no histórico da empresa</button></div>
         </div>
-      </div>
-      <div class="card">
-        <h3>1. Informe os CNPJs da relação</h3>
         <div style="display:grid;grid-template-columns:1fr 260px;gap:20px">
           <div>
             <label>Colar lista (um CNPJ por linha, com ou sem pontuação)</label>
@@ -681,6 +675,26 @@ function extrairCNPJs(texto) {
 }
 
 function importarArquivo(inp) {
+  // v7.4b: detecção automática — relatório Questor de fornecedores abre o painel 🚚
+  const f0 = inp.files && inp.files[0];
+  if (f0 && /\.(csv|txt)$/i.test(f0.name)) {
+    const rd0 = new FileReader();
+    rd0.onload = () => {
+      const buf = rd0.result;
+      let t = new TextDecoder('utf-8').decode(buf);
+      if (/\uFFFD/.test(t)) t = new TextDecoder('iso-8859-1').decode(buf);
+      if (/Totais ISS por Fornecedor/i.test(t) || (/CNPJ:\s*[\d./-]{14,18}/.test(t) && /- Entradas/i.test(t))) {
+        fornCarregarTexto(t, f0.name); inp.value=''; return;
+      }
+      $id('cnpj-lista').value = t;
+      toast('CNPJs carregados do arquivo — clique em "Consultar na base da Receita".');
+    };
+    rd0.readAsArrayBuffer(f0); inp.value='';
+    return;
+  }
+  importarArquivoTriagemInput(inp);
+}
+function importarArquivoTriagemInput(inp) {
   const f = inp.files[0]; if (!f) return;
   const reader = new FileReader();
   reader.onload = e => {
@@ -770,18 +784,23 @@ function fornArquivo(inp){
     const buf = rd.result;
     let t = new TextDecoder('utf-8').decode(buf);
     if (/\uFFFD/.test(t)) t = new TextDecoder('iso-8859-1').decode(buf);
+    fornCarregarTexto(t, f.name);
+  };
+  rd.readAsArrayBuffer(f); inp.value='';
+}
+function fornCarregarTexto(t, nomeArq){
+  {
     FO = fornParse(t);
     if (!FO.itens.length){ toast('Nenhum fornecedor com CNPJ e valor encontrado no arquivo.'); FO=null; return; }
     const soma = FO.itens.reduce((s,i)=>s+i.valor,0);
-    $id('fo-info').textContent = f.name;
     $id('fo-painel').style.display = 'block';
     $id('fo-emp').textContent = (FO.nomeEmpresa||'Empresa') + ' · ' + fmtCNPJ(FO.cnpjEmpresa||'');
     $id('fo-per').textContent = (FO.periodo?('Período '+FO.periodo+' · '):'') + FO.itens.length + ' fornecedores · R$ ' + fmt(soma) +
       (FO.totalRelatorio? (Math.abs(soma-FO.totalRelatorio)<0.02?' ✓ confere com o total do relatório':' ⚠️ difere do total do relatório: '+fmt(FO.totalRelatorio)) : '');
     $id('fo-salvar').style.display='none';
+    toast('Relatório de fornecedores detectado: '+(nomeArq||''));
     fornRender();
-  };
-  rd.readAsArrayBuffer(f); inp.value='';
+  }
 }
 function fornClasse(r){ return r.erro ? 'nid' : r.simei ? 'mei' : r.simples ? 'simples' : 'normal'; }
 const FO_ROTULO = { mei:['MEI','warn'], simples:['Simples Nacional','warn'], normal:['Regime normal (LP/LR)','ok'], nid:['Não identificado','err'] };
@@ -801,14 +820,28 @@ function fornStatsCalc(itens){
     pctQ: { simplesMei: q? (simplesMei.q/q*100):0, normal: q? (g.normal.q/q*100):0, nid: q? (g.nid.q/q*100):0 },
     pctV: { simplesMei: v? (simplesMei.v/v*100):0, normal: v? (g.normal.v/v*100):0, nid: v? (g.nid.v/v*100):0 } };
 }
+function fornVisual(s, quando, periodo){
+  const barra = (a,b,c) => { const t=a+b+c||1; const seg=(v,cor,rot)=> v>0?`<div style="width:${(v/t*100).toFixed(2)}%;background:${cor};min-width:${v/t>0.06?'0':'0'}" title="${rot}"></div>`:'';
+    return `<div style="display:flex;height:22px;border-radius:6px;overflow:hidden;border:1px solid var(--border,#dde3ea)">${seg(a,'#0f7a5a','Regime normal')}${seg(b,'#d99a2b','MEI + Simples')}${seg(c,'#c0392b','Não identificados')}</div>`; };
+  const card = (rot,val,sub,cor) => `<div style="flex:1;min-width:150px;border:1px solid var(--border,#dde3ea);border-left:4px solid ${cor};border-radius:8px;padding:8px 12px;background:#fff"><div class="hint" style="font-size:10.5px;letter-spacing:.4px;text-transform:uppercase">${rot}</div><div style="font-size:17px;font-weight:700">${val}</div><div class="hint">${sub}</div></div>`;
+  return `<div>
+    ${quando?`<div class="hint" style="margin-bottom:8px">Consulta de ${quando}${periodo?' · período '+periodo:''}</div>`:''}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      ${card('Fornecedores', s.totQ, 'R$ '+fmt(s.totV)+' no período', '#1a5276')}
+      ${card('Geram crédito de IBS/CBS', s.pctV.normal.toFixed(1)+'%', s.grupos.normal.q+' PJ regime normal · R$ '+fmt(s.grupos.normal.v), '#0f7a5a')}
+      ${card('MEI + Simples (sem crédito integral)', s.pctV.simplesMei.toFixed(1)+'%', s.simplesMei.q+' fornecedores · R$ '+fmt(s.simplesMei.v), '#d99a2b')}
+      ${s.grupos.nid.q?card('Não identificados', s.grupos.nid.q, 'R$ '+fmt(s.grupos.nid.v)+' · fora do crédito — confirme', '#c0392b'):''}
+    </div>
+    <div style="display:grid;grid-template-columns:110px 1fr 120px;gap:8px;align-items:center">
+      <span class="hint">Por valor (R$)</span>${barra(s.grupos.normal.v, s.simplesMei.v, s.grupos.nid.v)}<span class="hint">${s.pctV.normal.toFixed(1)}% com crédito</span>
+      <span class="hint">Por quantidade</span>${barra(s.grupos.normal.q, s.simplesMei.q, s.grupos.nid.q)}<span class="hint">${s.pctQ.normal.toFixed(1)}% com crédito</span>
+    </div>
+    <div class="hint" style="margin-top:6px"><span style="color:#0f7a5a">■</span> Regime normal (LP/LR) — gera crédito&nbsp;&nbsp;<span style="color:#d99a2b">■</span> MEI + Simples Nacional&nbsp;&nbsp;<span style="color:#c0392b">■</span> Não identificado</div>
+  </div>`;
+}
 function fornStats(){
   if (!FO.itens.some(i=>i.classe)) { $id('fo-stats').innerHTML=''; return; }
-  const s = fornStatsCalc(FO.itens);
-  $id('fo-stats').innerHTML = `<div class="hint" style="padding:10px;background:var(--info-bg,#eaf2f8);border-radius:8px">
-    <b>Resumo estatístico</b> — ${s.totQ} fornecedores · R$ ${fmt(s.totV)}<br>
-    • MEI + Simples Nacional: <b>${s.pctQ.simplesMei.toFixed(1)}%</b> das empresas · <b>${s.pctV.simplesMei.toFixed(1)}%</b> do valor (R$ ${fmt(s.simplesMei.v)}) → <i>Compras de PJ Simples/SIMEI</i><br>
-    • Demais regimes (LP/LR e outros): <b>${s.pctQ.normal.toFixed(1)}%</b> das empresas · <b>${s.pctV.normal.toFixed(1)}%</b> do valor (R$ ${fmt(s.grupos.normal.v)}) → <i>Compras de PJ Lucro Real/Presumido — geram crédito de IBS/CBS</i>
-    ${s.grupos.nid.q? '<br>• Não identificados: '+s.grupos.nid.q+' fornecedor(es) · R$ '+fmt(s.grupos.nid.v)+' — fora da base de crédito (conservador); confirme manualmente se necessário' : ''}</div>`;
+  $id('fo-stats').innerHTML = fornVisual(fornStatsCalc(FO.itens), null, FO.periodo);
 }
 async function fornConsultar(){
   if (!FO) return;
@@ -844,9 +877,7 @@ async function fornResumo(cnpj){
       <select onchange="window._FORN_RENDER(+this.value)">${rs.map((r,i)=>`<option value="${i}" ${i===ix?'selected':''}>${new Date(r.consultado_em).toLocaleString('pt-BR')}${r.dados.periodo?' · '+r.dados.periodo:''}</option>`).join('')}</select>
       <span class="hint">${rs.length} consulta(s) no histórico</span>
       <button class="btn" onclick="$id('emp-forn-resumo').innerHTML=''">Fechar</button></div>
-      <div class="hint" style="margin:8px 0">Consulta de ${dt} · ${s.totQ} fornecedores · R$ ${fmt(s.totV)} —
-        MEI+Simples <b>${s.pctQ.simplesMei.toFixed(1)}%</b> das empresas (${s.pctV.simplesMei.toFixed(1)}% do valor) ·
-        Regime normal <b>${s.pctQ.normal.toFixed(1)}%</b> (${s.pctV.normal.toFixed(1)}% do valor)</div>
+      <div style="margin:10px 0">${fornVisual(s, dt, c.dados.periodo)}</div>
       <div style="overflow:auto;max-height:420px"><table class="tbl"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead>
       <tbody>${c.dados.itens.map(i=>{const rr=FO_ROTULO[i.classe]||['—','']; return `<tr><td style="white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td>${esc(i.razao)}</td><td><span class="badge ${rr[1]}">${rr[0]}</span></td><td style="text-align:right">${fmt(i.valor)}</td></tr>`;}).join('')}</tbody></table></div></div>`;
   };
