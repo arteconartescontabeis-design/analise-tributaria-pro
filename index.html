@@ -230,7 +230,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.3</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.4</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -265,6 +265,25 @@ canvas{max-height:340px}
           </div>
         </div>
         <div id="ci-result" style="margin-top:12px"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 4px">🚚 Análise de fornecedores — crédito de IBS/CBS da Reforma</h3>
+        <div class="hint" style="margin-bottom:10px">Importe o relatório <b>Totais ISS por Fornecedor/Cliente</b> (Questor, CSV). O sistema identifica a empresa pelo cabeçalho, consulta o enquadramento de cada fornecedor (MEI / Simples / regime normal) e calcula os percentuais que alimentam o crédito de IBS/CBS na aba Reforma. Cada análise fica no histórico da empresa (botão 📊 em Empresas).</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <input type="file" id="fo-arq" accept=".csv,.txt" style="display:none" onchange="fornArquivo(this)">
+          <button class="btn" onclick="$id('fo-arq').click()">📄 Importar relatório (CSV)</button>
+          <span class="hint" id="fo-info">Nenhum relatório carregado.</span>
+        </div>
+        <div id="fo-painel" style="display:none;margin-top:12px">
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+            <div><b id="fo-emp"></b> <span class="hint" id="fo-per"></span></div>
+            <button class="btn solid" id="fo-btn" onclick="fornConsultar()">Consultar fornecedores na Receita</button>
+            <span class="hint" id="fo-prog"></span>
+          </div>
+          <div style="overflow:auto"><table class="tbl"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead><tbody id="fo-body"></tbody></table></div>
+          <div id="fo-stats" style="margin-top:10px"></div>
+          <div style="margin-top:10px"><button class="btn solid" id="fo-salvar" style="display:none" onclick="fornSalvar()">💾 Salvar análise no histórico da empresa</button></div>
+        </div>
       </div>
       <div class="card">
         <h3>1. Informe os CNPJs da relação</h3>
@@ -361,7 +380,7 @@ canvas{max-height:340px}
       <div class="card"><div class="toolbar" style="margin-bottom:0">
         <div style="min-width:280px;flex:1"><label>Empresa (usa a análise do regime atual como base)</label><select id="rf-empresa" onchange="rfTrocar()"></select></div>
         <div style="width:110px"><label>Ano-base</label><input type="number" id="rf-ano" value="2026" onchange="rfTrocar()"></div>
-        <div style="align-self:flex-end"><button class="btn" onclick="rfAutoPreencher()" title="Preenche receita, compras, contrapartes e — quando houver XMLs importados — as parcelas de receita com redução">⚡ Preencher da análise</button></div>
+        <div style="align-self:flex-end"><button class="btn" onclick="rfAutoPreencher()" title="Preenche receita, compras, contrapartes e — quando houver XMLs importados — as parcelas de receita com redução">⚡ Preencher da análise</button> <button class="btn" onclick="fornAplicarReforma()" title="Preenche Compras de PJ Lucro Real/Presumido e Compras de PJ Simples/SIMEI pela análise de fornecedores mais recente (Consulta CNPJ → 🚚)">🚚 Compras pelos fornecedores</button></div>
         <div style="align-self:flex-end;display:flex;gap:8px">
           <button class="btn solid" onclick="rfSalvar()">💾 Salvar</button>
           <button class="btn" onclick="rfCalcular()">Recalcular</button>
@@ -472,6 +491,7 @@ canvas{max-height:340px}
       <div class="card" style="overflow-x:auto"><table>
         <thead><tr><th>CNPJ</th><th>Razão Social</th><th>Regime</th><th>Simples</th><th>UF/Mun.</th><th>Obs.</th><th></th></tr></thead>
         <tbody id="emp-tbody"></tbody></table></div>
+      <div id="emp-forn-resumo"></div>
     </div>
     <div id="page-usuarios" style="display:none">
       <div class="page-title"><h1>Usuários</h1><span class="crumb">Equipe Artecon</span></div>
@@ -494,7 +514,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.3</b> <span class="badge ok">atual</span></td><td>25/07/2026</td><td>Classificação da Reforma pelo NBS da própria NFS-e (item 4 da v7): o importador de XML lê o NBS informado na nota (e o cClassTrib, quando presente), localiza-o na Tabela 01 oficial (675 códigos NBS → cClassTrib, com desempate pelo item da LC 116 nos 23 códigos ambíguos) e obtém as reduções de IBS e CBS na Tabela 02 (142 classificações) — em cascata: cClassTrib da própria nota → NBS único → NBS + item → estimativa pelo item LC 116 (como antes). A tela de conferência mostra a origem de cada classificação (◉ via NBS, da nota, manual ou estimada) e alerta quando o NBS exigir confirmação do item.</td></tr>
+          <tr><td><b>v7.4</b> <span class="badge ok">atual</span></td><td>26/07/2026</td><td>Análise de fornecedores para o crédito da Reforma: a Consulta CNPJ ganha o importador do relatório "Totais ISS por Fornecedor/Cliente" (Questor) — identifica a empresa e o período pelo cabeçalho, consulta o enquadramento de cada fornecedor na Receita (MEI, Simples Nacional ou regime normal), confere a soma com o total do relatório e apresenta o resumo estatístico com percentuais por quantidade de empresas e por valor; a análise é salva no histórico da empresa (nova tabela, setup_v74.sql) e pode ser consultada pelo botão 📊 na lista de Empresas (com todas as consultas anteriores para auditoria e comparação); na aba Reforma, o botão 🚚 preenche "Compras de PJ Lucro Real/Presumido" com o total dos fornecedores do regime normal (geram crédito de IBS/CBS) e "Compras de PJ Simples/SIMEI" com o total de MEI + Simples, conforme a análise mais recente; fornecedores não identificados ficam fora da base de crédito, com destaque para confirmação manual.</td></tr>
+          <tr><td><b>v7.3</b></td><td>25/07/2026</td><td>Classificação da Reforma pelo NBS da própria NFS-e (item 4 da v7): o importador de XML lê o NBS informado na nota (e o cClassTrib, quando presente), localiza-o na Tabela 01 oficial (675 códigos NBS → cClassTrib, com desempate pelo item da LC 116 nos 23 códigos ambíguos) e obtém as reduções de IBS e CBS na Tabela 02 (142 classificações) — em cascata: cClassTrib da própria nota → NBS único → NBS + item → estimativa pelo item LC 116 (como antes). A tela de conferência mostra a origem de cada classificação (◉ via NBS, da nota, manual ou estimada) e alerta quando o NBS exigir confirmação do item.</td></tr>
           <tr><td><b>v7.2</b></td><td>25/07/2026</td><td>Pacote UX: botão ⇉ em cada linha da grade repete o valor de janeiro nos 12 meses; os botões Imprimir/PDF mostram as opções corretas de impressão ao passar o mouse; a geração dos textos com IA exibe esqueleto animado nas seções enquanto escreve; importações (PGDAS e Faturamento) pedem confirmação antes de sobrescrever lançamentos existentes; foco visível ao navegar campos pelo teclado e rótulos de acessibilidade nos botões de ícone.</td></tr>
           <tr><td><b>v7.1</b></td><td>25/07/2026</td><td>Correções da revisão técnica: CPP do Anexo IV devida fora do DAS somada ao custo do Simples (proxy pela participação da receita); ISS e CPP retidos na fonte recompostos no total do Simples (LC 123, art. 21, §4º) e considerados na transição da Reforma; Lucro Presumido exclui todas as receitas monofásicas da base de PIS/COFINS; cenários da Reforma sem aba preenchida estimam créditos de IBS/CBS pelas compras de revenda da análise, com aviso de premissa no parecer (tela, impresso e payload da IA); repartição do DAS por tributo derivada dos parâmetros em uso (edições das partes fecham 100% com o DAS); trava do sublimite respeita as partes editadas dos Anexos IV e V; tela de Parâmetros ganha as colunas de partes dos Anexos III, IV e V; seleção de empresa unificada — Análise, Reforma e Relatórios acompanham automaticamente a empresa/ano escolhidos em qualquer módulo (com confirmação quando houver análise aberta de outra empresa, para não perder lançamentos não salvos).</td></tr>
           <tr><td><b>v7.0</b></td><td>24/07/2026</td><td>Impostos do Simples separados (PIS, COFINS, IRPJ, CSLL, CPP, ICMS, ISS e IPI) pela repartição da LC 123 em todos os quadros — Consolidado tributo a tributo, memória mensal do Simples e novo quadro DAS por tributo declarado (PGDAS) × simulado; receitas segregadas em Comércio/Indústria × Serviços na revisão do PGDAS, na grade de Receitas e na memória de cálculo; novo relatório "Parecer Reforma Tributária — com IA": estudo de impacto completo com capa e papel timbrado Artecon, 8 gráficos, miolo condicional por enquadramento (optante do Simples · acima do teto de R$ 4,8 mi · regime regular elegível), alertas de fronteira (teto, sublimite, Fator R, Anexo IV), split payment, plano de ação e parecer final com textos redigidos por IA via Edge Function segura no Supabase (com textos padrão quando a IA estiver indisponível).</td></tr>
@@ -721,6 +742,127 @@ async function consultarUm(cnpj) {
   return { cnpj, erro:'Falha de comunicação com as fontes' };
 }
 
+// ═══ v7.4: análise de fornecedores (crédito de IBS/CBS da Reforma) ═══
+let FO = null;
+function fornParse(txt){
+  const linhas = txt.split(/\r?\n/);
+  const out = { cnpjEmpresa:'', nomeEmpresa:'', periodo:'', itens:[], totalRelatorio:0 };
+  let secao = 'entradas';
+  for (const ln of linhas){
+    const mEmp = ln.match(/CNPJ:\s*([\d./-]{14,18})/i);
+    if (mEmp && !out.cnpjEmpresa){ out.cnpjEmpresa = mEmp[1].replace(/\D/g,''); const per = ln.match(/Per[íi]odo:\s*([^"]+)/i); if (per) out.periodo = per[1].trim(); continue; }
+    if (!out.nomeEmpresa){ const mNome = ln.match(/^"?\d{4}\s+([^";]+?)\s*-\s*(Matriz|Filial)/i); if (mNome){ out.nomeEmpresa = mNome[1].trim(); continue; } }
+    if (/-\s*Sa[íi]das/i.test(ln)) { secao='saidas'; continue; }
+    if (/-\s*Entradas/i.test(ln)) { secao='entradas'; continue; }
+    const mTot = ln.match(/Total das Entradas[^;]*";?([\d.,]+)/i);
+    if (mTot){ out.totalRelatorio = num(mTot[1]); continue; }
+    const m = ln.match(/^"?(\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2})\s*-\s*([^";]+)"?;([\d.,]+)/);
+    if (m && secao==='entradas'){
+      out.itens.push({ cnpj: m[1].replace(/\D/g,''), razao: m[2].trim(), valor: num(m[3]), classe: null });
+    }
+  }
+  return out;
+}
+function fornArquivo(inp){
+  const f = inp.files && inp.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    const buf = rd.result;
+    let t = new TextDecoder('utf-8').decode(buf);
+    if (/\uFFFD/.test(t)) t = new TextDecoder('iso-8859-1').decode(buf);
+    FO = fornParse(t);
+    if (!FO.itens.length){ toast('Nenhum fornecedor com CNPJ e valor encontrado no arquivo.'); FO=null; return; }
+    const soma = FO.itens.reduce((s,i)=>s+i.valor,0);
+    $id('fo-info').textContent = f.name;
+    $id('fo-painel').style.display = 'block';
+    $id('fo-emp').textContent = (FO.nomeEmpresa||'Empresa') + ' · ' + fmtCNPJ(FO.cnpjEmpresa||'');
+    $id('fo-per').textContent = (FO.periodo?('Período '+FO.periodo+' · '):'') + FO.itens.length + ' fornecedores · R$ ' + fmt(soma) +
+      (FO.totalRelatorio? (Math.abs(soma-FO.totalRelatorio)<0.02?' ✓ confere com o total do relatório':' ⚠️ difere do total do relatório: '+fmt(FO.totalRelatorio)) : '');
+    $id('fo-salvar').style.display='none';
+    fornRender();
+  };
+  rd.readAsArrayBuffer(f); inp.value='';
+}
+function fornClasse(r){ return r.erro ? 'nid' : r.simei ? 'mei' : r.simples ? 'simples' : 'normal'; }
+const FO_ROTULO = { mei:['MEI','warn'], simples:['Simples Nacional','warn'], normal:['Regime normal (LP/LR)','ok'], nid:['Não identificado','err'] };
+function fornRender(){
+  $id('fo-body').innerHTML = FO.itens.map(i=>{
+    const rr = i.classe? FO_ROTULO[i.classe] : null;
+    return `<tr><td style="white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td>${esc(i.razao)}</td><td>${rr?`<span class="badge ${rr[1]}">${rr[0]}</span>`:'<span class="hint">— aguardando consulta —</span>'}</td><td style="text-align:right">${fmt(i.valor)}</td></tr>`;
+  }).join('');
+  fornStats();
+}
+function fornStatsCalc(itens){
+  const g = { mei:{q:0,v:0}, simples:{q:0,v:0}, normal:{q:0,v:0}, nid:{q:0,v:0} };
+  for (const i of itens) if (i.classe) { g[i.classe].q++; g[i.classe].v += i.valor; }
+  const q = itens.length, v = itens.reduce((s,i)=>s+i.valor,0);
+  const simplesMei = { q: g.mei.q+g.simples.q, v: g.mei.v+g.simples.v };
+  return { grupos:g, totQ:q, totV:v, simplesMei,
+    pctQ: { simplesMei: q? (simplesMei.q/q*100):0, normal: q? (g.normal.q/q*100):0, nid: q? (g.nid.q/q*100):0 },
+    pctV: { simplesMei: v? (simplesMei.v/v*100):0, normal: v? (g.normal.v/v*100):0, nid: v? (g.nid.v/v*100):0 } };
+}
+function fornStats(){
+  if (!FO.itens.some(i=>i.classe)) { $id('fo-stats').innerHTML=''; return; }
+  const s = fornStatsCalc(FO.itens);
+  $id('fo-stats').innerHTML = `<div class="hint" style="padding:10px;background:var(--info-bg,#eaf2f8);border-radius:8px">
+    <b>Resumo estatístico</b> — ${s.totQ} fornecedores · R$ ${fmt(s.totV)}<br>
+    • MEI + Simples Nacional: <b>${s.pctQ.simplesMei.toFixed(1)}%</b> das empresas · <b>${s.pctV.simplesMei.toFixed(1)}%</b> do valor (R$ ${fmt(s.simplesMei.v)}) → <i>Compras de PJ Simples/SIMEI</i><br>
+    • Demais regimes (LP/LR e outros): <b>${s.pctQ.normal.toFixed(1)}%</b> das empresas · <b>${s.pctV.normal.toFixed(1)}%</b> do valor (R$ ${fmt(s.grupos.normal.v)}) → <i>Compras de PJ Lucro Real/Presumido — geram crédito de IBS/CBS</i>
+    ${s.grupos.nid.q? '<br>• Não identificados: '+s.grupos.nid.q+' fornecedor(es) · R$ '+fmt(s.grupos.nid.v)+' — fora da base de crédito (conservador); confirme manualmente se necessário' : ''}</div>`;
+}
+async function fornConsultar(){
+  if (!FO) return;
+  const btn = $id('fo-btn'); btn.disabled = true;
+  for (let i=0;i<FO.itens.length;i++){
+    $id('fo-prog').textContent = `Consultando ${i+1} de ${FO.itens.length}…`;
+    const r = await consultarUm(FO.itens[i].cnpj);
+    Object.assign(FO.itens[i], { situacao:r.situacao||'', simples:!!r.simples, simei:!!r.simei, erro:r.erro||null,
+      razao: r.razao_social || FO.itens[i].razao, classe: fornClasse(r) });
+    fornRender();
+    if (i<FO.itens.length-1) await new Promise(r=>setTimeout(r,350));
+  }
+  $id('fo-prog').textContent = 'Concluído.';
+  $id('fo-salvar').style.display=''; btn.disabled=false;
+}
+async function fornSalvar(){
+  if (!FO || !FO.itens.some(i=>i.classe)) { toast('Consulte os fornecedores antes de salvar.'); return; }
+  if (!FO.cnpjEmpresa){ toast('CNPJ da empresa dona do relatório não identificado no cabeçalho.'); return; }
+  await garantirEmpresa(FO.cnpjEmpresa, FO.nomeEmpresa||null, null);
+  const stats = fornStatsCalc(FO.itens);
+  await supa('POST','atp_fornec',{ body:{ cnpj: FO.cnpjEmpresa, dados: { periodo: FO.periodo, origem:'Totais ISS por Fornecedor/Cliente',
+    itens: FO.itens.map(i=>({cnpj:i.cnpj, razao:i.razao, classe:i.classe, valor:i.valor, situacao:i.situacao||''})), stats } } });
+  toast('Análise salva no histórico da empresa ✓ (botão 📊 em Empresas; aplique na aba Reforma).');
+}
+async function fornResumo(cnpj){
+  const rs = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+cnpj, order:'consultado_em.desc', select:'*' } }) || [];
+  const alvo = $id('emp-forn-resumo');
+  if (!rs.length){ alvo.innerHTML = '<div class="card" style="margin-top:12px"><span class="hint">Nenhuma análise de fornecedores salva para esta empresa — importe o relatório na Consulta CNPJ (🚚).</span></div>'; return; }
+  const render = ix => {
+    const c = rs[ix], s = c.dados.stats, dt = new Date(c.consultado_em).toLocaleString('pt-BR');
+    alvo.innerHTML = `<div class="card" style="margin-top:12px"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <h3 style="margin:0">📊 Resumo estatístico de fornecedores — ${fmtCNPJ(cnpj)}</h3>
+      <select onchange="window._FORN_RENDER(+this.value)">${rs.map((r,i)=>`<option value="${i}" ${i===ix?'selected':''}>${new Date(r.consultado_em).toLocaleString('pt-BR')}${r.dados.periodo?' · '+r.dados.periodo:''}</option>`).join('')}</select>
+      <span class="hint">${rs.length} consulta(s) no histórico</span>
+      <button class="btn" onclick="$id('emp-forn-resumo').innerHTML=''">Fechar</button></div>
+      <div class="hint" style="margin:8px 0">Consulta de ${dt} · ${s.totQ} fornecedores · R$ ${fmt(s.totV)} —
+        MEI+Simples <b>${s.pctQ.simplesMei.toFixed(1)}%</b> das empresas (${s.pctV.simplesMei.toFixed(1)}% do valor) ·
+        Regime normal <b>${s.pctQ.normal.toFixed(1)}%</b> (${s.pctV.normal.toFixed(1)}% do valor)</div>
+      <div style="overflow:auto;max-height:420px"><table class="tbl"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead>
+      <tbody>${c.dados.itens.map(i=>{const rr=FO_ROTULO[i.classe]||['—','']; return `<tr><td style="white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td>${esc(i.razao)}</td><td><span class="badge ${rr[1]}">${rr[0]}</span></td><td style="text-align:right">${fmt(i.valor)}</td></tr>`;}).join('')}</tbody></table></div></div>`;
+  };
+  window._FORN_RENDER = render;
+  render(0);
+}
+async function fornAplicarReforma(){
+  if (!RF || !RF.cnpj){ toast('Selecione a empresa na aba Reforma primeiro.'); return; }
+  const rs = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+RF.cnpj, order:'consultado_em.desc', limit:'1', select:'*' } }) || [];
+  if (!rs.length){ toast('Nenhuma análise de fornecedores salva para esta empresa — importe o relatório na Consulta CNPJ (🚚).'); return; }
+  const s = rs[0].dados.stats;
+  RF.contra.compras_lrlp    = Math.round(s.grupos.normal.v*100)/100;
+  RF.contra.compras_simples = Math.round((s.grupos.mei.v + s.grupos.simples.v)*100)/100;
+  rfRenderContra(); rfCalcular();
+  toast(`Compras preenchidas pela análise de ${new Date(rs[0].consultado_em).toLocaleDateString('pt-BR')}: normal R$ ${fmt(RF.contra.compras_lrlp)} · Simples/MEI R$ ${fmt(RF.contra.compras_simples)} ✓`);
+}
 async function iniciarConsulta() {
   const { validos, invalidos } = extrairCNPJs($id('cnpj-lista').value);
   if (!validos.length) { toast('Informe ao menos um CNPJ válido.'); return; }
@@ -1438,6 +1580,7 @@ function empRender() {
     <td>${e.uf?e.uf+' / '+(e.municipio||''):'—'}</td><td>${e.obs||''}</td>
     <td style="white-space:nowrap"><button class="btn" onclick="empEditar('${e.cnpj}')">Editar</button>
     <button class="btn" onclick="empAnalisar('${e.cnpj}')">Analisar</button>
+    <button class="btn" title="Resumo estatístico de fornecedores" onclick="fornResumo('${e.cnpj}')">📊</button>
     <button class="btn" style="color:var(--danger)" onclick="empExcluir('${e.cnpj}')">Excluir</button></td></tr>`).join('')
   : '<tr><td colspan="7" class="hint" style="text-align:center;padding:20px">Nenhuma empresa. Cadastre manualmente ou use a Consulta CNPJ.</td></tr>';
 }
