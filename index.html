@@ -230,7 +230,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.5.5</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.5.6</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -379,7 +379,7 @@ canvas{max-height:340px}
       <div class="card"><div class="toolbar" style="margin-bottom:0">
         <div style="min-width:280px;flex:1"><label>Empresa (usa a análise do regime atual como base)</label><select id="rf-empresa" onchange="rfTrocar()"></select></div>
         <div style="width:110px"><label>Ano-base</label><input type="number" id="rf-ano" value="2026" onchange="rfTrocar()"></div>
-        <div style="align-self:flex-end"><button class="btn" onclick="rfAutoPreencher()" title="Preenche receita, compras, contrapartes e — quando houver XMLs importados — as parcelas de receita com redução">⚡ Preencher da análise</button> <button class="btn" onclick="fornAplicarReforma()" title="Preenche Compras de PJ Lucro Real/Presumido e Compras de PJ Simples/SIMEI pela análise de fornecedores mais recente (Consulta CNPJ → 🚚)">🚚 Compras pelos fornecedores</button></div>
+        <div style="align-self:flex-end"><button class="btn" onclick="rfAutoPreencher()" title="Preenche receita, compras, contrapartes e — quando houver XMLs importados — as parcelas de receita com redução">⚡ Preencher da análise</button></div>
         <div style="align-self:flex-end;display:flex;gap:8px">
           <button class="btn solid" onclick="rfSalvar()">💾 Salvar</button>
           <button class="btn" onclick="rfCalcular()">Recalcular</button>
@@ -403,6 +403,7 @@ canvas{max-height:340px}
       <div class="card">
         <h3>Compras e vendas por contraparte <span class="hint" style="font-weight:400">(valores anuais, R$)</span></h3>
         <div id="rf-contrapartes" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px"></div>
+        <div id="rf-forn-nota"></div>
         <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap">
           <div><label>Receita anual total</label><input id="rf-receita" style="width:160px" onchange="rfCalcular()"></div>
           <div><label>Compras com crédito (auto: LR/LP + Simples)</label><input id="rf-compras" style="width:160px" disabled></div>
@@ -513,7 +514,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.5.5</b> <span class="badge ok">atual</span></td><td>27/07/2026</td><td>Correção de uma falha silenciosa ao importar a folha: análises salvas por versões anteriores do app eram restauradas do banco exatamente como haviam sido gravadas, sem os campos criados depois. Ao lançar a provisão de 13º num registro que não tinha esse campo, a importação era interrompida antes de atualizar a tela — nenhum valor aparecia e nenhum erro era exibido. Toda análise carregada passa a ser completada contra a estrutura atual, preservando o que já existe (inclusive o "automático" das abas de ICMS e IPI, que não vira zero). A importação da folha também deixou de falhar em silêncio: qualquer erro na gravação agora é mostrado.</td></tr>
+          <tr><td><b>v7.5.6</b> <span class="badge ok">atual</span></td><td>27/07/2026</td><td>A análise de fornecedores passa a ser aplicada sozinha: ao abrir a aba Reforma de uma empresa, o app busca a consulta mais recente e preenche "Compras de PJ Lucro Real/Presumido" e "Compras de PJ Simples/SIMEI", informando na tela de qual consulta e de qual período vieram os valores. O botão "🚚 Compras pelos fornecedores" foi removido — deixou de ser necessário. Valores digitados à mão nunca são sobrescritos automaticamente: nesse caso o app apenas avisa que existe uma análise disponível e oferece a substituição. Quando o relatório cobre menos de doze meses, o aviso destaca que os valores estão subdimensionados frente à projeção anual da Reforma. Corrigida também a restauração crua da análise no carregamento pela Reforma, que ignorava campos criados em versões posteriores.</td></tr>
+          <tr><td><b>v7.5.5</b></td><td>27/07/2026</td><td>Correção de uma falha silenciosa ao importar a folha: análises salvas por versões anteriores do app eram restauradas do banco exatamente como haviam sido gravadas, sem os campos criados depois. Ao lançar a provisão de 13º num registro que não tinha esse campo, a importação era interrompida antes de atualizar a tela — nenhum valor aparecia e nenhum erro era exibido. Toda análise carregada passa a ser completada contra a estrutura atual, preservando o que já existe (inclusive o "automático" das abas de ICMS e IPI, que não vira zero). A importação da folha também deixou de falhar em silêncio: qualquer erro na gravação agora é mostrado.</td></tr>
           <tr><td><b>v7.5.4</b></td><td>27/07/2026</td><td>Importação da folha passa a reconhecer vários relatórios dentro do mesmo PDF: o arquivo do Questor costuma trazer os meses concatenados, e antes só o primeiro período era lido, aplicando todos os funcionários a um único mês. Agora cada bloco é separado por período e por tipo, as páginas seguintes de um mesmo relatório são reagrupadas, e os relatórios de <b>13º Salário Adiantamento</b> deixam de ser somados aos salários — vão para a provisão de 13º do mês, com o FGTS correspondente. O 13º proporcional pago em rescisão continua nos salários e é apenas destacado na conferência. A conferência com o rodapé passou a somar Proventos e Vantagens, que aparecem em colunas separadas e faziam o total divergir nos meses com verba de vantagem.</td></tr>
           <tr><td><b>v7.5.3</b></td><td>27/07/2026</td><td>Correção na importação da folha: o ano da análise era lido de um campo inexistente, o que fazia a conferência acusar "a análise aberta é de NaN" e recusar relatórios do ano correto. Passa a usar o ano da própria análise, com o campo Ano da tela como alternativa.</td></tr>
           <tr><td><b>v7.5.2</b></td><td>27/07/2026</td><td>Planilha modelo reformulada: agora vem formatada, com as células de digitação destacadas em amarelo, os campos agrupados por seção (Configuração, Receitas por anexo, Folha, Compras e Despesas), uma coluna "Como preencher" explicando cada linha — o que entra, o que não entra e o efeito no cálculo — e uma aba "Como usar" com as regras de preenchimento, incluindo a diferença entre deixar em branco (não informado, preserva o que já existe) e digitar zero (valor informado, sobrescreve). O arquivo é distribuído pronto dentro do app, com verificação automática de sincronia com os campos do cálculo: se divergirem, o app volta a gerar a versão simples. <b>Nova importação da folha de pagamento</b>: o botão "Importar folha (Relação de Cálculo)" lê o PDF do relatório do Questor — um ou vários meses de uma vez — separa o pró-labore dos salários pelos eventos, soma a base de FGTS funcionário a funcionário, confere o total apurado com o rodapé do relatório e preenche Pró-labore, Salários e Base de FGTS nos meses correspondentes, avisando quando o relatório for de outro ano ou de outro CNPJ. A leitura do PDF passou a reagrupar o texto pela posição na página, recuperando as linhas físicas do relatório.</td></tr>
@@ -1085,6 +1087,40 @@ async function fornResumo(cnpj){
   };
   window._FORN_RENDER = render;
   render(0);
+}
+function fornMesesPeriodo(p){
+  const m = String(p||'').match(/(\d{2})\/(\d{2})\/(\d{4})\D+?(\d{2})\/(\d{2})\/(\d{4})/);
+  return m ? (+m[6]-+m[3])*12 + (+m[5]-+m[2]) + 1 : null;
+}
+// puxa sozinha a análise de fornecedores mais recente ao abrir a Reforma.
+// Só preenche se os campos estiverem vazios — valor digitado à mão nunca é sobrescrito sem o usuário mandar.
+async function fornAutoAplicar(){
+  RF._forn = null;
+  if (!RF || !RF.cnpj) return;
+  let rs = [];
+  try { rs = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+RF.cnpj, order:'consultado_em.desc', limit:'1', select:'*' } }) || []; }
+  catch(e){ return; }
+  if (!rs.length) return;
+  const d = rs[0].dados, g = d.stats.grupos;
+  const lrlp = Math.round(g.normal.v*100)/100;
+  const simp = Math.round((g.mei.v + g.simples.v)*100)/100;
+  const jaTem = (RF.contra.compras_lrlp||0) > 0 || (RF.contra.compras_simples||0) > 0;
+  RF._forn = { data: rs[0].consultado_em, periodo: d.periodo||'', meses: fornMesesPeriodo(d.periodo),
+               lrlp, simp, aplicado: !jaTem };
+  if (!jaTem) { RF.contra.compras_lrlp = lrlp; RF.contra.compras_simples = simp; }
+}
+function fornNotaHtml(){
+  const f = RF && RF._forn; if (!f) return '';
+  const quando = new Date(f.data).toLocaleDateString('pt-BR');
+  const parcial = f.meses && f.meses < 12;
+  if (!f.aplicado) return `<div class="hint" style="margin-top:10px;padding:10px 12px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109">
+    Existe uma análise de fornecedores de ${quando}${f.periodo?` (período ${f.periodo})`:''} com
+    <b>${fmtR(f.lrlp)}</b> em regime normal e <b>${fmtR(f.simp)}</b> em Simples/MEI, mas os campos acima já estavam preenchidos e não foram tocados.
+    <a href="#" onclick="fornAplicarReforma();return false" style="margin-left:6px">substituir pelos fornecedores</a></div>`;
+  return `<div class="hint" style="margin-top:10px;padding:10px 12px;border-left:4px solid ${parcial?'var(--alerta,#b9770e)':'var(--ok,#117a65)'};background:${parcial?'#fef6e7':'#eafaf1'};color:${parcial?'#7e5109':'#0e6251'}">
+    Compras preenchidas automaticamente pela análise de fornecedores de ${quando}${f.periodo?` · período ${f.periodo}`:''}.
+    ${parcial ? `<b>Atenção:</b> o relatório cobre ${f.meses} ${f.meses===1?'mês':'meses'} e a Reforma projeta o ano inteiro — os valores estão subdimensionados.
+       Importe o relatório dos 12 meses na Consulta CNPJ ou ajuste os campos à mão.` : ''}</div>`;
 }
 async function fornAplicarReforma(){
   if (!RF || !RF.cnpj){ toast('Selecione a empresa na aba Reforma primeiro.'); return; }
@@ -2193,11 +2229,12 @@ async function rfTrocar() {
   // carrega análise (regime atual) da empresa para servir de base
   try {
     const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
-    if (rows.length) { AN = rows[0].dados; AN.cnpj = cnpj; AN.ano = ano; anRecalcular?.(); RF = rows[0].dados?.reforma || rfNovo(cnpj, ano); }
+    if (rows.length) { AN = anNormalizar(rows[0].dados, cnpj, ano); AN.cnpj = cnpj; AN.ano = ano; anRecalcular?.(); RF = rows[0].dados?.reforma || rfNovo(cnpj, ano); }
     else RF = rfNovo(cnpj, ano);
   } catch { RF = rfNovo(cnpj, ano); }
   RF.cnpj = cnpj; RF.ano = ano;
   if (!RF.receita && AN?._res) RF.receita = AN._res.totais.receita;
+  await fornAutoAplicar();
   rfRenderAliq(); rfRenderBenef(); rfCalcular();
 }
 async function rfSalvar() {
