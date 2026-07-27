@@ -1404,7 +1404,7 @@ const z12 = () => Array(12).fill(0);
 
 function anNovo(cnpj, ano) {
   return { cnpj: cnpj||'', ano: ano||new Date().getFullYear(),
-    cfg: { iss:0, icmsV:0, icmsC:0, ipiV:0, ipiC:0, rbt12Direto:0, rbt12Lanc:z12(), folha12Lanc:z12(),
+    cfg: { iss:0, icmsV:.12, icmsC:.12, ipiV:0, ipiC:0, rbt12Direto:0, rbt12Lanc:z12(), folha12Lanc:z12(),
            lpBaseServ:.32, lpBaseCom:.08, lpBaseServCsll:0, adicionalIR:'trimestral', sublimite:'auto' },
     receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','fin','comtransp'].map(k=>[k,z12()])),
     folha: Object.fromEntries(['prolabore','salarios','baseFgts','prov13','provFerias'].map(k=>[k,z12()])),
@@ -1533,6 +1533,7 @@ function anSet(path, m, val, tipo) {
 
 function anRenderConfig() {
   const c = AN.cfg;
+  if (!(+c.icmsV) && !(+c.icmsC)) { c.icmsV = .12; c.icmsC = .12; setTimeout(anRecalcular, 0); }   // v7.5: 12%/12% como base padrão
   const _servTot = ['a3_semret','a3_retiss','a3_retissinss','a4','a5r'].reduce((s,k)=>s+((AN.receitas&&AN.receitas[k])||[]).reduce((a,b)=>a+(+b||0),0),0);
   const avisoIss = (_servTot>0 && !(+c.iss)) ? `<div class="hint" style="color:var(--danger);margin-top:10px">⚠️ Há receitas de serviços lançadas e o <b>% ISS está zerado</b> — o Presumido e o Real sairão sem ISS. Informe a alíquota do município (a importação de XMLs de NFS-e preenche automaticamente).</div>` : '';
   const pc = (id,rot,v) => `<div><label>${rot}</label><input id="${id}" value="${v?String(+(v*100).toFixed(4)).replace('.',','):''}" style="width:110px" onchange="anAplicarConfig(true)"></div>`;
@@ -2404,6 +2405,25 @@ function lcNorm(code) {
 let XN = null;
 function xmlParseNota(t, arquivo) {
   t = t.replace(/\r/g,'');
+  // ── NFS-e padrão NACIONAL (leiaute SPED/ADN — chave 42...) ── v7.5
+  if (/<infNFSe/i.test(t) || (/<NFSe/i.test(t) && /<nNFSe>/i.test(t))) {
+    const emit = xSec(t,'emit') || xSec(t,'prest') || t;
+    const toma = xSec(t,'toma') || xSec(t,'tomador') || '';
+    const dt = (xTag(t,'dhEmi') || xTag(t,'dhProc') || xTag(t,'dCompet') || '').slice(0,10);
+    const item6 = (xTag(t,'cTribNac')||'').replace(/\D/g,'');
+    const canc = /<sitNFSe>\s*2|cancelad/i.test(t) || !!xSec(t,'infCanc');
+    return { arquivo, tipo:'NFS-e', layout:'Nacional (ADN)', numero: xTag(t,'nNFSe') || xTag(t,'nDPS') || '',
+      data: dt, mes: dt?(+dt.slice(5,7))-1:null, ano: dt?+dt.slice(0,4):null,
+      valor: xNum(xTag(t,'vLiq')) || xNum(xTag(t,'vServ')) || xNum(xTag(t,'vNF')) || xNum(xTag(t,'vServPrest')),
+      item: item6 ? lcNorm(item6) : null,
+      aliqIss: xNum(xTag(t,'pAliq')) || xNum(xTag(t,'pAliqAplic')) || null,
+      nbs: xTag(t,'cNBS') || '',
+      cancelada: canc,
+      prestadorCnpj: (xTag(emit,'CNPJ')||'').replace(/\D/g,''),
+      prestadorNome: xTag(emit,'xNome') || '',
+      tomadorCnpj: (xTag(toma,'CNPJ')||'').replace(/\D/g,''),
+      tomadorPF: !!xTag(toma,'CPF') && !xTag(toma,'CNPJ') };
+  }
   // ── NF-e modelo 55 ──
   if (/<infNFe/i.test(t)) {
     const cStat = xTag(t,'cStat');
