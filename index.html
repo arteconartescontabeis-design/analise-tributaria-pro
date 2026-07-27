@@ -230,7 +230,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.4</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.5</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -279,7 +279,7 @@ canvas{max-height:340px}
           </div>
           <div id="fo-stats" style="margin-bottom:10px"></div>
           <div style="overflow:auto"><table class="tbl"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead><tbody id="fo-body"></tbody></table></div>
-          <div style="margin-top:10px"><button class="btn solid" id="fo-salvar" style="display:none" onclick="fornSalvar()">💾 Salvar análise no histórico da empresa</button></div>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn solid" id="fo-salvar" style="display:none" onclick="fornSalvar()">💾 Salvar análise no histórico da empresa</button><button class="btn" id="fo-desp" style="display:none" onclick="fornLancarDespesas()" title="Rateia o total do relatório pelos meses do período em Despesas › Outras, na análise da empresa">➕ Lançar total nas Despesas da análise</button></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 260px;gap:20px">
           <div>
@@ -332,6 +332,9 @@ canvas{max-height:340px}
             <button class="btn" onclick="$id('imp-bal-card').style.display='none';$id('imp-bal-card').style.display='block'">📊 Importar balancete</button>
             <button class="btn" onclick="$id('imp-dem-card').style.display='block'">📑 Importar Demonst. Simples</button>
             <button class="btn" onclick="$id('imp-xml-card').style.display='block'">🗂️ Importar XMLs</button>
+            <button class="btn" onclick="anModeloBaixar()" title="Planilha com todos os campos necessários para o cálculo automático — preencha e importe de volta">📋 Planilha modelo</button>
+            <input type="file" id="an-modelo-file" accept=".xlsx,.xls" style="display:none" onchange="anModeloImportar(this)">
+            <button class="btn" onclick="$id('an-modelo-file').click()">📥 Importar modelo preenchido</button>
             <button class="btn" onclick="anLimparDados()">🧹 Limpar dados</button>
           </div>
         </div>
@@ -508,7 +511,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.4</b> <span class="badge ok">atual</span></td><td>26/07/2026</td><td>Análise de fornecedores para o crédito da Reforma: a Consulta CNPJ ganha o importador do relatório "Totais ISS por Fornecedor/Cliente" (Questor) — identifica a empresa e o período pelo cabeçalho, consulta o enquadramento de cada fornecedor na Receita (MEI, Simples Nacional ou regime normal), confere a soma com o total do relatório e apresenta o resumo estatístico com percentuais por quantidade de empresas e por valor; a análise é salva no histórico da empresa (nova tabela, setup_v74.sql) e pode ser consultada pelo botão 📊 na lista de Empresas (com todas as consultas anteriores para auditoria e comparação); na aba Reforma, o botão 🚚 preenche "Compras de PJ Lucro Real/Presumido" com o total dos fornecedores do regime normal (geram crédito de IBS/CBS) e "Compras de PJ Simples/SIMEI" com o total de MEI + Simples, conforme a análise mais recente; fornecedores não identificados ficam fora da base de crédito, com destaque para confirmação manual.</td></tr>
+          <tr><td><b>v7.5</b> <span class="badge ok">atual</span></td><td>26/07/2026</td><td>Importação de XMLs com indicador de progresso (lotes grandes não aparentam travamento) e recálculo automático ao aplicar as notas — incluindo a aba Reforma com as reduções encontradas; confirmação antes de sobrescrever as compras da Reforma pela análise de fornecedores; total do relatório de fornecedores pode ser lançado nas Despesas da análise, rateado pelos meses do período; valores da aba Reforma exibidos no padrão brasileiro (1.234,56) e aceitos com vírgula; planilha modelo para download com todos os campos do cálculo automático (percentuais, RBT12/Fator R, receitas por bloco, folha, compras e despesas) e importador do modelo preenchido, junto dos demais importadores; percentuais da Config e da Reforma já recalculam ao editar.</td></tr>
+          <tr><td><b>v7.4</b></td><td>26/07/2026</td><td>Análise de fornecedores para o crédito da Reforma: a Consulta CNPJ ganha o importador do relatório "Totais ISS por Fornecedor/Cliente" (Questor) — identifica a empresa e o período pelo cabeçalho, consulta o enquadramento de cada fornecedor na Receita (MEI, Simples Nacional ou regime normal), confere a soma com o total do relatório e apresenta o resumo estatístico com percentuais por quantidade de empresas e por valor; a análise é salva no histórico da empresa (nova tabela, setup_v74.sql) e pode ser consultada pelo botão 📊 na lista de Empresas (com todas as consultas anteriores para auditoria e comparação); na aba Reforma, o botão 🚚 preenche "Compras de PJ Lucro Real/Presumido" com o total dos fornecedores do regime normal (geram crédito de IBS/CBS) e "Compras de PJ Simples/SIMEI" com o total de MEI + Simples, conforme a análise mais recente; fornecedores não identificados ficam fora da base de crédito, com destaque para confirmação manual.</td></tr>
           <tr><td><b>v7.3</b></td><td>25/07/2026</td><td>Classificação da Reforma pelo NBS da própria NFS-e (item 4 da v7): o importador de XML lê o NBS informado na nota (e o cClassTrib, quando presente), localiza-o na Tabela 01 oficial (675 códigos NBS → cClassTrib, com desempate pelo item da LC 116 nos 23 códigos ambíguos) e obtém as reduções de IBS e CBS na Tabela 02 (142 classificações) — em cascata: cClassTrib da própria nota → NBS único → NBS + item → estimativa pelo item LC 116 (como antes). A tela de conferência mostra a origem de cada classificação (◉ via NBS, da nota, manual ou estimada) e alerta quando o NBS exigir confirmação do item.</td></tr>
           <tr><td><b>v7.2</b></td><td>25/07/2026</td><td>Pacote UX: botão ⇉ em cada linha da grade repete o valor de janeiro nos 12 meses; os botões Imprimir/PDF mostram as opções corretas de impressão ao passar o mouse; a geração dos textos com IA exibe esqueleto animado nas seções enquanto escreve; importações (PGDAS e Faturamento) pedem confirmação antes de sobrescrever lançamentos existentes; foco visível ao navegar campos pelo teclado e rótulos de acessibilidade nos botões de ícone.</td></tr>
           <tr><td><b>v7.1</b></td><td>25/07/2026</td><td>Correções da revisão técnica: CPP do Anexo IV devida fora do DAS somada ao custo do Simples (proxy pela participação da receita); ISS e CPP retidos na fonte recompostos no total do Simples (LC 123, art. 21, §4º) e considerados na transição da Reforma; Lucro Presumido exclui todas as receitas monofásicas da base de PIS/COFINS; cenários da Reforma sem aba preenchida estimam créditos de IBS/CBS pelas compras de revenda da análise, com aviso de premissa no parecer (tela, impresso e payload da IA); repartição do DAS por tributo derivada dos parâmetros em uso (edições das partes fecham 100% com o DAS); trava do sublimite respeita as partes editadas dos Anexos IV e V; tela de Parâmetros ganha as colunas de partes dos Anexos III, IV e V; seleção de empresa unificada — Análise, Reforma e Relatórios acompanham automaticamente a empresa/ano escolhidos em qualquer módulo (com confirmação quando houver análise aberta de outra empresa, para não perder lançamentos não salvos).</td></tr>
@@ -855,7 +859,7 @@ async function fornConsultar(){
     if (i<FO.itens.length-1) await new Promise(r=>setTimeout(r,350));
   }
   $id('fo-prog').textContent = 'Concluído.';
-  $id('fo-salvar').style.display=''; btn.disabled=false;
+  $id('fo-salvar').style.display=''; $id('fo-desp').style.display=''; btn.disabled=false;
 }
 async function fornSalvar(){
   if (!FO || !FO.itens.some(i=>i.classe)) { toast('Consulte os fornecedores antes de salvar.'); return; }
@@ -865,6 +869,70 @@ async function fornSalvar(){
   await supa('POST','atp_fornec',{ body:{ cnpj: FO.cnpjEmpresa, dados: { periodo: FO.periodo, origem:'Totais ISS por Fornecedor/Cliente',
     itens: FO.itens.map(i=>({cnpj:i.cnpj, razao:i.razao, classe:i.classe, valor:i.valor, situacao:i.situacao||''})), stats } } });
   toast('Análise salva no histórico da empresa ✓ (botão 📊 em Empresas; aplique na aba Reforma).');
+}
+// ═══ v7.5: planilha modelo — todos os dados do cálculo em um arquivo só ═══
+const MODELO_LINHAS = [
+ ['cfg.iss','% ISS do município'],['cfg.icmsV','% ICMS sobre vendas'],['cfg.icmsC','% ICMS sobre compras'],['cfg.ipiV','% IPI sobre vendas'],['cfg.ipiC','% IPI sobre compras'],
+ ['cfg.rbt12Lanc','RBT12 — receitas dos 12 meses ANTERIORES ao ano'],['cfg.folha12Lanc','Folha dos 12 meses ANTERIORES (p/ Fator R)'],
+ ['receitas.a1_semst','Anexo I · Revenda sem ST'],['receitas.a1_red','Anexo I · Revenda com redução de ICMS'],['receitas.a1_red_pct','Anexo I · % da redução (0 a 100)'],['receitas.a1_mono','Anexo I · Monofásico sem ST'],['receitas.a1_comst','Anexo I · Revenda com ST'],['receitas.a1_comst_mono','Anexo I · Com ST e monofásico'],
+ ['receitas.a2_semst','Anexo II · Indústria sem ST'],['receitas.a2_red','Anexo II · Com redução de ICMS'],['receitas.a2_red_pct','Anexo II · % da redução (0 a 100)'],['receitas.a2_mono','Anexo II · Monofásico'],['receitas.a2_comst','Anexo II · Com ST'],['receitas.a2_comst_mono','Anexo II · Com ST e monofásico'],
+ ['receitas.a3_semret','Anexo III · Serviços sem retenção'],['receitas.a3_retiss','Anexo III · Serviços com ISS retido'],['receitas.a3_retissinss','Anexo III · Serviços com ISS e INSS retidos'],
+ ['receitas.a4','Anexo IV · Serviços'],['receitas.a5r','Anexo V/III · Serviços sujeitos ao Fator R'],['receitas.comtransp','Comunicação e transporte (ICMS)'],['receitas.fin','Receitas financeiras'],
+ ['folha.prolabore','Folha · Pró-labore'],['folha.salarios','Folha · Salários e proventos'],['folha.baseFgts','Folha · Base do FGTS'],['folha.prov13','Folha · Provisão de 13º'],['folha.provFerias','Folha · Provisão de férias'],
+ ['compras.semst','Compras · Revenda sem ST'],['compras.mono','Compras · Monofásico'],['compras.comst','Compras · Com ST'],['compras.comstMono','Compras · Com ST e monofásico'],['compras.baseIpiCred','Compras · Base de crédito de IPI'],
+ ['despesas.adm','Despesas administrativas'],['despesas.vendas','Despesas de vendas'],['despesas.fiscais','Despesas fiscais'],['despesas.financeiras','Despesas financeiras'],['despesas.outras','Outras despesas'],['despesas.credLR','Base extra de crédito PIS/COFINS (LR)']];
+const MESES_ROT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+function anModeloBaixar(){
+  if (!window.XLSX) { toast('Biblioteca XLSX não carregou.'); return; }
+  const linhas = [['Código (não alterar)','Descrição', ...MESES_ROT],
+    ['','— Percentuais em % (ex.: 12 = 12%). RBT12/Folha 12m: um valor por mês anterior. Demais: R$ por mês do ano —']];
+  for (const [p,rot] of MODELO_LINHAS) linhas.push([p, rot]);
+  const ws = XLSX.utils.aoa_to_sheet(linhas);
+  ws['!cols'] = [{wch:24},{wch:52},...MESES_ROT.map(()=>({wch:12}))];
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Dados');
+  XLSX.writeFile(wb, 'modelo_analise_tributaria.xlsx');
+  toast('Modelo baixado — preencha e use "Importar modelo preenchido".');
+}
+function anModeloImportar(inp){
+  const f = inp.files && inp.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const wb = XLSX.read(rd.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1});
+      const temDados = Object.values(AN.receitas||{}).some(a=>Array.isArray(a)&&a.some(v=>+v>0));
+      if (temDados && !confirm('A análise aberta já tem lançamentos.\nImportar o modelo vai SOBRESCREVER os campos preenchidos na planilha. Continuar?')) { inp.value=''; return; }
+      let aplicados = 0;
+      for (const r of rows){
+        const path = String(r[0]||'').trim();
+        if (!MODELO_LINHAS.some(([p])=>p===path)) continue;
+        const vals = Array.from({length:12},(_,m)=>num(String(r[2+m]??'')));
+        if (path.startsWith('cfg.') && !/Lanc$/.test(path)) { const v = vals.find(x=>x>0)||0; AN.cfg[path.slice(4)] = v/100; aplicados++; continue; }
+        const { o, k } = anPath(AN, path);
+        if (/_pct$/.test(path)) { for (let m=0;m<12;m++) o[k][m] = vals[m]/100; }
+        else { for (let m=0;m<12;m++) o[k][m] = vals[m]; }
+        aplicados++;
+      }
+      anRenderTabs(); anRenderGrid(); anAplicarConfigRender && anAplicarConfigRender(); anRecalcular();
+      toast(`Modelo importado ✓ — ${aplicados} linhas aplicadas. Confira a Config e salve a análise.`);
+    } catch(e){ toast('Erro ao ler o modelo: '+e.message); }
+    inp.value='';
+  };
+  rd.readAsArrayBuffer(f);
+}
+function fornLancarDespesas(){
+  if (!FO) return;
+  if (!AN || !AN.cnpj || AN.cnpj !== FO.cnpjEmpresa) { toast('Abra a análise da empresa '+fmtCNPJ(FO.cnpjEmpresa)+' primeiro (módulo Análise Atual).'); return; }
+  const mm = FO.periodo.match(/(\d{2})\/(\d{2})\/(\d{4})\s*a\s*(\d{2})\/(\d{2})\/(\d{4})/);
+  const m0 = mm ? +mm[2]-1 : 0, m1 = mm ? +mm[5]-1 : 11, nm = Math.max(1, m1-m0+1);
+  const tot = FO.itens.reduce((s,i)=>s+i.valor,0);
+  const jaTem = (AN.despesas.outras||[]).slice(m0,m1+1).some(v=>+v>0);
+  if (jaTem && !confirm('Despesas › Outras já tem valores nos meses do período.\nSubstituir pelo rateio do relatório de fornecedores?')) return;
+  const porMes = Math.round(tot/nm*100)/100;
+  for (let m=m0;m<=m1;m++) AN.despesas.outras[m] = porMes;
+  anRenderGrid(); anRecalcular();
+  toast(`R$ ${fmt(tot)} rateados em ${nm} meses (${fmt(porMes)}/mês) em Despesas › Outras ✓`);
 }
 async function fornResumo(cnpj){
   const rs = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+cnpj, order:'consultado_em.desc', select:'*' } }) || [];
@@ -889,9 +957,11 @@ async function fornAplicarReforma(){
   const rs = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+RF.cnpj, order:'consultado_em.desc', limit:'1', select:'*' } }) || [];
   if (!rs.length){ toast('Nenhuma análise de fornecedores salva para esta empresa — importe o relatório na Consulta CNPJ (🚚).'); return; }
   const s = rs[0].dados.stats;
+  if (((RF.contra.compras_lrlp||0)>0 || (RF.contra.compras_simples||0)>0)
+      && !confirm('Os campos de compras da Reforma já têm valores.\nSubstituir pelos totais da análise de fornecedores?')) return;
   RF.contra.compras_lrlp    = Math.round(s.grupos.normal.v*100)/100;
   RF.contra.compras_simples = Math.round((s.grupos.mei.v + s.grupos.simples.v)*100)/100;
-  rfRenderContra(); rfCalcular();
+  rfRenderBenef(); rfCalcular();
   toast(`Compras preenchidas pela análise de ${new Date(rs[0].consultado_em).toLocaleDateString('pt-BR')}: normal R$ ${fmt(RF.contra.compras_lrlp)} · Simples/MEI R$ ${fmt(RF.contra.compras_simples)} ✓`);
 }
 async function iniciarConsulta() {
@@ -1775,9 +1845,9 @@ function rfRenderBenef() {
   bloco('rf-benef-rec', RF.benefRec, 'benefRec');
   bloco('rf-benef-cred', RF.benefCred, 'benefCred');
   $id('rf-contrapartes').innerHTML = RF_CONTRA.map(([k,rot,sub]) =>
-    `<div><label>${rot}</label><input value="${RF.contra[k]||''}" onchange="RF.contra.${k}=num(this.value);rfCalcular()"><div class="hint">${sub} (anual)</div></div>`).join('');
-  $id('rf-receita').value = RF.receita||''; $id('rf-compras').value = RF.compras||'';
-  $id('rf-baseis').value = RF.baseIS||''; $id('rf-credsimples').value = RF.credSimplesPct||0;
+    `<div><label>${rot}</label><input value="${RF.contra[k]?fmt(RF.contra[k]):''}" onchange="RF.contra.${k}=num(this.value);rfCalcular();rfRenderBenef()"><div class="hint">${sub} (anual)</div></div>`).join('');
+  $id('rf-receita').value = RF.receita?fmt(RF.receita):''; $id('rf-compras').value = RF.compras?fmt(RF.compras):'';
+  $id('rf-baseis').value = RF.baseIS?fmt(RF.baseIS):''; $id('rf-credsimples').value = RF.credSimplesPct||0;
 }
 
 function rfCargaAtual() {
@@ -2410,7 +2480,11 @@ function xmlParseNota(t, arquivo) {
 async function xmlLer(input) {
   if (!input.files.length) return;
   const notas = [], erros = [];
+  const _tot = input.files.length; let _i = 0;
+  toast(`Lendo ${_tot} XML(s)…`);
   for (const f of input.files) {
+    _i++;
+    if (_i % 5 === 0 || _i === _tot) { toast(`Lendo nota ${_i} de ${_tot}…`); await new Promise(r=>setTimeout(r,0)); }
     try {
       // v7.3: respeitar o encoding declarado no XML (Palhoça emite ISO-8859-1)
       const _buf = await f.arrayBuffer();
@@ -2489,6 +2563,14 @@ function xmlReview() {
 }
 
 async function xmlAplicar() {
+  const _r = await _xmlAplicarBase();
+  try { anRecalcular(); } catch(e){}
+  if (typeof RF !== 'undefined' && RF && XN && RF.cnpj && XN.cnpj === RF.cnpj) {
+    try { rfAutoPreencher(); toast('Notas aplicadas ✓ — aba Reforma recalculada com as reduções encontradas.'); } catch(e){}
+  }
+  return _r;
+}
+async function _xmlAplicarBase() {
   const inc = XN.notas.filter(n=>n.incluir);
   if (!inc.length) { toast('Nenhuma nota incluída.'); return; }
   if (!AN) AN = anNovo('', +$id('an-ano').value);
