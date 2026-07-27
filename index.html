@@ -469,11 +469,11 @@ canvas{max-height:340px}
       </div>
       <div class="card" id="emp-form-card" style="display:none">
         <h3 id="emp-form-titulo">Nova empresa</h3>
-        <div style="display:grid;grid-template-columns:180px 1fr 140px 160px;gap:14px">
+        <div style="display:grid;grid-template-columns:180px 1fr 220px;gap:14px">
           <div><label>CNPJ</label><input id="emp-cnpj" placeholder="00.000.000/0001-00"></div>
           <div><label>Razão social</label><input id="emp-razao"></div>
-          <div><label>Optante Simples</label><select id="emp-simples"><option value="false">Não</option><option value="true">Sim</option></select></div>
-          <div><label>Regime atual</label><select id="emp-regime"><option>Simples Nacional</option><option>Lucro Presumido</option><option>Lucro Real</option><option>MEI</option></select></div>
+          <div><label>Regime atual <span class="hint" style="font-weight:400">— MEI e Simples vêm da consulta; Presumido/Real são definidos por você</span></label>
+            <select id="emp-regime"><option>A definir</option><option>Simples Nacional</option><option>Lucro Presumido</option><option>Lucro Real</option><option>MEI</option></select></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
           <div><label>UF / Município</label><input id="emp-ufmun" placeholder="SC / Palhoça"></div>
@@ -486,7 +486,7 @@ canvas{max-height:340px}
         </div>
       </div>
       <div class="card" style="overflow-x:auto"><table>
-        <thead><tr><th>CNPJ</th><th>Razão Social</th><th>Regime</th><th>Simples</th><th>UF/Mun.</th><th>Obs.</th><th></th></tr></thead>
+        <thead><tr><th>CNPJ</th><th>Razão Social</th><th>Regime</th><th>UF/Mun.</th><th>Obs.</th><th></th></tr></thead>
         <tbody id="emp-tbody"></tbody></table></div>
       <div id="emp-forn-resumo"></div>
     </div>
@@ -901,14 +901,21 @@ function anModeloImportar(inp){
       const wb = XLSX.read(rd.result, {type:'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, {header:1});
-      const temDados = Object.values(AN.receitas||{}).some(a=>Array.isArray(a)&&a.some(v=>+v>0));
-      if (temDados && !confirm('A análise aberta já tem lançamentos.\nImportar o modelo vai SOBRESCREVER os campos preenchidos na planilha. Continuar?')) { inp.value=''; return; }
+      const temDados = ['receitas','folha','compras','despesas'].some(sec =>
+        Object.values(AN[sec]||{}).some(a=>Array.isArray(a)&&a.some(v=>+v>0)));
+      if (!confirm(temDados
+            ? 'A análise aberta já tem lançamentos.\nImportar o modelo vai SOBRESCREVER os campos preenchidos na planilha, inclusive os percentuais da Config que vierem preenchidos no arquivo.\n\nContinuar?'
+            : 'Importar o modelo vai preencher a análise aberta com os dados do arquivo.\n\nContinuar?')) { inp.value=''; return; }
       let aplicados = 0;
       for (const r of rows){
         const path = String(r[0]||'').trim();
         if (!MODELO_LINHAS.some(([p])=>p===path)) continue;
         const vals = Array.from({length:12},(_,m)=>num(String(r[2+m]??'')));
-        if (path.startsWith('cfg.') && !/Lanc$/.test(path)) { const v = vals.find(x=>x>0)||0; AN.cfg[path.slice(4)] = v/100; aplicados++; continue; }
+        if (path.startsWith('cfg.') && !/Lanc$/.test(path)) {
+          // linha de percentual em branco = "não mexer" (antes zerava a config)
+          const vazia = Array.from({length:12},(_,m)=>String(r[2+m]??'').trim()).every(x=>x==='');
+          if (vazia) continue;
+          const v = vals.find(x=>x>0)||0; AN.cfg[path.slice(4)] = v/100; aplicados++; continue; }
         const { o, k } = anPath(AN, path);
         if (/_pct$/.test(path)) { for (let m=0;m<12;m++) o[k][m] = vals[m]/100; }
         else { for (let m=0;m<12;m++) o[k][m] = vals[m]; }
@@ -916,6 +923,9 @@ function anModeloImportar(inp){
       }
       anRenderTabs(); anRenderConfig(); anRenderGrid(); anRecalcular();
       toast(`Modelo importado ✓ — ${aplicados} linhas aplicadas. Confira a Config e salve a análise.`);
+      // faturamento importado acima do teto e sem os 12 meses anteriores lançados: classificar na hora
+      const semLanc = !(AN.cfg.rbt12Lanc||[]).some(v=>+v>0);
+      if (AN._sn && AN._sn.estado !== 'elegivel' && semLanc) snPerguntarAnterior(false);
     } catch(e){ toast('Erro ao ler o modelo: '+e.message); }
     inp.value='';
   };
@@ -1564,22 +1574,78 @@ function anAplicarConfig(silencioso) {
   anRecalcular(); if (!silencioso) toast('Configurações aplicadas — lembre de salvar a análise.');
 }
 
+const SN_TETO = 4800000;
+// Três estados, conforme a LC 123/2006 art. 3º, §§ 9º e 9º-A:
+//   'elegivel'   — receita dentro do teto
+//   'transicao'  — estourou DURANTE o período: o Simples ainda é devido no ano;
+//                  a exclusão vale do mês seguinte (excesso > 20%) ou de 1º/jan do ano seguinte (até 20%)
+//   'inelegivel' — já entrou o período inteiro acima do teto: não é opção, não entra no comparativo
+function snElegibilidade(r, cfg) {
+  const decl = cfg ? cfg.snAntAcima : null;   // true = ano anterior já acima do teto | false = não | null = não perguntado
+  const rbts = r.meses.map(m=>+m.rbt12||0);
+  let ac = 0; const acum = r.meses.map(m => (ac += (+m.receita||0)));
+  const rbtMax = Math.max(...rbts, 0), acumAno = acum[acum.length-1]||0;
+  // nunca foi elegível: ou os 12 meses anteriores já estavam acima do teto,
+  // ou um único mês do período sozinho estoura o limite anual
+  const r1 = +r.meses[0]?.receita || 0;
+  const exc = (Math.max(rbtMax,acumAno)-SN_TETO)/SN_TETO;
+  // 1º os 12 meses anteriores lançados; 2º a resposta declarada; 3º a presunção (um mês sozinho estoura o ano)
+  if (rbts[0] > SN_TETO) return { estado:'inelegivel', rbtMax, acumAno, excesso:exc, fonte:'lancamento' };
+  if (decl === true)     return { estado:'inelegivel', rbtMax, acumAno, excesso:exc, fonte:'declarado' };
+  if (acumAno <= SN_TETO && rbtMax <= SN_TETO) return { estado:'elegivel', rbtMax, acumAno };
+  if (decl !== false && r1 > SN_TETO) return { estado:'inelegivel', rbtMax, acumAno, excesso:exc, fonte:'presumido' };
+  const iEst = acum.findIndex(v=>v>SN_TETO);
+  const excesso = (Math.max(acumAno, rbtMax) - SN_TETO)/SN_TETO;
+  return { estado:'transicao', rbtMax, acumAno, excesso, declaradoNao: decl === false, mesEstouro: iEst>=0 ? iEst+1 : null,
+           efeito: excesso > 0.20 ? 'a partir do mês seguinte ao do excesso' : 'a partir de 1º de janeiro do ano seguinte' };
+}
+function snPerguntarAnterior(forcar) {
+  if (!AN) return false;
+  if (!forcar && AN.cfg.snAntAcima != null) return false;
+  const sim = confirm('O faturamento lançado ultrapassa o teto do Simples Nacional (' + fmtR(SN_TETO) + ').\n\n'
+    + 'A receita bruta dos 12 meses ANTERIORES também ficou acima desse valor?\n\n'
+    + 'OK = Sim, a empresa já vinha acima do teto → não era elegível ao Simples\n'
+    + 'Cancelar = Não, o teto foi ultrapassado agora → ano de transição, o Simples ainda é devido\n\n'
+    + 'Para maior precisão, lance os 12 meses anteriores no campo RBT12 da Config.');
+  AN.cfg.snAntAcima = sim; anRecalcular(); return true;
+}
+function snAvisoHtml(el) {
+  if (el.estado === 'elegivel') return '';
+  const pct = (el.excesso*100).toFixed(1).replace('.',',');
+  if (el.estado === 'inelegivel') return `<div class="hint" style="margin-top:8px;padding:10px 12px;border-left:4px solid var(--danger,#943126);background:#fdeaea;color:#7b241c">
+    <b>Simples Nacional não é opção para esta empresa.</b> A receita bruta já entra o período inteiro acima do teto de ${fmtR(SN_TETO)}
+    (RBT12 máximo de ${fmtR(el.rbtMax)}, ${pct}% acima). O valor do DAS deixa de ser apresentado como alternativa —
+    a comparação fica entre Lucro Presumido e Lucro Real.
+    <div style="margin-top:6px">${ el.fonte==='lancamento' ? 'Base: os 12 meses anteriores lançados na Config.'
+      : el.fonte==='declarado' ? 'Base: você informou que o ano anterior também ficou acima do teto.'
+      : 'Base: um único mês do período já supera o limite anual — presunção, porque os 12 meses anteriores não foram lançados.' }
+      <a href="#" onclick="snPerguntarAnterior(true);return false" style="margin-left:6px">corrigir</a></div></div>`;
+  return `<div class="hint" style="margin-top:8px;padding:10px 12px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109">
+    <b>Teto do Simples ultrapassado no período.</b> A receita acumulada chegou a ${fmtR(el.acumAno)} (${pct}% acima dos ${fmtR(SN_TETO)})
+    ${el.mesEstouro?`no mês ${el.mesEstouro}`:''}. O Simples continua devido no ano — a exclusão produz efeito ${el.efeito}
+    (LC 123/2006, art. 3º, §§ 9º e 9º-A). O DAS abaixo segue calculado por isso.
+    <div style="margin-top:6px">${ el.declaradoNao ? 'Você informou que o ano anterior ficou dentro do teto.' : 'Se o ano anterior já estava acima do teto, a empresa não era elegível.' }
+      <a href="#" onclick="snPerguntarAnterior(true);return false" style="margin-left:6px">informar o ano anterior</a></div></div>`;
+}
 function anRecalcular() {
   if (!AN) return;
   let r;
   try { r = calcular(AN, PARAMS.anexos, PARAMS.folha); } catch(e) { console.error(e); return; }
   AN._res = r;
   const T = r.totais;
-  const menor = Math.min(T.simples, T.lp, T.lr);
-  const nomeMenor = menor===T.simples ? 'Simples Nacional' : menor===T.lp ? 'Lucro Presumido' : 'Lucro Real';
+  const EL = snElegibilidade(r, AN.cfg); AN._sn = EL;
+  const snVale = EL.estado !== 'inelegivel';
+  const menor = snVale ? Math.min(T.simples, T.lp, T.lr) : Math.min(T.lp, T.lr);
+  const nomeMenor = (snVale && menor===T.simples) ? 'Simples Nacional' : menor===T.lp ? 'Lucro Presumido' : 'Lucro Real';
   const card = (rot, v, sub, on) => `<div class="stat ${on?'melhor':''}"><div class="n" style="font-size:20px">${fmtR(v)}</div><div class="l">${rot}</div><div class="sub">${sub}</div></div>`;
   const pct = v => T.receita>0 ? (v/T.receita*100).toFixed(2)+'% da receita' : '';
   $id('an-resumo').innerHTML =
     card('Receita anual', T.receita, (()=>{const fs=r.fatorRMensal||[r.fatorR];const mn=Math.min(...fs),mx=Math.max(...fs);return 'Fator R: '+(mn===mx?(mn*100).toFixed(2)+'%':(mn*100).toFixed(2)+'% a '+(mx*100).toFixed(2)+'% (mensal)');})()) +
-    card('Simples Nacional', T.simples, pct(T.simples), menor===T.simples) +
+    (snVale ? card('Simples Nacional', T.simples, pct(T.simples), menor===T.simples)
+            : `<div class="stat" style="opacity:.55"><div class="n" style="font-size:20px">—</div><div class="l">Simples Nacional</div><div class="sub">acima do teto · não elegível</div></div>`) +
     card('Lucro Presumido', T.lp, pct(T.lp), menor===T.lp) +
     card('Lucro Real', T.lr, pct(T.lr), menor===T.lr);
-  const econ2 = [T.simples,T.lp,T.lr].sort((a,b)=>a-b);
+  const econ2 = (snVale ? [T.simples,T.lp,T.lr] : [T.lp,T.lr]).sort((a,b)=>a-b);
   $id('an-veredito').style.display='block';
   let refHtml = '';
   try {
@@ -1595,6 +1661,7 @@ function anRecalcular() {
       </div><div class="hint" style="margin-top:6px">Quadro ano a ano (2026–2033) na aba <b>Relatórios → Comparativo de Regimes</b>.${C.usouFallback?' Aba Reforma sem dados: usei alíquotas-padrão e a receita da análise, sem créditos de compras.':''}</div></div>`;
   } catch(e) { console.error('Cenários da Reforma (análise):', e); }
   $id('an-veredito').innerHTML = `<h3 style="margin-bottom:6px">Melhor regime: ${nomeMenor}</h3>
+    ${snAvisoHtml(EL)}
     <div class="hint">Economia de <b>${fmtR(econ2[1]-econ2[0])}</b>/ano frente à 2ª melhor opção.${T.sublimite>0?`<br>⚠️ RBT12 acima de R$ 3,6 mi em parte do ano: o Simples inclui <b>${fmtR(T.sublimite)}</b> de ICMS/ISS pela trava da 5ª faixa (Res. CGSN 140/2018, art. 24) — a 6ª faixa não embute ICMS/ISS na repartição.`:''} ${AN.receitas.a4.some(v=>v>0)?'<br>⚠️ Há receitas do Anexo IV: o CPP é recolhido por fora do DAS — confira o INSS patronal informado na Folha, pois a planilha-base não o soma automaticamente ao total do Simples.':''}</div>${refHtml}`;
   // detalhe mensal
   let h = `<table><thead><tr><th>Mês</th><th class="num">Receita</th><th class="num">RBT12</th><th>Faixa</th><th class="num">DAS</th><th class="num">Simples</th><th class="num">Presumido</th><th class="num">Real</th></tr></thead><tbody>`;
@@ -1678,28 +1745,29 @@ function empRender() {
   const rows = EMPRESAS.filter(e => !q || (e.razao_social||'').toLowerCase().includes(q) || (e.cnpj||'').includes(q.replace(/\D/g,'')));
   $id('emp-tbody').innerHTML = rows.length ? rows.map(e=>`<tr>
     <td style="white-space:nowrap">${fmtCNPJ(e.cnpj)}</td><td>${esc(e.razao_social)||''}</td>
-    <td>${e.regime||'—'}</td><td>${e.simples?'<span class="badge ok">Sim</span>':'<span class="badge info">Não</span>'}</td>
+    <td>${e.regime && e.regime!=='A definir' ? esc(e.regime) : '<span class="badge info">A definir</span>'}</td>
     <td>${e.uf?e.uf+' / '+(e.municipio||''):'—'}</td><td>${e.obs||''}</td>
     <td style="white-space:nowrap"><button class="btn" onclick="empEditar('${e.cnpj}')">Editar</button>
     <button class="btn" onclick="empAnalisar('${e.cnpj}')">Analisar</button>
     <button class="btn" title="Resumo estatístico de fornecedores" onclick="fornResumo('${e.cnpj}')">📊</button>
     <button class="btn" style="color:var(--danger)" onclick="empExcluir('${e.cnpj}')">Excluir</button></td></tr>`).join('')
-  : '<tr><td colspan="7" class="hint" style="text-align:center;padding:20px">Nenhuma empresa. Cadastre manualmente ou use a Consulta CNPJ.</td></tr>';
+  : '<tr><td colspan="6" class="hint" style="text-align:center;padding:20px">Nenhuma empresa. Cadastre manualmente ou use a Consulta CNPJ.</td></tr>';
 }
 function empNova(){ EMP_EDIT=null; ['emp-cnpj','emp-razao','emp-ufmun','emp-obs'].forEach(i=>$id(i).value='');
-  $id('emp-simples').value='false'; $id('emp-regime').value='Simples Nacional';
+  $id('emp-regime').value='A definir';
   $id('emp-form-titulo').textContent='Nova empresa'; $id('emp-form-card').style.display='block'; }
 function empEditar(cnpj){ const e = EMPRESAS.find(x=>x.cnpj===cnpj); if(!e) return;
   EMP_EDIT=cnpj; $id('emp-cnpj').value=fmtCNPJ(e.cnpj); $id('emp-razao').value=e.razao_social||'';
-  $id('emp-simples').value=String(!!e.simples); $id('emp-regime').value=e.regime||'Simples Nacional';
+  $id('emp-regime').value = e.regime || (e.simples ? 'Simples Nacional' : 'A definir');
   $id('emp-ufmun').value=e.uf?`${e.uf} / ${e.municipio||''}`:''; $id('emp-obs').value=e.obs||'';
   $id('emp-form-titulo').textContent='Editar empresa'; $id('emp-form-card').style.display='block'; }
 async function empSalvar() {
   const cnpj = limparCNPJ($id('emp-cnpj').value);
   if (cnpj.length!==14 || !validaCNPJ(cnpj)) { toast('CNPJ inválido.'); return; }
   const [uf, municipio] = ($id('emp-ufmun').value||'').split('/').map(s=>s.trim());
-  const body = [{ cnpj, razao_social:$id('emp-razao').value.trim(), simples:$id('emp-simples').value==='true',
-    regime:$id('emp-regime').value, uf:uf||null, municipio:municipio||null, obs:$id('emp-obs').value.trim()||null, analise:true }];
+  const regime = $id('emp-regime').value;
+  const body = [{ cnpj, razao_social:$id('emp-razao').value.trim(), simples: regime==='Simples Nacional',
+    regime, uf:uf||null, municipio:municipio||null, obs:$id('emp-obs').value.trim()||null, analise:true }];
   try { await supa('POST','atp_empresas?on_conflict=cnpj',{ body }); toast('Empresa salva.');
     $id('emp-form-card').style.display='none'; empCarregar(); carregarDashboard(); }
   catch(e){ toast('Erro: '+e.message); }
@@ -1710,10 +1778,15 @@ async function empConsultarReceita() {
   toast('Consultando...');
   const r = await consultarUm(cnpj);
   if (r.erro) { toast(r.erro); return; }
-  $id('emp-razao').value = r.razao_social; $id('emp-simples').value = String(!!r.simples);
+  $id('emp-razao').value = r.razao_social;
   $id('emp-ufmun').value = r.uf ? `${r.uf} / ${r.municipio}` : '';
-  if (r.simples) $id('emp-regime').value = 'Simples Nacional';
-  toast('Dados preenchidos pela Receita.');
+  // a consulta resolve MEI e Simples; Presumido x Real não é dado público
+  const atual = $id('emp-regime').value;
+  if (r.simei) { $id('emp-regime').value = 'MEI'; }
+  else if (r.simples) { $id('emp-regime').value = 'Simples Nacional'; }
+  else if (atual==='MEI' || atual==='Simples Nacional' || atual==='A definir') { $id('emp-regime').value = 'A definir'; }
+  toast(r.simples || r.simei ? 'Dados e regime preenchidos pela Receita.'
+                             : 'Dados preenchidos. Empresa não optante — defina Presumido ou Real.');
 }
 async function empExcluir(cnpj) {
   const e = EMPRESAS.find(x=>x.cnpj===cnpj);
@@ -1983,7 +2056,8 @@ async function rfSalvar() {
   const dados = (AN && AN.cnpj===RF.cnpj) ? {...AN, _res:undefined, reforma:{...RF, _res:undefined}} : { ...(anNovo(RF.cnpj, RF.ano)), reforma:{...RF, _res:undefined} };
   const T = AN?._res?.totais || {};
   try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body:[{ cnpj:RF.cnpj, ano:RF.ano, dados,
-    resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr, reforma2033: RF._res?.linhas?.at(-1)?.total },
+    resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr, reforma2033: RF._res?.linhas?.at(-1)?.total,
+      snElegivel: (AN._sn?.estado || 'elegivel') !== 'inelegivel' },
     atualizado_em:new Date().toISOString() }] });
     toast('Análise da Reforma salva.'); } catch(e){ toast('Erro: '+e.message); }
 }
@@ -3527,8 +3601,9 @@ async function dashAnalises() {
       { label:'Reforma 2033', data:comAnalise.map(x=>+x.a.resumo.reforma2033||0), backgroundColor:'#1e8449' } ] },
       options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } } });
     const cont = { Simples:0, Presumido:0, Real:0 };
-    for (const x of comAnalise) { const r=x.a.resumo, mn=Math.min(+r.simples,+r.lp,+r.lr);
-      cont[mn===+r.simples?'Simples':mn===+r.lp?'Presumido':'Real']++; }
+    for (const x of comAnalise) { const r=x.a.resumo, ok = r.snElegivel!==false;
+      const mn = ok ? Math.min(+r.simples,+r.lp,+r.lr) : Math.min(+r.lp,+r.lr);
+      cont[(ok&&mn===+r.simples)?'Simples':mn===+r.lp?'Presumido':'Real']++; }
     window._chDa2 = new Chart($id('ch-da-melhor'), { type:'doughnut',
       data:{ labels:Object.keys(cont), datasets:[{ data:Object.values(cont), backgroundColor:['#1a5276','#b9770e','#943126'] }] },
       options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } } });
