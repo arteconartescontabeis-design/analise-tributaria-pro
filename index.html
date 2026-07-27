@@ -914,7 +914,7 @@ function anModeloImportar(inp){
         else { for (let m=0;m<12;m++) o[k][m] = vals[m]; }
         aplicados++;
       }
-      anRenderTabs(); anRenderGrid(); anAplicarConfigRender && anAplicarConfigRender(); anRecalcular();
+      anRenderTabs(); anRenderConfig(); anRenderGrid(); anRecalcular();
       toast(`Modelo importado ✓ — ${aplicados} linhas aplicadas. Confira a Config e salve a análise.`);
     } catch(e){ toast('Erro ao ler o modelo: '+e.message); }
     inp.value='';
@@ -1486,8 +1486,8 @@ function anRenderGrid() {
     for (let m=0;m<12;m++) {
       const { o,k } = anPath(AN, path);
       const v = o[k][m];
-      const shown = tipo==='nul' ? (v==null?'':v) : (tipo==='pct' ? (v?+(v*100).toFixed(4):'') : (v||''));
-      h += `<td><input inputmode="decimal" value="${shown}" onchange="anSet('${path}',${m},this.value,'${tipo||''}')"></td>`;
+      const shown = tipo==='nul' ? (v==null?'':fmt(v)) : (tipo==='pct' ? (v?String(+(v*100).toFixed(4)).replace('.',','):'') : (v?fmt(v):''));
+      h += `<td><input inputmode="decimal" value="${shown}" onchange="anSet('${path}',${m},this.value,'${tipo||''}');anRenderGrid()"></td>`;
     }
     h += '</tr>';
   }
@@ -1547,10 +1547,10 @@ function anRenderConfig() {
     <button class="btn solid" onclick="anAplicarConfig()">Aplicar</button>
   </div>${avisoIss}
   <div style="margin-top:18px"><b style="font-size:13px">RBT12 — receita e folha dos 12 meses anteriores</b>
-  <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto||''}" onchange="anAplicarConfig(true)"></div>
+  <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto?fmt(c.rbt12Direto):''}" onchange="anAplicarConfig(true)"></div>
   <div style="overflow-x:auto;margin-top:8px"><table class="gtable"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m} (ant.)</th>`).join('')}</tr></thead><tbody>
-  <tr><td class="rot">Receita</td>${MESES.map((_,m)=>`<td><input value="${c.rbt12Lanc[m]||''}" onchange="AN.cfg.rbt12Lanc[${m}]=num(this.value);anRecalcular()"></td>`).join('')}</tr>
-  <tr><td class="rot">Folha (Fator R)</td>${MESES.map((_,m)=>`<td><input value="${c.folha12Lanc[m]||''}" onchange="AN.cfg.folha12Lanc[${m}]=num(this.value);anRecalcular()"></td>`).join('')}</tr>
+  <tr><td class="rot">Receita</td>${MESES.map((_,m)=>`<td><input value="${c.rbt12Lanc[m]?fmt(c.rbt12Lanc[m]):''}" onchange="AN.cfg.rbt12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
+  <tr><td class="rot">Folha (Fator R)</td>${MESES.map((_,m)=>`<td><input value="${c.folha12Lanc[m]?fmt(c.folha12Lanc[m]):''}" onchange="AN.cfg.folha12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
   </tbody></table></div></div>`;
   $id('an-grid').innerHTML = h;
 }
