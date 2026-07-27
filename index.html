@@ -230,7 +230,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.5.3</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.5.4</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -513,7 +513,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.5.3</b> <span class="badge ok">atual</span></td><td>27/07/2026</td><td>Correção na importação da folha: o ano da análise era lido de um campo inexistente, o que fazia a conferência acusar "a análise aberta é de NaN" e recusar relatórios do ano correto. Passa a usar o ano da própria análise, com o campo Ano da tela como alternativa.</td></tr>
+          <tr><td><b>v7.5.4</b> <span class="badge ok">atual</span></td><td>27/07/2026</td><td>Importação da folha passa a reconhecer vários relatórios dentro do mesmo PDF: o arquivo do Questor costuma trazer os meses concatenados, e antes só o primeiro período era lido, aplicando todos os funcionários a um único mês. Agora cada bloco é separado por período e por tipo, as páginas seguintes de um mesmo relatório são reagrupadas, e os relatórios de <b>13º Salário Adiantamento</b> deixam de ser somados aos salários — vão para a provisão de 13º do mês, com o FGTS correspondente. O 13º proporcional pago em rescisão continua nos salários e é apenas destacado na conferência. A conferência com o rodapé passou a somar Proventos e Vantagens, que aparecem em colunas separadas e faziam o total divergir nos meses com verba de vantagem.</td></tr>
+          <tr><td><b>v7.5.3</b></td><td>27/07/2026</td><td>Correção na importação da folha: o ano da análise era lido de um campo inexistente, o que fazia a conferência acusar "a análise aberta é de NaN" e recusar relatórios do ano correto. Passa a usar o ano da própria análise, com o campo Ano da tela como alternativa.</td></tr>
           <tr><td><b>v7.5.2</b></td><td>27/07/2026</td><td>Planilha modelo reformulada: agora vem formatada, com as células de digitação destacadas em amarelo, os campos agrupados por seção (Configuração, Receitas por anexo, Folha, Compras e Despesas), uma coluna "Como preencher" explicando cada linha — o que entra, o que não entra e o efeito no cálculo — e uma aba "Como usar" com as regras de preenchimento, incluindo a diferença entre deixar em branco (não informado, preserva o que já existe) e digitar zero (valor informado, sobrescreve). O arquivo é distribuído pronto dentro do app, com verificação automática de sincronia com os campos do cálculo: se divergirem, o app volta a gerar a versão simples. <b>Nova importação da folha de pagamento</b>: o botão "Importar folha (Relação de Cálculo)" lê o PDF do relatório do Questor — um ou vários meses de uma vez — separa o pró-labore dos salários pelos eventos, soma a base de FGTS funcionário a funcionário, confere o total apurado com o rodapé do relatório e preenche Pró-labore, Salários e Base de FGTS nos meses correspondentes, avisando quando o relatório for de outro ano ou de outro CNPJ. A leitura do PDF passou a reagrupar o texto pela posição na página, recuperando as linhas físicas do relatório.</td></tr>
           <tr><td><b>v7.5.1</b></td><td>27/07/2026</td><td>Elegibilidade ao Simples Nacional em três estados (LC 123/2006, art. 3º, §§ 9º e 9º-A): <b>elegível</b>; <b>transição</b> — o teto foi ultrapassado durante o período, o Simples continua devido no ano e o aviso informa a data de efeito da exclusão (mês seguinte quando o excesso passa de 20%, 1º de janeiro do ano seguinte quando não passa); e <b>não elegível</b> — a empresa já entrou o período acima do teto, quando o DAS deixa de ser apresentado como alternativa, sai do cálculo do melhor regime e da economia anual, e não é mais contado no ranking da carteira no Dashboard. A classificação segue uma ordem explícita de evidência e o aviso diz qual foi usada: 1º os 12 meses anteriores lançados na Config; 2º a resposta do usuário; 3º a presunção de um único mês que supere o limite anual. Ao importar a planilha modelo com faturamento acima do teto e sem o RBT12 anterior lançado, o app pergunta se o ano anterior também ficou acima de R$ 4,8 milhões e classifica na hora — a resposta pode ser revista pelo link no próprio aviso. Importação do modelo passou a pedir confirmação sempre (a verificação anterior só olhava as receitas e ignorava folha, compras e despesas) e linha de percentual em branco no arquivo deixou de zerar a Config. Cadastro de empresas: o campo "Optante Simples" foi removido por duplicar a informação do "Regime atual", que ganhou a opção "A definir" e passou a ser preenchido pela consulta de CNPJ nos casos de MEI e Simples Nacional — Lucro Presumido e Real não são dado público e seguem como escolha do usuário.</td></tr>
           <tr><td><b>v7.5</b></td><td>26/07/2026</td><td>Importação de XMLs com indicador de progresso (lotes grandes não aparentam travamento) e recálculo automático ao aplicar as notas — incluindo a aba Reforma com as reduções encontradas; confirmação antes de sobrescrever as compras da Reforma pela análise de fornecedores; total do relatório de fornecedores pode ser lançado nas Despesas da análise, rateado pelos meses do período; valores da aba Reforma exibidos no padrão brasileiro (1.234,56) e aceitos com vírgula; planilha modelo para download com todos os campos do cálculo automático (percentuais, RBT12/Fator R, receitas por bloco, folha, compras e despesas) e importador do modelo preenchido, junto dos demais importadores; percentuais da Config e da Reforma já recalculam ao editar.</td></tr>
@@ -935,52 +936,81 @@ async function pdfLinhas(file){
   }
   return out;
 }
+// separa os vários relatórios que vêm concatenados no mesmo PDF (um por período/tipo)
+function folhaParseRelacao(txt){
+  const blocos = [];
+  let atual = null;
+  for (const seg of txt.split(/(?=Per[ií]odo:\s*\d{2}\/\d{2}\/\d{4}\s+a\s+\d{2}\/\d{2}\/\d{4})/)){
+    const h = seg.match(/Per[ií]odo:\s*\d{2}\/(\d{2})\/(\d{4})\s+a\s+\d{2}\/\d{2}\/\d{4}\s*([^\n]*)/);
+    if (!h) continue;
+    const mes = +h[1], ano = +h[2], tipo = (h[3]||'').trim() || 'Mensal';
+    if (!atual || atual.mes !== mes || atual.ano !== ano || atual.tipo !== tipo){
+      atual = { mes, ano, tipo, texto:'' }; blocos.push(atual);
+    }
+    atual.texto += '\n' + seg;              // páginas seguintes repetem o cabeçalho do mesmo relatório
+  }
+  return blocos.map(b => Object.assign(folhaResumoRelacao(b.texto),
+    { mes:b.mes, ano:b.ano, tipo:b.tipo, decimo: /13o?\s*Sal[áa]rio/i.test(b.tipo) }));
+}
+function folhaResumoRelacao(txt){
+  const cnpj = (txt.match(/CNPJ\/CPF:\s*([\d.\/-]{14,20})/)||[])[1] || '';
+  let prov=0, fgts=0, pro=0, d13=0, qtd=0;
+  for (let b of txt.split(/(?=Func:\s*\d+)/).slice(1)){
+    const iT = b.indexOf('Total da'); if (iT >= 0) b = b.slice(0, iT);
+    const mp = b.match(/Proventos\/Vantagens\s+([\d.,]+)/); if (!mp) continue;
+    qtd++; prov += num(mp[1]);
+    const mf = b.match(/FGTS\s+([\d.,]+)\s+Valor\s+FGTS/);                 if (mf) fgts += num(mf[1]);
+    const ml = b.match(/Pro-?\s?Labore\s+(?:[\d:]+\s*hs\s+)?([\d.,]+)/i);   if (ml) pro  += num(ml[1]);
+    const m3 = b.match(/\b\d{2,4}\s+1\s+13o?\s*Sal[áa]rio[^\n]{0,60}?([\d.]+,\d{2})/i); if (m3) d13 += num(m3[1]);
+  }
+  // o rodapé separa Proventos de Vantagens; o total por funcionário soma os dois
+  const mt = txt.match(/Total da Empresa[\s\S]{0,400}?Proventos\s+([\d.,]+)\s+Vantagens\s+([\d.,]+)/);
+  const totalRel = mt ? num(mt[1]) + num(mt[2]) : null;
+  return { cnpj, qtd, prov, fgts, pro, d13, sal: prov - pro, totalRel,
+           confere: totalRel == null || Math.abs(totalRel - prov) <= 0.02 };
+}
 async function folhaLerRelacao(input){
   const arqs = [...input.files]; input.value='';
   if (!arqs.length) return;
   if (!AN) { toast('Abra uma análise antes de importar a folha.'); return; }
   if (!window.pdfjsLib) { toast('Biblioteca PDF não carregou — verifique a internet.'); return; }
-  toast(`Lendo ${arqs.length} relatório(s) de folha...`);
-  const achados = [], erros = [];
+  toast(`Lendo ${arqs.length} arquivo(s) de folha...`);
+  const rels = [], erros = [];
   for (const f of arqs){
     try {
-      const txt = (await pdfLinhas(f)).join('\n');
-      const per = txt.match(/Per[ií]odo:?\s*(\d{2})\/(\d{2})\/(\d{4})\s+a\s+(\d{2})\/(\d{2})\/(\d{4})/i);
-      if (!per) { erros.push(`${f.name}: não encontrei o período do relatório.`); continue; }
-      const mes = +per[2], ano = +per[3];
-      const cnpj = (txt.match(/CNPJ\/CPF:\s*([\d.\/-]{14,20})/)||[])[1] || '';
-      let prov=0, fgts=0, pro=0, d13=0, qtd=0;
-      for (let b of txt.split(/(?=Func:\s*\d+)/).slice(1)){
-        const iT = b.indexOf('Total da'); if (iT >= 0) b = b.slice(0, iT);
-        const mp = b.match(/Proventos\/Vantagens\s+([\d.,]+)/); if (!mp) continue;
-        qtd++; prov += num(mp[1]);
-        const mf = b.match(/FGTS\s+([\d.,]+)\s+Valor\s+FGTS/);              if (mf) fgts += num(mf[1]);
-        const ml = b.match(/Pro-?\s?Labore\s+(?:[\d:]+\s*hs\s+)?([\d.,]+)/i); if (ml) pro  += num(ml[1]);
-        const m3 = b.match(/\b\d{2,4}\s+1\s+13o?\s*Sal[áa]rio[^\n]{0,60}?([\d.]+,\d{2})/i); if (m3) d13 += num(m3[1]);
-      }
-      if (!qtd) { erros.push(`${f.name}: nenhum funcionário reconhecido.`); continue; }
-      const mt = txt.match(/Total da Empresa[\s\S]*?Proventos\s+([\d.,]+)/);
-      const totalRel = mt ? num(mt[1]) : null;
-      achados.push({ arq:f.name, mes, ano, cnpj, qtd, prov, fgts, pro, d13, sal: prov-pro,
-        totalRel, confere: totalRel == null || Math.abs(totalRel - prov) <= 0.02 });
+      const achados = folhaParseRelacao((await pdfLinhas(f)).join('\n'));
+      if (!achados.length) { erros.push(`${f.name}: não encontrei nenhum período de apuração.`); continue; }
+      achados.forEach(r => r.arq = f.name);
+      rels.push(...achados);
     } catch(e){ erros.push(`${f.name}: ${e.message}`); }
   }
-  if (!achados.length) { alert('Nada foi importado.\n\n' + erros.join('\n')); return; }
+  if (!rels.length) { alert('Nada foi importado.\n\n' + erros.join('\n')); return; }
   const anoAn = +AN.ano || +($id('an-ano')||{}).value || new Date().getFullYear();
-  const doAno = achados.filter(a=>a.ano === anoAn), fora = achados.filter(a=>a.ano !== anoAn);
-  if (!doAno.length) { alert(`Os relatórios são de ${[...new Set(achados.map(a=>a.ano))].join(', ')}, mas a análise aberta é de ${anoAn}.`); return; }
-  const cnpjDif = AN.cnpj && doAno.some(a => a.cnpj && limparCNPJ(a.cnpj) !== limparCNPJ(AN.cnpj));
-  const lista = doAno.map(a => `• ${String(a.mes).padStart(2,'0')}/${a.ano} — ${a.qtd} func.  |  salários ${fmtR(a.sal)}  |  pró-labore ${fmtR(a.pro)}  |  base FGTS ${fmtR(a.fgts)}`
-    + (a.confere ? '' : `  ⚠ soma ${fmtR(a.prov)} ≠ rodapé ${fmtR(a.totalRel)}`)
-    + (a.d13 ? `\n     ↳ 13º encontrado: ${fmtR(a.d13)} (entrou nos salários; mova para a provisão se preferir)` : '')).join('\n');
-  if (!confirm(`Importar a folha para a análise de ${anoAn}?\n\n${lista}\n\n`
+  const doAno = rels.filter(r => r.ano === anoAn), fora = rels.filter(r => r.ano !== anoAn);
+  if (!doAno.length) { alert(`Os relatórios são de ${[...new Set(rels.map(r=>r.ano))].join(', ')}, mas a análise aberta é de ${anoAn}.`); return; }
+  const meses = new Map();
+  for (const r of doAno){
+    const m = meses.get(r.mes) || { pro:0, sal:0, fgts:0, prov13:0, aviso13:0, qtd:0, ok:true, tipos:[] };
+    if (r.decimo) { m.prov13 += r.prov; m.fgts += r.fgts; }
+    else          { m.pro += r.pro; m.sal += r.sal; m.fgts += r.fgts; m.aviso13 += r.d13; m.qtd = Math.max(m.qtd, r.qtd); }
+    m.ok = m.ok && r.confere; m.tipos.push(r.tipo); meses.set(r.mes, m);
+  }
+  const ord = [...meses.entries()].sort((a,b)=>a[0]-b[0]);
+  const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const lista = ord.map(([mes,m]) =>
+      `• ${MES[mes-1]}  ${String(m.qtd).padStart(2)} func.  salários ${fmtR(m.sal)}  ·  pró-labore ${fmtR(m.pro)}  ·  FGTS ${fmtR(m.fgts)}`
+    + (m.prov13 ? `\n     ↳ 13º adiantamento ${fmtR(m.prov13)} → vai para a provisão de 13º` : '')
+    + (m.aviso13 ? `\n     ↳ 13º em rescisão ${fmtR(m.aviso13)} (fica nos salários)` : '')
+    + (m.ok ? '' : '\n     ⚠ a soma dos funcionários não bateu com o rodapé do relatório')).join('\n');
+  if (!confirm(`${ord.length} mês(es) encontrado(s) para ${anoAn}:\n\n${lista}\n\n`
       + (fora.length ? `⚠ ${fora.length} relatório(s) de outro ano serão ignorados.\n` : '')
-      + (cnpjDif ? `⚠ O CNPJ do relatório é diferente do da empresa em análise.\n` : '')
-      + `\nPró-labore, Salários e Base de FGTS dos meses acima serão SOBRESCRITOS.`)) return;
-  for (const a of doAno){ const m = a.mes-1;
-    AN.folha.prolabore[m] = a.pro; AN.folha.salarios[m] = a.sal; AN.folha.baseFgts[m] = a.fgts; }
+      + `\nPró-labore, Salários e Base de FGTS desses meses serão SOBRESCRITOS.`)) return;
+  for (const [mes,m] of ord){ const i = mes-1;
+    AN.folha.prolabore[i] = m.pro; AN.folha.salarios[i] = m.sal; AN.folha.baseFgts[i] = m.fgts;
+    if (m.prov13) AN.folha.prov13[i] = m.prov13;
+  }
   anRenderGrid(); anRecalcular();
-  toast(`Folha importada ✓ — ${doAno.length} mês(es).${erros.length ? ' '+erros.length+' arquivo(s) com erro.' : ''}`);
+  toast(`Folha importada ✓ — ${ord.length} mês(es).${erros.length ? ' '+erros.length+' arquivo(s) com erro.' : ''}`);
 }
 function anModeloImportar(inp){
   const f = inp.files && inp.files[0]; if (!f) return;
