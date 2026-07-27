@@ -230,7 +230,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.5.7</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.5.8</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -514,7 +514,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.5.7</b> <span class="badge ok">atual</span></td><td>27/07/2026</td><td>Importações deixam de se apagar entre si. Cada importador declara quais seções da análise ele altera e, quando alguma delas já tem dados, o app pergunta antes — informando também quais seções <b>não</b> serão tocadas: PGDAS-D e Demonstrativo de Faturamento mexem apenas em Receitas, a Relação de Cálculo apenas em Folha. A causa da perda era outra e foi corrigida: o que se importa fica somente na memória até a análise ser salva, e trocar de empresa ou de ano recarrega tudo do banco, descartando em silêncio o que havia sido importado. Agora o app avisa que há importações não salvas e devolve a seleção anterior se você desistir.</td></tr>
+          <tr><td><b>v7.5.8</b> <span class="badge ok">atual</span></td><td>27/07/2026</td><td>A análise passa a ser gravada automaticamente depois de cada importação, sem depender de clicar em Salvar. Corrigido o aviso de "importações não salvas" que aparecia indevidamente ao escolher a empresa de uma análise recém-importada: atribuir a empresa a uma análise que ainda não tem nenhuma deixou de ser tratado como troca de empresa — os dados importados são preservados e gravados na hora. Quando o relatório não traz um CNPJ reconhecível, o app avisa que a empresa precisa ser escolhida no topo para gravar, em vez de recusar o salvamento sem explicar. A pendência de gravação também deixou de ser dada como resolvida quando o salvamento falha.</td></tr>
+          <tr><td><b>v7.5.7</b></td><td>27/07/2026</td><td>Importações deixam de se apagar entre si. Cada importador declara quais seções da análise ele altera e, quando alguma delas já tem dados, o app pergunta antes — informando também quais seções <b>não</b> serão tocadas: PGDAS-D e Demonstrativo de Faturamento mexem apenas em Receitas, a Relação de Cálculo apenas em Folha. A causa da perda era outra e foi corrigida: o que se importa fica somente na memória até a análise ser salva, e trocar de empresa ou de ano recarrega tudo do banco, descartando em silêncio o que havia sido importado. Agora o app avisa que há importações não salvas e devolve a seleção anterior se você desistir.</td></tr>
           <tr><td><b>v7.5.6</b></td><td>27/07/2026</td><td>A análise de fornecedores passa a ser aplicada sozinha: ao abrir a aba Reforma de uma empresa, o app busca a consulta mais recente e preenche "Compras de PJ Lucro Real/Presumido" e "Compras de PJ Simples/SIMEI", informando na tela de qual consulta e de qual período vieram os valores. O botão "🚚 Compras pelos fornecedores" foi removido — deixou de ser necessário. Valores digitados à mão nunca são sobrescritos automaticamente: nesse caso o app apenas avisa que existe uma análise disponível e oferece a substituição. Quando o relatório cobre menos de doze meses, o aviso destaca que os valores estão subdimensionados frente à projeção anual da Reforma. Corrigida também a restauração crua da análise no carregamento pela Reforma, que ignorava campos criados em versões posteriores.</td></tr>
           <tr><td><b>v7.5.5</b></td><td>27/07/2026</td><td>Correção de uma falha silenciosa ao importar a folha: análises salvas por versões anteriores do app eram restauradas do banco exatamente como haviam sido gravadas, sem os campos criados depois. Ao lançar a provisão de 13º num registro que não tinha esse campo, a importação era interrompida antes de atualizar a tela — nenhum valor aparecia e nenhum erro era exibido. Toda análise carregada passa a ser completada contra a estrutura atual, preservando o que já existe (inclusive o "automático" das abas de ICMS e IPI, que não vira zero). A importação da folha também deixou de falhar em silêncio: qualquer erro na gravação agora é mostrado.</td></tr>
           <tr><td><b>v7.5.4</b></td><td>27/07/2026</td><td>Importação da folha passa a reconhecer vários relatórios dentro do mesmo PDF: o arquivo do Questor costuma trazer os meses concatenados, e antes só o primeiro período era lido, aplicando todos os funcionários a um único mês. Agora cada bloco é separado por período e por tipo, as páginas seguintes de um mesmo relatório são reagrupadas, e os relatórios de <b>13º Salário Adiantamento</b> deixam de ser somados aos salários — vão para a provisão de 13º do mês, com o FGTS correspondente. O 13º proporcional pago em rescisão continua nos salários e é apenas destacado na conferência. A conferência com o rodapé passou a somar Proventos e Vantagens, que aparecem em colunas separadas e faziam o total divergir nos meses com verba de vantagem.</td></tr>
@@ -1568,7 +1569,13 @@ let PARAMS = { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha: {...FO
 let AN = null;          // análise corrente
 let AN_SUJO = false;    // v7.5.7: há importação/edição ainda não salva no banco
 // todo importador chama isto depois de mexer na análise: marca pendência e redesenha
-function anAplicado(){ AN_SUJO = true; anRenderTabs(); anRenderGrid(); anRecalcular(); }
+function anAplicado(){ AN_SUJO = true; anRenderTabs(); anRenderGrid(); anRecalcular(); anSalvarAuto(); }
+// grava sozinho depois de importar; sem empresa definida não há onde gravar, e aí o aviso explica o porquê
+async function anSalvarAuto(){
+  if (!AN) return;
+  if (!AN.cnpj) { toast('Importado. Não identifiquei o CNPJ no relatório — escolha a empresa no topo para gravar.'); return; }
+  await anSalvar();
+}
 // pergunta antes de sobrescrever seções que já têm dados; cada importador declara só o que altera
 function anPodeSobrescrever(secoes, oQue){
   if (!AN) return true;
@@ -1872,7 +1879,7 @@ function anRecalcular() {
 async function anTrocarEmpresa() {
   const cnpj = $id('an-empresa').value;
   // trocar de empresa/ano recarrega do banco: o que foi importado e não salvo se perderia em silêncio
-  if (AN_SUJO && AN && (AN.cnpj !== cnpj || +AN.ano !== +$id('an-ano').value)) {
+  if (AN_SUJO && AN && AN.cnpj && (AN.cnpj !== cnpj || +AN.ano !== +$id('an-ano').value)) {
     if (!confirm('Esta análise tem importações que ainda NÃO foram salvas.\n\nTrocar de empresa ou de ano vai descartá-las.\n\nContinuar mesmo assim?')) {
       anPreencherEmpresas(); $id('an-empresa').value = AN.cnpj || ''; $id('an-ano').value = AN.ano; return;
     }
@@ -1880,6 +1887,13 @@ async function anTrocarEmpresa() {
   empGlobalSet(cnpj, +$id('an-ano').value);
   if (!cnpj) { if (!AN) { AN = anNovo('', +$id('an-ano').value); anRenderTabs(); anRenderGrid(); anRecalcular(); } return; }
   const ano = +$id('an-ano').value;
+  // análise importada que ainda não tem empresa: adota a escolhida e preserva o que foi importado
+  if (AN_SUJO && AN && !AN.cnpj) {
+    AN.cnpj = cnpj; AN.ano = ano;
+    await anSalvar();
+    anRenderTabs(); anRenderGrid(); anRecalcular();
+    return;
+  }
   try {
     const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
     AN = anNormalizar(rows.length ? rows[0].dados : null, cnpj, ano);
@@ -1894,8 +1908,7 @@ async function anSalvar() {
   const T = AN._res?.totais || {};
   const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined},
     resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr }, atualizado_em:new Date().toISOString() }];
-  AN_SUJO = false;
-  try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); toast('Análise salva.'); }
+  try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); AN_SUJO = false; toast('Análise salva.'); }
   catch(e){ toast('Erro ao salvar: '+e.message); }
 }
 
