@@ -230,7 +230,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.5.6</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.5.7</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -514,7 +514,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.5.6</b> <span class="badge ok">atual</span></td><td>27/07/2026</td><td>A análise de fornecedores passa a ser aplicada sozinha: ao abrir a aba Reforma de uma empresa, o app busca a consulta mais recente e preenche "Compras de PJ Lucro Real/Presumido" e "Compras de PJ Simples/SIMEI", informando na tela de qual consulta e de qual período vieram os valores. O botão "🚚 Compras pelos fornecedores" foi removido — deixou de ser necessário. Valores digitados à mão nunca são sobrescritos automaticamente: nesse caso o app apenas avisa que existe uma análise disponível e oferece a substituição. Quando o relatório cobre menos de doze meses, o aviso destaca que os valores estão subdimensionados frente à projeção anual da Reforma. Corrigida também a restauração crua da análise no carregamento pela Reforma, que ignorava campos criados em versões posteriores.</td></tr>
+          <tr><td><b>v7.5.7</b> <span class="badge ok">atual</span></td><td>27/07/2026</td><td>Importações deixam de se apagar entre si. Cada importador declara quais seções da análise ele altera e, quando alguma delas já tem dados, o app pergunta antes — informando também quais seções <b>não</b> serão tocadas: PGDAS-D e Demonstrativo de Faturamento mexem apenas em Receitas, a Relação de Cálculo apenas em Folha. A causa da perda era outra e foi corrigida: o que se importa fica somente na memória até a análise ser salva, e trocar de empresa ou de ano recarrega tudo do banco, descartando em silêncio o que havia sido importado. Agora o app avisa que há importações não salvas e devolve a seleção anterior se você desistir.</td></tr>
+          <tr><td><b>v7.5.6</b></td><td>27/07/2026</td><td>A análise de fornecedores passa a ser aplicada sozinha: ao abrir a aba Reforma de uma empresa, o app busca a consulta mais recente e preenche "Compras de PJ Lucro Real/Presumido" e "Compras de PJ Simples/SIMEI", informando na tela de qual consulta e de qual período vieram os valores. O botão "🚚 Compras pelos fornecedores" foi removido — deixou de ser necessário. Valores digitados à mão nunca são sobrescritos automaticamente: nesse caso o app apenas avisa que existe uma análise disponível e oferece a substituição. Quando o relatório cobre menos de doze meses, o aviso destaca que os valores estão subdimensionados frente à projeção anual da Reforma. Corrigida também a restauração crua da análise no carregamento pela Reforma, que ignorava campos criados em versões posteriores.</td></tr>
           <tr><td><b>v7.5.5</b></td><td>27/07/2026</td><td>Correção de uma falha silenciosa ao importar a folha: análises salvas por versões anteriores do app eram restauradas do banco exatamente como haviam sido gravadas, sem os campos criados depois. Ao lançar a provisão de 13º num registro que não tinha esse campo, a importação era interrompida antes de atualizar a tela — nenhum valor aparecia e nenhum erro era exibido. Toda análise carregada passa a ser completada contra a estrutura atual, preservando o que já existe (inclusive o "automático" das abas de ICMS e IPI, que não vira zero). A importação da folha também deixou de falhar em silêncio: qualquer erro na gravação agora é mostrado.</td></tr>
           <tr><td><b>v7.5.4</b></td><td>27/07/2026</td><td>Importação da folha passa a reconhecer vários relatórios dentro do mesmo PDF: o arquivo do Questor costuma trazer os meses concatenados, e antes só o primeiro período era lido, aplicando todos os funcionários a um único mês. Agora cada bloco é separado por período e por tipo, as páginas seguintes de um mesmo relatório são reagrupadas, e os relatórios de <b>13º Salário Adiantamento</b> deixam de ser somados aos salários — vão para a provisão de 13º do mês, com o FGTS correspondente. O 13º proporcional pago em rescisão continua nos salários e é apenas destacado na conferência. A conferência com o rodapé passou a somar Proventos e Vantagens, que aparecem em colunas separadas e faziam o total divergir nos meses com verba de vantagem.</td></tr>
           <tr><td><b>v7.5.3</b></td><td>27/07/2026</td><td>Correção na importação da folha: o ano da análise era lido de um campo inexistente, o que fazia a conferência acusar "a análise aberta é de NaN" e recusar relatórios do ano correto. Passa a usar o ano da própria análise, com o campo Ano da tela como alternativa.</td></tr>
@@ -1005,6 +1006,7 @@ async function folhaLerRelacao(input){
     + (m.prov13 ? `\n     ↳ 13º adiantamento ${fmtR(m.prov13)} → vai para a provisão de 13º` : '')
     + (m.aviso13 ? `\n     ↳ 13º em rescisão ${fmtR(m.aviso13)} (fica nos salários)` : '')
     + (m.ok ? '' : '\n     ⚠ a soma dos funcionários não bateu com o rodapé do relatório')).join('\n');
+  if (!anPodeSobrescrever(['folha'], 'A Relação de Cálculo')) return;
   if (!confirm(`${ord.length} mês(es) encontrado(s) para ${anoAn}:\n\n${lista}\n\n`
       + (fora.length ? `⚠ ${fora.length} relatório(s) de outro ano serão ignorados.\n` : '')
       + `\nPró-labore, Salários e Base de FGTS desses meses serão SOBRESCRITOS.`)) return;
@@ -1016,7 +1018,7 @@ async function folhaLerRelacao(input){
       if (m.prov13) AN.folha.prov13[i] = m.prov13;
     }
   } catch(e){ console.error('folha:', e); alert('Não consegui gravar os valores na análise: '+e.message); return; }
-  anRenderGrid(); anRecalcular();
+  anAplicado();
   toast(`Folha importada ✓ — ${ord.length} mês(es).${erros.length ? ' '+erros.length+' arquivo(s) com erro.' : ''}`);
 }
 function anModeloImportar(inp){
@@ -1564,6 +1566,18 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
 // ═══════════ ESTADO E PARÂMETROS ═══════════
 let PARAMS = { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha: {...FOLHA_PERC_DEFAULT} };
 let AN = null;          // análise corrente
+let AN_SUJO = false;    // v7.5.7: há importação/edição ainda não salva no banco
+// todo importador chama isto depois de mexer na análise: marca pendência e redesenha
+function anAplicado(){ AN_SUJO = true; anRenderTabs(); anRenderGrid(); anRecalcular(); }
+// pergunta antes de sobrescrever seções que já têm dados; cada importador declara só o que altera
+function anPodeSobrescrever(secoes, oQue){
+  if (!AN) return true;
+  const ocupadas = secoes.filter(sec => Object.values(AN[sec]||{}).some(a=>Array.isArray(a)&&a.some(v=>+v>0)));
+  if (!ocupadas.length) return true;
+  const nomes = { receitas:'Receitas', folha:'Folha', compras:'Compras', despesas:'Despesas' };
+  return confirm(`A análise já tem dados em ${ocupadas.map(x=>nomes[x]||x).join(', ')}.\n\n`
+    + `${oQue} vai sobrescrever apenas ${secoes.map(x=>nomes[x]||x).join(', ')} — as demais seções não são tocadas.\n\nContinuar?`);
+}
 let EMPRESAS = [];      // cadastro
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 // v7.1: escape de HTML para dados de origem externa (BrasilAPI, planilhas, PDFs, IA)
@@ -1857,6 +1871,12 @@ function anRecalcular() {
 
 async function anTrocarEmpresa() {
   const cnpj = $id('an-empresa').value;
+  // trocar de empresa/ano recarrega do banco: o que foi importado e não salvo se perderia em silêncio
+  if (AN_SUJO && AN && (AN.cnpj !== cnpj || +AN.ano !== +$id('an-ano').value)) {
+    if (!confirm('Esta análise tem importações que ainda NÃO foram salvas.\n\nTrocar de empresa ou de ano vai descartá-las.\n\nContinuar mesmo assim?')) {
+      anPreencherEmpresas(); $id('an-empresa').value = AN.cnpj || ''; $id('an-ano').value = AN.ano; return;
+    }
+  }
   empGlobalSet(cnpj, +$id('an-ano').value);
   if (!cnpj) { if (!AN) { AN = anNovo('', +$id('an-ano').value); anRenderTabs(); anRenderGrid(); anRecalcular(); } return; }
   const ano = +$id('an-ano').value;
@@ -1865,6 +1885,7 @@ async function anTrocarEmpresa() {
     AN = anNormalizar(rows.length ? rows[0].dados : null, cnpj, ano);
     AN.cnpj = cnpj; AN.ano = ano;
   } catch { AN = anNovo(cnpj, ano); }
+  AN_SUJO = false;
   anRenderTabs(); anRenderGrid(); anRecalcular();
 }
 function anMudou(){ anTrocarEmpresa(); }
@@ -1873,6 +1894,7 @@ async function anSalvar() {
   const T = AN._res?.totais || {};
   const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined},
     resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr }, atualizado_em:new Date().toISOString() }];
+  AN_SUJO = false;
   try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); toast('Análise salva.'); }
   catch(e){ toast('Erro ao salvar: '+e.message); }
 }
@@ -2395,8 +2417,7 @@ function pgdasReview() {
 }
 
 async function pgdasAplicar() {
-  if (AN && Object.values(AN.receitas||{}).some(a=>Array.isArray(a)&&a.some(v=>+v>0))
-      && !confirm('A análise aberta já tem lançamentos de receita.\nAplicar o PGDAS vai SOBRESCREVER os meses importados.\nContinuar?')) return;
+  if (!anPodeSobrescrever(['receitas'], 'O PGDAS-D')) return;
   await garantirEmpresa(PG_DADOS.cnpj, PG_DADOS.nome, 'Simples Nacional');
   if (!AN) AN = anNovo('', +$id('an-ano').value);
   const chaves = Object.keys(PG_DADOS.meses);
@@ -2420,7 +2441,7 @@ async function pgdasAplicar() {
     AN.cfg.rbt12Direto = 0;
   }
   $id('imp-pgdas-card').style.display='none';
-  anRenderTabs(); anRenderGrid(); anRecalcular();
+  anAplicado();
   toast(`PGDAS aplicado: ${chaves.length} mês(es), ${aplicados} lançamento(s)${rpaFallback?` — ${rpaFallback} mês(es) pela RPA (confira o bloco de destino)`:''}. Salve a análise para persistir.`);
 }
 
@@ -2465,15 +2486,14 @@ async function fatLer(input) {
 
 async function fatAplicar() {
   const _bloco = $id('fat-bloco').value, _modo = $id('fat-modo').value;
-  if (AN && _modo!=='somar' && (AN.receitas?.[_bloco]||[]).some(v=>+v>0)
-      && !confirm('O bloco escolhido já tem valores lançados.\nO modo Substituir vai SOBRESCREVÊ-los.\nContinuar?')) return;
+  if (_modo!=='somar' && !anPodeSobrescrever(['receitas'], 'O Demonstrativo de Faturamento')) return;
   await garantirEmpresa(FAT.cnpj, FAT.nome, null);
   if (!AN) AN = anNovo('', +$id('an-ano').value);
   if (FAT.ano && +AN.ano !== FAT.ano) { AN.ano = FAT.ano; $id('an-ano').value = FAT.ano; }
   const bloco = $id('fat-bloco').value, modo = $id('fat-modo').value;
   for (let m=0;m<12;m++) AN.receitas[bloco][m] = (modo==='somar' ? (AN.receitas[bloco][m]||0) : 0) + FAT.valores[m];
   $id('imp-fat-card').style.display='none';
-  anRenderTabs(); anRenderGrid(); anRecalcular();
+  anAplicado();
   toast('Faturamento aplicado no bloco selecionado. Salve a análise para persistir.');
 }
 
