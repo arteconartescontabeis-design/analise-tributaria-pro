@@ -230,7 +230,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.5.4</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.5.5</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -513,7 +513,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.5.4</b> <span class="badge ok">atual</span></td><td>27/07/2026</td><td>Importação da folha passa a reconhecer vários relatórios dentro do mesmo PDF: o arquivo do Questor costuma trazer os meses concatenados, e antes só o primeiro período era lido, aplicando todos os funcionários a um único mês. Agora cada bloco é separado por período e por tipo, as páginas seguintes de um mesmo relatório são reagrupadas, e os relatórios de <b>13º Salário Adiantamento</b> deixam de ser somados aos salários — vão para a provisão de 13º do mês, com o FGTS correspondente. O 13º proporcional pago em rescisão continua nos salários e é apenas destacado na conferência. A conferência com o rodapé passou a somar Proventos e Vantagens, que aparecem em colunas separadas e faziam o total divergir nos meses com verba de vantagem.</td></tr>
+          <tr><td><b>v7.5.5</b> <span class="badge ok">atual</span></td><td>27/07/2026</td><td>Correção de uma falha silenciosa ao importar a folha: análises salvas por versões anteriores do app eram restauradas do banco exatamente como haviam sido gravadas, sem os campos criados depois. Ao lançar a provisão de 13º num registro que não tinha esse campo, a importação era interrompida antes de atualizar a tela — nenhum valor aparecia e nenhum erro era exibido. Toda análise carregada passa a ser completada contra a estrutura atual, preservando o que já existe (inclusive o "automático" das abas de ICMS e IPI, que não vira zero). A importação da folha também deixou de falhar em silêncio: qualquer erro na gravação agora é mostrado.</td></tr>
+          <tr><td><b>v7.5.4</b></td><td>27/07/2026</td><td>Importação da folha passa a reconhecer vários relatórios dentro do mesmo PDF: o arquivo do Questor costuma trazer os meses concatenados, e antes só o primeiro período era lido, aplicando todos os funcionários a um único mês. Agora cada bloco é separado por período e por tipo, as páginas seguintes de um mesmo relatório são reagrupadas, e os relatórios de <b>13º Salário Adiantamento</b> deixam de ser somados aos salários — vão para a provisão de 13º do mês, com o FGTS correspondente. O 13º proporcional pago em rescisão continua nos salários e é apenas destacado na conferência. A conferência com o rodapé passou a somar Proventos e Vantagens, que aparecem em colunas separadas e faziam o total divergir nos meses com verba de vantagem.</td></tr>
           <tr><td><b>v7.5.3</b></td><td>27/07/2026</td><td>Correção na importação da folha: o ano da análise era lido de um campo inexistente, o que fazia a conferência acusar "a análise aberta é de NaN" e recusar relatórios do ano correto. Passa a usar o ano da própria análise, com o campo Ano da tela como alternativa.</td></tr>
           <tr><td><b>v7.5.2</b></td><td>27/07/2026</td><td>Planilha modelo reformulada: agora vem formatada, com as células de digitação destacadas em amarelo, os campos agrupados por seção (Configuração, Receitas por anexo, Folha, Compras e Despesas), uma coluna "Como preencher" explicando cada linha — o que entra, o que não entra e o efeito no cálculo — e uma aba "Como usar" com as regras de preenchimento, incluindo a diferença entre deixar em branco (não informado, preserva o que já existe) e digitar zero (valor informado, sobrescreve). O arquivo é distribuído pronto dentro do app, com verificação automática de sincronia com os campos do cálculo: se divergirem, o app volta a gerar a versão simples. <b>Nova importação da folha de pagamento</b>: o botão "Importar folha (Relação de Cálculo)" lê o PDF do relatório do Questor — um ou vários meses de uma vez — separa o pró-labore dos salários pelos eventos, soma a base de FGTS funcionário a funcionário, confere o total apurado com o rodapé do relatório e preenche Pró-labore, Salários e Base de FGTS nos meses correspondentes, avisando quando o relatório for de outro ano ou de outro CNPJ. A leitura do PDF passou a reagrupar o texto pela posição na página, recuperando as linhas físicas do relatório.</td></tr>
           <tr><td><b>v7.5.1</b></td><td>27/07/2026</td><td>Elegibilidade ao Simples Nacional em três estados (LC 123/2006, art. 3º, §§ 9º e 9º-A): <b>elegível</b>; <b>transição</b> — o teto foi ultrapassado durante o período, o Simples continua devido no ano e o aviso informa a data de efeito da exclusão (mês seguinte quando o excesso passa de 20%, 1º de janeiro do ano seguinte quando não passa); e <b>não elegível</b> — a empresa já entrou o período acima do teto, quando o DAS deixa de ser apresentado como alternativa, sai do cálculo do melhor regime e da economia anual, e não é mais contado no ranking da carteira no Dashboard. A classificação segue uma ordem explícita de evidência e o aviso diz qual foi usada: 1º os 12 meses anteriores lançados na Config; 2º a resposta do usuário; 3º a presunção de um único mês que supere o limite anual. Ao importar a planilha modelo com faturamento acima do teto e sem o RBT12 anterior lançado, o app pergunta se o ano anterior também ficou acima de R$ 4,8 milhões e classifica na hora — a resposta pode ser revista pelo link no próprio aviso. Importação do modelo passou a pedir confirmação sempre (a verificação anterior só olhava as receitas e ignorava folha, compras e despesas) e linha de percentual em branco no arquivo deixou de zerar a Config. Cadastro de empresas: o campo "Optante Simples" foi removido por duplicar a informação do "Regime atual", que ganhou a opção "A definir" e passou a ser preenchido pela consulta de CNPJ nos casos de MEI e Simples Nacional — Lucro Presumido e Real não são dado público e seguem como escolha do usuário.</td></tr>
@@ -1005,10 +1006,14 @@ async function folhaLerRelacao(input){
   if (!confirm(`${ord.length} mês(es) encontrado(s) para ${anoAn}:\n\n${lista}\n\n`
       + (fora.length ? `⚠ ${fora.length} relatório(s) de outro ano serão ignorados.\n` : '')
       + `\nPró-labore, Salários e Base de FGTS desses meses serão SOBRESCRITOS.`)) return;
-  for (const [mes,m] of ord){ const i = mes-1;
-    AN.folha.prolabore[i] = m.pro; AN.folha.salarios[i] = m.sal; AN.folha.baseFgts[i] = m.fgts;
-    if (m.prov13) AN.folha.prov13[i] = m.prov13;
-  }
+  try {
+    for (const k of ['prolabore','salarios','baseFgts','prov13'])
+      if (!Array.isArray(AN.folha[k])) AN.folha[k] = Array(12).fill(0);
+    for (const [mes,m] of ord){ const i = mes-1;
+      AN.folha.prolabore[i] = m.pro; AN.folha.salarios[i] = m.sal; AN.folha.baseFgts[i] = m.fgts;
+      if (m.prov13) AN.folha.prov13[i] = m.prov13;
+    }
+  } catch(e){ console.error('folha:', e); alert('Não consegui gravar os valores na análise: '+e.message); return; }
   anRenderGrid(); anRecalcular();
   toast(`Folha importada ✓ — ${ord.length} mês(es).${erros.length ? ' '+erros.length+' arquivo(s) com erro.' : ''}`);
 }
@@ -1603,6 +1608,31 @@ function anRepetir(path) {
   anRenderGrid(); anRecalcular();
   toast('Valor de janeiro repetido nos 12 meses.');
 }
+// análises gravadas por versões antigas podem não ter campos criados depois;
+// completa o registro contra o esqueleto atual para nada quebrar ao ler AN.<secao>.<campo>[m]
+function anNormalizar(d, cnpj, ano){
+  const base = anNovo((d && d.cnpj) || cnpj || '', (d && d.ano) || ano);
+  if (!d || typeof d !== 'object') return base;
+  const a12 = v => { const a = Array.isArray(v) ? v.slice(0,12).map(x => +x||0) : []; while (a.length<12) a.push(0); return a; };
+  const out = { ...base, ...d };
+  for (const sec of ['receitas','folha','compras','despesas']){
+    const orig = d[sec] || {}; out[sec] = {};
+    for (const k of new Set([...Object.keys(base[sec]||{}), ...Object.keys(orig)]))
+      out[sec][k] = a12(orig[k] !== undefined ? orig[k] : (base[sec]||{})[k]);
+  }
+  out.cfg = { ...base.cfg, ...(d.cfg||{}) };
+  out.cfg.rbt12Lanc  = a12(out.cfg.rbt12Lanc);
+  out.cfg.folha12Lanc = a12(out.cfg.folha12Lanc);
+  out.folha13 = { ...base.folha13, ...(d.folha13||{}) };
+  for (const sec of ['icms','ipi']){                       // aqui null significa "automático" — não virar zero
+    out[sec] = { ...base[sec], ...(d[sec]||{}) };
+    for (const k of Object.keys(out[sec])){
+      const v = out[sec][k];
+      out[sec][k] = Array.isArray(v) ? (v.length===12 ? v : [...v, ...Array(12-v.length).fill(null)].slice(0,12)) : Array(12).fill(null);
+    }
+  }
+  return out;
+}
 function anRenderGrid() {
   if (!AN) return;
   const sec = AN_SECOES.find(s=>s.id===AN_TAB);
@@ -1796,7 +1826,7 @@ async function anTrocarEmpresa() {
   const ano = +$id('an-ano').value;
   try {
     const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
-    AN = rows.length ? rows[0].dados : anNovo(cnpj, ano);
+    AN = anNormalizar(rows.length ? rows[0].dados : null, cnpj, ano);
     AN.cnpj = cnpj; AN.ano = ano;
   } catch { AN = anNovo(cnpj, ano); }
   anRenderTabs(); anRenderGrid(); anRecalcular();
