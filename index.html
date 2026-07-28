@@ -230,7 +230,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.6.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.6.1</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -273,7 +273,7 @@ canvas{max-height:340px}
         <div id="fo-abas" style="display:flex;gap:8px;align-items:center;margin:10px 0 0;flex-wrap:wrap">
           <button class="btn" id="fo-aba-servico" onclick="fornTrocarAba('servico')">🧾 Fornecedores de serviço</button>
           <button class="btn" id="fo-aba-revenda"  onclick="fornTrocarAba('revenda')">📦 Fornecedores de revenda</button>
-          <button class="btn solid" onclick="$id('fo-arq').click()">Importar relatório(s) nesta aba</button>
+          <button class="btn solid" id="fo-btn-imp" onclick="$id('fo-arq').click()">Importar relatório(s)</button>
           <span class="hint" id="fo-aba-hint"></span>
         </div>
         <div id="fo-painel" style="display:none;margin:10px 0;border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe">
@@ -520,7 +520,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.6.0</b> <span class="badge ok">atual</span></td><td>27/07/2026</td><td>A análise de fornecedores passa a separar <b>serviço</b> e <b>revenda</b> em duas abas de importação, cada uma com seu conjunto de dados, sua consulta na Receita e seu resumo. Cada aba aceita vários relatórios de uma vez: os fornecedores são consolidados por CNPJ, os períodos se unem, e quando já existem dados carregados o app pergunta se deve substituir ou somar — avisando quando o mesmo arquivo e período já haviam sido carregados. Na revenda, a importação pergunta a que as compras se referem (sem ST, com ST, monofásicas, ou com ST e monofásicas), enquanto não existe classificação automática por NCM. Os lançamentos passaram a respeitar o período do relatório: anual rateia nos doze meses, mensal lança apenas naquele mês. Fornecedores de serviço alimentam a Reforma e as Despesas; os de revenda alimentam a Reforma e a linha escolhida de Compras — a baixa de custos continua vindo do balancete, para não duplicar o CMV. Na Reforma, as compras passam a somar a consulta mais recente de cada tipo, em vez de considerar apenas a última; a nota na tela mostra as duas origens com seus períodos. O resumo estatístico ganhou blocos separados por tipo e um total geral. Consultas salvas antes desta versão valem como serviço.</td></tr>
+          <tr><td><b>v7.6.1</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Correção das abas de fornecedores: elas nunca eram inicializadas ao abrir a Consulta CNPJ, então nenhuma aparecia marcada como ativa e todo relatório importado era tratado como serviço — inclusive os de revenda, que por isso não perguntavam a linha de compras nem gravavam o tipo. A aba ativa passa a ser destacada, e o botão de importar diz explicitamente para qual das duas o arquivo vai. Quando o relatório é reconhecido pelo card único da Consulta CNPJ, onde não existe aba de contexto, o app pergunta se os fornecedores são de serviço ou de revenda em vez de assumir. O histórico de consultas passou a exibir o tipo de cada análise salva, marcando como presumidas as anteriores a esta versão.</td></tr>
+          <tr><td><b>v7.6.0</b></td><td>27/07/2026</td><td>A análise de fornecedores passa a separar <b>serviço</b> e <b>revenda</b> em duas abas de importação, cada uma com seu conjunto de dados, sua consulta na Receita e seu resumo. Cada aba aceita vários relatórios de uma vez: os fornecedores são consolidados por CNPJ, os períodos se unem, e quando já existem dados carregados o app pergunta se deve substituir ou somar — avisando quando o mesmo arquivo e período já haviam sido carregados. Na revenda, a importação pergunta a que as compras se referem (sem ST, com ST, monofásicas, ou com ST e monofásicas), enquanto não existe classificação automática por NCM. Os lançamentos passaram a respeitar o período do relatório: anual rateia nos doze meses, mensal lança apenas naquele mês. Fornecedores de serviço alimentam a Reforma e as Despesas; os de revenda alimentam a Reforma e a linha escolhida de Compras — a baixa de custos continua vindo do balancete, para não duplicar o CMV. Na Reforma, as compras passam a somar a consulta mais recente de cada tipo, em vez de considerar apenas a última; a nota na tela mostra as duas origens com seus períodos. O resumo estatístico ganhou blocos separados por tipo e um total geral. Consultas salvas antes desta versão valem como serviço.</td></tr>
           <tr><td><b>v7.5.8</b></td><td>27/07/2026</td><td>A análise passa a ser gravada automaticamente depois de cada importação, sem depender de clicar em Salvar. Corrigido o aviso de "importações não salvas" que aparecia indevidamente ao escolher a empresa de uma análise recém-importada: atribuir a empresa a uma análise que ainda não tem nenhuma deixou de ser tratado como troca de empresa — os dados importados são preservados e gravados na hora. Quando o relatório não traz um CNPJ reconhecível, o app avisa que a empresa precisa ser escolhida no topo para gravar, em vez de recusar o salvamento sem explicar. A pendência de gravação também deixou de ser dada como resolvida quando o salvamento falha.</td></tr>
           <tr><td><b>v7.5.7</b></td><td>27/07/2026</td><td>Importações deixam de se apagar entre si. Cada importador declara quais seções da análise ele altera e, quando alguma delas já tem dados, o app pergunta antes — informando também quais seções <b>não</b> serão tocadas: PGDAS-D e Demonstrativo de Faturamento mexem apenas em Receitas, a Relação de Cálculo apenas em Folha. A causa da perda era outra e foi corrigida: o que se importa fica somente na memória até a análise ser salva, e trocar de empresa ou de ano recarrega tudo do banco, descartando em silêncio o que havia sido importado. Agora o app avisa que há importações não salvas e devolve a seleção anterior se você desistir.</td></tr>
           <tr><td><b>v7.5.6</b></td><td>27/07/2026</td><td>A análise de fornecedores passa a ser aplicada sozinha: ao abrir a aba Reforma de uma empresa, o app busca a consulta mais recente e preenche "Compras de PJ Lucro Real/Presumido" e "Compras de PJ Simples/SIMEI", informando na tela de qual consulta e de qual período vieram os valores. O botão "🚚 Compras pelos fornecedores" foi removido — deixou de ser necessário. Valores digitados à mão nunca são sobrescritos automaticamente: nesse caso o app apenas avisa que existe uma análise disponível e oferece a substituição. Quando o relatório cobre menos de doze meses, o aviso destaca que os valores estão subdimensionados frente à projeção anual da Reforma. Corrigida também a restauração crua da análise no carregamento pela Reforma, que ignorava campos criados em versões posteriores.</td></tr>
@@ -635,7 +636,7 @@ function go(page) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page===page));
   ['dashboard','cnpj','empresas','analise','reforma','relatorios','parametros','usuarios','versoes'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
   if (page==='dashboard') dashAnalises();
-  if (page==='cnpj') carregarDashboard();
+  if (page==='cnpj') { carregarDashboard(); fornTrocarAba(FO_TIPO); }
   if (page==='relatorios') { empCarregar().then(()=>{ const sel=$id('rl-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; sel.value=at||''; if (EMP_GLOBAL.cnpj) empGlobalAplicar('rl-empresa','rl-ano'); else if (AN?.cnpj) { sel.value=AN.cnpj; $id('rl-ano').value=AN.ano; } rlCarregar(); }); }
   if (page==='empresas') empCarregar();
   if (page==='analise') { if (!AN) AN = anNovo('', +($id('an-ano').value||new Date().getFullYear()));
@@ -806,8 +807,11 @@ function fornParse(txt){
 function fornTrocarAba(tipo){
   FO_TIPO = tipo; FO = FOT[tipo];
   for (const t of ['servico','revenda']){
-    const b = $id('fo-aba-'+t); if (b) b.className = 'btn' + (t===tipo ? ' solid' : '');
+    const b = $id('fo-aba-'+t);
+    if (b){ b.className = 'btn' + (t===tipo ? ' solid' : ''); b.style.opacity = t===tipo ? '1' : '.55'; }
   }
+  const bi = $id('fo-btn-imp');
+  if (bi) bi.textContent = 'Importar relatório(s) de ' + (tipo==='servico' ? 'SERVIÇO' : 'REVENDA');
   const outro = tipo==='servico' ? 'revenda' : 'servico';
   $id('fo-aba-hint').textContent = FOT[outro]
     ? `${FOT[outro].itens.length} fornecedor(es) carregados na outra aba` : '';
@@ -893,8 +897,10 @@ function fornCarregarTexto(t, nomeArq){       // entrada pelo card único da Con
   const r = fornParse(t);
   if (!r.itens.length){ toast('Nenhum fornecedor com CNPJ e valor encontrado no arquivo.'); return; }
   r.arquivo = nomeArq || 'relatório';
-  toast(`Relatório detectado — carregando na aba de ${FO_TIPO==='servico'?'serviço':'revenda'}.`);
-  fornIncorporar([r], FO_TIPO);
+  // aqui não há aba de contexto: o tipo tem que ser perguntado, senão vai tudo para serviço
+  const serv = confirm(`Relatório detectado: ${r.itens.length} fornecedor(es)${r.periodo?` · período ${r.periodo}`:''}.\n\n`
+    + 'Estes fornecedores são de SERVIÇO ou de REVENDA?\n\nOK = SERVIÇO\nCancelar = REVENDA');
+  fornIncorporar([r], serv ? 'servico' : 'revenda');
 }
 function fornClasse(r){ return r.erro ? 'nid' : r.simei ? 'mei' : r.simples ? 'simples' : 'normal'; }
 const FO_ROTULO = { mei:['MEI','warn'], simples:['Simples Nacional','warn'], normal:['Regime normal (LP/LR)','ok'], nid:['Não identificado','err'] };
@@ -1189,8 +1195,10 @@ async function fornResumo(cnpj){
   if (!rs.length){ alvo.innerHTML = '<div class="card" style="margin-top:12px"><span class="hint">Nenhuma análise de fornecedores salva para esta empresa — importe o relatório na Consulta CNPJ (🚚).</span></div>'; return; }
   const render = ix => {
     const c = rs[ix], s = c.dados.stats, dt = new Date(c.consultado_em).toLocaleString('pt-BR');
+    const tipoRot = (c.dados.tipo === 'revenda' ? '📦 revenda' : '🧾 serviço') + (c.dados.tipo ? '' : ' (presumido)');
     alvo.innerHTML = `<div class="card" style="margin-top:12px"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <h3 style="margin:0">📊 Resumo estatístico de fornecedores — ${fmtCNPJ(cnpj)}</h3>
+      <span class="badge info">${tipoRot}</span>
       <select onchange="window._FORN_RENDER(+this.value)">${rs.map((r,i)=>`<option value="${i}" ${i===ix?'selected':''}>${new Date(r.consultado_em).toLocaleString('pt-BR')}${r.dados.periodo?' · '+r.dados.periodo:''}</option>`).join('')}</select>
       <span class="hint">${rs.length} consulta(s) no histórico</span>
       <button class="btn" onclick="$id('emp-forn-resumo').innerHTML=''">Fechar</button></div>
