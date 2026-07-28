@@ -230,7 +230,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.6.3</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.7.0</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -283,6 +283,7 @@ canvas{max-height:340px}
             <button class="btn solid" id="fo-btn" onclick="fornConsultar()">Consultar fornecedores na Receita</button>
             <span class="hint" id="fo-prog"></span>
           </div>
+          <div id="fo-acoes" style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap"></div>
           <div id="fo-stats" style="margin-bottom:10px"></div>
           <div style="overflow:auto"><table class="tbl"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead><tbody id="fo-body"></tbody></table></div>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn solid" id="fo-salvar" style="display:none" onclick="fornSalvar()">💾 Salvar análise no histórico da empresa</button><button class="btn" id="fo-desp" style="display:none" onclick="fornLancarDespesas()" title="Rateia o total do relatório pelos meses do período em Despesas › Outras, na análise da empresa">➕ Lançar total nas Despesas da análise</button></div>
@@ -520,7 +521,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.6.3</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Leitor do relatório "Totais ICMS por Fornecedor/Cliente" (Questor), que é o que traz as <b>entradas</b> de revenda. Ele tem estrutura diferente do relatório de ISS: o parceiro aparece numa linha "Pessoa" com a inscrição federal e o valor vem na linha "Total Pessoa" seguinte, com o valor contábil. O app passou a reconhecer os dois layouts, somando os lançamentos repetidos do mesmo parceiro, lendo apenas a seção de Entradas e conferindo o resultado com o total do período impresso no rodapé. Fornecedores pessoa física são identificados e mantidos no relatório, mas ficam fora da consulta à Receita, que só atende CNPJ, e fora da base de crédito. Validado com o relatório real: 162 parceiros e soma idêntica ao total do relatório.</td></tr>
+          <tr><td><b>v7.7.0</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td><b>Exige rodar o setup_v77.sql no Supabase.</b> As consultas de CNPJ passam a ser guardadas e reaproveitadas por trinta dias: um relatório com centena e meia de fornecedores, que levava cerca de um minuto, responde de imediato na segunda vez, e a Receita só é consultada de novo quando o dado vence. Se o script ainda não tiver sido rodado, o app consulta direto como antes, sem quebrar. O botão "Limpar dados" deixou de agir sobre a análise aberta e passou a agir sobre a empresa selecionada, perguntando o que excluir: uma análise específica por ano, ou tudo — todas as análises e todas as consultas de fornecedores daquela empresa. A exclusão agora é feita no banco e não tem desfazer, por isso o aviso é explícito; a empresa continua cadastrada e o histórico de CNPJs consultados é preservado. No painel de fornecedores, "Salvar análise no histórico" e "Lançar total" subiram para o topo, antes da relação, que pode ter centenas de linhas. E a pergunta de serviço ou revenda na importação foi removida: quem define é a aba escolhida, que o botão de importar já nomeia.</td></tr>
+          <tr><td><b>v7.6.3</b></td><td>28/07/2026</td><td>Leitor do relatório "Totais ICMS por Fornecedor/Cliente" (Questor), que é o que traz as <b>entradas</b> de revenda. Ele tem estrutura diferente do relatório de ISS: o parceiro aparece numa linha "Pessoa" com a inscrição federal e o valor vem na linha "Total Pessoa" seguinte, com o valor contábil. O app passou a reconhecer os dois layouts, somando os lançamentos repetidos do mesmo parceiro, lendo apenas a seção de Entradas e conferindo o resultado com o total do período impresso no rodapé. Fornecedores pessoa física são identificados e mantidos no relatório, mas ficam fora da consulta à Receita, que só atende CNPJ, e fora da base de crédito. Validado com o relatório real: 162 parceiros e soma idêntica ao total do relatório.</td></tr>
           <tr><td><b>v7.6.2</b></td><td>28/07/2026</td><td>A importação de fornecedores passou a aceitar planilhas (.xls e .xlsx) além de CSV e TXT, convertendo a planilha em texto antes da leitura. E deixou de falhar em silêncio: quando o arquivo não é reconhecido como relatório de fornecedores, o app informa quantos CNPJs encontrou, mostra a primeira linha do arquivo e diz qual layout o leitor espera, em vez de um aviso passageiro. Isso torna visível o caso em que o relatório escolhido tem um cabeçalho diferente do "Totais ISS por Fornecedor/Cliente" e acaba sendo tratado como simples lista de CNPJs para triagem.</td></tr>
           <tr><td><b>v7.6.1</b></td><td>28/07/2026</td><td>Correção das abas de fornecedores: elas nunca eram inicializadas ao abrir a Consulta CNPJ, então nenhuma aparecia marcada como ativa e todo relatório importado era tratado como serviço — inclusive os de revenda, que por isso não perguntavam a linha de compras nem gravavam o tipo. A aba ativa passa a ser destacada, e o botão de importar diz explicitamente para qual das duas o arquivo vai. Quando o relatório é reconhecido pelo card único da Consulta CNPJ, onde não existe aba de contexto, o app pergunta se os fornecedores são de serviço ou de revenda em vez de assumir. O histórico de consultas passou a exibir o tipo de cada análise salva, marcando como presumidas as anteriores a esta versão.</td></tr>
           <tr><td><b>v7.6.0</b></td><td>27/07/2026</td><td>A análise de fornecedores passa a separar <b>serviço</b> e <b>revenda</b> em duas abas de importação, cada uma com seu conjunto de dados, sua consulta na Receita e seu resumo. Cada aba aceita vários relatórios de uma vez: os fornecedores são consolidados por CNPJ, os períodos se unem, e quando já existem dados carregados o app pergunta se deve substituir ou somar — avisando quando o mesmo arquivo e período já haviam sido carregados. Na revenda, a importação pergunta a que as compras se referem (sem ST, com ST, monofásicas, ou com ST e monofásicas), enquanto não existe classificação automática por NCM. Os lançamentos passaram a respeitar o período do relatório: anual rateia nos doze meses, mensal lança apenas naquele mês. Fornecedores de serviço alimentam a Reforma e as Despesas; os de revenda alimentam a Reforma e a linha escolhida de Compras — a baixa de custos continua vindo do balancete, para não duplicar o CMV. Na Reforma, as compras passam a somar a consulta mais recente de cada tipo, em vez de considerar apenas a última; a nota na tela mostra as duas origens com seus períodos. O resumo estatístico ganhou blocos separados por tipo e um total geral. Consultas salvas antes desta versão valem como serviço.</td></tr>
@@ -744,7 +746,29 @@ function importarArquivoTriagemInput(inp) {
 }
 
 // ── CNPJ: consulta com fila e contingência ─────────────────────────────
-async function consultarUm(cnpj) {
+const CNPJ_CACHE_DIAS = 30;
+async function cnpjCacheLer(cnpj){
+  try {
+    const r = await supa('GET','atp_cnpj_cache',{ params:{ cnpj:'eq.'+cnpj, select:'*', limit:'1' } });
+    if (!r || !r.length) return null;
+    const dias = (Date.now() - new Date(r[0].consultado_em).getTime()) / 86400000;
+    if (dias > CNPJ_CACHE_DIAS) return null;         // vencido: reconsulta na Receita
+    return { ...r[0].dados, cnpj, doCache:true, diasCache: Math.floor(dias) };
+  } catch(e){ return null; }                         // tabela ausente ou offline: segue direto
+}
+async function cnpjCacheGravar(cnpj, d){
+  if (!d || d.erro) return;                          // erro não vira cache
+  try { await supa('POST','atp_cnpj_cache?on_conflict=cnpj',
+    { body:[{ cnpj, dados:d, consultado_em:new Date().toISOString() }] }); } catch(e){}
+}
+async function consultarUm(cnpj){
+  const c = await cnpjCacheLer(cnpj);
+  if (c) return c;
+  const r = await consultarUmDireto(cnpj);
+  await cnpjCacheGravar(cnpj, r);
+  return r;
+}
+async function consultarUmDireto(cnpj) {
   // 1ª fonte: minhareceita.org
   try {
     const r = await fetch(`https://minhareceita.org/${cnpj}`);
@@ -937,6 +961,15 @@ function fornUnirPeriodos(a, b){
   const i = ini(A) <= ini(B) ? A : B, f = fim(A) >= fim(B) ? A : B;
   return `${i[1]}/${i[2]}/${i[3]} a ${f[4]}/${f[5]}/${f[6]}`;
 }
+// ações ficam ANTES da relação: com 160 fornecedores, no rodapé ninguém as alcança
+function fornAcoes(){
+  const alvo = $id('fo-acoes'); if (!alvo) return;
+  if (!FO || !FO.itens.some(i=>i.classe)) { alvo.innerHTML = ''; return; }
+  const rev = FO_TIPO === 'revenda';
+  alvo.innerHTML = `<button class="btn solid" onclick="fornSalvar()">💾 Salvar análise no histórico da empresa</button>`
+    + `<button class="btn" onclick="${rev?'fornLancarCompras()':'fornLancarDespesas()'}">`
+    + `➕ Lançar total ${rev?'em Compras':'nas Despesas'} da análise</button>`;
+}
 function fornMostrarPainel(){
   const soma = FO.itens.reduce((s,i)=>s+i.valor,0);
   $id('fo-painel').style.display = 'block';
@@ -946,17 +979,17 @@ function fornMostrarPainel(){
   $id('fo-per').textContent = (FO.periodo?('Período '+FO.periodo+' · '):'') + FO.itens.length + ' fornecedores · R$ ' + fmt(soma)
     + (FO.lotes && FO.lotes.length>1 ? ` · ${FO.lotes.length} relatórios` : '')
     + (FO.totalRelatorio ? (Math.abs(soma-FO.totalRelatorio)<0.02?' ✓ confere com o total dos relatórios':' ⚠️ difere do total: '+fmt(FO.totalRelatorio)) : '') + dst;
-  $id('fo-salvar').style.display = FO.itens.some(i=>i.classe) ? '' : 'none';
+  $id('fo-salvar').style.display = 'none';
+  fornAcoes();
   fornRender();
 }
 function fornCarregarTexto(t, nomeArq){       // entrada pelo card único da Consulta CNPJ
   const r = fornParse(t);
   if (!r.itens.length){ toast('Nenhum fornecedor com CNPJ e valor encontrado no arquivo.'); return; }
   r.arquivo = nomeArq || 'relatório';
-  // aqui não há aba de contexto: o tipo tem que ser perguntado, senão vai tudo para serviço
-  const serv = confirm(`Relatório detectado: ${r.itens.length} fornecedor(es)${r.periodo?` · período ${r.periodo}`:''}.\n\n`
-    + 'Estes fornecedores são de SERVIÇO ou de REVENDA?\n\nOK = SERVIÇO\nCancelar = REVENDA');
-  fornIncorporar([r], serv ? 'servico' : 'revenda');
+  // a aba ativa define o tipo — o aviso diz para onde foi, já que este caminho não tem aba própria
+  toast(`Relatório detectado (${r.itens.length} parceiros) — carregado na aba de ${FO_TIPO==='servico'?'SERVIÇO':'REVENDA'}.`);
+  fornIncorporar([r], FO_TIPO);
 }
 function fornClasse(r){ return r.erro ? 'nid' : r.simei ? 'mei' : r.simples ? 'simples' : 'normal'; }
 const FO_ROTULO = { mei:['MEI','warn'], simples:['Simples Nacional','warn'], normal:['Regime normal (LP/LR)','ok'], nid:['Não identificado','err'], pf:['Pessoa física','err'] };
@@ -1027,11 +1060,7 @@ async function fornConsultar(){
     if (i<FO.itens.length-1) await new Promise(r=>setTimeout(r,350));
   }
   $id('fo-prog').textContent = 'Concluído.';
-  $id('fo-salvar').style.display='';
-  const bd = $id('fo-desp');
-  bd.style.display='';
-  bd.textContent = FO_TIPO==='revenda' ? '➕ Lançar total em Compras da análise' : '➕ Lançar total nas Despesas da análise';
-  bd.onclick = FO_TIPO==='revenda' ? fornLancarCompras : fornLancarDespesas;
+  fornAcoes();
   btn.disabled=false;
 }
 async function fornSalvar(){
@@ -3240,13 +3269,42 @@ function rfAutoPreencher() {
 }
 
 // ═══════════ v6: LIMPAR DADOS DA ANÁLISE ═══════════
-function anLimparDados() {
-  if (!AN) { toast('Nenhuma análise aberta.'); return; }
-  if (!confirm('Limpar TODOS os dados lançados desta análise (receitas, folha, compras, despesas, Config, notas e importações)?\n\nNada é apagado do banco até você salvar — para desfazer, basta recarregar a página sem salvar.')) return;
-  const cnpj = AN.cnpj, ano = AN.ano;
-  AN = anNovo(cnpj, ano);
+async function anLimparDados() {
+  const cnpj = (AN && AN.cnpj) || $id('an-empresa').value || '';
+  if (!cnpj) { alert('Selecione a empresa no topo.\n\nO "Limpar dados" age somente sobre a empresa selecionada.'); return; }
+  const nome = ($id('an-empresa').selectedOptions[0]?.textContent || fmtCNPJ(cnpj)).trim();
+  let anos = [], nFornec = 0;
+  try {
+    const a = await supa('GET','atp_analises',{ params:{ cnpj:'eq.'+cnpj, select:'ano', order:'ano.desc' } }) || [];
+    anos = [...new Set(a.map(x=>+x.ano))];
+    const f = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+cnpj, select:'id' } }) || [];
+    nFornec = f.length;
+  } catch(e){ alert('Não consegui consultar os dados da empresa: '+e.message); return; }
+  if (!anos.length && !nFornec) { toast('Esta empresa não tem nada gravado para excluir.'); return; }
+  const opc = anos.map((a,i)=>`${i+1} — excluir a análise de ${a}`);
+  const iTudo = anos.length + 1;
+  opc.push(`${iTudo} — excluir TUDO: ${anos.length} análise(s) e ${nFornec} consulta(s) de fornecedores`);
+  const esc = prompt(`Limpar dados de ${nome}\n\n${opc.join('\n')}\n\nDigite o número da opção:`);
+  if (esc === null) return;
+  const op = +esc;
+  if (!(op >= 1 && op <= iTudo)) { toast('Opção inválida.'); return; }
+  const tudo = op === iTudo, alvoAno = tudo ? null : anos[op-1];
+  const oQue = tudo ? `TODAS as ${anos.length} análise(s) e as ${nFornec} consulta(s) de fornecedores`
+                    : `a análise de ${alvoAno}`;
+  if (!confirm(`Excluir ${oQue} de ${nome}?\n\nIsto apaga do banco de dados e NÃO tem desfazer.\n\n`
+    + `A empresa continua cadastrada e o histórico de CNPJs consultados é preservado.`)) return;
+  try {
+    if (tudo){
+      await supa('DELETE','atp_analises',{ params:{ cnpj:'eq.'+cnpj } });
+      await supa('DELETE','atp_fornec',  { params:{ cnpj:'eq.'+cnpj } });
+    } else {
+      await supa('DELETE','atp_analises',{ params:{ cnpj:'eq.'+cnpj, ano:'eq.'+alvoAno } });
+    }
+  } catch(e){ alert('Erro ao excluir: '+e.message); return; }
+  if (tudo || +AN?.ano === +alvoAno){ AN = anNovo(cnpj, AN?.ano || +$id('an-ano').value); AN_SUJO = false; }
+  if (tudo){ FOT = { servico:null, revenda:null }; FO = null; $id('fo-painel').style.display='none'; }
   anRenderTabs(); anRenderGrid(); anRecalcular();
-  toast('Dados da análise limpos. Salve para persistir ou recarregue para desfazer.');
+  toast(`Excluído: ${oQue}.`);
 }
 
 // ═══════════ v6: CONSULTA INDIVIDUAL DE CNPJ ═══════════
