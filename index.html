@@ -230,7 +230,7 @@ canvas{max-height:340px}
   <div class="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.6.1</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.6.3</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -269,7 +269,7 @@ canvas{max-height:340px}
       <div class="card">
         <h3>1. Informe os CNPJs — triagem ou análise de fornecedores</h3>
         <div class="hint" style="margin-bottom:8px">Cole uma lista de CNPJs (triagem simples) <b>ou importe um arquivo</b> — o sistema detecta sozinho: relatório <b>Totais ISS por Fornecedor/Cliente</b> (Questor) abre a análise de fornecedores 🚚 com valores, percentuais e crédito de IBS/CBS da Reforma; qualquer outro arquivo/lista segue como triagem.</div>
-        <input type="file" id="fo-arq" accept=".csv,.txt" multiple style="display:none" onchange="fornArquivo(this)">
+        <input type="file" id="fo-arq" accept=".csv,.txt,.xls,.xlsx" multiple style="display:none" onchange="fornArquivo(this)">
         <div id="fo-abas" style="display:flex;gap:8px;align-items:center;margin:10px 0 0;flex-wrap:wrap">
           <button class="btn" id="fo-aba-servico" onclick="fornTrocarAba('servico')">🧾 Fornecedores de serviço</button>
           <button class="btn" id="fo-aba-revenda"  onclick="fornTrocarAba('revenda')">📦 Fornecedores de revenda</button>
@@ -520,7 +520,9 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.6.1</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Correção das abas de fornecedores: elas nunca eram inicializadas ao abrir a Consulta CNPJ, então nenhuma aparecia marcada como ativa e todo relatório importado era tratado como serviço — inclusive os de revenda, que por isso não perguntavam a linha de compras nem gravavam o tipo. A aba ativa passa a ser destacada, e o botão de importar diz explicitamente para qual das duas o arquivo vai. Quando o relatório é reconhecido pelo card único da Consulta CNPJ, onde não existe aba de contexto, o app pergunta se os fornecedores são de serviço ou de revenda em vez de assumir. O histórico de consultas passou a exibir o tipo de cada análise salva, marcando como presumidas as anteriores a esta versão.</td></tr>
+          <tr><td><b>v7.6.3</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Leitor do relatório "Totais ICMS por Fornecedor/Cliente" (Questor), que é o que traz as <b>entradas</b> de revenda. Ele tem estrutura diferente do relatório de ISS: o parceiro aparece numa linha "Pessoa" com a inscrição federal e o valor vem na linha "Total Pessoa" seguinte, com o valor contábil. O app passou a reconhecer os dois layouts, somando os lançamentos repetidos do mesmo parceiro, lendo apenas a seção de Entradas e conferindo o resultado com o total do período impresso no rodapé. Fornecedores pessoa física são identificados e mantidos no relatório, mas ficam fora da consulta à Receita, que só atende CNPJ, e fora da base de crédito. Validado com o relatório real: 162 parceiros e soma idêntica ao total do relatório.</td></tr>
+          <tr><td><b>v7.6.2</b></td><td>28/07/2026</td><td>A importação de fornecedores passou a aceitar planilhas (.xls e .xlsx) além de CSV e TXT, convertendo a planilha em texto antes da leitura. E deixou de falhar em silêncio: quando o arquivo não é reconhecido como relatório de fornecedores, o app informa quantos CNPJs encontrou, mostra a primeira linha do arquivo e diz qual layout o leitor espera, em vez de um aviso passageiro. Isso torna visível o caso em que o relatório escolhido tem um cabeçalho diferente do "Totais ISS por Fornecedor/Cliente" e acaba sendo tratado como simples lista de CNPJs para triagem.</td></tr>
+          <tr><td><b>v7.6.1</b></td><td>28/07/2026</td><td>Correção das abas de fornecedores: elas nunca eram inicializadas ao abrir a Consulta CNPJ, então nenhuma aparecia marcada como ativa e todo relatório importado era tratado como serviço — inclusive os de revenda, que por isso não perguntavam a linha de compras nem gravavam o tipo. A aba ativa passa a ser destacada, e o botão de importar diz explicitamente para qual das duas o arquivo vai. Quando o relatório é reconhecido pelo card único da Consulta CNPJ, onde não existe aba de contexto, o app pergunta se os fornecedores são de serviço ou de revenda em vez de assumir. O histórico de consultas passou a exibir o tipo de cada análise salva, marcando como presumidas as anteriores a esta versão.</td></tr>
           <tr><td><b>v7.6.0</b></td><td>27/07/2026</td><td>A análise de fornecedores passa a separar <b>serviço</b> e <b>revenda</b> em duas abas de importação, cada uma com seu conjunto de dados, sua consulta na Receita e seu resumo. Cada aba aceita vários relatórios de uma vez: os fornecedores são consolidados por CNPJ, os períodos se unem, e quando já existem dados carregados o app pergunta se deve substituir ou somar — avisando quando o mesmo arquivo e período já haviam sido carregados. Na revenda, a importação pergunta a que as compras se referem (sem ST, com ST, monofásicas, ou com ST e monofásicas), enquanto não existe classificação automática por NCM. Os lançamentos passaram a respeitar o período do relatório: anual rateia nos doze meses, mensal lança apenas naquele mês. Fornecedores de serviço alimentam a Reforma e as Despesas; os de revenda alimentam a Reforma e a linha escolhida de Compras — a baixa de custos continua vindo do balancete, para não duplicar o CMV. Na Reforma, as compras passam a somar a consulta mais recente de cada tipo, em vez de considerar apenas a última; a nota na tela mostra as duas origens com seus períodos. O resumo estatístico ganhou blocos separados por tipo e um total geral. Consultas salvas antes desta versão valem como serviço.</td></tr>
           <tr><td><b>v7.5.8</b></td><td>27/07/2026</td><td>A análise passa a ser gravada automaticamente depois de cada importação, sem depender de clicar em Salvar. Corrigido o aviso de "importações não salvas" que aparecia indevidamente ao escolher a empresa de uma análise recém-importada: atribuir a empresa a uma análise que ainda não tem nenhuma deixou de ser tratado como troca de empresa — os dados importados são preservados e gravados na hora. Quando o relatório não traz um CNPJ reconhecível, o app avisa que a empresa precisa ser escolhida no topo para gravar, em vez de recusar o salvamento sem explicar. A pendência de gravação também deixou de ser dada como resolvida quando o salvamento falha.</td></tr>
           <tr><td><b>v7.5.7</b></td><td>27/07/2026</td><td>Importações deixam de se apagar entre si. Cada importador declara quais seções da análise ele altera e, quando alguma delas já tem dados, o app pergunta antes — informando também quais seções <b>não</b> serão tocadas: PGDAS-D e Demonstrativo de Faturamento mexem apenas em Receitas, a Relação de Cálculo apenas em Folha. A causa da perda era outra e foi corrigida: o que se importa fica somente na memória até a análise ser salva, e trocar de empresa ou de ano recarrega tudo do banco, descartando em silêncio o que havia sido importado. Agora o app avisa que há importações não salvas e devolve a seleção anterior se você desistir.</td></tr>
@@ -706,7 +708,7 @@ function importarArquivo(inp) {
       const buf = rd0.result;
       let t = new TextDecoder('utf-8').decode(buf);
       if (/\uFFFD/.test(t)) t = new TextDecoder('iso-8859-1').decode(buf);
-      if (/Totais ISS por Fornecedor/i.test(t) || (/CNPJ:\s*[\d./-]{14,18}/.test(t) && /- Entradas/i.test(t))) {
+      if (/Totais\s+I(SS|CMS)\s+por/i.test(t) || /Total\s+Pessoa:/i.test(t) || (/CNPJ:\s*[\d./-]{14,18}/.test(t) && /- Entradas/i.test(t))) {
         fornCarregarTexto(t, f0.name); inp.value=''; return;
       }
       $id('cnpj-lista').value = t;
@@ -786,6 +788,8 @@ let FO_TIPO = 'servico';
 const FO_DESTINOS = [['semst','Compras sem ST'],['comst','Compras com ST'],
                      ['mono','Compras monofásicas'],['comstMono','Compras com ST e monofásicas']];
 function fornParse(txt){
+  // "Totais ICMS por Fornecedor/Cliente": parceiro na linha Pessoa:, valor na linha Total Pessoa:
+  if (/Total\s+Pessoa:/i.test(txt)) return fornParseICMS(txt);
   const linhas = txt.split(/\r?\n/);
   const out = { cnpjEmpresa:'', nomeEmpresa:'', periodo:'', itens:[], totalRelatorio:0 };
   let secao = 'entradas';
@@ -820,9 +824,53 @@ function fornTrocarAba(tipo){
 }
 function fornLerArquivo(f){
   return new Promise(res => { const rd = new FileReader();
-    rd.onload = () => { const b = rd.result; let t = new TextDecoder('utf-8').decode(b);
-      if (/\uFFFD/.test(t)) t = new TextDecoder('iso-8859-1').decode(b); res({ texto:t, nome:f.name }); };
+    rd.onload = () => {
+      const b = rd.result;
+      if (/\.(xlsx|xls)$/i.test(f.name) && window.XLSX){        // relatório exportado em planilha
+        try {
+          const wb = XLSX.read(new Uint8Array(b), { type:'array' });
+          const linhas = wb.SheetNames.map(nm => XLSX.utils.sheet_to_csv(wb.Sheets[nm], { FS:';' }));
+          return res({ texto: linhas.join('\n'), nome:f.name });
+        } catch(e){ console.error('xlsx fornecedores:', e); }
+      }
+      let t = new TextDecoder('utf-8').decode(b);
+      if (/\uFFFD/.test(t)) t = new TextDecoder('iso-8859-1').decode(b);
+      res({ texto:t, nome:f.name });
+    };
     rd.readAsArrayBuffer(f); });
+}
+function fornParseICMS(txt){
+  const out = { cnpjEmpresa:'', nomeEmpresa:'', periodo:'', itens:[], totalRelatorio:0 };
+  const idx = {}; let secao = 'entradas', pend = null;
+  for (let ln of txt.split(/\r?\n/)){
+    ln = ln.replace(/\r$/,'');
+    const mEmp = ln.match(/CNPJ:\s*([\d./-]{14,18})/i);
+    if (mEmp && !out.cnpjEmpresa){
+      out.cnpjEmpresa = mEmp[1].replace(/\D/g,'');
+      const per = ln.match(/Per[íi]odo:\s*([^"]+)/i); if (per) out.periodo = per[1].trim();
+      continue;
+    }
+    if (!out.nomeEmpresa){ const mn = ln.match(/^"?\d{3,5}\s+([^";]+?)\s*-\s*(Matriz|Filial)/i); if (mn){ out.nomeEmpresa = mn[1].trim(); continue; } }
+    if (/-\s*Sa[íi]das/i.test(ln) && !/Total/i.test(ln)) { secao = 'saidas'; continue; }
+    if (/-\s*Entradas/i.test(ln) && !/Total/i.test(ln)) { secao = 'entradas'; continue; }
+    const mTot = ln.match(/Total de Entradas do Per[íi]odo[^;]*";([\d.,]+)/i);
+    if (mTot){ out.totalRelatorio = num(mTot[1]); continue; }
+    const mp = ln.match(/^"?Pessoa:\s*(\d+)\s+(.+?)\s*-\s*Inscr\.\s*Federal:\s*([\d./-]+)/i);
+    if (mp){ pend = { cod:mp[1], razao:mp[2].trim(), doc:mp[3].replace(/\D/g,'') }; continue; }
+    const mt = ln.match(/^"?Total Pessoa:\s*(\d+)\s+(.+?)"?;([\d.,]+)/i);
+    if (mt && secao === 'entradas'){
+      const d = (pend && pend.cod === mt[1]) ? pend : null;
+      const doc = d ? d.doc : '';
+      pend = null;
+      if (!doc) continue;
+      const valor = num(mt[3]);                     // Vlr Contábil — bate com o total do relatório
+      if (idx[doc] != null){ out.itens[idx[doc]].valor += valor; continue; }
+      idx[doc] = out.itens.length;
+      out.itens.push({ cnpj: doc, razao: (d ? d.razao : mt[2]).trim(), valor,
+                       classe: doc.length === 11 ? 'pf' : null });   // CPF não se consulta na base de CNPJ
+    }
+  }
+  return out;
 }
 async function fornArquivo(inp){
   const arqs = [...(inp.files||[])]; inp.value='';
@@ -831,7 +879,15 @@ async function fornArquivo(inp){
   for (const f of arqs){
     const { texto, nome } = await fornLerArquivo(f);
     const r = fornParse(texto);
-    if (!r.itens.length){ toast(`${nome}: nenhum fornecedor com CNPJ e valor.`); continue; }
+    if (!r.itens.length){
+      const cnpjs = (texto.match(/\d{2}[.\s]?\d{3}[.\s]?\d{3}[\/\s]?\d{4}[-\s]?\d{2}/g)||[]).length;
+      const prim = texto.split(/\r?\n/).find(l=>l.trim()) || '';
+      alert(`Não consegui ler "${nome}" como relatório de fornecedores.\n\n`
+        + `Encontrei ${cnpjs} CNPJ(s) no arquivo, mas nenhuma linha com CNPJ e valor no formato esperado.\n\n`
+        + `O leitor foi feito para o "Totais ISS por Fornecedor/Cliente" do Questor.\n`
+        + `Primeira linha do arquivo:\n${prim.slice(0,160)}`);
+      continue;
+    }
     r.arquivo = nome; lotes.push(r);
   }
   if (!lotes.length) return;
@@ -903,7 +959,7 @@ function fornCarregarTexto(t, nomeArq){       // entrada pelo card único da Con
   fornIncorporar([r], serv ? 'servico' : 'revenda');
 }
 function fornClasse(r){ return r.erro ? 'nid' : r.simei ? 'mei' : r.simples ? 'simples' : 'normal'; }
-const FO_ROTULO = { mei:['MEI','warn'], simples:['Simples Nacional','warn'], normal:['Regime normal (LP/LR)','ok'], nid:['Não identificado','err'] };
+const FO_ROTULO = { mei:['MEI','warn'], simples:['Simples Nacional','warn'], normal:['Regime normal (LP/LR)','ok'], nid:['Não identificado','err'], pf:['Pessoa física','err'] };
 function fornRender(){
   $id('fo-body').innerHTML = FO.itens.map(i=>{
     const rr = i.classe? FO_ROTULO[i.classe] : null;
@@ -913,7 +969,7 @@ function fornRender(){
 }
 function fornStatsCalc(itens){
   const g = { mei:{q:0,v:0}, simples:{q:0,v:0}, normal:{q:0,v:0}, nid:{q:0,v:0} };
-  for (const i of itens) if (i.classe) { g[i.classe].q++; g[i.classe].v += i.valor; }
+  for (const i of itens) if (i.classe) { const k = i.classe==='pf' ? 'nid' : i.classe; g[k].q++; g[k].v += i.valor; }
   const q = itens.length, v = itens.reduce((s,i)=>s+i.valor,0);
   const simplesMei = { q: g.mei.q+g.simples.q, v: g.mei.v+g.simples.v };
   return { grupos:g, totQ:q, totV:v, simplesMei,
@@ -962,6 +1018,7 @@ async function fornConsultar(){
   if (!FO) return;
   const btn = $id('fo-btn'); btn.disabled = true;
   for (let i=0;i<FO.itens.length;i++){
+    if (FO.itens[i].classe === 'pf') continue;          // CPF não existe na base de CNPJ
     $id('fo-prog').textContent = `Consultando ${i+1} de ${FO.itens.length}…`;
     const r = await consultarUm(FO.itens[i].cnpj);
     Object.assign(FO.itens[i], { situacao:r.situacao||'', simples:!!r.simples, simei:!!r.simei, erro:r.erro||null,
