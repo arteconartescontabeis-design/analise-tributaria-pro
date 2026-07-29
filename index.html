@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.7</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.8</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -584,7 +584,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.8.7</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>A seleção de empresa e ano deixou de ocupar um cartão inteiro no topo e virou uma faixa fina, com os dois campos e os rótulos na mesma linha. São cerca de quarenta pixels de altura recuperados em todas as telas, que passam a mostrar mais conteúdo sem rolagem.</td></tr>
+          <tr><td><b>v7.8.8</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Correção na comparação entre o DAS declarado e o simulado. A verificação somava os meses declarados no PGDAS e confrontava esse total com o imposto simulado do <b>ano inteiro</b>. Quando o PGDAS importado cobria apenas parte do ano — quatro meses, por exemplo —, a diferença apontada era artificial e podia chegar a três vezes, sem que houvesse erro algum de cálculo. A comparação passou a considerar somente os meses efetivamente declarados, avisa quantos meses o arquivo cobre quando não são os doze, e informa a diferença em reais e em percentual, apontando o que costuma explicá-la: Fator R, anexo das receitas e importação em duplicidade.</td></tr>
+          <tr><td><b>v7.8.7</b></td><td>28/07/2026</td><td>A seleção de empresa e ano deixou de ocupar um cartão inteiro no topo e virou uma faixa fina, com os dois campos e os rótulos na mesma linha. São cerca de quarenta pixels de altura recuperados em todas as telas, que passam a mostrar mais conteúdo sem rolagem.</td></tr>
           <tr><td><b>v7.8.6</b></td><td>28/07/2026</td><td>Importar Dados reorganizado. A área de seleção de arquivo passou a aparecer <b>acima</b> da lista de importadores: antes ela abria abaixo da relação inteira e era preciso rolar a página para encontrá-la depois de clicar. Os importadores deixaram de ser uma lista vertical e passaram a ocupar a largura da tela em blocos lado a lado, com a explicação do que cada um preenche logo abaixo do respectivo botão — a mesma informação em menos da metade do espaço.</td></tr>
           <tr><td><b>v7.8.5</b></td><td>28/07/2026</td><td>Correção do travamento ao consultar fornecedores. Para montar a pergunta com o número de consultas já em cache, o app fazia <b>uma consulta ao banco por fornecedor</b> — com cento e sessenta fornecedores eram cento e sessenta requisições antes de qualquer coisa aparecer na tela. Passou a ser uma única consulta por lote. Some-se a isso que o botão só era bloqueado depois dessa espera, de modo que cada novo clique disparava outra execução em paralelo — daí a impressão de que nada acontecia e depois tudo acontecia várias vezes. Os botões de operação demorada agora se bloqueiam no instante do clique e exibem o que estão fazendo — Consultando, Salvando, Excluindo —, voltando ao normal ao terminar, inclusive em caso de erro. E a consulta de fornecedores passou a perguntar se você realmente deseja consultar de novo sempre que a lista já tiver sido consultada antes.</td></tr>
           <tr><td><b>v7.8.4</b></td><td>28/07/2026</td><td>O resultado da verificação deixou de ser uma janela de aviso e passou a ser um painel na própria tela, em que cada apontamento traz o link <b>corrigir</b> que leva direto ao lugar onde se resolve — a aba de folha, a de compras, a de receitas, o RBT12 ou a Configuração da empresa, conforme o caso. A <b>Reforma ganhou o seu próprio verificador</b>, com as perguntas que fazem sentido ali: receita zerada, ausência de compras de contraparte — que zera o crédito de IBS/CBS e superestima a carga —, análise de fornecedores cobrindo menos de doze meses enquanto a projeção é anual, alíquotas próprias diferentes do padrão e análise do regime atual não carregada. Corrigido também o seletor de empresa que ainda aparecia duplicado na aba Reforma: agora vale apenas o do topo, e os botões de ação foram para a linha do título.</td></tr>
@@ -2158,9 +2159,18 @@ function anVerificar(){
       .filter((v,m)=>v>0 && !mesesRec[m]).length;
   if (desalinho) add('observe',`${desalinho} mês(es) com folha e sem receita.`,'analise:folha');
   if (AN._pgdas && Array.isArray(AN._pgdas.das) && AN._res){
-    const dDecl = AN._pgdas.das.reduce((a,b)=>a+(+b||0),0), dSim = AN._res.totais.simples;
-    if (dDecl > 0 && Math.abs(dDecl - dSim)/dDecl > 0.02)
-      add('observe',`DAS declarado (${fmtR(dDecl)}) difere do simulado (${fmtR(dSim)}) em mais de 2%.`);
+    // compara SÓ os meses declarados — somar 4 meses de PGDAS contra 12 simulados não diz nada
+    const mesesDecl = AN._pgdas.das.map((v,m)=>+v>0?m:-1).filter(m=>m>=0);
+    const dDecl = mesesDecl.reduce((a,m)=>a+(+AN._pgdas.das[m]||0),0);
+    const dSim  = mesesDecl.reduce((a,m)=>a+(+((AN._res.meses[m]||{}).simples||{}).das||0),0);
+    if (mesesDecl.length && mesesDecl.length < 12)
+      add('observe',`O PGDAS importado cobre ${mesesDecl.length} de 12 meses — a comparação considera apenas esses meses.`,'importar');
+    if (dDecl > 0 && Math.abs(dDecl - dSim)/dDecl > 0.02){
+      const dif = dSim - dDecl, pct = dif/dDecl*100;
+      add('observe',`Nos ${mesesDecl.length} mês(es) declarados: PGDAS ${fmtR(dDecl)} × simulado ${fmtR(dSim)} — `
+        + `${dif>0?'a mais':'a menos'} ${fmtR(Math.abs(dif))} (${pct>0?'+':''}${pct.toFixed(1).replace('.',',')}%). `
+        + `Confira Fator R, anexo das receitas e importação em duplicidade.`,'analise:receitas');
+    }
   }
   if (Object.keys(c.folhaPerc||{}).length)
     add('observe','Esta empresa usa percentuais de folha próprios, diferentes do padrão do aplicativo.','config');
