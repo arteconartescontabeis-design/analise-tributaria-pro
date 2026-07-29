@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.3</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.4</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -349,6 +349,7 @@ canvas{max-height:340px}
       </div>
       <div style="display:none"><select id="an-empresa" onchange="anTrocarEmpresa()"></select>
         <input type="number" id="an-ano" value="2026" onchange="anMudou()"></div>
+      <div class="card" id="an-verif" style="display:none"></div>
       <div class="card" id="an-cfg-aviso" style="display:none;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109"></div>
       <div class="grid c4" id="an-resumo" style="margin-bottom:18px"></div>
       <div class="card">
@@ -422,14 +423,16 @@ canvas{max-height:340px}
     <div id="page-reforma" style="display:none">
       <div class="page-title"><h1>Reforma Tributária</h1><span class="ctx-emp" style="font-weight:600;color:var(--primary,#1a5276)"></span><span class="crumb">CBS · IS · IBS — LC 214/2025</span></div>
       <div class="card"><div class="toolbar" style="margin-bottom:0">
-        <div style="min-width:280px;flex:1"><label>Empresa (usa a análise do regime atual como base)</label><select id="rf-empresa" onchange="rfTrocar()"></select></div>
-        <div style="width:110px"><label>Ano-base</label><input type="number" id="rf-ano" value="2026" onchange="rfTrocar()"></div>
+        <div style="display:none"><select id="rf-empresa" onchange="rfTrocar()"></select></div>
+        <div style="display:none"><input type="number" id="rf-ano" value="2026" onchange="rfTrocar()"></div>
         <div style="align-self:flex-end"><button class="btn" onclick="rfAutoPreencher()" title="Preenche receita, compras, contrapartes e — quando houver XMLs importados — as parcelas de receita com redução">⚡ Preencher da análise</button></div>
         <div style="align-self:flex-end;display:flex;gap:8px">
           <button class="btn solid" onclick="rfSalvar()">💾 Salvar</button>
           <button class="btn" onclick="rfCalcular()">Recalcular</button>
+          <button class="btn" onclick="rfVerificarMostrar()" title="Verifica se a Reforma tem os dados necessários">🔎 Verificar</button>
         </div>
       </div></div>
+      <div class="card" id="rf-verif" style="display:none"></div>
       <div class="card"><div class="hint">As alíquotas da transição decorrem da EC 132 e da LC 214 e valem para todos os contribuintes —
         são editadas uma única vez em <a href="#" onclick="go('parametros');return false"><b>Parâmetros</b></a>.
         Se esta empresa precisar de alíquotas próprias, o ajuste e o retorno ao padrão ficam na Configuração da empresa.</div></div>
@@ -565,7 +568,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.8.3</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Corrigida a duplicação do seletor de empresa: ao criar a barra global, os seletores da Reforma e dos Relatórios haviam permanecido na tela e a empresa aparecia duas vezes. A Reforma passou a usar apenas a barra do topo; os Relatórios voltaram a ter os próprios controles, por serem um gerador com tipo e periodicidade próprios, e a barra global deixa de aparecer ali. O nome da empresa e o ano passaram a acompanhar o título de cada módulo. Os Relatórios ganharam um campo opcional de <b>ano de comparação</b>: informando um segundo ano, o relatório abre com a evolução entre os dois — receita e carga de cada regime, com variação em reais e em percentual, aumento em vermelho e redução em verde. E foi criado o botão <b>Verificar</b>, que varre a análise e classifica o que encontra em três níveis: o que impede o cálculo, o que distorce o resultado sem impedir — Fator R zerado por falta de folha, revenda sem compras lançadas, Lucro Real sem despesas, ISS ou ICMS zerados — e o que é apenas observação, como meses sem receita, folha em mês sem faturamento e divergência acima de 2% entre o DAS declarado e o simulado.</td></tr>
+          <tr><td><b>v7.8.4</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>O resultado da verificação deixou de ser uma janela de aviso e passou a ser um painel na própria tela, em que cada apontamento traz o link <b>corrigir</b> que leva direto ao lugar onde se resolve — a aba de folha, a de compras, a de receitas, o RBT12 ou a Configuração da empresa, conforme o caso. A <b>Reforma ganhou o seu próprio verificador</b>, com as perguntas que fazem sentido ali: receita zerada, ausência de compras de contraparte — que zera o crédito de IBS/CBS e superestima a carga —, análise de fornecedores cobrindo menos de doze meses enquanto a projeção é anual, alíquotas próprias diferentes do padrão e análise do regime atual não carregada. Corrigido também o seletor de empresa que ainda aparecia duplicado na aba Reforma: agora vale apenas o do topo, e os botões de ação foram para a linha do título.</td></tr>
+          <tr><td><b>v7.8.3</b></td><td>28/07/2026</td><td>Corrigida a duplicação do seletor de empresa: ao criar a barra global, os seletores da Reforma e dos Relatórios haviam permanecido na tela e a empresa aparecia duas vezes. A Reforma passou a usar apenas a barra do topo; os Relatórios voltaram a ter os próprios controles, por serem um gerador com tipo e periodicidade próprios, e a barra global deixa de aparecer ali. O nome da empresa e o ano passaram a acompanhar o título de cada módulo. Os Relatórios ganharam um campo opcional de <b>ano de comparação</b>: informando um segundo ano, o relatório abre com a evolução entre os dois — receita e carga de cada regime, com variação em reais e em percentual, aumento em vermelho e redução em verde. E foi criado o botão <b>Verificar</b>, que varre a análise e classifica o que encontra em três níveis: o que impede o cálculo, o que distorce o resultado sem impedir — Fator R zerado por falta de folha, revenda sem compras lançadas, Lucro Real sem despesas, ISS ou ICMS zerados — e o que é apenas observação, como meses sem receita, folha em mês sem faturamento e divergência acima de 2% entre o DAS declarado e o simulado.</td></tr>
           <tr><td><b>v7.8.2</b></td><td>28/07/2026</td><td>Reorganização da tela de Análise Atual. As abas de lançamento subiram para logo abaixo dos números-resumo: antes era preciso percorrer a página inteira para digitar e voltar ao topo para ver o efeito. Os botões Salvar e Recalcular saíram do cartão que ocupavam sozinhos e foram para a linha do título, e a barra de empresa passou a caber numa linha só — três blocos de cabeçalho viraram um. O aviso de dados faltantes ganhou uma verificação que faltava: quando há receita de serviços e nenhuma folha lançada, o Fator R fica em 0% e os serviços caem no Anexo V, o pior enquadramento, inflando o imposto calculado sem que nada na tela denunciasse. Alterações digitadas à mão passaram a contar como pendência de gravação, e sair do módulo com alterações não salvas agora avisa — antes só a troca de empresa era protegida. Por fim, a tabela de <b>alíquotas por ano da transição</b> saiu da aba Reforma e passou a ser editada em Parâmetros, onde altera o padrão do aplicativo que semeia cada nova análise; a aba Reforma indica onde encontrá-la.</td></tr>
           <tr><td><b>v7.8.1</b></td><td>28/07/2026</td><td>A Configuração da empresa passou a vir antes da Análise Atual no menu, seguindo a ordem do trabalho: configurar, importar, analisar. A presunção da <b>CSLL sobre revenda e indústria</b>, que estava fixa em 12% dentro do cálculo, virou campo editável ao lado das demais — agora as quatro bases do Lucro Presumido (IRPJ e CSLL, de serviços e de comércio) são visíveis e ajustáveis, o que permite refletir casos como revenda de combustível, transporte de cargas e serviços hospitalares. O <b>RBT12 dos doze meses anteriores</b> saiu da configuração e virou a primeira aba da Análise Atual, junto das demais linhas mensais, por ser lançamento e não parâmetro. Os <b>percentuais de folha</b> deixaram de ser apenas globais: cada empresa pode ter os seus, herdando os do aplicativo enquanto nada for preenchido — necessário porque o RAT depende do grau de risco e do FAP, individuais, e a alíquota de terceiros varia conforme o FPAS. As <b>alíquotas da Reforma</b> continuam sendo editadas em Parâmetros, por decorrerem da lei e valerem para todos; a Configuração da empresa passou a informar se aquela empresa está usando alíquotas próprias e a oferecer o retorno ao padrão.</td></tr>
           <tr><td><b>v7.8.0</b></td><td>28/07/2026</td><td>Reorganização da navegação. A <b>empresa e o ano passaram a ser escolhidos uma única vez</b>, numa barra no topo que vale para todos os módulos — antes a mesma escolha era repetida em Análise Atual, Reforma e Relatórios, e era possível analisar uma empresa enquanto a Reforma mostrava outra. O campo do ano aparece só nos módulos que o utilizam. Os importadores saíram da barra de botões da Análise Atual e ganharam o módulo <b>Importar Dados</b>, onde cada um vem acompanhado da informação de que parte da análise ele preenche; o "Limpar dados" foi separado deles, num bloco próprio de exclusão, por apagar do banco sem desfazer. A configuração da análise virou o módulo <b>Configuração da empresa</b>, distinto dos Parâmetros do aplicativo, e a Análise Atual passou a avisar quando faltar ISS, ICMS ou o RBT12 dos doze meses anteriores — antes esses campos ficavam na primeira aba e serviam de lembrete. Por fim, a consulta de fornecedores na Receita passou a pedir confirmação informando quantos já estão em cache e quantos serão realmente consultados, com estimativa de tempo, além de um botão para reconsultar todos ignorando o cache.</td></tr>
@@ -2086,49 +2090,83 @@ function anVerificar(){
   const merc = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_mono','a2_comst','a2_comst_mono']
                  .reduce((s,k)=>s+(R[k]||[]).reduce((x,y)=>x+(+y||0),0),0);
   const receita = serv + merc, folha = soma(F), compras = soma(C), desp = soma(D);
-  const add = (nivel, texto) => out.push({ nivel, texto });
+  const add = (nivel, texto, ir) => out.push({ nivel, texto, ir });
 
-  if (!AN.cnpj) add('impede','Nenhuma empresa selecionada — a análise não pode ser salva.');
-  if (!receita) add('impede','Nenhuma receita lançada no ano.');
+  if (!AN.cnpj) add('impede','Nenhuma empresa selecionada — a análise não pode ser salva.','config');
+  if (!receita) add('impede','Nenhuma receita lançada no ano.','analise:receitas');
 
-  if (serv > 0 && !(+c.iss)) add('distorce','Há receita de serviços e a alíquota de ISS está zerada.');
-  if (merc > 0 && !(+c.icmsV)) add('distorce','Há venda de mercadorias e o % de ICMS sobre vendas está zerado.');
+  if (serv > 0 && !(+c.iss)) add('distorce','Há receita de serviços e a alíquota de ISS está zerada.','config');
+  if (merc > 0 && !(+c.icmsV)) add('distorce','Há venda de mercadorias e o % de ICMS sobre vendas está zerado.','config');
   if (!(c.rbt12Lanc||[]).some(v=>+v>0) && !+c.rbt12Direto)
-    add('distorce','RBT12 dos 12 meses anteriores em branco — a faixa do Simples começa na primeira.');
+    add('distorce','RBT12 dos 12 meses anteriores em branco — a faixa do Simples começa na primeira.','analise:rbt12');
   if (serv > 0 && !folha && !(c.folha12Lanc||[]).some(v=>+v>0))
-    add('distorce','Receita de serviços sem folha lançada: o Fator R fica em 0% e os serviços caem no Anexo V.');
+    add('distorce','Receita de serviços sem folha lançada: o Fator R fica em 0% e os serviços caem no Anexo V.','analise:folha');
   if (merc > 0 && !compras)
-    add('distorce','Há revenda sem nenhuma compra lançada — o Lucro Real fica sem custo e o lucro sai inflado.');
+    add('distorce','Há revenda sem nenhuma compra lançada — o Lucro Real fica sem custo e o lucro sai inflado.','analise:compras');
   if (!desp && receita > 0)
-    add('distorce','Nenhuma despesa lançada — o Lucro Real considera a receita quase inteira como lucro.');
+    add('distorce','Nenhuma despesa lançada — o Lucro Real considera a receita quase inteira como lucro.','analise:despesas');
 
   const mesesRec = Array.from({length:12},(_,m)=>['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a3_semret','a3_retiss','a4','a5r','comtransp']
       .reduce((s,k)=>s+(+((R[k]||[])[m])||0),0));
   const semRec = mesesRec.filter(v=>!v).length;
-  if (semRec && semRec < 12) add('observe',`${semRec} mês(es) sem receita lançada — confira se a empresa esteve inativa.`);
+  if (semRec && semRec < 12) add('observe',`${semRec} mês(es) sem receita lançada — confira se a empresa esteve inativa.`,'analise:receitas');
   const desalinho = Array.from({length:12},(_,m)=>((+(F.salarios||[])[m]||0)+(+(F.prolabore||[])[m]||0)))
       .filter((v,m)=>v>0 && !mesesRec[m]).length;
-  if (desalinho) add('observe',`${desalinho} mês(es) com folha e sem receita.`);
+  if (desalinho) add('observe',`${desalinho} mês(es) com folha e sem receita.`,'analise:folha');
   if (AN._pgdas && Array.isArray(AN._pgdas.das) && AN._res){
     const dDecl = AN._pgdas.das.reduce((a,b)=>a+(+b||0),0), dSim = AN._res.totais.simples;
     if (dDecl > 0 && Math.abs(dDecl - dSim)/dDecl > 0.02)
       add('observe',`DAS declarado (${fmtR(dDecl)}) difere do simulado (${fmtR(dSim)}) em mais de 2%.`);
   }
   if (Object.keys(c.folhaPerc||{}).length)
-    add('observe','Esta empresa usa percentuais de folha próprios, diferentes do padrão do aplicativo.');
+    add('observe','Esta empresa usa percentuais de folha próprios, diferentes do padrão do aplicativo.','config');
   return out;
 }
-function anVerificarMostrar(){
-  const v = anVerificar();
-  if (!v.length){ alert('Verificação concluída.\n\nNenhuma inconsistência encontrada — a análise tem os dados necessários para o cálculo completo.'); return; }
-  const grupo = (nivel, rot) => { const l = v.filter(x=>x.nivel===nivel);
-    return l.length ? `\n${rot}\n` + l.map(x=>'  • '+x.texto).join('\n') + '\n' : ''; };
-  alert('Verificação da análise\n'
-    + grupo('impede','IMPEDE O CÁLCULO')
-    + grupo('distorce','DISTORCE O RESULTADO (calcula, mas o número sai errado)')
-    + grupo('observe','OBSERVAÇÕES')
-    + '\nCorrija na Configuração da empresa ou nas abas de lançamento.');
+function verifIr(dest){
+  const [pag, aba] = String(dest).split(':');
+  if (aba) AN_TAB = aba;
+  go(pag);
+  if (aba) { anRenderTabs(); anRenderGrid(); }
 }
+function verifPainel(alvoId, titulo, itens){
+  const el = $id(alvoId); if (!el) return;
+  const fechar = `<button class="btn" style="margin-top:12px" onclick="$id('${alvoId}').style.display='none'">Fechar</button>`;
+  el.style.display = '';
+  if (!itens.length){
+    el.innerHTML = `<h3 style="margin:0;color:#117a65">✓ ${titulo} — nenhuma inconsistência</h3>
+      <div class="hint">Os dados necessários para o cálculo completo estão lançados.</div>${fechar}`;
+    el.scrollIntoView({behavior:'smooth', block:'nearest'}); return;
+  }
+  const grupo = (nivel, rot, cor) => {
+    const l = itens.filter(x=>x.nivel===nivel); if (!l.length) return '';
+    return `<div style="margin-top:12px"><b style="color:${cor}">${rot}</b>
+      <ul style="margin:6px 0 0 20px;padding:0">${l.map(x=>`<li style="margin:5px 0">${x.texto}`
+        + (x.ir ? ` <a href="#" onclick="verifIr('${x.ir}');return false" style="white-space:nowrap">corrigir →</a>` : '')
+        + '</li>').join('')}</ul></div>`;
+  };
+  el.innerHTML = `<h3 style="margin:0">🔎 ${titulo}</h3>`
+    + grupo('impede','Impede o cálculo','#943126')
+    + grupo('distorce','Distorce o resultado — calcula, mas o número sai errado','#b9770e')
+    + grupo('observe','Observações','#566573') + fechar;
+  el.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function rfVerificar(){
+  const out = []; const add = (nivel,texto,ir) => out.push({nivel,texto,ir});
+  if (!RF || !RF.cnpj) { add('impede','Nenhuma empresa selecionada para a Reforma.','reforma'); return out; }
+  if (!+RF.receita) add('impede','Receita da Reforma zerada — use "Preencher da análise" ou informe o valor.','reforma');
+  const cl = +(RF.contra?.compras_lrlp||0), cs = +(RF.contra?.compras_simples||0);
+  if (!cl && !cs) add('distorce','Nenhuma compra de contraparte lançada: o crédito de IBS/CBS fica zero e a carga sai superestimada.','reforma');
+  else if (!cl) add('observe','Só há compras de Simples/MEI lançadas — confira se faltam fornecedores do regime normal.','reforma');
+  if (RF._forn && RF._forn.partes && RF._forn.partes.some(x=>x.meses && x.meses < 12))
+    add('distorce','A análise de fornecedores cobre menos de doze meses, mas a Reforma projeta o ano inteiro — as compras estão subdimensionadas.','cnpj');
+  if (PARAMS.reforma && JSON.stringify(RF.aliq) !== JSON.stringify(PARAMS.reforma))
+    add('observe','Esta empresa usa alíquotas de transição próprias, diferentes do padrão do aplicativo.','config');
+  if (!AN || AN.cnpj !== RF.cnpj)
+    add('observe','A análise do regime atual desta empresa não está aberta — o comparativo usa o que estiver gravado.','analise');
+  return out;
+}
+function rfVerificarMostrar(){ verifPainel('rf-verif','Verificação da Reforma', rfVerificar()); }
+function anVerificarMostrar(){ verifPainel('an-verif','Verificação da análise', anVerificar()); }
 function anAvisoConfig(){
   const el = $id('an-cfg-aviso'); if (!el || !AN) return;
   const c = AN.cfg, falta = [];
