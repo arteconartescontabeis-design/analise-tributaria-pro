@@ -217,9 +217,10 @@ canvas{max-height:340px}
       <div class="nav-item active" data-page="dashboard" onclick="go('dashboard')">📊 <span>Dashboard</span></div>
       <div class="nav-item" data-page="cnpj" onclick="go('cnpj')">🔍 <span>Consulta CNPJ</span></div>
       <div class="nav-item" data-page="empresas" onclick="go('empresas')">🏢 <span>Empresas</span></div>
-      <div class="nav-item" data-page="analise" onclick="go('analise')">🧮 <span>Análise Atual</span></div>
+
       <div class="nav-item" data-page="config" onclick="go('config')">⚙️ <span>Configuração da empresa</span></div>
       <div class="nav-item" data-page="importar" onclick="go('importar')">📥 <span>Importar Dados</span></div>
+      <div class="nav-item" data-page="analise" onclick="go('analise')">🧮 <span>Análise Atual</span></div>
       <div class="nav-item" data-page="reforma" onclick="go('reforma')">🏛️ <span>Reforma</span></div>
       <div class="nav-item" data-page="relatorios" onclick="go('relatorios')">📑 <span>Relatórios</span></div>
       <div class="nav-item" data-page="parametros" onclick="go('parametros')">⚙️ <span>Parâmetros</span></div>
@@ -238,7 +239,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.1</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -558,7 +559,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.8.0</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Reorganização da navegação. A <b>empresa e o ano passaram a ser escolhidos uma única vez</b>, numa barra no topo que vale para todos os módulos — antes a mesma escolha era repetida em Análise Atual, Reforma e Relatórios, e era possível analisar uma empresa enquanto a Reforma mostrava outra. O campo do ano aparece só nos módulos que o utilizam. Os importadores saíram da barra de botões da Análise Atual e ganharam o módulo <b>Importar Dados</b>, onde cada um vem acompanhado da informação de que parte da análise ele preenche; o "Limpar dados" foi separado deles, num bloco próprio de exclusão, por apagar do banco sem desfazer. A configuração da análise virou o módulo <b>Configuração da empresa</b>, distinto dos Parâmetros do aplicativo, e a Análise Atual passou a avisar quando faltar ISS, ICMS ou o RBT12 dos doze meses anteriores — antes esses campos ficavam na primeira aba e serviam de lembrete. Por fim, a consulta de fornecedores na Receita passou a pedir confirmação informando quantos já estão em cache e quantos serão realmente consultados, com estimativa de tempo, além de um botão para reconsultar todos ignorando o cache.</td></tr>
+          <tr><td><b>v7.8.1</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>A Configuração da empresa passou a vir antes da Análise Atual no menu, seguindo a ordem do trabalho: configurar, importar, analisar. A presunção da <b>CSLL sobre revenda e indústria</b>, que estava fixa em 12% dentro do cálculo, virou campo editável ao lado das demais — agora as quatro bases do Lucro Presumido (IRPJ e CSLL, de serviços e de comércio) são visíveis e ajustáveis, o que permite refletir casos como revenda de combustível, transporte de cargas e serviços hospitalares. O <b>RBT12 dos doze meses anteriores</b> saiu da configuração e virou a primeira aba da Análise Atual, junto das demais linhas mensais, por ser lançamento e não parâmetro. Os <b>percentuais de folha</b> deixaram de ser apenas globais: cada empresa pode ter os seus, herdando os do aplicativo enquanto nada for preenchido — necessário porque o RAT depende do grau de risco e do FAP, individuais, e a alíquota de terceiros varia conforme o FPAS. As <b>alíquotas da Reforma</b> continuam sendo editadas em Parâmetros, por decorrerem da lei e valerem para todos; a Configuração da empresa passou a informar se aquela empresa está usando alíquotas próprias e a oferecer o retorno ao padrão.</td></tr>
+          <tr><td><b>v7.8.0</b></td><td>28/07/2026</td><td>Reorganização da navegação. A <b>empresa e o ano passaram a ser escolhidos uma única vez</b>, numa barra no topo que vale para todos os módulos — antes a mesma escolha era repetida em Análise Atual, Reforma e Relatórios, e era possível analisar uma empresa enquanto a Reforma mostrava outra. O campo do ano aparece só nos módulos que o utilizam. Os importadores saíram da barra de botões da Análise Atual e ganharam o módulo <b>Importar Dados</b>, onde cada um vem acompanhado da informação de que parte da análise ele preenche; o "Limpar dados" foi separado deles, num bloco próprio de exclusão, por apagar do banco sem desfazer. A configuração da análise virou o módulo <b>Configuração da empresa</b>, distinto dos Parâmetros do aplicativo, e a Análise Atual passou a avisar quando faltar ISS, ICMS ou o RBT12 dos doze meses anteriores — antes esses campos ficavam na primeira aba e serviam de lembrete. Por fim, a consulta de fornecedores na Receita passou a pedir confirmação informando quantos já estão em cache e quantos serão realmente consultados, com estimativa de tempo, além de um botão para reconsultar todos ignorando o cache.</td></tr>
           <tr><td><b>v7.7.0</b></td><td>28/07/2026</td><td><b>Exige rodar o setup_v77.sql no Supabase.</b> As consultas de CNPJ passam a ser guardadas e reaproveitadas por trinta dias: um relatório com centena e meia de fornecedores, que levava cerca de um minuto, responde de imediato na segunda vez, e a Receita só é consultada de novo quando o dado vence. Se o script ainda não tiver sido rodado, o app consulta direto como antes, sem quebrar. O botão "Limpar dados" deixou de agir sobre a análise aberta e passou a agir sobre a empresa selecionada, perguntando o que excluir: uma análise específica por ano, ou tudo — todas as análises e todas as consultas de fornecedores daquela empresa. A exclusão agora é feita no banco e não tem desfazer, por isso o aviso é explícito; a empresa continua cadastrada e o histórico de CNPJs consultados é preservado. No painel de fornecedores, "Salvar análise no histórico" e "Lançar total" subiram para o topo, antes da relação, que pode ter centenas de linhas. E a pergunta de serviço ou revenda na importação foi removida: quem define é a aba escolhida, que o botão de importar já nomeia.</td></tr>
           <tr><td><b>v7.6.3</b></td><td>28/07/2026</td><td>Leitor do relatório "Totais ICMS por Fornecedor/Cliente" (Questor), que é o que traz as <b>entradas</b> de revenda. Ele tem estrutura diferente do relatório de ISS: o parceiro aparece numa linha "Pessoa" com a inscrição federal e o valor vem na linha "Total Pessoa" seguinte, com o valor contábil. O app passou a reconhecer os dois layouts, somando os lançamentos repetidos do mesmo parceiro, lendo apenas a seção de Entradas e conferindo o resultado com o total do período impresso no rodapé. Fornecedores pessoa física são identificados e mantidos no relatório, mas ficam fora da consulta à Receita, que só atende CNPJ, e fora da base de crédito. Validado com o relatório real: 162 parceiros e soma idêntica ao total do relatório.</td></tr>
           <tr><td><b>v7.6.2</b></td><td>28/07/2026</td><td>A importação de fornecedores passou a aceitar planilhas (.xls e .xlsx) além de CSV e TXT, convertendo a planilha em texto antes da leitura. E deixou de falhar em silêncio: quando o arquivo não é reconhecido como relatório de fornecedores, o app informa quantos CNPJs encontrou, mostra a primeira linha do arquivo e diz qual layout o leitor espera, em vez de um aviso passageiro. Isso torna visível o caso em que o relatório escolhido tem um cabeçalho diferente do "Totais ISS por Fornecedor/Cliente" e acaba sendo tratado como simples lista de CNPJs para triagem.</td></tr>
@@ -1795,7 +1797,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const lp_cof = _baseLPliq*.03;
     const base32 = serv*cfg.lpBaseServ;
     const base8  = com*cfg.lpBaseCom + R.fin[m];
-    const base12 = com*.12 + R.fin[m];
+    const base12 = com*(+cfg.lpBaseComCsll || .12) + R.fin[m];
     const baseCsllServ = serv*((+cfg.lpBaseServCsll||0) > 0 ? +cfg.lpBaseServCsll : (cfg.lpBaseServ !== .32 ? .12 : .32));
     const lp_csll = (baseCsllServ + base12)*.09;
     const lp_irpj = (base32 + base8)*.15;
@@ -1895,7 +1897,7 @@ const z12 = () => Array(12).fill(0);
 function anNovo(cnpj, ano) {
   return { cnpj: cnpj||'', ano: ano||new Date().getFullYear(),
     cfg: { iss:0, icmsV:.12, icmsC:.12, ipiV:0, ipiC:0, rbt12Direto:0, rbt12Lanc:z12(), folha12Lanc:z12(),
-           lpBaseServ:.32, lpBaseCom:.08, lpBaseServCsll:0, adicionalIR:'trimestral', sublimite:'auto' },
+           lpBaseServ:.32, lpBaseCom:.08, lpBaseServCsll:0, lpBaseComCsll:.12, folhaPerc:{}, adicionalIR:'trimestral', sublimite:'auto' },
     receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','fin','comtransp'].map(k=>[k,z12()])),
     folha: Object.fromEntries(['prolabore','salarios','baseFgts','prov13','provFerias'].map(k=>[k,z12()])),
     folha13: { prolabore13:0, salarios13:0, baseFgts13:0 },
@@ -1907,6 +1909,7 @@ function anNovo(cnpj, ano) {
 
 // ═══════════ ANÁLISE: DEFINIÇÃO DAS SEÇÕES/LINHAS ═══════════
 const AN_SECOES = [
+  { id:'rbt12', nome:'📅 12 meses anteriores' },
   { id:'receitas', nome:'💰 Receitas', linhas:[
     ['Vendas Anexo I (Comércio)'],
     ['receitas.a1_semst','Sem ST'], ['receitas.a1_red','Sem ST c/ redução ICMS'], ['receitas.a1_red_pct','% da redução ICMS','pct'],
@@ -1946,7 +1949,7 @@ const AN_SECOES = [
     ['despesas.financeiras','Financeiras'], ['despesas.outras','Outras'], ['despesas.credLR','Com crédito no Lucro Real'],
   ]},
 ];
-let AN_TAB = 'receitas';
+let AN_TAB = 'rbt12';
 
 function anPath(obj, path) { const p = path.split('.'); return { o: obj[p[0]], k: p[1] }; }
 
@@ -1976,6 +1979,8 @@ function anNormalizar(d, cnpj, ano){
       out[sec][k] = a12(orig[k] !== undefined ? orig[k] : (base[sec]||{})[k]);
   }
   out.cfg = { ...base.cfg, ...(d.cfg||{}) };
+  if (out.cfg.lpBaseComCsll == null) out.cfg.lpBaseComCsll = .12;
+  if (!out.cfg.folhaPerc || typeof out.cfg.folhaPerc !== 'object') out.cfg.folhaPerc = {};
   out.cfg.rbt12Lanc  = a12(out.cfg.rbt12Lanc);
   out.cfg.folha12Lanc = a12(out.cfg.folha12Lanc);
   out.folha13 = { ...base.folha13, ...(d.folha13||{}) };
@@ -1993,6 +1998,12 @@ function anRenderGrid() {
   if (APP.page === 'config') { anRenderConfig(); return; }
   const sec = AN_SECOES.find(s=>s.id===AN_TAB) || AN_SECOES[0];
   if (!sec) return;
+  if (sec.id==='rbt12'){ const c = AN.cfg; $id('an-grid').innerHTML = `<div style="margin-top:18px"><b style="font-size:13px">RBT12 — receita e folha dos 12 meses anteriores</b>
+  <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto?fmt(c.rbt12Direto):''}" onchange="anAplicarConfig(true)"></div>
+  <div style="overflow-x:auto;margin-top:8px"><table class="gtable"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m} (ant.)</th>`).join('')}</tr></thead><tbody>
+  <tr><td class="rot">Receita</td>${MESES.map((_,m)=>`<td><input value="${c.rbt12Lanc[m]?fmt(c.rbt12Lanc[m]):''}" onchange="AN.cfg.rbt12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
+  <tr><td class="rot">Folha (Fator R)</td>${MESES.map((_,m)=>`<td><input value="${c.folha12Lanc[m]?fmt(c.folha12Lanc[m]):''}" onchange="AN.cfg.folha12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
+  </tbody></table></div></div>`; return; }
   let h = '<table class="gtable"><thead><tr><th></th>' + MESES.map(m=>`<th class="num">${m}</th>`).join('') + '</tr></thead><tbody>';
   for (const L of sec.linhas) {
     if (L.length===1) { h += `<tr class="grupo"><td colspan="13">${L[0]}</td></tr>`; continue; }
@@ -2061,6 +2072,27 @@ function anAvisoConfig(){
   el.innerHTML = `<b>Configuração incompleta.</b> Falta ${falta.join(', ').replace(/, ([^,]*)$/, ' e $1')}.
     Isso altera o cálculo. <a href="#" onclick="go('config');return false">abrir a Configuração da empresa</a>`;
 }
+// percentuais de folha: a empresa herda do app enquanto não tiver ajuste próprio
+function folhaPercDaEmpresa(cfg){
+  const c = cfg || (AN && AN.cfg) || {};
+  const own = c.folhaPerc || {};
+  const out = { ...PARAMS.folha };
+  for (const k of Object.keys(out)) if (own[k] != null && own[k] !== '') out[k] = +own[k];
+  return out;
+}
+function cfgFolhaSet(k, v){
+  if (!AN.cfg.folhaPerc) AN.cfg.folhaPerc = {};
+  const x = String(v).trim();
+  if (x === '') delete AN.cfg.folhaPerc[k]; else AN.cfg.folhaPerc[k] = num(x)/100;
+  anRecalcular(); anRenderConfig();
+}
+function cfgReformaPadrao(){
+  if (!RF || !PARAMS.reforma) { toast('Abra a Reforma desta empresa primeiro.'); return; }
+  if (!confirm('Descartar as alíquotas próprias desta empresa e voltar às do aplicativo (Parâmetros)?')) return;
+  RF.aliq = JSON.parse(JSON.stringify(PARAMS.reforma));
+  rfRenderAliq?.(); rfCalcular?.(); anRenderConfig();
+  toast('Alíquotas da Reforma voltaram ao padrão do aplicativo.');
+}
 function anRenderConfig() {
   const c = AN.cfg;
   if (!(+c.icmsV) && !(+c.icmsC)) { c.icmsV = .12; c.icmsC = .12; setTimeout(anRecalcular, 0); }   // v7.5: 12%/12% como base padrão
@@ -2071,25 +2103,47 @@ function anRenderConfig() {
     ${pc('cf-iss','% ISS',c.iss)} ${pc('cf-icmsv','% ICMS vendas',c.icmsV)} ${pc('cf-icmsc','% ICMS compras',c.icmsC)}
     ${pc('cf-ipiv','% IPI vendas',c.ipiV)} ${pc('cf-ipic','% IPI compras',c.ipiC)}
     <div><label>Base IRPJ serviços (LP)</label><select id="cf-bserv" onchange="anAplicarConfig(true)"><option value="0.32" ${c.lpBaseServ==.32?'selected':''}>32%</option><option value="0.16" ${c.lpBaseServ==.16?'selected':''}>16%</option><option value="0.08" ${c.lpBaseServ==.08?'selected':''}>8%</option></select></div>
+    <div><label>Base CSLL comércio (LP)</label><select id="cf-bcomcsll" onchange="anAplicarConfig(true)" title="Presunção da CSLL sobre revenda e indústria — 12% na regra geral (art. 20 da Lei 9.249/95).">
+      <option value="0.12" ${(+c.lpBaseComCsll||.12)==.12?'selected':''}>12%</option>
+      <option value="0.32" ${(+c.lpBaseComCsll)==.32?'selected':''}>32%</option>
+      <option value="0.08" ${(+c.lpBaseComCsll)==.08?'selected':''}>8%</option></select></div>
     <div><label>Base CSLL serviços (LP)</label><select id="cf-bcsll" onchange="anAplicarConfig(true)" title="Origem da presunção da CSLL: no modo Auto, serviços usam 32%; se a base do IRPJ de serviços for 16% ou 8% (transporte/hospitalar), a CSLL fica em 12% (art. 20 da Lei 9.249/95)."><option value="0" ${!(+c.lpBaseServCsll)?'selected':''}>Auto — 32% (12% se IRPJ 16%/8%)</option><option value="0.32" ${+c.lpBaseServCsll===.32?'selected':''}>32%</option><option value="0.12" ${+c.lpBaseServCsll===.12?'selected':''}>12%</option></select></div>
     <div><label>Base IRPJ comércio (LP)</label><select id="cf-bcom" onchange="anAplicarConfig(true)"><option value="0.08" ${c.lpBaseCom==.08?'selected':''}>8%</option><option value="0.16" ${c.lpBaseCom==.16?'selected':''}>16%</option></select></div>
     <div><label>Adicional de IRPJ</label><select id="cf-adic" onchange="anAplicarConfig(true)"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
     <div><label>Sublimite ICMS/ISS (R$ 3,6 mi)</label><select id="cf-sublim" onchange="anAplicarConfig(true)"><option value="auto" ${(c.sublimite||'auto')=='auto'?'selected':''}>Aplicar trava da 5ª faixa</option><option value="off" ${c.sublimite=='off'?'selected':''}>Não aplicar</option></select></div>
     <button class="btn solid" onclick="anAplicarConfig()">Aplicar</button>
   </div>${avisoIss}
-  <div style="margin-top:18px"><b style="font-size:13px">RBT12 — receita e folha dos 12 meses anteriores</b>
-  <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto?fmt(c.rbt12Direto):''}" onchange="anAplicarConfig(true)"></div>
-  <div style="overflow-x:auto;margin-top:8px"><table class="gtable"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m} (ant.)</th>`).join('')}</tr></thead><tbody>
-  <tr><td class="rot">Receita</td>${MESES.map((_,m)=>`<td><input value="${c.rbt12Lanc[m]?fmt(c.rbt12Lanc[m]):''}" onchange="AN.cfg.rbt12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
-  <tr><td class="rot">Folha (Fator R)</td>${MESES.map((_,m)=>`<td><input value="${c.folha12Lanc[m]?fmt(c.folha12Lanc[m]):''}" onchange="AN.cfg.folha12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
-  </tbody></table></div></div>`;
+  `;
+  const fp = PARAMS.folha, own = c.folhaPerc || {};
+  const campoFP = (k, rot) => `<div><label>${rot} %</label>
+    <input style="width:120px" value="${own[k]!=null&&own[k]!==''?(+(own[k]*100).toFixed(4)):''}"
+      placeholder="${+(fp[k]*100).toFixed(4)} (padrão)" onchange="cfgFolhaSet('${k}', this.value)"></div>`;
+  const temProprio = Object.keys(own).length > 0;
+  h += `<div style="margin-top:22px"><b style="font-size:13px">Percentuais de folha desta empresa</b>
+    <div class="hint">Em branco, a empresa usa o percentual do aplicativo (Parâmetros). Preencha apenas o que for diferente —
+      o RAT depende do grau de risco e é multiplicado pelo FAP, e a alíquota de terceiros varia conforme o FPAS/CNAE.
+      ${temProprio ? '<b>Esta empresa tem percentuais próprios.</b>' : 'Hoje esta empresa segue integralmente o padrão.'}</div>
+    <div class="toolbar" style="margin-top:8px">
+      ${campoFP('patronalSalarios','INSS patronal salários')}${campoFP('patronalProLabore','INSS patronal pró-labore')}
+      ${campoFP('rat','RAT/FAP')}${campoFP('terceiros','Terceiros')}${campoFP('fgts','FGTS')}
+    </div></div>`;
+  const proprias = RF && RF.cnpj === AN.cnpj && PARAMS.reforma
+    && JSON.stringify(RF.aliq) !== JSON.stringify(PARAMS.reforma);
+  h += `<div style="margin-top:22px"><b style="font-size:13px">Alíquotas da Reforma</b>
+    <div class="hint">São definidas na Emenda 132 e na LC 214 e valem para todos os contribuintes, por isso a edição fica em
+      <a href="#" onclick="go('parametros');return false">Parâmetros</a>, num lugar só. Aqui trata-se apenas da exceção desta empresa.
+      ${proprias ? '<b style="color:#7e5109">Esta empresa está usando alíquotas próprias, diferentes do padrão.</b>'
+                 : 'Esta empresa usa as alíquotas padrão do aplicativo.'}</div>
+    ${proprias ? '<button class="btn" style="margin-top:8px" onclick="cfgReformaPadrao()">↩ Voltar ao padrão do aplicativo</button>' : ''}
+  </div>`;
   $id('an-config-box').innerHTML = h;
 }
 function anAplicarConfig(silencioso) {
   if (!AN) return;
   const g = id => num($id(id).value)/100;
   Object.assign(AN.cfg, { iss:g('cf-iss'), icmsV:g('cf-icmsv'), icmsC:g('cf-icmsc'), ipiV:g('cf-ipiv'), ipiC:g('cf-ipic'),
-    lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, lpBaseServCsll:+($id('cf-bcsll')?.value||0), adicionalIR:$id('cf-adic').value, sublimite:$id('cf-sublim').value,
+    lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, lpBaseServCsll:+($id('cf-bcsll')?.value||0),
+    lpBaseComCsll:+($id('cf-bcomcsll')?.value||.12), adicionalIR:$id('cf-adic').value, sublimite:$id('cf-sublim').value,
     rbt12Direto:num($id('cf-rbtd').value) });
   anRecalcular(); if (!silencioso) toast('Configurações aplicadas — lembre de salvar a análise.');
 }
@@ -2150,7 +2204,7 @@ function snAvisoHtml(el) {
 function anRecalcular() {
   if (!AN) return;
   let r;
-  try { r = calcular(AN, PARAMS.anexos, PARAMS.folha); } catch(e) { console.error(e); return; }
+  try { r = calcular(AN, PARAMS.anexos, folhaPercDaEmpresa()); } catch(e) { console.error(e); return; }
   AN._res = r;
   const T = r.totais;
   anAvisoConfig();
@@ -2228,7 +2282,7 @@ async function anSalvar() {
 }
 
 // ═══════════ PARÂMETROS ═══════════
-function prAuto(){ if (AN) anRecalcular(); if (RL && RL.dados) { RL.res = calcular(RL.dados, PARAMS.anexos, PARAMS.folha); } }
+function prAuto(){ if (AN) anRecalcular(); if (RL && RL.dados) { RL.res = calcular(RL.dados, PARAMS.anexos, folhaPercDaEmpresa(RL.dados.cfg)); } }
 function prRender() {
   const A = PARAMS.anexos, F = PARAMS.folha;
   const tab = (nome, key, extras) => {
