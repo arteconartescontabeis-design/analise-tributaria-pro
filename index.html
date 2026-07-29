@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.9</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.9.0</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -587,7 +587,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.8.9</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>O resultado da triagem passou a explicar o que ele é e o que não é. A triagem apenas classifica o regime dos CNPJs informados e, por não conter valores, nunca teve como lançar nada na análise — o que gerava a impressão de que faltava um botão de importar. O aviso indica agora qual relatório usar quando o objetivo é lançar valores: Totais ISS por Fornecedor/Cliente para serviços tomados e Totais ICMS por Fornecedor/Cliente para as entradas de revenda, ambos pelas abas do bloco de análise de fornecedores.</td></tr>
+          <tr><td><b>v7.9.0</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Correção de quatro falhas relatadas em uso. Os importadores de <b>balancete, XMLs e Demonstrativo do Simples</b> não marcavam a análise como pendente nem acionavam a gravação automática criada para os demais — importavam, mostravam o resultado na tela e nada era salvo. A gravação automática também deixou de falhar em silêncio: quando o CNPJ não é identificado no relatório, ou quando o próprio salvamento falha, o app agora avisa em janela, dizendo o que fazer. O link <b>corrigir</b> da verificação passou a trocar a aba pelo identificador correto e a rolar a tela até o campo em questão, em vez de apenas mudar de módulo. E o botão <b>Verificar</b> passou a recalcular antes de varrer, de modo que cada clique reflete o estado atual da análise e não o do último cálculo.</td></tr>
+          <tr><td><b>v7.8.9</b></td><td>28/07/2026</td><td>O resultado da triagem passou a explicar o que ele é e o que não é. A triagem apenas classifica o regime dos CNPJs informados e, por não conter valores, nunca teve como lançar nada na análise — o que gerava a impressão de que faltava um botão de importar. O aviso indica agora qual relatório usar quando o objetivo é lançar valores: Totais ISS por Fornecedor/Cliente para serviços tomados e Totais ICMS por Fornecedor/Cliente para as entradas de revenda, ambos pelas abas do bloco de análise de fornecedores.</td></tr>
           <tr><td><b>v7.8.8</b></td><td>28/07/2026</td><td>Correção na comparação entre o DAS declarado e o simulado. A verificação somava os meses declarados no PGDAS e confrontava esse total com o imposto simulado do <b>ano inteiro</b>. Quando o PGDAS importado cobria apenas parte do ano — quatro meses, por exemplo —, a diferença apontada era artificial e podia chegar a três vezes, sem que houvesse erro algum de cálculo. A comparação passou a considerar somente os meses efetivamente declarados, avisa quantos meses o arquivo cobre quando não são os doze, e informa a diferença em reais e em percentual, apontando o que costuma explicá-la: Fator R, anexo das receitas e importação em duplicidade.</td></tr>
           <tr><td><b>v7.8.7</b></td><td>28/07/2026</td><td>A seleção de empresa e ano deixou de ocupar um cartão inteiro no topo e virou uma faixa fina, com os dois campos e os rótulos na mesma linha. São cerca de quarenta pixels de altura recuperados em todas as telas, que passam a mostrar mais conteúdo sem rolagem.</td></tr>
           <tr><td><b>v7.8.6</b></td><td>28/07/2026</td><td>Importar Dados reorganizado. A área de seleção de arquivo passou a aparecer <b>acima</b> da lista de importadores: antes ela abria abaixo da relação inteira e era preciso rolar a página para encontrá-la depois de clicar. Os importadores deixaram de ser uma lista vertical e passaram a ocupar a largura da tela em blocos lado a lado, com a explicação do que cada um preenche logo abaixo do respectivo botão — a mesma informação em menos da metade do espaço.</td></tr>
@@ -1944,8 +1945,13 @@ function anAplicado(){ AN_SUJO = true; anRenderTabs(); anRenderGrid(); anRecalcu
 // grava sozinho depois de importar; sem empresa definida não há onde gravar, e aí o aviso explica o porquê
 async function anSalvarAuto(){
   if (!AN) return;
-  if (!AN.cnpj) { toast('Importado. Não identifiquei o CNPJ no relatório — escolha a empresa no topo para gravar.'); return; }
-  await anSalvar();
+  if (!AN.cnpj){
+    alert('Os dados foram importados, mas NÃO puderam ser gravados.\n\n'
+      + 'Não identifiquei o CNPJ da empresa no relatório. Escolha a empresa na barra do topo e clique em "Salvar análise".');
+    return;
+  }
+  const ok = await anSalvar();
+  if (ok === false) alert('Os dados foram importados, mas a gravação falhou.\n\nUse "Salvar análise" para tentar de novo.');
 }
 // pergunta antes de sobrescrever seções que já têm dados; cada importador declara só o que altera
 function anPodeSobrescrever(secoes, oQue){
@@ -2180,11 +2186,17 @@ function anVerificar(){
     add('observe','Esta empresa usa percentuais de folha próprios, diferentes do padrão do aplicativo.','config');
   return out;
 }
+const VERIF_ABA = { receitas:'receitas', folha:'folha', compras:'compras', despesas:'despesas',
+                    rbt12:'rbt12', impostos:'impostos' };
 function verifIr(dest){
   const [pag, aba] = String(dest).split(':');
-  if (aba) AN_TAB = aba;
+  if (aba && VERIF_ABA[aba]) AN_TAB = VERIF_ABA[aba];
   go(pag);
-  if (aba) { anRenderTabs(); anRenderGrid(); }
+  setTimeout(()=>{
+    if (aba && VERIF_ABA[aba]) { anRenderTabs(); anRenderGrid(); }
+    const alvo = pag === 'config' ? $id('an-config-box') : (aba ? $id('an-grid') : null);
+    if (alvo && alvo.scrollIntoView) alvo.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 60);
 }
 function verifPainel(alvoId, titulo, itens){
   const el = $id(alvoId); if (!el) return;
@@ -2223,8 +2235,8 @@ function rfVerificar(){
     add('observe','A análise do regime atual desta empresa não está aberta — o comparativo usa o que estiver gravado.','analise');
   return out;
 }
-function rfVerificarMostrar(){ verifPainel('rf-verif','Verificação da Reforma', rfVerificar()); }
-function anVerificarMostrar(){ verifPainel('an-verif','Verificação da análise', anVerificar()); }
+function rfVerificarMostrar(){ rfCalcular?.(); verifPainel('rf-verif','Verificação da Reforma', rfVerificar()); }
+function anVerificarMostrar(){ anRecalcular(); verifPainel('an-verif','Verificação da análise', anVerificar()); }
 function anAvisoConfig(){
   const el = $id('an-cfg-aviso'); if (!el || !AN) return;
   const c = AN.cfg, falta = [];
@@ -2443,12 +2455,12 @@ async function anTrocarEmpresa() {
 }
 function anMudou(){ anTrocarEmpresa(); }
 async function anSalvar() {
-  if (!AN || !AN.cnpj) { toast('Selecione a empresa no topo (ou importe PGDAS/Faturamento, que o cadastro é automático).'); return; }
+  if (!AN || !AN.cnpj) { toast('Selecione a empresa no topo (ou importe PGDAS/Faturamento, que o cadastro é automático).'); return false; }
   const T = AN._res?.totais || {};
   const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined},
     resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr }, atualizado_em:new Date().toISOString() }];
-  try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); AN_SUJO = false; toast('Análise salva.'); }
-  catch(e){ toast('Erro ao salvar: '+e.message); }
+  try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); AN_SUJO = false; toast('Análise salva.'); return true; }
+  catch(e){ console.error('anSalvar:', e); toast('Erro ao salvar: '+e.message); return false; }
 }
 
 // ═══════════ PARÂMETROS ═══════════
@@ -3203,7 +3215,7 @@ async function balAplicar() {
     else { const cota = base/meses.length; for (const m of meses) AN.folha.baseFgts[m] += cota; }
   }
   $id('imp-bal-card').style.display='none';
-  anRenderTabs(); anRenderGrid(); anRecalcular();
+  anAplicado();
   toast(`Balancete aplicado: ${aplicadas} conta(s). Revise a aba Folha/Compras e salve a análise.`);
 }
 
@@ -3458,7 +3470,7 @@ async function _xmlAplicarBase() {
     msg += ` · ${lanc} receita(s) lançada(s) no bloco (ano ${AN.ano})`;
   }
   $id('imp-xml-card').style.display='none';
-  anRenderTabs(); anRenderGrid(); anRecalcular();
+  anAplicado();
   toast(msg + '. Use "⚡ Preencher da análise" na aba Reforma e salve a análise.');
 }
 
@@ -3575,7 +3587,7 @@ async function demAplicar() {
     for (let m=0;m<12;m++){ const v = DEM.fol[mesKey(ano,m)]; if (v!=null){ AN.folha.salarios[m]=v; c++; } }
     msg.push(`${c} mês(es) de folha (confira encargos)`); }
   $id('imp-dem-card').style.display='none';
-  anRenderTabs(); anRenderGrid(); anRecalcular();
+  anAplicado();
   toast('Demonstrativo aplicado: '+(msg.join(' · ')||'nada selecionado')+'. Salve a análise para persistir.');
 }
 
