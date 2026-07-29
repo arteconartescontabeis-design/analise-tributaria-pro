@@ -218,6 +218,8 @@ canvas{max-height:340px}
       <div class="nav-item" data-page="cnpj" onclick="go('cnpj')">🔍 <span>Consulta CNPJ</span></div>
       <div class="nav-item" data-page="empresas" onclick="go('empresas')">🏢 <span>Empresas</span></div>
       <div class="nav-item" data-page="analise" onclick="go('analise')">🧮 <span>Análise Atual</span></div>
+      <div class="nav-item" data-page="config" onclick="go('config')">⚙️ <span>Configuração da empresa</span></div>
+      <div class="nav-item" data-page="importar" onclick="go('importar')">📥 <span>Importar Dados</span></div>
       <div class="nav-item" data-page="reforma" onclick="go('reforma')">🏛️ <span>Reforma</span></div>
       <div class="nav-item" data-page="relatorios" onclick="go('relatorios')">📑 <span>Relatórios</span></div>
       <div class="nav-item" data-page="parametros" onclick="go('parametros')">⚙️ <span>Parâmetros</span></div>
@@ -228,9 +230,15 @@ canvas{max-height:340px}
   </div>
 
   <div class="main">
+    <div class="card" id="topo-empresa" style="display:flex;gap:14px;align-items:flex-end;padding:12px 16px;margin-bottom:14px">
+      <div style="min-width:300px;flex:1"><label>Empresa <span class="hint" style="font-weight:400">— vale para todos os módulos</span></label>
+        <select id="g-empresa" onchange="gTrocar()"></select></div>
+      <div style="width:120px" id="g-ano-wrap"><label>Ano</label><input type="number" id="g-ano" value="2026" onchange="gTrocar()"></div>
+      <div class="hint" id="g-hint" style="padding-bottom:8px"></div>
+    </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.7.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.0</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -284,6 +292,9 @@ canvas{max-height:340px}
             <span class="hint" id="fo-prog"></span>
           </div>
           <div id="fo-acoes" style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap"></div>
+          <button class="btn" id="fo-refazer" style="display:none;margin-bottom:10px"
+            onclick="if(confirm('Consultar TODOS de novo na Receita, ignorando o que já foi consultado nos últimos 30 dias?')) fornConsultar(true)">
+            🔄 Reconsultar todos na Receita</button>
           <div id="fo-stats" style="margin-bottom:10px"></div>
           <div style="overflow:auto"><table class="tbl"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead><tbody id="fo-body"></tbody></table></div>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn solid" id="fo-salvar" style="display:none" onclick="fornSalvar()">💾 Salvar análise no histórico da empresa</button><button class="btn" id="fo-desp" style="display:none" onclick="fornLancarDespesas()" title="Rateia o total do relatório pelos meses do período em Despesas › Outras, na análise da empresa">➕ Lançar total nas Despesas da análise</button></div>
@@ -329,24 +340,52 @@ canvas{max-height:340px}
       <div class="page-title"><h1>Análise Tributária — Regime Atual</h1><span class="crumb">Simples × Presumido × Real</span></div>
       <div class="card">
         <div class="toolbar" style="margin-bottom:0">
-          <div style="min-width:280px;flex:1"><label>Empresa</label><select id="an-empresa" onchange="anTrocarEmpresa()"></select></div>
-          <div style="width:110px"><label>Ano</label><input type="number" id="an-ano" value="2026" onchange="anMudou()"></div>
+          <div style="display:none"><select id="an-empresa" onchange="anTrocarEmpresa()"></select>
+            <input type="number" id="an-ano" value="2026" onchange="anMudou()"></div>
           <div style="align-self:flex-end;display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn solid" onclick="anSalvar()">💾 Salvar análise</button>
             <button class="btn" onclick="anRecalcular()">Recalcular</button>
-            <button class="btn" onclick="$id('imp-pgdas-card').style.display='block'">📄 Importar PGDAS</button>
-            <button class="btn" onclick="$id('imp-fat-card').style.display='block'">🧾 Importar Faturamento</button>
-            <button class="btn" onclick="$id('imp-bal-card').style.display='none';$id('imp-bal-card').style.display='block'">📊 Importar balancete</button>
-            <button class="btn" onclick="$id('imp-dem-card').style.display='block'">📑 Importar Demonst. Simples</button>
-            <button class="btn" onclick="$id('imp-xml-card').style.display='block'">🗂️ Importar XMLs</button>
-            <button class="btn" onclick="anModeloBaixar()" title="Planilha com todos os campos necessários para o cálculo automático — preencha e importe de volta">📋 Planilha modelo</button>
-            <input type="file" id="an-modelo-file" accept=".xlsx,.xls" style="display:none" onchange="anModeloImportar(this)">
-            <button class="btn" onclick="$id('an-modelo-file').click()">📥 Importar modelo preenchido</button>
-            <input type="file" id="an-folha-file" accept=".pdf" multiple style="display:none" onchange="folhaLerRelacao(this)">
-            <button class="btn" onclick="$id('an-folha-file').click()">👥 Importar folha (Relação de Cálculo)</button>
-            <button class="btn" onclick="anLimparDados()">🧹 Limpar dados</button>
           </div>
         </div>
+      </div>
+      <div class="card" id="an-cfg-aviso" style="display:none;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109"></div>
+      <div class="grid c4" id="an-resumo" style="margin-bottom:18px"></div>
+      <div class="card" id="an-veredito" style="display:none"></div>
+      <div class="card">
+        <div class="an-tabs" id="an-tabs"></div>
+        <div id="an-grid" style="overflow-x:auto;margin-top:14px"></div>
+      </div>
+      <div class="card"><h3>Resultado mês a mês</h3><div id="an-detalhe" style="overflow-x:auto"></div></div>
+    </div>
+    <div id="page-config" style="display:none">
+      <div class="page-title"><h1>Configuração da empresa</h1><span class="crumb">Alíquotas, presunções e histórico — por empresa e ano</span></div>
+      <div class="card"><div id="an-config-box"></div></div>
+    </div>
+    <div id="page-importar" style="display:none">
+      <div class="page-title"><h1>Importar Dados</h1><span class="crumb">Alimenta a análise da empresa e do ano escolhidos no topo</span></div>
+      <div class="card">
+        <h3 style="margin-top:0">Importadores <span class="hint" style="font-weight:400">— cada um preenche uma parte da análise; os demais campos não são tocados</span></h3>
+        <table style="width:100%;border-collapse:collapse">
+          <tr><td style="padding:7px 0;width:270px"><button class="btn" onclick="$id('imp-pgdas-card').style.display='block'">📄 Importar PGDAS-D</button></td>
+              <td class="hint">Preenche <b>Receitas</b> pelas declarações mensais do Simples.</td></tr>
+          <tr><td style="padding:7px 0"><button class="btn" onclick="$id('imp-fat-card').style.display='block'">🧾 Importar Faturamento</button></td>
+              <td class="hint">Preenche <b>Receitas</b> pelo Demonstrativo Mensal de Faturamento do Questor.</td></tr>
+          <tr><td style="padding:7px 0"><button class="btn" onclick="$id('imp-dem-card').style.display='block'">📑 Importar Demonst. do Simples</button></td>
+              <td class="hint">Preenche <b>Receitas</b> e confere com o PGDAS.</td></tr>
+          <tr><td style="padding:7px 0"><button class="btn" onclick="$id('imp-bal-card').style.display='block'">📊 Importar balancete</button></td>
+              <td class="hint">Preenche <b>Despesas</b> e o <b>custo das mercadorias</b> pelo balancete do Questor.</td></tr>
+          <tr><td style="padding:7px 0"><button class="btn" onclick="$id('imp-xml-card').style.display='block'">🗂️ Importar XMLs</button></td>
+              <td class="hint">Preenche <b>Receitas</b> nota a nota e classifica os serviços para a Reforma.</td></tr>
+          <tr><td style="padding:7px 0"><input type="file" id="an-folha-file" accept=".pdf" multiple style="display:none" onchange="folhaLerRelacao(this)">
+              <button class="btn" onclick="$id('an-folha-file').click()">👥 Importar folha</button></td>
+              <td class="hint">Preenche <b>Folha</b> pela Relação de Cálculo do Questor; vários meses no mesmo arquivo.</td></tr>
+          <tr><td style="padding:7px 0"><button class="btn" onclick="anModeloBaixar()">📋 Baixar planilha modelo</button></td>
+              <td class="hint">Planilha com todos os campos, já formatada e com ajuda por linha.</td></tr>
+          <tr><td style="padding:7px 0"><input type="file" id="an-modelo-file" accept=".xlsx,.xls" style="display:none" onchange="anModeloImportar(this)">
+              <button class="btn" onclick="$id('an-modelo-file').click()">📥 Importar modelo preenchido</button></td>
+              <td class="hint">Preenche <b>tudo o que estiver na planilha</b> — linhas em branco não alteram nada.</td></tr>
+        </table>
+        <div class="hint" style="margin-top:10px">Compras de fornecedores entram pela <b>Consulta CNPJ</b>, na aba de revenda.</div>
       </div>
       <div class="card" id="imp-pgdas-card" style="display:none">
         <h3>Importar PGDAS-D <span class="hint" style="font-weight:400">— selecione um ou vários PDFs de declaração (meses diferentes da mesma empresa)</span></h3>
@@ -373,13 +412,11 @@ canvas{max-height:340px}
         <input type="file" id="imp-xml-files" accept=".xml" multiple onchange="xmlLer(this)">
         <div id="imp-xml-review" style="margin-top:12px"></div>
       </div>
-      <div class="grid c4" id="an-resumo" style="margin-bottom:18px"></div>
-      <div class="card" id="an-veredito" style="display:none"></div>
-      <div class="card">
-        <div class="an-tabs" id="an-tabs"></div>
-        <div id="an-grid" style="overflow-x:auto;margin-top:14px"></div>
+      <div class="card" style="border-left:4px solid var(--danger,#943126)">
+        <h3 style="margin-top:0;color:#943126">Excluir dados</h3>
+        <div class="hint" style="margin-bottom:10px">Apaga do banco de dados e <b>não tem desfazer</b>. Age somente sobre a empresa selecionada no topo.</div>
+        <button class="btn" onclick="anLimparDados()">🧹 Limpar dados da empresa</button>
       </div>
-      <div class="card"><h3>Resultado mês a mês</h3><div id="an-detalhe" style="overflow-x:auto"></div></div>
     </div>
     <div id="page-reforma" style="display:none">
       <div class="page-title"><h1>Reforma Tributária</h1><span class="crumb">CBS · IS · IBS — LC 214/2025</span></div>
@@ -521,7 +558,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.7.0</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td><b>Exige rodar o setup_v77.sql no Supabase.</b> As consultas de CNPJ passam a ser guardadas e reaproveitadas por trinta dias: um relatório com centena e meia de fornecedores, que levava cerca de um minuto, responde de imediato na segunda vez, e a Receita só é consultada de novo quando o dado vence. Se o script ainda não tiver sido rodado, o app consulta direto como antes, sem quebrar. O botão "Limpar dados" deixou de agir sobre a análise aberta e passou a agir sobre a empresa selecionada, perguntando o que excluir: uma análise específica por ano, ou tudo — todas as análises e todas as consultas de fornecedores daquela empresa. A exclusão agora é feita no banco e não tem desfazer, por isso o aviso é explícito; a empresa continua cadastrada e o histórico de CNPJs consultados é preservado. No painel de fornecedores, "Salvar análise no histórico" e "Lançar total" subiram para o topo, antes da relação, que pode ter centenas de linhas. E a pergunta de serviço ou revenda na importação foi removida: quem define é a aba escolhida, que o botão de importar já nomeia.</td></tr>
+          <tr><td><b>v7.8.0</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Reorganização da navegação. A <b>empresa e o ano passaram a ser escolhidos uma única vez</b>, numa barra no topo que vale para todos os módulos — antes a mesma escolha era repetida em Análise Atual, Reforma e Relatórios, e era possível analisar uma empresa enquanto a Reforma mostrava outra. O campo do ano aparece só nos módulos que o utilizam. Os importadores saíram da barra de botões da Análise Atual e ganharam o módulo <b>Importar Dados</b>, onde cada um vem acompanhado da informação de que parte da análise ele preenche; o "Limpar dados" foi separado deles, num bloco próprio de exclusão, por apagar do banco sem desfazer. A configuração da análise virou o módulo <b>Configuração da empresa</b>, distinto dos Parâmetros do aplicativo, e a Análise Atual passou a avisar quando faltar ISS, ICMS ou o RBT12 dos doze meses anteriores — antes esses campos ficavam na primeira aba e serviam de lembrete. Por fim, a consulta de fornecedores na Receita passou a pedir confirmação informando quantos já estão em cache e quantos serão realmente consultados, com estimativa de tempo, além de um botão para reconsultar todos ignorando o cache.</td></tr>
+          <tr><td><b>v7.7.0</b></td><td>28/07/2026</td><td><b>Exige rodar o setup_v77.sql no Supabase.</b> As consultas de CNPJ passam a ser guardadas e reaproveitadas por trinta dias: um relatório com centena e meia de fornecedores, que levava cerca de um minuto, responde de imediato na segunda vez, e a Receita só é consultada de novo quando o dado vence. Se o script ainda não tiver sido rodado, o app consulta direto como antes, sem quebrar. O botão "Limpar dados" deixou de agir sobre a análise aberta e passou a agir sobre a empresa selecionada, perguntando o que excluir: uma análise específica por ano, ou tudo — todas as análises e todas as consultas de fornecedores daquela empresa. A exclusão agora é feita no banco e não tem desfazer, por isso o aviso é explícito; a empresa continua cadastrada e o histórico de CNPJs consultados é preservado. No painel de fornecedores, "Salvar análise no histórico" e "Lançar total" subiram para o topo, antes da relação, que pode ter centenas de linhas. E a pergunta de serviço ou revenda na importação foi removida: quem define é a aba escolhida, que o botão de importar já nomeia.</td></tr>
           <tr><td><b>v7.6.3</b></td><td>28/07/2026</td><td>Leitor do relatório "Totais ICMS por Fornecedor/Cliente" (Questor), que é o que traz as <b>entradas</b> de revenda. Ele tem estrutura diferente do relatório de ISS: o parceiro aparece numa linha "Pessoa" com a inscrição federal e o valor vem na linha "Total Pessoa" seguinte, com o valor contábil. O app passou a reconhecer os dois layouts, somando os lançamentos repetidos do mesmo parceiro, lendo apenas a seção de Entradas e conferindo o resultado com o total do período impresso no rodapé. Fornecedores pessoa física são identificados e mantidos no relatório, mas ficam fora da consulta à Receita, que só atende CNPJ, e fora da base de crédito. Validado com o relatório real: 162 parceiros e soma idêntica ao total do relatório.</td></tr>
           <tr><td><b>v7.6.2</b></td><td>28/07/2026</td><td>A importação de fornecedores passou a aceitar planilhas (.xls e .xlsx) além de CSV e TXT, convertendo a planilha em texto antes da leitura. E deixou de falhar em silêncio: quando o arquivo não é reconhecido como relatório de fornecedores, o app informa quantos CNPJs encontrou, mostra a primeira linha do arquivo e diz qual layout o leitor espera, em vez de um aviso passageiro. Isso torna visível o caso em que o relatório escolhido tem um cabeçalho diferente do "Totais ISS por Fornecedor/Cliente" e acaba sendo tratado como simples lista de CNPJs para triagem.</td></tr>
           <tr><td><b>v7.6.1</b></td><td>28/07/2026</td><td>Correção das abas de fornecedores: elas nunca eram inicializadas ao abrir a Consulta CNPJ, então nenhuma aparecia marcada como ativa e todo relatório importado era tratado como serviço — inclusive os de revenda, que por isso não perguntavam a linha de compras nem gravavam o tipo. A aba ativa passa a ser destacada, e o botão de importar diz explicitamente para qual das duas o arquivo vai. Quando o relatório é reconhecido pelo card único da Consulta CNPJ, onde não existe aba de contexto, o app pergunta se os fornecedores são de serviço ou de revenda em vez de assumir. O histórico de consultas passou a exibir o tipo de cada análise salva, marcando como presumidas as anteriores a esta versão.</td></tr>
@@ -638,7 +676,7 @@ function entrar() {
 function go(page) {
   APP.page = page;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page===page));
-  ['dashboard','cnpj','empresas','analise','reforma','relatorios','parametros','usuarios','versoes'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
+  ['dashboard','cnpj','empresas','analise','importar','config','reforma','relatorios','parametros','usuarios','versoes'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
   if (page==='dashboard') dashAnalises();
   if (page==='cnpj') { carregarDashboard(); fornTrocarAba(FO_TIPO); }
   if (page==='relatorios') { empCarregar().then(()=>{ const sel=$id('rl-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; sel.value=at||''; if (EMP_GLOBAL.cnpj) empGlobalAplicar('rl-empresa','rl-ano'); else if (AN?.cnpj) { sel.value=AN.cnpj; $id('rl-ano').value=AN.ano; } rlCarregar(); }); }
@@ -647,23 +685,51 @@ function go(page) {
     anRenderTabs(); anRenderGrid(); anRecalcular();
     empCarregar().then(()=>{
       const alvo = EMP_GLOBAL.cnpj;
-      const anoAlvo = EMP_GLOBAL.ano || +$id('an-ano').value;
+      gSincronizar('analise');
       const difere = alvo && (AN?.cnpj !== alvo || (EMP_GLOBAL.ano && +AN?.ano !== +EMP_GLOBAL.ano));
       if (!difere) return;
-      if (AN?.cnpj && !confirm('Sincronizar com a empresa/ano selecionados nos outros módulos?\nAlterações não salvas da análise atual serão perdidas.')) {
-        empGlobalSet(AN.cnpj, AN.ano);   // usuário preferiu manter — a análise vira a seleção global
-        return;
-      }
       empGlobalAplicar('an-empresa','an-ano');
       if ($id('an-empresa').value === alvo) anTrocarEmpresa();
     }); }
+  if (page==='config') anRenderConfig();
+  if (page==='importar' || page==='config') { if (!AN) AN = anNovo(EMP_GLOBAL.cnpj||'', EMP_GLOBAL.ano||+$id('an-ano').value);
+    empCarregar().then(()=>{ empGlobalAplicar('an-empresa','an-ano');
+      if (EMP_GLOBAL.cnpj && AN?.cnpj !== EMP_GLOBAL.cnpj) anTrocarEmpresa(); }); }
   if (page==='parametros') prRender();
   if (page==='reforma') { empCarregar().then(()=>{ const sel=$id('rf-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; sel.value=at||''; if (EMP_GLOBAL.cnpj) empGlobalAplicar('rf-empresa','rf-ano');
     if (sel.value && (!RF || RF.cnpj!==sel.value || +RF.ano!==+$id('rf-ano').value)) { rfTrocar(); }
     else if(!RF){ RF=rfNovo('', +$id('rf-ano').value); rfRenderAliq(); rfRenderBenef(); rfCalcular(); } }); }
   if (page==='usuarios') usCarregar();
+  empCarregar().then(()=>gSincronizar(page)).catch(()=>gSincronizar(page));
 }
 
+// v7.8: a empresa e o ano passaram a ser escolhidos UMA vez, no topo, e valem para todos os módulos.
+const G_COM_ANO = ['analise','importar','config','reforma','relatorios'];
+const G_SEM_BARRA = ['dashboard','parametros','usuarios','versoes'];
+function gSincronizar(page){
+  const barra = $id('topo-empresa'); if (barra) barra.style.display = G_SEM_BARRA.includes(page) ? 'none' : '';
+  const wa = $id('g-ano-wrap'); if (wa) wa.style.display = G_COM_ANO.includes(page) ? '' : 'none';
+  const sg = $id('g-empresa'), sa = $id('an-empresa');
+  if (sg && sa && sa.innerHTML && sg.innerHTML !== sa.innerHTML){ const at = sg.value; sg.innerHTML = sa.innerHTML; if (at) sg.value = at; }
+  if (sg && EMP_GLOBAL.cnpj && [...sg.options].some(o=>o.value===EMP_GLOBAL.cnpj)) sg.value = EMP_GLOBAL.cnpj;
+  if (EMP_GLOBAL.ano) $id('g-ano').value = EMP_GLOBAL.ano;
+  const h = $id('g-hint');
+  if (h) h.textContent = sg && !sg.value ? 'Escolha a empresa para trabalhar nos módulos.' : '';
+}
+async function gTrocar(){
+  const cnpj = $id('g-empresa').value;
+  const ano  = +$id('g-ano').value || new Date().getFullYear();
+  empGlobalSet(cnpj, ano);
+  for (const id of ['an-empresa','rf-empresa','rl-empresa']){
+    const s = $id(id); if (s && [...s.options].some(o=>o.value===cnpj)) s.value = cnpj;
+  }
+  for (const id of ['an-ano','rf-ano']){ const a = $id(id); if (a) a.value = ano; }
+  const p = APP.page;
+  if (p==='analise' || p==='importar' || p==='config') await anTrocarEmpresa();
+  else if (p==='reforma') rfTrocar();
+  else if (p==='relatorios') rlCarregar();
+  gSincronizar(p);
+}
 // v7.1: EMPRESA GLOBAL — a empresa (e o ano) selecionados em qualquer módulo valem para todos.
 // A última ação do usuário é a fonte da verdade; os demais módulos sincronizam ao serem abertos.
 let EMP_GLOBAL = { cnpj:'', ano:null };
@@ -1047,8 +1113,21 @@ function fornMesesDoPeriodo(per){
   const out=[]; for (let a=a0, mm=m0; a<a1 || (a===a1 && mm<=m1); mm++){ if (mm>11){mm=0;a++; if(a>a1) break;} out.push(mm); if (out.length>12) break; }
   return out.length ? [...new Set(out)] : [...Array(12).keys()];
 }
-async function fornConsultar(){
+async function fornConsultar(forcar){
   if (!FO) return;
+  const alvos = FO.itens.filter(i => i.classe !== 'pf');
+  let emCache = 0;
+  if (!forcar){
+    for (const it of alvos) if (await cnpjCacheLer(it.cnpj)) emCache++;
+    const novos = alvos.length - emCache;
+    if (novos > 0){
+      const seg = Math.ceil(novos * 0.35);
+      if (!confirm(`Consultar ${alvos.length} fornecedor(es) na Receita?\n\n`
+        + `• ${emCache} já consultado(s) nos últimos 30 dias — respondem na hora\n`
+        + `• ${novos} irão à Receita agora — cerca de ${seg < 60 ? seg+' segundos' : Math.ceil(seg/60)+' minuto(s)'}\n\n`
+        + `Deseja continuar?`)) return;
+    }
+  }
   const btn = $id('fo-btn'); btn.disabled = true;
   for (let i=0;i<FO.itens.length;i++){
     if (FO.itens[i].classe === 'pf') continue;          // CPF não existe na base de CNPJ
@@ -1061,6 +1140,7 @@ async function fornConsultar(){
   }
   $id('fo-prog').textContent = 'Concluído.';
   fornAcoes();
+  const br = $id('fo-refazer'); if (br) br.style.display = '';
   btn.disabled=false;
 }
 async function fornSalvar(){
@@ -1827,7 +1907,6 @@ function anNovo(cnpj, ano) {
 
 // ═══════════ ANÁLISE: DEFINIÇÃO DAS SEÇÕES/LINHAS ═══════════
 const AN_SECOES = [
-  { id:'config', nome:'⚙️ Config' },
   { id:'receitas', nome:'💰 Receitas', linhas:[
     ['Vendas Anexo I (Comércio)'],
     ['receitas.a1_semst','Sem ST'], ['receitas.a1_red','Sem ST c/ redução ICMS'], ['receitas.a1_red_pct','% da redução ICMS','pct'],
@@ -1867,7 +1946,7 @@ const AN_SECOES = [
     ['despesas.financeiras','Financeiras'], ['despesas.outras','Outras'], ['despesas.credLR','Com crédito no Lucro Real'],
   ]},
 ];
-let AN_TAB = 'config';
+let AN_TAB = 'receitas';
 
 function anPath(obj, path) { const p = path.split('.'); return { o: obj[p[0]], k: p[1] }; }
 
@@ -1911,8 +1990,9 @@ function anNormalizar(d, cnpj, ano){
 }
 function anRenderGrid() {
   if (!AN) return;
-  const sec = AN_SECOES.find(s=>s.id===AN_TAB);
-  if (sec.id==='config') { anRenderConfig(); return; }
+  if (APP.page === 'config') { anRenderConfig(); return; }
+  const sec = AN_SECOES.find(s=>s.id===AN_TAB) || AN_SECOES[0];
+  if (!sec) return;
   let h = '<table class="gtable"><thead><tr><th></th>' + MESES.map(m=>`<th class="num">${m}</th>`).join('') + '</tr></thead><tbody>';
   for (const L of sec.linhas) {
     if (L.length===1) { h += `<tr class="grupo"><td colspan="13">${L[0]}</td></tr>`; continue; }
@@ -1966,6 +2046,21 @@ function anSet(path, m, val, tipo) {
   anRecalcular();
 }
 
+// a Config saiu das abas: sem um lembrete, dá para analisar o ano inteiro com alíquota zerada
+function anAvisoConfig(){
+  const el = $id('an-cfg-aviso'); if (!el || !AN) return;
+  const c = AN.cfg, falta = [];
+  const temServ = ['a3_semret','a3_retiss','a3_retissinss','a4','a5r'].some(k => (AN.receitas[k]||[]).some(v=>+v>0));
+  const temMerc = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_mono','a2_comst']
+                    .some(k => (AN.receitas[k]||[]).some(v=>+v>0));
+  if (temServ && !(+c.iss)) falta.push('a alíquota de ISS');
+  if (temMerc && !(+c.icmsV)) falta.push('o % de ICMS sobre vendas');
+  if (!(AN.cfg.rbt12Lanc||[]).some(v=>+v>0) && !+c.rbt12Direto) falta.push('o RBT12 dos 12 meses anteriores');
+  if (!falta.length){ el.style.display='none'; return; }
+  el.style.display = '';
+  el.innerHTML = `<b>Configuração incompleta.</b> Falta ${falta.join(', ').replace(/, ([^,]*)$/, ' e $1')}.
+    Isso altera o cálculo. <a href="#" onclick="go('config');return false">abrir a Configuração da empresa</a>`;
+}
 function anRenderConfig() {
   const c = AN.cfg;
   if (!(+c.icmsV) && !(+c.icmsC)) { c.icmsV = .12; c.icmsC = .12; setTimeout(anRecalcular, 0); }   // v7.5: 12%/12% como base padrão
@@ -1988,7 +2083,7 @@ function anRenderConfig() {
   <tr><td class="rot">Receita</td>${MESES.map((_,m)=>`<td><input value="${c.rbt12Lanc[m]?fmt(c.rbt12Lanc[m]):''}" onchange="AN.cfg.rbt12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
   <tr><td class="rot">Folha (Fator R)</td>${MESES.map((_,m)=>`<td><input value="${c.folha12Lanc[m]?fmt(c.folha12Lanc[m]):''}" onchange="AN.cfg.folha12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
   </tbody></table></div></div>`;
-  $id('an-grid').innerHTML = h;
+  $id('an-config-box').innerHTML = h;
 }
 function anAplicarConfig(silencioso) {
   if (!AN) return;
@@ -2058,6 +2153,7 @@ function anRecalcular() {
   try { r = calcular(AN, PARAMS.anexos, PARAMS.folha); } catch(e) { console.error(e); return; }
   AN._res = r;
   const T = r.totais;
+  anAvisoConfig();
   const EL = snElegibilidade(r, AN.cfg); AN._sn = EL;
   const snVale = EL.estado !== 'inelegivel';
   const menor = snVale ? Math.min(T.simples, T.lp, T.lr) : Math.min(T.lp, T.lr);
