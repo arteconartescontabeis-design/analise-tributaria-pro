@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.9.4</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.10.0</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -587,7 +587,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.9.4</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Reescrito o aviso de receita de exportação na importação do PGDAS-D. O texto anterior tratava a exportação como se fosse um problema da empresa, quando é situação corriqueira e com disciplina própria: imunidade de PIS, COFINS, ICMS e ISS, e limite de R$ 4.800.000,00 separado do mercado interno, conforme o artigo 3º, § 14, e o artigo 18, § 14, da LC 123/2006. O aviso agora explica esse tratamento, deixa claro que a limitação é do aplicativo — que ainda não tem linha específica para essa receita —, informa que a comparação entre regimes permanece útil embora os valores absolutos fiquem superestimados, e indica o caminho para separar os valores manualmente.</td></tr>
+          <tr><td><b>v7.10.0</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td><b>Receita de exportação passou a ser calculada corretamente nos três regimes.</b> Foram criadas linhas próprias na aba Receitas para revenda, indústria e serviços destinados ao exterior. No Simples Nacional, essa receita passa a ter <b>RBT12 e faixa próprios</b>, separados do mercado interno, e sobre ela incidem apenas IRPJ, CSLL e a contribuição previdenciária — PIS, COFINS, IPI, ICMS e ISS são desconsiderados, conforme o artigo 3º, § 14, e o artigo 18, § 14, da LC 123/2006. A separação corrige dois erros que se somavam: além de cobrar tributos de que a receita é imune, a exportação inflava o RBT12 do mercado interno e empurrava toda a receita doméstica para faixas mais altas do que as devidas. No Lucro Presumido, a exportação saiu da base de PIS e COFINS e entrou nas presunções de IRPJ e CSLL; no Lucro Real, ela já ficava fora da base não cumulativa e permanece compondo o lucro tributável. A aba "12 meses anteriores" ganhou a linha do RBT12 de exportação, e a importação do PGDAS-D passou a reconhecer as atividades destinadas ao exterior, lançá-las nas linhas próprias e preencher esse RBT12 a partir da seção de mercado externo da declaração. A regra foi conferida contra três declarações reais, reproduzindo os valores ao centavo.</td></tr>
+          <tr><td><b>v7.9.4</b></td><td>28/07/2026</td><td>Reescrito o aviso de receita de exportação na importação do PGDAS-D. O texto anterior tratava a exportação como se fosse um problema da empresa, quando é situação corriqueira e com disciplina própria: imunidade de PIS, COFINS, ICMS e ISS, e limite de R$ 4.800.000,00 separado do mercado interno, conforme o artigo 3º, § 14, e o artigo 18, § 14, da LC 123/2006. O aviso agora explica esse tratamento, deixa claro que a limitação é do aplicativo — que ainda não tem linha específica para essa receita —, informa que a comparação entre regimes permanece útil embora os valores absolutos fiquem superestimados, e indica o caminho para separar os valores manualmente.</td></tr>
           <tr><td><b>v7.9.3</b></td><td>28/07/2026</td><td>Três correções na importação do PGDAS-D, encontradas ao analisar declarações reais. Quando as declarações são de um ano diferente do que está aberto, o aplicativo ajustava o ano da análise internamente mas <b>não avisava a barra do topo</b>: gravava corretamente no ano das declarações e, na primeira troca de empresa, recarregava o ano antigo — o usuário via a importação simplesmente desaparecer. Agora a barra acompanha e o ajuste é informado. As atividades de <b>prestação de serviços com retenção de ISS</b> passaram a ser lançadas na linha correspondente, e não mais como serviços sem retenção, o que impedia a recomposição prevista no artigo 21, §4º da LC 123. E a <b>receita de exportação</b>, que o aplicativo não distingue e lança como revenda no mercado interno, passou a ser identificada e sinalizada em janela ao final da importação, informando o valor e alertando que o cálculo cobra ICMS, PIS e COFINS sobre receita imune.</td></tr>
           <tr><td><b>v7.9.2</b></td><td>28/07/2026</td><td>A importação do PGDAS-D passou a adotar a empresa selecionada na barra do topo quando o CNPJ não é reconhecido no PDF — antes a análise ficava sem empresa, a gravação era recusada e a verificação acusava "nenhuma empresa selecionada" mesmo havendo uma escolhida na tela. A leitura também deixou de terminar em silêncio quando não produz resultado: se nenhuma receita for identificada, o app informa quais períodos encontrou e alerta que o arquivo pode ser o recibo ou a guia, e não o extrato completo com o quadro de atividades; se a tabela de RBT12 dos doze meses anteriores não for localizada, avisa que o campo precisa ser lançado à mão, sob pena de a faixa do Simples começar na primeira. Escolher a empresa no topo passou a valer também quando a análise ainda está em branco.</td></tr>
           <tr><td><b>v7.9.1</b></td><td>28/07/2026</td><td>Três correções apontadas pela auditoria. A gravação da análise passou a <b>conferir se alguém salvou depois de você</b>: como existe um único registro por empresa e ano, duas pessoas trabalhando ao mesmo tempo se sobrescreviam em silêncio — agora o app informa a data da última gravação e pede confirmação antes de substituir. A verificação da Reforma passou a alertar que o <b>Imposto Seletivo está com alíquota zero</b> em todos os anos enquanto a regulamentação não é publicada, o que torna a projeção incompleta para quem produz ou importa bebidas, fumo e veículos. E a suíte de testes ganhou uma <b>verificação de integridade da interface</b>, que confere se todo elemento referenciado pelo código existe de fato na tela; ela já apontou uma referência órfã deixada pela mudança das alíquotas de transição para Parâmetros, agora removida.</td></tr>
@@ -1233,7 +1234,11 @@ async function fornSalvar(){
 // ═══ v7.5: planilha modelo — todos os dados do cálculo em um arquivo só ═══
 const MODELO_LINHAS = [
  ['cfg.iss','% ISS do município'],['cfg.icmsV','% ICMS sobre vendas'],['cfg.icmsC','% ICMS sobre compras'],['cfg.ipiV','% IPI sobre vendas'],['cfg.ipiC','% IPI sobre compras'],
- ['cfg.rbt12Lanc','RBT12 — receitas dos 12 meses ANTERIORES ao ano'],['cfg.folha12Lanc','Folha dos 12 meses ANTERIORES (p/ Fator R)'],
+ ['cfg.rbt12Lanc','RBT12 — receitas dos 12 meses ANTERIORES ao ano'],
+  ['cfg.rbt12ExpLanc','RBT12 exportação — 12 meses ANTERIORES ao ano'],
+  ['receitas.a1_exp','Revenda para o exterior (Anexo I)'],
+  ['receitas.a2_exp','Indústria para o exterior (Anexo II)'],
+  ['receitas.a3_exp','Serviços para o exterior (Anexo III)'],['cfg.folha12Lanc','Folha dos 12 meses ANTERIORES (p/ Fator R)'],
  ['receitas.a1_semst','Anexo I · Revenda sem ST'],['receitas.a1_red','Anexo I · Revenda com redução de ICMS'],['receitas.a1_red_pct','Anexo I · % da redução (0 a 100)'],['receitas.a1_mono','Anexo I · Monofásico sem ST'],['receitas.a1_comst','Anexo I · Revenda com ST'],['receitas.a1_comst_mono','Anexo I · Com ST e monofásico'],
  ['receitas.a2_semst','Anexo II · Indústria sem ST'],['receitas.a2_red','Anexo II · Com redução de ICMS'],['receitas.a2_red_pct','Anexo II · % da redução (0 a 100)'],['receitas.a2_mono','Anexo II · Monofásico'],['receitas.a2_comst','Anexo II · Com ST'],['receitas.a2_comst_mono','Anexo II · Com ST e monofásico'],
  ['receitas.a3_semret','Anexo III · Serviços sem retenção'],['receitas.a3_retiss','Anexo III · Serviços com ISS retido'],['receitas.a3_retissinss','Anexo III · Serviços com ISS e INSS retidos'],
@@ -1715,7 +1720,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   fp = Object.assign({}, FOLHA_PERC_DEFAULT, fp||{});
   const cfg = inp.cfg, R = {}, out = { meses: [] };
   const K = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','comtransp'];
-  for (const k of [...K,'a1_red_pct','a1_mono_pct','a2_red_pct','fin']) R[k] = arr12(inp.receitas[k]);
+  // exportação: LC 123 art. 3º §14 (limite próprio) e art. 18 §14 (sem PIS, COFINS, IPI, ICMS e ISS)
+  const KEXP = ['a1_exp','a2_exp','a3_exp'];
+  for (const k of [...K,...KEXP,'a1_red_pct','a1_mono_pct','a2_red_pct','fin']) R[k] = arr12(inp.receitas[k]);
   const F = {}; for (const k of ['prolabore','salarios','baseFgts','prov13','provFerias']) F[k] = arr12(inp.folha[k]);
   const C = {}; for (const k of ['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred']) C[k] = arr12(inp.compras[k]);
   const D = {}; for (const k of ['adm','vendas','fiscais','financeiras','outras','credLR']) D[k] = arr12(inp.despesas[k]);
@@ -1723,10 +1730,13 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
 
   const REPX = repEfetiva(anexos);   // v7.1: repartição efetiva acompanha os parâmetros editados
   const rbt12Cfg = S(cfg.rbt12Lanc), folha12Cfg = S(cfg.folha12Lanc);
+  const rbt12ExpCfg = S(cfg.rbt12ExpLanc || z12());
   out.fatorRMensal = [];
 
-  const totalRec = m => K.reduce((s,k)=>s+R[k][m],0);
+  const totalRec = m => K.reduce((s,k)=>s+R[k][m],0);          // mercado interno
+  const totalExp = m => KEXP.reduce((s,k)=>s+R[k][m],0);       // exportação (RBT12 e limite próprios)
   const totalPrev = [];   // receitas acumuladas dos meses anteriores do ano corrente
+  const totalPrevExp = [];
   const folhaPrev = [];   // folha (pró-labore+salários+FGTS) dos meses anteriores — Fator R dinâmico
   const folhaMesFR = m => F.prolabore[m] + F.salarios[m] + F.baseFgts[m]*fp.fgts;
 
@@ -1739,7 +1749,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const fatorR = rbt12 > 0 ? folha12m / rbt12 : 0;
     out.fatorRMensal.push(fatorR);
     if (m===0) out.fatorR = fatorR;
+    const rbt12Exp = m===0 ? rbt12ExpCfg : S((cfg.rbt12ExpLanc||z12()).slice(m)) + S(totalPrevExp);
     const fx = faixaDe(rbt12);
+    const fxE = faixaDe(rbt12Exp);
+    const efE = A => rbt12Exp>0 ? (rbt12Exp*A.aliq[fxE] - A.ded[fxE])/rbt12Exp : 0;
     const ef = A => rbt12>0 ? (rbt12*A.aliq[fx] - A.ded[fx])/rbt12 : 0;
     const A1=anexos.I, A2=anexos.II, A3=anexos.III, A4=anexos.IV, A5=anexos.V;
     const e1=ef(A1), e2=ef(A2), e3=ef(A3), e4=ef(A4), e5=ef(A5);
@@ -1761,11 +1774,18 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       a4: e4,
       a5r: fatorR < .28 ? e5 : e3,
       comtransp: (A3.iss[fx]>0 ? e3*(1-A3.iss[fx]) : e3) + e1*A1.icms[fx],
+      // exportação: sobra apenas IRPJ + CSLL + CPP da repartição do anexo, na faixa da RBT12 externa
+      a1_exp: efE(A1)*Math.max(0, 1 - A1.icms[fxE] - A1.piscof[fxE]),
+      a2_exp: efE(A2)*Math.max(0, 1 - A2.icms[fxE] - A2.piscof[fxE]),
+      a3_exp: efE(A3)*Math.max(0, 1 - A3.iss[fxE]  - A3.piscof[fxE]),
     };
 
-    const das = K.reduce((s,k)=>s + R[k][m]*efb[k], 0);
-    const receita = totalRec(m);
-    totalPrev.push(receita);
+    const dasExp = KEXP.reduce((s,k)=>s + R[k][m]*efb[k], 0);
+    const das = K.reduce((s,k)=>s + R[k][m]*efb[k], 0) + dasExp;
+    const recInt = totalRec(m), recExp = totalExp(m);
+    const receita = recInt + recExp;
+    totalPrev.push(recInt);            // o RBT12 interno não é contaminado pela exportação
+    totalPrevExp.push(recExp);
     folhaPrev.push(folhaMesFR(m));
 
     // ── Consumo embutido no DAS (para os cenários da Reforma): PIS/COFINS e ICMS/ISS ──
@@ -1867,14 +1887,16 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // ── LUCRO PRESUMIDO ──
     // v7.1 (A3): revenda monofásica tem alíquota zero de PIS/COFINS também no cumulativo —
     // excluídos TODOS os blocos monofásicos (antes só os "com ST e monofásico" saíam da base)
-    const basePisCofLP = receita - R.a1_comst_mono[m] - R.a2_comst_mono[m] - R.a1_mono[m] - R.a2_mono[m];
+    const basePisCofLP = receita - R.a1_comst_mono[m] - R.a2_comst_mono[m] - R.a1_mono[m] - R.a2_mono[m] - recExp;
     const _baseLPliq = Math.max(0, basePisCofLP - icmsDeb);   // exclusão do ICMS nunca negativa a base
     const lp_pis = _baseLPliq*.0065;
     const lp_cof = _baseLPliq*.03;
-    const base32 = serv*cfg.lpBaseServ;
-    const base8  = com*cfg.lpBaseCom + R.fin[m];
-    const base12 = com*(+cfg.lpBaseComCsll || .12) + R.fin[m];
-    const baseCsllServ = serv*((+cfg.lpBaseServCsll||0) > 0 ? +cfg.lpBaseServCsll : (cfg.lpBaseServ !== .32 ? .12 : .32));
+    const servIR = serv + R.a3_exp[m];                       // exportação é imune a PIS/COFINS/ICMS/ISS,
+    const comIR  = com  + R.a1_exp[m] + R.a2_exp[m];          // mas compõe a presunção de IRPJ e CSLL
+    const base32 = servIR*cfg.lpBaseServ;
+    const base8  = comIR*cfg.lpBaseCom + R.fin[m];
+    const base12 = comIR*(+cfg.lpBaseComCsll || .12) + R.fin[m];
+    const baseCsllServ = servIR*((+cfg.lpBaseServCsll||0) > 0 ? +cfg.lpBaseServCsll : (cfg.lpBaseServ !== .32 ? .12 : .32));
     const lp_csll = (baseCsllServ + base12)*.09;
     const lp_irpj = (base32 + base8)*.15;
 
@@ -1889,7 +1911,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const lr_csll = baseIRCS>0 ? baseIRCS*.09 : 0;
     const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
 
-    out.meses.push({ m, rbt12, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasTrib: dt, recCom, recServ,
+    out.meses.push({ m, rbt12, rbt12Exp, recInt, recExp, dasExp, faixaExp: fxE+1, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasTrib: dt, recCom, recServ,
       fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal,
       simples: { das, fgts, sublimite: subIcms+subIss, issRetido, cppRetida,
         // v7.1 (A1): CPP do Anexo IV é devida FORA do DAS — proxy pela participação da receita a4 no mês
@@ -1977,9 +1999,9 @@ const z12 = () => Array(12).fill(0);
 
 function anNovo(cnpj, ano) {
   return { cnpj: cnpj||'', ano: ano||new Date().getFullYear(),
-    cfg: { iss:0, icmsV:.12, icmsC:.12, ipiV:0, ipiC:0, rbt12Direto:0, rbt12Lanc:z12(), folha12Lanc:z12(),
+    cfg: { iss:0, icmsV:.12, icmsC:.12, ipiV:0, ipiC:0, rbt12Direto:0, rbt12Lanc:z12(), rbt12ExpLanc:z12(), folha12Lanc:z12(),
            lpBaseServ:.32, lpBaseCom:.08, lpBaseServCsll:0, lpBaseComCsll:.12, folhaPerc:{}, adicionalIR:'trimestral', sublimite:'auto' },
-    receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','fin','comtransp'].map(k=>[k,z12()])),
+    receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','fin','comtransp','a1_exp','a2_exp','a3_exp'].map(k=>[k,z12()])),
     folha: Object.fromEntries(['prolabore','salarios','baseFgts','prov13','provFerias'].map(k=>[k,z12()])),
     folha13: { prolabore13:0, salarios13:0, baseFgts13:0 },
     compras: Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred'].map(k=>[k,z12()])),
@@ -1996,6 +2018,10 @@ const AN_SECOES = [
     ['receitas.a1_semst','Sem ST'], ['receitas.a1_red','Sem ST c/ redução ICMS'], ['receitas.a1_red_pct','% da redução ICMS','pct'],
     ['receitas.a1_mono','Sem ST e monofásico'], ['receitas.a1_mono_pct','% redução ICMS (monof.)','pct'],
     ['receitas.a1_comst','Com ST'], ['receitas.a1_comst_mono','Com ST e monofásico'],
+    ['Exportação — limite e RBT12 próprios; sem PIS, COFINS, IPI, ICMS e ISS (LC 123, art. 3º §14 e art. 18 §14)'],
+    ['receitas.a1_exp','Revenda para o exterior (Anexo I)'],
+    ['receitas.a2_exp','Indústria para o exterior (Anexo II)'],
+    ['receitas.a3_exp','Serviços para o exterior (Anexo III)'],
     ['Vendas Anexo II (Indústria)'],
     ['receitas.a2_semst','Sem ST'], ['receitas.a2_red','Sem ST c/ redução ICMS'], ['receitas.a2_red_pct','% da redução ICMS','pct'],
     ['receitas.a2_mono','Sem ST e monofásico'], ['receitas.a2_comst','Com ST'], ['receitas.a2_comst_mono','Com ST e monofásico'],
@@ -2063,6 +2089,7 @@ function anNormalizar(d, cnpj, ano){
   if (out.cfg.lpBaseComCsll == null) out.cfg.lpBaseComCsll = .12;
   if (!out.cfg.folhaPerc || typeof out.cfg.folhaPerc !== 'object') out.cfg.folhaPerc = {};
   out.cfg.rbt12Lanc  = a12(out.cfg.rbt12Lanc);
+  out.cfg.rbt12ExpLanc = a12(out.cfg.rbt12ExpLanc);
   out.cfg.folha12Lanc = a12(out.cfg.folha12Lanc);
   out.folha13 = { ...base.folha13, ...(d.folha13||{}) };
   for (const sec of ['icms','ipi']){                       // aqui null significa "automático" — não virar zero
@@ -2082,6 +2109,7 @@ function anRenderGrid() {
   if (sec.id==='rbt12'){ const c = AN.cfg; $id('an-grid').innerHTML = `<div style="margin-top:18px"><b style="font-size:13px">RBT12 — receita e folha dos 12 meses anteriores</b>
   <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto?fmt(c.rbt12Direto):''}" onchange="anAplicarConfig(true)"></div>
   <div style="overflow-x:auto;margin-top:8px"><table class="gtable"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m} (ant.)</th>`).join('')}</tr></thead><tbody>
+  <tr><td class="rot">Receita exportação</td>${MESES.map((_,m)=>`<td><input value="${(c.rbt12ExpLanc||[])[m]?fmt(c.rbt12ExpLanc[m]):''}" onchange="if(!AN.cfg.rbt12ExpLanc)AN.cfg.rbt12ExpLanc=z12();AN.cfg.rbt12ExpLanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
   <tr><td class="rot">Receita</td>${MESES.map((_,m)=>`<td><input value="${c.rbt12Lanc[m]?fmt(c.rbt12Lanc[m]):''}" onchange="AN.cfg.rbt12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
   <tr><td class="rot">Folha (Fator R)</td>${MESES.map((_,m)=>`<td><input value="${c.folha12Lanc[m]?fmt(c.folha12Lanc[m]):''}" onchange="AN.cfg.folha12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
   </tbody></table></div></div>`; return; }
@@ -2893,6 +2921,8 @@ const brNum = s => parseFloat(String(s).replace(/\./g,'').replace(',','.')) || 0
 function pgdasExportacao(atividade){ return /para o exterior/.test(String(atividade).toLowerCase()) && !/exceto para o exterior/.test(String(atividade).toLowerCase()); }
 function pgdasBloco(atividade) {
   const a = atividade.toLowerCase();
+  if (pgdasExportacao(a)) return a.includes('serviço') || a.includes('locação') ? 'a3_exp'
+                               : a.includes('industrializadas pelo contribuinte') ? 'a2_exp' : 'a1_exp';
   const st = a.includes('com substituição') || (a.includes('substituição tributária') && !a.includes('sem substituição'));
   const mono = a.includes('monofásica') && !a.includes('sem substituição tributária/tributação monofásica');
   let pfx = null;
@@ -2953,7 +2983,10 @@ async function pgdasLer(input) {
       let antSec = (txt.match(/2\.2\.1\) Mercado Interno(.+?)2\.2\.2\)/s)||[])[1] || '';
       antSec = antSec.replace(/(\d{2}\/\d{4})/g, ' $1 ');   // descola valores grudados em MM/AAAA (só aqui)
       const rbtAnt = {}; for (const mm of antSec.matchAll(/(\d{2})\/(\d{4})\s+([\d.]+,\d{2})/g)) rbtAnt[`${mm[1]}/${mm[2]}`] = brNum(mm[3]);
-      meses[chave] = { receita: rpa, das, atividades: atividades.map(a=>({...a, bloco: pgdasBloco(a.texto)})), tributos: trib, rbtAnt };
+      let expSec = (txt.match(/2\.2\.2\) Mercado Externo(.+?)2\.3\)/s)||[])[1] || '';
+      expSec = expSec.replace(/(\d{2}\/\d{4})/g, ' $1 ');
+      const rbtExpAnt = {}; for (const mm of expSec.matchAll(/(\d{2})\/(\d{4})\s+([\d.]+,\d{2})/g)) rbtExpAnt[`${mm[1]}/${mm[2]}`] = brNum(mm[3]);
+      meses[chave] = { receita: rpa, das, atividades: atividades.map(a=>({...a, bloco: pgdasBloco(a.texto)})), tributos: trib, rbtAnt, rbtExpAnt };
     } catch(e) { console.error(e); erros.push(f.name+' ('+e.message+')'); }
   }
   if (!Object.keys(meses).length) { toast('Nenhum PGDAS válido encontrado. Arquivos com problema: '+(erros.join(', ')||'—')); return; }
@@ -3035,6 +3068,9 @@ async function pgdasAplicar() {
     const ref = PG_DADOS.meses[chaves.sort()[0]] || PG_DADOS.meses[chaves[0]];
     const tabela = Object.values(PG_DADOS.meses).map(x=>x.rbtAnt).reduce((a,b)=>Object.assign(a,b),{});
     for (let i=0;i<12;i++) AN.cfg.rbt12Lanc[i] = tabela[`${String(i+1).padStart(2,'0')}/${anoImp-1}`] || 0;
+    const tabExp = {}; for (const pa of chaves) Object.assign(tabExp, PG_DADOS.meses[pa].rbtExpAnt||{});
+    if (!Array.isArray(AN.cfg.rbt12ExpLanc)) AN.cfg.rbt12ExpLanc = z12();
+    for (let i=0;i<12;i++) AN.cfg.rbt12ExpLanc[i] = tabExp[`${String(i+1).padStart(2,'0')}/${anoImp-1}`] || 0;
     AN.cfg.rbt12Direto = 0;
   }
   const expo = [];
@@ -3042,13 +3078,7 @@ async function pgdasAplicar() {
     if (pgdasExportacao(a.texto)) expo.push({ pa, valor:a.valor });
   if (expo.length){
     const tot = expo.reduce((s,x)=>s+x.valor,0);
-    alert('Estas declarações incluem receita de exportação: ' + fmtR(tot) + ' em ' + expo.length + ' lançamento(s).\n\n'
-      + 'A exportação é imune a PIS, COFINS, ICMS e ISS, e no Simples Nacional tem limite próprio de R$ 4.800.000,00, '
-      + 'separado do mercado interno (LC 123/2006, art. 3º, § 14, e art. 18, § 14).\n\n'
-      + 'O aplicativo ainda não tem linha específica para essa receita: ela entrou como revenda no mercado interno. '
-      + 'Na prática, o cálculo cobra sobre ela tributos de que é imune, e o Simples, o Presumido e o Real saem maiores que o devido — '
-      + 'a comparação entre regimes continua útil, mas os valores absolutos estão superestimados.\n\n'
-      + 'Você pode seguir assim para uma leitura aproximada, ou separar esses valores à mão na aba Receitas.');
+    toast(`Exportação: ${fmtR(tot)} em ${expo.length} lançamento(s), lançados nas linhas próprias.`);
   }
   if (!aplicados){
     alert('As declarações foram lidas, mas NENHUMA receita foi identificada.\n\n'
