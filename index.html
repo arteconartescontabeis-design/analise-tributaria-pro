@@ -231,16 +231,16 @@ canvas{max-height:340px}
   </div>
 
   <div class="main">
-    <div class="card" id="topo-empresa" style="display:flex;gap:14px;align-items:flex-end;padding:12px 16px;margin-bottom:14px">
+    <div id="topo-empresa" style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:nowrap">
       <label style="margin:0;white-space:nowrap">Empresa</label>
-      <select id="g-empresa" onchange="gTrocar()" style="min-width:300px;flex:1"></select>
-      <span id="g-ano-wrap" style="display:flex;align-items:center;gap:6px"><label style="margin:0">Ano</label>
-        <input type="number" id="g-ano" value="2026" onchange="gTrocar()" style="width:90px"></span>
-      <div class="hint" id="g-hint" style="padding-bottom:8px"></div>
+      <select id="g-empresa" onchange="gTrocar()" style="flex:1;min-width:240px;max-width:620px"></select>
+      <label id="g-ano-wrap" style="margin:0;display:flex;align-items:center;gap:6px;white-space:nowrap">Ano
+        <input type="number" id="g-ano" value="2026" onchange="gTrocar()" style="width:84px"></label>
+      <span class="hint" id="g-hint" style="margin:0"></span>
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.6</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.7</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -584,7 +584,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.8.6</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Importar Dados reorganizado. A área de seleção de arquivo passou a aparecer <b>acima</b> da lista de importadores: antes ela abria abaixo da relação inteira e era preciso rolar a página para encontrá-la depois de clicar. Os importadores deixaram de ser uma lista vertical e passaram a ocupar a largura da tela em blocos lado a lado, com a explicação do que cada um preenche logo abaixo do respectivo botão — a mesma informação em menos da metade do espaço.</td></tr>
+          <tr><td><b>v7.8.7</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>A seleção de empresa e ano deixou de ocupar um cartão inteiro no topo e virou uma faixa fina, com os dois campos e os rótulos na mesma linha. São cerca de quarenta pixels de altura recuperados em todas as telas, que passam a mostrar mais conteúdo sem rolagem.</td></tr>
+          <tr><td><b>v7.8.6</b></td><td>28/07/2026</td><td>Importar Dados reorganizado. A área de seleção de arquivo passou a aparecer <b>acima</b> da lista de importadores: antes ela abria abaixo da relação inteira e era preciso rolar a página para encontrá-la depois de clicar. Os importadores deixaram de ser uma lista vertical e passaram a ocupar a largura da tela em blocos lado a lado, com a explicação do que cada um preenche logo abaixo do respectivo botão — a mesma informação em menos da metade do espaço.</td></tr>
           <tr><td><b>v7.8.5</b></td><td>28/07/2026</td><td>Correção do travamento ao consultar fornecedores. Para montar a pergunta com o número de consultas já em cache, o app fazia <b>uma consulta ao banco por fornecedor</b> — com cento e sessenta fornecedores eram cento e sessenta requisições antes de qualquer coisa aparecer na tela. Passou a ser uma única consulta por lote. Some-se a isso que o botão só era bloqueado depois dessa espera, de modo que cada novo clique disparava outra execução em paralelo — daí a impressão de que nada acontecia e depois tudo acontecia várias vezes. Os botões de operação demorada agora se bloqueiam no instante do clique e exibem o que estão fazendo — Consultando, Salvando, Excluindo —, voltando ao normal ao terminar, inclusive em caso de erro. E a consulta de fornecedores passou a perguntar se você realmente deseja consultar de novo sempre que a lista já tiver sido consultada antes.</td></tr>
           <tr><td><b>v7.8.4</b></td><td>28/07/2026</td><td>O resultado da verificação deixou de ser uma janela de aviso e passou a ser um painel na própria tela, em que cada apontamento traz o link <b>corrigir</b> que leva direto ao lugar onde se resolve — a aba de folha, a de compras, a de receitas, o RBT12 ou a Configuração da empresa, conforme o caso. A <b>Reforma ganhou o seu próprio verificador</b>, com as perguntas que fazem sentido ali: receita zerada, ausência de compras de contraparte — que zera o crédito de IBS/CBS e superestima a carga —, análise de fornecedores cobrindo menos de doze meses enquanto a projeção é anual, alíquotas próprias diferentes do padrão e análise do regime atual não carregada. Corrigido também o seletor de empresa que ainda aparecia duplicado na aba Reforma: agora vale apenas o do topo, e os botões de ação foram para a linha do título.</td></tr>
           <tr><td><b>v7.8.3</b></td><td>28/07/2026</td><td>Corrigida a duplicação do seletor de empresa: ao criar a barra global, os seletores da Reforma e dos Relatórios haviam permanecido na tela e a empresa aparecia duas vezes. A Reforma passou a usar apenas a barra do topo; os Relatórios voltaram a ter os próprios controles, por serem um gerador com tipo e periodicidade próprios, e a barra global deixa de aparecer ali. O nome da empresa e o ano passaram a acompanhar o título de cada módulo. Os Relatórios ganharam um campo opcional de <b>ano de comparação</b>: informando um segundo ano, o relatório abre com a evolução entre os dois — receita e carga de cada regime, com variação em reais e em percentual, aumento em vermelho e redução em verde. E foi criado o botão <b>Verificar</b>, que varre a análise e classifica o que encontra em três níveis: o que impede o cálculo, o que distorce o resultado sem impedir — Fator R zerado por falta de folha, revenda sem compras lançadas, Lucro Real sem despesas, ISS ou ICMS zerados — e o que é apenas observação, como meses sem receita, folha em mês sem faturamento e divergência acima de 2% entre o DAS declarado e o simulado.</td></tr>
