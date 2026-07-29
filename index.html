@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.2</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.3</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -340,11 +340,12 @@ canvas{max-height:340px}
     <!-- PLACEHOLDERS -->
     <div id="page-analise" style="display:none">
       <div class="page-title" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <h1 style="margin:0">Análise Tributária — Regime Atual</h1>
+        <h1 style="margin:0">Análise Tributária — Regime Atual</h1><span class="ctx-emp" style="font-weight:600;color:var(--primary,#1a5276)"></span>
         <span class="crumb">Simples × Presumido × Real</span>
         <span style="flex:1"></span>
         <button class="btn solid" onclick="anSalvar()">💾 Salvar análise</button>
         <button class="btn" onclick="anRecalcular()">Recalcular</button>
+        <button class="btn" onclick="anVerificarMostrar()" title="Varre a análise e lista o que impede o cálculo, o que distorce o resultado e o que merece conferência">🔎 Verificar</button>
       </div>
       <div style="display:none"><select id="an-empresa" onchange="anTrocarEmpresa()"></select>
         <input type="number" id="an-ano" value="2026" onchange="anMudou()"></div>
@@ -358,11 +359,11 @@ canvas{max-height:340px}
       <div class="card"><h3>Resultado mês a mês</h3><div id="an-detalhe" style="overflow-x:auto"></div></div>
     </div>
     <div id="page-config" style="display:none">
-      <div class="page-title"><h1>Configuração da empresa</h1><span class="crumb">Alíquotas, presunções e histórico — por empresa e ano</span></div>
+      <div class="page-title"><h1>Configuração da empresa</h1><span class="ctx-emp" style="font-weight:600;color:var(--primary,#1a5276)"></span><span class="crumb">Alíquotas, presunções e histórico — por empresa e ano</span></div>
       <div class="card"><div id="an-config-box"></div></div>
     </div>
     <div id="page-importar" style="display:none">
-      <div class="page-title"><h1>Importar Dados</h1><span class="crumb">Alimenta a análise da empresa e do ano escolhidos no topo</span></div>
+      <div class="page-title"><h1>Importar Dados</h1><span class="ctx-emp" style="font-weight:600;color:var(--primary,#1a5276)"></span><span class="crumb">Alimenta a análise da empresa e do ano escolhidos no topo</span></div>
       <div class="card">
         <h3 style="margin-top:0">Importadores <span class="hint" style="font-weight:400">— cada um preenche uma parte da análise; os demais campos não são tocados</span></h3>
         <table style="width:100%;border-collapse:collapse">
@@ -419,7 +420,7 @@ canvas{max-height:340px}
       </div>
     </div>
     <div id="page-reforma" style="display:none">
-      <div class="page-title"><h1>Reforma Tributária</h1><span class="crumb">CBS · IS · IBS — LC 214/2025</span></div>
+      <div class="page-title"><h1>Reforma Tributária</h1><span class="ctx-emp" style="font-weight:600;color:var(--primary,#1a5276)"></span><span class="crumb">CBS · IS · IBS — LC 214/2025</span></div>
       <div class="card"><div class="toolbar" style="margin-bottom:0">
         <div style="min-width:280px;flex:1"><label>Empresa (usa a análise do regime atual como base)</label><select id="rf-empresa" onchange="rfTrocar()"></select></div>
         <div style="width:110px"><label>Ano-base</label><input type="number" id="rf-ano" value="2026" onchange="rfTrocar()"></div>
@@ -462,6 +463,8 @@ canvas{max-height:340px}
       <div class="card no-print"><div class="toolbar" style="margin-bottom:0">
         <div style="min-width:260px;flex:1"><label>Empresa</label><select id="rl-empresa" onchange="rlCarregar()"></select></div>
         <div style="width:100px"><label>Ano</label><input type="number" id="rl-ano" value="2025" onchange="rlCarregar()"></div>
+          <div style="width:130px"><label>Comparar com <span class="hint" style="font-weight:400">(opcional)</span></label>
+            <input type="number" id="rl-ano2" placeholder="—" onchange="rlCarregar()"></div>
         <div><label>Relatório</label><select id="rl-tipo" onchange="rlRender()">
           <option value="regimes">Comparativo de regimes</option>
           <option value="consolidado">Consolidado analítico (4 regimes)</option>
@@ -562,7 +565,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.8.2</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Reorganização da tela de Análise Atual. As abas de lançamento subiram para logo abaixo dos números-resumo: antes era preciso percorrer a página inteira para digitar e voltar ao topo para ver o efeito. Os botões Salvar e Recalcular saíram do cartão que ocupavam sozinhos e foram para a linha do título, e a barra de empresa passou a caber numa linha só — três blocos de cabeçalho viraram um. O aviso de dados faltantes ganhou uma verificação que faltava: quando há receita de serviços e nenhuma folha lançada, o Fator R fica em 0% e os serviços caem no Anexo V, o pior enquadramento, inflando o imposto calculado sem que nada na tela denunciasse. Alterações digitadas à mão passaram a contar como pendência de gravação, e sair do módulo com alterações não salvas agora avisa — antes só a troca de empresa era protegida. Por fim, a tabela de <b>alíquotas por ano da transição</b> saiu da aba Reforma e passou a ser editada em Parâmetros, onde altera o padrão do aplicativo que semeia cada nova análise; a aba Reforma indica onde encontrá-la.</td></tr>
+          <tr><td><b>v7.8.3</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Corrigida a duplicação do seletor de empresa: ao criar a barra global, os seletores da Reforma e dos Relatórios haviam permanecido na tela e a empresa aparecia duas vezes. A Reforma passou a usar apenas a barra do topo; os Relatórios voltaram a ter os próprios controles, por serem um gerador com tipo e periodicidade próprios, e a barra global deixa de aparecer ali. O nome da empresa e o ano passaram a acompanhar o título de cada módulo. Os Relatórios ganharam um campo opcional de <b>ano de comparação</b>: informando um segundo ano, o relatório abre com a evolução entre os dois — receita e carga de cada regime, com variação em reais e em percentual, aumento em vermelho e redução em verde. E foi criado o botão <b>Verificar</b>, que varre a análise e classifica o que encontra em três níveis: o que impede o cálculo, o que distorce o resultado sem impedir — Fator R zerado por falta de folha, revenda sem compras lançadas, Lucro Real sem despesas, ISS ou ICMS zerados — e o que é apenas observação, como meses sem receita, folha em mês sem faturamento e divergência acima de 2% entre o DAS declarado e o simulado.</td></tr>
+          <tr><td><b>v7.8.2</b></td><td>28/07/2026</td><td>Reorganização da tela de Análise Atual. As abas de lançamento subiram para logo abaixo dos números-resumo: antes era preciso percorrer a página inteira para digitar e voltar ao topo para ver o efeito. Os botões Salvar e Recalcular saíram do cartão que ocupavam sozinhos e foram para a linha do título, e a barra de empresa passou a caber numa linha só — três blocos de cabeçalho viraram um. O aviso de dados faltantes ganhou uma verificação que faltava: quando há receita de serviços e nenhuma folha lançada, o Fator R fica em 0% e os serviços caem no Anexo V, o pior enquadramento, inflando o imposto calculado sem que nada na tela denunciasse. Alterações digitadas à mão passaram a contar como pendência de gravação, e sair do módulo com alterações não salvas agora avisa — antes só a troca de empresa era protegida. Por fim, a tabela de <b>alíquotas por ano da transição</b> saiu da aba Reforma e passou a ser editada em Parâmetros, onde altera o padrão do aplicativo que semeia cada nova análise; a aba Reforma indica onde encontrá-la.</td></tr>
           <tr><td><b>v7.8.1</b></td><td>28/07/2026</td><td>A Configuração da empresa passou a vir antes da Análise Atual no menu, seguindo a ordem do trabalho: configurar, importar, analisar. A presunção da <b>CSLL sobre revenda e indústria</b>, que estava fixa em 12% dentro do cálculo, virou campo editável ao lado das demais — agora as quatro bases do Lucro Presumido (IRPJ e CSLL, de serviços e de comércio) são visíveis e ajustáveis, o que permite refletir casos como revenda de combustível, transporte de cargas e serviços hospitalares. O <b>RBT12 dos doze meses anteriores</b> saiu da configuração e virou a primeira aba da Análise Atual, junto das demais linhas mensais, por ser lançamento e não parâmetro. Os <b>percentuais de folha</b> deixaram de ser apenas globais: cada empresa pode ter os seus, herdando os do aplicativo enquanto nada for preenchido — necessário porque o RAT depende do grau de risco e do FAP, individuais, e a alíquota de terceiros varia conforme o FPAS. As <b>alíquotas da Reforma</b> continuam sendo editadas em Parâmetros, por decorrerem da lei e valerem para todos; a Configuração da empresa passou a informar se aquela empresa está usando alíquotas próprias e a oferecer o retorno ao padrão.</td></tr>
           <tr><td><b>v7.8.0</b></td><td>28/07/2026</td><td>Reorganização da navegação. A <b>empresa e o ano passaram a ser escolhidos uma única vez</b>, numa barra no topo que vale para todos os módulos — antes a mesma escolha era repetida em Análise Atual, Reforma e Relatórios, e era possível analisar uma empresa enquanto a Reforma mostrava outra. O campo do ano aparece só nos módulos que o utilizam. Os importadores saíram da barra de botões da Análise Atual e ganharam o módulo <b>Importar Dados</b>, onde cada um vem acompanhado da informação de que parte da análise ele preenche; o "Limpar dados" foi separado deles, num bloco próprio de exclusão, por apagar do banco sem desfazer. A configuração da análise virou o módulo <b>Configuração da empresa</b>, distinto dos Parâmetros do aplicativo, e a Análise Atual passou a avisar quando faltar ISS, ICMS ou o RBT12 dos doze meses anteriores — antes esses campos ficavam na primeira aba e serviam de lembrete. Por fim, a consulta de fornecedores na Receita passou a pedir confirmação informando quantos já estão em cache e quantos serão realmente consultados, com estimativa de tempo, além de um botão para reconsultar todos ignorando o cache.</td></tr>
           <tr><td><b>v7.7.0</b></td><td>28/07/2026</td><td><b>Exige rodar o setup_v77.sql no Supabase.</b> As consultas de CNPJ passam a ser guardadas e reaproveitadas por trinta dias: um relatório com centena e meia de fornecedores, que levava cerca de um minuto, responde de imediato na segunda vez, e a Receita só é consultada de novo quando o dado vence. Se o script ainda não tiver sido rodado, o app consulta direto como antes, sem quebrar. O botão "Limpar dados" deixou de agir sobre a análise aberta e passou a agir sobre a empresa selecionada, perguntando o que excluir: uma análise específica por ano, ou tudo — todas as análises e todas as consultas de fornecedores daquela empresa. A exclusão agora é feita no banco e não tem desfazer, por isso o aviso é explícito; a empresa continua cadastrada e o histórico de CNPJs consultados é preservado. No painel de fornecedores, "Salvar análise no histórico" e "Lançar total" subiram para o topo, antes da relação, que pode ter centenas de linhas. E a pergunta de serviço ou revenda na importação foi removida: quem define é a aba escolhida, que o botão de importar já nomeia.</td></tr>
@@ -712,8 +716,15 @@ function go(page) {
 }
 
 // v7.8: a empresa e o ano passaram a ser escolhidos UMA vez, no topo, e valem para todos os módulos.
-const G_COM_ANO = ['analise','importar','config','reforma','relatorios'];
-const G_SEM_BARRA = ['dashboard','parametros','usuarios','versoes'];
+const G_COM_ANO = ['analise','importar','config','reforma'];
+const G_SEM_BARRA = ['dashboard','parametros','usuarios','versoes','relatorios'];   // Relatórios é gerador: tem controles próprios
+function gCtx(){
+  const sel = $id('g-empresa');
+  const nome = sel && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent.trim() : '';
+  const ano  = $id('g-ano') ? $id('g-ano').value : '';
+  const txt  = nome ? `${nome}${ano?' · '+ano:''}` : '';
+  document.querySelectorAll('.ctx-emp').forEach(e => { e.textContent = txt; e.style.display = txt ? '' : 'none'; });
+}
 function gSincronizar(page){
   const barra = $id('topo-empresa'); if (barra) barra.style.display = G_SEM_BARRA.includes(page) ? 'none' : '';
   const wa = $id('g-ano-wrap'); if (wa) wa.style.display = G_COM_ANO.includes(page) ? '' : 'none';
@@ -723,6 +734,7 @@ function gSincronizar(page){
   if (EMP_GLOBAL.ano) $id('g-ano').value = EMP_GLOBAL.ano;
   const h = $id('g-hint');
   if (h) h.textContent = sg && !sg.value ? 'Escolha a empresa para trabalhar nos módulos.' : '';
+  gCtx();
 }
 async function gTrocar(){
   const cnpj = $id('g-empresa').value;
@@ -735,7 +747,6 @@ async function gTrocar(){
   const p = APP.page;
   if (p==='analise' || p==='importar' || p==='config') await anTrocarEmpresa();
   else if (p==='reforma') rfTrocar();
-  else if (p==='relatorios') rlCarregar();
   gSincronizar(p);
 }
 // v7.1: EMPRESA GLOBAL — a empresa (e o ano) selecionados em qualquer módulo valem para todos.
@@ -2065,6 +2076,59 @@ function anSet(path, m, val, tipo) {
 }
 
 // a Config saiu das abas: sem um lembrete, dá para analisar o ano inteiro com alíquota zerada
+// varredura completa: o que impede, o que distorce e o que é só observação
+function anVerificar(){
+  const out = [];
+  if (!AN) return out;
+  const c = AN.cfg, R = AN.receitas, F = AN.folha, C = AN.compras, D = AN.despesas;
+  const soma = o => Object.values(o||{}).reduce((s,a)=>s+(Array.isArray(a)?a.reduce((x,y)=>x+(+y||0),0):0),0);
+  const serv = ['a3_semret','a3_retiss','a3_retissinss','a4','a5r'].reduce((s,k)=>s+(R[k]||[]).reduce((x,y)=>x+(+y||0),0),0);
+  const merc = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_mono','a2_comst','a2_comst_mono']
+                 .reduce((s,k)=>s+(R[k]||[]).reduce((x,y)=>x+(+y||0),0),0);
+  const receita = serv + merc, folha = soma(F), compras = soma(C), desp = soma(D);
+  const add = (nivel, texto) => out.push({ nivel, texto });
+
+  if (!AN.cnpj) add('impede','Nenhuma empresa selecionada — a análise não pode ser salva.');
+  if (!receita) add('impede','Nenhuma receita lançada no ano.');
+
+  if (serv > 0 && !(+c.iss)) add('distorce','Há receita de serviços e a alíquota de ISS está zerada.');
+  if (merc > 0 && !(+c.icmsV)) add('distorce','Há venda de mercadorias e o % de ICMS sobre vendas está zerado.');
+  if (!(c.rbt12Lanc||[]).some(v=>+v>0) && !+c.rbt12Direto)
+    add('distorce','RBT12 dos 12 meses anteriores em branco — a faixa do Simples começa na primeira.');
+  if (serv > 0 && !folha && !(c.folha12Lanc||[]).some(v=>+v>0))
+    add('distorce','Receita de serviços sem folha lançada: o Fator R fica em 0% e os serviços caem no Anexo V.');
+  if (merc > 0 && !compras)
+    add('distorce','Há revenda sem nenhuma compra lançada — o Lucro Real fica sem custo e o lucro sai inflado.');
+  if (!desp && receita > 0)
+    add('distorce','Nenhuma despesa lançada — o Lucro Real considera a receita quase inteira como lucro.');
+
+  const mesesRec = Array.from({length:12},(_,m)=>['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a3_semret','a3_retiss','a4','a5r','comtransp']
+      .reduce((s,k)=>s+(+((R[k]||[])[m])||0),0));
+  const semRec = mesesRec.filter(v=>!v).length;
+  if (semRec && semRec < 12) add('observe',`${semRec} mês(es) sem receita lançada — confira se a empresa esteve inativa.`);
+  const desalinho = Array.from({length:12},(_,m)=>((+(F.salarios||[])[m]||0)+(+(F.prolabore||[])[m]||0)))
+      .filter((v,m)=>v>0 && !mesesRec[m]).length;
+  if (desalinho) add('observe',`${desalinho} mês(es) com folha e sem receita.`);
+  if (AN._pgdas && Array.isArray(AN._pgdas.das) && AN._res){
+    const dDecl = AN._pgdas.das.reduce((a,b)=>a+(+b||0),0), dSim = AN._res.totais.simples;
+    if (dDecl > 0 && Math.abs(dDecl - dSim)/dDecl > 0.02)
+      add('observe',`DAS declarado (${fmtR(dDecl)}) difere do simulado (${fmtR(dSim)}) em mais de 2%.`);
+  }
+  if (Object.keys(c.folhaPerc||{}).length)
+    add('observe','Esta empresa usa percentuais de folha próprios, diferentes do padrão do aplicativo.');
+  return out;
+}
+function anVerificarMostrar(){
+  const v = anVerificar();
+  if (!v.length){ alert('Verificação concluída.\n\nNenhuma inconsistência encontrada — a análise tem os dados necessários para o cálculo completo.'); return; }
+  const grupo = (nivel, rot) => { const l = v.filter(x=>x.nivel===nivel);
+    return l.length ? `\n${rot}\n` + l.map(x=>'  • '+x.texto).join('\n') + '\n' : ''; };
+  alert('Verificação da análise\n'
+    + grupo('impede','IMPEDE O CÁLCULO')
+    + grupo('distorce','DISTORCE O RESULTADO (calcula, mas o número sai errado)')
+    + grupo('observe','OBSERVAÇÕES')
+    + '\nCorrija na Configuração da empresa ou nas abas de lançamento.');
+}
 function anAvisoConfig(){
   const el = $id('an-cfg-aviso'); if (!el || !AN) return;
   const c = AN.cfg, falta = [];
@@ -3614,7 +3678,7 @@ function rlConsolidado(rot, n) {
       <div class="hint" style="margin-top:8px">Transição: PIS/COFINS saem em 2027 (entra a CBS plena); ICMS/ISS caem 10% ao ano de 2029 a 2032 e zeram em 2033 (entra o IBS); IPI apenas até 2026. Reduções de IBS/CBS conforme a classificação cClassTrib das notas importadas.${cen&&cen.usouFallback?' <b>⚠️ Aba Reforma sem dados salvos — usei alíquotas-padrão e a receita da análise; use "⚡ Preencher da análise" e salve.</b>':''}</div>
     </div>`;
   }
-  $id('rl-corpo').innerHTML = h;
+  $id('rl-corpo').innerHTML = rlCmpHtml() + h;
 }
 
 // ═══════════ RELATÓRIOS ═══════════
@@ -3637,8 +3701,18 @@ async function rlCarregar() {
   } catch {}
   if (!dados && AN && AN.cnpj===cnpj && +AN.ano===ano) dados = AN;   // análise aberta não salva
   RL.dados = dados;
-  RL.res = dados ? calcular(dados, PARAMS.anexos, PARAMS.folha) : null;
+  RL.res = dados ? calcular(dados, PARAMS.anexos, folhaPercDaEmpresa(dados.cfg)) : null;
   RL.reforma = dados?.reforma || null;
+  RL.cmp = null;
+  const ano2 = +($id('rl-ano2')?.value || 0);
+  if (ano2 && ano2 !== ano){
+    try {
+      const r2 = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano2}`, limit:'1' } });
+      let d2 = r2.length ? r2[0].dados : null;
+      if (!d2 && AN && AN.cnpj===cnpj && +AN.ano===ano2) d2 = AN;
+      if (d2) RL.cmp = { ano:ano2, res: calcular(d2, PARAMS.anexos, folhaPercDaEmpresa(d2.cfg)) };
+    } catch(e){ console.error('ano de comparação:', e); }
+  }
   rlRender();
 }
 
@@ -3879,7 +3953,7 @@ function rlParecer(){
     <div class="pp-notaia">Texto interpretativo ${RL._ia?'gerado por inteligência artificial':'padrão do sistema'} a partir dos valores calculados pelo motor do Análise Tributária Pro. Os números não são gerados pela IA. ${D.cen&&D.cen.semCreditos?'Cenários da Reforma sem créditos de IBS/CBS informados. ':(D.cen&&D.cen.proxyCompras?'Créditos de IBS/CBS estimados pelas compras de revenda da análise. ':'')}Valores em moeda constante do ano-base. Estimativas direcionais — não substituem a apuração formal de cada período.</div>
   </div></div>`;
 
-  $id('rl-corpo').innerHTML = h;
+  $id('rl-corpo').innerHTML = rlCmpHtml() + h;
 
   // ── GRÁFICOS ──
   const CORES = { verde:'#0f7a5a', gold:'#d99a2b', azul:'#1a5276', graf:'#2b3240', vinho:'#8c2f39' };
@@ -3963,6 +4037,26 @@ async function parecerIA(){
   }
 }
 
+function rlCmpHtml(){
+  if (!RL.cmp || !RL.res) return '';
+  const A = RL.res.totais, B = RL.cmp.res.totais, anoA = +$id('rl-ano').value, anoB = RL.cmp.ano;
+  const linha = (rot, a, b) => {
+    const d = a - b, pct = b ? (d/b*100) : 0;
+    const cor = d > 0 ? '#943126' : d < 0 ? '#117a65' : 'var(--muted)';
+    return `<tr><td class="rot">${rot}</td><td class="num">${fmtR(b)}</td><td class="num">${fmtR(a)}</td>
+      <td class="num" style="color:${cor}">${d>0?'+':''}${fmtR(d)}</td>
+      <td class="num" style="color:${cor}">${b?((d>0?'+':'')+pct.toFixed(1).replace('.',',')+'%'):'—'}</td></tr>`;
+  };
+  return `<div class="card"><h3 style="margin-top:0">Evolução ${anoB} → ${anoA}</h3>
+    <table class="gtable"><thead><tr><th></th><th class="num">${anoB}</th><th class="num">${anoA}</th>
+      <th class="num">Variação</th><th class="num">%</th></tr></thead><tbody>
+      ${linha('Receita', A.receita, B.receita)}
+      ${linha('Simples Nacional', A.simples, B.simples)}
+      ${linha('Lucro Presumido', A.lp, B.lp)}
+      ${linha('Lucro Real', A.lr, B.lr)}
+    </tbody></table>
+    <div class="hint" style="margin-top:8px">Aumento de carga em vermelho, redução em verde.</div></div>`;
+}
 function rlRender() {
   rlLimparCharts();
   const tipo = $id('rl-tipo').value, n = +$id('rl-per').value;
@@ -4082,7 +4176,7 @@ function rlRegimes(rot, n) {
   ${usouFallback?'⚠️ Aba Reforma sem dados desta empresa: usei as alíquotas-padrão da transição e a receita da análise, sem créditos de compras nem reduções — preencha a aba Reforma para refinar.':''}
   ${(rfxInfo?.contra?.compras_lrlp||0)+(rfxInfo?.contra?.compras_simples||0)>0?'Créditos de IBS/CBS calculados sobre as compras informadas na aba Reforma.':''}</div></div></div></div>`;
   }
-  $id('rl-corpo').innerHTML = h;
+  $id('rl-corpo').innerHTML = rlCmpHtml() + h;
   rlChart('ch-seis', { type:'bar', data:{ labels:CEN.map(c=>c.nome+(c.sub.includes('2033')?' (2033)':'')),
     datasets:[{ label:'Carga anual (R$)', data:CEN.map(c=>c.v), backgroundColor:CEN.map(c=>c.cor) }]},
     options:{ responsive:true, indexAxis:'y', plugins:{ legend:{display:false},
@@ -4199,7 +4293,7 @@ function rlReforma() {
   for (const L of linhas) h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(L.deb)}</td><td class="num">${fmt(L.cred)}</td><td class="num">${fmt(L.liq)}</td><td class="num">${fmt(L.is)}</td><td class="num">${fmt(L.rem)}</td><td class="num">${fmt(L.total)}</td></tr>`;
   h += `</tbody></table></div><div class="hint" style="margin-top:8px">Estimativas conforme parâmetros editáveis salvos na análise (EC 132/2023 · LC 214/2025). IS sem direito a crédito; créditos limitados nas aquisições do Simples.</div></div>`;
   if (window.__refCen) h += refCenCard(window.__refCen, RL.res.totais);
-  $id('rl-corpo').innerHTML = h;
+  $id('rl-corpo').innerHTML = rlCmpHtml() + h;
   rlChart('ch-rf', { type:'line', data:{ labels:anos, datasets:[
     { label:'IBS/CBS líquido + IS', data:linhas.map(l=>l.liq+l.is), borderColor:CORES.simples, backgroundColor:CORES.simples, fill:false },
     { label:'Tributos atuais remanescentes', data:linhas.map(l=>l.rem), borderColor:CORES.lp, backgroundColor:CORES.lp, fill:false },
