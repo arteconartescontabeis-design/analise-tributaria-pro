@@ -143,6 +143,22 @@ for (const i of [1,2]) {
 chk(`gabaritos: ${OKG}/${TOTG} (trava do sublimite documentada)`, TOTG>0 && DIVERG.length===0,
     DIVERG.slice(0,5).join(' | '));
 
+// ═══ 6. Integridade da interface ═══
+// Todo elemento que o código acessa por $id() precisa existir no HTML.
+// Foi a ausência disso que deixou passar container removido e seletor duplicado.
+console.log('\n■ Integridade da interface');
+{
+  const usados = new Set([...html.matchAll(/\$id\('([^']+)'\)/g)].map(m=>m[1])
+                    .filter(id => !id.includes('${')));            // ids montados em runtime
+  const declarados = new Set([
+    ...[...html.matchAll(/id="([^"]+)"/g)].map(m=>m[1]),
+    ...[...html.matchAll(/id='([^']+)'/g)].map(m=>m[1])
+  ]);
+  const orfaos = [...usados].filter(id => !declarados.has(id)).sort();
+  chk(`todo $id() tem elemento correspondente (${usados.size} referências)`, orfaos.length===0,
+      orfaos.length ? 'sem declaração: ' + orfaos.join(', ') : '');
+}
+
 // ═══ RESULTADO ═══
 console.log('\n══════════════════════════════════');
 console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
