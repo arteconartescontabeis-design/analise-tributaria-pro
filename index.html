@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.4</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.8.6</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -290,12 +290,12 @@ canvas{max-height:340px}
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
             <b>🚚 Análise de fornecedores</b>
             <div><b id="fo-emp"></b> <span class="hint" id="fo-per"></span></div>
-            <button class="btn solid" id="fo-btn" onclick="fornConsultar()">Consultar fornecedores na Receita</button>
+            <button class="btn solid" id="fo-btn" onclick="comBotao('fo-btn','Consultando fornecedores',()=>fornConsultar())">Consultar fornecedores na Receita</button>
             <span class="hint" id="fo-prog"></span>
           </div>
           <div id="fo-acoes" style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap"></div>
           <button class="btn" id="fo-refazer" style="display:none;margin-bottom:10px"
-            onclick="if(confirm('Consultar TODOS de novo na Receita, ignorando o que já foi consultado nos últimos 30 dias?')) fornConsultar(true)">
+            onclick="if(confirm('Consultar TODOS de novo na Receita, ignorando o que já foi consultado nos últimos 30 dias?')) comBotao('fo-refazer','Reconsultando',()=>fornConsultar(true))">
             🔄 Reconsultar todos na Receita</button>
           <div id="fo-stats" style="margin-bottom:10px"></div>
           <div style="overflow:auto"><table class="tbl"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead><tbody id="fo-body"></tbody></table></div>
@@ -313,7 +313,7 @@ canvas{max-height:340px}
           </div>
         </div>
         <div class="toolbar" style="margin-top:16px;margin-bottom:0">
-          <button class="btn solid" id="btn-consultar" onclick="iniciarConsulta()">Consultar na base da Receita</button>
+          <button class="btn solid" id="btn-consultar" onclick="comBotao('btn-consultar','Consultando',()=>iniciarConsulta())">Consultar na base da Receita</button>
           <button class="btn" onclick="limparConsulta()">🧹 Limpar dados</button>
           <div class="progress" id="prog-wrap" style="display:none"><div class="bar" id="prog-bar"></div></div>
           <span class="hint" id="prog-txt"></span>
@@ -343,7 +343,7 @@ canvas{max-height:340px}
         <h1 style="margin:0">Análise Tributária — Regime Atual</h1><span class="ctx-emp" style="font-weight:600;color:var(--primary,#1a5276)"></span>
         <span class="crumb">Simples × Presumido × Real</span>
         <span style="flex:1"></span>
-        <button class="btn solid" onclick="anSalvar()">💾 Salvar análise</button>
+        <button class="btn solid" id="an-btn-salvar" onclick="comBotao('an-btn-salvar','Salvando',()=>anSalvar())">💾 Salvar análise</button>
         <button class="btn" onclick="anRecalcular()">Recalcular</button>
         <button class="btn" onclick="anVerificarMostrar()" title="Varre a análise e lista o que impede o cálculo, o que distorce o resultado e o que merece conferência">🔎 Verificar</button>
       </div>
@@ -365,30 +365,6 @@ canvas{max-height:340px}
     </div>
     <div id="page-importar" style="display:none">
       <div class="page-title"><h1>Importar Dados</h1><span class="ctx-emp" style="font-weight:600;color:var(--primary,#1a5276)"></span><span class="crumb">Alimenta a análise da empresa e do ano escolhidos no topo</span></div>
-      <div class="card">
-        <h3 style="margin-top:0">Importadores <span class="hint" style="font-weight:400">— cada um preenche uma parte da análise; os demais campos não são tocados</span></h3>
-        <table style="width:100%;border-collapse:collapse">
-          <tr><td style="padding:7px 0;width:270px"><button class="btn" onclick="$id('imp-pgdas-card').style.display='block'">📄 Importar PGDAS-D</button></td>
-              <td class="hint">Preenche <b>Receitas</b> pelas declarações mensais do Simples.</td></tr>
-          <tr><td style="padding:7px 0"><button class="btn" onclick="$id('imp-fat-card').style.display='block'">🧾 Importar Faturamento</button></td>
-              <td class="hint">Preenche <b>Receitas</b> pelo Demonstrativo Mensal de Faturamento do Questor.</td></tr>
-          <tr><td style="padding:7px 0"><button class="btn" onclick="$id('imp-dem-card').style.display='block'">📑 Importar Demonst. do Simples</button></td>
-              <td class="hint">Preenche <b>Receitas</b> e confere com o PGDAS.</td></tr>
-          <tr><td style="padding:7px 0"><button class="btn" onclick="$id('imp-bal-card').style.display='block'">📊 Importar balancete</button></td>
-              <td class="hint">Preenche <b>Despesas</b> e o <b>custo das mercadorias</b> pelo balancete do Questor.</td></tr>
-          <tr><td style="padding:7px 0"><button class="btn" onclick="$id('imp-xml-card').style.display='block'">🗂️ Importar XMLs</button></td>
-              <td class="hint">Preenche <b>Receitas</b> nota a nota e classifica os serviços para a Reforma.</td></tr>
-          <tr><td style="padding:7px 0"><input type="file" id="an-folha-file" accept=".pdf" multiple style="display:none" onchange="folhaLerRelacao(this)">
-              <button class="btn" onclick="$id('an-folha-file').click()">👥 Importar folha</button></td>
-              <td class="hint">Preenche <b>Folha</b> pela Relação de Cálculo do Questor; vários meses no mesmo arquivo.</td></tr>
-          <tr><td style="padding:7px 0"><button class="btn" onclick="anModeloBaixar()">📋 Baixar planilha modelo</button></td>
-              <td class="hint">Planilha com todos os campos, já formatada e com ajuda por linha.</td></tr>
-          <tr><td style="padding:7px 0"><input type="file" id="an-modelo-file" accept=".xlsx,.xls" style="display:none" onchange="anModeloImportar(this)">
-              <button class="btn" onclick="$id('an-modelo-file').click()">📥 Importar modelo preenchido</button></td>
-              <td class="hint">Preenche <b>tudo o que estiver na planilha</b> — linhas em branco não alteram nada.</td></tr>
-        </table>
-        <div class="hint" style="margin-top:10px">Compras de fornecedores entram pela <b>Consulta CNPJ</b>, na aba de revenda.</div>
-      </div>
       <div class="card" id="imp-pgdas-card" style="display:none">
         <h3>Importar PGDAS-D <span class="hint" style="font-weight:400">— selecione um ou vários PDFs de declaração (meses diferentes da mesma empresa)</span></h3>
         <input type="file" id="imp-pgdas-files" accept=".pdf" multiple onchange="pgdasLer(this)">
@@ -414,10 +390,50 @@ canvas{max-height:340px}
         <input type="file" id="imp-xml-files" accept=".xml" multiple onchange="xmlLer(this)">
         <div id="imp-xml-review" style="margin-top:12px"></div>
       </div>
+      <div class="card">
+        <h3 style="margin-top:0">Importadores <span class="hint" style="font-weight:400">— cada um preenche uma parte da análise; os demais campos não são tocados</span></h3>
+        <input type="file" id="an-folha-file" accept=".pdf" multiple style="display:none" onchange="folhaLerRelacao(this)">
+        <input type="file" id="an-modelo-file" accept=".xlsx,.xls" style="display:none" onchange="anModeloImportar(this)">
+        <div class="grid c4" style="gap:12px">
+          <div style="border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:12px">
+            <button class="btn" style="width:100%" onclick="$id('imp-pgdas-card').style.display='block'">📄 PGDAS-D</button>
+            <div class="hint" style="margin-top:8px">Preenche <b>Receitas</b> pelas declarações mensais do Simples.</div>
+          </div>
+          <div style="border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:12px">
+            <button class="btn" style="width:100%" onclick="$id('imp-fat-card').style.display='block'">🧾 Faturamento</button>
+            <div class="hint" style="margin-top:8px">Preenche <b>Receitas</b> pelo Demonstrativo Mensal de Faturamento.</div>
+          </div>
+          <div style="border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:12px">
+            <button class="btn" style="width:100%" onclick="$id('imp-dem-card').style.display='block'">📑 Demonst. do Simples</button>
+            <div class="hint" style="margin-top:8px">Preenche <b>Receitas</b> e confere com o PGDAS.</div>
+          </div>
+          <div style="border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:12px">
+            <button class="btn" style="width:100%" onclick="$id('imp-bal-card').style.display='block'">📊 Balancete</button>
+            <div class="hint" style="margin-top:8px">Preenche <b>Despesas</b> e o custo das mercadorias.</div>
+          </div>
+          <div style="border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:12px">
+            <button class="btn" style="width:100%" onclick="$id('imp-xml-card').style.display='block'">🗂️ XMLs de notas</button>
+            <div class="hint" style="margin-top:8px">Preenche <b>Receitas</b> nota a nota e classifica os serviços para a Reforma.</div>
+          </div>
+          <div style="border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:12px">
+            <button class="btn" style="width:100%" onclick="$id('an-folha-file').click()">👥 Folha</button>
+            <div class="hint" style="margin-top:8px">Preenche <b>Folha</b> pela Relação de Cálculo; vários meses no mesmo arquivo.</div>
+          </div>
+          <div style="border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:12px">
+            <button class="btn" style="width:100%" onclick="anModeloBaixar()">📋 Baixar modelo</button>
+            <div class="hint" style="margin-top:8px">Planilha com todos os campos, formatada e com ajuda por linha.</div>
+          </div>
+          <div style="border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:12px">
+            <button class="btn" style="width:100%" onclick="$id('an-modelo-file').click()">📥 Importar modelo</button>
+            <div class="hint" style="margin-top:8px">Preenche <b>tudo o que estiver na planilha</b> — linhas em branco não alteram nada.</div>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:12px">Compras de fornecedores entram pela <b>Consulta CNPJ</b>, na aba de revenda.</div>
+      </div>
       <div class="card" style="border-left:4px solid var(--danger,#943126)">
         <h3 style="margin-top:0;color:#943126">Excluir dados</h3>
         <div class="hint" style="margin-bottom:10px">Apaga do banco de dados e <b>não tem desfazer</b>. Age somente sobre a empresa selecionada no topo.</div>
-        <button class="btn" onclick="anLimparDados()">🧹 Limpar dados da empresa</button>
+        <button class="btn" id="an-btn-limpar" onclick="comBotao('an-btn-limpar','Excluindo',()=>anLimparDados())">🧹 Limpar dados da empresa</button>
       </div>
     </div>
     <div id="page-reforma" style="display:none">
@@ -427,7 +443,7 @@ canvas{max-height:340px}
         <div style="display:none"><input type="number" id="rf-ano" value="2026" onchange="rfTrocar()"></div>
         <div style="align-self:flex-end"><button class="btn" onclick="rfAutoPreencher()" title="Preenche receita, compras, contrapartes e — quando houver XMLs importados — as parcelas de receita com redução">⚡ Preencher da análise</button></div>
         <div style="align-self:flex-end;display:flex;gap:8px">
-          <button class="btn solid" onclick="rfSalvar()">💾 Salvar</button>
+          <button class="btn solid" id="rf-btn-salvar" onclick="comBotao('rf-btn-salvar','Salvando',()=>rfSalvar())">💾 Salvar</button>
           <button class="btn" onclick="rfCalcular()">Recalcular</button>
           <button class="btn" onclick="rfVerificarMostrar()" title="Verifica se a Reforma tem os dados necessários">🔎 Verificar</button>
         </div>
@@ -568,7 +584,9 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.8.4</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>O resultado da verificação deixou de ser uma janela de aviso e passou a ser um painel na própria tela, em que cada apontamento traz o link <b>corrigir</b> que leva direto ao lugar onde se resolve — a aba de folha, a de compras, a de receitas, o RBT12 ou a Configuração da empresa, conforme o caso. A <b>Reforma ganhou o seu próprio verificador</b>, com as perguntas que fazem sentido ali: receita zerada, ausência de compras de contraparte — que zera o crédito de IBS/CBS e superestima a carga —, análise de fornecedores cobrindo menos de doze meses enquanto a projeção é anual, alíquotas próprias diferentes do padrão e análise do regime atual não carregada. Corrigido também o seletor de empresa que ainda aparecia duplicado na aba Reforma: agora vale apenas o do topo, e os botões de ação foram para a linha do título.</td></tr>
+          <tr><td><b>v7.8.6</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Importar Dados reorganizado. A área de seleção de arquivo passou a aparecer <b>acima</b> da lista de importadores: antes ela abria abaixo da relação inteira e era preciso rolar a página para encontrá-la depois de clicar. Os importadores deixaram de ser uma lista vertical e passaram a ocupar a largura da tela em blocos lado a lado, com a explicação do que cada um preenche logo abaixo do respectivo botão — a mesma informação em menos da metade do espaço.</td></tr>
+          <tr><td><b>v7.8.5</b></td><td>28/07/2026</td><td>Correção do travamento ao consultar fornecedores. Para montar a pergunta com o número de consultas já em cache, o app fazia <b>uma consulta ao banco por fornecedor</b> — com cento e sessenta fornecedores eram cento e sessenta requisições antes de qualquer coisa aparecer na tela. Passou a ser uma única consulta por lote. Some-se a isso que o botão só era bloqueado depois dessa espera, de modo que cada novo clique disparava outra execução em paralelo — daí a impressão de que nada acontecia e depois tudo acontecia várias vezes. Os botões de operação demorada agora se bloqueiam no instante do clique e exibem o que estão fazendo — Consultando, Salvando, Excluindo —, voltando ao normal ao terminar, inclusive em caso de erro. E a consulta de fornecedores passou a perguntar se você realmente deseja consultar de novo sempre que a lista já tiver sido consultada antes.</td></tr>
+          <tr><td><b>v7.8.4</b></td><td>28/07/2026</td><td>O resultado da verificação deixou de ser uma janela de aviso e passou a ser um painel na própria tela, em que cada apontamento traz o link <b>corrigir</b> que leva direto ao lugar onde se resolve — a aba de folha, a de compras, a de receitas, o RBT12 ou a Configuração da empresa, conforme o caso. A <b>Reforma ganhou o seu próprio verificador</b>, com as perguntas que fazem sentido ali: receita zerada, ausência de compras de contraparte — que zera o crédito de IBS/CBS e superestima a carga —, análise de fornecedores cobrindo menos de doze meses enquanto a projeção é anual, alíquotas próprias diferentes do padrão e análise do regime atual não carregada. Corrigido também o seletor de empresa que ainda aparecia duplicado na aba Reforma: agora vale apenas o do topo, e os botões de ação foram para a linha do título.</td></tr>
           <tr><td><b>v7.8.3</b></td><td>28/07/2026</td><td>Corrigida a duplicação do seletor de empresa: ao criar a barra global, os seletores da Reforma e dos Relatórios haviam permanecido na tela e a empresa aparecia duas vezes. A Reforma passou a usar apenas a barra do topo; os Relatórios voltaram a ter os próprios controles, por serem um gerador com tipo e periodicidade próprios, e a barra global deixa de aparecer ali. O nome da empresa e o ano passaram a acompanhar o título de cada módulo. Os Relatórios ganharam um campo opcional de <b>ano de comparação</b>: informando um segundo ano, o relatório abre com a evolução entre os dois — receita e carga de cada regime, com variação em reais e em percentual, aumento em vermelho e redução em verde. E foi criado o botão <b>Verificar</b>, que varre a análise e classifica o que encontra em três níveis: o que impede o cálculo, o que distorce o resultado sem impedir — Fator R zerado por falta de folha, revenda sem compras lançadas, Lucro Real sem despesas, ISS ou ICMS zerados — e o que é apenas observação, como meses sem receita, folha em mês sem faturamento e divergência acima de 2% entre o DAS declarado e o simulado.</td></tr>
           <tr><td><b>v7.8.2</b></td><td>28/07/2026</td><td>Reorganização da tela de Análise Atual. As abas de lançamento subiram para logo abaixo dos números-resumo: antes era preciso percorrer a página inteira para digitar e voltar ao topo para ver o efeito. Os botões Salvar e Recalcular saíram do cartão que ocupavam sozinhos e foram para a linha do título, e a barra de empresa passou a caber numa linha só — três blocos de cabeçalho viraram um. O aviso de dados faltantes ganhou uma verificação que faltava: quando há receita de serviços e nenhuma folha lançada, o Fator R fica em 0% e os serviços caem no Anexo V, o pior enquadramento, inflando o imposto calculado sem que nada na tela denunciasse. Alterações digitadas à mão passaram a contar como pendência de gravação, e sair do módulo com alterações não salvas agora avisa — antes só a troca de empresa era protegida. Por fim, a tabela de <b>alíquotas por ano da transição</b> saiu da aba Reforma e passou a ser editada em Parâmetros, onde altera o padrão do aplicativo que semeia cada nova análise; a aba Reforma indica onde encontrá-la.</td></tr>
           <tr><td><b>v7.8.1</b></td><td>28/07/2026</td><td>A Configuração da empresa passou a vir antes da Análise Atual no menu, seguindo a ordem do trabalho: configurar, importar, analisar. A presunção da <b>CSLL sobre revenda e indústria</b>, que estava fixa em 12% dentro do cálculo, virou campo editável ao lado das demais — agora as quatro bases do Lucro Presumido (IRPJ e CSLL, de serviços e de comércio) são visíveis e ajustáveis, o que permite refletir casos como revenda de combustível, transporte de cargas e serviços hospitalares. O <b>RBT12 dos doze meses anteriores</b> saiu da configuração e virou a primeira aba da Análise Atual, junto das demais linhas mensais, por ser lançamento e não parâmetro. Os <b>percentuais de folha</b> deixaram de ser apenas globais: cada empresa pode ter os seus, herdando os do aplicativo enquanto nada for preenchido — necessário porque o RAT depende do grau de risco e do FAP, individuais, e a alíquota de terceiros varia conforme o FPAS. As <b>alíquotas da Reforma</b> continuam sendo editadas em Parâmetros, por decorrerem da lei e valerem para todos; a Configuração da empresa passou a informar se aquela empresa está usando alíquotas próprias e a oferecer o retorno ao padrão.</td></tr>
@@ -766,6 +784,16 @@ function empGlobalAplicar(selId, anoId){
   const a = $id(anoId);
   if (a && EMP_GLOBAL.ano) a.value = EMP_GLOBAL.ano;
 }
+// v7.8.5: enquanto roda, o botão fica desabilitado e diz o que está fazendo
+async function comBotao(alvo, rotulo, fn){
+  const b = typeof alvo === 'string' ? $id(alvo) : alvo;
+  if (b && b.dataset.rodando === '1') return;
+  const orig = b ? b.innerHTML : '';
+  if (b){ b.dataset.rodando = '1'; b.disabled = true; b.innerHTML = (rotulo || 'Executando') + '…'; }
+  try { return await fn(); }
+  catch(e){ console.error(e); toast('Erro: ' + (e.message||e)); }
+  finally { if (b){ b.disabled = false; b.innerHTML = orig; delete b.dataset.rodando; } }
+}
 function toast(msg) {
   const t = $id('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 3200);
@@ -844,6 +872,20 @@ async function cnpjCacheLer(cnpj){
     if (dias > CNPJ_CACHE_DIAS) return null;         // vencido: reconsulta na Receita
     return { ...r[0].dados, cnpj, doCache:true, diasCache: Math.floor(dias) };
   } catch(e){ return null; }                         // tabela ausente ou offline: segue direto
+}
+async function cnpjCacheContar(cnpjs){
+  if (!cnpjs.length) return 0;
+  const lim = new Date(Date.now() - CNPJ_CACHE_DIAS*86400000).toISOString();
+  let tot = 0;
+  for (let i=0; i<cnpjs.length; i+=200){
+    const lote = cnpjs.slice(i, i+200);
+    try {
+      const r = await supa('GET','atp_cnpj_cache',{ params:{ select:'cnpj',
+        cnpj:`in.(${lote.join(',')})`, consultado_em:`gte.${lim}` } });
+      tot += (r||[]).length;
+    } catch(e){ return 0; }                 // sem cache disponível: trata como tudo novo
+  }
+  return tot;
 }
 async function cnpjCacheGravar(cnpj, d){
   if (!d || d.erro) return;                          // erro não vira cache
@@ -1055,7 +1097,7 @@ function fornAcoes(){
   const alvo = $id('fo-acoes'); if (!alvo) return;
   if (!FO || !FO.itens.some(i=>i.classe)) { alvo.innerHTML = ''; return; }
   const rev = FO_TIPO === 'revenda';
-  alvo.innerHTML = `<button class="btn solid" onclick="fornSalvar()">💾 Salvar análise no histórico da empresa</button>`
+  alvo.innerHTML = `<button class="btn solid" id="fo-btn-salvar" onclick="comBotao('fo-btn-salvar','Salvando',()=>fornSalvar())">💾 Salvar análise no histórico da empresa</button>`
     + `<button class="btn" onclick="${rev?'fornLancarCompras()':'fornLancarDespesas()'}">`
     + `➕ Lançar total ${rev?'em Compras':'nas Despesas'} da análise</button>`;
 }
@@ -1139,9 +1181,11 @@ function fornMesesDoPeriodo(per){
 async function fornConsultar(forcar){
   if (!FO) return;
   const alvos = FO.itens.filter(i => i.classe !== 'pf');
-  let emCache = 0;
+  if (!alvos.length){ toast('Nenhum CNPJ a consultar (só pessoas físicas na lista).'); return; }
   if (!forcar){
-    for (const it of alvos) if (await cnpjCacheLer(it.cnpj)) emCache++;
+    const jaFeita = FO.itens.some(i => i.classe && i.classe !== 'pf');
+    if (jaFeita && !confirm(`Estes ${alvos.length} fornecedores já foram consultados.\n\nDeseja realmente consultar novamente?`)) return;
+    const emCache = await cnpjCacheContar(alvos.map(i=>i.cnpj));
     const novos = alvos.length - emCache;
     if (novos > 0){
       const seg = Math.ceil(novos * 0.35);
@@ -1151,7 +1195,7 @@ async function fornConsultar(forcar){
         + `Deseja continuar?`)) return;
     }
   }
-  const btn = $id('fo-btn'); btn.disabled = true;
+  const btn = $id('fo-btn');
   for (let i=0;i<FO.itens.length;i++){
     if (FO.itens[i].classe === 'pf') continue;          // CPF não existe na base de CNPJ
     $id('fo-prog').textContent = `Consultando ${i+1} de ${FO.itens.length}…`;
@@ -1164,7 +1208,6 @@ async function fornConsultar(forcar){
   $id('fo-prog').textContent = 'Concluído.';
   fornAcoes();
   const br = $id('fo-refazer'); if (br) br.style.display = '';
-  btn.disabled=false;
 }
 async function fornSalvar(){
   if (!FO || !FO.itens.some(i=>i.classe)) { toast('Consulte os fornecedores antes de salvar.'); return; }
