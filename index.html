@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.9.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.9.1</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -587,7 +587,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.9.0</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Correção de quatro falhas relatadas em uso. Os importadores de <b>balancete, XMLs e Demonstrativo do Simples</b> não marcavam a análise como pendente nem acionavam a gravação automática criada para os demais — importavam, mostravam o resultado na tela e nada era salvo. A gravação automática também deixou de falhar em silêncio: quando o CNPJ não é identificado no relatório, ou quando o próprio salvamento falha, o app agora avisa em janela, dizendo o que fazer. O link <b>corrigir</b> da verificação passou a trocar a aba pelo identificador correto e a rolar a tela até o campo em questão, em vez de apenas mudar de módulo. E o botão <b>Verificar</b> passou a recalcular antes de varrer, de modo que cada clique reflete o estado atual da análise e não o do último cálculo.</td></tr>
+          <tr><td><b>v7.9.1</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Três correções apontadas pela auditoria. A gravação da análise passou a <b>conferir se alguém salvou depois de você</b>: como existe um único registro por empresa e ano, duas pessoas trabalhando ao mesmo tempo se sobrescreviam em silêncio — agora o app informa a data da última gravação e pede confirmação antes de substituir. A verificação da Reforma passou a alertar que o <b>Imposto Seletivo está com alíquota zero</b> em todos os anos enquanto a regulamentação não é publicada, o que torna a projeção incompleta para quem produz ou importa bebidas, fumo e veículos. E a suíte de testes ganhou uma <b>verificação de integridade da interface</b>, que confere se todo elemento referenciado pelo código existe de fato na tela; ela já apontou uma referência órfã deixada pela mudança das alíquotas de transição para Parâmetros, agora removida.</td></tr>
+          <tr><td><b>v7.9.0</b></td><td>28/07/2026</td><td>Correção de quatro falhas relatadas em uso. Os importadores de <b>balancete, XMLs e Demonstrativo do Simples</b> não marcavam a análise como pendente nem acionavam a gravação automática criada para os demais — importavam, mostravam o resultado na tela e nada era salvo. A gravação automática também deixou de falhar em silêncio: quando o CNPJ não é identificado no relatório, ou quando o próprio salvamento falha, o app agora avisa em janela, dizendo o que fazer. O link <b>corrigir</b> da verificação passou a trocar a aba pelo identificador correto e a rolar a tela até o campo em questão, em vez de apenas mudar de módulo. E o botão <b>Verificar</b> passou a recalcular antes de varrer, de modo que cada clique reflete o estado atual da análise e não o do último cálculo.</td></tr>
           <tr><td><b>v7.8.9</b></td><td>28/07/2026</td><td>O resultado da triagem passou a explicar o que ele é e o que não é. A triagem apenas classifica o regime dos CNPJs informados e, por não conter valores, nunca teve como lançar nada na análise — o que gerava a impressão de que faltava um botão de importar. O aviso indica agora qual relatório usar quando o objetivo é lançar valores: Totais ISS por Fornecedor/Cliente para serviços tomados e Totais ICMS por Fornecedor/Cliente para as entradas de revenda, ambos pelas abas do bloco de análise de fornecedores.</td></tr>
           <tr><td><b>v7.8.8</b></td><td>28/07/2026</td><td>Correção na comparação entre o DAS declarado e o simulado. A verificação somava os meses declarados no PGDAS e confrontava esse total com o imposto simulado do <b>ano inteiro</b>. Quando o PGDAS importado cobria apenas parte do ano — quatro meses, por exemplo —, a diferença apontada era artificial e podia chegar a três vezes, sem que houvesse erro algum de cálculo. A comparação passou a considerar somente os meses efetivamente declarados, avisa quantos meses o arquivo cobre quando não são os doze, e informa a diferença em reais e em percentual, apontando o que costuma explicá-la: Fator R, anexo das receitas e importação em duplicidade.</td></tr>
           <tr><td><b>v7.8.7</b></td><td>28/07/2026</td><td>A seleção de empresa e ano deixou de ocupar um cartão inteiro no topo e virou uma faixa fina, com os dois campos e os rótulos na mesma linha. São cerca de quarenta pixels de altura recuperados em todas as telas, que passam a mostrar mais conteúdo sem rolagem.</td></tr>
@@ -739,7 +740,7 @@ function go(page) {
   if (page==='parametros') { prRender(); prRenderAliq(); }
   if (page==='reforma') { empCarregar().then(()=>{ const sel=$id('rf-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; sel.value=at||''; if (EMP_GLOBAL.cnpj) empGlobalAplicar('rf-empresa','rf-ano');
     if (sel.value && (!RF || RF.cnpj!==sel.value || +RF.ano!==+$id('rf-ano').value)) { rfTrocar(); }
-    else if(!RF){ RF=rfNovo('', +$id('rf-ano').value); rfRenderAliq(); rfRenderBenef(); rfCalcular(); } }); }
+    else if(!RF){ RF=rfNovo('', +$id('rf-ano').value); rfRenderBenef(); rfCalcular(); } }); }
   if (page==='usuarios') usCarregar();
   empCarregar().then(()=>gSincronizar(page)).catch(()=>gSincronizar(page));
 }
@@ -2229,6 +2230,8 @@ function rfVerificar(){
   else if (!cl) add('observe','Só há compras de Simples/MEI lançadas — confira se faltam fornecedores do regime normal.','reforma');
   if (RF._forn && RF._forn.partes && RF._forn.partes.some(x=>x.meses && x.meses < 12))
     add('distorce','A análise de fornecedores cobre menos de doze meses, mas a Reforma projeta o ano inteiro — as compras estão subdimensionadas.','cnpj');
+  if (!RF_ANOS.some(a => +((RF.aliq[a]||{}).is) > 0))
+    add('observe','Imposto Seletivo com alíquota zero em todos os anos (regulamentação pendente). Se a empresa produz ou importa bens sujeitos ao IS — bebidas, fumo, veículos —, a projeção da Reforma está incompleta.','parametros');
   if (PARAMS.reforma && JSON.stringify(RF.aliq) !== JSON.stringify(PARAMS.reforma))
     add('observe','Esta empresa usa alíquotas de transição próprias, diferentes do padrão do aplicativo.','config');
   if (!AN || AN.cnpj !== RF.cnpj)
@@ -2272,7 +2275,7 @@ function cfgReformaPadrao(){
   if (!RF || !PARAMS.reforma) { toast('Abra a Reforma desta empresa primeiro.'); return; }
   if (!confirm('Descartar as alíquotas próprias desta empresa e voltar às do aplicativo (Parâmetros)?')) return;
   RF.aliq = JSON.parse(JSON.stringify(PARAMS.reforma));
-  rfRenderAliq?.(); rfCalcular?.(); anRenderConfig();
+  rfCalcular?.(); anRenderConfig();
   toast('Alíquotas da Reforma voltaram ao padrão do aplicativo.');
 }
 function anRenderConfig() {
@@ -2449,6 +2452,7 @@ async function anTrocarEmpresa() {
     const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
     AN = anNormalizar(rows.length ? rows[0].dados : null, cnpj, ano);
     AN.cnpj = cnpj; AN.ano = ano;
+    AN._verEm = rows.length ? (rows[0].atualizado_em || null) : null;   // marca da versão lida
   } catch { AN = anNovo(cnpj, ano); }
   AN_SUJO = false;
   anRenderTabs(); anRenderGrid(); anRecalcular();
@@ -2456,10 +2460,20 @@ async function anTrocarEmpresa() {
 function anMudou(){ anTrocarEmpresa(); }
 async function anSalvar() {
   if (!AN || !AN.cnpj) { toast('Selecione a empresa no topo (ou importe PGDAS/Faturamento, que o cadastro é automático).'); return false; }
+  // ninguém deve sobrescrever, sem saber, o trabalho de outra pessoa na mesma empresa/ano
+  try {
+    const atual = await supa('GET','atp_analises',{ params:{ select:'atualizado_em', cnpj:`eq.${AN.cnpj}`, ano:`eq.${AN.ano}`, limit:'1' } });
+    const remoto = atual && atual.length ? atual[0].atualizado_em : null;
+    if (remoto && AN._verEm && remoto !== AN._verEm){
+      if (!confirm('Esta análise foi gravada por outra pessoa (ou em outra aba) depois que você a abriu.\n\n'
+        + `Última gravação: ${new Date(remoto).toLocaleString('pt-BR')}.\n\n`
+        + 'Salvar agora substitui o que foi gravado. Continuar?')) return false;
+    }
+  } catch(e){ console.error('conferência de versão:', e); }
   const T = AN._res?.totais || {};
-  const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined},
+  const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined, _verEm:undefined},
     resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr }, atualizado_em:new Date().toISOString() }];
-  try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); AN_SUJO = false; toast('Análise salva.'); return true; }
+  try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); AN_SUJO = false; AN._verEm = body[0].atualizado_em; toast('Análise salva.'); return true; }
   catch(e){ console.error('anSalvar:', e); toast('Erro ao salvar: '+e.message); return false; }
 }
 
@@ -2685,19 +2699,6 @@ function prRenderAliq(){
   }
   alvo.innerHTML = h + '</tbody>';
 }
-function rfRenderAliq() {
-  if (!$id('rf-aliq')) return;
-  const cab = ['Ano','CBS %','IS %','IBS Estado %','IBS Município %','ICMS/ISS remanesc. %','PIS/COFINS remanesc. %'];
-  let h = '<thead><tr>'+cab.map(c=>`<th class="num">${c}</th>`).join('')+'</tr></thead><tbody>';
-  for (const a of RF_ANOS) {
-    const r = RF.aliq[a];
-    h += `<tr><td class="rot">${a}${a===2026?' <span class="badge info">teste</span>':''}${a===2033?' <span class="badge ok">pleno</span>':''}</td>`;
-    for (const k of ['cbs','is','ibse','ibsm']) h += `<td><input value="${r[k]}" onchange="RF.aliq[${a}].${k}=num(this.value);rfCalcular()"></td>`;
-    for (const k of ['remIcmsIss','remPisCof']) h += `<td><input value="${+(r[k]*100).toFixed(2)}" onchange="RF.aliq[${a}].${k}=num(this.value)/100;rfCalcular()"></td>`;
-    h += '</tr>';
-  }
-  $id('rf-aliq').innerHTML = h + '</tbody>';
-}
 function rfRenderBenef() {
   const bloco = (cont, obj, id) => {
     $id(cont).innerHTML = '<table class="gtable"><tbody>' + RF_REDUCOES.map(([k,rot]) =>
@@ -2827,7 +2828,7 @@ function rfCalcular() {
 async function rfTrocar() {
   const cnpj = $id('rf-empresa').value, ano = +$id('rf-ano').value;
   empGlobalSet(cnpj, ano);
-  if (!cnpj) { RF = rfNovo('', ano); rfRenderAliq(); rfRenderBenef(); rfCalcular(); return; }
+  if (!cnpj) { RF = rfNovo('', ano); rfRenderBenef(); rfCalcular(); return; }
   // carrega análise (regime atual) da empresa para servir de base
   try {
     const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
@@ -2837,7 +2838,7 @@ async function rfTrocar() {
   RF.cnpj = cnpj; RF.ano = ano;
   if (!RF.receita && AN?._res) RF.receita = AN._res.totais.receita;
   await fornAutoAplicar();
-  rfRenderAliq(); rfRenderBenef(); rfCalcular();
+  rfRenderBenef(); rfCalcular();
 }
 async function rfSalvar() {
   if (!RF || !RF.cnpj) { toast('Selecione uma empresa.'); return; }
