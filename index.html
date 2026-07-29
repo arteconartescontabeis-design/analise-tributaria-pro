@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.10.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.10.1</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -587,7 +587,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.10.0</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td><b>Receita de exportação passou a ser calculada corretamente nos três regimes.</b> Foram criadas linhas próprias na aba Receitas para revenda, indústria e serviços destinados ao exterior. No Simples Nacional, essa receita passa a ter <b>RBT12 e faixa próprios</b>, separados do mercado interno, e sobre ela incidem apenas IRPJ, CSLL e a contribuição previdenciária — PIS, COFINS, IPI, ICMS e ISS são desconsiderados, conforme o artigo 3º, § 14, e o artigo 18, § 14, da LC 123/2006. A separação corrige dois erros que se somavam: além de cobrar tributos de que a receita é imune, a exportação inflava o RBT12 do mercado interno e empurrava toda a receita doméstica para faixas mais altas do que as devidas. No Lucro Presumido, a exportação saiu da base de PIS e COFINS e entrou nas presunções de IRPJ e CSLL; no Lucro Real, ela já ficava fora da base não cumulativa e permanece compondo o lucro tributável. A aba "12 meses anteriores" ganhou a linha do RBT12 de exportação, e a importação do PGDAS-D passou a reconhecer as atividades destinadas ao exterior, lançá-las nas linhas próprias e preencher esse RBT12 a partir da seção de mercado externo da declaração. A regra foi conferida contra três declarações reais, reproduzindo os valores ao centavo.</td></tr>
+          <tr><td><b>v7.10.1</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Completada a separação dos limites do Simples Nacional. A versão anterior já apurava a alíquota da exportação por um RBT12 próprio, mas o <b>teste de permanência no regime</b> continuava somando mercado interno e exportação no acumulado do ano — uma empresa com quatro milhões e meio no mercado interno e um milhão exportado seria apontada como fora do Simples, indevidamente. Os dois limites passaram a ser verificados de forma independente, de R$ 4.800.000,00 cada, conforme o artigo 3º, § 14, da LC 123/2006, e o aviso na tela informa qual deles foi ultrapassado, exibindo os dois acumulados lado a lado.</td></tr>
+          <tr><td><b>v7.10.0</b></td><td>28/07/2026</td><td><b>Receita de exportação passou a ser calculada corretamente nos três regimes.</b> Foram criadas linhas próprias na aba Receitas para revenda, indústria e serviços destinados ao exterior. No Simples Nacional, essa receita passa a ter <b>RBT12 e faixa próprios</b>, separados do mercado interno, e sobre ela incidem apenas IRPJ, CSLL e a contribuição previdenciária — PIS, COFINS, IPI, ICMS e ISS são desconsiderados, conforme o artigo 3º, § 14, e o artigo 18, § 14, da LC 123/2006. A separação corrige dois erros que se somavam: além de cobrar tributos de que a receita é imune, a exportação inflava o RBT12 do mercado interno e empurrava toda a receita doméstica para faixas mais altas do que as devidas. No Lucro Presumido, a exportação saiu da base de PIS e COFINS e entrou nas presunções de IRPJ e CSLL; no Lucro Real, ela já ficava fora da base não cumulativa e permanece compondo o lucro tributável. A aba "12 meses anteriores" ganhou a linha do RBT12 de exportação, e a importação do PGDAS-D passou a reconhecer as atividades destinadas ao exterior, lançá-las nas linhas próprias e preencher esse RBT12 a partir da seção de mercado externo da declaração. A regra foi conferida contra três declarações reais, reproduzindo os valores ao centavo.</td></tr>
           <tr><td><b>v7.9.4</b></td><td>28/07/2026</td><td>Reescrito o aviso de receita de exportação na importação do PGDAS-D. O texto anterior tratava a exportação como se fosse um problema da empresa, quando é situação corriqueira e com disciplina própria: imunidade de PIS, COFINS, ICMS e ISS, e limite de R$ 4.800.000,00 separado do mercado interno, conforme o artigo 3º, § 14, e o artigo 18, § 14, da LC 123/2006. O aviso agora explica esse tratamento, deixa claro que a limitação é do aplicativo — que ainda não tem linha específica para essa receita —, informa que a comparação entre regimes permanece útil embora os valores absolutos fiquem superestimados, e indica o caminho para separar os valores manualmente.</td></tr>
           <tr><td><b>v7.9.3</b></td><td>28/07/2026</td><td>Três correções na importação do PGDAS-D, encontradas ao analisar declarações reais. Quando as declarações são de um ano diferente do que está aberto, o aplicativo ajustava o ano da análise internamente mas <b>não avisava a barra do topo</b>: gravava corretamente no ano das declarações e, na primeira troca de empresa, recarregava o ano antigo — o usuário via a importação simplesmente desaparecer. Agora a barra acompanha e o ajuste é informado. As atividades de <b>prestação de serviços com retenção de ISS</b> passaram a ser lançadas na linha correspondente, e não mais como serviços sem retenção, o que impedia a recomposição prevista no artigo 21, §4º da LC 123. E a <b>receita de exportação</b>, que o aplicativo não distingue e lança como revenda no mercado interno, passou a ser identificada e sinalizada em janela ao final da importação, informando o valor e alertando que o cálculo cobra ICMS, PIS e COFINS sobre receita imune.</td></tr>
           <tr><td><b>v7.9.2</b></td><td>28/07/2026</td><td>A importação do PGDAS-D passou a adotar a empresa selecionada na barra do topo quando o CNPJ não é reconhecido no PDF — antes a análise ficava sem empresa, a gravação era recusada e a verificação acusava "nenhuma empresa selecionada" mesmo havendo uma escolhida na tela. A leitura também deixou de terminar em silêncio quando não produz resultado: se nenhuma receita for identificada, o app informa quais períodos encontrou e alerta que o arquivo pode ser o recibo ou a guia, e não o extrato completo com o quadro de atividades; se a tabela de RBT12 dos doze meses anteriores não for localizada, avisa que o campo precisa ser lançado à mão, sob pena de a faixa do Simples começar na primeira. Escolher a empresa no topo passou a valer também quando a análise ainda está em branco.</td></tr>
@@ -2373,21 +2374,34 @@ const SN_TETO = 4800000;
 //   'inelegivel' — já entrou o período inteiro acima do teto: não é opção, não entra no comparativo
 function snElegibilidade(r, cfg) {
   const decl = cfg ? cfg.snAntAcima : null;   // true = ano anterior já acima do teto | false = não | null = não perguntado
-  const rbts = r.meses.map(m=>+m.rbt12||0);
-  let ac = 0; const acum = r.meses.map(m => (ac += (+m.receita||0)));
-  const rbtMax = Math.max(...rbts, 0), acumAno = acum[acum.length-1]||0;
-  // nunca foi elegível: ou os 12 meses anteriores já estavam acima do teto,
-  // ou um único mês do período sozinho estoura o limite anual
-  const r1 = +r.meses[0]?.receita || 0;
-  const exc = (Math.max(rbtMax,acumAno)-SN_TETO)/SN_TETO;
-  // 1º os 12 meses anteriores lançados; 2º a resposta declarada; 3º a presunção (um mês sozinho estoura o ano)
-  if (rbts[0] > SN_TETO) return { estado:'inelegivel', rbtMax, acumAno, excesso:exc, fonte:'lancamento' };
-  if (decl === true)     return { estado:'inelegivel', rbtMax, acumAno, excesso:exc, fonte:'declarado' };
-  if (acumAno <= SN_TETO && rbtMax <= SN_TETO) return { estado:'elegivel', rbtMax, acumAno };
-  if (decl !== false && r1 > SN_TETO) return { estado:'inelegivel', rbtMax, acumAno, excesso:exc, fonte:'presumido' };
-  const iEst = acum.findIndex(v=>v>SN_TETO);
-  const excesso = (Math.max(acumAno, rbtMax) - SN_TETO)/SN_TETO;
-  return { estado:'transicao', rbtMax, acumAno, excesso, declaradoNao: decl === false, mesEstouro: iEst>=0 ? iEst+1 : null,
+  // LC 123 art. 3º, §14: os limites do mercado interno e da exportação são INDEPENDENTES —
+  // R$ 4,8 mi de cada lado. Somar os dois excluiria empresas que a lei mantém no Simples.
+  const lado = (rbtKey, recKey) => {
+    const rbts = r.meses.map(m => +m[rbtKey] || 0);
+    let ac = 0; const acum = r.meses.map(m => (ac += (+m[recKey] || 0)));
+    return { rbts, acum, rbtMax: Math.max(...rbts, 0), acumAno: acum[acum.length-1] || 0, r1: +r.meses[0]?.[recKey] || 0 };
+  };
+  const temExp = r.meses.some(m => (+m.recExp || 0) > 0);
+  const I = lado('rbt12', r.meses[0] && r.meses[0].recInt !== undefined ? 'recInt' : 'receita');
+  const E = temExp ? lado('rbt12Exp', 'recExp') : null;
+  const estouraAntes = L => L && L.rbts[0] > SN_TETO;
+  const estouraNoAno = L => L && (L.acumAno > SN_TETO || L.rbtMax > SN_TETO);
+  const excDe = L => L ? (Math.max(L.rbtMax, L.acumAno) - SN_TETO) / SN_TETO : 0;
+  const nomes = [];
+  if (estouraNoAno(I)) nomes.push('mercado interno');
+  if (estouraNoAno(E)) nomes.push('exportação');
+  const pior = (estouraNoAno(E) && !estouraNoAno(I)) ? E : I;
+  const base = { rbtMax: pior.rbtMax, acumAno: pior.acumAno, limites: nomes,
+                 interno: { rbtMax:I.rbtMax, acumAno:I.acumAno },
+                 exportacao: E ? { rbtMax:E.rbtMax, acumAno:E.acumAno } : null };
+  if (estouraAntes(I) || estouraAntes(E)) return { ...base, estado:'inelegivel', excesso:excDe(pior), fonte:'lancamento' };
+  if (decl === true)                       return { ...base, estado:'inelegivel', excesso:excDe(pior), fonte:'declarado' };
+  if (!estouraNoAno(I) && !estouraNoAno(E)) return { ...base, estado:'elegivel' };
+  if (decl !== false && (I.r1 > SN_TETO || (E && E.r1 > SN_TETO)))
+    return { ...base, estado:'inelegivel', excesso:excDe(pior), fonte:'presumido' };
+  const iEst = pior.acum.findIndex(v => v > SN_TETO);
+  const excesso = excDe(pior);
+  return { ...base, estado:'transicao', excesso, declaradoNao: decl === false, mesEstouro: iEst>=0 ? iEst+1 : null,
            efeito: excesso > 0.20 ? 'a partir do mês seguinte ao do excesso' : 'a partir de 1º de janeiro do ano seguinte' };
 }
 function snPerguntarAnterior(forcar) {
@@ -2405,14 +2419,16 @@ function snAvisoHtml(el) {
   const pct = (el.excesso*100).toFixed(1).replace('.',',');
   if (el.estado === 'inelegivel') return `<div class="hint" style="margin-top:8px;padding:10px 12px;border-left:4px solid var(--danger,#943126);background:#fdeaea;color:#7b241c">
     <b>Simples Nacional não é opção para esta empresa.</b> A receita bruta já entra o período inteiro acima do teto de ${fmtR(SN_TETO)}
-    (RBT12 máximo de ${fmtR(el.rbtMax)}, ${pct}% acima). O valor do DAS deixa de ser apresentado como alternativa —
+    (RBT12 máximo de ${fmtR(el.rbtMax)}, ${pct}% acima${el.limites && el.limites.length ? ', em ' + el.limites.join(' e ') : ''}). O valor do DAS deixa de ser apresentado como alternativa —
     a comparação fica entre Lucro Presumido e Lucro Real.
     <div style="margin-top:6px">${ el.fonte==='lancamento' ? 'Base: os 12 meses anteriores lançados na Config.'
       : el.fonte==='declarado' ? 'Base: você informou que o ano anterior também ficou acima do teto.'
       : 'Base: um único mês do período já supera o limite anual — presunção, porque os 12 meses anteriores não foram lançados.' }
       <a href="#" onclick="snPerguntarAnterior(true);return false" style="margin-left:6px">corrigir</a></div></div>`;
   return `<div class="hint" style="margin-top:8px;padding:10px 12px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109">
-    <b>Teto do Simples ultrapassado no período.</b> A receita acumulada chegou a ${fmtR(el.acumAno)} (${pct}% acima dos ${fmtR(SN_TETO)})
+    <b>Teto do Simples ultrapassado no período${el.limites && el.limites.length ? ' — ' + el.limites.join(' e ') : ''}.</b>
+    ${el.exportacao ? `Os limites são independentes: mercado interno ${fmtR(el.interno.acumAno)} e exportação ${fmtR(el.exportacao.acumAno)}, R$ 4,8 mi cada (LC 123, art. 3º, §14). ` : ''}
+    A receita acumulada do lado excedido chegou a ${fmtR(el.acumAno)} (${pct}% acima dos ${fmtR(SN_TETO)})
     ${el.mesEstouro?`no mês ${el.mesEstouro}`:''}. O Simples continua devido no ano — a exclusão produz efeito ${el.efeito}
     (LC 123/2006, art. 3º, §§ 9º e 9º-A). O DAS abaixo segue calculado por isso.
     <div style="margin-top:6px">${ el.declaradoNao ? 'Você informou que o ano anterior ficou dentro do teto.' : 'Se o ano anterior já estava acima do teto, a empresa não era elegível.' }
