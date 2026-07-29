@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.9.1</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.9.3</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -587,7 +587,9 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.9.1</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Três correções apontadas pela auditoria. A gravação da análise passou a <b>conferir se alguém salvou depois de você</b>: como existe um único registro por empresa e ano, duas pessoas trabalhando ao mesmo tempo se sobrescreviam em silêncio — agora o app informa a data da última gravação e pede confirmação antes de substituir. A verificação da Reforma passou a alertar que o <b>Imposto Seletivo está com alíquota zero</b> em todos os anos enquanto a regulamentação não é publicada, o que torna a projeção incompleta para quem produz ou importa bebidas, fumo e veículos. E a suíte de testes ganhou uma <b>verificação de integridade da interface</b>, que confere se todo elemento referenciado pelo código existe de fato na tela; ela já apontou uma referência órfã deixada pela mudança das alíquotas de transição para Parâmetros, agora removida.</td></tr>
+          <tr><td><b>v7.9.3</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Três correções na importação do PGDAS-D, encontradas ao analisar declarações reais. Quando as declarações são de um ano diferente do que está aberto, o aplicativo ajustava o ano da análise internamente mas <b>não avisava a barra do topo</b>: gravava corretamente no ano das declarações e, na primeira troca de empresa, recarregava o ano antigo — o usuário via a importação simplesmente desaparecer. Agora a barra acompanha e o ajuste é informado. As atividades de <b>prestação de serviços com retenção de ISS</b> passaram a ser lançadas na linha correspondente, e não mais como serviços sem retenção, o que impedia a recomposição prevista no artigo 21, §4º da LC 123. E a <b>receita de exportação</b>, que o aplicativo não distingue e lança como revenda no mercado interno, passou a ser identificada e sinalizada em janela ao final da importação, informando o valor e alertando que o cálculo cobra ICMS, PIS e COFINS sobre receita imune.</td></tr>
+          <tr><td><b>v7.9.2</b></td><td>28/07/2026</td><td>A importação do PGDAS-D passou a adotar a empresa selecionada na barra do topo quando o CNPJ não é reconhecido no PDF — antes a análise ficava sem empresa, a gravação era recusada e a verificação acusava "nenhuma empresa selecionada" mesmo havendo uma escolhida na tela. A leitura também deixou de terminar em silêncio quando não produz resultado: se nenhuma receita for identificada, o app informa quais períodos encontrou e alerta que o arquivo pode ser o recibo ou a guia, e não o extrato completo com o quadro de atividades; se a tabela de RBT12 dos doze meses anteriores não for localizada, avisa que o campo precisa ser lançado à mão, sob pena de a faixa do Simples começar na primeira. Escolher a empresa no topo passou a valer também quando a análise ainda está em branco.</td></tr>
+          <tr><td><b>v7.9.1</b></td><td>28/07/2026</td><td>Três correções apontadas pela auditoria. A gravação da análise passou a <b>conferir se alguém salvou depois de você</b>: como existe um único registro por empresa e ano, duas pessoas trabalhando ao mesmo tempo se sobrescreviam em silêncio — agora o app informa a data da última gravação e pede confirmação antes de substituir. A verificação da Reforma passou a alertar que o <b>Imposto Seletivo está com alíquota zero</b> em todos os anos enquanto a regulamentação não é publicada, o que torna a projeção incompleta para quem produz ou importa bebidas, fumo e veículos. E a suíte de testes ganhou uma <b>verificação de integridade da interface</b>, que confere se todo elemento referenciado pelo código existe de fato na tela; ela já apontou uma referência órfã deixada pela mudança das alíquotas de transição para Parâmetros, agora removida.</td></tr>
           <tr><td><b>v7.9.0</b></td><td>28/07/2026</td><td>Correção de quatro falhas relatadas em uso. Os importadores de <b>balancete, XMLs e Demonstrativo do Simples</b> não marcavam a análise como pendente nem acionavam a gravação automática criada para os demais — importavam, mostravam o resultado na tela e nada era salvo. A gravação automática também deixou de falhar em silêncio: quando o CNPJ não é identificado no relatório, ou quando o próprio salvamento falha, o app agora avisa em janela, dizendo o que fazer. O link <b>corrigir</b> da verificação passou a trocar a aba pelo identificador correto e a rolar a tela até o campo em questão, em vez de apenas mudar de módulo. E o botão <b>Verificar</b> passou a recalcular antes de varrer, de modo que cada clique reflete o estado atual da análise e não o do último cálculo.</td></tr>
           <tr><td><b>v7.8.9</b></td><td>28/07/2026</td><td>O resultado da triagem passou a explicar o que ele é e o que não é. A triagem apenas classifica o regime dos CNPJs informados e, por não conter valores, nunca teve como lançar nada na análise — o que gerava a impressão de que faltava um botão de importar. O aviso indica agora qual relatório usar quando o objetivo é lançar valores: Totais ISS por Fornecedor/Cliente para serviços tomados e Totais ICMS por Fornecedor/Cliente para as entradas de revenda, ambos pelas abas do bloco de análise de fornecedores.</td></tr>
           <tr><td><b>v7.8.8</b></td><td>28/07/2026</td><td>Correção na comparação entre o DAS declarado e o simulado. A verificação somava os meses declarados no PGDAS e confrontava esse total com o imposto simulado do <b>ano inteiro</b>. Quando o PGDAS importado cobria apenas parte do ano — quatro meses, por exemplo —, a diferença apontada era artificial e podia chegar a três vezes, sem que houvesse erro algum de cálculo. A comparação passou a considerar somente os meses efetivamente declarados, avisa quantos meses o arquivo cobre quando não são os doze, e informa a diferença em reais e em percentual, apontando o que costuma explicá-la: Fator R, anexo das receitas e importação em duplicidade.</td></tr>
@@ -774,6 +776,7 @@ async function gTrocar(){
     const s = $id(id); if (s && [...s.options].some(o=>o.value===cnpj)) s.value = cnpj;
   }
   for (const id of ['an-ano','rf-ano']){ const a = $id(id); if (a) a.value = ano; }
+  if (AN && !AN.cnpj && cnpj) AN.cnpj = cnpj;      // análise em branco adota a empresa escolhida
   const p = APP.page;
   if (p==='analise' || p==='importar' || p==='config') await anTrocarEmpresa();
   else if (p==='reforma') rfTrocar();
@@ -2886,6 +2889,7 @@ let PG_DADOS = null;
 
 const brNum = s => parseFloat(String(s).replace(/\./g,'').replace(',','.')) || 0;
 
+function pgdasExportacao(atividade){ return /para o exterior/.test(String(atividade).toLowerCase()) && !/exceto para o exterior/.test(String(atividade).toLowerCase()); }
 function pgdasBloco(atividade) {
   const a = atividade.toLowerCase();
   const st = a.includes('com substituição') || (a.includes('substituição tributária') && !a.includes('sem substituição'));
@@ -2896,7 +2900,11 @@ function pgdasBloco(atividade) {
   else if (a.includes('comunicação') || a.includes('transporte intermunicipal') || a.includes('transporte interestadual')) return 'comtransp';
   else if (a.includes('anexo iv') || a.includes('construção') || a.includes('vigilância') || a.includes('limpeza') || a.includes('obras')) return 'a4';
   else if (a.includes('fator r') || a.includes('anexo v')) return 'a5r';
-  else if (a.includes('serviço') || a.includes('locação')) return 'a3_semret';
+  else if (a.includes('serviço') || a.includes('locação')) {
+    const retIss  = /reten[çc][ãa]o.{0,30}iss|iss.{0,20}retid/.test(a);
+    const retInss = a.includes('inss') && a.includes('reten');
+    return retIss && retInss ? 'a3_retissinss' : retIss ? 'a3_retiss' : 'a3_semret';
+  }
   if (!pfx) return 'a1_semst';
   if (st && mono) return pfx+'_comst_mono';
   if (st) return pfx+'_comst';
@@ -3001,9 +3009,16 @@ async function pgdasAplicar() {
   if (!anPodeSobrescrever(['receitas'], 'O PGDAS-D')) return;
   await garantirEmpresa(PG_DADOS.cnpj, PG_DADOS.nome, 'Simples Nacional');
   if (!AN) AN = anNovo('', +$id('an-ano').value);
+  // sem CNPJ no PDF, vale o que está selecionado na barra do topo
+  if (!AN.cnpj) AN.cnpj = limparCNPJ(PG_DADOS.cnpj||'') || EMP_GLOBAL.cnpj || ($id('g-empresa')||{}).value || '';
   const chaves = Object.keys(PG_DADOS.meses);
   const anoImp = +chaves[0].split('/')[1];
-  if (+AN.ano !== anoImp) { AN.ano = anoImp; $id('an-ano').value = anoImp; }
+  if (+AN.ano !== anoImp) {                       // a barra do topo manda: sem sincronizar, o app recarrega o ano antigo e o import "some"
+    AN.ano = anoImp; $id('an-ano').value = anoImp;
+    empGlobalSet(AN.cnpj || EMP_GLOBAL.cnpj, anoImp);
+    if ($id('g-ano')) $id('g-ano').value = anoImp;
+    toast(`Ano da análise ajustado para ${anoImp}, conforme as declarações.`);
+  }
   AN._pgdas = { das: z12(), tributos: {} };
   let aplicados = 0, rpaFallback = 0;
   for (const pa of chaves) {
@@ -3021,6 +3036,25 @@ async function pgdasAplicar() {
     for (let i=0;i<12;i++) AN.cfg.rbt12Lanc[i] = tabela[`${String(i+1).padStart(2,'0')}/${anoImp-1}`] || 0;
     AN.cfg.rbt12Direto = 0;
   }
+  const expo = [];
+  for (const pa of chaves) for (const a of PG_DADOS.meses[pa].atividades)
+    if (pgdasExportacao(a.texto)) expo.push({ pa, valor:a.valor });
+  if (expo.length){
+    const tot = expo.reduce((s,x)=>s+x.valor,0);
+    alert('Atenção: as declarações contêm RECEITA DE EXPORTAÇÃO — ' + fmtR(tot) + ' em ' + expo.length + ' lançamento(s).\n\n'
+      + 'O aplicativo não tem linha própria para exportação e a lançou como revenda no mercado interno. '
+      + 'Isso faz o cálculo cobrar ICMS, PIS e COFINS sobre uma receita imune, superestimando os regimes comparados.\n\n'
+      + 'Confira esses valores na aba Receitas antes de usar o resultado.');
+  }
+  if (!aplicados){
+    alert('As declarações foram lidas, mas NENHUMA receita foi identificada.\n\n'
+      + `Períodos encontrados: ${chaves.join(', ')}.\n\n`
+      + 'Confira se os PDFs são o extrato completo do PGDAS-D (com o quadro de atividades por anexo) '
+      + 'e não apenas o recibo ou a guia DAS.');
+  }
+  if ($id('pg-rbt').checked && !AN.cfg.rbt12Lanc.some(v=>+v>0))
+    alert(`Receitas aplicadas, mas não encontrei a tabela de RBT12 dos 12 meses de ${anoImp-1} nas declarações.\n\n`
+      + 'Lance o RBT12 na aba "12 meses anteriores" da Análise Atual, senão a faixa do Simples começa na primeira.');
   $id('imp-pgdas-card').style.display='none';
   anAplicado();
   toast(`PGDAS aplicado: ${chaves.length} mês(es), ${aplicados} lançamento(s)${rpaFallback?` — ${rpaFallback} mês(es) pela RPA (confira o bloco de destino)`:''}. Salve a análise para persistir.`);
