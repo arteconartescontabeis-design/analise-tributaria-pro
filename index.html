@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.10.1</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.11.0</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -360,7 +360,15 @@ canvas{max-height:340px}
         <div id="an-grid" style="overflow-x:auto;margin-top:14px"></div>
       </div>
       <div class="card" id="an-veredito" style="display:none"></div>
-      <div class="card"><h3>Resultado mês a mês</h3><div id="an-detalhe" style="overflow-x:auto"></div></div>
+      <div class="card"><h3>Resultado mês a mês</h3>
+        <div class="hint" style="margin:-6px 0 10px">
+          <b>DAS</b> é a guia do Simples. <b>SIMPLES</b> é o custo total do regime e por isso é maior:
+          soma ao DAS o FGTS, a trava do sublimite quando o RBT12 passa de R$ 3,6 mi, o ISS e o INSS retidos pelo tomador
+          (recompostos conforme a LC 123, art. 21, § 4º) e a contribuição previdenciária do Anexo IV, devida fora do DAS.
+          <b>PRESUMIDO</b> e <b>REAL</b> também incluem FGTS e INSS patronal — é o que torna a comparação entre os três justa.
+          <a href="#" onclick="anExplicarSimples();return false">ver a composição deste ano</a>
+        </div>
+        <div id="an-detalhe" style="overflow-x:auto"></div></div>
     </div>
     <div id="page-config" style="display:none">
       <div class="page-title"><h1>Configuração da empresa</h1><span class="ctx-emp" style="font-weight:600;color:var(--primary,#1a5276)"></span><span class="crumb">Alíquotas, presunções e histórico — por empresa e ano</span></div>
@@ -485,7 +493,15 @@ canvas{max-height:340px}
       <div class="card no-print"><div class="toolbar" style="margin-bottom:0">
         <div style="min-width:260px;flex:1"><label>Empresa</label><select id="rl-empresa" onchange="rlCarregar()"></select></div>
         <div style="width:100px"><label>Ano</label><input type="number" id="rl-ano" value="2025" onchange="rlCarregar()"></div>
-          <div style="width:130px"><label>Comparar com <span class="hint" style="font-weight:400">(opcional)</span></label>
+          <div style="width:190px;display:none" id="rl-conf-modo-wrap"><label>Detalhe da conferência</label>
+            <select id="rl-conf-modo" onchange="rlRender()">
+              <option value="mes">Um mês (padrão)</option>
+              <option value="anual">Resumo anual</option>
+              <option value="completo">Completo — 12 meses</option>
+            </select></div>
+          <div style="width:110px;display:none" id="rl-conf-mes-wrap"><label>Mês</label>
+            <select id="rl-conf-mes" onchange="rlRender()"></select></div>
+          <div style="width:130px" id="rl-ano2-wrap"><label>Comparar com <span class="hint" style="font-weight:400">(opcional)</span></label>
             <input type="number" id="rl-ano2" placeholder="—" onchange="rlCarregar()"></div>
         <div><label>Relatório</label><select id="rl-tipo" onchange="rlRender()">
           <option value="regimes">Comparativo de regimes</option>
@@ -493,6 +509,7 @@ canvas{max-height:340px}
           <option value="registros">Detalhamento dos registros</option>
           <option value="reforma">Reforma Tributária</option>
           <option value="parecer">Parecer Reforma Tributária — com IA</option>
+          <option value="conferencia">Conferência de cálculos — memória (interno)</option>
         </select></div>
         <div><label>Periodicidade</label><select id="rl-per" onchange="rlRender()">
           <option value="1">Mensal</option><option value="2">Bimestral</option>
@@ -587,7 +604,10 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.10.1</b> <span class="badge ok">atual</span></td><td>28/07/2026</td><td>Completada a separação dos limites do Simples Nacional. A versão anterior já apurava a alíquota da exportação por um RBT12 próprio, mas o <b>teste de permanência no regime</b> continuava somando mercado interno e exportação no acumulado do ano — uma empresa com quatro milhões e meio no mercado interno e um milhão exportado seria apontada como fora do Simples, indevidamente. Os dois limites passaram a ser verificados de forma independente, de R$ 4.800.000,00 cada, conforme o artigo 3º, § 14, da LC 123/2006, e o aviso na tela informa qual deles foi ultrapassado, exibindo os dois acumulados lado a lado.</td></tr>
+          <tr><td><b>v7.11.0</b> <span class="badge ok">atual</span></td><td>29/07/2026</td><td>Novo relatório <b>Conferência de cálculos — memória</b>, documento interno de papel de trabalho. Diferente dos demais, ele não mostra apenas o resultado: exibe a fórmula de cada apuração com os valores já substituídos, de modo que a conferência seja feita a olho. Traz a formação do RBT12, a faixa, a alíquota efetiva e — o ponto que mais gera dúvida — a alíquota de cada bloco de receita, deixando ver por que ela difere da geral conforme haja substituição tributária, tributação monofásica, redução de base ou retenção de ISS. Segue com a decomposição nos oito tributos, o que corre por fora da guia, a apuração separada da exportação, e as bases do Lucro Presumido e do Lucro Real. Quando há PGDAS-D importado, confronta automaticamente o calculado com o declarado e sinaliza diferenças acima de dois por cento. Três modos de detalhe: um mês, resumo anual e completo. Encerra com a declaração das divergências assumidas — prejuízo não compensado, ICMS na base de PIS/COFINS, crédito por aproximação, Fator R sem 13º e a trava do sublimite —, porque papel de trabalho que omite o que não faz induz a erro.</td></tr>
+          <tr><td><b>v7.10.3</b></td><td>29/07/2026</td><td>Corrigida a comparação entre anos, criada na versão 7.8.3, que estava sendo inserida em <b>todos</b> os relatórios — inclusive no Parecer da Reforma Tributária e no relatório da Reforma, que não são telas de consulta e sim documentos formatados, com capa, papel timbrado e paginação calculada em milímetros. Preenchido o ano de comparação, um quadro era acrescentado antes da capa e deslocava todo o miolo, comprometendo a impressão. O quadro passou a valer apenas para o comparativo de regimes e o consolidado analítico, e o campo "Comparar com" desaparece quando o relatório selecionado é um dos dois documentos.</td></tr>
+          <tr><td><b>v7.10.2</b></td><td>29/07/2026</td><td>A tabela mensal passou a explicar a diferença entre as colunas DAS e SIMPLES, que gerava dúvida legítima. A primeira é a guia; a segunda é o custo total do regime e por isso é maior, somando ao DAS o FGTS, a trava do sublimite quando o RBT12 supera R$ 3,6 milhões, o ISS e o INSS retidos pelo tomador — recompostos conforme o artigo 21, § 4º, da LC 123 — e a contribuição previdenciária do Anexo IV, devida fora da guia. Como as colunas de Lucro Presumido e Lucro Real também incluem FGTS e INSS patronal, é essa composição que torna a comparação entre os três regimes equivalente. Um link abre a composição do ano, item a item, com os valores somados.</td></tr>
+          <tr><td><b>v7.10.1</b></td><td>28/07/2026</td><td>Completada a separação dos limites do Simples Nacional. A versão anterior já apurava a alíquota da exportação por um RBT12 próprio, mas o <b>teste de permanência no regime</b> continuava somando mercado interno e exportação no acumulado do ano — uma empresa com quatro milhões e meio no mercado interno e um milhão exportado seria apontada como fora do Simples, indevidamente. Os dois limites passaram a ser verificados de forma independente, de R$ 4.800.000,00 cada, conforme o artigo 3º, § 14, da LC 123/2006, e o aviso na tela informa qual deles foi ultrapassado, exibindo os dois acumulados lado a lado.</td></tr>
           <tr><td><b>v7.10.0</b></td><td>28/07/2026</td><td><b>Receita de exportação passou a ser calculada corretamente nos três regimes.</b> Foram criadas linhas próprias na aba Receitas para revenda, indústria e serviços destinados ao exterior. No Simples Nacional, essa receita passa a ter <b>RBT12 e faixa próprios</b>, separados do mercado interno, e sobre ela incidem apenas IRPJ, CSLL e a contribuição previdenciária — PIS, COFINS, IPI, ICMS e ISS são desconsiderados, conforme o artigo 3º, § 14, e o artigo 18, § 14, da LC 123/2006. A separação corrige dois erros que se somavam: além de cobrar tributos de que a receita é imune, a exportação inflava o RBT12 do mercado interno e empurrava toda a receita doméstica para faixas mais altas do que as devidas. No Lucro Presumido, a exportação saiu da base de PIS e COFINS e entrou nas presunções de IRPJ e CSLL; no Lucro Real, ela já ficava fora da base não cumulativa e permanece compondo o lucro tributável. A aba "12 meses anteriores" ganhou a linha do RBT12 de exportação, e a importação do PGDAS-D passou a reconhecer as atividades destinadas ao exterior, lançá-las nas linhas próprias e preencher esse RBT12 a partir da seção de mercado externo da declaração. A regra foi conferida contra três declarações reais, reproduzindo os valores ao centavo.</td></tr>
           <tr><td><b>v7.9.4</b></td><td>28/07/2026</td><td>Reescrito o aviso de receita de exportação na importação do PGDAS-D. O texto anterior tratava a exportação como se fosse um problema da empresa, quando é situação corriqueira e com disciplina própria: imunidade de PIS, COFINS, ICMS e ISS, e limite de R$ 4.800.000,00 separado do mercado interno, conforme o artigo 3º, § 14, e o artigo 18, § 14, da LC 123/2006. O aviso agora explica esse tratamento, deixa claro que a limitação é do aplicativo — que ainda não tem linha específica para essa receita —, informa que a comparação entre regimes permanece útil embora os valores absolutos fiquem superestimados, e indica o caminho para separar os valores manualmente.</td></tr>
           <tr><td><b>v7.9.3</b></td><td>28/07/2026</td><td>Três correções na importação do PGDAS-D, encontradas ao analisar declarações reais. Quando as declarações são de um ano diferente do que está aberto, o aplicativo ajustava o ano da análise internamente mas <b>não avisava a barra do topo</b>: gravava corretamente no ano das declarações e, na primeira troca de empresa, recarregava o ano antigo — o usuário via a importação simplesmente desaparecer. Agora a barra acompanha e o ajuste é informado. As atividades de <b>prestação de serviços com retenção de ISS</b> passaram a ser lançadas na linha correspondente, e não mais como serviços sem retenção, o que impedia a recomposição prevista no artigo 21, §4º da LC 123. E a <b>receita de exportação</b>, que o aplicativo não distingue e lança como revenda no mercado interno, passou a ser identificada e sinalizada em janela ao final da importação, informando o valor e alertando que o cálculo cobra ICMS, PIS e COFINS sobre receita imune.</td></tr>
@@ -2272,6 +2292,23 @@ function rfVerificar(){
   return out;
 }
 function rfVerificarMostrar(){ rfCalcular?.(); verifPainel('rf-verif','Verificação da Reforma', rfVerificar()); }
+function anExplicarSimples(){
+  if (!AN || !AN._res) { toast('Recalcule a análise primeiro.'); return; }
+  const M = AN._res.meses;
+  const som = f => M.reduce((s,x)=>s+(+f(x)||0),0);
+  const das = som(x=>x.simples.das), fgts = som(x=>x.simples.fgts), sub = som(x=>x.simples.sublimite);
+  const iss = som(x=>x.simples.issRetido), cpp = som(x=>x.simples.cppRetida), a4 = som(x=>x.simples.inssPatrForaDAS);
+  const tot = das+fgts+sub+iss+cpp+a4;
+  const li = (rot,v) => v ? `\n  ${rot.padEnd(38,'.')} ${fmtR(v)}` : '';
+  alert('Composição do custo do Simples Nacional no ano\n'
+    + li('DAS (guia)', das) + li('FGTS sobre a folha', fgts)
+    + li('Trava do sublimite (ICMS/ISS 5ª faixa)', sub)
+    + li('ISS retido pelo tomador (recomposto)', iss)
+    + li('INSS retido (recomposto)', cpp)
+    + li('CPP do Anexo IV, fora do DAS', a4)
+    + `\n  ${''.padEnd(38,'=')} \n  ${'TOTAL do regime'.padEnd(38,'.')} ${fmtR(tot)}`
+    + '\n\nA coluna DAS mostra apenas a primeira linha; a coluna SIMPLES mostra o total.');
+}
 function anVerificarMostrar(){ anRecalcular(); verifPainel('an-verif','Verificação da análise', anVerificar()); }
 function anAvisoConfig(){
   const el = $id('an-cfg-aviso'); if (!el || !AN) return;
@@ -4146,7 +4183,7 @@ function rlParecer(){
     <div class="pp-notaia">Texto interpretativo ${RL._ia?'gerado por inteligência artificial':'padrão do sistema'} a partir dos valores calculados pelo motor do Análise Tributária Pro. Os números não são gerados pela IA. ${D.cen&&D.cen.semCreditos?'Cenários da Reforma sem créditos de IBS/CBS informados. ':(D.cen&&D.cen.proxyCompras?'Créditos de IBS/CBS estimados pelas compras de revenda da análise. ':'')}Valores em moeda constante do ano-base. Estimativas direcionais — não substituem a apuração formal de cada período.</div>
   </div></div>`;
 
-  $id('rl-corpo').innerHTML = rlCmpHtml() + h;
+  $id('rl-corpo').innerHTML = h;
 
   // ── GRÁFICOS ──
   const CORES = { verde:'#0f7a5a', gold:'#d99a2b', azul:'#1a5276', graf:'#2b3240', vinho:'#8c2f39' };
@@ -4230,6 +4267,148 @@ async function parecerIA(){
   }
 }
 
+// ═══ Conferência de cálculos — memória (papel de trabalho interno) ═══
+const CF = {
+  lin: (rot, formula, valor) => `<tr><td class="rot" style="white-space:nowrap">${rot}</td>
+      <td style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#566573">${formula||''}</td>
+      <td class="num"><b>${valor}</b></td></tr>`,
+  tab: (titulo, linhas) => `<div style="margin:14px 0 6px;font-weight:700;color:#1a5276;font-size:13px">${titulo}</div>
+      <table class="gtable"><tbody>${linhas.join('')}</tbody></table>`,
+  pc: v => (v*100).toFixed(4).replace('.',',') + '%',
+};
+function rlConferencia(){
+  const R = RL.res, D = RL.dados, A = PARAMS.anexos;
+  const modo = ($id('rl-conf-modo')||{}).value || 'mes';
+  const mSel = +(($id('rl-conf-mes')||{}).value ?? 0);
+  const meses = modo === 'mes' ? [mSel] : [...Array(12).keys()];
+  const emp = RL.empresa || {};
+  const cab = `<div class="card" style="border-left:4px solid #1a5276">
+    <h3 style="margin:0">Conferência de cálculos — memória</h3>
+    <div class="hint">${esc(emp.razao_social||'')} · CNPJ ${fmtCNPJ(D.cnpj)} · ano-base ${D.ano}
+      · gerado em ${new Date().toLocaleString('pt-BR')} · <b>documento interno</b></div>
+    <div class="hint" style="margin-top:6px">Configuração vigente: ISS ${CF.pc(+D.cfg.iss||0)} · ICMS vendas ${CF.pc(+D.cfg.icmsV||0)} · ICMS compras ${CF.pc(+D.cfg.icmsC||0)}
+      · presunções IRPJ ${CF.pc(+D.cfg.lpBaseCom||0)} (comércio) e ${CF.pc(+D.cfg.lpBaseServ||0)} (serviços)
+      · CSLL ${CF.pc(+D.cfg.lpBaseComCsll||.12)} (comércio)
+      · folha ${Object.keys(D.cfg.folhaPerc||{}).length ? 'com percentuais próprios' : 'pelos Parâmetros do aplicativo'}</div>
+    <div class="hint" style="margin-top:6px">Origem dos dados: ${[
+        D._pgdas ? 'receitas com PGDAS-D importado' : null,
+        (D.folha?.salarios||[]).some(v=>+v>0) ? 'folha lançada' : null,
+        (D.compras?.semst||[]).some(v=>+v>0) ? 'compras lançadas' : null
+      ].filter(Boolean).join(' · ') || 'lançamento manual'}</div></div>`;
+
+  if (modo === 'anual') return cab + rlConfAnual();
+
+  let h = cab;
+  for (const m of meses){
+    const M = R.meses[m]; if (!M) continue;
+    const AN1 = A.I, AN3 = A.III, fx = M.faixa-1;
+    const efGeral = M.rbt12>0 ? (M.rbt12*AN1.aliq[fx]-AN1.ded[fx])/M.rbt12 : 0;
+    const L = [];
+    L.push(CF.lin('Receita do mês (interna)','soma das linhas de receita do mercado interno', fmtR(M.recInt)));
+    if (M.recExp) L.push(CF.lin('Receita de exportação','linhas a1_exp + a2_exp + a3_exp', fmtR(M.recExp)));
+    L.push(CF.lin('RBT12 (mercado interno)','12 meses anteriores lançados + meses já decorridos do ano', fmtR(M.rbt12)));
+    L.push(CF.lin('Faixa', `RBT12 ${fmtR(M.rbt12)} → faixa da tabela`, M.faixa + 'ª'));
+    L.push(CF.lin('Alíquota efetiva (Anexo I)',
+      `(${fmtR(M.rbt12)} × ${CF.pc(AN1.aliq[fx])} − ${fmtR(AN1.ded[fx])}) ÷ ${fmtR(M.rbt12)}`, CF.pc(efGeral)));
+    const blocos = Object.keys(M.efb).filter(k => (D.receitas[k]||[])[m] > 0);
+    for (const k of blocos)
+      L.push(CF.lin(k, `${fmtR(D.receitas[k][m])} × ${CF.pc(M.efb[k])}`, fmtR(D.receitas[k][m]*M.efb[k])));
+    L.push(CF.lin('<b>DAS do mês</b>','soma dos blocos acima', fmtR(M.das)));
+    const T = M.dasTrib;
+    L.push(CF.lin('Decomposição',
+      `IRPJ ${fmtR(T.irpj)} · CSLL ${fmtR(T.csll)} · COFINS ${fmtR(T.cofins)} · PIS ${fmtR(T.pis)} · CPP ${fmtR(T.cpp)} · ICMS ${fmtR(T.icms)} · ISS ${fmtR(T.iss)}`,
+      fmtR(T.irpj+T.csll+T.cofins+T.pis+T.cpp+T.icms+T.iss+T.ipi)));
+    const S = M.simples;
+    if (S.sublimite) L.push(CF.lin('Trava do sublimite','ICMS/ISS da 5ª faixa, RBT12 acima de R$ 3,6 mi (Res. CGSN 140, art. 24)', fmtR(S.sublimite)));
+    if (S.issRetido) L.push(CF.lin('ISS retido (recomposto)','LC 123, art. 21, § 4º', fmtR(S.issRetido)));
+    if (S.cppRetida) L.push(CF.lin('INSS retido (recomposto)','LC 123, art. 21, § 4º', fmtR(S.cppRetida)));
+    if (S.inssPatrForaDAS) L.push(CF.lin('CPP do Anexo IV','devida fora da guia', fmtR(S.inssPatrForaDAS)));
+    L.push(CF.lin('FGTS','base de FGTS × alíquota da folha', fmtR(S.fgts)));
+    L.push(CF.lin('<b>Custo total do regime</b>','DAS + FGTS + trava + retenções + CPP fora do DAS', fmtR(S.total)));
+
+    const E = [];
+    if (M.recExp){
+      const fxE = M.faixaExp-1;
+      const efE = M.rbt12Exp>0 ? (M.rbt12Exp*AN1.aliq[fxE]-AN1.ded[fxE])/M.rbt12Exp : 0;
+      E.push(CF.lin('RBT12 do mercado externo','limite próprio de R$ 4,8 mi (LC 123, art. 3º, § 14)', fmtR(M.rbt12Exp)));
+      E.push(CF.lin('Alíquota efetiva externa',
+        `(${fmtR(M.rbt12Exp)} × ${CF.pc(AN1.aliq[fxE])} − ${fmtR(AN1.ded[fxE])}) ÷ ${fmtR(M.rbt12Exp)}`, CF.pc(efE)));
+      E.push(CF.lin('Parcela devida',
+        `${CF.pc(efE)} × (1 − ICMS ${CF.pc(AN1.icms[fxE])} − PIS/COFINS ${CF.pc(AN1.piscof[fxE])}) = só IRPJ, CSLL e CPP`,
+        CF.pc(M.efb.a1_exp||0)));
+      E.push(CF.lin('<b>DAS da exportação</b>', `${fmtR(M.recExp)} × alíquota acima`, fmtR(M.dasExp)));
+    }
+
+    const P = M.lp, LR = M.lr;
+    const LPl = [
+      CF.lin('Base IRPJ', `comércio × ${CF.pc(+D.cfg.lpBaseCom||0)} + serviços × ${CF.pc(+D.cfg.lpBaseServ||0)} + receitas financeiras`, fmtR(P.baseAdic||0)),
+      CF.lin('IRPJ','base × 15%', fmtR(P.irpj)),
+      CF.lin('CSLL','base × 9%', fmtR(P.csll)),
+      CF.lin('PIS','base cumulativa × 0,65% (sem monofásico e sem exportação)', fmtR(P.pis)),
+      CF.lin('COFINS','base cumulativa × 3,00%', fmtR(P.cofins)),
+      CF.lin('ICMS','débito − crédito', fmtR(P.icms)),
+      CF.lin('ISS','serviços × alíquota do município', fmtR(P.iss)),
+      CF.lin('INSS patronal + FGTS','folha × percentuais da empresa', fmtR(P.inssPatr + P.fgts)),
+      CF.lin('<b>Total do Lucro Presumido</b>','', fmtR(P.total)),
+    ];
+    const LRl = [
+      CF.lin('Receita − custos − despesas', `${fmtR(M.receita)} − ${fmtR(M.custos)} − ${fmtR(M.despTotal)}`, fmtR(M.receita-M.custos-M.despTotal)),
+      CF.lin('IRPJ','lucro × 15% (prejuízo não é compensado entre meses)', fmtR(LR.irpj)),
+      CF.lin('CSLL','lucro × 9%', fmtR(LR.csll)),
+      CF.lin('PIS','base não cumulativa × 1,65%', fmtR(LR.pis)),
+      CF.lin('COFINS','base não cumulativa × 7,60%', fmtR(LR.cofins)),
+      CF.lin('<b>Total do Lucro Real</b>','', fmtR(LR.total)),
+    ];
+
+    let conf = '';
+    if (D._pgdas && Array.isArray(D._pgdas.das) && +D._pgdas.das[m] > 0){
+      const dcl = +D._pgdas.das[m], dif = M.das - dcl, pct = dcl ? dif/dcl*100 : 0;
+      const cor = Math.abs(pct) > 2 ? '#943126' : '#117a65';
+      conf = `<div style="margin-top:12px;padding:10px 12px;border-left:4px solid ${cor};background:${Math.abs(pct)>2?'#fdeaea':'#eafaf1'}">
+        <b>Conferência com o PGDAS-D declarado:</b> declarado ${fmtR(dcl)} · calculado ${fmtR(M.das)} ·
+        diferença ${fmtR(dif)} (${pct>0?'+':''}${pct.toFixed(2).replace('.',',')}%)
+        ${Math.abs(pct)>2 ? ' — <b>acima do limite de 2%, confira Fator R, anexo das receitas e duplicidade de importação</b>' : ' — dentro do limite de 2%'}</div>`;
+    }
+
+    h += `<div class="card"><h3 style="margin-top:0">${MESES_ROT[m]}/${D.ano}</h3>`
+       + CF.tab('Simples Nacional', L)
+       + (E.length ? CF.tab('Exportação — apuração separada', E) : '')
+       + CF.tab('Lucro Presumido', LPl)
+       + CF.tab('Lucro Real', LRl)
+       + conf + '</div>';
+  }
+  return h + rlConfDivergencias();
+}
+function rlConfAnual(){
+  const R = RL.res, D = RL.dados;
+  const li = R.meses.map(M => `<tr><td class="rot">${MESES_ROT[M.m]}</td>
+    <td class="num">${fmtR(M.receita)}</td><td class="num">${fmtR(M.rbt12)}</td><td class="num">${M.faixa}ª</td>
+    <td class="num">${fmtR(M.das)}</td><td class="num">${fmtR(M.simples.total)}</td>
+    <td class="num">${fmtR(M.lp.total)}</td><td class="num">${fmtR(M.lr.total)}</td></tr>`).join('');
+  const T = R.totais;
+  return `<div class="card"><h3 style="margin-top:0">Resumo anual</h3>
+    <table class="gtable"><thead><tr><th>Mês</th><th class="num">Receita</th><th class="num">RBT12</th><th class="num">Faixa</th>
+      <th class="num">DAS</th><th class="num">Simples (total)</th><th class="num">Presumido</th><th class="num">Real</th></tr></thead>
+    <tbody>${li}<tr style="font-weight:700;border-top:2px solid #1a5276">
+      <td class="rot">Total</td><td class="num">${fmtR(T.receita)}</td><td class="num">—</td><td class="num">—</td>
+      <td class="num">${fmtR(R.meses.reduce((s,x)=>s+x.das,0))}</td><td class="num">${fmtR(T.simples)}</td>
+      <td class="num">${fmtR(T.lp)}</td><td class="num">${fmtR(T.lr)}</td></tr></tbody></table>
+    <div class="hint" style="margin-top:8px">Para ver as fórmulas de um mês, troque o detalhe para "Um mês".</div></div>`
+    + rlConfDivergencias();
+}
+function rlConfDivergencias(){
+  return `<div class="card" style="border-left:4px solid #b9770e">
+    <h3 style="margin-top:0">Divergências e decisões declaradas</h3>
+    <div class="hint">O que este cálculo <b>não</b> faz, por decisão consciente. Um papel de trabalho que omite isso induz a erro.</div>
+    <ul style="margin:10px 0 0 20px;padding:0;line-height:1.8">
+      <li><b>Prejuízo fiscal não é compensado entre meses no Lucro Real.</b> Base negativa vira zero e o prejuízo se perde; o mês seguinte lucrativo paga integralmente. Superestima o Lucro Real em empresas sazonais.</li>
+      <li><b>O ICMS não é excluído da base de PIS/COFINS</b> (Tema 69 do STF). Mantido para preservar a equivalência com a planilha de referência. Quando aplicado, o PIS/COFINS do Lucro Real cai.</li>
+      <li><b>Crédito de PIS/COFINS no Lucro Real por aproximação:</b> receita menos compras e menos a base extra informada. Não distingue insumo de não insumo; energia, aluguel e depreciação dependem do campo próprio estar preenchido.</li>
+      <li><b>Fator R sem o 13º salário</b> e sem a contribuição do Anexo IV.</li>
+      <li><b>Lucro Real apenas mensal</b> — sem apuração trimestral nem estimativa anual com balanço de suspensão.</li>
+      <li><b>Trava do sublimite:</b> o aplicativo soma ao custo do regime o ICMS/ISS da 5ª faixa quando o RBT12 supera R$ 3,6 milhões. A planilha de referência não soma — a diferença é proposital e o aplicativo é o correto.</li>
+    </ul></div>`;
+}
 function rlCmpHtml(){
   if (!RL.cmp || !RL.res) return '';
   const A = RL.res.totais, B = RL.cmp.res.totais, anoA = +$id('rl-ano').value, anoB = RL.cmp.ano;
@@ -4253,13 +4432,21 @@ function rlCmpHtml(){
 function rlRender() {
   rlLimparCharts();
   const tipo = $id('rl-tipo').value, n = +$id('rl-per').value;
+  // parecer e Reforma são documentos formatados: comparação entre anos não entra neles
+  const w = $id('rl-ano2-wrap'); if (w) w.style.display = (tipo==='parecer' || tipo==='reforma' || tipo==='conferencia') ? 'none' : '';
+  const conf = tipo === 'conferencia';
+  { const e1 = $id('rl-conf-modo-wrap'); if (e1) e1.style.display = conf ? '' : 'none';
+    const sm = $id('rl-conf-mes'), e2 = $id('rl-conf-mes-wrap');
+    if (conf && sm && !sm.options.length) sm.innerHTML = MESES_ROT.map((r,i)=>`<option value="${i}">${r}</option>`).join('');
+    if (e2) e2.style.display = (conf && ($id('rl-conf-modo')||{}).value === 'mes') ? '' : 'none'; }
   if (!RL.res) { $id('rl-cab').style.display='none';
     $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Sem análise para este ano</h2><p>Abra a empresa na aba Análise Atual (ou importe PGDAS/Faturamento) e salve.</p></div>'; return; }
   const rot = PER_ROTULOS[n], R = RL.res, M = R.meses;
   const emp = RL.empresa;
   $id('rl-cab').style.display='block';
-  $id('rl-titulo').textContent = ({regimes:'Comparativo de Regimes Tributários', consolidado:'Consolidado Analítico — Simples · Presumido · Real · Reforma', registros:'Detalhamento dos Registros', reforma:'Reforma Tributária — Transição 2026–2033', parecer:'Parecer — Estudo de Impacto da Reforma Tributária'})[tipo];
+  $id('rl-titulo').textContent = ({regimes:'Comparativo de Regimes Tributários', consolidado:'Consolidado Analítico — Simples · Presumido · Real · Reforma', registros:'Detalhamento dos Registros', reforma:'Reforma Tributária — Transição 2026–2033', parecer:'Parecer — Estudo de Impacto da Reforma Tributária', conferencia:'Conferência de Cálculos — Memória (documento interno)'})[tipo];
   $id('rl-sub').innerHTML = `<b>${emp?.razao_social||''}</b> · CNPJ ${fmtCNPJ(RL.dados.cnpj)} · Ano-base ${RL.dados.ano} · Periodicidade: ${$id('rl-per').selectedOptions[0].text} · Artecon Artes Contábeis`;
+  if (tipo==='conferencia'){ $id('rl-corpo').innerHTML = rlConferencia(); return; }
   if (tipo==='regimes') rlRegimes(rot,n); else if (tipo==='consolidado') rlConsolidado(rot,n); else if (tipo==='registros') rlRegistros(rot,n); else if (tipo==='parecer') rlParecer(); else rlReforma();
 }
 
@@ -4486,7 +4673,7 @@ function rlReforma() {
   for (const L of linhas) h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(L.deb)}</td><td class="num">${fmt(L.cred)}</td><td class="num">${fmt(L.liq)}</td><td class="num">${fmt(L.is)}</td><td class="num">${fmt(L.rem)}</td><td class="num">${fmt(L.total)}</td></tr>`;
   h += `</tbody></table></div><div class="hint" style="margin-top:8px">Estimativas conforme parâmetros editáveis salvos na análise (EC 132/2023 · LC 214/2025). IS sem direito a crédito; créditos limitados nas aquisições do Simples.</div></div>`;
   if (window.__refCen) h += refCenCard(window.__refCen, RL.res.totais);
-  $id('rl-corpo').innerHTML = rlCmpHtml() + h;
+  $id('rl-corpo').innerHTML = h;
   rlChart('ch-rf', { type:'line', data:{ labels:anos, datasets:[
     { label:'IBS/CBS líquido + IS', data:linhas.map(l=>l.liq+l.is), borderColor:CORES.simples, backgroundColor:CORES.simples, fill:false },
     { label:'Tributos atuais remanescentes', data:linhas.map(l=>l.rem), borderColor:CORES.lp, backgroundColor:CORES.lp, fill:false },
