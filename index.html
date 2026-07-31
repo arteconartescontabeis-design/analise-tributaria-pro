@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.11.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.11.1</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -604,7 +604,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.11.0</b> <span class="badge ok">atual</span></td><td>29/07/2026</td><td>Novo relatório <b>Conferência de cálculos — memória</b>, documento interno de papel de trabalho. Diferente dos demais, ele não mostra apenas o resultado: exibe a fórmula de cada apuração com os valores já substituídos, de modo que a conferência seja feita a olho. Traz a formação do RBT12, a faixa, a alíquota efetiva e — o ponto que mais gera dúvida — a alíquota de cada bloco de receita, deixando ver por que ela difere da geral conforme haja substituição tributária, tributação monofásica, redução de base ou retenção de ISS. Segue com a decomposição nos oito tributos, o que corre por fora da guia, a apuração separada da exportação, e as bases do Lucro Presumido e do Lucro Real. Quando há PGDAS-D importado, confronta automaticamente o calculado com o declarado e sinaliza diferenças acima de dois por cento. Três modos de detalhe: um mês, resumo anual e completo. Encerra com a declaração das divergências assumidas — prejuízo não compensado, ICMS na base de PIS/COFINS, crédito por aproximação, Fator R sem 13º e a trava do sublimite —, porque papel de trabalho que omite o que não faz induz a erro.</td></tr>
+          <tr><td><b>v7.11.1</b> <span class="badge ok">atual</span></td><td>29/07/2026</td><td>A consulta de fornecedores passou a ser gravada automaticamente no histórico assim que termina, como já ocorria com a análise. Antes ela existia apenas na memória até alguém clicar em salvar, e sair da tela descartava o trabalho sem aviso — o que dava a impressão de que a informação havia sido apagada sozinha. O painel passou a exibir se a consulta está gravada, com data e hora, ou se existe apenas na tela. Falhas de gravação deixaram de aparecer em aviso passageiro e passaram a ser informadas em janela, com o motivo, inclusive quando o CNPJ da empresa não é reconhecido no cabeçalho do relatório e por isso não há onde guardar. Sair da Consulta CNPJ com consulta ainda não gravada passou a pedir confirmação. A varredura não encontrou nenhuma exclusão automática: o único ponto que apaga consultas é a opção "excluir tudo" do Limpar dados, que exige confirmação expressa.</td></tr>
+          <tr><td><b>v7.11.0</b></td><td>29/07/2026</td><td>Novo relatório <b>Conferência de cálculos — memória</b>, documento interno de papel de trabalho. Diferente dos demais, ele não mostra apenas o resultado: exibe a fórmula de cada apuração com os valores já substituídos, de modo que a conferência seja feita a olho. Traz a formação do RBT12, a faixa, a alíquota efetiva e — o ponto que mais gera dúvida — a alíquota de cada bloco de receita, deixando ver por que ela difere da geral conforme haja substituição tributária, tributação monofásica, redução de base ou retenção de ISS. Segue com a decomposição nos oito tributos, o que corre por fora da guia, a apuração separada da exportação, e as bases do Lucro Presumido e do Lucro Real. Quando há PGDAS-D importado, confronta automaticamente o calculado com o declarado e sinaliza diferenças acima de dois por cento. Três modos de detalhe: um mês, resumo anual e completo. Encerra com a declaração das divergências assumidas — prejuízo não compensado, ICMS na base de PIS/COFINS, crédito por aproximação, Fator R sem 13º e a trava do sublimite —, porque papel de trabalho que omite o que não faz induz a erro.</td></tr>
           <tr><td><b>v7.10.3</b></td><td>29/07/2026</td><td>Corrigida a comparação entre anos, criada na versão 7.8.3, que estava sendo inserida em <b>todos</b> os relatórios — inclusive no Parecer da Reforma Tributária e no relatório da Reforma, que não são telas de consulta e sim documentos formatados, com capa, papel timbrado e paginação calculada em milímetros. Preenchido o ano de comparação, um quadro era acrescentado antes da capa e deslocava todo o miolo, comprometendo a impressão. O quadro passou a valer apenas para o comparativo de regimes e o consolidado analítico, e o campo "Comparar com" desaparece quando o relatório selecionado é um dos dois documentos.</td></tr>
           <tr><td><b>v7.10.2</b></td><td>29/07/2026</td><td>A tabela mensal passou a explicar a diferença entre as colunas DAS e SIMPLES, que gerava dúvida legítima. A primeira é a guia; a segunda é o custo total do regime e por isso é maior, somando ao DAS o FGTS, a trava do sublimite quando o RBT12 supera R$ 3,6 milhões, o ISS e o INSS retidos pelo tomador — recompostos conforme o artigo 21, § 4º, da LC 123 — e a contribuição previdenciária do Anexo IV, devida fora da guia. Como as colunas de Lucro Presumido e Lucro Real também incluem FGTS e INSS patronal, é essa composição que torna a comparação entre os três regimes equivalente. Um link abre a composição do ano, item a item, com os valores somados.</td></tr>
           <tr><td><b>v7.10.1</b></td><td>28/07/2026</td><td>Completada a separação dos limites do Simples Nacional. A versão anterior já apurava a alíquota da exportação por um RBT12 próprio, mas o <b>teste de permanência no regime</b> continuava somando mercado interno e exportação no acumulado do ano — uma empresa com quatro milhões e meio no mercado interno e um milhão exportado seria apontada como fora do Simples, indevidamente. Os dois limites passaram a ser verificados de forma independente, de R$ 4.800.000,00 cada, conforme o artigo 3º, § 14, da LC 123/2006, e o aviso na tela informa qual deles foi ultrapassado, exibindo os dois acumulados lado a lado.</td></tr>
@@ -739,6 +740,11 @@ function entrar() {
 
 // ── NAVEGAÇÃO ──────────────────────────────────────────────────────────
 function go(page) {
+  if (APP.page === 'cnpj' && page !== 'cnpj'){
+    const pend = ['servico','revenda'].filter(t => FOT[t] && FOT[t].itens.some(i=>i.classe) && !FOT[t]._salvo);
+    if (pend.length && !confirm(`Há consulta de fornecedores (${pend.join(' e ')}) que ainda NÃO foi gravada no histórico.\n\n`
+        + 'Sair desta tela descarta o resultado. Continuar?')) return;
+  }
   if (AN_SUJO && ['analise','importar','config'].includes(APP.page) && !['analise','importar','config'].includes(page)
       && !confirm('A análise tem alterações que ainda NÃO foram salvas.\n\nSair deste módulo pode descartá-las. Continuar?')) return;
   APP.page = page;
@@ -1131,7 +1137,10 @@ function fornAcoes(){
   const alvo = $id('fo-acoes'); if (!alvo) return;
   if (!FO || !FO.itens.some(i=>i.classe)) { alvo.innerHTML = ''; return; }
   const rev = FO_TIPO === 'revenda';
-  alvo.innerHTML = `<button class="btn solid" id="fo-btn-salvar" onclick="comBotao('fo-btn-salvar','Salvando',()=>fornSalvar())">💾 Salvar análise no histórico da empresa</button>`
+  const selo = FO._salvo
+    ? `<span class="badge ok" style="align-self:center">✓ gravada em ${new Date(FO._salvo).toLocaleString('pt-BR')}</span>`
+    : `<span class="badge err" style="align-self:center">não gravada — existe só nesta tela</span>`;
+  alvo.innerHTML = selo + `<button class="btn solid" id="fo-btn-salvar" onclick="comBotao('fo-btn-salvar','Salvando',()=>fornSalvar())">💾 Salvar análise no histórico da empresa</button>`
     + `<button class="btn" onclick="${rev?'fornLancarCompras()':'fornLancarDespesas()'}">`
     + `➕ Lançar total ${rev?'em Compras':'nas Despesas'} da análise</button>`;
 }
@@ -1242,15 +1251,29 @@ async function fornConsultar(forcar){
   $id('fo-prog').textContent = 'Concluído.';
   fornAcoes();
   const br = $id('fo-refazer'); if (br) br.style.display = '';
+  await fornSalvar(true);          // grava sozinha: a consulta vivia só na memória e sumia sem aviso
 }
-async function fornSalvar(){
-  if (!FO || !FO.itens.some(i=>i.classe)) { toast('Consulte os fornecedores antes de salvar.'); return; }
-  if (!FO.cnpjEmpresa){ toast('CNPJ da empresa dona do relatório não identificado no cabeçalho.'); return; }
-  await garantirEmpresa(FO.cnpjEmpresa, FO.nomeEmpresa||null, null);
-  const stats = fornStatsCalc(FO.itens);
-  await supa('POST','atp_fornec',{ body:{ cnpj: FO.cnpjEmpresa, dados: { periodo: FO.periodo, tipo: FO_TIPO, destino: FO.destino||null, lotes: FO.lotes||[], origem:'Totais ISS por Fornecedor/Cliente',
-    itens: FO.itens.map(i=>({cnpj:i.cnpj, razao:i.razao, classe:i.classe, valor:i.valor, situacao:i.situacao||''})), stats } } });
-  toast('Análise salva no histórico da empresa ✓ (botão 📊 em Empresas; aplique na aba Reforma).');
+async function fornSalvar(auto){
+  if (!FO || !FO.itens.some(i=>i.classe)) { if (!auto) toast('Consulte os fornecedores antes de salvar.'); return false; }
+  if (!FO.cnpjEmpresa){
+    alert('A consulta NÃO pôde ser gravada no histórico.\n\n'
+      + 'O CNPJ da empresa dona do relatório não foi identificado no cabeçalho do arquivo — sem ele não há onde guardar.\n\n'
+      + 'Os dados na tela continuam válidos, mas se perdem ao sair.');
+    return false; }
+  try {
+    await garantirEmpresa(FO.cnpjEmpresa, FO.nomeEmpresa||null, null);
+    const stats = fornStatsCalc(FO.itens);
+    await supa('POST','atp_fornec',{ body:{ cnpj: FO.cnpjEmpresa, dados: { periodo: FO.periodo, tipo: FO_TIPO, destino: FO.destino||null, lotes: FO.lotes||[], origem:'Totais ISS por Fornecedor/Cliente',
+      itens: FO.itens.map(i=>({cnpj:i.cnpj, razao:i.razao, classe:i.classe, valor:i.valor, situacao:i.situacao||''})), stats } } });
+    FO._salvo = new Date().toISOString(); fornAcoes();
+    toast('Análise salva no histórico da empresa ✓ (botão 📊 em Empresas; aplique na aba Reforma).');
+    return true;
+  } catch(e){
+    console.error('fornSalvar:', e);
+    alert('A consulta NÃO pôde ser gravada no histórico.\n\nMotivo: ' + (e.message||e)
+      + '\n\nOs dados na tela continuam válidos. Tente salvar de novo antes de sair desta tela.');
+    return false;
+  }
 }
 // ═══ v7.5: planilha modelo — todos os dados do cálculo em um arquivo só ═══
 const MODELO_LINHAS = [
