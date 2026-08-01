@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.13.3</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.13.4</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -608,7 +608,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.13.3</b> <span class="badge ok">atual</span></td><td>31/07/2026</td><td>A aba ICMS · IPI passou a exibir o que foi <b>apurado</b>, mês a mês: base de débito, débito, crédito, valor a pagar, a parcela de ICMS embutida na guia do Simples, o IPI e o ISS. Até aqui a aba continha apenas os campos de substituição manual, todos em branco por não haver exceções lançadas, e não existia lugar algum onde conferir o cálculo — o que dava a impressão de que o imposto não estava sendo apurado. O texto da aba também deixou de chamar esses campos de "override": eles servem para substituir o valor apurado, e em branco significam que o aplicativo calcula. Um aviso destaca quando os percentuais de ICMS estão zerados na Configuração, caso em que realmente não há o que apurar.</td></tr>
+          <tr><td><b>v7.13.4</b> <span class="badge ok">atual</span></td><td>01/08/2026</td><td>O quadro de ICMS, IPI e ISS apurados passou a abrir a aba, antes dos campos de substituição manual. Na versão anterior ele havia sido acrescentado ao final, depois das quatro linhas de digitação e da barra de rolagem horizontal, e ficava fora da área visível — de modo que a aba continuava aparentando não exibir apuração alguma. A ordem agora reflete o uso: primeiro o que foi calculado, depois os campos que servem para substituí-lo em casos excepcionais.</td></tr>
+          <tr><td><b>v7.13.3</b></td><td>31/07/2026</td><td>A aba ICMS · IPI passou a exibir o que foi <b>apurado</b>, mês a mês: base de débito, débito, crédito, valor a pagar, a parcela de ICMS embutida na guia do Simples, o IPI e o ISS. Até aqui a aba continha apenas os campos de substituição manual, todos em branco por não haver exceções lançadas, e não existia lugar algum onde conferir o cálculo — o que dava a impressão de que o imposto não estava sendo apurado. O texto da aba também deixou de chamar esses campos de "override": eles servem para substituir o valor apurado, e em branco significam que o aplicativo calcula. Um aviso destaca quando os percentuais de ICMS estão zerados na Configuração, caso em que realmente não há o que apurar.</td></tr>
           <tr><td><b>v7.13.2</b></td><td>31/07/2026</td><td>A importação passou a reconhecer o <b>Extrato do Simples Nacional</b>, além da Declaração. Os dois documentos trazem a mesma apuração, mas identificam o período de forma diferente — o extrato usa "Período de Apuração (PA): MM/AAAA" —, e por isso os extratos vinham sendo descartados em silêncio, o que fazia parte dos arquivos selecionados simplesmente não aparecer. O nome e o CNPJ da empresa também passaram a ser lidos no formato do extrato, que os apresenta como CNPJ Estabelecimento e Nome Empresarial. Corrigida ainda a leitura do <b>DAS declarado</b>: quando o quadro de resumo é cortado pela quebra de página, o valor ficava órfão e era lido como zero — agora o total do débito exigível é usado como alternativa, o que restabelece a conferência entre o declarado e o simulado nesses meses.</td></tr>
           <tr><td><b>v7.13.1</b></td><td>31/07/2026</td><td>Corrigida a importação do PGDAS-D, que somava aos valores já existentes em vez de substituí-los. Importar as mesmas declarações duas vezes dobrava a receita, e importar um lote menor deixava resíduo dos meses da importação anterior — o resultado aparentava importação pela metade ou receita inflada, conforme o caso. Os meses que vêm nas declarações passaram a ser zerados antes da aplicação, e apenas eles: meses lançados por outra origem permanecem intactos. A importação também passou a informar quantos dos doze meses foram cobertos e quais ficaram sem receita, o que explica por que o ICMS, o ISS e os demais tributos aparecem zerados nesses meses — não há base de cálculo neles.</td></tr>
           <tr><td><b>v7.13.0</b></td><td>31/07/2026</td><td>A <b>Configuração da empresa</b> ganhou botão próprio de gravação e passou a salvar sozinha após cada alteração. Antes, mudar a alíquota de ISS atualizava o cálculo na tela mas não marcava a análise como pendente — a alteração se perdia ao trocar de módulo, sem aviso, e a mensagem mandava salvar num botão que havia ficado na Análise Atual quando a configuração virou módulo próprio. O <b>rateio de valores importados</b> passou a perguntar em quantos meses dividir, mas apenas quando o relatório cobre mais meses do que a análise tem lançados: informando os dois números, permite concentrar nos meses efetivamente movimentados em vez de espalhar por meses ainda sem apuração. E as <b>perguntas do sistema deixaram de usar OK e Cancelar</b>, cujos rótulos são fixos no navegador e não diziam o que cada opção fazia. As decisões passaram a ser tomadas em janela própria, com botões que nomeiam a ação — Substituir os existentes ou Somar aos existentes, Sim excluir ou Não cancelar —, e as escolhas que antes exigiam digitar um número, como a linha de compras da revenda e o alcance da exclusão, viraram listas clicáveis.</td></tr>
@@ -2262,7 +2263,7 @@ function anRenderGrid() {
         <div><label>Base FGTS 13º</label><input style="width:140px" value="${f.baseFgts13||''}" onchange="AN.folha13.baseFgts13=num(this.value);anRecalcular()"></div>
       </div></div>`;
   }
-  if (sec.id === 'impostos') h += anApuradoImpostos();
+  if (sec.id === 'impostos') h = anApuradoImpostos() + h;
   $id('an-grid').innerHTML = h;
 }
 // a aba só tinha campos de exceção, todos vazios — não havia onde ver o valor apurado
@@ -2273,7 +2274,7 @@ function anApuradoImpostos(){
     + R.meses.map(M=>`<td class="num">${(+f(M)) ? fmt(f(M)) : '—'}</td>`).join('')
     + `<td class="num"><b>${fmt(R.meses.reduce((s,M)=>s+(+f(M)||0),0))}</b></td></tr>`;
   const semAliq = !(+c.icmsV) && !(+c.icmsC);
-  return `<div style="margin-top:22px"><b style="font-size:13px">Apurado pelo aplicativo</b>
+  return `<div style="margin-bottom:22px"><b style="font-size:13px">ICMS, IPI e ISS apurados pelo aplicativo</b>
     <div class="hint">Valores calculados a partir das receitas, das compras e dos percentuais da Configuração
       (ICMS vendas ${(+c.icmsV*100).toFixed(2).replace('.',',')}%, compras ${(+c.icmsC*100).toFixed(2).replace('.',',')}%).
       No <b>Simples Nacional</b> o ICMS é recolhido dentro do DAS — o valor a pagar abaixo vale para o Lucro Presumido e o Lucro Real.
