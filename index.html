@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.11.1</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.13.0</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -348,10 +348,12 @@ canvas{max-height:340px}
         <span style="flex:1"></span>
         <button class="btn solid" id="an-btn-salvar" onclick="comBotao('an-btn-salvar','Salvando',()=>anSalvar())">💾 Salvar análise</button>
         <button class="btn" onclick="anRecalcular()">Recalcular</button>
+        <button class="btn" onclick="anHistorico()" title="As três gravações mais recentes desta análise, com data e autor">🕘 Histórico</button>
         <button class="btn" onclick="anVerificarMostrar()" title="Varre a análise e lista o que impede o cálculo, o que distorce o resultado e o que merece conferência">🔎 Verificar</button>
       </div>
       <div style="display:none"><select id="an-empresa" onchange="anTrocarEmpresa()"></select>
         <input type="number" id="an-ano" value="2026" onchange="anMudou()"></div>
+      <div class="card" id="an-hist" style="display:none"></div>
       <div class="card" id="an-verif" style="display:none"></div>
       <div class="card" id="an-cfg-aviso" style="display:none;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109"></div>
       <div class="grid c4" id="an-resumo" style="margin-bottom:18px"></div>
@@ -371,7 +373,9 @@ canvas{max-height:340px}
         <div id="an-detalhe" style="overflow-x:auto"></div></div>
     </div>
     <div id="page-config" style="display:none">
-      <div class="page-title"><h1>Configuração da empresa</h1><span class="ctx-emp" style="font-weight:600;color:var(--primary,#1a5276)"></span><span class="crumb">Alíquotas, presunções e histórico — por empresa e ano</span></div>
+      <div class="page-title" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 style="margin:0">Configuração da empresa</h1><span class="ctx-emp" style="font-weight:600;color:var(--primary,#1a5276)"></span><span class="crumb">Alíquotas, presunções e histórico — por empresa e ano</span>
+        <span style="flex:1"></span>
+        <button class="btn solid" id="cfg-btn-salvar" onclick="comBotao('cfg-btn-salvar','Salvando',()=>anSalvar())">💾 Salvar configuração</button></div>
       <div class="card"><div id="an-config-box"></div></div>
     </div>
     <div id="page-importar" style="display:none">
@@ -604,7 +608,9 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.11.1</b> <span class="badge ok">atual</span></td><td>29/07/2026</td><td>A consulta de fornecedores passou a ser gravada automaticamente no histórico assim que termina, como já ocorria com a análise. Antes ela existia apenas na memória até alguém clicar em salvar, e sair da tela descartava o trabalho sem aviso — o que dava a impressão de que a informação havia sido apagada sozinha. O painel passou a exibir se a consulta está gravada, com data e hora, ou se existe apenas na tela. Falhas de gravação deixaram de aparecer em aviso passageiro e passaram a ser informadas em janela, com o motivo, inclusive quando o CNPJ da empresa não é reconhecido no cabeçalho do relatório e por isso não há onde guardar. Sair da Consulta CNPJ com consulta ainda não gravada passou a pedir confirmação. A varredura não encontrou nenhuma exclusão automática: o único ponto que apaga consultas é a opção "excluir tudo" do Limpar dados, que exige confirmação expressa.</td></tr>
+          <tr><td><b>v7.13.0</b> <span class="badge ok">atual</span></td><td>31/07/2026</td><td>A <b>Configuração da empresa</b> ganhou botão próprio de gravação e passou a salvar sozinha após cada alteração. Antes, mudar a alíquota de ISS atualizava o cálculo na tela mas não marcava a análise como pendente — a alteração se perdia ao trocar de módulo, sem aviso, e a mensagem mandava salvar num botão que havia ficado na Análise Atual quando a configuração virou módulo próprio. O <b>rateio de valores importados</b> passou a perguntar em quantos meses dividir, mas apenas quando o relatório cobre mais meses do que a análise tem lançados: informando os dois números, permite concentrar nos meses efetivamente movimentados em vez de espalhar por meses ainda sem apuração. E as <b>perguntas do sistema deixaram de usar OK e Cancelar</b>, cujos rótulos são fixos no navegador e não diziam o que cada opção fazia. As decisões passaram a ser tomadas em janela própria, com botões que nomeiam a ação — Substituir os existentes ou Somar aos existentes, Sim excluir ou Não cancelar —, e as escolhas que antes exigiam digitar um número, como a linha de compras da revenda e o alcance da exclusão, viraram listas clicáveis.</td></tr>
+          <tr><td><b>v7.12.0</b></td><td>29/07/2026</td><td><b>Exige rodar o setup_v712.sql no Supabase.</b> Cada gravação da análise passou a guardar uma cópia no histórico, com data, hora e o e-mail de quem salvou. São mantidas as três versões mais recentes de cada empresa e ano; a poda é feita pelo próprio banco, de modo a valer mesmo que outra ferramenta grave na tabela. O botão Histórico, na linha do título da Análise Atual, lista essas versões com a receita e o Simples de cada uma, e permite restaurar qualquer delas — a restauração substitui a análise em tela e é ela própria gravada, de forma que a versão anterior à restauração permanece disponível. Sem o script executado nada quebra: a gravação segue normal, apenas sem histórico, e o botão informa a pendência. É a primeira resposta concreta ao risco de sobrescrita entre usuários apontado na auditoria.</td></tr>
+          <tr><td><b>v7.11.1</b></td><td>29/07/2026</td><td>A consulta de fornecedores passou a ser gravada automaticamente no histórico assim que termina, como já ocorria com a análise. Antes ela existia apenas na memória até alguém clicar em salvar, e sair da tela descartava o trabalho sem aviso — o que dava a impressão de que a informação havia sido apagada sozinha. O painel passou a exibir se a consulta está gravada, com data e hora, ou se existe apenas na tela. Falhas de gravação deixaram de aparecer em aviso passageiro e passaram a ser informadas em janela, com o motivo, inclusive quando o CNPJ da empresa não é reconhecido no cabeçalho do relatório e por isso não há onde guardar. Sair da Consulta CNPJ com consulta ainda não gravada passou a pedir confirmação. A varredura não encontrou nenhuma exclusão automática: o único ponto que apaga consultas é a opção "excluir tudo" do Limpar dados, que exige confirmação expressa.</td></tr>
           <tr><td><b>v7.11.0</b></td><td>29/07/2026</td><td>Novo relatório <b>Conferência de cálculos — memória</b>, documento interno de papel de trabalho. Diferente dos demais, ele não mostra apenas o resultado: exibe a fórmula de cada apuração com os valores já substituídos, de modo que a conferência seja feita a olho. Traz a formação do RBT12, a faixa, a alíquota efetiva e — o ponto que mais gera dúvida — a alíquota de cada bloco de receita, deixando ver por que ela difere da geral conforme haja substituição tributária, tributação monofásica, redução de base ou retenção de ISS. Segue com a decomposição nos oito tributos, o que corre por fora da guia, a apuração separada da exportação, e as bases do Lucro Presumido e do Lucro Real. Quando há PGDAS-D importado, confronta automaticamente o calculado com o declarado e sinaliza diferenças acima de dois por cento. Três modos de detalhe: um mês, resumo anual e completo. Encerra com a declaração das divergências assumidas — prejuízo não compensado, ICMS na base de PIS/COFINS, crédito por aproximação, Fator R sem 13º e a trava do sublimite —, porque papel de trabalho que omite o que não faz induz a erro.</td></tr>
           <tr><td><b>v7.10.3</b></td><td>29/07/2026</td><td>Corrigida a comparação entre anos, criada na versão 7.8.3, que estava sendo inserida em <b>todos</b> os relatórios — inclusive no Parecer da Reforma Tributária e no relatório da Reforma, que não são telas de consulta e sim documentos formatados, com capa, papel timbrado e paginação calculada em milímetros. Preenchido o ano de comparação, um quadro era acrescentado antes da capa e deslocava todo o miolo, comprometendo a impressão. O quadro passou a valer apenas para o comparativo de regimes e o consolidado analítico, e o campo "Comparar com" desaparece quando o relatório selecionado é um dos dois documentos.</td></tr>
           <tr><td><b>v7.10.2</b></td><td>29/07/2026</td><td>A tabela mensal passou a explicar a diferença entre as colunas DAS e SIMPLES, que gerava dúvida legítima. A primeira é a guia; a segunda é o custo total do regime e por isso é maior, somando ao DAS o FGTS, a trava do sublimite quando o RBT12 supera R$ 3,6 milhões, o ISS e o INSS retidos pelo tomador — recompostos conforme o artigo 21, § 4º, da LC 123 — e a contribuição previdenciária do Anexo IV, devida fora da guia. Como as colunas de Lucro Presumido e Lucro Real também incluem FGTS e INSS patronal, é essa composição que torna a comparação entre os três regimes equivalente. Um link abre a composição do ano, item a item, com os valores somados.</td></tr>
@@ -834,6 +840,36 @@ async function comBotao(alvo, rotulo, fn){
   catch(e){ console.error(e); toast('Erro: ' + (e.message||e)); }
   finally { if (b){ b.disabled = false; b.innerHTML = orig; delete b.dataset.rodando; } }
 }
+// v7.13: o confirm do navegador tem OK/Cancelar fixos — não dá para renomear.
+// Este diálogo permite que cada botão diga a ação que executa.
+function dlg(titulo, texto, opcoes){
+  return new Promise(res => {
+    const fundo = document.createElement('div');
+    fundo.className = 'no-print';
+    fundo.style.cssText = 'position:fixed;inset:0;background:rgba(11,31,58,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    const cx = document.createElement('div');
+    cx.style.cssText = 'background:#fff;border-radius:12px;max-width:560px;width:100%;max-height:86vh;overflow:auto;box-shadow:0 18px 50px rgba(0,0,0,.3)';
+    cx.innerHTML = `<div style="padding:18px 22px 0"><h3 style="margin:0 0 8px">${esc(titulo)}</h3>
+        <div style="white-space:pre-wrap;font-size:13px;line-height:1.6;color:#34495e">${esc(texto)}</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;padding:16px 22px 18px"></div>`;
+    const barra = cx.lastElementChild;
+    opcoes.forEach((o,i) => {
+      const b = document.createElement('button');
+      b.className = 'btn' + (o.destaque ? ' solid' : '');
+      b.textContent = o.rotulo;
+      if (o.perigo) b.style.color = 'var(--danger,#943126)';
+      b.onclick = () => { fundo.remove(); document.removeEventListener('keydown', tecla); res(o.valor); };
+      barra.appendChild(b);
+      if (i === 0) setTimeout(()=>b.focus(), 30);
+    });
+    const tecla = e => { if (e.key === 'Escape'){ fundo.remove(); document.removeEventListener('keydown', tecla); res(null); } };
+    document.addEventListener('keydown', tecla);
+    fundo.onclick = e => { if (e.target === fundo){ fundo.remove(); document.removeEventListener('keydown', tecla); res(null); } };
+    fundo.appendChild(cx); document.body.appendChild(fundo);
+  });
+}
+const dlgSimNao = (titulo, texto, rotSim='Sim', rotNao='Não') =>
+  dlg(titulo, texto, [{rotulo:rotSim, valor:true, destaque:true}, {rotulo:rotNao, valor:false}]).then(v => v === true);
 function toast(msg) {
   const t = $id('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 3200);
@@ -1086,26 +1122,31 @@ async function fornArquivo(inp){
     r.arquivo = nome; lotes.push(r);
   }
   if (!lotes.length) return;
-  fornIncorporar(lotes, FO_TIPO);
+  await fornIncorporar(lotes, FO_TIPO);
 }
 // junta os lotes ao que já existe na aba, perguntando substituir ou somar
-function fornIncorporar(lotes, tipo){
+async function fornIncorporar(lotes, tipo){
   const atual = FOT[tipo];
   let base = atual;
   if (atual && atual.itens.length){
     const repetido = lotes.find(l => (atual.lotes||[]).some(x => x.periodo === l.periodo && x.arquivo === l.arquivo));
-    if (repetido && !confirm(`O relatório "${repetido.arquivo}" (período ${repetido.periodo||'?'}) já foi carregado nesta aba.\n\nCarregar de novo pode duplicar os valores. Continuar?`)) return;
-    const sub = confirm(`Esta aba já tem ${atual.itens.length} fornecedor(es) carregados.\n\n`
-      + `OK = SUBSTITUIR pelos novos arquivos\nCancelar = SOMAR aos existentes`);
-    if (sub) base = null;
+    if (repetido && !await dlgSimNao('Relatório já carregado',
+        `O relatório "${repetido.arquivo}" (período ${repetido.periodo||'?'}) já foi carregado nesta aba.\n\nCarregar de novo pode duplicar os valores.`,
+        'Carregar mesmo assim', 'Cancelar')) return;
+    const r = await dlg('Já há fornecedores nesta aba',
+      `Esta aba tem ${atual.itens.length} fornecedor(es) carregados. O que fazer com os novos arquivos?`,
+      [{rotulo:'Substituir os existentes', valor:'sub', destaque:true},
+       {rotulo:'Somar aos existentes', valor:'somar'},
+       {rotulo:'Cancelar', valor:null}]);
+    if (r === null) return;
+    if (r === 'sub') base = null;
   }
   let destino = base ? base.destino : null;
   if (tipo === 'revenda' && !destino){
-    const esc = prompt('A que se referem estas compras?\n\n'
-      + FO_DESTINOS.map((d,i)=>`${i+1} — ${d[1]}`).join('\n')
-      + '\n\n(enquanto não existe consulta por NCM, a classificação é informada aqui)', '1');
-    if (esc === null) return;
-    destino = (FO_DESTINOS[(+esc||1)-1] || FO_DESTINOS[0])[0];
+    destino = await dlg('A que se referem estas compras?',
+      'Enquanto não existe classificação automática por NCM, informe aqui o tratamento das mercadorias.',
+      [...FO_DESTINOS.map((d,i)=>({rotulo:d[1], valor:d[0], destaque:i===0})), {rotulo:'Cancelar', valor:null}]);
+    if (destino === null) return;
   }
   const novo = base ? JSON.parse(JSON.stringify(base))
                     : { cnpjEmpresa:'', nomeEmpresa:'', periodo:'', itens:[], totalRelatorio:0, lotes:[], destino };
@@ -1163,7 +1204,7 @@ function fornCarregarTexto(t, nomeArq){       // entrada pelo card único da Con
   r.arquivo = nomeArq || 'relatório';
   // a aba ativa define o tipo — o aviso diz para onde foi, já que este caminho não tem aba própria
   toast(`Relatório detectado (${r.itens.length} parceiros) — carregado na aba de ${FO_TIPO==='servico'?'SERVIÇO':'REVENDA'}.`);
-  fornIncorporar([r], FO_TIPO);
+  fornIncorporar([r], FO_TIPO);   // async: segue em segundo plano
 }
 function fornClasse(r){ return r.erro ? 'nid' : r.simei ? 'mei' : r.simples ? 'simples' : 'normal'; }
 const FO_ROTULO = { mei:['MEI','warn'], simples:['Simples Nacional','warn'], normal:['Regime normal (LP/LR)','ok'], nid:['Não identificado','err'], pf:['Pessoa física','err'] };
@@ -1459,28 +1500,52 @@ function anModeloImportar(inp){
   rd.readAsArrayBuffer(f);
 }
 // rateia um total pelos meses do período numa linha da análise
-function fornRatear(secao, campo, total, periodo, rotulo){
-  const meses = fornMesesDoPeriodo(periodo), porMes = Math.round(total/meses.length*100)/100;
+function anMesesLancados(){
+  const sec = ['receitas','folha','compras','despesas'];
+  const tem = m => sec.some(s => Object.values(AN[s]||{}).some(a => Array.isArray(a) && +a[m] > 0));
+  const idx = [...Array(12).keys()].filter(tem);
+  return idx.length ? idx : null;
+}
+async function fornRatear(secao, campo, total, periodo, rotulo){
+  let meses = fornMesesDoPeriodo(periodo);
+  const lanc = anMesesLancados();
+  // só pergunta quando o relatório cobre mais meses do que a análise tem lançados
+  if (lanc && lanc.length && meses.length > lanc.length){
+    const MS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const r = await dlg('Em quantos meses ratear?',
+      `O relatório cobre ${meses.length} meses (${periodo || 'período não identificado'}), `
+      + `mas a análise tem lançamentos em ${lanc.length}: de ${MS[lanc[0]]} a ${MS[lanc[lanc.length-1]]}.\n\n`
+      + `Dividir por ${meses.length} espalha o valor por meses ainda sem movimento; `
+      + `dividir por ${lanc.length} concentra nos meses efetivamente lançados.`,
+      [{rotulo:`Ratear em ${lanc.length} meses (lançados)`, valor:'lanc', destaque:true},
+       {rotulo:`Ratear em ${meses.length} meses (relatório)`, valor:'rel'},
+       {rotulo:'Cancelar', valor:null}]);
+    if (r === null) return false;
+    if (r === 'lanc') meses = lanc;
+  }
+  const porMes = Math.round(total/meses.length*100)/100;
   if (!Array.isArray(AN[secao][campo])) AN[secao][campo] = Array(12).fill(0);
   const jaTem = meses.some(m => +AN[secao][campo][m] > 0);
-  if (jaTem && !confirm(`${rotulo} já tem valores nos meses do período.\n\nSubstituir pelo rateio do relatório de fornecedores?`)) return false;
+  if (jaTem && !await dlgSimNao('Substituir os valores?',
+      `${rotulo} já tem valores nos meses do período.\n\nSubstituir pelo rateio do relatório de fornecedores?`,
+      'Sim, substituir', 'Não')) return false;
   for (const m of meses) AN[secao][campo][m] = porMes;
   toast(`R$ ${fmt(total)} rateados em ${meses.length} ${meses.length===1?'mês':'meses'} (${fmt(porMes)}/mês) em ${rotulo} ✓`);
   return true;
 }
-function fornLancarDespesas(){                 // serviço → Despesas › Outras
+async function fornLancarDespesas(){          // serviço → Despesas › Outras
   const d = FOT.servico; if (!d) return;
   if (!AN || !AN.cnpj || AN.cnpj !== d.cnpjEmpresa) { toast('Abra a análise da empresa '+fmtCNPJ(d.cnpjEmpresa)+' primeiro (módulo Análise Atual).'); return; }
   const tot = d.itens.reduce((s,i)=>s+i.valor,0);
-  if (fornRatear('despesas','outras', tot, d.periodo, 'Despesas › Outras')) anAplicado();
+  if (await fornRatear('despesas','outras', tot, d.periodo, 'Despesas › Outras')) anAplicado();
 }
-function fornLancarCompras(){                  // revenda → Compras, na linha informada na importação
+async function fornLancarCompras(){           // revenda → Compras, na linha informada na importação
   const d = FOT.revenda; if (!d) return;
   if (!AN || !AN.cnpj || AN.cnpj !== d.cnpjEmpresa) { toast('Abra a análise da empresa '+fmtCNPJ(d.cnpjEmpresa)+' primeiro (módulo Análise Atual).'); return; }
   const campo = d.destino || 'semst', rot = (FO_DESTINOS.find(x=>x[0]===campo)||['','Compras'])[1];
   const tot = d.itens.reduce((s,i)=>s+i.valor,0);
   // a baixa de custos (CMV) NÃO é escrita aqui — continua vindo do balancete
-  if (fornRatear('compras', campo, tot, d.periodo, rot)) anAplicado();
+  if (await fornRatear('compras', campo, tot, d.periodo, rot)) anAplicado();
 }
 async function fornResumo(cnpj){
   const rs = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+cnpj, order:'consultado_em.desc', select:'*' } }) || [];
@@ -2423,7 +2488,11 @@ function anAplicarConfig(silencioso) {
     lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, lpBaseServCsll:+($id('cf-bcsll')?.value||0),
     lpBaseComCsll:+($id('cf-bcomcsll')?.value||.12), adicionalIR:$id('cf-adic').value, sublimite:$id('cf-sublim').value,
     rbt12Direto:num($id('cf-rbtd').value) });
-  anRecalcular(); if (!silencioso) toast('Configurações aplicadas — lembre de salvar a análise.');
+  AN_SUJO = true;                       // sem isto a alteração sumia sem aviso ao trocar de módulo
+  anRecalcular();
+  clearTimeout(window._cfgTimer);
+  window._cfgTimer = setTimeout(()=>{ if (AN && AN.cnpj) anSalvar(); }, 1200);   // grava sozinha, como os importadores
+  if (!silencioso) toast('Configuração aplicada e sendo gravada…');
 }
 
 const SN_TETO = 4800000;
@@ -2467,12 +2536,15 @@ function snElegibilidade(r, cfg) {
 function snPerguntarAnterior(forcar) {
   if (!AN) return false;
   if (!forcar && AN.cfg.snAntAcima != null) return false;
-  const sim = confirm('O faturamento lançado ultrapassa o teto do Simples Nacional (' + fmtR(SN_TETO) + ').\n\n'
+  dlg('Receita acima do teto do Simples',
+    'O faturamento lançado ultrapassa ' + fmtR(SN_TETO) + '.\n\n'
     + 'A receita bruta dos 12 meses ANTERIORES também ficou acima desse valor?\n\n'
-    + 'OK = Sim, a empresa já vinha acima do teto → não era elegível ao Simples\n'
-    + 'Cancelar = Não, o teto foi ultrapassado agora → ano de transição, o Simples ainda é devido\n\n'
-    + 'Para maior precisão, lance os 12 meses anteriores no campo RBT12 da Config.');
-  AN.cfg.snAntAcima = sim; anRecalcular(); return true;
+    + 'Para maior precisão, lance os 12 meses anteriores na aba "12 meses anteriores".',
+    [{rotulo:'Sim — já vinha acima do teto', valor:true, destaque:true},
+     {rotulo:'Não — estourou agora', valor:false},
+     {rotulo:'Não sei informar', valor:null}]
+  ).then(r => { if (r === null) return; AN.cfg.snAntAcima = r; anRecalcular(); });
+  return true;
 }
 function snAvisoHtml(el) {
   if (el.estado === 'elegivel') return '';
@@ -2566,6 +2638,63 @@ async function anTrocarEmpresa() {
   anRenderTabs(); anRenderGrid(); anRecalcular();
 }
 function anMudou(){ anTrocarEmpresa(); }
+// ═══ v7.12: histórico de versões — as 3 últimas por empresa/ano, com autoria ═══
+async function anHistGravar(reg){
+  try {
+    await supa('POST','atp_analises_hist',{ body:[{ cnpj:reg.cnpj, ano:reg.ano, dados:reg.dados,
+      resumo:reg.resumo, gravado_por: APP.user?.email || null }] });
+  } catch(e){ console.warn('histórico não gravado (rode o setup_v712.sql):', e.message); }
+}
+async function anHistorico(){
+  const cnpj = (AN && AN.cnpj) || $id('an-empresa').value || '';
+  const ano  = +(AN?.ano) || +$id('an-ano').value;
+  if (!cnpj) { toast('Selecione a empresa no topo.'); return; }
+  let rs = [];
+  try {
+    rs = await supa('GET','atp_analises_hist',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`,
+      order:'gravado_em.desc', limit:'3' } }) || [];
+  } catch(e){
+    alert('Não consegui ler o histórico.\n\nSe o script setup_v712.sql ainda não foi executado no Supabase, a tabela não existe.\n\nDetalhe: ' + (e.message||e));
+    return;
+  }
+  const el = $id('an-hist'); if (!el) return;
+  if (!rs.length){
+    el.style.display = ''; 
+    el.innerHTML = `<h3 style="margin:0">Histórico de versões</h3>
+      <div class="hint">Ainda não há versões guardadas desta análise (${ano}). A primeira aparece na próxima gravação.</div>
+      <button class="btn" style="margin-top:10px" onclick="$id('an-hist').style.display='none'">Fechar</button>`;
+    return;
+  }
+  const linhas = rs.map((r,i) => {
+    const q = r.gravado_por || 'autor não registrado';
+    const t = new Date(r.gravado_em).toLocaleString('pt-BR');
+    const rm = r.resumo || {};
+    return `<tr><td class="rot">${i===0?'<b>mais recente</b>':'versão '+(i+1)}</td>
+      <td>${t}</td><td>${esc(q)}</td>
+      <td class="num">${rm.receita!=null?fmtR(+rm.receita):'—'}</td>
+      <td class="num">${rm.simples!=null?fmtR(+rm.simples):'—'}</td>
+      <td><button class="btn" onclick="anHistRestaurar(${r.id})">Restaurar</button></td></tr>`;
+  }).join('');
+  window._AN_HIST = rs;
+  el.style.display = '';
+  el.innerHTML = `<h3 style="margin:0">Histórico de versões — ${ano}</h3>
+    <div class="hint">São guardadas as três gravações mais recentes. Restaurar substitui a análise atual, e a própria restauração vira uma nova versão.</div>
+    <table class="gtable" style="margin-top:10px"><thead><tr><th></th><th>Gravada em</th><th>Por</th>
+      <th class="num">Receita</th><th class="num">Simples</th><th></th></tr></thead><tbody>${linhas}</tbody></table>
+    <button class="btn" style="margin-top:10px" onclick="$id('an-hist').style.display='none'">Fechar</button>`;
+}
+async function anHistRestaurar(id){
+  const r = (window._AN_HIST||[]).find(x => x.id === id); if (!r) return;
+  const q = r.gravado_por || 'autor não registrado';
+  if (!confirm(`Restaurar a versão gravada em ${new Date(r.gravado_em).toLocaleString('pt-BR')} por ${q}?\n\n`
+    + 'A análise atual será substituída. Como a restauração também é gravada, a versão de agora continua no histórico.')) return;
+  AN = anNormalizar(r.dados, r.cnpj, r.ano);
+  AN.cnpj = r.cnpj; AN.ano = r.ano; AN_SUJO = true;
+  anRenderTabs(); anRenderGrid(); anRecalcular();
+  const ok = await anSalvar();
+  $id('an-hist').style.display = 'none';
+  toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
+}
 async function anSalvar() {
   if (!AN || !AN.cnpj) { toast('Selecione a empresa no topo (ou importe PGDAS/Faturamento, que o cadastro é automático).'); return false; }
   // ninguém deve sobrescrever, sem saber, o trabalho de outra pessoa na mesma empresa/ano
@@ -2581,7 +2710,9 @@ async function anSalvar() {
   const T = AN._res?.totais || {};
   const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined, _verEm:undefined},
     resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr }, atualizado_em:new Date().toISOString() }];
-  try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); AN_SUJO = false; AN._verEm = body[0].atualizado_em; toast('Análise salva.'); return true; }
+  try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); AN_SUJO = false; AN._verEm = body[0].atualizado_em;
+    await anHistGravar(body[0]);
+    toast('Análise salva.'); return true; }
   catch(e){ console.error('anSalvar:', e); toast('Erro ao salvar: '+e.message); return false; }
 }
 
@@ -3774,18 +3905,19 @@ async function anLimparDados() {
     nFornec = f.length;
   } catch(e){ alert('Não consegui consultar os dados da empresa: '+e.message); return; }
   if (!anos.length && !nFornec) { toast('Esta empresa não tem nada gravado para excluir.'); return; }
-  const opc = anos.map((a,i)=>`${i+1} — excluir a análise de ${a}`);
-  const iTudo = anos.length + 1;
-  opc.push(`${iTudo} — excluir TUDO: ${anos.length} análise(s) e ${nFornec} consulta(s) de fornecedores`);
-  const esc = prompt(`Limpar dados de ${nome}\n\n${opc.join('\n')}\n\nDigite o número da opção:`);
+  const esc = await dlg(`Limpar dados de ${nome}`,
+    'A exclusão apaga do banco de dados e não tem desfazer.\n\nO que deseja excluir?',
+    [...anos.map(a=>({rotulo:`Análise de ${a}`, valor:String(a)})),
+     {rotulo:`TUDO — ${anos.length} análise(s) e ${nFornec} consulta(s)`, valor:'tudo', perigo:true},
+     {rotulo:'Cancelar', valor:null}]);
   if (esc === null) return;
-  const op = +esc;
-  if (!(op >= 1 && op <= iTudo)) { toast('Opção inválida.'); return; }
-  const tudo = op === iTudo, alvoAno = tudo ? null : anos[op-1];
+  const tudo = esc === 'tudo', alvoAno = tudo ? null : +esc;
   const oQue = tudo ? `TODAS as ${anos.length} análise(s) e as ${nFornec} consulta(s) de fornecedores`
                     : `a análise de ${alvoAno}`;
-  if (!confirm(`Excluir ${oQue} de ${nome}?\n\nIsto apaga do banco de dados e NÃO tem desfazer.\n\n`
-    + `A empresa continua cadastrada e o histórico de CNPJs consultados é preservado.`)) return;
+  if (!await dlgSimNao('Confirmar exclusão',
+    `Excluir ${oQue} de ${nome}?\n\nIsto apaga do banco de dados e NÃO tem desfazer.\n\n`
+    + `A empresa continua cadastrada e o histórico de CNPJs consultados é preservado.`,
+    'Sim, excluir', 'Não, cancelar')) return;
   try {
     if (tudo){
       await supa('DELETE','atp_analises',{ params:{ cnpj:'eq.'+cnpj } });
