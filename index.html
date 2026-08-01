@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.13.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.13.1</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -608,7 +608,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.13.0</b> <span class="badge ok">atual</span></td><td>31/07/2026</td><td>A <b>Configuração da empresa</b> ganhou botão próprio de gravação e passou a salvar sozinha após cada alteração. Antes, mudar a alíquota de ISS atualizava o cálculo na tela mas não marcava a análise como pendente — a alteração se perdia ao trocar de módulo, sem aviso, e a mensagem mandava salvar num botão que havia ficado na Análise Atual quando a configuração virou módulo próprio. O <b>rateio de valores importados</b> passou a perguntar em quantos meses dividir, mas apenas quando o relatório cobre mais meses do que a análise tem lançados: informando os dois números, permite concentrar nos meses efetivamente movimentados em vez de espalhar por meses ainda sem apuração. E as <b>perguntas do sistema deixaram de usar OK e Cancelar</b>, cujos rótulos são fixos no navegador e não diziam o que cada opção fazia. As decisões passaram a ser tomadas em janela própria, com botões que nomeiam a ação — Substituir os existentes ou Somar aos existentes, Sim excluir ou Não cancelar —, e as escolhas que antes exigiam digitar um número, como a linha de compras da revenda e o alcance da exclusão, viraram listas clicáveis.</td></tr>
+          <tr><td><b>v7.13.1</b> <span class="badge ok">atual</span></td><td>31/07/2026</td><td>Corrigida a importação do PGDAS-D, que somava aos valores já existentes em vez de substituí-los. Importar as mesmas declarações duas vezes dobrava a receita, e importar um lote menor deixava resíduo dos meses da importação anterior — o resultado aparentava importação pela metade ou receita inflada, conforme o caso. Os meses que vêm nas declarações passaram a ser zerados antes da aplicação, e apenas eles: meses lançados por outra origem permanecem intactos. A importação também passou a informar quantos dos doze meses foram cobertos e quais ficaram sem receita, o que explica por que o ICMS, o ISS e os demais tributos aparecem zerados nesses meses — não há base de cálculo neles.</td></tr>
+          <tr><td><b>v7.13.0</b></td><td>31/07/2026</td><td>A <b>Configuração da empresa</b> ganhou botão próprio de gravação e passou a salvar sozinha após cada alteração. Antes, mudar a alíquota de ISS atualizava o cálculo na tela mas não marcava a análise como pendente — a alteração se perdia ao trocar de módulo, sem aviso, e a mensagem mandava salvar num botão que havia ficado na Análise Atual quando a configuração virou módulo próprio. O <b>rateio de valores importados</b> passou a perguntar em quantos meses dividir, mas apenas quando o relatório cobre mais meses do que a análise tem lançados: informando os dois números, permite concentrar nos meses efetivamente movimentados em vez de espalhar por meses ainda sem apuração. E as <b>perguntas do sistema deixaram de usar OK e Cancelar</b>, cujos rótulos são fixos no navegador e não diziam o que cada opção fazia. As decisões passaram a ser tomadas em janela própria, com botões que nomeiam a ação — Substituir os existentes ou Somar aos existentes, Sim excluir ou Não cancelar —, e as escolhas que antes exigiam digitar um número, como a linha de compras da revenda e o alcance da exclusão, viraram listas clicáveis.</td></tr>
           <tr><td><b>v7.12.0</b></td><td>29/07/2026</td><td><b>Exige rodar o setup_v712.sql no Supabase.</b> Cada gravação da análise passou a guardar uma cópia no histórico, com data, hora e o e-mail de quem salvou. São mantidas as três versões mais recentes de cada empresa e ano; a poda é feita pelo próprio banco, de modo a valer mesmo que outra ferramenta grave na tabela. O botão Histórico, na linha do título da Análise Atual, lista essas versões com a receita e o Simples de cada uma, e permite restaurar qualquer delas — a restauração substitui a análise em tela e é ela própria gravada, de forma que a versão anterior à restauração permanece disponível. Sem o script executado nada quebra: a gravação segue normal, apenas sem histórico, e o botão informa a pendência. É a primeira resposta concreta ao risco de sobrescrita entre usuários apontado na auditoria.</td></tr>
           <tr><td><b>v7.11.1</b></td><td>29/07/2026</td><td>A consulta de fornecedores passou a ser gravada automaticamente no histórico assim que termina, como já ocorria com a análise. Antes ela existia apenas na memória até alguém clicar em salvar, e sair da tela descartava o trabalho sem aviso — o que dava a impressão de que a informação havia sido apagada sozinha. O painel passou a exibir se a consulta está gravada, com data e hora, ou se existe apenas na tela. Falhas de gravação deixaram de aparecer em aviso passageiro e passaram a ser informadas em janela, com o motivo, inclusive quando o CNPJ da empresa não é reconhecido no cabeçalho do relatório e por isso não há onde guardar. Sair da Consulta CNPJ com consulta ainda não gravada passou a pedir confirmação. A varredura não encontrou nenhuma exclusão automática: o único ponto que apaga consultas é a opção "excluir tudo" do Limpar dados, que exige confirmação expressa.</td></tr>
           <tr><td><b>v7.11.0</b></td><td>29/07/2026</td><td>Novo relatório <b>Conferência de cálculos — memória</b>, documento interno de papel de trabalho. Diferente dos demais, ele não mostra apenas o resultado: exibe a fórmula de cada apuração com os valores já substituídos, de modo que a conferência seja feita a olho. Traz a formação do RBT12, a faixa, a alíquota efetiva e — o ponto que mais gera dúvida — a alíquota de cada bloco de receita, deixando ver por que ela difere da geral conforme haja substituição tributária, tributação monofásica, redução de base ou retenção de ISS. Segue com a decomposição nos oito tributos, o que corre por fora da guia, a apuração separada da exportação, e as bases do Lucro Presumido e do Lucro Real. Quando há PGDAS-D importado, confronta automaticamente o calculado com o declarado e sinaliza diferenças acima de dois por cento. Três modos de detalhe: um mês, resumo anual e completo. Encerra com a declaração das divergências assumidas — prejuízo não compensado, ICMS na base de PIS/COFINS, crédito por aproximação, Fator R sem 13º e a trava do sublimite —, porque papel de trabalho que omite o que não faz induz a erro.</td></tr>
@@ -3261,6 +3262,11 @@ async function pgdasAplicar() {
     toast(`Ano da análise ajustado para ${anoImp}, conforme as declarações.`);
   }
   AN._pgdas = { das: z12(), tributos: {} };
+  // limpa APENAS os meses que vieram nas declarações: importar duas vezes somava,
+  // e importar um lote menor deixava resíduo dos meses antigos
+  const mesesImp = [...new Set(chaves.map(k => +k.split('/')[0] - 1))];
+  for (const k of Object.keys(AN.receitas))
+    if (Array.isArray(AN.receitas[k])) for (const m of mesesImp) AN.receitas[k][m] = 0;
   let aplicados = 0, rpaFallback = 0;
   for (const pa of chaves) {
     const [mm, aa] = pa.split('/'); const m = +mm - 1;
@@ -3279,6 +3285,12 @@ async function pgdasAplicar() {
     if (!Array.isArray(AN.cfg.rbt12ExpLanc)) AN.cfg.rbt12ExpLanc = z12();
     for (let i=0;i<12;i++) AN.cfg.rbt12ExpLanc[i] = tabExp[`${String(i+1).padStart(2,'0')}/${anoImp-1}`] || 0;
     AN.cfg.rbt12Direto = 0;
+  }
+  // a análise cobre 12 meses; declarações parciais deixam o restante sem receita
+  if (mesesImp.length < 12){
+    const MS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const faltam = [...Array(12).keys()].filter(m => !mesesImp.includes(m));
+    toast(`Importados ${mesesImp.length} de 12 meses (${mesesImp.map(m=>MS[m]).join(', ')}). Sem receita em: ${faltam.map(m=>MS[m]).join(', ')}.`);
   }
   const expo = [];
   for (const pa of chaves) for (const a of PG_DADOS.meses[pa].atividades)
