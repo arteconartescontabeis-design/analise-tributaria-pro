@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.13.4</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.13.6</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -608,7 +608,9 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-          <tr><td><b>v7.13.4</b> <span class="badge ok">atual</span></td><td>01/08/2026</td><td>O quadro de ICMS, IPI e ISS apurados passou a abrir a aba, antes dos campos de substituição manual. Na versão anterior ele havia sido acrescentado ao final, depois das quatro linhas de digitação e da barra de rolagem horizontal, e ficava fora da área visível — de modo que a aba continuava aparentando não exibir apuração alguma. A ordem agora reflete o uso: primeiro o que foi calculado, depois os campos que servem para substituí-lo em casos excepcionais.</td></tr>
+          <tr><td><b>v7.13.6</b> <span class="badge ok">atual</span></td><td>01/08/2026</td><td>A importação do PGDAS-D passou a <b>conferir o acumulado da análise contra o RBA declarado</b> — a receita bruta acumulada no ano-calendário corrente que a própria declaração informa. Ao aplicar um lote, o aplicativo soma o que a análise tem de janeiro até o período mais recente importado e compara com o acumulado oficial; havendo diferença, um aviso nomeia os meses que não vieram no lote e podem carregar resíduo. O caso concreto: importações feitas <b>antes</b> da correção da v7.13.1 somavam em vez de substituir, e os valores dobrados ficaram <b>gravados no banco</b>; a correção posterior zera apenas os meses do lote em aplicação, de modo que os demais permaneciam inflados sem que nada acusasse. A régua do RBA fecha ao centavo com a soma dos meses declarados e denuncia o resíduo na hora. A solução, indicada no próprio aviso, é importar todos os PDFs do ano num único lote — cada mês do lote é zerado antes de receber o valor declarado.</td></tr>
+          <tr><td><b>v7.13.5</b></td><td>01/08/2026</td><td>A revisão da importação do PGDAS-D passou a exibir corretamente as atividades de <b>exportação</b> e as de serviço com <b>retenção conjunta de ISS e INSS</b>. Esses enquadramentos já eram aplicados por baixo — a receita de "Revenda de mercadorias para o exterior" ia para a linha própria de exportação, imune a PIS/COFINS, ICMS e ISS e com limite próprio de 4,8 milhões —, mas a lista de blocos da tela não continha essas opções, e o navegador exibia a primeira da lista, "Anexo I — Sem ST", como se a exportação fosse tributada como venda interna. Pior: qualquer toque naquela caixa gravava de fato o bloco interno, sem caminho de volta, contaminando o RBT12 do mercado interno. As quatro opções passaram a existir na lista — que também serve aos destinos do Faturamento, do XML e do Demonstrativo — e, por segurança, um bloco que a lista não conheça passa a ser exibido tal como está, nunca mascarado pela primeira opção.</td></tr>
+          <tr><td><b>v7.13.4</b></td><td>01/08/2026</td><td>O quadro de ICMS, IPI e ISS apurados passou a abrir a aba, antes dos campos de substituição manual. Na versão anterior ele havia sido acrescentado ao final, depois das quatro linhas de digitação e da barra de rolagem horizontal, e ficava fora da área visível — de modo que a aba continuava aparentando não exibir apuração alguma. A ordem agora reflete o uso: primeiro o que foi calculado, depois os campos que servem para substituí-lo em casos excepcionais.</td></tr>
           <tr><td><b>v7.13.3</b></td><td>31/07/2026</td><td>A aba ICMS · IPI passou a exibir o que foi <b>apurado</b>, mês a mês: base de débito, débito, crédito, valor a pagar, a parcela de ICMS embutida na guia do Simples, o IPI e o ISS. Até aqui a aba continha apenas os campos de substituição manual, todos em branco por não haver exceções lançadas, e não existia lugar algum onde conferir o cálculo — o que dava a impressão de que o imposto não estava sendo apurado. O texto da aba também deixou de chamar esses campos de "override": eles servem para substituir o valor apurado, e em branco significam que o aplicativo calcula. Um aviso destaca quando os percentuais de ICMS estão zerados na Configuração, caso em que realmente não há o que apurar.</td></tr>
           <tr><td><b>v7.13.2</b></td><td>31/07/2026</td><td>A importação passou a reconhecer o <b>Extrato do Simples Nacional</b>, além da Declaração. Os dois documentos trazem a mesma apuração, mas identificam o período de forma diferente — o extrato usa "Período de Apuração (PA): MM/AAAA" —, e por isso os extratos vinham sendo descartados em silêncio, o que fazia parte dos arquivos selecionados simplesmente não aparecer. O nome e o CNPJ da empresa também passaram a ser lidos no formato do extrato, que os apresenta como CNPJ Estabelecimento e Nome Empresarial. Corrigida ainda a leitura do <b>DAS declarado</b>: quando o quadro de resumo é cortado pela quebra de página, o valor ficava órfão e era lido como zero — agora o total do débito exigível é usado como alternativa, o que restabelece a conferência entre o declarado e o simulado nesses meses.</td></tr>
           <tr><td><b>v7.13.1</b></td><td>31/07/2026</td><td>Corrigida a importação do PGDAS-D, que somava aos valores já existentes em vez de substituí-los. Importar as mesmas declarações duas vezes dobrava a receita, e importar um lote menor deixava resíduo dos meses da importação anterior — o resultado aparentava importação pela metade ou receita inflada, conforme o caso. Os meses que vêm nas declarações passaram a ser zerados antes da aplicação, e apenas eles: meses lançados por outra origem permanecem intactos. A importação também passou a informar quantos dos doze meses foram cobertos e quais ficaram sem receita, o que explica por que o ICMS, o ISS e os demais tributos aparecem zerados nesses meses — não há base de cálculo neles.</td></tr>
@@ -3150,7 +3152,8 @@ async function garantirEmpresa(cnpjBruto, nome, regime) {
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const PG_BLOCOS = [['a1_semst','Anexo I — Sem ST'],['a1_comst','Anexo I — Com ST'],['a1_mono','Anexo I — Monofásico'],['a1_comst_mono','Anexo I — ST + Mono'],
   ['a2_semst','Anexo II — Sem ST'],['a2_comst','Anexo II — Com ST'],['a2_mono','Anexo II — Monofásico'],['a2_comst_mono','Anexo II — ST + Mono'],
-  ['a3_semret','Anexo III — Sem retenção'],['a3_retiss','Anexo III — Ret. ISS'],['a4','Anexo IV'],['a5r','Anexo V/III (Fator R)'],['comtransp','Comunicação/Transporte']];
+  ['a3_semret','Anexo III — Sem retenção'],['a3_retiss','Anexo III — Ret. ISS'],['a3_retissinss','Anexo III — Ret. ISS + INSS'],['a4','Anexo IV'],['a5r','Anexo V/III (Fator R)'],['comtransp','Comunicação/Transporte'],
+  ['a1_exp','Exportação — Revenda (Anexo I)'],['a2_exp','Exportação — Indústria (Anexo II)'],['a3_exp','Exportação — Serviços (Anexo III)']];
 let PG_DADOS = null;
 
 const brNum = s => parseFloat(String(s).replace(/\./g,'').replace(',','.')) || 0;
@@ -3211,6 +3214,8 @@ async function pgdasLer(input) {
       nomePdf = (txt.match(/Nome empresarial:\s*(.+?)\s+Data de abertura/)||[])[1]
              || (txt.match(/Nome Empresarial:\s*(.+?)\s+Data de Abertura/i)||[])[1] || nomePdf;
       const rpa = brNum((txt.match(/Receita Bruta do PA \(RPA\) - Competência\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})/)||[])[3]);
+      // RBA = acumulado do ano-calendário corrente ATÉ o PA, inclusive — declarado pela própria RFB; serve de régua de conferência
+      const rba = brNum((txt.match(/Receita bruta acumulada no ano-calend[áa]rio corrente\s*\(RBA\)\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})/)||[])[3]);
       let das = brNum((txt.match(/Valor Total do Débito Declarado \(R\$\)\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})/)||[])[2]);
       // o quadro 2.6 pode ser cortado pela quebra de página (o valor fica órfão) — cai no total do débito
       if (!das) { const td = [...txt.matchAll(/Total do Débito Exig[íi]vel \(R\$\)\s*IRPJ.*?Total\s+(?:[\d.]+,\d{2}\s+){8}([\d.]+,\d{2})/gs)];
@@ -3231,7 +3236,7 @@ async function pgdasLer(input) {
       let expSec = (txt.match(/2\.2\.2\) Mercado Externo(.+?)2\.3\)/s)||[])[1] || '';
       expSec = expSec.replace(/(\d{2}\/\d{4})/g, ' $1 ');
       const rbtExpAnt = {}; for (const mm of expSec.matchAll(/(\d{2})\/(\d{4})\s+([\d.]+,\d{2})/g)) rbtExpAnt[`${mm[1]}/${mm[2]}`] = brNum(mm[3]);
-      meses[chave] = { receita: rpa, das, atividades: atividades.map(a=>({...a, bloco: pgdasBloco(a.texto)})), tributos: trib, rbtAnt, rbtExpAnt };
+      meses[chave] = { receita: rpa, rba, das, atividades: atividades.map(a=>({...a, bloco: pgdasBloco(a.texto)})), tributos: trib, rbtAnt, rbtExpAnt };
     } catch(e) { console.error(e); erros.push(f.name+' ('+e.message+')'); }
   }
   if (!Object.keys(meses).length) { toast('Nenhum PGDAS válido encontrado. Arquivos com problema: '+(erros.join(', ')||'—')); return; }
@@ -3254,6 +3259,7 @@ function pgdasReview() {
   const chaves = Object.keys(PG_DADOS.meses).sort((a,b)=>a.split('/').reverse().join('')<b.split('/').reverse().join('')?-1:1);
   const anoImp = +chaves[0].split('/')[1];
   const sel = (pa,i,b) => `<select onchange="PG_DADOS.meses['${pa}'].atividades[${i}].bloco=this.value;pgdasReview()" style="min-width:190px">` +
+    (PG_BLOCOS.some(([k])=>k===b)?'':`<option value="${esc(b)}" selected>${esc(b)}</option>`) +
     PG_BLOCOS.map(([k,r])=>`<option value="${k}" ${k===b?'selected':''}>${r}</option>`).join('') + '</select>';
   let h = `<div class="hint" style="margin-bottom:8px"><b>${PG_DADOS.nome||''}</b> — CNPJ ${PG_DADOS.cnpj||'?'} · ${chaves.length} mês(es) do ano <b>${anoImp}</b>. Confira o enquadramento de cada atividade e aplique.</div>
   <table class="gtable"><thead><tr><th>PA</th><th class="num">Receita (RPA)</th><th class="num">Comércio/Ind.</th><th class="num">Serviços</th><th>Atividade → bloco do Simples</th><th class="num">DAS declarado</th></tr></thead><tbody>`;
@@ -3328,6 +3334,29 @@ async function pgdasAplicar() {
     const MS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
     const faltam = [...Array(12).keys()].filter(m => !mesesImp.includes(m));
     toast(`Importados ${mesesImp.length} de 12 meses (${mesesImp.map(m=>MS[m]).join(', ')}). Sem receita em: ${faltam.map(m=>MS[m]).join(', ')}.`);
+  }
+  // conferência com o acumulado DECLARADO (RBA): a soma da análise até o PA mais recente do lote
+  // tem que fechar com o que a própria declaração informa — pega resíduo de importações antigas
+  // (versões anteriores à v7.13.1 SOMAVAM em vez de substituir) em meses fora deste lote
+  {
+    const paMax = chaves.slice().sort((a,b)=>(+a.split('/')[0])-(+b.split('/')[0])).at(-1);
+    const rbaDecl = +((PG_DADOS.meses[paMax]||{}).rba)||0;
+    if (rbaDecl > 0){
+      const mMax = +paMax.split('/')[0]-1;
+      let acum = 0;
+      for (const [k,arr] of Object.entries(AN.receitas))
+        if (Array.isArray(arr) && !k.endsWith('_pct') && k!=='fin')
+          for (let i=0;i<=mMax;i++) acum += +arr[i]||0;
+      const dif = acum - rbaDecl;
+      if (Math.abs(dif) > 0.02){
+        const MS=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+        const fora = [...Array(mMax+1).keys()].filter(m=>!mesesImp.includes(m) && Object.values(AN.receitas).some(a=>Array.isArray(a)&&+a[m]>0));
+        alert(`CONFERÊNCIA COM O PGDAS: a análise acumula ${fmtR(acum)} de janeiro a ${MS[mMax]}, mas a declaração de ${paMax} informa acumulado (RBA) de ${fmtR(rbaDecl)} — diferença de ${fmtR(dif)}.\n\n`
+          + (fora.length
+              ? `Os meses ${fora.map(m=>MS[m]).join(', ')} não vieram neste lote e podem carregar resíduo de importações feitas antes da correção da v7.13.1 (que somava em vez de substituir).\n\nSolução: selecione TODOS os PDFs do ano numa única importação — cada mês do lote é zerado antes de receber o valor declarado.`
+              : 'Confira os lançamentos na grade da Análise Atual.'));
+      }
+    }
   }
   const expo = [];
   for (const pa of chaves) for (const a of PG_DADOS.meses[pa].atividades)
