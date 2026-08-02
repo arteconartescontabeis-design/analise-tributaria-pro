@@ -43,7 +43,7 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
 </head>
 <body>
 <div class="topo">
-  <b>🏷️ Classificação RTC</b> <span class="badge">v1.7.0</span>
+  <b>🏷️ Classificação RTC</b> <span class="badge">v1.8.0</span>
   <a href="index.html">← Análise Tributária Pro</a>
   <span style="flex:1"></span>
   <a href="#" id="ct-sair" style="display:none" onclick="ctSair();return false">Sair</a>
@@ -108,7 +108,8 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
 </main>
 
 <details class="versoes"><summary>Versões</summary>
-  <table><tr><td><b>v1.7.0</b> <span class="badge ok">atual</span></td><td>02/08/2026</td><td>A tela passou a mostrar o <b>período das notas</b> e a permitir <b>selecionar o período</b>: uma barra informa a cobertura do lote (data da primeira à última emissão) e dois campos de data recortam a análise — grade, quadro de conferência por CFOP, KPIs, alerta do grupo IBS/CBS e a relação de decisões passam a considerar apenas os itens emitidos dentro do intervalo, com o contador "X de Y itens no período" deixando explícito o que ficou de fora. O botão "Período completo" restaura a cobertura integral. Com isso a conferência do faturamento ganha a dimensão que faltava: recorta-se o mês fechado e o total por CFOP bate diretamente contra o livro de saídas daquele mês. No modo carteira a barra não aparece (as datas vêm dos XMLs). As consultas ao portal e as decisões gravadas não são afetadas pelo recorte — ele muda o que se vê, não o que se sabe.</td></tr>
+  <table><tr><td><b>v1.8.0</b> <span class="badge ok">atual</span></td><td>02/08/2026</td><td>Ponte com o parecer de IA do Análise Tributária Pro: o cabeçalho de cada cliente ganhou o botão <b>"Gravar notas do período p/ relatórios"</b>, que persiste no banco o resumo das notas do período selecionado — produtos consolidados (código, descrição, NCM, CFOP, quantidade e valor), totais por CFOP e o total geral, com autor e data. O mesmo período regravado substitui o anterior. É esse resumo que o parecer do app principal passa a analisar, encerrando com a relação dos produtos vendidos e suas classificações para a Reforma. Requer <b>setup_ct_v5.sql</b>.</td></tr>
+  <tr><td><b>v1.7.0</b></td><td>02/08/2026</td><td>A tela passou a mostrar o <b>período das notas</b> e a permitir <b>selecionar o período</b>: uma barra informa a cobertura do lote (data da primeira à última emissão) e dois campos de data recortam a análise — grade, quadro de conferência por CFOP, KPIs, alerta do grupo IBS/CBS e a relação de decisões passam a considerar apenas os itens emitidos dentro do intervalo, com o contador "X de Y itens no período" deixando explícito o que ficou de fora. O botão "Período completo" restaura a cobertura integral. Com isso a conferência do faturamento ganha a dimensão que faltava: recorta-se o mês fechado e o total por CFOP bate diretamente contra o livro de saídas daquele mês. No modo carteira a barra não aparece (as datas vêm dos XMLs). As consultas ao portal e as decisões gravadas não são afetadas pelo recorte — ele muda o que se vê, não o que se sabe.</td></tr>
   <tr><td><b>v1.6.1</b></td><td>02/08/2026</td><td>O nome da empresa passou a vir do <b>cadastro compartilhado</b> (atp_empresas, o mesmo do Análise Tributária Pro) e aparece ao lado do CNPJ em todos os cabeçalhos — grade, decisões, carteira e relatório. Corrigido o CNPJ exibido em dobro quando o cliente aberto pela carteira não tinha nome gravado: agora a ordem de busca é perfil → cadastro de empresas, e só na falta dos dois a tela diz "(sem nome no cadastro de empresas)", nunca repetindo o número. Quando o nome vem do cadastro, é gravado de volta no perfil para a carteira listar por nome dali em diante.</td></tr>
   <tr><td><b>v1.6.0</b></td><td>02/08/2026</td><td>A relação da tela passou a vir <b>separada por CFOP</b>: cada linha da grade agora é cliente + NCM + CFOP, com as demais informações preservadas — o mesmo NCM vendido em 5102 e em 6102 aparece em duas linhas, cada uma com seu valor. E cada cliente ganhou o quadro <b>Conferência do faturamento por CFOP</b>: totais de itens e valores por CFOP com o percentual e a linha TOTAL, a régua para verificar se o faturamento do lote bate com o livro de saídas e com o declarado. A consulta ao portal continua uma por NCM (o CFOP não muda a resposta do Conformidade Fácil — muda a leitura, via regras e perfil), com o resultado replicado às linhas. O CSV ganhou a coluna cfop e as linhas são ordenadas por CFOP dentro do cliente. No modo carteira o quadro não aparece, porque valores e CFOPs dependem dos XMLs.</td></tr>
   <tr><td><b>v1.5.0</b></td><td>02/08/2026</td><td>Nasce a <b>Carteira de clientes</b>, respondendo à pergunta "o lote apaga ou fica gravado?": o que fica no banco são o perfil, as decisões por produto e o cache de consultas; o lote de XMLs (valores e CFOPs) vive só na tela. Agora um seletor lista todos os clientes com dados gravados e o botão <b>Abrir cliente gravado</b> remonta a tela inteira a partir do banco — produtos das decisões, perfil aplicado e consultas vindas direto do cache, sem tocar no portal nem precisar dos XMLs. Consultas <b>vencidas</b> (além das 84 h) ficam marcadas em vermelho e o Consultar passou a reconsultá-las automaticamente, em vez de aceitá-las como frescas. No modo carteira os valores aparecem como "—" com o aviso de que dependem de XMLs. O nome do cliente passou a ser gravado junto ao perfil (também ao gravar decisões), para a carteira listar por nome. Requer <b>setup_ct_v4.sql</b> (uma coluna nova).</td></tr>
@@ -277,6 +278,29 @@ function ctPeriodoBarra(){
   const ativos = ctItensAtivos().length;
   $id('ct-per-info').textContent = ` — o lote cobre ${br(datas[0])} a ${br(datas[datas.length-1])} · ${ativos} de ${CT.itens.length} itens no período selecionado`;
 }
+async function ctPeriodoGravar(cnpj){
+  const itens = ctItensAtivos().filter(i => i.cnpjEmit === cnpj);
+  if (!itens.length){ toast('Não há itens deste cliente no período selecionado.'); return; }
+  const datas = itens.map(i => i.dEmi).filter(Boolean).sort();
+  const de = (CT.per && CT.per.de) || datas[0], ate = (CT.per && CT.per.ate) || datas[datas.length-1];
+  if (!de || !ate){ toast('As notas não têm data de emissão legível.'); return; }
+  const agg = {}, cfops = {};
+  let total = 0;
+  for (const i of itens){
+    const k = i.cProd + '|' + (i.ncm||'') + '|' + (i.cfop||'');
+    agg[k] = agg[k] || { cprod: i.cProd, xprod: i.xProd, ncm: i.ncm||'', cfop: i.cfop||'', dfe: i.dfe, qtd: 0, valor: 0 };
+    agg[k].qtd++; agg[k].valor = +(agg[k].valor + i.vProd).toFixed(2);
+    const c = i.cfop || '—';
+    cfops[c] = cfops[c] || { qtd: 0, valor: 0 };
+    cfops[c].qtd++; cfops[c].valor = +(cfops[c].valor + i.vProd).toFixed(2);
+    total = +(total + i.vProd).toFixed(2);
+  }
+  await supa('POST', 'atp_ct_periodo', { params: { on_conflict: 'cnpj_cliente,de,ate' },
+    body: { cnpj_cliente: cnpj, de, ate, itens: Object.values(agg), cfops, total,
+            gravado_por: APP.user ? APP.user.email : null, gravado_em: new Date().toISOString() } });
+  toast(`Notas de ${de.split('-').reverse().join('/')} a ${ate.split('-').reverse().join('/')} gravadas: ${Object.values(agg).length} produto(s), R$ ${ctFmt(total)} — disponíveis no parecer do Análise Tributária.`);
+}
+
 async function ctPeriodoAplicar(){
   CT.per = { de: $id('ct-per-de').value || null, ate: $id('ct-per-ate').value || null };
   await ctProcessarAgg();
@@ -365,6 +389,8 @@ function ctRender(){
     const totCli = g.linhas.reduce((s,a) => s + a.valor, 0);
     return `<tr><td colspan="8" style="background:#f8fafb; border-radius:8px">
         ${ctTituloCliente(cnpj, g.nome)}
+        ${CT.modo !== 'carteira' ? `<button class="btn" id="ct-per-gravar-${cnpj}" style="margin-left:10px"
+          onclick="comBotao('ct-per-gravar-${cnpj}','Gravando período',()=>ctPeriodoGravar('${cnpj}'))">📤 Gravar notas do período p/ relatórios</button>` : ''}
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin-top:6px">
           ${ctPfSel(cnpj,1,'q_1')}${ctPfSel(cnpj,2,'q_2')}${ctPfSel(cnpj,3,'q_3')}${ctPfSel(cnpj,4,'q_4')}
         </div>
