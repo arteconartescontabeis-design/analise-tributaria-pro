@@ -43,7 +43,7 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
 </head>
 <body>
 <div class="topo">
-  <b>🏷️ Classificação RTC</b> <span class="badge">v1.2.0</span>
+  <b>🏷️ Classificação RTC</b> <span class="badge">v1.3.0</span>
   <a href="index.html">← Análise Tributária Pro</a>
   <span style="flex:1"></span>
   <a href="#" id="ct-sair" style="display:none" onclick="ctSair();return false">Sair</a>
@@ -100,7 +100,8 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
 </main>
 
 <details class="versoes"><summary>Versões</summary>
-  <table><tr><td><b>v1.2.0</b> <span class="badge ok">atual</span></td><td>02/08/2026</td><td>Fase 2: nasce a seção <b>Decisões por produto</b> — a relação oficial cliente + produto com o <b>cClassTrib decidido pelo contador</b>. Cada produto do lote aparece com a sugestão do sistema pré-selecionada (ou a decisão já gravada, com autor e data), num seletor agrupado por CST com as reduções à vista; escolhas de <b>suspensão ou diferimento</b> abrem automaticamente o campo da <b>tributação regular</b>, porque a nota fiscal exige informar como a operação seria tributada sem o benefício — o par dobrado. As decisões são gravadas por cliente no banco compartilhado (com quem decidiu e quando) e reaparecem nos próximos lotes do mesmo cliente. Dois entregáveis saem dali: o <b>Relatório para o cliente</b>, peça timbrada pronta para impressão com produto, classificação, tratamento, redução, fundamento e pendências; e o <b>De-para para o ERP</b>, CSV com cProd → CST/cClassTrib (e o par regular quando houver), o insumo que falta ao emissor do cliente para preencher o grupo IBS/CBS. Requer rodar o <b>setup_ct_v2.sql</b> (duas colunas novas na tabela de decisões).</td></tr>
+  <table><tr><td><b>v1.3.0</b> <span class="badge ok">atual</span></td><td>02/08/2026</td><td>A classificação passou a ser <b>automática com revisão por exceção</b>. Três novidades: o <b>perfil da operação é gravado por cliente</b> — marcado uma vez (coletor incentivado, cooperativa etc.), vale para todos os lotes futuros e é aplicado sozinho; entram <b>regras por CFOP</b>, deduções diretas do XML sem julgamento (toda operação 7xxx é exportação e classifica imunidade; devoluções são marcadas para espelhar a origem); e cada produto recebe um <b>grau de confiança</b>: verde (decisão gravada, PERMITIDO único, CFOP de exportação ou perfil que fecha num só código), amarelo (regra geral ou múltiplos candidatos — o primeiro é assumido) e vermelho (sinais conflitantes, como item com grupo de ISS numa NF-e, que o sistema se recusa a chutar). O botão <b>"Só o que pede a minha atenção"</b> esconde os verdes, e a gravação ganhou o <b>"Gravar só alta confiança"</b>. A origem e o grau de cada decisão são gravados no banco e <b>saem no relatório do cliente</b> — o que foi dedução automática e o que foi análise do contador ficam distinguidos, prontos para a reformulação do relatório que vem a seguir. Requer <b>setup_ct_v3.sql</b>.</td></tr>
+  <tr><td><b>v1.2.0</b></td><td>02/08/2026</td><td>Fase 2: nasce a seção <b>Decisões por produto</b> — a relação oficial cliente + produto com o <b>cClassTrib decidido pelo contador</b>. Cada produto do lote aparece com a sugestão do sistema pré-selecionada (ou a decisão já gravada, com autor e data), num seletor agrupado por CST com as reduções à vista; escolhas de <b>suspensão ou diferimento</b> abrem automaticamente o campo da <b>tributação regular</b>, porque a nota fiscal exige informar como a operação seria tributada sem o benefício — o par dobrado. As decisões são gravadas por cliente no banco compartilhado (com quem decidiu e quando) e reaparecem nos próximos lotes do mesmo cliente. Dois entregáveis saem dali: o <b>Relatório para o cliente</b>, peça timbrada pronta para impressão com produto, classificação, tratamento, redução, fundamento e pendências; e o <b>De-para para o ERP</b>, CSV com cProd → CST/cClassTrib (e o par regular quando houver), o insumo que falta ao emissor do cliente para preencher o grupo IBS/CBS. Requer rodar o <b>setup_ct_v2.sql</b> (duas colunas novas na tabela de decisões).</td></tr>
   <tr><td><b>v1.1.0</b></td><td>02/08/2026</td><td>A grade passou a trazer a <b>classificação IBS/CBS sugerida pelo sistema</b> para cada NCM, com o percentual de redução de alíquota quando a classificação o tiver. A regra de sugestão, em ordem: (1) havendo enquadramento <b>PERMITIDO</b> específico do NCM, ele é a sugestão; (2) senão, se o perfil da operação selecionado nos filtros apontar para até três classificações, elas são sugeridas; (3) senão, vale a regra geral 000001 — tributação integral, CST 000. Cada sugestão exibe o código, o CST, o tratamento, a redução CBS/IBS quando houver e a origem da sugestão — e segue sendo <b>sugestão</b>: a decisão formal por produto é a fase 2. A coluna de valor foi renomeada para <b>"Valor · % do lote"</b> deixando claro que aquele percentual é o peso do NCM no faturamento do lote importado (prioridade de análise), não um percentual tributário. O CSV exporta a sugestão.</td></tr>
   <tr><td><b>v1.0.0</b></td><td>01/08/2026</td><td>Primeira versão como aplicativo
   próprio, separado do Análise Tributária Pro para ter ciclo de atualização independente — mesma sessão de login, mesmos
@@ -227,10 +228,11 @@ function ctLerXML(nome, texto){
   for (const det of inf.getElementsByTagNameNS(CT_NS, 'det')){
     const prod = det.getElementsByTagNameNS(CT_NS, 'prod')[0];
     const gIBS = det.getElementsByTagNameNS(CT_NS, 'IBSCBS')[0] || null;
+    const gISS = det.getElementsByTagNameNS(CT_NS, 'ISSQN')[0] || null;
     CT.itens.push({ arq: nome, dfe, cnpjEmit: ctTx(emit, 'CNPJ'), nomeEmit: ctTx(emit, 'xNome'),
       cProd: ctTx(prod, 'cProd'), xProd: ctTx(prod, 'xProd'), ncm: ctTx(prod, 'NCM'),
       cfop: ctTx(prod, 'CFOP'), vProd: parseFloat(ctTx(prod, 'vProd')) || 0,
-      temIBSCBS: !!gIBS, cClassNota: gIBS ? ctTx(gIBS, 'cClassTrib') : '' });
+      temIBSCBS: !!gIBS, temISS: !!gISS, cClassNota: gIBS ? ctTx(gIBS, 'cClassTrib') : '' });
   }
 }
 
@@ -377,11 +379,67 @@ function ctProdutos(){
   for (const i of CT.itens){
     if (!i.cnpjEmit || !i.cProd) continue;
     const k = i.cnpjEmit + '|' + i.cProd;
-    m[k] = m[k] || { cnpj: i.cnpjEmit, nome: i.nomeEmit, cprod: i.cProd, xprod: i.xProd, ncm: i.ncm, dfe: i.dfe, valor: 0, qtd: 0 };
-    m[k].valor += i.vProd; m[k].qtd++;
+    m[k] = m[k] || { cnpj: i.cnpjEmit, nome: i.nomeEmit, cprod: i.cProd, xprod: i.xProd, ncm: i.ncm, dfe: i.dfe, valor: 0, qtd: 0, cfops: new Set(), iss: false };
+    m[k].valor += i.vProd; m[k].qtd++; m[k].cfops.add(i.cfop); m[k].iss = m[k].iss || i.temISS;
   }
   return Object.values(m).sort((a,b) => a.nome.localeCompare(b.nome) || b.valor - a.valor);
 }
+
+let CT_PERFIS = {}, CT_VIS = 'todos';
+
+function ctPerfilSet(cnpj){
+  const pf = CT_PERFIS[cnpj];
+  if (!pf) return null;
+  let s = null;
+  for (const v of [pf.q1, pf.q2, pf.q3, pf.q4]){
+    if (!v) continue;
+    const f = CT_FILTROS.find(x => x.v === v);
+    if (!f) continue;
+    s = s === null ? new Set(f.p) : new Set([...s].filter(c => f.p.includes(c)));
+  }
+  return s;
+}
+
+function ctClassificar(p){
+  const d = CT_DEC[p.cnpj + '|' + p.cprod];
+  if (d) return { cod: d.cclasstrib, nivel: 'alta', gravada: true,
+    origem: 'decisão gravada em ' + new Date(d.decidido_em).toLocaleDateString('pt-BR') + ' por ' + (d.decidido_por||'').split('@')[0] };
+  const cfops = [...(p.cfops||[])];
+  if (cfops.length && cfops.every(c => /^7/.test(c))){
+    const exp = CT_BASE.find(b => b.cst === '410' && /exporta/i.test(b.d));
+    if (exp) return { cod: exp.c, nivel: 'alta', origem: 'regra por CFOP — exportação (' + cfops.join(', ') + '), imune por dedução direta do XML' };
+  }
+  if (p.iss) return { cod: '000001', nivel: 'rev',
+    origem: 'sinais conflitantes — o item traz grupo de ISS numa NF-e; confirme se é serviço ou mercadoria antes de gravar' };
+  const dev = cfops.filter(c => /^[1256](201|202|410|411|660|661|662)$/.test(c));
+  if (dev.length) return { cod: '000001', nivel: 'rev',
+    origem: 'devolução (CFOP ' + dev.join(', ') + ') — a classificação deve espelhar a operação de origem' };
+  const n = CT.ncms[p.ncm];
+  const permitidos = n && n.consulta ? (n.consulta.permitidos || []) : [];
+  if (permitidos.length === 1) return { cod: permitidos[0].cclasstrib, nivel: 'alta',
+    origem: 'PERMITIDO específico do NCM — Anexo ' + permitidos[0].anexo + ' · Item ' + permitidos[0].item };
+  if (permitidos.length > 1) return { cod: permitidos[0].cclasstrib, nivel: 'prov',
+    origem: permitidos.length + ' PERMITIDOs para o NCM — assumi o primeiro; confira os demais' };
+  const pf = ctPerfilSet(p.cnpj);
+  if (pf){
+    const apl = CT_BASE.filter(b => pf.has(b.c));
+    if (apl.length === 1) return { cod: apl[0].c, nivel: 'alta', origem: 'perfil gravado do cliente aponta um único código' };
+    if (apl.length >= 2 && apl.length <= 3) return { cod: apl[0].c, nivel: 'prov', origem: 'perfil do cliente aponta ' + apl.length + ' códigos — assumi o primeiro' };
+  }
+  return { cod: '000001', nivel: 'prov', origem: 'regra geral — nenhum sinal específico do NCM, do CFOP ou do perfil' };
+}
+
+async function ctPerfilSalvar(cnpj){
+  const pf = { cnpj_cliente: cnpj,
+    q1: $id('ct-pf1-' + cnpj).value || null, q2: $id('ct-pf2-' + cnpj).value || null,
+    q3: $id('ct-pf3-' + cnpj).value || null, q4: $id('ct-pf4-' + cnpj).value || null,
+    gravado_por: APP.user ? APP.user.email : null, gravado_em: new Date().toISOString() };
+  CT_PERFIS[cnpj] = pf;
+  ctDecRender();
+  try { await supa('POST', 'atp_ct_perfil', { params: { on_conflict: 'cnpj_cliente' }, body: pf }); toast('Perfil do cliente gravado — vale para todos os lotes futuros.'); }
+  catch(e){ toast('Perfil aplicado na tela, mas não gravou no banco: ' + (e.message||e)); }
+}
+function ctVis(m){ CT_VIS = m; ctDecRender(); }
 
 async function ctDecCarregar(){
   const cnpjs = [...new Set(CT.itens.map(i => i.cnpjEmit))].filter(Boolean);
@@ -390,6 +448,8 @@ async function ctDecCarregar(){
     try {
       const rows = await supa('GET', 'atp_ct_decisao', { params: { cnpj_cliente: `in.(${cnpjs.join(',')})`, select: '*' } }) || [];
       for (const r of rows) CT_DEC[r.cnpj_cliente + '|' + r.cprod] = r;
+      const pfs = await supa('GET', 'atp_ct_perfil', { params: { cnpj_cliente: `in.(${cnpjs.join(',')})`, select: '*' } }) || [];
+      CT_PERFIS = {}; for (const p of pfs) CT_PERFIS[p.cnpj_cliente] = p;
     } catch(e){ console.error('decisões:', e); toast('Aviso: não consegui carregar as decisões gravadas (' + (e.message||e) + ')'); }
   }
   ctDecRender();
@@ -414,55 +474,84 @@ function ctDecRender(){
   const box = $id('ct-decisoes-box');
   box.style.display = CT_PRODS.length ? 'block' : 'none';
   if (!CT_PRODS.length){ $id('ct-dec-lista').innerHTML = ''; return; }
-  const filtro = ctFiltroSel();
+  const CORES = { alta: ['#1e8449','','',''], prov: ['#f39c12','#fdf2e9','#873600'], rev: ['#b03a2e','#fdedec','#7b241c'] };
+  const info = CT_PRODS.map((p,i) => ({ p, i, r: ctClassificar(p) }));
+  const nAlta = info.filter(x => x.r.nivel === 'alta').length,
+        nAten = info.length - nAlta;
   const porCli = {};
-  CT_PRODS.forEach((p, i) => (porCli[p.cnpj] = porCli[p.cnpj] || { nome: p.nome, linhas: [] }).linhas.push([p, i]));
-  $id('ct-dec-lista').innerHTML = Object.entries(porCli).map(([cnpj, g]) => `
-    <div style="margin-top:14px"><b>${g.nome}</b> <span class="muted">CNPJ ${cnpj}</span>
+  info.forEach(x => (porCli[x.p.cnpj] = porCli[x.p.cnpj] || { nome: x.p.nome, linhas: [] }).linhas.push(x));
+  const pfSel = (cnpj, n, q) => {
+    const pf = CT_PERFIS[cnpj] || {};
+    const rot = { q_1:'1 · Fornecedor é', q_2:'2 · Bem', q_3:'3 · Regime', q_4:'4 · Operação' };
+    return `<label style="font-size:.76rem">${rot[q]}<br><select id="ct-pf${n}-${cnpj}" style="width:100%" onchange="ctPerfilSalvar('${cnpj}')">
+      <option value="">(não listado)</option>
+      ${CT_FILTROS.filter(f => f.q === q).map(f => `<option value="${f.v}" ${pf['q'+n] === f.v ? 'selected' : ''}>${f.r}</option>`).join('')}
+    </select></label>`;
+  };
+  $id('ct-dec-lista').innerHTML = `
+    <div style="display:flex; gap:8px; margin:8px 0; align-items:center; flex-wrap:wrap">
+      <button class="btn ${CT_VIS==='todos'?'solid':''}" onclick="ctVis('todos')">Todos (${info.length})</button>
+      <button class="btn ${CT_VIS==='rev'?'solid':''}" onclick="ctVis('rev')">Só o que pede a minha atenção (${nAten})</button>
+      <span class="muted">🟢 ${nAlta} alta confiança · 🟡/🔴 ${nAten} para revisar</span>
+    </div>` +
+  Object.entries(porCli).map(([cnpj, g]) => `
+    <div style="margin-top:14px; border-top:1px solid var(--cinza,#eee); padding-top:10px">
+      <b>${g.nome}</b> <span class="muted">CNPJ ${cnpj}</span>
       <button class="btn solid" id="ct-dec-salvar-${cnpj}" style="margin-left:10px"
-        onclick="comBotao('ct-dec-salvar-${cnpj}','Gravando',()=>ctDecSalvar('${cnpj}'))">💾 Gravar decisões</button>
-      <button class="btn" onclick="ctRelatorio('${cnpj}')">🖨 Relatório para o cliente</button>
-      <button class="btn" onclick="ctDeParaCSV('${cnpj}')">⬇ De-para p/ ERP</button>
-    </div>
-    <table class="tabela" style="margin-top:6px">
-      <tr><th>cProd</th><th>Produto</th><th>NCM</th><th style="text-align:right">Valor no lote</th><th>Classificação decidida (cClassTrib)</th><th>Obs.</th></tr>
-      ${g.linhas.map(([p, i]) => {
-        const d = CT_DEC[p.cnpj + '|' + p.cprod];
-        const n = CT.ncms[p.ncm];
-        const cod = d ? d.cclasstrib : (n ? ctSugestao(n, filtro).lista[0].cod : '000001');
-        const par = d && d.cclasstrib_reg ? d.cclasstrib_reg : '';
-        return `<tr><td>${p.cprod}</td><td>${p.xprod}<br>${d
-            ? `<span class="badge ok">gravada · ${(d.decidido_por||'').split('@')[0]} · ${new Date(d.decidido_em).toLocaleDateString('pt-BR')}</span>`
-            : '<span class="muted" style="font-size:.74rem">sugestão do sistema — ainda não gravada</span>'}</td>
-          <td>${ctNCM(p.ncm)}</td><td style="text-align:right">${ctFmt(p.valor)}</td>
-          <td>${ctSelClass('ct-dec-' + i, cod)}
-            <div id="ct-par-${i}" style="display:${ctPrecisaPar(cod) ? 'block' : 'none'}; margin-top:4px">
-              <span class="muted" style="font-size:.76rem">Tributação regular (como seria sem o benefício):</span><br>
-              ${ctSelClass('ct-reg-' + i, par || '000001').replace('ct-dec-' + i + "'", "ct-reg-" + i + "'x'")}
-            </div></td>
-          <td><input id="ct-obs-${i}" style="width:120px" value="${(d && d.observacao ? d.observacao : '').replace(/"/g,'&quot;')}"></td></tr>`;
+        onclick="comBotao('ct-dec-salvar-${cnpj}','Gravando',()=>ctDecSalvar('${cnpj}',false))">💾 Gravar tudo (${g.linhas.length})</button>
+      <button class="btn" id="ct-dec-alta-${cnpj}"
+        onclick="comBotao('ct-dec-alta-${cnpj}','Gravando',()=>ctDecSalvar('${cnpj}',true))">Gravar só alta confiança (${g.linhas.filter(x=>x.r.nivel==='alta').length})</button>
+      <button class="btn" onclick="ctRelatorio('${cnpj}')">🖨 Relatório</button>
+      <button class="btn" onclick="ctDeParaCSV('${cnpj}')">⬇ De-para</button>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin:8px 0; background:#f8fafb; border-radius:8px; padding:8px">
+        <div style="grid-column:1/-1" class="muted" style="font-size:.76rem">Perfil da operação do cliente — gravado uma vez, vale para todos os lotes:</div>
+        ${pfSel(cnpj,1,'q_1')}${pfSel(cnpj,2,'q_2')}${pfSel(cnpj,3,'q_3')}${pfSel(cnpj,4,'q_4')}
+      </div>
+      ${g.linhas.map(({p, i, r}) => {
+        const mostra = CT_VIS === 'todos' || (r.nivel !== 'alta' && !r.gravada);
+        const [dot, bg] = [CORES[r.nivel][0], CORES[r.nivel][1] || '#fff'];
+        return `<div style="display:${mostra?'flex':'none'}; gap:10px; align-items:flex-start; border:1px solid ${r.nivel==='alta'?'#e5e8e8':dot}; background:${bg}; border-radius:8px; padding:8px 10px; margin-bottom:6px">
+          <span style="width:10px;height:10px;border-radius:50%;background:${dot};margin-top:5px;flex:none"></span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.86rem"><b>${p.xprod}</b> <span class="muted">· ${p.cprod} · ${ctNCM(p.ncm)} · ${[...p.cfops].join('/')} · ${ctFmt(p.valor)}</span>
+              ${r.gravada ? '<span class="badge ok" style="margin-left:6px">gravada</span>' : ''}</div>
+            <div style="margin-top:4px">${ctSelClass('ct-dec-' + i, r.cod)}
+              <div id="ct-par-${i}" style="display:${ctPrecisaPar(r.cod)?'block':'none'}; margin-top:4px">
+                <span class="muted" style="font-size:.76rem">Tributação regular (sem o benefício):</span><br>
+                ${ctSelClass('ct-reg-' + i, (CT_DEC[p.cnpj+'|'+p.cprod]||{}).cclasstrib_reg || '000001').replace("ct-dec-" + i + "'", "ct-reg-" + i + "'x'")}
+              </div>
+              <input id="ct-obs-${i}" placeholder="obs." style="width:110px; margin-left:6px" value="${((CT_DEC[p.cnpj+'|'+p.cprod]||{}).observacao||'').replace(/"/g,'&quot;')}">
+            </div>
+            <div class="muted" style="font-size:.76rem; margin-top:2px; ${r.nivel!=='alta'?'color:'+CORES[r.nivel][2]:''}">${r.nivel==='alta'?'automático':'confira'}: ${r.origem}</div>
+          </div>
+        </div>`;
       }).join('')}
-    </table>`).join('');
+    </div>`).join('');
 }
 
-async function ctDecSalvar(cnpj){
+async function ctDecSalvar(cnpj, soAlta){
   const regs = [];
   CT_PRODS.forEach((p, i) => {
     if (p.cnpj !== cnpj || !$id('ct-dec-' + i)) return;
+    const r = ctClassificar(p);
+    if (soAlta && r.nivel !== 'alta') return;
     const cod = $id('ct-dec-' + i).value;
     const precisaPar = ctPrecisaPar(cod);
+    const manual = cod !== r.cod;
     regs.push({ cnpj_cliente: p.cnpj, cprod: p.cprod, xprod: p.xprod, ncm: p.ncm, dfe_type: p.dfe,
       cclasstrib: cod, cst: ctCstDe(cod),
       cclasstrib_reg: precisaPar && $id('ct-reg-' + i) ? $id('ct-reg-' + i).value : null,
       cst_reg: precisaPar && $id('ct-reg-' + i) ? ctCstDe($id('ct-reg-' + i).value) : null,
-      origem: (CT.ncms[p.ncm] && CT.ncms[p.ncm].consulta && (CT.ncms[p.ncm].consulta.permitidos||[]).some(x => x.cclasstrib === cod)) ? 'permitido' : 'manual',
+      origem: manual ? 'manual' : (r.gravada ? 'gravada' : r.origem.split(' — ')[0].slice(0, 60)),
+      confianca: manual ? 'revisada pelo contador' : (r.nivel === 'alta' ? 'alta (automática)' : r.nivel === 'prov' ? 'provável (automática)' : 'revisão'),
       observacao: $id('ct-obs-' + i) ? $id('ct-obs-' + i).value : '',
       decidido_por: APP.user ? APP.user.email : null, decidido_em: new Date().toISOString() });
   });
+  if (!regs.length){ toast('Nada a gravar neste filtro.'); return; }
   await supa('POST', 'atp_ct_decisao', { params: { on_conflict: 'cnpj_cliente,cprod' }, body: regs });
   for (const r of regs) CT_DEC[r.cnpj_cliente + '|' + r.cprod] = r;
   ctDecRender();
-  toast(`${regs.length} decisão(ões) gravadas para o cliente.`);
+  toast(`${regs.length} decisão(ões) gravadas${soAlta ? ' (alta confiança)' : ''}.`);
 }
 
 function ctDeParaCSV(cnpj){
@@ -492,7 +581,7 @@ function ctRelatorio(cnpj){
       <td>${d ? 'CST ' + d.cst + ' · ' + d.cclasstrib : '<i>pendente de decisão</i>'}</td>
       <td>${b ? b.t + (b.p ? ` — redução CBS ${b.p.CBS||'-'}% · IBS ${b.p.IBS||'-'}%` : '') : ''}
           ${d && d.cclasstrib_reg ? `<br><small>Tributação regular: CST ${d.cst_reg} · ${d.cclasstrib_reg}</small>` : ''}</td>
-      <td style="font-size:.75rem">${b ? b.d : ''}${d && d.observacao ? '<br><i>' + d.observacao + '</i>' : ''}</td></tr>`;
+      <td style="font-size:.75rem">${b ? b.d : ''}${d && d.confianca ? '<br><small><b>Origem:</b> ' + (d.origem||'') + ' · ' + d.confianca + '</small>' : ''}${d && d.observacao ? '<br><i>' + d.observacao + '</i>' : ''}</td></tr>`;
   }).join('');
   const w2 = window.open('', '_blank');
   w2.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Classificação Tributária RTC — ${g[0].nome}</title>
