@@ -43,7 +43,7 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
 </head>
 <body>
 <div class="topo">
-  <b>🏷️ Classificação RTC</b> <span class="badge">v1.0.0</span>
+  <b>🏷️ Classificação RTC</b> <span class="badge">v1.1.0</span>
   <a href="index.html">← Análise Tributária Pro</a>
   <span style="flex:1"></span>
   <a href="#" id="ct-sair" style="display:none" onclick="ctSair();return false">Sair</a>
@@ -94,7 +94,8 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
 </main>
 
 <details class="versoes"><summary>Versões</summary>
-  <table><tr><td><b>v1.0.0</b> <span class="badge ok">atual</span></td><td>01/08/2026</td><td>Primeira versão como aplicativo
+  <table><tr><td><b>v1.1.0</b> <span class="badge ok">atual</span></td><td>02/08/2026</td><td>A grade passou a trazer a <b>classificação IBS/CBS sugerida pelo sistema</b> para cada NCM, com o percentual de redução de alíquota quando a classificação o tiver. A regra de sugestão, em ordem: (1) havendo enquadramento <b>PERMITIDO</b> específico do NCM, ele é a sugestão; (2) senão, se o perfil da operação selecionado nos filtros apontar para até três classificações, elas são sugeridas; (3) senão, vale a regra geral 000001 — tributação integral, CST 000. Cada sugestão exibe o código, o CST, o tratamento, a redução CBS/IBS quando houver e a origem da sugestão — e segue sendo <b>sugestão</b>: a decisão formal por produto é a fase 2. A coluna de valor foi renomeada para <b>"Valor · % do lote"</b> deixando claro que aquele percentual é o peso do NCM no faturamento do lote importado (prioridade de análise), não um percentual tributário. O CSV exporta a sugestão.</td></tr>
+  <tr><td><b>v1.0.0</b></td><td>01/08/2026</td><td>Primeira versão como aplicativo
   próprio, separado do Análise Tributária Pro para ter ciclo de atualização independente — mesma sessão de login, mesmos
   usuários e mesmo cadastro de empresas do banco compartilhado. Traz a fase 1 do módulo: importação de XMLs de NF-e e NFC-e,
   deduplicação de NCMs ponderada por valor, consulta ao Conformidade Fácil (SVRS) via Edge Function cff-consulta com cache
@@ -254,6 +255,24 @@ function ctFiltrosRender(){
     </select></label>`).join('');
 }
 
+function ctPct(p){
+  if (!p) return '';
+  if (typeof p === 'string') return p;
+  const cbs = p.CBS ? `CBS ${p.CBS}%` : '', ibs = p.IBS ? `IBS ${p.IBS}%` : '';
+  return [cbs, ibs].filter(Boolean).join(' · ');
+}
+function ctSugestao(n, filtro){
+  const c = n.consulta;
+  if (c && c.permitidos && c.permitidos.length)
+    return { origem: 'específico do NCM (PERMITIDO)', lista: c.permitidos.map(p => ({ cod: p.cclasstrib, cst: p.cst, trat: p.tratamento, pct: ctPct(p.percentuais) })) };
+  if (filtro !== null){
+    const apl = CT_BASE.filter(x => filtro.has(x.c));
+    if (apl.length >= 1 && apl.length <= 3)
+      return { origem: 'pelo perfil da operação', lista: apl.map(g => ({ cod: g.c, cst: g.cst, trat: g.t, pct: ctPct(g.p) })) };
+  }
+  const padrao = CT_BASE.find(x => x.c === '000001') || { cst: '000' };
+  return { origem: 'regra geral padrão', lista: [{ cod: '000001', cst: padrao.cst, trat: 'Tributação integral', pct: '' }] };
+}
 const ctFmt = v => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const ctNCM = n => n && n.length === 8 ? n.slice(0,4) + '.' + n.slice(4,6) + '.' + n.slice(6) : (n || '—');
 
@@ -273,8 +292,8 @@ function ctRender(){
     + kpi(consultados + '/' + lista.length,'NCMs consultados');
   const filtro = ctFiltroSel();
   const gerais = filtro === null ? CT_BASE : CT_BASE.filter(c => filtro.has(c.c));
-  $id('ct-tab').innerHTML = `<tr><th>NCM</th><th>Doc</th><th>Produtos (amostra)</th><th style="text-align:right">Valor · %</th>
-      <th>Consulta</th><th>PERMITIDO (específico do NCM)</th><th style="text-align:right">Gerais aplicáveis</th></tr>`
+  $id('ct-tab').innerHTML = `<tr><th>NCM</th><th>Doc</th><th>Produtos (amostra)</th><th style="text-align:right">Valor · % do lote</th>
+      <th>Consulta</th><th>PERMITIDO (específico do NCM)</th><th>Classificação IBS/CBS sugerida</th><th style="text-align:right">Gerais aplicáveis</th></tr>`
     + lista.map(n => {
       const c = n.consulta;
       let stC = '<span class="muted">— não consultado</span>', perm = '<span class="muted">—</span>';
@@ -290,7 +309,7 @@ function ctRender(){
       }
       return `<tr><td><b>${ctNCM(n.ncm)}</b></td><td>${n.dfe}</td><td>${[...n.produtos].join('<br>')}</td>
         <td style="text-align:right">${ctFmt(n.valor)}<br><span class="muted">${total ? (n.valor/total*100).toFixed(1) : 0}%</span></td>
-        <td>${stC}</td><td>${perm}</td><td style="text-align:right">${gerais.length}</td></tr>`;
+        <td>${stC}</td><td>${perm}</td><td>${(s => s.lista.map(x => `<div style="margin:2px 0"><span class="badge ok">${x.cod}</span> CST ${x.cst} — ${x.trat}${x.pct ? `<br><b style="color:#1a5276">redução ${x.pct}</b>` : ''}</div>`).join('') + `<div class="muted" style="font-size:.74rem">${s.origem} · sugestão do sistema — a decisão é sua (fase 2)</div>`)(ctSugestao(n, filtro))}</td><td style="text-align:right">${gerais.length}</td></tr>`;
     }).join('');
   const avisos = [];
   if (semIBS) avisos.push(`<b>${semIBS} de ${CT.itens.length} itens</b> foram emitidos SEM o grupo IBS/CBS exigido a partir de 2026 — o ERP do cliente ainda não classifica.`);
@@ -328,12 +347,13 @@ async function ctConsultar(forcar){
 function ctExportCSV(){
   const lista = Object.values(CT.ncms).sort((a,b) => b.valor - a.valor);
   const total = lista.reduce((s,a) => s + a.valor, 0) || 1;
-  const L = ['ncm;dfe;qtd_itens;valor;pct_valor;produtos;consulta;permitidos'];
+  const L = ['ncm;dfe;qtd_itens;valor;pct_valor_lote;produtos;consulta;permitidos;sugestao'];
   for (const n of lista){
     const c = n.consulta || {};
     const perm = (c.permitidos || []).map(p => `${p.cclasstrib} (Anexo ${p.anexo} Item ${p.item})`).join(' | ');
     L.push([n.ncm, n.dfe, n.qtd, n.valor.toFixed(2).replace('.',','), (n.valor/total*100).toFixed(2).replace('.',','),
-      [...n.produtos].join(' | ').replace(/;/g,','), c.erro ? 'erro' : (c.origem || 'não consultado'), perm || (c.consultado_em ? 'só regra geral' : '')].join(';'));
+      [...n.produtos].join(' | ').replace(/;/g,','), c.erro ? 'erro' : (c.origem || 'não consultado'), perm || (c.consultado_em ? 'só regra geral' : ''),
+      (s => s.lista.map(x => x.cod + (x.pct ? ' (redução ' + x.pct + ')' : '')).join(' | ') + ' [' + s.origem + ']')(ctSugestao(n, ctFiltroSel()))].join(';'));
   }
   const blob = new Blob(['\uFEFF' + L.join('\r\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
