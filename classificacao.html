@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classificação RTC | Artecon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{ --azul:#1a5276; --azul2:#21618c; --cinza:#f4f6f7; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ font-family:'DM Sans',sans-serif; background:var(--cinza); color:#212f3d; }
+h1{ font-family:'Playfair Display',serif; color:var(--azul); font-size:1.4rem; }
+.topo{ background:var(--azul); color:#fff; padding:10px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.topo b{ font-family:'Playfair Display',serif; font-size:1.05rem; }
+.topo a{ color:#fff; opacity:.85; text-decoration:none; font-size:.85rem; }
+.topo a:hover{ opacity:1; }
+.badge{ display:inline-block; background:#fff; color:var(--azul); border-radius:12px; padding:2px 10px; font-size:.72rem; font-weight:700; }
+.badge.ok{ background:#eafaf1; color:#1e8449; }
+main{ padding:20px; max-width:1200px; margin:0 auto; }
+.card{ background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-top:12px; }
+.muted{ color:#5d6d7e; font-size:.85rem; }
+.btn{ font-family:inherit; background:#fff; color:var(--azul); border:1px solid var(--azul); border-radius:8px; padding:9px 16px; cursor:pointer; font-size:.85rem; }
+.btn.solid{ background:var(--azul); color:#fff; }
+.btn:disabled{ opacity:.5; cursor:default; }
+.linha-botoes{ display:flex; }
+.cards-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+.kpi-card{ background:#fff; border-radius:10px; padding:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.kpi-v{ font-size:1.25rem; font-weight:700; color:var(--azul); }
+.kpi-l{ font-size:.74rem; color:#5d6d7e; margin-top:2px; }
+.tabela{ width:100%; border-collapse:collapse; font-size:.83rem; }
+.tabela th{ text-align:left; color:#5d6d7e; font-weight:500; border-bottom:2px solid var(--cinza); padding:7px 8px; }
+.tabela td{ border-bottom:1px solid var(--cinza); padding:7px 8px; vertical-align:top; }
+.aviso-amarelo{ background:#fdf2e9; border-left:4px solid #f39c12; padding:12px 14px; border-radius:6px; font-size:.87rem; }
+#tela-login{ max-width:360px; margin:80px auto; }
+#tela-login input{ width:100%; padding:10px; margin-top:8px; border:1px solid #d5dbdb; border-radius:8px; font-family:inherit; }
+select{ padding:6px; border:1px solid #d5dbdb; border-radius:6px; font-family:inherit; }
+footer{ text-align:center; color:#85929e; font-size:.75rem; padding:18px; }
+details.versoes{ max-width:1200px; margin:0 auto; padding:0 20px 20px; font-size:.83rem; }
+details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align:top; }
+@media (max-width:640px){ main{ padding:10px; } }
+</style>
+</head>
+<body>
+<div class="topo">
+  <b>🏷️ Classificação RTC</b> <span class="badge">v1.0.0</span>
+  <a href="index.html">← Análise Tributária Pro</a>
+  <span style="flex:1"></span>
+  <a href="#" id="ct-sair" style="display:none" onclick="ctSair();return false">Sair</a>
+</div>
+
+<div id="tela-login" class="card">
+  <h1>Entrar</h1>
+  <p class="muted">Mesmo usuário e senha do Análise Tributária Pro — se você já estiver logado lá, esta tela nem aparece.</p>
+  <input type="email" id="lg-email" placeholder="e-mail">
+  <input type="password" id="lg-senha" placeholder="senha">
+  <button class="btn solid" id="lg-btn" style="width:100%; margin-top:12px" onclick="comBotao('lg-btn','Entrando',()=>ctLogin())">Entrar</button>
+  <p id="lg-erro" class="muted" style="color:#b03a2e; margin-top:8px"></p>
+</div>
+
+<main id="app-ct" style="display:none">
+
+    
+    <div id="page-classrtc">
+      <h1>🏷️ Classificação Tributária RTC <span id="ct-user" class="muted" style="font-size:.8rem"></span></h1>
+      <p class="muted">Importe os XMLs (NF-e e NFC-e) do cliente, consulte a classificação IBS/CBS de cada NCM no
+        Conformidade Fácil (SVRS) e identifique os enquadramentos PERMITIDOS com Anexo e Item da LC 214/2025.</p>
+      <div class="card" style="padding:10px 14px; font-size:.85rem">
+        Tabela geral embutida: <b id="ct-base-info"></b> · cache de consultas com revalidação automática
+        <b>2× por semana</b> (84 h) · a fonte da verdade é sempre o portal — use <i>Reconsultar</i> para forçar.
+        <span id="ct-hash-aviso"></span>
+      </div>
+      <div id="ct-drop" class="card" style="border:2px dashed var(--azul,#1a5276); text-align:center; padding:26px; cursor:pointer">
+        <b>Arraste os XMLs das notas aqui</b><br>ou clique para selecionar (vários arquivos, vários clientes)
+        <input type="file" id="ct-arqs" accept=".xml" multiple style="display:none">
+      </div>
+      <div id="ct-kpis" class="cards-grid" style="margin-top:12px"></div>
+      <div id="ct-acoes" style="display:none; margin-top:12px; gap:10px; flex-wrap:wrap" class="linha-botoes">
+        <button class="btn solid" id="ct-btn-consultar" onclick="comBotao('ct-btn-consultar','Consultando NCMs',()=>ctConsultar(false))">Consultar classificações</button>
+        <button class="btn" id="ct-btn-forcar" onclick="comBotao('ct-btn-forcar','Reconsultando',()=>ctConsultar(true))">Reconsultar (ignorar cache)</button>
+        <button class="btn" id="ct-btn-csv" onclick="ctExportCSV()">⬇ Exportar CSV</button>
+        <span id="ct-progresso" class="muted" style="align-self:center"></span>
+      </div>
+      <div class="card" id="ct-filtros-box" style="display:none; margin-top:12px">
+        <b>Perfil da operação</b> <span class="muted">(os filtros do portal, aplicados localmente — não geram novas consultas)</span>
+        <div id="ct-filtros" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-top:8px"></div>
+      </div>
+      <div class="card" id="ct-resultado" style="display:none; margin-top:12px; overflow-x:auto">
+        <table id="ct-tab" class="tabela"></table>
+      </div>
+      <div id="ct-aviso"></div>
+    </div>
+
+</main>
+
+<details class="versoes"><summary>Versões</summary>
+  <table><tr><td><b>v1.0.0</b> <span class="badge ok">atual</span></td><td>01/08/2026</td><td>Primeira versão como aplicativo
+  próprio, separado do Análise Tributária Pro para ter ciclo de atualização independente — mesma sessão de login, mesmos
+  usuários e mesmo cadastro de empresas do banco compartilhado. Traz a fase 1 do módulo: importação de XMLs de NF-e e NFC-e,
+  deduplicação de NCMs ponderada por valor, consulta ao Conformidade Fácil (SVRS) via Edge Function cff-consulta com cache
+  revalidado 2× por semana, enquadramentos PERMITIDOS com Anexo/Item/condição/percentuais da LC 214/2025, comparação de versão
+  da tabela por hash, filtros de perfil de operação locais, alerta de itens sem o grupo IBS/CBS e exportação em CSV.</td></tr></table>
+</details>
+<footer>Artecon Artes Contábeis · Classificação Tributária RTC</footer>
+
+<script>
+'use strict';
+const SUPA_URL = 'https://kmdrqkiyhdmdtufrogke.supabase.co';
+const SUPA_KEY = 'sb_publishable_4eHrESOoQYRC7bR9rYKGBg_If2lOjnE';
+const APP = { token:null, user:null };
+const $id = id => document.getElementById(id);
+
+function toast(msg){
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#212f3d;color:#fff;padding:10px 18px;border-radius:8px;font-size:.85rem;z-index:99;max-width:90%';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 4000);
+}
+async function comBotao(alvo, rotulo, fn){
+  const b = typeof alvo === 'string' ? $id(alvo) : alvo;
+  if (b && b.dataset.rodando === '1') return;
+  const orig = b ? b.innerHTML : '';
+  if (b){ b.dataset.rodando = '1'; b.disabled = true; b.innerHTML = (rotulo || 'Executando') + '…'; }
+  try { return await fn(); }
+  catch(e){ console.error(e); toast('Erro: ' + (e.message || e)); }
+  finally { if (b){ b.disabled = false; b.innerHTML = orig; delete b.dataset.rodando; } }
+}
+
+// ── sessão compartilhada com o Análise Tributária Pro (mesmas chaves, mesma origem) ──
+function ctEntrou(data){
+  APP.token = data.access_token; APP.user = data.user;
+  localStorage.setItem('atp_token', data.access_token);
+  localStorage.setItem('atp_refresh', data.refresh_token);
+  $id('tela-login').style.display = 'none';
+  $id('app-ct').style.display = 'block';
+  $id('ct-sair').style.display = 'inline';
+  $id('ct-user').textContent = ' · ' + (APP.user?.email || '');
+  ctInit();
+}
+async function ctLogin(){
+  $id('lg-erro').textContent = '';
+  const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+    method:'POST', headers:{ 'apikey':SUPA_KEY, 'Content-Type':'application/json' },
+    body: JSON.stringify({ email:$id('lg-email').value.trim(), password:$id('lg-senha').value }) });
+  const data = await res.json();
+  if (!res.ok || !data.access_token){ $id('lg-erro').textContent = 'Falha no login: ' + (data.error_description || data.msg || res.status); return; }
+  ctEntrou(data);
+}
+async function ctSessaoRestaurar(){
+  const rt = localStorage.getItem('atp_refresh');
+  if (!rt) return false;
+  try {
+    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method:'POST', headers:{ 'apikey':SUPA_KEY, 'Content-Type':'application/json' },
+      body: JSON.stringify({ refresh_token: rt }) });
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (!data.access_token) return false;
+    ctEntrou(data);
+    return true;
+  } catch { return false; }
+}
+function ctSair(){
+  localStorage.removeItem('atp_token'); localStorage.removeItem('atp_refresh');
+  APP.token = null; APP.user = null;
+  location.reload();
+}
+window.addEventListener('load', ()=>ctSessaoRestaurar());
+</script>
+<script>
+// ═══ MÓDULO CLASSIFICAÇÃO RTC (F1 — v7.14.0) ═══════════════════════════
+// Base geral extraída do Conformidade Fácil em 01/08/2026; hash = versão da tabela.
+const CT_BASE_INFO = { data:'01/08/2026', hash:'435e6bf5b842bf4e', qtd:90 };
+const CT_BASE = [{"c":"000001","cst":"000","t":"Tributação integral","d":"Situações tributadas integralmente pelo IBS e CBS."},{"c":"000003","cst":"000","t":"Tributação integral","d":"Regime automotivo - projetos incentivados, observado o art. 311 da Lei Complementar nº 214, de 2025."},{"c":"000004","cst":"000","t":"Tributação integral","d":"Regime automotivo - projetos incentivados, observado o art. 312 da Lei Complementar nº 214, de 2025."},{"c":"000005","cst":"000","t":"Tributação integral","d":"Operação com EAC destinado à mistura com gasolina A, mas com saída do biocombustível com destinação diversa, observado o art. 179 da Lei Complementar nº 214, de 2025."},{"c":"200002","cst":"200","t":"Alíquota reduzida","d":"Fornecimento ou importação de tratores, máquinas e implementos agrícolas, destinados a produtor rural não contribuinte, e de veículos de transporte de carga destinados a transportador autônomo de carga pessoa física não contribuinte, observado o art. 110 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200003","cst":"200","t":"Alíquota reduzida","d":"Vendas de produtos destinados à alimentação humana relacionados no Anexo I da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NCM/SH, que compõem a Cesta Básica Nacional de Alimentos, criada nos termos do art. 8º da Emenda Constitucional nº 132, de 20 de dezembro de 2023, observado o art. 125 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200004","cst":"200","t":"Alíquota reduzida","d":"Fornecimento de dispositivos médicos com a especificação das respectivas classificações da NCM/SH previstas no Anexo XII da Lei Complementar nº 214, de 2025, observado o art. 144 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200005","cst":"200","t":"Alíquota reduzida","d":"Fornecimento de dispositivos médicos com a especificação das respectivas classificações da NCM/SH previstas no Anexo IV da Lei Complementar nº 214, de 2025, quando adquiridos por órgãos da administração pública direta, autarquias, fundações públicas e entidades de saúde imunes, observado o art. 144 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200006","cst":"200","t":"Alíquota reduzida","d":"Situação de emergência de saúde pública reconhecida pelo Poder Legislativo federal, estadual, distrital ou municipal competente, ato conjunto do Ministro da Fazenda e do Comitê Gestor do IBS poderá ser editado, a qualquer momento, para incluir dispositivos não listados no Anexo XII da Lei Complementar nº 214, de 2025, limitada a vigência do benefício ao período e à localidade da emergência de saúde pública, observado o art. 144 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200007","cst":"200","t":"Alíquota reduzida","d":"Fornecimento dos dispositivos de acessibilidade próprios para pessoas com deficiência relacionados no Anexo XIII da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NCM/SH, observado o art. 145 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200008","cst":"200","t":"Alíquota reduzida","d":"Fornecimento dos dispositivos de acessibilidade próprios para pessoas com deficiência relacionados no Anexo V da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NCM/SH, quando adquiridos por órgãos da administração pública direta, autarquias, fundações públicas e entidades imunes, observado o art. 145 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200009","cst":"200","t":"Alíquota reduzida","d":"Fornecimento dos medicamentos registrados na Anvisa, observado o art. 146 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200010","cst":"200","t":"Alíquota reduzida","d":"Fornecimento dos medicamentos registrados na Anvisa, quando adquiridos por órgãos da administração pública direta, autarquias, fundações públicas e entidades imunes, observado o art. 146 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200011","cst":"200","t":"Alíquota reduzida","d":"Fornecimento das composições para nutrição enteral e parenteral, composições especiais e fórmulas nutricionais destinadas às pessoas com erros inatos do metabolismo relacionadas no Anexo VI da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NCM/SH, quando adquiridas por órgãos da administração pública direta, autarquias e fundações públicas, observado o art. 146 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200012","cst":"200","t":"Alíquota reduzida","d":"Situação de emergência de saúde pública reconhecida pelo Poder Legislativo federal, estadual, distrital ou municipal competente, ato conjunto do Ministro da Fazenda e do Comitê Gestor do IBS poderá ser editado, a qualquer momento, limitada a vigência do benefício ao período e à localidade da emergência de saúde pública, observado o art. 146 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200013","cst":"200","t":"Alíquota reduzida","d":"Fornecimento de tampões higiênicos, absorventes higiênicos internos ou externos, descartáveis ou reutilizáveis, calcinhas absorventes e coletores menstruais, observado o art. 147 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200014","cst":"200","t":"Alíquota reduzida","d":"Fornecimento dos produtos hortícolas, frutas e ovos, relacionados no Anexo XV da Lei Complementar nº 214 , de 2025, com a especificação das respectivas classificações da NCM/SH e desde que não cozidos, observado o art. 148 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200015","cst":"200","t":"Alíquota reduzida","d":"Venda de automóveis de passageiros de fabricação nacional de, no mínimo, 4 (quatro) portas, inclusive a de acesso ao bagageiro, quando adquiridos por motoristas profissionais que exerçam, comprovadamente, em automóvel de sua propriedade, atividade de condutor autônomo de passageiros, na condição de titular de autorização, permissão ou concessão do poder público, e que destinem o automóvel à utilização na categoria de aluguel (táxi), ou por pessoas com deficiência física, visual, auditiva, deficiência mental severa ou profunda, transtorno do espectro autista, com prejuízos na comunicação social e em padrões restritos ou repetitivos de comportamento de nível moderado ou grave, nos termos da legislação relativa à matéria, observado o disposto no art. 149 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200020","cst":"200","t":"Alíquota reduzida","d":"Operação praticada por sociedades cooperativas optantes por regime específico do IBS e CBS, quando o associado destinar bem ou serviço à cooperativa de que participa, e a cooperativa fornecer bem ou serviço ao associado sujeito ao regime regular do IBS e da CBS, observado o art. 271 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200022","cst":"200","t":"Alíquota reduzida","d":"Operação originada fora da Zona Franca de Manaus que destine bem material industrializado de origem nacional a contribuinte estabelecido na Zona Franca de Manaus que seja habilitado nos termos do art. 442 da Lei Complementar nº 214, de 2025, e sujeito ao regime regular do IBS e da CBS ou optante pelo regime do Simples Nacional de que trata o art. 12 da Lei Complementar nº 123, de 2006, observado o art. 445 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200023","cst":"200","t":"Alíquota reduzida","d":"Operação realizada por indústria incentivada que destine bem material intermediário para outra indústria incentivada na Zona Franca de Manaus, desde que a entrega ou disponibilização dos bens ocorra dentro da referida área, observado o art. 448 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200024","cst":"200","t":"Alíquota reduzida","d":"Operação originada fora das Áreas de Livre Comércio que destine bem material industrializado de origem nacional a contribuinte estabelecido nas Áreas de Livre Comércio que seja habilitado nos termos do art. 456 da Lei Complementar nº 214, de 2025, e sujeito ao regime regular do IBS e da CBS ou optante pelo regime do Simples Nacional de que trata o art. 12 da Lei Complementar nº 123, de 2006, observado o art. 463 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200030","cst":"200","t":"Alíquota reduzida","d":"Venda dos dispositivos médicos relacionados no Anexo IV da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NCM/SH, observado o art. 131 da Lei Complementar nº 214, de 2025.","p":{"CBS":"60","IBS":"60"}},{"c":"200031","cst":"200","t":"Alíquota reduzida","d":"Fornecimento dos dispositivos de acessibilidade próprios para pessoas com deficiência relacionados no Anexo V da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NCM/SH, observado o art. 132 da Lei Complementar nº 214, de 2025.","p":{"CBS":"60","IBS":"60"}},{"c":"200032","cst":"200","t":"Alíquota reduzida","d":"Fornecimento dos medicamentos registrados na Anvisa ou produzidos por farmácias de manipulação, ressalvados os medicamentos sujeitos à alíquota zero de que trata o art. 146 da Lei Complementar nº 214, de 2025, observado o art. 133 da Lei Complementar nº 214, de 2025.","p":{"CBS":"60","IBS":"60"}},{"c":"200033","cst":"200","t":"Alíquota reduzida","d":"Fornecimento das composições para nutrição enteral e parenteral, composições especiais e fórmulas nutricionais destinadas às pessoas com erros inatos do metabolismo relacionadas no Anexo VI da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NCM/SH, observado o art. 133 da Lei Complementar nº 214, de 2025.","p":{"CBS":"60","IBS":"60"}},{"c":"200034","cst":"200","t":"Alíquota reduzida","d":"Fornecimento dos alimentos destinados ao consumo humano relacionados no Anexo VII da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NCM/SH, observado o art. 135 da Lei Complementar nº 214, de 2025.","p":{"CBS":"60","IBS":"60"}},{"c":"200035","cst":"200","t":"Alíquota reduzida","d":"Fornecimento dos produtos de higiene pessoal e limpeza relacionados no Anexo VIII da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NCM/SH, observado o art. 136 da Lei Complementar nº 214, de 2025.","p":{"CBS":"60","IBS":"60"}},{"c":"200036","cst":"200","t":"Alíquota reduzida","d":"Fornecimento de produtos agropecuários, aquícolas, pesqueiros, florestais e extrativistas vegetais in natura, observado o art. 137 da Lei Complementar nº 214, de 2025.","p":{"CBS":"60","IBS":"60"}},{"c":"200038","cst":"200","t":"Alíquota reduzida","d":"Fornecimento dos insumos agropecuários e aquícolas relacionados no Anexo IX da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NCM/SH e da NBS, observado o art. 138 da Lei Complementar nº 214, de 2025.","p":{"CBS":"60","IBS":"60"}},{"c":"200039","cst":"200","t":"Alíquota reduzida","d":"Fornecimento dos bens e serviços listados no Anexo X da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NCM/SH e NBS, nos casos relacionados com produções nacionais artísticas, culturais, de eventos, jornalísticas e audiovisuais, observado o art. 139 da Lei Complementar nº 214, de 2025.","p":{"CBS":"60","IBS":"60"}},{"c":"200043","cst":"200","t":"Alíquota reduzida","d":"Fornecimento à administração pública direta, autarquias e fundações púbicas dos serviços e dos bens relativos à soberania e à segurança nacional, à segurança da informação e à segurança cibernética relacionados no Anexo XI da Lei Complementar nº 214, de 2025, com a especificação das respectivas classificações da NBS e da NCM/SH, observado o art. 142 da Lei Complementar nº 214, de 2025.","p":{"CBS":"60","IBS":"60"}},{"c":"200047","cst":"200","t":"Alíquota reduzida","d":"Bares e Restaurantes, observado o art. 275 da Lei Complementar nº 214, de 2025.","p":{"CBS":"40","IBS":"40"}},{"c":"200053","cst":"200","t":"Alíquota reduzida","d":"Fornecimento de medicamentos registrados na Anvisa, quando classificados como soros ou vacinas, observado o art. 146 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"200054","cst":"200","t":"Alíquota reduzida","d":"Fornecimento de bem material pela cooperativa de produção agropecuária a associado não sujeito ao regime regular do IBS e da CBS com anulação de créditos referentes ao bem fornecido, observado o art. 271 da Lei Complementar nº 214, de 2025.","p":{"CBS":"100","IBS":"100"}},{"c":"410001","cst":"410","t":"Imunidade e não incidência","d":"Fornecimento de bonificações quando constem do respectivo documento fiscal e que não dependam de evento posterior, observado o art. 5º da Lei Complementar nº 214, de 2025."},{"c":"410002","cst":"410","t":"Imunidade e não incidência","d":"Transferências entre estabelecimentos pertencentes ao mesmo contribuinte, observado o art. 6º da Lei Complementar nº 214, de 2025."},{"c":"410003","cst":"410","t":"Imunidade e não incidência","d":"Doações que não tenham por objeto bens ou serviços que tenham permitido a apropriação de créditos pelo doador, observado o art. 6º da Lei Complementar nº 214, de 2025."},{"c":"410004","cst":"410","t":"Imunidade e não incidência","d":"Exportações de bens e serviços, observado o art. 8º da Lei Complementar nº 214, de 2025."},{"c":"410005","cst":"410","t":"Imunidade e não incidência","d":"Fornecimentos realizados pela União, pelos Estados, pelo Distrito Federal e pelos Municípios, observado o art. 9º da Lei Complementar nº 214, de 2025."},{"c":"410006","cst":"410","t":"Imunidade e não incidência","d":"Fornecimentos realizados por entidades religiosas e templos de qualquer culto, inclusive suas organizações assistenciais e beneficentes, observado o art. 9º da Lei Complementar nº 214, de 2025."},{"c":"410007","cst":"410","t":"Imunidade e não incidência","d":"Fornecimentos realizados por partidos políticos, inclusive suas fundações, entidades sindicais dos trabalhadores e instituições de educação e de assistência social, sem fins lucrativos, observado o art. 9º da Lei Complementar nº 214, de 2025."},{"c":"410008","cst":"410","t":"Imunidade e não incidência","d":"Fornecimentos de livros, jornais, periódicos e do papel destinado a sua impressão, observado o art. 9º da Lei Complementar nº 214, de 2025."},{"c":"410009","cst":"410","t":"Imunidade e não incidência","d":"Fornecimentos de fonogramas e videofonogramas musicais produzidos no Brasil contendo obras musicais ou literomusicais de autores brasileiros e/ou obras em geral interpretadas por artistas brasileiros, bem como os suportes materiais ou arquivos digitais que os contenham, salvo na etapa de replicação industrial de mídias ópticas de leitura a laser, observado o art. 9º da Lei Complementar nº 214, de 2025."},{"c":"410012","cst":"410","t":"Imunidade e não incidência","d":"Fornecimento de condomínio edilício não optante pelo regime regular, observado o art. 26 da Lei Complementar nº 214, de 2025."},{"c":"410013","cst":"410","t":"Imunidade e não incidência","d":"Exportações de combustíveis, observado o art. 98 da Lei Complementar nº 214, de 2025."},{"c":"410014","cst":"410","t":"Imunidade e não incidência","d":"Fornecimento de produtor rural não contribuinte, observado o art. 164 da Lei Complementar nº 214, de 2025."},{"c":"410016","cst":"410","t":"Imunidade e não incidência","d":"Fornecimento ou aquisição de resíduos sólidos, observado o art. 170 da Lei Complementar nº 214, de 2025."},{"c":"410017","cst":"410","t":"Imunidade e não incidência","d":"Aquisição de bem móvel com crédito presumido sob condição de revenda realizada, observado o art. 171 da Lei Complementar nº 214, de 2025."},{"c":"410019","cst":"410","t":"Imunidade e não incidência","d":"Exclusão da gorjeta na base de cálculo no fornecimento de alimentação, observado o art. 274 da Lei Complementar nº 214, de 2025."},{"c":"410020","cst":"410","t":"Imunidade e não incidência","d":"Exclusão do valor de intermediação na base de cálculo no fornecimento de alimentação, observado o art. 274 da Lei Complementar nº 214, de 2025."},{"c":"410026","cst":"410","t":"Imunidade e não incidência","d":"Doações sem contraprestação em benefício do doador, com anulação de crédito apropriados pelo doador referente ao fornecimento doado, observado o art. 6º da Lei Complementar nº 214, de 2025."},{"c":"410027","cst":"410","t":"Imunidade e não incidência","d":"Fornecimento de bens e serviços, desde que vinculados direta e exclusivamente à exportação de bens materiais ou associados à entrega no exterior de bens materiais, observado o art. 6º da Lei Complementar nº 214, de 2025."},{"c":"410029","cst":"410","t":"Imunidade e não incidência","d":"Operações não sujeitas à incidência de IBS e de CBS, alcançadas apenas por obrigação acessória do ICMS, observado o art. 4º da Lei Complementar nº 214, de 2025."},{"c":"410030","cst":"410","t":"Imunidade e não incidência","d":"Estorno de crédito apropriado de bens adquiridos e venham a perecer, deteriorar-se ou ser objeto de roubo, furto ou extravio, observado o art. 47 da Lei Complementar nº 214, de 2025."},{"c":"410031","cst":"410","t":"Imunidade e não incidência","d":"Fornecimento em período anterior ao início de vigência de incidências de CBS e IBS, observado o art. 544 da Lei Complementar nº 214, de 2025."},{"c":"410035","cst":"410","t":"Imunidade e não incidência","d":"Fornecimento realizado por nanoempreendedor, observado o art. 26 da Lei Complementar nº 214, de 2025."},{"c":"410999","cst":"410","t":"Imunidade e não incidência","d":"Operações não onerosas sem previsão de tributação, não especificadas anteriormente, observado o art. 4º da Lei Complementar nº 214, de 2025."},{"c":"510001","cst":"510","t":"Diferimento","d":"Operações, sujeitas a diferimento, com energia elétrica ou com direitos a ela relacionados, relativas à importação, geração, comercialização, distribuição e transmissão, observado o art. 28 da Lei Complementar nº 214, de 2025."},{"c":"515001","cst":"515","t":"Diferimento com redução de alíquota","d":"Operações, sujeitas a diferimento, com insumos agropecuários e aquícolas, observado o art. 138 da Lei Complementar nº 214, de 2025.","p":{"CBS":"60","IBS":"60"}},{"c":"550001","cst":"550","t":"Suspensão","d":"Exportações de bens materiais, observado o art. 82 da Lei Complementar nº 214, de 2025."},{"c":"550002","cst":"550","t":"Suspensão","d":"Regime de Trânsito, observado o art. 84 da Lei Complementar nº 214, de 2025."},{"c":"550003","cst":"550","t":"Suspensão","d":"Regimes de Depósito, observado o art. 85 da Lei Complementar nº 214, de 2025."},{"c":"550004","cst":"550","t":"Suspensão","d":"Regimes de Depósito, observado o art. 87 da Lei Complementar nº 214, de 2025."},{"c":"550005","cst":"550","t":"Suspensão","d":"Regimes de Depósito, observado o art. 87 da Lei Complementar nº 214, de 2025."},{"c":"550006","cst":"550","t":"Suspensão","d":"Regimes de Permanência Temporária, observado o art. 88 da Lei Complementar nº 214, de 2025."},{"c":"550007","cst":"550","t":"Suspensão","d":"Regimes de Aperfeiçoamento, observado o art. 90 da Lei Complementar nº 214, de 2025."},{"c":"550008","cst":"550","t":"Suspensão","d":"Importação de bens para o Regime de Repetro-Temporário, de que tratam o inciso I do art. 93 da Lei Complementar nº 214, de 2025."},{"c":"550009","cst":"550","t":"Suspensão","d":"GNL-Temporário, de que trata o inciso II do art. 93 da Lei Complementar nº 214, de 2025."},{"c":"550010","cst":"550","t":"Suspensão","d":"Repetro-Permanente, de que trata o inciso III do art. 93 da Lei Complementar nº 214, de 2025."},{"c":"550011","cst":"550","t":"Suspensão","d":"Repetro-Industrialização, de que trata o inciso IV do art. 93 da Lei Complementar nº 214, de 2025."},{"c":"550012","cst":"550","t":"Suspensão","d":"Repetro-Nacional, de que trata o inciso V do art. 93 da Lei Complementar nº 214, de 2025."},{"c":"550013","cst":"550","t":"Suspensão","d":"Repetro-Entreposto, de que trata o inciso VI do art. 93 da Lei Complementar nº 214, de 2025."},{"c":"550014","cst":"550","t":"Suspensão","d":"Zona de Processamento de Exportação, observado os arts. 99, 100 e 102 da Lei Complementar nº 214, de 2025."},{"c":"550015","cst":"550","t":"Suspensão","d":"Regime Tributário para Incentivo à Modernização e à Ampliação da Estrutura Portuária - Reporto, observado o art. 105 da Lei Complementar nº 214, de 2025."},{"c":"550016","cst":"550","t":"Suspensão","d":"Regime Especial de Incentivos para o Desenvolvimento da Infraestrutura - Reidi, observado o art. 106 da Lei Complementar nº 214, de 2025."},{"c":"550017","cst":"550","t":"Suspensão","d":"Regime Tributário para Incentivo à Atividade Econômica Naval – Renaval, observado o art. 107 da Lei Complementar nº 214, de 2025."},{"c":"550018","cst":"550","t":"Suspensão","d":"Desoneração da aquisição de bens de capital, observado o art. 109 da Lei Complementar nº 214, de 2025."},{"c":"550019","cst":"550","t":"Suspensão","d":"Importação de bem material por indústria incentivada para utilização na Zona Franca de Manaus, observado o art. 443 da Lei Complementar nº 214, de 2025."},{"c":"550020","cst":"550","t":"Suspensão","d":"Áreas de livre comércio, observado o art. 461 da Lei Complementar nº 214, de 2025."},{"c":"550021","cst":"550","t":"Suspensão","d":"Fornecimento de produtos agropecuários in natura para contribuinte do regime regular que promova industrialização destinada a exportação, observado o art. 82 da Lei Complementar nº 214, de 2025."},{"c":"550022","cst":"550","t":"Suspensão","d":"Regime Especial de Incentivos para a Produção de Hidrogênio de Baixa Emissão de Carbono (Rehidro), observado o art. 106 da Lei Complementar nº 214, de 2025."},{"c":"550023","cst":"550","t":"Suspensão","d":"Operações com hidrocarbonetos líquidos derivados de petróleo não combustíveis ou de gás natural, inclusive nafta, observado o art. 172 da Lei Complementar nº 214, de 2025."},{"c":"620001","cst":"620","t":"Tributação Monofásica","d":"Tributação monofásica sobre combustíveis, observados os art. 172 da Lei Complementar nº 214, de 2025."},{"c":"620002","cst":"620","t":"Tributação Monofásica","d":"Tributação monofásica com responsabilidade pela retenção sobre combustíveis, observado o art. 178 da Lei Complementar nº 214, de 2025."},{"c":"620003","cst":"620","t":"Tributação Monofásica","d":"Tributação monofásica com responsabilidade de retenção de tributos por terceiros, observado o art. 178 da Lei Complementar nº 214, de 2025."},{"c":"620004","cst":"620","t":"Tributação Monofásica","d":"Tributação monofásica sobre mistura de EAC com gasolina A em percentual superior ou inferior ao obrigatório, observado o art. 179 da Lei Complementar nº 214, de 2025."},{"c":"620005","cst":"620","t":"Tributação Monofásica","d":"Tributação monofásica sobre mistura de EAC com gasolina A em percentual superior ou inferior ao obrigatório, observado o art. 179 da Lei Complementar nº 214, de 2025."},{"c":"620006","cst":"620","t":"Tributação Monofásica","d":"Tributação monofásica sobre combustíveis cobrada anteriormente, observador o art. 180 da Lei Complementar nº 214, de 2025."},{"c":"620007","cst":"620","t":"Tributação Monofásica","d":"Perecimento, deteriorização, roubo, furto ou extravio no regime monofásico sem estorno de crédito, observado o art. 47 da Lei Complementar nº 214, de 2025."}];
+const CT_FILTROS = [{"q":"q_1","v":"141","r":"Coletor incentivado","p":["410016"]},{"q":"q_1","v":"142","r":"Entidade religiosa e templo de qualquer culto, inclusive suas organizações assistenciais e beneficentes","p":["410006"]},{"q":"q_1","v":"143","r":"Nanoempreendedor","p":["410035"]},{"q":"q_1","v":"144","r":"Partidos políticos, entidades sindicais ou instituições de educação e de assistência social","p":["410007"]},{"q":"q_1","v":"145","r":"Produtor rural não contribuinte do IBS/CBS","p":["410014"]},{"q":"q_1","v":"146","r":"União, Estado, Distrito Federal ou Município, suas autarquias e às fundações instituídas e mantidas pelo poder público","p":["410005"]},{"q":"q_1","v":"147","r":"Empresa pública prestadora de serviço postal","p":["410005"]},{"q":"q_1","v":"151","r":"Exportador","p":["410004"]},{"q":"q_1","v":"152","r":"Não listado","p":["000001","000002","000003","000004","010001","010002","011001","011002","011003","011004","011005","200001","200002","200004","200005","200006","200007","200008","200009","200010","200011","200012","200013","200014","200015","200016","200017","200018","200019","200020","200021","200022","200023","200024","200025","200026","200027","200028","200029","200030","200031","200032","200033","200035","200036","200037","200038","200039","200040","200041","200043","200044","200045","200046","200048","200049","200050","200051","200052","200053","220001","220002","220003","221001","222001","400001","410001","410002","410003","410008","410009","410010","410011","410012","410013","410015","410016","410017","410018","410019","410020","410021","410022","410023","410024","410026","410027","410028","410029","410030","410031","410999","510001","515001","550001","550002","550003","550004","550005","550006","550007","550008","550009","550010","550011","550012","550013","550014","550015","550016","550017","550018","550019","550020","550021","550022","550023","620001","620002","620003","620004","620005","620006","800001","800002","810001","811001","811002","811003","820001","820002","820003","820004","820005","820006","820007","820008","830001","200047","200003","200034"]},{"q":"q_2","v":"153","r":"Livros, jornais, periódicos e do papel destinado a sua impressão","p":["410008"]},{"q":"q_2","v":"154","r":"Fonogramas e videofonogramas musicais produzidos no Brasil","p":["410009"]},{"q":"q_2","v":"155","r":"Energia elétrica","p":["000001","510001","410001"]},{"q":"q_2","v":"156","r":"Produtos de cuidados básicos à saúde menstrual","p":["200013","410001","410026","410003"]},{"q":"q_2","v":"157","r":"Alimentação e bebidas não alcoólicas preparadas em bar, restaurante ou lanchonete, exceto quando houver fornecimento contratado a pessoa jurídica, revenda sem preparo ou bebidas alcoólicas","p":["200047","410001","410026","410003"]},{"q":"q_2","v":"158","r":"Produtos hortícolas, frutas e ovos","p":["200014","410001","410026","410003"]},{"q":"q_2","v":"159","r":"Produtos destinados à alimentação humana","p":["200003","200034","410001","410026","410003"]},{"q":"q_2","v":"160","r":"Medicamentos","p":["200009","200010","200012","200053","200032","410001","410026","410003"]},{"q":"q_2","v":"161","r":"Dispositivos médicos","p":["200004","200005","200006","200030","410001","410026","410003"]},{"q":"q_2","v":"162","r":"Composições para nutrição enteral e parenteral, composições especiais e fórmulas nutricionais destinadas às pessoas com erros inatos do metabolismo","p":["200011","200033","410001","410026","410003"]},{"q":"q_2","v":"163","r":"Dispositivos de acessibilidade próprios para pessoas com deficiência","p":["200007","200008","200031","410001","410026","410003"]},{"q":"q_2","v":"164","r":"Combustível ou lubrificante","p":["620001","620002","620003","620004","620005","620006","410013"]},{"q":"q_2","v":"165","r":"Produtos de higiene pessoal e limpeza","p":["200035","410001","410026","410003"]},{"q":"q_2","v":"166","r":"Bens relacionados a produções nacionais artísticas, culturais, de eventos, jornalísticas e audiovisuais","p":["200039","410001","410026","410003"]},{"q":"q_2","v":"167","r":"Bens relativos à soberania e à segurança nacional, à segurança da informação e à segurança cibernética","p":["000001","200043","200044","410001","410026","410003"]},{"q":"q_2","v":"168","r":"Insumos agropecuários e aquícolas","p":["200038","515001","410001","410026","410003"]},{"q":"q_2","v":"169","r":"Produtos agropecuários, aquícolas, pesqueiros, florestais e extrativistas vegetais in natura","p":["200036","550021","410001","410026","410003"]},{"q":"q_2","v":"171","r":"Automóvel de passageiros","p":["000001","200015","410001","410026","410003"]},{"q":"q_2","v":"172","r":"Tratores, máquinas e implementos agrícolas","p":["200002","000001","410026","410003"]},{"q":"q_2","v":"173","r":"Veículos de transporte de carga","p":["200002","000001","410026","410003"]},{"q":"q_2","v":"174","r":"Hidrocarbonetos líquidos derivados de petróleo não combustíveis ou de gás natural","p":["550023","410026","410003"]},{"q":"q_2","v":"175","r":"Não listado","p":["000001","000002","000003","000004","010001","010002","011001","011002","011003","011004","011005","200001","200002","200016","200017","200018","200019","200020","200021","200022","200023","200024","200025","200027","200028","200029","200037","200040","200041","200042","200043","200045","200046","200048","200049","200050","200051","200052","220001","220002","220003","221001","222001","400001","410001","410002","410003","410004","410005","410006","410007","410010","410011","410012","410013","410014","410015","410017","410018","410019","410020","410021","410022","410023","410024","410025","410026","410027","410028","410029","410030","410031","410999","510001","515001","550001","550002","550003","550004","550005","550006","550007","550008","550009","550010","550011","550012","550013","550014","550015","550016","550017","550018","550019","550020","550021","550022","550023","800001","800002","810001","811001","811002","811003","820001","820002","820003","820004","820005","820006","820007","820008","830001","200006","200012"]},{"q":"q_3","v":"176","r":"Regime Automotivo - Projeto Incentivado","p":["000003","000004"]},{"q":"q_3","v":"177","r":"Regimes Aduaneiros Especiais","p":["550002","550003","550004","550005","550006","550007","550008","550009","550010","550011","550012","550013"]},{"q":"q_3","v":"178","r":"Regimes dos Bens de Capital","p":["550015","550016","550017","550018"]},{"q":"q_3","v":"179","r":"Regime Favorecido da Zona Franca de Manaus","p":["550019","200023","200022"]},{"q":"q_3","v":"180","r":"Zonas de Processamento de Exportação","p":["550014"]},{"q":"q_3","v":"181","r":"Regime Especial de Incentivos para a Produção de Hidrogênio de Baixa Emissão de Carbono (Rehidro)","p":["550022"]},{"q":"q_3","v":"182","r":"Regime Favorecido Áreas de livre comércio","p":["550020","200024"]},{"q":"q_3","v":"183","r":"Não listado","p":["000001","000002","010001","010002","011001","011002","011003","011004","011005","200001","200002","200005","200006","200007","200008","200009","200010","200011","200012","200013","200014","200015","200016","200017","200018","200019","200020","200021","200023","200024","200025","200026","200027","200028","200029","200030","200031","200032","200033","200034","200035","200036","200037","200038","200039","200040","200041","200042","200043","200044","200045","200046","200047","200048","200049","200050","200051","200052","220001","220002","220003","221001","222001","400001","410001","410002","410003","410004","410005","410006","410007","410008","410009","410010","410011","410012","410013","410014","410015","410016","410017","410018","410019","410020","410021","410022","410023","410024","410025","410026","410027","410028","410029","410030","410031","410035","410999","510001","515001","550001","550019","550020","550021","550023","620001","620002","620003","620004","620005","620006","800001","800002","810001","811001","811002","811003","820001","820002","820003","820004","820005","820006","820007","820008","830001","550002","550003","550004","550006","550007","550008","550009","550010","550011","550012","550013"]},{"q":"q_4","v":"184","r":"ALC - Importação","p":["550020"]},{"q":"q_4","v":"185","r":"ALC - Operação originada fora da ALC destinada a contribuinte estabelecido na ALC","p":["200024"]},{"q":"q_4","v":"186","r":"Aquisição de bem móvel usado de pessoa física não contribuinte para revenda","p":["410017"]},{"q":"q_4","v":"187","r":"Bonificação que não depende de evento posterior","p":["410001"]},{"q":"q_4","v":"189","r":"Doação sem contraprestação com anulação de crédito aproveitado","p":["410026"]},{"q":"q_4","v":"190","r":"Doação sem contraprestação e sem aproveitamento de crédito","p":["410003"]},{"q":"q_4","v":"192","r":"Fornecimento à administração pública dos serviços e dos bens relativos à soberania","p":["200043"]},{"q":"q_4","v":"193","r":"Fornecimento de insumos agropecuários e aquícolas para Produtor rural não contribuinte do IBS e da CBS ou contribuinte do regime regular do IBS e da CBS","p":["515001"]},{"q":"q_4","v":"194","r":"Fornecimento em período anterior ao início de vigência de incidências de CBS e IBS","p":["410031"]},{"q":"q_4","v":"195","r":"Fornecimento ou importação de tratores, máquinas e implementos agrícolas, destinados a produtor rural não contribuinte","p":["200002"]},{"q":"q_4","v":"196","r":"Fornecimento de veículos de transporte de carga destinados a transportador autônomo de carga pessoa física não contribuinte","p":["200002"]},{"q":"q_4","v":"197","r":"Fornecimento para abastecimento de aeronaves em tráfego internacional e com destino ao exterior","p":["410013"]},{"q":"q_4","v":"198","r":"Operações acobertadas somente pelo ICMS","p":["410029"]},{"q":"q_4","v":"199","r":"Operações com hidrocarbonetos líquidos derivados de petróleo não combustíveis ou de gás natural, inclusive nafta","p":["550023"]},{"q":"q_4","v":"200","r":"Operações entre a sociedade cooperativa e seu associado","p":["200020"]},{"q":"q_4","v":"201","r":"Operações não onerosas sem previsão de tributação, não especificadas anteriormente","p":["410999"]},{"q":"q_4","v":"202","r":"Operações vinculadas direta e exclusivamente à exportação de bens materiais","p":["550001","550021"]},{"q":"q_4","v":"203","r":"Regimes Aduaneiros Especiais - Importação ou Aquisição","p":["550002","550003","550004","550006","550007","550008","550009","550010","550011","550012","550013"]},{"q":"q_4","v":"204","r":"Situação de emergência de saúde pública reconhecida pelo Poder público","p":["200006","200012"]},{"q":"q_4","v":"205","r":"Transferências entre estabelecimentos pertencentes ao mesmo contribuinte","p":["410002"]},{"q":"q_4","v":"206","r":"Venda de automóveis de passageiros de fabricação nacional para motoristas profissionais ou pessoas com deficiência","p":["200015"]},{"q":"q_4","v":"207","r":"ZFM - Importação","p":["550019"]},{"q":"q_4","v":"208","r":"ZFM - Operação entre industrias incentivadas","p":["200023"]},{"q":"q_4","v":"209","r":"ZFM - Operação originada fora da ZFM que destine bem material industrializado a contribuinte estabelecido na ZFM","p":["200022"]},{"q":"q_4","v":"210","r":"Não listado","p":["000001","000002","000003","000004","010001","010002","011001","011002","011003","011004","011005","200001","200003","200004","200005","200007","200008","200009","200010","200011","200013","200014","200016","200017","200018","200019","200021","200025","200026","200027","200028","200029","200030","200031","200032","200033","200034","200035","200036","200037","200038","200039","200040","200041","200042","200044","200045","200046","200047","200048","200049","200050","200051","200052","220001","220002","220003","221001","222001","400001","410005","410006","410007","410008","410009","410010","410011","410012","410014","410015","410016","410018","410019","410020","410021","410023","410024","410025","410027","410028","410030","410035","510001","550005","550014","550015","550016","550017","550018","550020","550022","620001","620002","620003","620004","620005","620006","800001","800002","810001","811001","811002","811003","820001","820002","820003","820004","820005","820006","820007","820008","830001"]}];
+
+const CT_VALIDADE_H = 84; // duas revalidações por semana — decisão de 01/08/2026
+const CT_NS = 'http://www.portalfiscal.inf.br/nfe';
+let CT = { itens: [], erros: [], ncms: {}, iniciado: false };
+
+function ctInit(){
+  if (CT.iniciado) return;
+  CT.iniciado = true;
+  $id('ct-base-info').textContent = `${CT_BASE_INFO.qtd} classificações · extraída em ${CT_BASE_INFO.data} · versão ${CT_BASE_INFO.hash.slice(0,8)}`;
+  const drop = $id('ct-drop'), inp = $id('ct-arqs');
+  drop.onclick = () => inp.click();
+  inp.onchange = () => ctProcessar(inp.files);
+  drop.ondragover = e => { e.preventDefault(); drop.style.background = '#eaf2f8'; };
+  drop.ondragleave = () => drop.style.background = '';
+  drop.ondrop = e => { e.preventDefault(); drop.style.background = ''; ctProcessar(e.dataTransfer.files); };
+  ctFiltrosRender();
+}
+
+function ctTx(el, tag){ if(!el) return ''; const n = el.getElementsByTagNameNS(CT_NS, tag)[0]; return n ? n.textContent.trim() : ''; }
+
+function ctLerXML(nome, texto){
+  const doc = new DOMParser().parseFromString(texto, 'application/xml');
+  if (doc.getElementsByTagName('parsererror').length){ CT.erros.push(nome + ': XML inválido'); return; }
+  const inf = doc.getElementsByTagNameNS(CT_NS, 'infNFe')[0];
+  if (!inf){ CT.erros.push(nome + ': não é NF-e/NFC-e (infNFe ausente)'); return; }
+  const ide = inf.getElementsByTagNameNS(CT_NS, 'ide')[0];
+  const emit = inf.getElementsByTagNameNS(CT_NS, 'emit')[0];
+  const mod = ctTx(ide, 'mod');
+  if (mod !== '55' && mod !== '65'){ CT.erros.push(nome + ': modelo ' + mod + ' fora do escopo (só 55/65)'); return; }
+  const dfe = mod === '65' ? 'NFCE' : 'NFE';
+  for (const det of inf.getElementsByTagNameNS(CT_NS, 'det')){
+    const prod = det.getElementsByTagNameNS(CT_NS, 'prod')[0];
+    const gIBS = det.getElementsByTagNameNS(CT_NS, 'IBSCBS')[0] || null;
+    CT.itens.push({ arq: nome, dfe, cnpjEmit: ctTx(emit, 'CNPJ'), nomeEmit: ctTx(emit, 'xNome'),
+      cProd: ctTx(prod, 'cProd'), xProd: ctTx(prod, 'xProd'), ncm: ctTx(prod, 'NCM'),
+      cfop: ctTx(prod, 'CFOP'), vProd: parseFloat(ctTx(prod, 'vProd')) || 0,
+      temIBSCBS: !!gIBS, cClassNota: gIBS ? ctTx(gIBS, 'cClassTrib') : '' });
+  }
+}
+
+async function ctProcessar(files){
+  CT.itens = []; CT.erros = [];
+  await Promise.all([...files].filter(f => /\.xml$/i.test(f.name))
+    .map(f => f.text().then(x => ctLerXML(f.name, x)).catch(e => CT.erros.push(f.name + ': ' + e.message))));
+  const agg = {};
+  for (const i of CT.itens){
+    const k = i.ncm || '(sem NCM)';
+    agg[k] = agg[k] || { ncm: k, dfe: i.dfe, qtd: 0, valor: 0, produtos: new Set(), emitentes: new Set(), consulta: (CT.ncms[k]||{}).consulta || null };
+    agg[k].qtd++; agg[k].valor += i.vProd;
+    if (agg[k].produtos.size < 3) agg[k].produtos.add(i.xProd.slice(0, 45));
+    agg[k].emitentes.add(i.nomeEmit.split(' ')[0]);
+    if (i.dfe === 'NFCE') agg[k].dfe = agg[k].dfe === 'NFE' ? 'NFE' : 'NFCE';
+  }
+  CT.ncms = agg;
+  ctRender();
+}
+
+function ctFiltroSel(){
+  const escolhas = ['ct-f1','ct-f2','ct-f3','ct-f4'].map(id => $id(id) ? $id(id).value : '');
+  let permitido = null;
+  for (const v of escolhas){
+    if (!v) continue;
+    const f = CT_FILTROS.find(x => x.v === v);
+    if (!f) continue;
+    permitido = permitido === null ? new Set(f.p) : new Set([...permitido].filter(c => f.p.includes(c)));
+  }
+  return permitido; // null = todos
+}
+
+function ctFiltrosRender(){
+  const box = $id('ct-filtros');
+  const qs = ['q_1','q_2','q_3','q_4'];
+  const rot = { q_1:'1 · Fornecedor é', q_2:'2 · Bem identificado como', q_3:'3 · Regime especial / incentivado', q_4:'4 · Operação relacionada a' };
+  box.innerHTML = qs.map((q, i) => `<label style="font-size:.82rem">${rot[q]}<br>
+    <select id="ct-f${i+1}" style="width:100%" onchange="ctRender()">
+      <option value="">(não listado / todos)</option>
+      ${CT_FILTROS.filter(f => f.q === q).map(f => `<option value="${f.v}">${f.r}</option>`).join('')}
+    </select></label>`).join('');
+}
+
+const ctFmt = v => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const ctNCM = n => n && n.length === 8 ? n.slice(0,4) + '.' + n.slice(4,6) + '.' + n.slice(6) : (n || '—');
+
+function ctRender(){
+  const lista = Object.values(CT.ncms).sort((a,b) => b.valor - a.valor);
+  const tem = lista.length > 0;
+  $id('ct-acoes').style.display = tem ? 'flex' : 'none';
+  $id('ct-filtros-box').style.display = tem ? 'block' : 'none';
+  $id('ct-resultado').style.display = tem ? 'block' : 'none';
+  if (!tem){ $id('ct-kpis').innerHTML = ''; return; }
+  const total = lista.reduce((s,a) => s + a.valor, 0);
+  const semIBS = CT.itens.filter(i => !i.temIBSCBS).length;
+  const consultados = lista.filter(n => n.consulta && !n.consulta.erro).length;
+  const kpi = (v,l) => `<div class="kpi-card"><div class="kpi-v">${v}</div><div class="kpi-l">${l}</div></div>`;
+  $id('ct-kpis').innerHTML = kpi(CT.itens.length,'itens') + kpi(lista.length,'NCMs únicos')
+    + kpi('R$ ' + ctFmt(total),'valor dos itens') + kpi(semIBS,'itens sem grupo IBS/CBS na nota')
+    + kpi(consultados + '/' + lista.length,'NCMs consultados');
+  const filtro = ctFiltroSel();
+  const gerais = filtro === null ? CT_BASE : CT_BASE.filter(c => filtro.has(c.c));
+  $id('ct-tab').innerHTML = `<tr><th>NCM</th><th>Doc</th><th>Produtos (amostra)</th><th style="text-align:right">Valor · %</th>
+      <th>Consulta</th><th>PERMITIDO (específico do NCM)</th><th style="text-align:right">Gerais aplicáveis</th></tr>`
+    + lista.map(n => {
+      const c = n.consulta;
+      let stC = '<span class="muted">— não consultado</span>', perm = '<span class="muted">—</span>';
+      if (c && c.erro) stC = `<span style="color:#b03a2e">erro: ${c.erro}</span>`;
+      else if (c){
+        const idadeH = Math.round((Date.now() - new Date(c.consultado_em).getTime()) / 36e5);
+        stC = `${c.origem === 'portal' ? '🌐 portal' : '💾 cache'} · há ${idadeH} h`;
+        perm = (c.permitidos && c.permitidos.length)
+          ? c.permitidos.map(p => `<div style="margin:2px 0"><span class="badge ok">${p.cclasstrib}</span>
+              <b>Anexo ${p.anexo} · Item ${p.item}</b> — ${p.tratamento}${p.percentuais ? ' (' + p.percentuais + ')' : ''}
+              <br><span class="muted" style="font-size:.78rem">${p.descricao}${p.condicao ? ' · Condição: ' + p.condicao : ''}</span></div>`).join('')
+          : '<span class="muted">nenhum — só regra geral</span>';
+      }
+      return `<tr><td><b>${ctNCM(n.ncm)}</b></td><td>${n.dfe}</td><td>${[...n.produtos].join('<br>')}</td>
+        <td style="text-align:right">${ctFmt(n.valor)}<br><span class="muted">${total ? (n.valor/total*100).toFixed(1) : 0}%</span></td>
+        <td>${stC}</td><td>${perm}</td><td style="text-align:right">${gerais.length}</td></tr>`;
+    }).join('');
+  const avisos = [];
+  if (semIBS) avisos.push(`<b>${semIBS} de ${CT.itens.length} itens</b> foram emitidos SEM o grupo IBS/CBS exigido a partir de 2026 — o ERP do cliente ainda não classifica.`);
+  const hashes = new Set(lista.filter(n => n.consulta && n.consulta.geral_hash).map(n => n.consulta.geral_hash));
+  if (hashes.size && ![...hashes].every(h => h === CT_BASE_INFO.hash))
+    avisos.push('<b>A tabela do portal mudou</b> em relação à base embutida (versão ' + CT_BASE_INFO.hash.slice(0,8) + ') — os PERMITIDO consultados já refletem a versão nova; a base geral do app precisa de atualização.');
+  if (CT.erros.length) avisos.push('Arquivos ignorados: ' + CT.erros.join(' · '));
+  $id('ct-aviso').innerHTML = avisos.map(a => `<div class="aviso-amarelo" style="margin-top:10px">${a}</div>`).join('');
+  $id('ct-hash-aviso').innerHTML = hashes.size && [...hashes].every(h => h === CT_BASE_INFO.hash)
+    ? ' · <span style="color:#1e8449">✓ versão confirmada no portal</span>' : '';
+}
+
+async function ctConsultar(forcar){
+  const alvos = Object.values(CT.ncms).filter(n => /^\d{8}$/.test(n.ncm) && (forcar || !n.consulta || n.consulta.erro));
+  if (!alvos.length){ toast('Nada a consultar — todos os NCMs já têm resposta.'); return; }
+  let feito = 0;
+  for (const n of alvos){
+    $id('ct-progresso').textContent = `consultando ${++feito}/${alvos.length} — ${ctNCM(n.ncm)}…`;
+    try {
+      const r = await fetch(`${SUPA_URL}/functions/v1/cff-consulta`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': `Bearer ${APP.token || SUPA_KEY}` },
+        body: JSON.stringify({ ncm: n.ncm, dfeType: n.dfe, forcar })
+      });
+      n.consulta = await r.json();
+      if (!r.ok && !n.consulta.erro) n.consulta = { erro: 'HTTP ' + r.status };
+    } catch(e){ n.consulta = { erro: e.message }; }
+    ctRender();
+    if (feito < alvos.length) await new Promise(r => setTimeout(r, 1000)); // cadência de 1 req/s
+  }
+  $id('ct-progresso').textContent = '';
+  toast(`Consulta concluída: ${alvos.length} NCM(s).`);
+}
+
+function ctExportCSV(){
+  const lista = Object.values(CT.ncms).sort((a,b) => b.valor - a.valor);
+  const total = lista.reduce((s,a) => s + a.valor, 0) || 1;
+  const L = ['ncm;dfe;qtd_itens;valor;pct_valor;produtos;consulta;permitidos'];
+  for (const n of lista){
+    const c = n.consulta || {};
+    const perm = (c.permitidos || []).map(p => `${p.cclasstrib} (Anexo ${p.anexo} Item ${p.item})`).join(' | ');
+    L.push([n.ncm, n.dfe, n.qtd, n.valor.toFixed(2).replace('.',','), (n.valor/total*100).toFixed(2).replace('.',','),
+      [...n.produtos].join(' | ').replace(/;/g,','), c.erro ? 'erro' : (c.origem || 'não consultado'), perm || (c.consultado_em ? 'só regra geral' : '')].join(';'));
+  }
+  const blob = new Blob(['\uFEFF' + L.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'classificacao_rtc.csv'; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+</script>
+</body>
+</html>
