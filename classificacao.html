@@ -43,7 +43,7 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
 </head>
 <body>
 <div class="topo">
-  <b>🏷️ Classificação RTC</b> <span class="badge">v1.3.0</span>
+  <b>🏷️ Classificação RTC</b> <span class="badge">v1.4.0</span>
   <a href="index.html">← Análise Tributária Pro</a>
   <span style="flex:1"></span>
   <a href="#" id="ct-sair" style="display:none" onclick="ctSair();return false">Sair</a>
@@ -81,10 +81,6 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
         <button class="btn" id="ct-btn-csv" onclick="ctExportCSV()">⬇ Exportar CSV</button>
         <span id="ct-progresso" class="muted" style="align-self:center"></span>
       </div>
-      <div class="card" id="ct-filtros-box" style="display:none; margin-top:12px">
-        <b>Perfil da operação</b> <span class="muted">(os filtros do portal, aplicados localmente — não geram novas consultas)</span>
-        <div id="ct-filtros" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-top:8px"></div>
-      </div>
       <div class="card" id="ct-resultado" style="display:none; margin-top:12px; overflow-x:auto">
         <table id="ct-tab" class="tabela"></table>
       </div>
@@ -100,7 +96,8 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
 </main>
 
 <details class="versoes"><summary>Versões</summary>
-  <table><tr><td><b>v1.3.0</b> <span class="badge ok">atual</span></td><td>02/08/2026</td><td>A classificação passou a ser <b>automática com revisão por exceção</b>. Três novidades: o <b>perfil da operação é gravado por cliente</b> — marcado uma vez (coletor incentivado, cooperativa etc.), vale para todos os lotes futuros e é aplicado sozinho; entram <b>regras por CFOP</b>, deduções diretas do XML sem julgamento (toda operação 7xxx é exportação e classifica imunidade; devoluções são marcadas para espelhar a origem); e cada produto recebe um <b>grau de confiança</b>: verde (decisão gravada, PERMITIDO único, CFOP de exportação ou perfil que fecha num só código), amarelo (regra geral ou múltiplos candidatos — o primeiro é assumido) e vermelho (sinais conflitantes, como item com grupo de ISS numa NF-e, que o sistema se recusa a chutar). O botão <b>"Só o que pede a minha atenção"</b> esconde os verdes, e a gravação ganhou o <b>"Gravar só alta confiança"</b>. A origem e o grau de cada decisão são gravados no banco e <b>saem no relatório do cliente</b> — o que foi dedução automática e o que foi análise do contador ficam distinguidos, prontos para a reformulação do relatório que vem a seguir. Requer <b>setup_ct_v3.sql</b>.</td></tr>
+  <table><tr><td><b>v1.4.0</b> <span class="badge ok">atual</span></td><td>02/08/2026</td><td>A grade da consulta passou a ser <b>separada por cliente</b>, cada bloco com o seu próprio <b>Perfil da operação</b> editável no cabeçalho (gravado no banco ao mudar) — porque o mesmo NCM pode receber classificação diferente em cada cliente: um coletor incentivado e um comércio comum vendendo o mesmo produto têm sugestões distintas, lado a lado na mesma tela. O filtro global antigo foi aposentado. A consulta ao portal continua econômica: NCMs repetidos entre clientes são consultados <b>uma única vez</b> e o resultado é replicado a todos, já que a resposta do portal depende do NCM, não do cliente — quem muda a leitura é o perfil. O percentual de valor agora é relativo ao total <b>do cliente</b>, o CSV ganhou as colunas de cliente e CNPJ, e o bloco de decisões exibe o perfil como selos, apontando a edição para a consulta.</td></tr>
+  <tr><td><b>v1.3.0</b></td><td>02/08/2026</td><td>A classificação passou a ser <b>automática com revisão por exceção</b>. Três novidades: o <b>perfil da operação é gravado por cliente</b> — marcado uma vez (coletor incentivado, cooperativa etc.), vale para todos os lotes futuros e é aplicado sozinho; entram <b>regras por CFOP</b>, deduções diretas do XML sem julgamento (toda operação 7xxx é exportação e classifica imunidade; devoluções são marcadas para espelhar a origem); e cada produto recebe um <b>grau de confiança</b>: verde (decisão gravada, PERMITIDO único, CFOP de exportação ou perfil que fecha num só código), amarelo (regra geral ou múltiplos candidatos — o primeiro é assumido) e vermelho (sinais conflitantes, como item com grupo de ISS numa NF-e, que o sistema se recusa a chutar). O botão <b>"Só o que pede a minha atenção"</b> esconde os verdes, e a gravação ganhou o <b>"Gravar só alta confiança"</b>. A origem e o grau de cada decisão são gravados no banco e <b>saem no relatório do cliente</b> — o que foi dedução automática e o que foi análise do contador ficam distinguidos, prontos para a reformulação do relatório que vem a seguir. Requer <b>setup_ct_v3.sql</b>.</td></tr>
   <tr><td><b>v1.2.0</b></td><td>02/08/2026</td><td>Fase 2: nasce a seção <b>Decisões por produto</b> — a relação oficial cliente + produto com o <b>cClassTrib decidido pelo contador</b>. Cada produto do lote aparece com a sugestão do sistema pré-selecionada (ou a decisão já gravada, com autor e data), num seletor agrupado por CST com as reduções à vista; escolhas de <b>suspensão ou diferimento</b> abrem automaticamente o campo da <b>tributação regular</b>, porque a nota fiscal exige informar como a operação seria tributada sem o benefício — o par dobrado. As decisões são gravadas por cliente no banco compartilhado (com quem decidiu e quando) e reaparecem nos próximos lotes do mesmo cliente. Dois entregáveis saem dali: o <b>Relatório para o cliente</b>, peça timbrada pronta para impressão com produto, classificação, tratamento, redução, fundamento e pendências; e o <b>De-para para o ERP</b>, CSV com cProd → CST/cClassTrib (e o par regular quando houver), o insumo que falta ao emissor do cliente para preencher o grupo IBS/CBS. Requer rodar o <b>setup_ct_v2.sql</b> (duas colunas novas na tabela de decisões).</td></tr>
   <tr><td><b>v1.1.0</b></td><td>02/08/2026</td><td>A grade passou a trazer a <b>classificação IBS/CBS sugerida pelo sistema</b> para cada NCM, com o percentual de redução de alíquota quando a classificação o tiver. A regra de sugestão, em ordem: (1) havendo enquadramento <b>PERMITIDO</b> específico do NCM, ele é a sugestão; (2) senão, se o perfil da operação selecionado nos filtros apontar para até três classificações, elas são sugeridas; (3) senão, vale a regra geral 000001 — tributação integral, CST 000. Cada sugestão exibe o código, o CST, o tratamento, a redução CBS/IBS quando houver e a origem da sugestão — e segue sendo <b>sugestão</b>: a decisão formal por produto é a fase 2. A coluna de valor foi renomeada para <b>"Valor · % do lote"</b> deixando claro que aquele percentual é o peso do NCM no faturamento do lote importado (prioridade de análise), não um percentual tributário. O CSV exporta a sugestão.</td></tr>
   <tr><td><b>v1.0.0</b></td><td>01/08/2026</td><td>Primeira versão como aplicativo
@@ -210,7 +207,6 @@ function ctInit(){
   drop.ondragover = e => { e.preventDefault(); drop.style.background = '#eaf2f8'; };
   drop.ondragleave = () => drop.style.background = '';
   drop.ondrop = e => { e.preventDefault(); drop.style.background = ''; ctProcessar(e.dataTransfer.files); };
-  ctFiltrosRender();
 }
 
 function ctTx(el, tag){ if(!el) return ''; const n = el.getElementsByTagNameNS(CT_NS, tag)[0]; return n ? n.textContent.trim() : ''; }
@@ -242,11 +238,11 @@ async function ctProcessar(files){
     .map(f => f.text().then(x => ctLerXML(f.name, x)).catch(e => CT.erros.push(f.name + ': ' + e.message))));
   const agg = {};
   for (const i of CT.itens){
-    const k = i.ncm || '(sem NCM)';
-    agg[k] = agg[k] || { ncm: k, dfe: i.dfe, qtd: 0, valor: 0, produtos: new Set(), emitentes: new Set(), consulta: (CT.ncms[k]||{}).consulta || null };
+    const k = (i.cnpjEmit || '?') + '|' + (i.ncm || '(sem NCM)');
+    agg[k] = agg[k] || { cnpj: i.cnpjEmit, nome: i.nomeEmit, ncm: i.ncm || '(sem NCM)', dfe: i.dfe, qtd: 0, valor: 0,
+      produtos: new Set(), consulta: (CT.ncms[k]||{}).consulta || null };
     agg[k].qtd++; agg[k].valor += i.vProd;
     if (agg[k].produtos.size < 3) agg[k].produtos.add(i.xProd.slice(0, 45));
-    agg[k].emitentes.add(i.nomeEmit.split(' ')[0]);
     if (i.dfe === 'NFCE') agg[k].dfe = agg[k].dfe === 'NFE' ? 'NFE' : 'NFCE';
   }
   CT.ncms = agg;
@@ -254,28 +250,6 @@ async function ctProcessar(files){
   ctDecCarregar();
 }
 
-function ctFiltroSel(){
-  const escolhas = ['ct-f1','ct-f2','ct-f3','ct-f4'].map(id => $id(id) ? $id(id).value : '');
-  let permitido = null;
-  for (const v of escolhas){
-    if (!v) continue;
-    const f = CT_FILTROS.find(x => x.v === v);
-    if (!f) continue;
-    permitido = permitido === null ? new Set(f.p) : new Set([...permitido].filter(c => f.p.includes(c)));
-  }
-  return permitido; // null = todos
-}
-
-function ctFiltrosRender(){
-  const box = $id('ct-filtros');
-  const qs = ['q_1','q_2','q_3','q_4'];
-  const rot = { q_1:'1 · Fornecedor é', q_2:'2 · Bem identificado como', q_3:'3 · Regime especial / incentivado', q_4:'4 · Operação relacionada a' };
-  box.innerHTML = qs.map((q, i) => `<label style="font-size:.82rem">${rot[q]}<br>
-    <select id="ct-f${i+1}" style="width:100%" onchange="ctRender()">
-      <option value="">(não listado / todos)</option>
-      ${CT_FILTROS.filter(f => f.q === q).map(f => `<option value="${f.v}">${f.r}</option>`).join('')}
-    </select></label>`).join('');
-}
 
 function ctPct(p){
   if (!p) return '';
@@ -298,41 +272,73 @@ function ctSugestao(n, filtro){
 const ctFmt = v => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const ctNCM = n => n && n.length === 8 ? n.slice(0,4) + '.' + n.slice(4,6) + '.' + n.slice(6) : (n || '—');
 
+function ctPerfilChips(cnpj){
+  const pf = CT_PERFIS[cnpj];
+  const rots = pf ? ['q1','q2','q3','q4'].map(k => pf[k]).filter(Boolean)
+    .map(v => (CT_FILTROS.find(f => f.v === v) || {}).r).filter(Boolean) : [];
+  return rots.length ? rots.map(r => `<span class="badge ok">${r}</span>`).join(' ') : '<span class="muted">perfil não definido — regra geral</span>';
+}
+function ctPfSel(cnpj, n, q){
+  const pf = CT_PERFIS[cnpj] || {};
+  const rot = { q_1:'1 · Fornecedor é', q_2:'2 · Bem', q_3:'3 · Regime', q_4:'4 · Operação' };
+  return `<label style="font-size:.76rem">${rot[q]}<br><select id="ct-pf${n}-${cnpj}" style="width:100%" onchange="ctPerfilSalvar('${cnpj}')">
+    <option value="">(não listado)</option>
+    ${CT_FILTROS.filter(f => f.q === q).map(f => `<option value="${f.v}" ${pf['q'+n] === f.v ? 'selected' : ''}>${f.r}</option>`).join('')}
+  </select></label>`;
+}
+
 function ctRender(){
-  const lista = Object.values(CT.ncms).sort((a,b) => b.valor - a.valor);
+  const lista = Object.values(CT.ncms);
   const tem = lista.length > 0;
   $id('ct-acoes').style.display = tem ? 'flex' : 'none';
-  $id('ct-filtros-box').style.display = tem ? 'block' : 'none';
   $id('ct-resultado').style.display = tem ? 'block' : 'none';
   if (!tem){ $id('ct-kpis').innerHTML = ''; return; }
   const total = lista.reduce((s,a) => s + a.valor, 0);
   const semIBS = CT.itens.filter(i => !i.temIBSCBS).length;
   const consultados = lista.filter(n => n.consulta && !n.consulta.erro).length;
+  const clientes = [...new Set(lista.map(n => n.cnpj))];
   const kpi = (v,l) => `<div class="kpi-card"><div class="kpi-v">${v}</div><div class="kpi-l">${l}</div></div>`;
-  $id('ct-kpis').innerHTML = kpi(CT.itens.length,'itens') + kpi(lista.length,'NCMs únicos')
+  $id('ct-kpis').innerHTML = kpi(clientes.length,'clientes') + kpi(CT.itens.length,'itens')
+    + kpi(new Set(lista.map(n => n.ncm)).size,'NCMs únicos')
     + kpi('R$ ' + ctFmt(total),'valor dos itens') + kpi(semIBS,'itens sem grupo IBS/CBS na nota')
-    + kpi(consultados + '/' + lista.length,'NCMs consultados');
-  const filtro = ctFiltroSel();
-  const gerais = filtro === null ? CT_BASE : CT_BASE.filter(c => filtro.has(c.c));
-  $id('ct-tab').innerHTML = `<tr><th>NCM</th><th>Doc</th><th>Produtos (amostra)</th><th style="text-align:right">Valor · % do lote</th>
-      <th>Consulta</th><th>PERMITIDO (específico do NCM)</th><th>Classificação IBS/CBS sugerida</th><th style="text-align:right">Gerais aplicáveis</th></tr>`
-    + lista.map(n => {
-      const c = n.consulta;
-      let stC = '<span class="muted">— não consultado</span>', perm = '<span class="muted">—</span>';
-      if (c && c.erro) stC = `<span style="color:#b03a2e">erro: ${c.erro}</span>`;
-      else if (c){
-        const idadeH = Math.round((Date.now() - new Date(c.consultado_em).getTime()) / 36e5);
-        stC = `${c.origem === 'portal' ? '🌐 portal' : '💾 cache'} · há ${idadeH} h`;
-        perm = (c.permitidos && c.permitidos.length)
-          ? c.permitidos.map(p => `<div style="margin:2px 0"><span class="badge ok">${p.cclasstrib}</span>
-              <b>Anexo ${p.anexo} · Item ${p.item}</b> — ${p.tratamento}${p.percentuais ? ' (' + p.percentuais + ')' : ''}
-              <br><span class="muted" style="font-size:.78rem">${p.descricao}${p.condicao ? ' · Condição: ' + p.condicao : ''}</span></div>`).join('')
-          : '<span class="muted">nenhum — só regra geral</span>';
-      }
-      return `<tr><td><b>${ctNCM(n.ncm)}</b></td><td>${n.dfe}</td><td>${[...n.produtos].join('<br>')}</td>
-        <td style="text-align:right">${ctFmt(n.valor)}<br><span class="muted">${total ? (n.valor/total*100).toFixed(1) : 0}%</span></td>
-        <td>${stC}</td><td>${perm}</td><td>${(s => s.lista.map(x => `<div style="margin:2px 0"><span class="badge ok">${x.cod}</span> CST ${x.cst} — ${x.trat}${x.pct ? `<br><b style="color:#1a5276">redução ${x.pct}</b>` : ''}</div>`).join('') + `<div class="muted" style="font-size:.74rem">${s.origem} · sugestão do sistema — a decisão é sua (fase 2)</div>`)(ctSugestao(n, filtro))}</td><td style="text-align:right">${gerais.length}</td></tr>`;
-    }).join('');
+    + kpi(consultados + '/' + lista.length,'linhas consultadas');
+  const porCli = {};
+  for (const n of lista) (porCli[n.cnpj] = porCli[n.cnpj] || { nome: n.nome, linhas: [] }).linhas.push(n);
+  $id('ct-tab').innerHTML = Object.entries(porCli).map(([cnpj, g]) => {
+    const pfSet = ctPerfilSet(cnpj);
+    const gerais = pfSet === null ? CT_BASE : CT_BASE.filter(c => pfSet.has(c.c));
+    const totCli = g.linhas.reduce((s,a) => s + a.valor, 0);
+    return `<tr><td colspan="7" style="background:#f8fafb; border-radius:8px">
+        <b>${g.nome}</b> <span class="muted">CNPJ ${cnpj}</span>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin-top:6px">
+          ${ctPfSel(cnpj,1,'q_1')}${ctPfSel(cnpj,2,'q_2')}${ctPfSel(cnpj,3,'q_3')}${ctPfSel(cnpj,4,'q_4')}
+        </div>
+        <div class="muted" style="font-size:.76rem; margin-top:4px">Perfil da operação DESTE cliente — gravado no banco ao mudar,
+        vale para todos os lotes e classifica sozinho; o mesmo NCM pode receber classificação diferente em outro cliente.</div>
+      </td></tr>
+      <tr><th>NCM</th><th>Doc</th><th>Produtos (amostra)</th><th style="text-align:right">Valor · % do cliente</th>
+        <th>Consulta</th><th>PERMITIDO (específico do NCM)</th><th>Classificação IBS/CBS sugerida</th></tr>`
+      + g.linhas.sort((a,b) => b.valor - a.valor).map(n => {
+        const c = n.consulta;
+        let stC = '<span class="muted">— não consultado</span>', perm = '<span class="muted">—</span>';
+        if (c && c.erro) stC = `<span style="color:#b03a2e">erro: ${c.erro}</span>`;
+        else if (c){
+          const idadeH = Math.round((Date.now() - new Date(c.consultado_em).getTime()) / 36e5);
+          stC = `${c.origem === 'portal' ? '🌐 portal' : '💾 cache'} · há ${idadeH} h`;
+          perm = (c.permitidos && c.permitidos.length)
+            ? c.permitidos.map(p => `<div style="margin:2px 0"><span class="badge ok">${p.cclasstrib}</span>
+                <b>Anexo ${p.anexo} · Item ${p.item}</b> — ${p.tratamento}${p.percentuais ? ' (' + p.percentuais + ')' : ''}
+                <br><span class="muted" style="font-size:.78rem">${p.descricao}${p.condicao ? ' · Condição: ' + p.condicao : ''}</span></div>`).join('')
+            : '<span class="muted">nenhum — só regra geral</span>';
+        }
+        const s = ctSugestao(n, pfSet);
+        return `<tr><td><b>${ctNCM(n.ncm)}</b></td><td>${n.dfe}</td><td>${[...n.produtos].join('<br>')}</td>
+          <td style="text-align:right">${ctFmt(n.valor)}<br><span class="muted">${totCli ? (n.valor/totCli*100).toFixed(1) : 0}%</span></td>
+          <td>${stC}</td><td>${perm}</td>
+          <td>${s.lista.map(x => `<div style="margin:2px 0"><span class="badge ok">${x.cod}</span> CST ${x.cst} — ${x.trat}${x.pct ? `<br><b style="color:#1a5276">redução ${x.pct}</b>` : ''}</div>`).join('')
+            + `<div class="muted" style="font-size:.74rem">${s.origem} · ${gerais.length} gerais no perfil · sugestão — a decisão é sua</div>`}</td></tr>`;
+      }).join('');
+  }).join('');
   const avisos = [];
   if (semIBS) avisos.push(`<b>${semIBS} de ${CT.itens.length} itens</b> foram emitidos SEM o grupo IBS/CBS exigido a partir de 2026 — o ERP do cliente ainda não classifica.`);
   const hashes = new Set(lista.filter(n => n.consulta && n.consulta.geral_hash).map(n => n.consulta.geral_hash));
@@ -342,28 +348,37 @@ function ctRender(){
   $id('ct-aviso').innerHTML = avisos.map(a => `<div class="aviso-amarelo" style="margin-top:10px">${a}</div>`).join('');
   $id('ct-hash-aviso').innerHTML = hashes.size && [...hashes].every(h => h === CT_BASE_INFO.hash)
     ? ' · <span style="color:#1e8449">✓ versão confirmada no portal</span>' : '';
+  ctDecRender();
 }
 
 async function ctConsultar(forcar){
-  const alvos = Object.values(CT.ncms).filter(n => /^\d{8}$/.test(n.ncm) && (forcar || !n.consulta || n.consulta.erro));
-  if (!alvos.length){ toast('Nada a consultar — todos os NCMs já têm resposta.'); return; }
+  const linhas = Object.values(CT.ncms).filter(n => /^\d{8}$/.test(n.ncm));
+  const unicos = {};
+  for (const n of linhas){
+    const k = n.ncm + '|' + n.dfe;
+    if (forcar || !n.consulta || n.consulta.erro) unicos[k] = unicos[k] || { ncm: n.ncm, dfe: n.dfe };
+  }
+  const alvos = Object.values(unicos);
+  if (!alvos.length){ toast('Nada a consultar — todas as linhas já têm resposta.'); return; }
   let feito = 0;
-  for (const n of alvos){
-    $id('ct-progresso').textContent = `consultando ${++feito}/${alvos.length} — ${ctNCM(n.ncm)}…`;
+  for (const a of alvos){
+    $id('ct-progresso').textContent = `consultando ${++feito}/${alvos.length} — ${ctNCM(a.ncm)}…`;
+    let resp;
     try {
       const r = await fetch(`${SUPA_URL}/functions/v1/cff-consulta`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': `Bearer ${APP.token || SUPA_KEY}` },
-        body: JSON.stringify({ ncm: n.ncm, dfeType: n.dfe, forcar })
+        body: JSON.stringify({ ncm: a.ncm, dfeType: a.dfe, forcar })
       });
-      n.consulta = await r.json();
-      if (!r.ok && !n.consulta.erro) n.consulta = { erro: 'HTTP ' + r.status };
-    } catch(e){ n.consulta = { erro: e.message }; }
+      resp = await r.json();
+      if (!r.ok && !resp.erro) resp = { erro: 'HTTP ' + r.status };
+    } catch(e){ resp = { erro: e.message }; }
+    for (const n of linhas) if (n.ncm === a.ncm && n.dfe === a.dfe) n.consulta = resp;
     ctRender();
     if (feito < alvos.length) await new Promise(r => setTimeout(r, 1000)); // cadência de 1 req/s
   }
   $id('ct-progresso').textContent = '';
-  toast(`Consulta concluída: ${alvos.length} NCM(s).`);
+  toast(`Consulta concluída: ${alvos.length} NCM(s) — resultado aplicado a todos os clientes do lote.`);
 }
 
 let CT_DEC = {}, CT_PRODS = [];
@@ -414,7 +429,7 @@ function ctClassificar(p){
   const dev = cfops.filter(c => /^[1256](201|202|410|411|660|661|662)$/.test(c));
   if (dev.length) return { cod: '000001', nivel: 'rev',
     origem: 'devolução (CFOP ' + dev.join(', ') + ') — a classificação deve espelhar a operação de origem' };
-  const n = CT.ncms[p.ncm];
+  const n = CT.ncms[p.cnpj + '|' + p.ncm];
   const permitidos = n && n.consulta ? (n.consulta.permitidos || []) : [];
   if (permitidos.length === 1) return { cod: permitidos[0].cclasstrib, nivel: 'alta',
     origem: 'PERMITIDO específico do NCM — Anexo ' + permitidos[0].anexo + ' · Item ' + permitidos[0].item };
@@ -435,7 +450,7 @@ async function ctPerfilSalvar(cnpj){
     q3: $id('ct-pf3-' + cnpj).value || null, q4: $id('ct-pf4-' + cnpj).value || null,
     gravado_por: APP.user ? APP.user.email : null, gravado_em: new Date().toISOString() };
   CT_PERFIS[cnpj] = pf;
-  ctDecRender();
+  ctRender();
   try { await supa('POST', 'atp_ct_perfil', { params: { on_conflict: 'cnpj_cliente' }, body: pf }); toast('Perfil do cliente gravado — vale para todos os lotes futuros.'); }
   catch(e){ toast('Perfil aplicado na tela, mas não gravou no banco: ' + (e.message||e)); }
 }
@@ -452,7 +467,7 @@ async function ctDecCarregar(){
       CT_PERFIS = {}; for (const p of pfs) CT_PERFIS[p.cnpj_cliente] = p;
     } catch(e){ console.error('decisões:', e); toast('Aviso: não consegui carregar as decisões gravadas (' + (e.message||e) + ')'); }
   }
-  ctDecRender();
+  ctRender();
 }
 
 function ctSelClass(id, val){
@@ -480,14 +495,6 @@ function ctDecRender(){
         nAten = info.length - nAlta;
   const porCli = {};
   info.forEach(x => (porCli[x.p.cnpj] = porCli[x.p.cnpj] || { nome: x.p.nome, linhas: [] }).linhas.push(x));
-  const pfSel = (cnpj, n, q) => {
-    const pf = CT_PERFIS[cnpj] || {};
-    const rot = { q_1:'1 · Fornecedor é', q_2:'2 · Bem', q_3:'3 · Regime', q_4:'4 · Operação' };
-    return `<label style="font-size:.76rem">${rot[q]}<br><select id="ct-pf${n}-${cnpj}" style="width:100%" onchange="ctPerfilSalvar('${cnpj}')">
-      <option value="">(não listado)</option>
-      ${CT_FILTROS.filter(f => f.q === q).map(f => `<option value="${f.v}" ${pf['q'+n] === f.v ? 'selected' : ''}>${f.r}</option>`).join('')}
-    </select></label>`;
-  };
   $id('ct-dec-lista').innerHTML = `
     <div style="display:flex; gap:8px; margin:8px 0; align-items:center; flex-wrap:wrap">
       <button class="btn ${CT_VIS==='todos'?'solid':''}" onclick="ctVis('todos')">Todos (${info.length})</button>
@@ -503,10 +510,7 @@ function ctDecRender(){
         onclick="comBotao('ct-dec-alta-${cnpj}','Gravando',()=>ctDecSalvar('${cnpj}',true))">Gravar só alta confiança (${g.linhas.filter(x=>x.r.nivel==='alta').length})</button>
       <button class="btn" onclick="ctRelatorio('${cnpj}')">🖨 Relatório</button>
       <button class="btn" onclick="ctDeParaCSV('${cnpj}')">⬇ De-para</button>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin:8px 0; background:#f8fafb; border-radius:8px; padding:8px">
-        <div style="grid-column:1/-1" class="muted" style="font-size:.76rem">Perfil da operação do cliente — gravado uma vez, vale para todos os lotes:</div>
-        ${pfSel(cnpj,1,'q_1')}${pfSel(cnpj,2,'q_2')}${pfSel(cnpj,3,'q_3')}${pfSel(cnpj,4,'q_4')}
-      </div>
+      <div style="margin:8px 0" class="muted">Perfil da operação: ${ctPerfilChips(cnpj)} <span style="font-size:.74rem">(edita-se no bloco da consulta, acima)</span></div>
       ${g.linhas.map(({p, i, r}) => {
         const mostra = CT_VIS === 'todos' || (r.nivel !== 'alta' && !r.gravada);
         const [dot, bg] = [CORES[r.nivel][0], CORES[r.nivel][1] || '#fff'];
@@ -608,13 +612,13 @@ function ctRelatorio(cnpj){
 function ctExportCSV(){
   const lista = Object.values(CT.ncms).sort((a,b) => b.valor - a.valor);
   const total = lista.reduce((s,a) => s + a.valor, 0) || 1;
-  const L = ['ncm;dfe;qtd_itens;valor;pct_valor_lote;produtos;consulta;permitidos;sugestao'];
+  const L = ['cliente;cnpj;ncm;dfe;qtd_itens;valor;pct_valor_lote;produtos;consulta;permitidos;sugestao'];
   for (const n of lista){
     const c = n.consulta || {};
     const perm = (c.permitidos || []).map(p => `${p.cclasstrib} (Anexo ${p.anexo} Item ${p.item})`).join(' | ');
-    L.push([n.ncm, n.dfe, n.qtd, n.valor.toFixed(2).replace('.',','), (n.valor/total*100).toFixed(2).replace('.',','),
+    L.push([String(n.nome||'').replace(/;/g,','), n.cnpj, n.ncm, n.dfe, n.qtd, n.valor.toFixed(2).replace('.',','), (n.valor/total*100).toFixed(2).replace('.',','),
       [...n.produtos].join(' | ').replace(/;/g,','), c.erro ? 'erro' : (c.origem || 'não consultado'), perm || (c.consultado_em ? 'só regra geral' : ''),
-      (s => s.lista.map(x => x.cod + (x.pct ? ' (redução ' + x.pct + ')' : '')).join(' | ') + ' [' + s.origem + ']')(ctSugestao(n, ctFiltroSel()))].join(';'));
+      (s => s.lista.map(x => x.cod + (x.pct ? ' (redução ' + x.pct + ')' : '')).join(' | ') + ' [' + s.origem + ']')(ctSugestao(n, ctPerfilSet(n.cnpj)))].join(';'));
   }
   const blob = new Blob(['\uFEFF' + L.join('\r\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
