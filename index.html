@@ -241,7 +241,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.14.1</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.15.0</span></div>
       <div class="card" style="margin-bottom:18px">
         <h3>Empresas cadastradas para análise</h3>
         <div style="overflow-x:auto"><table>
@@ -610,7 +610,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.14.1</b> <span class="badge ok">atual</span></td><td>01/08/2026</td><td>O módulo de Classificação RTC passou a viver em um <b>aplicativo próprio</b> — o arquivo <b>classificacao.html</b>, no mesmo repositório — para que cada um tenha ciclo de atualização independente: subir uma versão nova de um nunca interrompe nem arrisca o outro. A separação é só de arquivo: o login é o mesmo (a sessão é compartilhada automaticamente por estarem no mesmo endereço), os usuários são os mesmos e o cadastro de empresas é o mesmo banco. O item do menu "Classificação RTC ↗" agora leva ao aplicativo irmão, e lá existe o caminho de volta. Tudo o que a v7.14.0 descreveu sobre o módulo continua valendo — apenas mudou de casa, começando lá como v1.0.0.</td></tr>
+                    <tr><td><b>v7.15.0</b> <span class="badge ok">atual</span></td><td>02/08/2026</td><td>O <b>Parecer</b> passou a analisar as <b>notas fiscais do período do relatório</b>, em ponte com o aplicativo Classificação Tributária RTC. Antes da assinatura, o documento ganha a seção <b>"Produtos vendidos no período e classificação para a Reforma (IBS/CBS)"</b>: a relação dos produtos consolidados do ano-base (código, NCM, CFOP, valor e participação), cada um com o CST e o cClassTrib decididos pelo contador — tratamento, percentuais de redução, par da tributação regular quando houver, grau de confiança e autor — além do valor com tratamento diferenciado, dos pendentes de decisão e dos totais por CFOP como régua de conferência contra o livro de saídas. Os dados vêm das notas gravadas pelo botão "Gravar notas do período" do app de Classificação e das decisões por produto; a IA recebe o mesmo resumo em números no seu insumo (notasPeriodoRTC) para redigir a análise, e como sempre <b>nenhum valor é gerado pela IA</b> — a tabela é calculada pelo sistema. Sem notas gravadas, o parecer orienta o caminho e, havendo decisões, lista as classificações sem valores. Requer o setup_ct_v5.sql (compartilhado com a v1.8.0 da Classificação).</td></tr>
+          <tr><td><b>v7.14.1</b></td><td>01/08/2026</td><td>O módulo de Classificação RTC passou a viver em um <b>aplicativo próprio</b> — o arquivo <b>classificacao.html</b>, no mesmo repositório — para que cada um tenha ciclo de atualização independente: subir uma versão nova de um nunca interrompe nem arrisca o outro. A separação é só de arquivo: o login é o mesmo (a sessão é compartilhada automaticamente por estarem no mesmo endereço), os usuários são os mesmos e o cadastro de empresas é o mesmo banco. O item do menu "Classificação RTC ↗" agora leva ao aplicativo irmão, e lá existe o caminho de volta. Tudo o que a v7.14.0 descreveu sobre o módulo continua valendo — apenas mudou de casa, começando lá como v1.0.0.</td></tr>
           <tr><td><b>v7.14.0</b></td><td>01/08/2026</td><td>Nasce o módulo <b>Classificação Tributária RTC</b> (fase 1 de 3), no menu ao lado da Reforma. Ele importa os XMLs de NF-e e NFC-e do cliente, deduplica os NCMs ponderando pelo valor e consulta cada um no Conformidade Fácil da SVRS através da Edge Function <b>cff-consulta</b> — que traz os enquadramentos <b>PERMITIDOS</b> específicos do NCM com Anexo, Item, condição e percentuais da LC 214/2025, além do carimbo de origem e idade da resposta. A tabela geral de 90 classificações vem embutida no aplicativo com versão própria, e a cada consulta o hash devolvido pelo portal é comparado ao embutido: divergiu, a tela avisa que a Receita alterou a tabela. O cache revalida <b>duas vezes por semana</b> (84 horas), com botão de reconsulta forçada que ignora tudo, e os quatro filtros de perfil de operação do portal rodam localmente, sem gerar novas consultas. A aba também denuncia itens emitidos sem o grupo IBS/CBS obrigatório desde 2026 e exporta o resultado em CSV. Requer rodar <b>setup_ct.sql</b> e publicar a função <b>cff-consulta</b> no Supabase. Fases seguintes: decisão por cliente+produto com relatório e de-para (F2) e monitor mensal de mudanças (F3).</td></tr>
           <tr><td><b>v7.13.6</b></td><td>01/08/2026</td><td>A importação do PGDAS-D passou a <b>conferir o acumulado da análise contra o RBA declarado</b> — a receita bruta acumulada no ano-calendário corrente que a própria declaração informa. Ao aplicar um lote, o aplicativo soma o que a análise tem de janeiro até o período mais recente importado e compara com o acumulado oficial; havendo diferença, um aviso nomeia os meses que não vieram no lote e podem carregar resíduo. O caso concreto: importações feitas <b>antes</b> da correção da v7.13.1 somavam em vez de substituir, e os valores dobrados ficaram <b>gravados no banco</b>; a correção posterior zera apenas os meses do lote em aplicação, de modo que os demais permaneciam inflados sem que nada acusasse. A régua do RBA fecha ao centavo com a soma dos meses declarados e denuncia o resíduo na hora. A solução, indicada no próprio aviso, é importar todos os PDFs do ano num único lote — cada mês do lote é zerado antes de receber o valor declarado.</td></tr>
           <tr><td><b>v7.13.5</b></td><td>01/08/2026</td><td>A revisão da importação do PGDAS-D passou a exibir corretamente as atividades de <b>exportação</b> e as de serviço com <b>retenção conjunta de ISS e INSS</b>. Esses enquadramentos já eram aplicados por baixo — a receita de "Revenda de mercadorias para o exterior" ia para a linha própria de exportação, imune a PIS/COFINS, ICMS e ISS e com limite próprio de 4,8 milhões —, mas a lista de blocos da tela não continha essas opções, e o navegador exibia a primeira da lista, "Anexo I — Sem ST", como se a exportação fosse tributada como venda interna. Pior: qualquer toque naquela caixa gravava de fato o bloco interno, sem caminho de volta, contaminando o RBT12 do mercado interno. As quatro opções passaram a existir na lista — que também serve aos destinos do Faturamento, do XML e do Demonstrativo — e, por segurança, um bloco que a lista não conheça passa a ser exibido tal como está, nunca mascarado pela primeira opção.</td></tr>
@@ -4415,12 +4416,14 @@ function rlParecer(){
     <p class="pp-p">${TX.parecer1}</p>
     ${TX.parecer2?`<p class="pp-p">${TX.parecer2}</p>`:''}
     <div class="pp-final">${TX.recomendacao}</div>
+    <div id="pp-notas"></div>
     <p class="pp-p">Colocamo-nos à disposição para esclarecimentos adicionais.</p>
     <div class="pp-assin"><p>Atenciosamente,</p><div style="height:14mm"></div><div class="pp-traco"></div><b>Responsável técnico</b><div class="hint">Artecon Artes Contábeis · Palhoça/SC</div></div>
     <div class="pp-notaia">Texto interpretativo ${RL._ia?'gerado por inteligência artificial':'padrão do sistema'} a partir dos valores calculados pelo motor do Análise Tributária Pro. Os números não são gerados pela IA. ${D.cen&&D.cen.semCreditos?'Cenários da Reforma sem créditos de IBS/CBS informados. ':(D.cen&&D.cen.proxyCompras?'Créditos de IBS/CBS estimados pelas compras de revenda da análise. ':'')}Valores em moeda constante do ano-base. Estimativas direcionais — não substituem a apuração formal de cada período.</div>
   </div></div>`;
 
   $id('rl-corpo').innerHTML = h;
+  rlNotasPeriodo();
 
   // ── GRÁFICOS ──
   const CORES = { verde:'#0f7a5a', gold:'#d99a2b', azul:'#1a5276', graf:'#2b3240', vinho:'#8c2f39' };
@@ -4461,6 +4464,97 @@ function rlParecer(){
   }
 }
 
+// ═══ Notas fiscais do período (ponte com o Classificação RTC) ═══
+const CT_MIN = [{"c":"000001","cst":"000","t":"Tributação integral"},{"c":"000003","cst":"000","t":"Tributação integral"},{"c":"000004","cst":"000","t":"Tributação integral"},{"c":"000005","cst":"000","t":"Tributação integral"},{"c":"200002","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200003","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200004","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200005","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200006","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200007","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200008","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200009","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200010","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200011","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200012","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200013","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200014","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200015","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200020","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200022","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200023","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200024","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200030","cst":"200","t":"Alíquota reduzida","p":{"CBS":"60","IBS":"60"}},{"c":"200031","cst":"200","t":"Alíquota reduzida","p":{"CBS":"60","IBS":"60"}},{"c":"200032","cst":"200","t":"Alíquota reduzida","p":{"CBS":"60","IBS":"60"}},{"c":"200033","cst":"200","t":"Alíquota reduzida","p":{"CBS":"60","IBS":"60"}},{"c":"200034","cst":"200","t":"Alíquota reduzida","p":{"CBS":"60","IBS":"60"}},{"c":"200035","cst":"200","t":"Alíquota reduzida","p":{"CBS":"60","IBS":"60"}},{"c":"200036","cst":"200","t":"Alíquota reduzida","p":{"CBS":"60","IBS":"60"}},{"c":"200038","cst":"200","t":"Alíquota reduzida","p":{"CBS":"60","IBS":"60"}},{"c":"200039","cst":"200","t":"Alíquota reduzida","p":{"CBS":"60","IBS":"60"}},{"c":"200043","cst":"200","t":"Alíquota reduzida","p":{"CBS":"60","IBS":"60"}},{"c":"200047","cst":"200","t":"Alíquota reduzida","p":{"CBS":"40","IBS":"40"}},{"c":"200053","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"200054","cst":"200","t":"Alíquota reduzida","p":{"CBS":"100","IBS":"100"}},{"c":"410001","cst":"410","t":"Imunidade e não incidência"},{"c":"410002","cst":"410","t":"Imunidade e não incidência"},{"c":"410003","cst":"410","t":"Imunidade e não incidência"},{"c":"410004","cst":"410","t":"Imunidade e não incidência"},{"c":"410005","cst":"410","t":"Imunidade e não incidência"},{"c":"410006","cst":"410","t":"Imunidade e não incidência"},{"c":"410007","cst":"410","t":"Imunidade e não incidência"},{"c":"410008","cst":"410","t":"Imunidade e não incidência"},{"c":"410009","cst":"410","t":"Imunidade e não incidência"},{"c":"410012","cst":"410","t":"Imunidade e não incidência"},{"c":"410013","cst":"410","t":"Imunidade e não incidência"},{"c":"410014","cst":"410","t":"Imunidade e não incidência"},{"c":"410016","cst":"410","t":"Imunidade e não incidência"},{"c":"410017","cst":"410","t":"Imunidade e não incidência"},{"c":"410019","cst":"410","t":"Imunidade e não incidência"},{"c":"410020","cst":"410","t":"Imunidade e não incidência"},{"c":"410026","cst":"410","t":"Imunidade e não incidência"},{"c":"410027","cst":"410","t":"Imunidade e não incidência"},{"c":"410029","cst":"410","t":"Imunidade e não incidência"},{"c":"410030","cst":"410","t":"Imunidade e não incidência"},{"c":"410031","cst":"410","t":"Imunidade e não incidência"},{"c":"410035","cst":"410","t":"Imunidade e não incidência"},{"c":"410999","cst":"410","t":"Imunidade e não incidência"},{"c":"510001","cst":"510","t":"Diferimento"},{"c":"515001","cst":"515","t":"Diferimento com redução de alíquota","p":{"CBS":"60","IBS":"60"}},{"c":"550001","cst":"550","t":"Suspensão"},{"c":"550002","cst":"550","t":"Suspensão"},{"c":"550003","cst":"550","t":"Suspensão"},{"c":"550004","cst":"550","t":"Suspensão"},{"c":"550005","cst":"550","t":"Suspensão"},{"c":"550006","cst":"550","t":"Suspensão"},{"c":"550007","cst":"550","t":"Suspensão"},{"c":"550008","cst":"550","t":"Suspensão"},{"c":"550009","cst":"550","t":"Suspensão"},{"c":"550010","cst":"550","t":"Suspensão"},{"c":"550011","cst":"550","t":"Suspensão"},{"c":"550012","cst":"550","t":"Suspensão"},{"c":"550013","cst":"550","t":"Suspensão"},{"c":"550014","cst":"550","t":"Suspensão"},{"c":"550015","cst":"550","t":"Suspensão"},{"c":"550016","cst":"550","t":"Suspensão"},{"c":"550017","cst":"550","t":"Suspensão"},{"c":"550018","cst":"550","t":"Suspensão"},{"c":"550019","cst":"550","t":"Suspensão"},{"c":"550020","cst":"550","t":"Suspensão"},{"c":"550021","cst":"550","t":"Suspensão"},{"c":"550022","cst":"550","t":"Suspensão"},{"c":"550023","cst":"550","t":"Suspensão"},{"c":"620001","cst":"620","t":"Tributação Monofásica"},{"c":"620002","cst":"620","t":"Tributação Monofásica"},{"c":"620003","cst":"620","t":"Tributação Monofásica"},{"c":"620004","cst":"620","t":"Tributação Monofásica"},{"c":"620005","cst":"620","t":"Tributação Monofásica"},{"c":"620006","cst":"620","t":"Tributação Monofásica"},{"c":"620007","cst":"620","t":"Tributação Monofásica"}];
+const ctMinDe = cod => CT_MIN.find(x => x.c === cod) || null;
+
+async function rlCtBuscar(){
+  const cnpj = limparCNPJ(RL.dados.cnpj), ano = RL.dados.ano;
+  const [periodos, decisoes] = await Promise.all([
+    supa('GET','atp_ct_periodo',{ params:{ cnpj_cliente:`eq.${cnpj}`, de:`lte.${ano}-12-31`, ate:`gte.${ano}-01-01`, order:'de.asc' } }).catch(()=>[]),
+    supa('GET','atp_ct_decisao',{ params:{ cnpj_cliente:`eq.${cnpj}`, select:'*' } }).catch(()=>[]),
+  ]);
+  const dec = {}; for (const d of (decisoes||[])) dec[d.cprod] = d;
+  // consolidar produtos de todos os lotes do ano (mesmo período regravado já substitui no banco)
+  const prod = {}, cfops = {}; let total = 0;
+  for (const p of (periodos||[])){
+    for (const i of (p.itens||[])){
+      const k = i.cprod + '|' + (i.ncm||'') + '|' + (i.cfop||'');
+      prod[k] = prod[k] || { ...i, valor:0, qtd:0 };
+      prod[k].valor = +(prod[k].valor + (+i.valor||0)).toFixed(2); prod[k].qtd += (+i.qtd||0);
+    }
+    for (const [c,x] of Object.entries(p.cfops||{})){
+      cfops[c] = cfops[c] || { qtd:0, valor:0 };
+      cfops[c].qtd += (+x.qtd||0); cfops[c].valor = +(cfops[c].valor + (+x.valor||0)).toFixed(2);
+    }
+    total = +(total + (+p.total||0)).toFixed(2);
+  }
+  const lista = Object.values(prod).sort((a,b)=>b.valor-a.valor).map(i=>{
+    const d = dec[i.cprod] || null, m = d ? ctMinDe(d.cclasstrib) : null;
+    return { ...i, dec:d, min:m };
+  });
+  const comBeneficio = lista.filter(i => i.min && !/^Tributação integral/i.test(i.min.t))
+    .reduce((s,i)=>s+i.valor,0);
+  RL._ct = { periodos: periodos||[], decisoes: decisoes||[], lista, cfops, total,
+    comBeneficio, pendentes: lista.filter(i=>!i.dec).length };
+  return RL._ct;
+}
+function rlCtResumoIA(){
+  const C = RL._ct; if (!C || !C.periodos.length) return null;
+  return {
+    cobertura: C.periodos.map(p=>({ de:p.de, ate:p.ate })),
+    totalNotas: C.total,
+    porCfop: Object.fromEntries(Object.entries(C.cfops).map(([c,x])=>[c, x.valor])),
+    produtosPendentesDeClassificacao: C.pendentes,
+    valorComBeneficioRTC: +C.comBeneficio.toFixed(2),
+    topProdutos: C.lista.slice(0,5).map(i=>({ produto:i.xprod, ncm:i.ncm, cfop:i.cfop, valor:i.valor,
+      classificacao: i.dec ? `CST ${i.dec.cst} · ${i.dec.cclasstrib}` : 'pendente',
+      tratamento: i.min ? i.min.t + (i.min.p ? ` (redução CBS ${i.min.p.CBS||'-'}% · IBS ${i.min.p.IBS||'-'}%)` : '') : '' })),
+  };
+}
+async function rlNotasPeriodo(){
+  const box = $id('pp-notas'); if (!box) return;
+  box.innerHTML = '<div class="hint">Carregando notas do período (Classificação RTC)…</div>';
+  try {
+    const C = await rlCtBuscar();
+    const br = d => String(d||'').split('-').reverse().join('/');
+    if (!C.periodos.length && !C.decisoes.length){
+      box.innerHTML = `<div class="pp-h2">Produtos vendidos e classificação para a Reforma (IBS/CBS)</div>
+        <div class="hint">Nenhuma nota gravada para ${RL.dados.ano}. No <a href="classificacao.html" target="_blank">Classificação RTC</a>,
+        importe os XMLs do cliente, ajuste o período e use <b>“Gravar notas do período p/ relatórios”</b> — a relação passa a compor este parecer.</div>`;
+      return;
+    }
+    const linhas = C.lista.map(i => `<tr>
+        <td>${esc(i.xprod)}<div class="hint">${esc(i.cprod)}</div></td>
+        <td>${i.ncm ? i.ncm.replace(/^(\d{4})(\d{2})(\d{2})$/,'$1.$2.$3') : '—'}</td>
+        <td>${esc(i.cfop||'—')}</td>
+        <td class="num">${fmtR(i.valor)}</td>
+        <td class="num">${C.total ? (i.valor/C.total*100).toFixed(1) : '—'}%</td>
+        <td>${i.dec ? `<b>CST ${esc(i.dec.cst)} · ${esc(i.dec.cclasstrib)}</b>${i.min ? '<br>'+esc(i.min.t) + (i.min.p ? ` — <b>redução CBS ${i.min.p.CBS||'-'}% · IBS ${i.min.p.IBS||'-'}%</b>` : '') : ''}${i.dec.cclasstrib_reg ? `<div class="hint">Tributação regular: CST ${esc(i.dec.cst_reg||'')} · ${esc(i.dec.cclasstrib_reg)}</div>` : ''}<div class="hint">${esc(i.dec.confianca||'')}${i.dec.decidido_por ? ' · ' + esc(String(i.dec.decidido_por).split('@')[0]) : ''}</div>` : '<i>pendente de decisão</i>'}</td>
+      </tr>`).join('');
+    const cfopRod = Object.entries(C.cfops).sort((a,b)=>a[0].localeCompare(b[0]))
+      .map(([c,x])=>`${c}: ${fmtR(x.valor)}`).join(' · ');
+    const perTx = C.periodos.map(p=>`${br(p.de)} a ${br(p.ate)}`).join('; ');
+    box.innerHTML = `<div class="pp-h2">Produtos vendidos no período e classificação para a Reforma (IBS/CBS)</div>
+      ${C.periodos.length ? `<p class="pp-p">Com base nas notas fiscais gravadas para o período de <b>${perTx}</b>
+        (${C.lista.length} produto(s), total de <b>${fmtR(C.total)}</b>), relacionam-se abaixo os produtos vendidos e a
+        classificação tributária definida para o grupo IBS/CBS dos documentos fiscais, conforme a LC 214/2025.
+        ${C.comBeneficio ? `Do total, <b>${fmtR(C.comBeneficio)}</b> (${(C.comBeneficio/C.total*100).toFixed(1)}%) referem-se a
+        produtos com tratamento diferenciado (imunidade, redução, suspensão ou diferimento).` : ''}
+        ${C.pendentes ? `<b style="color:#b03a2e">${C.pendentes} produto(s) seguem pendentes de decisão.</b>` : ''}</p>` :
+        `<p class="pp-p">Sem notas gravadas para ${RL.dados.ano} — a relação abaixo traz as classificações já decididas por produto, sem valores de venda.</p>`}
+      <table class="gtable"><thead><tr><th>Produto</th><th>NCM</th><th>CFOP</th><th class="num">Valor</th><th class="num">%</th><th>Classificação IBS/CBS</th></tr></thead>
+      <tbody>${linhas || `<tr><td colspan="6"><i>—</i></td></tr>`}</tbody></table>
+      ${C.periodos.length ? `<div class="hint" style="margin-top:6px">Totais por CFOP: ${cfopRod} · <b>TOTAL ${fmtR(C.total)}</b> —
+        régua de conferência contra o livro de saídas do período.</div>` : ''}
+      <div class="hint">Fonte: Classificação Tributária RTC (Artecon) — notas gravadas ${C.periodos.map(p=>`em ${new Date(p.gravado_em).toLocaleDateString('pt-BR')}${p.gravado_por?' por '+esc(String(p.gravado_por).split('@')[0]):''}`).join('; ') || '—'};
+        decisões de classificação por produto com autor e data registrados. Números calculados pelo sistema — a IA não gera valores.</div>`;
+  } catch(e){
+    console.error('rlNotasPeriodo', e);
+    box.innerHTML = '<div class="hint">Não foi possível carregar as notas do período: ' + esc(e.message||e) + ' — verifique se o setup_ct_v5.sql foi executado.</div>';
+  }
+}
+
 // ── chamada à Edge Function gerar-parecer (Supabase) ──
 async function parecerIA(){
   const btn = $id('pp-ia-btn'); if (btn){ btn.disabled = true; btn.textContent = '⏳ Gerando…'; }
@@ -4478,6 +4572,7 @@ async function parecerIA(){
         transicao: D.anos.map(L=>({ ano:L.ano, hibrido:L.hib, regularMelhor:L.regular, regularNome:L.regNome, lp:L.regLP, lr:L.regLR })),
         cenarios2033: D.L33 ? { porDentro: D.T.simples, hibrido: D.L33.hib, foraDoSimples: D.L33.regular, regNome: D.L33.regNome } : null,
         splitPayment: D.split, fatorRMedio: D.frMed,
+        notasPeriodoRTC: rlCtResumoIA(),
       },
       premissas: { reformaFallback: !!(D.cen&&D.cen.usouFallback), creditosProxyCompras: !!(D.cen&&D.cen.proxyCompras), semCreditosIBSCBS: !!(D.cen&&D.cen.semCreditos), moedaConstante: true },
     };
