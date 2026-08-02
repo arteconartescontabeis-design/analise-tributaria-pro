@@ -43,7 +43,7 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
 </head>
 <body>
 <div class="topo">
-  <b>🏷️ Classificação RTC</b> <span class="badge">v1.6.0</span>
+  <b>🏷️ Classificação RTC</b> <span class="badge">v1.7.0</span>
   <a href="index.html">← Análise Tributária Pro</a>
   <span style="flex:1"></span>
   <a href="#" id="ct-sair" style="display:none" onclick="ctSair();return false">Sair</a>
@@ -81,6 +81,12 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
         <input type="file" id="ct-arqs" accept=".xml" multiple style="display:none">
       </div>
       <div id="ct-kpis" class="cards-grid" style="margin-top:12px"></div>
+      <div id="ct-periodo" class="card" style="display:none; margin-top:12px; padding:10px 14px">
+        📅 <b>Período das notas</b>: de <input type="date" id="ct-per-de" onchange="ctPeriodoAplicar()">
+        até <input type="date" id="ct-per-ate" onchange="ctPeriodoAplicar()">
+        <button class="btn" onclick="ctPeriodoLimpar()">Período completo</button>
+        <span id="ct-per-info" class="muted" style="font-size:.8rem"></span>
+      </div>
       <div id="ct-acoes" style="display:none; margin-top:12px; gap:10px; flex-wrap:wrap" class="linha-botoes">
         <button class="btn solid" id="ct-btn-consultar" onclick="comBotao('ct-btn-consultar','Consultando NCMs',()=>ctConsultar(false))">Consultar classificações</button>
         <button class="btn" id="ct-btn-forcar" onclick="comBotao('ct-btn-forcar','Reconsultando',()=>ctConsultar(true))">Reconsultar (ignorar cache)</button>
@@ -102,7 +108,9 @@ details.versoes td{ padding:6px; border-bottom:1px solid #e5e8e8; vertical-align
 </main>
 
 <details class="versoes"><summary>Versões</summary>
-  <table><tr><td><b>v1.6.0</b> <span class="badge ok">atual</span></td><td>02/08/2026</td><td>A relação da tela passou a vir <b>separada por CFOP</b>: cada linha da grade agora é cliente + NCM + CFOP, com as demais informações preservadas — o mesmo NCM vendido em 5102 e em 6102 aparece em duas linhas, cada uma com seu valor. E cada cliente ganhou o quadro <b>Conferência do faturamento por CFOP</b>: totais de itens e valores por CFOP com o percentual e a linha TOTAL, a régua para verificar se o faturamento do lote bate com o livro de saídas e com o declarado. A consulta ao portal continua uma por NCM (o CFOP não muda a resposta do Conformidade Fácil — muda a leitura, via regras e perfil), com o resultado replicado às linhas. O CSV ganhou a coluna cfop e as linhas são ordenadas por CFOP dentro do cliente. No modo carteira o quadro não aparece, porque valores e CFOPs dependem dos XMLs.</td></tr>
+  <table><tr><td><b>v1.7.0</b> <span class="badge ok">atual</span></td><td>02/08/2026</td><td>A tela passou a mostrar o <b>período das notas</b> e a permitir <b>selecionar o período</b>: uma barra informa a cobertura do lote (data da primeira à última emissão) e dois campos de data recortam a análise — grade, quadro de conferência por CFOP, KPIs, alerta do grupo IBS/CBS e a relação de decisões passam a considerar apenas os itens emitidos dentro do intervalo, com o contador "X de Y itens no período" deixando explícito o que ficou de fora. O botão "Período completo" restaura a cobertura integral. Com isso a conferência do faturamento ganha a dimensão que faltava: recorta-se o mês fechado e o total por CFOP bate diretamente contra o livro de saídas daquele mês. No modo carteira a barra não aparece (as datas vêm dos XMLs). As consultas ao portal e as decisões gravadas não são afetadas pelo recorte — ele muda o que se vê, não o que se sabe.</td></tr>
+  <tr><td><b>v1.6.1</b></td><td>02/08/2026</td><td>O nome da empresa passou a vir do <b>cadastro compartilhado</b> (atp_empresas, o mesmo do Análise Tributária Pro) e aparece ao lado do CNPJ em todos os cabeçalhos — grade, decisões, carteira e relatório. Corrigido o CNPJ exibido em dobro quando o cliente aberto pela carteira não tinha nome gravado: agora a ordem de busca é perfil → cadastro de empresas, e só na falta dos dois a tela diz "(sem nome no cadastro de empresas)", nunca repetindo o número. Quando o nome vem do cadastro, é gravado de volta no perfil para a carteira listar por nome dali em diante.</td></tr>
+  <tr><td><b>v1.6.0</b></td><td>02/08/2026</td><td>A relação da tela passou a vir <b>separada por CFOP</b>: cada linha da grade agora é cliente + NCM + CFOP, com as demais informações preservadas — o mesmo NCM vendido em 5102 e em 6102 aparece em duas linhas, cada uma com seu valor. E cada cliente ganhou o quadro <b>Conferência do faturamento por CFOP</b>: totais de itens e valores por CFOP com o percentual e a linha TOTAL, a régua para verificar se o faturamento do lote bate com o livro de saídas e com o declarado. A consulta ao portal continua uma por NCM (o CFOP não muda a resposta do Conformidade Fácil — muda a leitura, via regras e perfil), com o resultado replicado às linhas. O CSV ganhou a coluna cfop e as linhas são ordenadas por CFOP dentro do cliente. No modo carteira o quadro não aparece, porque valores e CFOPs dependem dos XMLs.</td></tr>
   <tr><td><b>v1.5.0</b></td><td>02/08/2026</td><td>Nasce a <b>Carteira de clientes</b>, respondendo à pergunta "o lote apaga ou fica gravado?": o que fica no banco são o perfil, as decisões por produto e o cache de consultas; o lote de XMLs (valores e CFOPs) vive só na tela. Agora um seletor lista todos os clientes com dados gravados e o botão <b>Abrir cliente gravado</b> remonta a tela inteira a partir do banco — produtos das decisões, perfil aplicado e consultas vindas direto do cache, sem tocar no portal nem precisar dos XMLs. Consultas <b>vencidas</b> (além das 84 h) ficam marcadas em vermelho e o Consultar passou a reconsultá-las automaticamente, em vez de aceitá-las como frescas. No modo carteira os valores aparecem como "—" com o aviso de que dependem de XMLs. O nome do cliente passou a ser gravado junto ao perfil (também ao gravar decisões), para a carteira listar por nome. Requer <b>setup_ct_v4.sql</b> (uma coluna nova).</td></tr>
   <tr><td><b>v1.4.0</b><td>02/08/2026</td><td>A grade da consulta passou a ser <b>separada por cliente</b>, cada bloco com o seu próprio <b>Perfil da operação</b> editável no cabeçalho (gravado no banco ao mudar) — porque o mesmo NCM pode receber classificação diferente em cada cliente: um coletor incentivado e um comércio comum vendendo o mesmo produto têm sugestões distintas, lado a lado na mesma tela. O filtro global antigo foi aposentado. A consulta ao portal continua econômica: NCMs repetidos entre clientes são consultados <b>uma única vez</b> e o resultado é replicado a todos, já que a resposta do portal depende do NCM, não do cliente — quem muda a leitura é o perfil. O percentual de valor agora é relativo ao total <b>do cliente</b>, o CSV ganhou as colunas de cliente e CNPJ, e o bloco de decisões exibe o perfil como selos, apontando a edição para a consulta.</td></tr>
   <tr><td><b>v1.3.0</b></td><td>02/08/2026</td><td>A classificação passou a ser <b>automática com revisão por exceção</b>. Três novidades: o <b>perfil da operação é gravado por cliente</b> — marcado uma vez (coletor incentivado, cooperativa etc.), vale para todos os lotes futuros e é aplicado sozinho; entram <b>regras por CFOP</b>, deduções diretas do XML sem julgamento (toda operação 7xxx é exportação e classifica imunidade; devoluções são marcadas para espelhar a origem); e cada produto recebe um <b>grau de confiança</b>: verde (decisão gravada, PERMITIDO único, CFOP de exportação ou perfil que fecha num só código), amarelo (regra geral ou múltiplos candidatos — o primeiro é assumido) e vermelho (sinais conflitantes, como item com grupo de ISS numa NF-e, que o sistema se recusa a chutar). O botão <b>"Só o que pede a minha atenção"</b> esconde os verdes, e a gravação ganhou o <b>"Gravar só alta confiança"</b>. A origem e o grau de cada decisão são gravados no banco e <b>saem no relatório do cliente</b> — o que foi dedução automática e o que foi análise do contador ficam distinguidos, prontos para a reformulação do relatório que vem a seguir. Requer <b>setup_ct_v3.sql</b>.</td></tr>
@@ -228,13 +236,14 @@ function ctLerXML(nome, texto){
   const ide = inf.getElementsByTagNameNS(CT_NS, 'ide')[0];
   const emit = inf.getElementsByTagNameNS(CT_NS, 'emit')[0];
   const mod = ctTx(ide, 'mod');
+  const dEmi = (ctTx(ide, 'dhEmi') || ctTx(ide, 'dEmi')).slice(0, 10);
   if (mod !== '55' && mod !== '65'){ CT.erros.push(nome + ': modelo ' + mod + ' fora do escopo (só 55/65)'); return; }
   const dfe = mod === '65' ? 'NFCE' : 'NFE';
   for (const det of inf.getElementsByTagNameNS(CT_NS, 'det')){
     const prod = det.getElementsByTagNameNS(CT_NS, 'prod')[0];
     const gIBS = det.getElementsByTagNameNS(CT_NS, 'IBSCBS')[0] || null;
     const gISS = det.getElementsByTagNameNS(CT_NS, 'ISSQN')[0] || null;
-    CT.itens.push({ arq: nome, dfe, cnpjEmit: ctTx(emit, 'CNPJ'), nomeEmit: ctTx(emit, 'xNome'),
+    CT.itens.push({ arq: nome, dfe, dEmi, cnpjEmit: ctTx(emit, 'CNPJ'), nomeEmit: ctTx(emit, 'xNome'),
       cProd: ctTx(prod, 'cProd'), xProd: ctTx(prod, 'xProd'), ncm: ctTx(prod, 'NCM'),
       cfop: ctTx(prod, 'CFOP'), vProd: parseFloat(ctTx(prod, 'vProd')) || 0,
       temIBSCBS: !!gIBS, temISS: !!gISS, cClassNota: gIBS ? ctTx(gIBS, 'cClassTrib') : '' });
@@ -242,17 +251,47 @@ function ctLerXML(nome, texto){
 }
 
 async function ctProcessar(files){
-  CT.modo = null; CT.itens = []; CT.erros = [];
+  CT.modo = null; CT.itens = []; CT.erros = []; CT.per = null; if ($id('ct-per-de')){ $id('ct-per-de').value=''; $id('ct-per-ate').value=''; }
   await Promise.all([...files].filter(f => /\.xml$/i.test(f.name))
     .map(f => f.text().then(x => ctLerXML(f.name, x)).catch(e => CT.erros.push(f.name + ': ' + e.message))));
+  const datas = CT.itens.map(i => i.dEmi).filter(Boolean).sort();
+  CT.per = datas.length ? { de: datas[0], ate: datas[datas.length-1] } : null;
+  if (CT.per){ $id('ct-per-de').value = CT.per.de; $id('ct-per-ate').value = CT.per.ate; }
   await ctProcessarAgg();
   ctDecCarregar();
   ctCacheCarregar();
 }
 
+function ctItensAtivos(){
+  if (!CT.per || CT.modo === 'carteira') return CT.itens;
+  return CT.itens.filter(i => (!CT.per.de || (i.dEmi && i.dEmi >= CT.per.de)) && (!CT.per.ate || (i.dEmi && i.dEmi <= CT.per.ate)));
+}
+function ctPeriodoBarra(){
+  const box = $id('ct-periodo');
+  const datas = CT.itens.map(i => i.dEmi).filter(Boolean).sort();
+  const mostrar = CT.modo !== 'carteira' && datas.length > 0;
+  box.style.display = mostrar ? 'block' : 'none';
+  if (!mostrar) return;
+  const br = d => d ? d.split('-').reverse().join('/') : '?';
+  if (!$id('ct-per-de').value && CT.per) { $id('ct-per-de').value = CT.per.de || ''; $id('ct-per-ate').value = CT.per.ate || ''; }
+  const ativos = ctItensAtivos().length;
+  $id('ct-per-info').textContent = ` — o lote cobre ${br(datas[0])} a ${br(datas[datas.length-1])} · ${ativos} de ${CT.itens.length} itens no período selecionado`;
+}
+async function ctPeriodoAplicar(){
+  CT.per = { de: $id('ct-per-de').value || null, ate: $id('ct-per-ate').value || null };
+  await ctProcessarAgg();
+}
+async function ctPeriodoLimpar(){
+  const datas = CT.itens.map(i => i.dEmi).filter(Boolean).sort();
+  CT.per = datas.length ? { de: datas[0], ate: datas[datas.length-1] } : null;
+  $id('ct-per-de').value = CT.per ? CT.per.de : '';
+  $id('ct-per-ate').value = CT.per ? CT.per.ate : '';
+  await ctProcessarAgg();
+}
+
 async function ctProcessarAgg(){
   const agg = {};
-  for (const i of CT.itens){
+  for (const i of ctItensAtivos()){
     const k = (i.cnpjEmit || '?') + '|' + (i.ncm || '(sem NCM)') + '|' + (i.cfop || '');
     agg[k] = agg[k] || { cnpj: i.cnpjEmit, nome: i.nomeEmit, ncm: i.ncm || '(sem NCM)', cfop: i.cfop || '', dfe: i.dfe, qtd: 0, valor: 0,
       produtos: new Set(), consulta: (CT.ncms[k]||{}).consulta || null };
@@ -308,11 +347,13 @@ function ctRender(){
   $id('ct-resultado').style.display = tem ? 'block' : 'none';
   if (!tem){ $id('ct-kpis').innerHTML = ''; return; }
   const total = lista.reduce((s,a) => s + a.valor, 0);
-  const semIBS = CT.itens.filter(i => !i.temIBSCBS).length;
+  const ativos = ctItensAtivos();
+  const semIBS = ativos.filter(i => !i.temIBSCBS).length;
   const consultados = lista.filter(n => n.consulta && !n.consulta.erro).length;
   const clientes = [...new Set(lista.map(n => n.cnpj))];
   const kpi = (v,l) => `<div class="kpi-card"><div class="kpi-v">${v}</div><div class="kpi-l">${l}</div></div>`;
-  $id('ct-kpis').innerHTML = kpi(clientes.length,'clientes') + kpi(CT.itens.length,'itens')
+  ctPeriodoBarra();
+  $id('ct-kpis').innerHTML = kpi(clientes.length,'clientes') + kpi(ativos.length,'itens no período')
     + kpi(new Set(lista.map(n => n.ncm)).size,'NCMs únicos')
     + kpi('R$ ' + ctFmt(total),'valor dos itens') + kpi(semIBS,'itens sem grupo IBS/CBS na nota')
     + kpi(consultados + '/' + lista.length,'linhas consultadas');
@@ -323,7 +364,7 @@ function ctRender(){
     const gerais = pfSet === null ? CT_BASE : CT_BASE.filter(c => pfSet.has(c.c));
     const totCli = g.linhas.reduce((s,a) => s + a.valor, 0);
     return `<tr><td colspan="8" style="background:#f8fafb; border-radius:8px">
-        <b>${g.nome}</b> <span class="muted">CNPJ ${cnpj}</span>
+        ${ctTituloCliente(cnpj, g.nome)}
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin-top:6px">
           ${ctPfSel(cnpj,1,'q_1')}${ctPfSel(cnpj,2,'q_2')}${ctPfSel(cnpj,3,'q_3')}${ctPfSel(cnpj,4,'q_4')}
         </div>
@@ -368,7 +409,7 @@ function ctRender(){
   }).join('');
   const avisos = [];
   if (CT.modo === 'carteira') avisos.push('Cliente aberto da <b>carteira</b>: produtos e decisões vieram do banco; valores, CFOPs e a checagem do grupo IBS/CBS dependem de XMLs — importe um lote para atualizá-los.');
-  if (CT.modo !== 'carteira' && semIBS) avisos.push(`<b>${semIBS} de ${CT.itens.length} itens</b> foram emitidos SEM o grupo IBS/CBS exigido a partir de 2026 — o ERP do cliente ainda não classifica.`);
+  if (CT.modo !== 'carteira' && semIBS) avisos.push(`<b>${semIBS} de ${ativos.length} itens</b> foram emitidos SEM o grupo IBS/CBS exigido a partir de 2026 — o ERP do cliente ainda não classifica.`);
   const hashes = new Set(lista.filter(n => n.consulta && n.consulta.geral_hash).map(n => n.consulta.geral_hash));
   if (hashes.size && ![...hashes].every(h => h === CT_BASE_INFO.hash))
     avisos.push('<b>A tabela do portal mudou</b> em relação à base embutida (versão ' + CT_BASE_INFO.hash.slice(0,8) + ') — os PERMITIDO consultados já refletem a versão nova; a base geral do app precisa de atualização.');
@@ -419,7 +460,7 @@ function ctCstDe(cod){ const b = CT_BASE.find(x => x.c === cod); return b ? b.cs
 
 function ctProdutos(){
   const m = {};
-  for (const i of CT.itens){
+  for (const i of ctItensAtivos()){
     if (!i.cnpjEmit || !i.cProd) continue;
     const k = i.cnpjEmit + '|' + i.cProd;
     m[k] = m[k] || { cnpj: i.cnpjEmit, nome: i.nomeEmit, cprod: i.cProd, xprod: i.xProd, ncm: i.ncm, dfe: i.dfe, valor: 0, qtd: 0, cfops: new Set(), iss: false };
@@ -445,6 +486,23 @@ function ctPerfilSet(cnpj){
 
 function ctFresco(c){ return !!c && !c.erro && c.consultado_em && (Date.now() - new Date(c.consultado_em).getTime()) < CT_VALIDADE_H * 3600e3; }
 
+let CT_NOMES = {};
+async function ctNomesCarregar(cnpjs){
+  const alvo = (cnpjs || []).filter(c => c && !(c in CT_NOMES));
+  if (cnpjs && !alvo.length) return;
+  try {
+    const params = { select: 'cnpj,razao_social' };
+    if (cnpjs) params.cnpj = `in.(${alvo.join(',')})`; else params.limit = '1000';
+    const rows = await supa('GET', 'atp_empresas', { params }) || [];
+    for (const r of rows) CT_NOMES[r.cnpj] = r.razao_social || '';
+  } catch(e){ console.error('nomes:', e); }
+}
+function ctNome(cnpj, alt){ const n = alt || CT_NOMES[cnpj] || ''; return (n && n !== cnpj) ? n : ''; }
+function ctTituloCliente(cnpj, nome){
+  const n = ctNome(cnpj, nome);
+  return `<b>${n || '<i style="font-weight:400">(sem nome no cadastro de empresas)</i>'}</b> <span class="muted">CNPJ ${cnpj}</span>`;
+}
+
 async function ctCarteiraCarregar(){
   try {
     const pfs = await supa('GET', 'atp_ct_perfil', { params: { select: 'cnpj_cliente,nome_cliente' } }) || [];
@@ -452,6 +510,8 @@ async function ctCarteiraCarregar(){
     const nomes = {};
     for (const p of pfs) nomes[p.cnpj_cliente] = p.nome_cliente || '';
     for (const d of decs) if (!(d.cnpj_cliente in nomes)) nomes[d.cnpj_cliente] = '';
+    await ctNomesCarregar(Object.keys(nomes));
+    for (const c of Object.keys(nomes)) nomes[c] = ctNome(c, nomes[c]);
     const sel = $id('ct-cli-sel');
     const atual = sel.value;
     sel.innerHTML = '<option value="">— clientes com dados gravados —</option>' +
@@ -479,10 +539,13 @@ async function ctAbrirCliente(){
   const decs = await supa('GET', 'atp_ct_decisao', { params: { cnpj_cliente: `eq.${cnpj}`, select: '*' } }) || [];
   const pfs = await supa('GET', 'atp_ct_perfil', { params: { cnpj_cliente: `eq.${cnpj}`, select: '*' } }) || [];
   if (!decs.length && !pfs.length){ toast('Este cliente ainda não tem decisões nem perfil gravados.'); return; }
-  const nome = (pfs[0] && pfs[0].nome_cliente) || cnpj;
+  await ctNomesCarregar([cnpj]);
+  const nome = ctNome(cnpj, pfs[0] && pfs[0].nome_cliente) || '';
+  if (nome && !(pfs[0] && pfs[0].nome_cliente))
+    try { await supa('POST', 'atp_ct_perfil', { params: { on_conflict: 'cnpj_cliente' }, body: { cnpj_cliente: cnpj, nome_cliente: nome } }); } catch(e){}
   CT.modo = 'carteira';
   CT.erros = [];
-  CT.itens = decs.map(d => ({ arq: '(banco)', dfe: d.dfe_type || 'NFE', cnpjEmit: d.cnpj_cliente, nomeEmit: nome,
+  CT.itens = decs.map(d => ({ arq: '(banco)', dfe: d.dfe_type || 'NFE', cnpjEmit: d.cnpj_cliente, nomeEmit: nome || '',
     cProd: d.cprod, xProd: d.xprod || d.cprod, ncm: d.ncm || '', cfop: '', vProd: 0,
     temIBSCBS: true, temISS: false, cClassNota: '' }));
   CT.ncms = {};
@@ -581,7 +644,7 @@ function ctDecRender(){
     </div>` +
   Object.entries(porCli).map(([cnpj, g]) => `
     <div style="margin-top:14px; border-top:1px solid var(--cinza,#eee); padding-top:10px">
-      <b>${g.nome}</b> <span class="muted">CNPJ ${cnpj}</span>
+      ${ctTituloCliente(cnpj, g.nome)}
       <button class="btn solid" id="ct-dec-salvar-${cnpj}" style="margin-left:10px"
         onclick="comBotao('ct-dec-salvar-${cnpj}','Gravando',()=>ctDecSalvar('${cnpj}',false))">💾 Gravar tudo (${g.linhas.length})</button>
       <button class="btn" id="ct-dec-alta-${cnpj}"
@@ -677,7 +740,7 @@ function ctRelatorio(cnpj){
     .rodape{margin-top:30px;font-size:.75rem;color:#5d6d7e;border-top:1px solid #e5e8e8;padding-top:10px}
     @media print{ body{padding:0} }</style></head><body>
     <h1>Artecon Artes Contábeis<br><small>Classificação Tributária da Reforma do Consumo — IBS · CBS</small></h1>
-    <p><b>Cliente:</b> ${g[0].nome} — CNPJ ${cnpj}<br><b>Data:</b> ${hoje} · <b>Documentos analisados:</b> NF-e/NFC-e do lote importado</p>
+    <p><b>Cliente:</b> ${ctNome(cnpj, g[0].nome) || '(sem nome no cadastro)'} — CNPJ ${cnpj}<br><b>Data:</b> ${hoje} · <b>Documentos analisados:</b> NF-e/NFC-e do lote importado</p>
     <p>Relação dos produtos com a classificação tributária (CST e cClassTrib) definida para o grupo IBS/CBS dos documentos
     fiscais, conforme a Lei Complementar nº 214/2025 e a tabela vigente do Conformidade Fácil (SVRS). Os demais campos do
     grupo (base, alíquotas e valores por ente) decorrem desta classificação e são calculados pelo sistema emissor.</p>
