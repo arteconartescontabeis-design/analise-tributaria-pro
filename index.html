@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.16.2</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.16.3</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -614,7 +614,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.16.2</b> <span class="badge ok">atual</span></td><td>10/08/2026</td><td><b>2026 (ano-teste) deixou de gerar IBS e CBS a pagar.</b> Antes, o 1% do ano-teste (CBS 0,9% + IBS 0,1%) era somado à carga de 2026 ao lado do PIS/COFINS integrais, o que superestimava o ano. Agora o ano-teste não gera valor a recolher em nenhum cenário — a apuração continua visível nas colunas de débito e crédito da aba Reforma, e no Detalhamento tributo a tributo as linhas de IBS, CBS e Imposto Seletivo aparecem vazias em 2026, com nota explicativa. Os demais anos não mudaram.</td></tr>
+                    <tr><td><b>v7.16.3</b> <span class="badge ok">atual</span></td><td>10/08/2026</td><td><b>Atualizar os Parâmetros passou a recalcular tudo automaticamente.</b> As alíquotas da transição eram copiadas para dentro de cada análise no momento em que ela era criada, e a cópia vencia o padrão — por isso análises antigas continuavam exibindo a tabela anterior (26,80% em 2033) mesmo depois da atualização. Agora a análise usa sempre o padrão vigente do aplicativo, e alterar os Parâmetros reflete na hora na Análise Atual, na Reforma e nos Relatórios. <b>Correção da tela da Reforma que abria vazia.</b> Análises gravadas por versões anteriores não traziam todos os campos da Reforma e a montagem da tela parava no meio, em silêncio — daí a impressão de que a informação só aparecia depois de mexer no ano. O registro salvo passa a ser completado com os campos que faltam, como já era feito na análise do regime atual.</td></tr>
+                    <tr><td><b>v7.16.2</b></td><td>10/08/2026</td><td><b>2026 (ano-teste) deixou de gerar IBS e CBS a pagar.</b> Antes, o 1% do ano-teste (CBS 0,9% + IBS 0,1%) era somado à carga de 2026 ao lado do PIS/COFINS integrais, o que superestimava o ano. Agora o ano-teste não gera valor a recolher em nenhum cenário — a apuração continua visível nas colunas de débito e crédito da aba Reforma, e no Detalhamento tributo a tributo as linhas de IBS, CBS e Imposto Seletivo aparecem vazias em 2026, com nota explicativa. Os demais anos não mudaram.</td></tr>
                     <tr><td><b>v7.16.1</b></td><td>10/08/2026</td><td>Ajustes dos testes da v7.16.0. O <b>Detalhamento tributo a tributo (ano) da Reforma</b> passou a exibir <b>cada tributo em sua própria linha</b> nos três cenários — no regime regular, IRPJ, adicional de IRPJ, CSLL, INSS patronal e FGTS aparecem separados, assim como PIS e COFINS remanescentes; no Simples "por dentro", o DAS, a trava do sublimite, o FGTS e as retenções; no híbrido, o DAS ajustado, o FGTS e cada retenção. Corrigido o <b>campo Ano, que caía para baixo do nome da empresa</b> nas telas de Análise Atual, Reforma, Importar Dados e Configuração da empresa: ao exibir o campo, o programa apagava o alinhamento definido no layout. E o <b>Dashboard passou a abrir já preenchido</b> — as estatísticas e a relação de empresas em análise só apareciam depois de navegar por outro módulo e voltar; além disso, a empresa e o ano da última sessão voltaram a ser lembrados ao entrar no sistema.</td></tr>
                     <tr><td><b>v7.16.0</b></td><td>10/08/2026</td><td>Pacote da revisão de agosto, com 12 melhorias. <b>Meses sem lançamento deixaram de ser projetados</b>: a tabela Resultado mês a mês passa a exibir "—" após o último mês com dados, com aviso de até onde a análise está preenchida (o RBT12 rolante continua calculado por dentro, para o Fator R e a trava do sublimite). <b>Alíquotas da Reforma atualizadas à Resolução CGIBS nº 14/2026</b> (DOU 31/07/2026): referência conjunta de 27,91% — CBS 9,21% e IBS pleno 18,7% —, com atualização em um clique nos Parâmetros para quem tem o padrão antigo gravado; a referência definitiva será fixada pelo Senado a partir do cálculo do TCU. <b>Parcelas de redução da Reforma com cascata de fontes</b>: notas importadas (XML) → Classificação RTC → atividade do cadastro (estimativa com confirmação) → manual, sempre com selo de origem e aviso claro quando não há fonte. Novo quadro <b>Detalhamento tributo a tributo (ano) — Reforma</b> no Comparativo de Regimes, com seletor de cenário. <b>Configuração da empresa</b> acessada de dentro de Empresas (botão ⚙️ por linha). Carteira consultada sem a definição manual de regime dos não optantes. Dashboard com gráficos acima e relação de empresas abaixo; cards renumerados; Ano ao lado do nome da empresa; títulos sem o rótulo redundante "EMPRESA · ANO". Cadastro de empresas ganhou o campo <b>Atividade principal (item LC 116)</b>, usado como fonte estimada das reduções. Base pronta para a <b>tabela oficial de Classificação (cClassTrib)</b> via Supabase, com fallback embutido e selo de origem/data (requer setup_v716.sql e a função atualizar-classtrib).</td></tr>
                     <tr><td><b>v7.15.1</b></td><td>02/08/2026</td><td>A análise das notas do período ganhou a <b>voz da IA</b>: publicada a v7.2 da Edge Function gerar-parecer, cuja resposta passou a incluir o campo <b>notasPeriodo</b> — um parágrafo interpretando o total vendido e a cobertura por CFOP, o peso dos produtos com tratamento diferenciado na carga futura, os principais produtos classificados e as pendências, citando exclusivamente os números que o sistema calculou (com dados ausentes, o campo volta vazio e nada é mencionado). O parecer exibe esse parágrafo no topo da seção de produtos, acima da tabela determinística, após "Gerar textos com IA". Requer publicar o <b>gerar-parecer.ts</b> v7.2 na função existente.</td></tr>
@@ -2421,8 +2422,6 @@ function rfVerificar(){
     add('distorce','A análise de fornecedores cobre menos de doze meses, mas a Reforma projeta o ano inteiro — as compras estão subdimensionadas.','cnpj');
   if (!RF_ANOS.some(a => +((RF.aliq[a]||{}).is) > 0))
     add('observe','Imposto Seletivo com alíquota zero em todos os anos (regulamentação pendente). Se a empresa produz ou importa bens sujeitos ao IS — bebidas, fumo, veículos —, a projeção da Reforma está incompleta.','parametros');
-  if (PARAMS.reforma && JSON.stringify(RF.aliq) !== JSON.stringify(PARAMS.reforma))
-    add('observe','Esta empresa usa alíquotas de transição próprias, diferentes do padrão do aplicativo.','config');
   if (!AN || AN.cnpj !== RF.cnpj)
     add('observe','A análise do regime atual desta empresa não está aberta — o comparativo usa o que estiver gravado.','analise');
   return out;
@@ -2477,13 +2476,6 @@ function cfgFolhaSet(k, v){
   if (x === '') delete AN.cfg.folhaPerc[k]; else AN.cfg.folhaPerc[k] = num(x)/100;
   anRecalcular(); anRenderConfig();
 }
-function cfgReformaPadrao(){
-  if (!RF || !PARAMS.reforma) { toast('Abra a Reforma desta empresa primeiro.'); return; }
-  if (!confirm('Descartar as alíquotas próprias desta empresa e voltar às do aplicativo (Parâmetros)?')) return;
-  RF.aliq = JSON.parse(JSON.stringify(PARAMS.reforma));
-  rfCalcular?.(); anRenderConfig();
-  toast('Alíquotas da Reforma voltaram ao padrão do aplicativo.');
-}
 function anRenderConfig() {
   const c = AN.cfg;
   if (!(+c.icmsV) && !(+c.icmsC)) { c.icmsV = .12; c.icmsC = .12; setTimeout(anRecalcular, 0); }   // v7.5: 12%/12% como base padrão
@@ -2518,14 +2510,10 @@ function anRenderConfig() {
       ${campoFP('patronalSalarios','INSS patronal salários')}${campoFP('patronalProLabore','INSS patronal pró-labore')}
       ${campoFP('rat','RAT/FAP')}${campoFP('terceiros','Terceiros')}${campoFP('fgts','FGTS')}
     </div></div>`;
-  const proprias = RF && RF.cnpj === AN.cnpj && PARAMS.reforma
-    && JSON.stringify(RF.aliq) !== JSON.stringify(PARAMS.reforma);
   h += `<div style="margin-top:22px"><b style="font-size:13px">Alíquotas da Reforma</b>
-    <div class="hint">São definidas na Emenda 132 e na LC 214 e valem para todos os contribuintes, por isso a edição fica em
-      <a href="#" onclick="go('parametros');return false">Parâmetros</a>, num lugar só. Aqui trata-se apenas da exceção desta empresa.
-      ${proprias ? '<b style="color:#7e5109">Esta empresa está usando alíquotas próprias, diferentes do padrão.</b>'
-                 : 'Esta empresa usa as alíquotas padrão do aplicativo.'}</div>
-    ${proprias ? '<button class="btn" style="margin-top:8px" onclick="cfgReformaPadrao()">↩ Voltar ao padrão do aplicativo</button>' : ''}
+    <div class="hint">São definidas na Emenda 132 e na LC 214 e valem para todos os contribuintes, por isso ficam num lugar só, em
+      <a href="#" onclick="go('parametros');return false">Parâmetros</a>. Desde a v7.16.3, <b>toda análise usa sempre o padrão vigente</b>:
+      ao atualizar os Parâmetros, esta e as demais análises são recalculadas automaticamente, sem cópias congeladas.</div>
   </div>`;
   $id('an-config-box').innerHTML = h;
 }
@@ -2772,7 +2760,12 @@ async function anSalvar() {
 }
 
 // ═══════════ PARÂMETROS ═══════════
-function prAuto(){ if (AN) anRecalcular(); if (RL && RL.dados) { RL.res = calcular(RL.dados, PARAMS.anexos, folhaPercDaEmpresa(RL.dados.cfg)); } }
+function prAuto(){
+  if (AN) anRecalcular();
+  if (RL && RL.dados) { RL.res = calcular(RL.dados, PARAMS.anexos, folhaPercDaEmpresa(RL.dados.cfg)); }
+  // v7.16.3: a Reforma aberta acompanha na hora a mudança das alíquotas
+  if (RF) { RF.aliq = JSON.parse(JSON.stringify(PARAMS.reforma || RF_ALIQ_DEFAULT)); rfCalcular?.(); }
+}
 function prRender() {
   const A = PARAMS.anexos, F = PARAMS.folha;
   const tab = (nome, key, extras) => {
@@ -2799,7 +2792,7 @@ function prRender() {
 }
 async function prSalvar() {
   try { await supa('POST','atp_parametros?on_conflict=chave',{ body:[{ chave:'default', valor:PARAMS, atualizado_em:new Date().toISOString() }] });
-    toast('Parâmetros salvos.'); anRecalcular(); }
+    toast('Parâmetros salvos — análises e projeções recalculadas.'); prAuto(); }
   catch(e){ toast('Erro: '+e.message); }
 }
 function prRestaurar(){ PARAMS = { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha:{...FOLHA_PERC_DEFAULT} }; prRender(); toast('Padrão restaurado (salve para persistir).'); }
@@ -2995,6 +2988,24 @@ const RF_REDUCOES = [['r30','Redução 30%',.30],['r40','Redução 40%',.40],['r
 const RF_CONTRA = [['compras_simples','Compras de PJ Simples/SIMEI','Valor de compras'],['compras_lrlp','Compras de PJ Lucro Real/Presumido','Valor de compras'],['vendas_pf','Vendas para Pessoas Físicas','Valor de vendas'],['vendas_simples','Vendas para PJ Simples/SIMEI','Valor de vendas'],['vendas_lrlp','Vendas para PJ Lucro Real/Presumido','Valor de vendas']];
 
 let RF = null; // estado do módulo
+// v7.16.3: completa o registro salvo sobre o esqueleto do rfNovo. Campo novo em rfNovo
+// PRECISA passar por aqui, senão registros antigos quebram a tela da Reforma.
+function rfNormalizar(d, cnpj, ano) {
+  const base = rfNovo(cnpj, ano);
+  if (!d || typeof d !== 'object') return base;
+  const out = { ...base, ...d, cnpj: cnpj || d.cnpj || '', ano: +(ano || d.ano || base.ano) };
+  out.benefRec  = { ...base.benefRec,  ...(d.benefRec  || {}) };
+  out.benefCred = { ...base.benefCred, ...(d.benefCred || {}) };
+  out.contra    = { ...base.contra,    ...(d.contra    || {}) };
+  for (const o of [out.benefRec, out.benefCred, out.contra])
+    for (const k of Object.keys(o)) o[k] = +o[k] || 0;
+  for (const k of ['receita','compras','baseIS','credSimplesPct']) out[k] = +out[k] || 0;
+  // as alíquotas da transição são do APLICATIVO (Parâmetros), não da análise:
+  // assim, atualizar os Parâmetros atualiza automaticamente as análises já salvas.
+  out.aliq = JSON.parse(JSON.stringify(PARAMS.reforma || RF_ALIQ_DEFAULT));
+  delete out._res; delete out._benefFonte; delete out._benefDet; delete out._benefOpcoes;
+  return out;
+}
 function rfNovo(cnpj, ano) {
   return { cnpj:cnpj||'', ano:ano||2026,
     aliq: JSON.parse(JSON.stringify(PARAMS.reforma||RF_ALIQ_DEFAULT)),
@@ -3065,7 +3076,7 @@ function rfCargaAtual() {
 
 // Débito/crédito de IBS/CBS por ano a partir dos dados da aba Reforma (compartilhado com o Relatório)
 function rfLinhaBase(rf, a) {
-  const q = rf.aliq[a];
+  const q = Object.assign({}, RF_ALIQ_DEFAULT[a], (PARAMS.reforma||{})[a]||{});   // v7.16.3: padrão vigente
   const alq = (q.cbs + q.ibse + q.ibsm)/100;
   const recBenef = RF_REDUCOES.reduce((s,[k])=>s+(rf.benefRec?.[k]||0),0);
   const credBenefTot = RF_REDUCOES.reduce((s,[k])=>s+(rf.benefCred?.[k]||0),0);
@@ -3092,7 +3103,10 @@ function calcCenariosReforma(res, reforma) {
     rfx.contra = Object.assign({}, rfx.contra, { compras_lrlp: T.comprasRevenda });
     proxyCompras = true;
   }
-  const aliq = {}; for (const a of RF_ANOS) aliq[a] = Object.assign({}, RF_ALIQ_DEFAULT[a], (rfx.aliq||{})[a]||{});
+  // v7.16.3: as alíquotas vêm SEMPRE dos Parâmetros do aplicativo (ou do padrão de fábrica),
+  // nunca da cópia gravada na análise — atualizar Parâmetros reflete em tudo que já existe.
+  const aliqApp = PARAMS.reforma || RF_ALIQ_DEFAULT;
+  const aliq = {}; for (const a of RF_ANOS) aliq[a] = Object.assign({}, RF_ALIQ_DEFAULT[a], aliqApp[a]||{});
   rfx.aliq = aliq;
   if (!(rfx.receita>0)) rfx.receita = T.receita;
   const dasCheio = (T.das||0) + (T.sublimite||0);
@@ -3170,9 +3184,9 @@ async function rfTrocar() {
   // carrega análise (regime atual) da empresa para servir de base
   try {
     const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
-    if (rows.length) { AN = anNormalizar(rows[0].dados, cnpj, ano); AN.cnpj = cnpj; AN.ano = ano; anRecalcular?.(); RF = rows[0].dados?.reforma || rfNovo(cnpj, ano); }
+    if (rows.length) { AN = anNormalizar(rows[0].dados, cnpj, ano); AN.cnpj = cnpj; AN.ano = ano; anRecalcular?.(); RF = rfNormalizar(rows[0].dados?.reforma, cnpj, ano); }
     else RF = rfNovo(cnpj, ano);
-  } catch { RF = rfNovo(cnpj, ano); }
+  } catch(e) { console.error('rfTrocar:', e); RF = rfNovo(cnpj, ano); }
   RF.cnpj = cnpj; RF.ano = ano;
   if (!RF.receita && AN?._res) RF.receita = AN._res.totais.receita;
   await fornAutoAplicar();
