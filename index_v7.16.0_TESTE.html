@@ -4728,7 +4728,15 @@ function rlRfTribHtml(cen){
         add('_regime', L.ano, usaLP?1:2);
       }
     }
-    const rots = Object.keys(cel).filter(r=>r!=='_regime');
+    // ordem fixa das linhas (v7.16.2): sem isso, os tributos que não existem em 2026
+    // seriam criados só na coluna de 2027 e cairiam para o fim da tabela.
+    const ORDEM = {
+      dentro: ['DAS (Simples Nacional)','ICMS/ISS do sublimite (5ª faixa)','FGTS','ISS retido pelo tomador','CPP retida pelo tomador','INSS patronal fora do DAS (Anexo IV)'],
+      hibrido: ['DAS ajustado (sem a parcela de consumo)','FGTS','ISS retido pelo tomador (remanescente)','CPP retida pelo tomador','INSS patronal fora do DAS (Anexo IV)','CBS (líquida de créditos)','IBS estadual (líquido)','IBS municipal (líquido)','Imposto Seletivo'],
+      fora: ['CBS (líquida de créditos)','IBS estadual (líquido)','IBS municipal (líquido)','Imposto Seletivo','PIS remanescente','COFINS remanescente','ICMS remanescente','ISS remanescente','IPI (até 2026)','IRPJ','Adicional de IRPJ','CSLL','INSS patronal','FGTS'],
+    };
+    const rots = (ORDEM[cen]||[]).filter(r=>cel[r]).concat(
+      Object.keys(cel).filter(r=>r!=='_regime' && !(ORDEM[cen]||[]).includes(r)));
     const totalAno = {}; for (const a of anos) totalAno[a] = rots.reduce((s,r)=>s+(cel[r][a]||0),0);
     let h = '<div style="overflow-x:auto"><table><thead><tr><th>Tributo</th>' + anos.map(a=>`<th class="num">${a}</th>`).join('') + '</tr></thead><tbody>';
     for (const r of rots) h += `<tr><td>${r}</td>` + anos.map(a=>`<td class="num">${cel[r][a]==null?'—':F(cel[r][a])}</td>`).join('') + '</tr>';
