@@ -158,6 +158,27 @@ console.log('\n■ Alíquotas de referência da Reforma');
     [2027,2028].every(a => Math.abs((A[a].ibse + A[a].ibsm) - 0.10) < 0.001));
 }
 
+// ═══ 5c. Alíquotas seguem os Parâmetros; registro antigo da Reforma é completado ═══
+console.log('\n■ Reforma: padrão vigente e registro antigo');
+{
+  // análise salva com a tabela ANTIGA (8,8 / 16 / 2) não pode congelar o cálculo
+  const antiga = { 2033:{ cbs:8.8, ibse:16, ibsm:2, is:0, remIcmsIss:0, remPisCof:0 } };
+  const inp = JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures','caso1.json'),'utf8')).inp;
+  const usada = vm.runInContext(`(()=>{ const res = calcular(${JSON.stringify(inp)}, PARAMS.anexos, folhaPercDaEmpresa(${JSON.stringify(inp)}.cfg));
+    const r = calcCenariosReforma(res, { receita:100000, aliq:${JSON.stringify(antiga)} });
+    return r.rfx.aliq[2033]; })()`, ctx);
+  const padrao = vm.runInContext('PARAMS.reforma ? PARAMS.reforma[2033] : RF_ALIQ_DEFAULT[2033]', ctx);
+  chk('alíquotas vêm dos Parâmetros, não da cópia salva na análise',
+    Math.abs(usada.cbs - padrao.cbs) < 1e-9 && Math.abs(usada.ibse - padrao.ibse) < 1e-9,
+    `usada CBS ${usada.cbs}% × padrão ${padrao.cbs}%`);
+
+  // registro gravado por versão anterior (sem benefRec/benefCred/contra) não pode quebrar a tela
+  const norm = vm.runInContext(`rfNormalizar({ receita: 50000 }, '123', 2026)`, ctx);
+  chk('registro antigo da Reforma é completado (rfNormalizar)',
+    norm && norm.benefRec && norm.benefCred && norm.contra && norm.aliq
+      && Object.values(norm.benefRec).every(v => v === 0) && norm.receita === 50000);
+}
+
 // ═══ 6. Integridade da interface ═══
 // Todo elemento que o código acessa por $id() precisa existir no HTML.
 // Foi a ausência disso que deixou passar container removido e seletor duplicado.
