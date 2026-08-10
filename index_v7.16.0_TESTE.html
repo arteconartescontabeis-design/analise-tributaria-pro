@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.16.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.16.1</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -614,7 +614,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.16.0</b> <span class="badge ok">atual</span></td><td>10/08/2026</td><td>Pacote da revisão de agosto, com 12 melhorias. <b>Meses sem lançamento deixaram de ser projetados</b>: a tabela Resultado mês a mês passa a exibir "—" após o último mês com dados, com aviso de até onde a análise está preenchida (o RBT12 rolante continua calculado por dentro, para o Fator R e a trava do sublimite). <b>Alíquotas da Reforma atualizadas à Resolução CGIBS nº 14/2026</b> (DOU 31/07/2026): referência conjunta de 27,91% — CBS 9,21% e IBS pleno 18,7% —, com atualização em um clique nos Parâmetros para quem tem o padrão antigo gravado; a referência definitiva será fixada pelo Senado a partir do cálculo do TCU. <b>Parcelas de redução da Reforma com cascata de fontes</b>: notas importadas (XML) → Classificação RTC → atividade do cadastro (estimativa com confirmação) → manual, sempre com selo de origem e aviso claro quando não há fonte. Novo quadro <b>Detalhamento tributo a tributo (ano) — Reforma</b> no Comparativo de Regimes, com seletor de cenário. <b>Configuração da empresa</b> acessada de dentro de Empresas (botão ⚙️ por linha). Carteira consultada sem a definição manual de regime dos não optantes. Dashboard com gráficos acima e relação de empresas abaixo; cards renumerados; Ano ao lado do nome da empresa; títulos sem o rótulo redundante "EMPRESA · ANO". Cadastro de empresas ganhou o campo <b>Atividade principal (item LC 116)</b>, usado como fonte estimada das reduções. Base pronta para a <b>tabela oficial de Classificação (cClassTrib)</b> via Supabase, com fallback embutido e selo de origem/data (requer setup_v716.sql e a função atualizar-classtrib).</td></tr>
+                    <tr><td><b>v7.16.1</b> <span class="badge ok">atual</span></td><td>10/08/2026</td><td>Ajustes dos testes da v7.16.0. O <b>Detalhamento tributo a tributo (ano) da Reforma</b> passou a exibir <b>cada tributo em sua própria linha</b> nos três cenários — no regime regular, IRPJ, adicional de IRPJ, CSLL, INSS patronal e FGTS aparecem separados, assim como PIS e COFINS remanescentes; no Simples "por dentro", o DAS, a trava do sublimite, o FGTS e as retenções; no híbrido, o DAS ajustado, o FGTS e cada retenção. Corrigido o <b>campo Ano, que caía para baixo do nome da empresa</b> nas telas de Análise Atual, Reforma, Importar Dados e Configuração da empresa: ao exibir o campo, o programa apagava o alinhamento definido no layout. E o <b>Dashboard passou a abrir já preenchido</b> — as estatísticas e a relação de empresas em análise só apareciam depois de navegar por outro módulo e voltar; além disso, a empresa e o ano da última sessão voltaram a ser lembrados ao entrar no sistema.</td></tr>
+                    <tr><td><b>v7.16.0</b></td><td>10/08/2026</td><td>Pacote da revisão de agosto, com 12 melhorias. <b>Meses sem lançamento deixaram de ser projetados</b>: a tabela Resultado mês a mês passa a exibir "—" após o último mês com dados, com aviso de até onde a análise está preenchida (o RBT12 rolante continua calculado por dentro, para o Fator R e a trava do sublimite). <b>Alíquotas da Reforma atualizadas à Resolução CGIBS nº 14/2026</b> (DOU 31/07/2026): referência conjunta de 27,91% — CBS 9,21% e IBS pleno 18,7% —, com atualização em um clique nos Parâmetros para quem tem o padrão antigo gravado; a referência definitiva será fixada pelo Senado a partir do cálculo do TCU. <b>Parcelas de redução da Reforma com cascata de fontes</b>: notas importadas (XML) → Classificação RTC → atividade do cadastro (estimativa com confirmação) → manual, sempre com selo de origem e aviso claro quando não há fonte. Novo quadro <b>Detalhamento tributo a tributo (ano) — Reforma</b> no Comparativo de Regimes, com seletor de cenário. <b>Configuração da empresa</b> acessada de dentro de Empresas (botão ⚙️ por linha). Carteira consultada sem a definição manual de regime dos não optantes. Dashboard com gráficos acima e relação de empresas abaixo; cards renumerados; Ano ao lado do nome da empresa; títulos sem o rótulo redundante "EMPRESA · ANO". Cadastro de empresas ganhou o campo <b>Atividade principal (item LC 116)</b>, usado como fonte estimada das reduções. Base pronta para a <b>tabela oficial de Classificação (cClassTrib)</b> via Supabase, com fallback embutido e selo de origem/data (requer setup_v716.sql e a função atualizar-classtrib).</td></tr>
                     <tr><td><b>v7.15.1</b></td><td>02/08/2026</td><td>A análise das notas do período ganhou a <b>voz da IA</b>: publicada a v7.2 da Edge Function gerar-parecer, cuja resposta passou a incluir o campo <b>notasPeriodo</b> — um parágrafo interpretando o total vendido e a cobertura por CFOP, o peso dos produtos com tratamento diferenciado na carga futura, os principais produtos classificados e as pendências, citando exclusivamente os números que o sistema calculou (com dados ausentes, o campo volta vazio e nada é mencionado). O parecer exibe esse parágrafo no topo da seção de produtos, acima da tabela determinística, após "Gerar textos com IA". Requer publicar o <b>gerar-parecer.ts</b> v7.2 na função existente.</td></tr>
           <tr><td><b>v7.15.0</b></td><td>02/08/2026</td><td>O <b>Parecer</b> passou a analisar as <b>notas fiscais do período do relatório</b>, em ponte com o aplicativo Classificação Tributária RTC. Antes da assinatura, o documento ganha a seção <b>"Produtos vendidos no período e classificação para a Reforma (IBS/CBS)"</b>: a relação dos produtos consolidados do ano-base (código, NCM, CFOP, valor e participação), cada um com o CST e o cClassTrib decididos pelo contador — tratamento, percentuais de redução, par da tributação regular quando houver, grau de confiança e autor — além do valor com tratamento diferenciado, dos pendentes de decisão e dos totais por CFOP como régua de conferência contra o livro de saídas. Os dados vêm das notas gravadas pelo botão "Gravar notas do período" do app de Classificação e das decisões por produto; a IA recebe o mesmo resumo em números no seu insumo (notasPeriodoRTC) para redigir a análise, e como sempre <b>nenhum valor é gerado pela IA</b> — a tabela é calculada pelo sistema. Sem notas gravadas, o parecer orienta o caminho e, havendo decisões, lista as classificações sem valores. Requer o setup_ct_v5.sql (compartilhado com a v1.8.0 da Classificação).</td></tr>
           <tr><td><b>v7.14.1</b></td><td>01/08/2026</td><td>O módulo de Classificação RTC passou a viver em um <b>aplicativo próprio</b> — o arquivo <b>classificacao.html</b>, no mesmo repositório — para que cada um tenha ciclo de atualização independente: subir uma versão nova de um nunca interrompe nem arrisca o outro. A separação é só de arquivo: o login é o mesmo (a sessão é compartilhada automaticamente por estarem no mesmo endereço), os usuários são os mesmos e o cadastro de empresas é o mesmo banco. O item do menu "Classificação RTC ↗" agora leva ao aplicativo irmão, e lá existe o caminho de volta. Tudo o que a v7.14.0 descreveu sobre o módulo continua valendo — apenas mudou de casa, começando lá como v1.0.0.</td></tr>
@@ -757,10 +758,13 @@ function entrar() {
   prCarregar();
   dlLc116Montar();
   ctOficialCarregar();
+  empGlobalRestaurar();
   $id('auth-screen').style.display = 'none';
   $id('app').style.display = 'block';
   $id('user-email').textContent = APP.user?.email || '';
   carregarDashboard();
+  dashAnalises();                    // v7.16.1: o Dashboard já abre preenchido
+  empCarregar().then(()=>gSincronizar(APP.page)).catch(()=>{});
 }
 
 // ── NAVEGAÇÃO ──────────────────────────────────────────────────────────
@@ -813,8 +817,8 @@ function gCtx(){
   document.querySelectorAll('.ctx-emp').forEach(e => { e.textContent = txt; e.style.display = txt ? '' : 'none'; });
 }
 function gSincronizar(page){
-  const barra = $id('topo-empresa'); if (barra) barra.style.display = G_SEM_BARRA.includes(page) ? 'none' : '';
-  const wa = $id('g-ano-wrap'); if (wa) wa.style.display = G_COM_ANO.includes(page) ? '' : 'none';
+  const barra = $id('topo-empresa'); if (barra) barra.style.display = G_SEM_BARRA.includes(page) ? 'none' : 'flex';
+  const wa = $id('g-ano-wrap'); if (wa) wa.style.display = G_COM_ANO.includes(page) ? 'flex' : 'none';
   const sg = $id('g-empresa'), sa = $id('an-empresa');
   if (sg && sa && sa.innerHTML && sg.innerHTML !== sa.innerHTML){ const at = sg.value; sg.innerHTML = sa.innerHTML; if (at) sg.value = at; }
   if (sg && EMP_GLOBAL.cnpj && [...sg.options].some(o=>o.value===EMP_GLOBAL.cnpj)) sg.value = EMP_GLOBAL.cnpj;
@@ -843,6 +847,14 @@ let EMP_GLOBAL = { cnpj:'', ano:null };
 function empGlobalSet(cnpj, ano){
   EMP_GLOBAL.cnpj = cnpj || '';
   if (ano) EMP_GLOBAL.ano = +ano;
+  try { localStorage.setItem('atp_emp_global', JSON.stringify(EMP_GLOBAL)); } catch {}
+}
+// v7.16.1: retoma a empresa/ano da última sessão, para os módulos abrirem já preenchidos
+function empGlobalRestaurar(){
+  try { const g = JSON.parse(localStorage.getItem('atp_emp_global')||'null');
+    if (g && g.cnpj){ EMP_GLOBAL.cnpj = g.cnpj; if (g.ano) EMP_GLOBAL.ano = +g.ano;
+      const a = $id('g-ano'); if (a && EMP_GLOBAL.ano) a.value = EMP_GLOBAL.ano; }
+  } catch {}
 }
 function empGlobalAplicar(selId, anoId){
   const s = $id(selId);
@@ -4669,32 +4681,42 @@ function rlRfTribHtml(cen){
       const parte = k => totQ>0 ? L.liquido*(+q[k]||0)/totQ : 0;
       const rPC = +q.remPisCof||0, rII = +q.remIcmsIss||0;
       if (cen==='dentro'){
-        add('Simples Nacional (DAS + FGTS + retenções)', L.ano, T.simples);
+        // carga do Simples decomposta como no motor: DAS + trava do sublimite + FGTS + retenções
+        add('DAS (Simples Nacional)', L.ano, T.das||0);
+        add('ICMS/ISS do sublimite (5ª faixa)', L.ano, T.sublimite||0);
+        add('FGTS', L.ano, T.fgts||0);
+        add('ISS retido pelo tomador', L.ano, T.issRetido||0);
+        add('CPP retida pelo tomador', L.ano, T.cppRetida||0);
+        add('INSS patronal fora do DAS (Anexo IV)', L.ano, T.cppForaDAS||0);
       } else if (cen==='hibrido'){
         add('DAS ajustado (sem a parcela de consumo)', L.ano, L.dasHib);
-        add('FGTS + retenções + CPP fora do DAS', L.ano, (T.fgts||0)+(T.issRetido||0)*rII+(T.cppRetida||0)+(T.cppForaDAS||0));
+        add('FGTS', L.ano, T.fgts||0);
+        add('ISS retido pelo tomador (remanescente)', L.ano, (T.issRetido||0)*rII);
+        add('CPP retida pelo tomador', L.ano, T.cppRetida||0);
+        add('INSS patronal fora do DAS (Anexo IV)', L.ano, T.cppForaDAS||0);
         add('CBS (líquida de créditos)', L.ano, parte('cbs'));
         add('IBS estadual (líquido)', L.ano, parte('ibse'));
         add('IBS municipal (líquido)', L.ano, parte('ibsm'));
         add('Imposto Seletivo', L.ano, L.is||0);
       } else {
         const usaLP = L.regLP <= L.regLR;
-        const pis = usaLP?sLP('pis'):sLR('pis'), cof = usaLP?sLP('cofins'):sLR('cofins');
-        const icms = usaLP?sLP('icms'):sLR('icms'), iss = usaLP?sLP('iss'):sLR('iss');
-        const ipi = usaLP?sLP('ipi'):sLR('ipi');
-        const tot = usaLP?T.lp:T.lr;
-        // resto = IRPJ/CSLL/adicional/INSS patronal/FGTS — o que sobra do regime depois de
-        // retirados os tributos de consumo INTEGRAIS (mesma base do motor: lpResto/lrResto).
-        const resto = tot - pis - cof - icms - iss - ipi;
+        const v = k => usaLP ? sLP(k) : sLR(k);
+        const pis = v('pis'), cof = v('cofins'), icms = v('icms'), iss = v('iss'), ipi = v('ipi');
         add('CBS (líquida de créditos)', L.ano, parte('cbs'));
         add('IBS estadual (líquido)', L.ano, parte('ibse'));
         add('IBS municipal (líquido)', L.ano, parte('ibsm'));
         add('Imposto Seletivo', L.ano, L.is||0);
-        add('PIS/COFINS remanescentes', L.ano, (pis+cof)*rPC);
+        add('PIS remanescente', L.ano, pis*rPC);
+        add('COFINS remanescente', L.ano, cof*rPC);
         add('ICMS remanescente', L.ano, icms*rII);
         add('ISS remanescente', L.ano, iss*rII);
         add('IPI (até 2026)', L.ano, L.ano<=2026?ipi:0);
-        add('IRPJ · CSLL · INSS patronal · FGTS', L.ano, resto);
+        // tributos que a Reforma NÃO substitui — cada um em sua linha
+        add('IRPJ', L.ano, v('irpj'));
+        add('Adicional de IRPJ', L.ano, v('adicional'));
+        add('CSLL', L.ano, v('csll'));
+        add('INSS patronal', L.ano, v('inssPatr'));
+        add('FGTS', L.ano, v('fgts'));
         add('_regime', L.ano, usaLP?1:2);
       }
     }
