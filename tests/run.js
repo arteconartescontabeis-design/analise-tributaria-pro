@@ -143,6 +143,21 @@ for (const i of [1,2]) {
 chk(`gabaritos: ${OKG}/${TOTG} (trava do sublimite documentada)`, TOTG>0 && DIVERG.length===0,
     DIVERG.slice(0,5).join(' | '));
 
+// ═══ 5b. Alíquotas de referência da Reforma (Res. CGIBS nº 14/2026) ═══
+console.log('\n■ Alíquotas de referência da Reforma');
+{
+  const A = vm.runInContext('RF_ALIQ_DEFAULT', ctx);
+  const s33 = A[2033].cbs + A[2033].ibse + A[2033].ibsm;
+  chk('2033 fecha na referência conjunta de 27,91%', Math.abs(s33 - 27.91) < 0.005, `Σ = ${s33.toFixed(2)}%`);
+  const ibs33 = A[2033].ibse + A[2033].ibsm;
+  chk('IBS pleno = 18,7% e escada 2029-2032 = 10/20/30/40%',
+    Math.abs(ibs33 - 18.70) < 0.02 &&
+    [2029,2030,2031,2032].every((a,i) => Math.abs((A[a].ibse + A[a].ibsm) - ibs33*(i+1)/10) < 0.03),
+    `IBS 2033 = ${ibs33.toFixed(2)}%`);
+  chk('IBS de 2027-2028 mantido em 0,10% (ADCT art. 127)',
+    [2027,2028].every(a => Math.abs((A[a].ibse + A[a].ibsm) - 0.10) < 0.001));
+}
+
 // ═══ 6. Integridade da interface ═══
 // Todo elemento que o código acessa por $id() precisa existir no HTML.
 // Foi a ausência disso que deixou passar container removido e seletor duplicado.
