@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.16.3</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.17.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -464,7 +464,7 @@ canvas{max-height:340px}
         </div>
       </div></div>
       <div class="card" id="rf-verif" style="display:none"></div>
-      <div class="card"><div class="hint">As alíquotas da transição decorrem da EC 132 e da LC 214, com a referência da <b>Resolução CGIBS nº 14/2026</b> (padrão conjunto estimado de 27,91%; a definitiva será fixada pelo Senado a partir do cálculo do TCU), e valem para todos os contribuintes —
+      <div class="card"><div class="hint">As alíquotas da transição decorrem da EC 132 e da LC 214, com a referência da <b>Resolução CGIBS nº 14/2026</b> (padrão conjunto estimado de 27,91%; a definitiva será fixada pelo Senado a partir do cálculo do TCU), e valem para todos os contribuintes; dentro do Simples, a partilha do DAS por vigência segue a <b>Res. CGSN nº 190/2026</b> —
         são editadas uma única vez em <a href="#" onclick="go('parametros');return false"><b>Parâmetros</b></a>.
         Se esta empresa precisar de alíquotas próprias, o ajuste e o retorno ao padrão ficam na Configuração da empresa.</div></div>
       <div class="grid" style="grid-template-columns:1fr 1fr;gap:18px">
@@ -537,7 +537,7 @@ canvas{max-height:340px}
       <div id="pr-container"></div>
       <div class="card" style="margin-top:18px">
         <h3 style="margin-top:0">1. Alíquotas por ano da transição <span class="hint" style="font-weight:400">— EC 132/2023 e LC 214/2025; estimativas de referência, ajuste conforme a regulamentação</span></h3>
-        <div class="hint" style="margin-bottom:10px">Valem para <b>todos os contribuintes</b> e semeiam cada nova análise da Reforma. Referência: <b>Res. CGIBS nº 14/2026</b> (27,91% conjunto — IBS 18,7% + CBS 9,21%); a alíquota definitiva será fixada pelo Senado Federal a partir do cálculo do TCU (até 30/10/2026).
+        <div class="hint" style="margin-bottom:10px">Valem para <b>todos os contribuintes</b> e semeiam cada nova análise da Reforma. Referência: <b>Res. CGIBS nº 14/2026</b> (27,91% conjunto — IBS 18,7% + CBS 9,21%); a alíquota definitiva será fixada pelo Senado Federal a partir do cálculo do TCU (até 30/10/2026). A partilha do DAS do Simples na transição (2027+) segue a <b>Res. CGSN nº 190/2026</b> e não é editável aqui.
           Empresas que já tenham alíquotas próprias mantêm as suas — o retorno ao padrão fica na Configuração da empresa.</div>
         <div class="hint" id="pr-cgibs-aviso" style="display:none;background:#fdf3e0;border:1px solid #e6c78a;border-radius:8px;padding:8px 10px;margin-bottom:8px"></div>
         <div style="overflow-x:auto"><table class="gtable" id="pr-aliq"></table></div>
@@ -614,7 +614,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.16.3</b> <span class="badge ok">atual</span></td><td>10/08/2026</td><td><b>Atualizar os Parâmetros passou a recalcular tudo automaticamente.</b> As alíquotas da transição eram copiadas para dentro de cada análise no momento em que ela era criada, e a cópia vencia o padrão — por isso análises antigas continuavam exibindo a tabela anterior (26,80% em 2033) mesmo depois da atualização. Agora a análise usa sempre o padrão vigente do aplicativo, e alterar os Parâmetros reflete na hora na Análise Atual, na Reforma e nos Relatórios. <b>Correção da tela da Reforma que abria vazia.</b> Análises gravadas por versões anteriores não traziam todos os campos da Reforma e a montagem da tela parava no meio, em silêncio — daí a impressão de que a informação só aparecia depois de mexer no ano. O registro salvo passa a ser completado com os campos que faltam, como já era feito na análise do regime atual.</td></tr>
+                    <tr><td><b>v7.17.0</b> <span class="badge ok">atual</span></td><td>13/08/2026</td><td><b>Adequação à Resolução CGSN nº 190/2026</b> (DOU 10/08/2026), que regulamenta o Simples Nacional na Reforma Tributária a partir de 1º/01/2027. A <b>partilha do DAS</b> passa a seguir os novos Anexos I–V por vigência (2027–28, 2029, 2030, 2031, 2032 e 2033+): PIS/COFINS saem da partilha já em 2027 (a fatia vira CBS), ICMS/ISS decrescem em degraus (90/80/70/60%) e zeram em 2033, com o IBS absorvendo a diferença. O <b>cenário híbrido</b> aplica exatamente o art. 22-A: DAS deduzido das parcelas de CBS e IBS da faixa/vigência (antes, aproximação pelos remanescentes — resultado idêntico nas faixas 1–5 e agora exato também na 6ª faixa de 2027–28). O quadro tributo a tributo do Comparativo ganhou a <b>abertura informativa "↳ CBS/IBS dentro do DAS"</b> no cenário por dentro e a linha própria do <b>IBS do sublimite</b>; a trava da 5ª faixa é recomposta por vigência, com teto do ISS decrescente (5% → 3%, Anexos III/IV) e IBS pela fórmula própria dos rodapés — o total do cenário "por dentro" pode variar levemente nos anos em que o teto do ISS morde. O <b>Fator R</b> passa a usar a receita conjunta dos mercados interno e externo (art. 26), mantidas as bases distintas para a alíquota (art. 16, §3º, II) — sem efeito para empresas sem exportação. Parecer com parágrafo de prazos (opção em setembro/2026; confirmação de receitas anteriores até 20/12/2026 — arts. 6º e 144-D/E) e nota do art. 40-D/40-E no quadro do híbrido. <b>Nota D7:</b> o rodapé da trava de ICMS do Anexo II no DOU aparenta erro material (usa os fatores do Anexo I/III); implementado por simetria com o próprio anexo — conferir na versão certificada antes de operar 2027. MEI (Anexo XIII) embutido como referência. Tabelas transcritas do DOU com 251 verificações; suíte de testes ampliada (partilha soma 100%, identidade com a LC 123, art. 22-A e travas). Blocos do art. 25, I-A e X, em backlog.</td></tr>
+                    <tr><td><b>v7.16.3</b></td><td>10/08/2026</td><td><b>Atualizar os Parâmetros passou a recalcular tudo automaticamente.</b> As alíquotas da transição eram copiadas para dentro de cada análise no momento em que ela era criada, e a cópia vencia o padrão — por isso análises antigas continuavam exibindo a tabela anterior (26,80% em 2033) mesmo depois da atualização. Agora a análise usa sempre o padrão vigente do aplicativo, e alterar os Parâmetros reflete na hora na Análise Atual, na Reforma e nos Relatórios. <b>Correção da tela da Reforma que abria vazia.</b> Análises gravadas por versões anteriores não traziam todos os campos da Reforma e a montagem da tela parava no meio, em silêncio — daí a impressão de que a informação só aparecia depois de mexer no ano. O registro salvo passa a ser completado com os campos que faltam, como já era feito na análise do regime atual.</td></tr>
                     <tr><td><b>v7.16.2</b></td><td>10/08/2026</td><td><b>2026 (ano-teste) deixou de gerar IBS e CBS a pagar.</b> Antes, o 1% do ano-teste (CBS 0,9% + IBS 0,1%) era somado à carga de 2026 ao lado do PIS/COFINS integrais, o que superestimava o ano. Agora o ano-teste não gera valor a recolher em nenhum cenário — a apuração continua visível nas colunas de débito e crédito da aba Reforma, e no Detalhamento tributo a tributo as linhas de IBS, CBS e Imposto Seletivo aparecem vazias em 2026, com nota explicativa. Os demais anos não mudaram.</td></tr>
                     <tr><td><b>v7.16.1</b></td><td>10/08/2026</td><td>Ajustes dos testes da v7.16.0. O <b>Detalhamento tributo a tributo (ano) da Reforma</b> passou a exibir <b>cada tributo em sua própria linha</b> nos três cenários — no regime regular, IRPJ, adicional de IRPJ, CSLL, INSS patronal e FGTS aparecem separados, assim como PIS e COFINS remanescentes; no Simples "por dentro", o DAS, a trava do sublimite, o FGTS e as retenções; no híbrido, o DAS ajustado, o FGTS e cada retenção. Corrigido o <b>campo Ano, que caía para baixo do nome da empresa</b> nas telas de Análise Atual, Reforma, Importar Dados e Configuração da empresa: ao exibir o campo, o programa apagava o alinhamento definido no layout. E o <b>Dashboard passou a abrir já preenchido</b> — as estatísticas e a relação de empresas em análise só apareciam depois de navegar por outro módulo e voltar; além disso, a empresa e o ano da última sessão voltaram a ser lembrados ao entrar no sistema.</td></tr>
                     <tr><td><b>v7.16.0</b></td><td>10/08/2026</td><td>Pacote da revisão de agosto, com 12 melhorias. <b>Meses sem lançamento deixaram de ser projetados</b>: a tabela Resultado mês a mês passa a exibir "—" após o último mês com dados, com aviso de até onde a análise está preenchida (o RBT12 rolante continua calculado por dentro, para o Fator R e a trava do sublimite). <b>Alíquotas da Reforma atualizadas à Resolução CGIBS nº 14/2026</b> (DOU 31/07/2026): referência conjunta de 27,91% — CBS 9,21% e IBS pleno 18,7% —, com atualização em um clique nos Parâmetros para quem tem o padrão antigo gravado; a referência definitiva será fixada pelo Senado a partir do cálculo do TCU. <b>Parcelas de redução da Reforma com cascata de fontes</b>: notas importadas (XML) → Classificação RTC → atividade do cadastro (estimativa com confirmação) → manual, sempre com selo de origem e aviso claro quando não há fonte. Novo quadro <b>Detalhamento tributo a tributo (ano) — Reforma</b> no Comparativo de Regimes, com seletor de cenário. <b>Configuração da empresa</b> acessada de dentro de Empresas (botão ⚙️ por linha). Carteira consultada sem a definição manual de regime dos não optantes. Dashboard com gráficos acima e relação de empresas abaixo; cards renumerados; Ano ao lado do nome da empresa; títulos sem o rótulo redundante "EMPRESA · ANO". Cadastro de empresas ganhou o campo <b>Atividade principal (item LC 116)</b>, usado como fonte estimada das reduções. Base pronta para a <b>tabela oficial de Classificação (cClassTrib)</b> via Supabase, com fallback embutido e selo de origem/data (requer setup_v716.sql e a função atualizar-classtrib).</td></tr>
@@ -1802,6 +1803,65 @@ const REP_TRIB = {
   IV: { irpj:[.188,.198,.208,.178,.188,.535], csll:[.152,.152,.152,.192,.192,.215], cofins:[.1767,.2055,.1973,.189,.1808,.2055], pis:[.0383,.0445,.0427,.041,.0392,.0445], iss:[.445,.40,.40,.40,.40,0] },
   V:  { irpj:[.25,.23,.24,.21,.23,.35], csll:[.15,.15,.15,.15,.125,.155], cofins:[.141,.141,.1492,.1574,.141,.1644], pis:[.0305,.0305,.0323,.0341,.0305,.0356], cpp:[.2885,.2785,.2385,.2385,.2385,.295], iss:[.14,.17,.19,.21,.235,0] },
 };
+// ═══ v7.17.0 · Res. CGSN nº 190/2026 (DOU 10/08/2026): partilha do DAS por vigência (2027+) ═══
+// PIS/COFINS saem da partilha já em 2027 (a fatia vira CBS); ICMS/ISS decrescem pelos degraus
+// 100/90/80/70/60/0% (2027-28 / 2029 / 2030 / 2031 / 2032 / 2033+) e o IBS absorve a diferença.
+// Tabelas transcritas do DOU e validadas no CI (soma 100% por faixa; identidade com o REP_TRIB nas
+// faixas 1–5: CBS+IBS = PIS/COFINS antigos + parcela migrada do ICMS/ISS).
+const REM190 = {2027:1,2028:1,2029:.9,2030:.8,2031:.7,2032:.6,2033:0};        // ICMS/ISS remanescentes na partilha
+const TETO_ISS_190 = {2027:.05,2028:.05,2029:.045,2030:.04,2031:.035,2032:.03,2033:0}; // teto do ISS, Anexos III/IV (art. 21, III)
+const vig190 = ano => ano>=2033 ? 2033 : (ano>=2029 ? ano : 2027);
+const REP190 = {
+  2027: {
+    I:  { irpj:[.055,.055,.055,.055,.055,.1358], csll:[.035,.035,.035,.035,.035,.1006], cbs:[.1533,.1533,.1533,.1533,.1533,.3402], cpp:[.415,.415,.42,.42,.42,.4234], icms:[.34,.34,.335,.335,.335,0], ibs:[.0017,.0017,.0017,.0017,.0017,0] },
+    II: { irpj:[.055,.055,.055,.055,.055,.0853], csll:[.035,.035,.035,.035,.035,.0753], cbs:[.1385,.1385,.1385,.1385,.1385,.2522], cpp:[.375,.375,.375,.375,.375,.2359], ipi:[.075,.075,.075,.075,.075,.3513], icms:[.32,.32,.32,.32,.32,0], ibs:[.0015,.0015,.0015,.0015,.0015,0] },
+    III:{ irpj:[.04,.04,.04,.04,.04,.3509], csll:[.035,.035,.035,.035,.035,.1504], cbs:[.1543,.1691,.1641,.1641,.1543,.1929], cpp:[.434,.434,.434,.434,.434,.3058], iss:[.335,.32,.325,.325,.335,0], ibs:[.0017,.0019,.0019,.0019,.0017,0] },
+    IV: { irpj:[.188,.198,.208,.178,.188,.5371], csll:[.152,.152,.152,.192,.192,.2159], cbs:[.2126,.2473,.2374,.2275,.2176,.247], iss:[.445,.4,.4,.4,.4,0], ibs:[.0024,.0027,.0026,.0025,.0024,0] },
+    V:  { irpj:[.25,.23,.24,.21,.23,.351], csll:[.15,.15,.15,.15,.125,.1554], cbs:[.1696,.1696,.1795,.1894,.1696,.1978], cpp:[.2885,.2785,.2385,.2385,.2385,.2958], iss:[.14,.17,.19,.21,.235,0], ibs:[.0019,.0019,.002,.0021,.0019,0] },
+  },
+  2029: {
+    I:  { irpj:[.055,.055,.055,.055,.055,.135], csll:[.035,.035,.035,.035,.035,.1], cbs:[.155,.155,.155,.155,.155,.344], cpp:[.415,.415,.42,.42,.42,.421], icms:[.306,.306,.3015,.3015,.3015,0], ibs:[.034,.034,.0335,.0335,.0335,0] },
+    II: { irpj:[.055,.055,.055,.055,.055,.085], csll:[.035,.035,.035,.035,.035,.075], cbs:[.14,.14,.14,.14,.14,.255], cpp:[.375,.375,.375,.375,.375,.235], ipi:[.075,.075,.075,.075,.075,.35], icms:[.288,.288,.288,.288,.288,0], ibs:[.032,.032,.032,.032,.032,0] },
+    III:{ irpj:[.04,.04,.04,.04,.04,.35], csll:[.035,.035,.035,.035,.035,.15], cbs:[.156,.171,.166,.166,.156,.195], cpp:[.434,.434,.434,.434,.434,.305], iss:[.3015,.288,.2925,.2925,.3015,0], ibs:[.0335,.032,.0325,.0325,.0335,0] },
+    IV: { irpj:[.188,.198,.208,.178,.188,.535], csll:[.152,.152,.152,.192,.192,.215], cbs:[.215,.25,.24,.23,.22,.25], iss:[.4005,.36,.36,.36,.36,0], ibs:[.0445,.04,.04,.04,.04,0] },
+    V:  { irpj:[.25,.23,.24,.21,.23,.35], csll:[.15,.15,.15,.15,.125,.155], cbs:[.1715,.1715,.1815,.1915,.1715,.2], cpp:[.2885,.2785,.2385,.2385,.2385,.295], iss:[.126,.153,.171,.189,.2115,0], ibs:[.014,.017,.019,.021,.0235,0] },
+  },
+  2030: {
+    I:  { irpj:[.055,.055,.055,.055,.055,.135], csll:[.035,.035,.035,.035,.035,.1], cbs:[.155,.155,.155,.155,.155,.344], cpp:[.415,.415,.42,.42,.42,.421], icms:[.272,.272,.268,.268,.268,0], ibs:[.068,.068,.067,.067,.067,0] },
+    II: { irpj:[.055,.055,.055,.055,.055,.085], csll:[.035,.035,.035,.035,.035,.075], cbs:[.14,.14,.14,.14,.14,.255], cpp:[.375,.375,.375,.375,.375,.235], ipi:[.075,.075,.075,.075,.075,.35], icms:[.256,.256,.256,.256,.256,0], ibs:[.064,.064,.064,.064,.064,0] },
+    III:{ irpj:[.04,.04,.04,.04,.04,.35], csll:[.035,.035,.035,.035,.035,.15], cbs:[.156,.171,.166,.166,.156,.195], cpp:[.434,.434,.434,.434,.434,.305], iss:[.268,.256,.26,.26,.268,0], ibs:[.067,.064,.065,.065,.067,0] },
+    IV: { irpj:[.188,.198,.208,.178,.188,.535], csll:[.152,.152,.152,.192,.192,.215], cbs:[.215,.25,.24,.23,.22,.25], iss:[.356,.32,.32,.32,.32,0], ibs:[.089,.08,.08,.08,.08,0] },
+    V:  { irpj:[.25,.23,.24,.21,.23,.35], csll:[.15,.15,.15,.15,.125,.155], cbs:[.1715,.1715,.1815,.1915,.1715,.2], cpp:[.2885,.2785,.2385,.2385,.2385,.295], iss:[.112,.136,.152,.168,.188,0], ibs:[.028,.034,.038,.042,.047,0] },
+  },
+  2031: {
+    I:  { irpj:[.055,.055,.055,.055,.055,.135], csll:[.035,.035,.035,.035,.035,.1], cbs:[.155,.155,.155,.155,.155,.344], cpp:[.415,.415,.42,.42,.42,.421], icms:[.238,.238,.2345,.2345,.2345,0], ibs:[.102,.102,.1005,.1005,.1005,0] },
+    II: { irpj:[.055,.055,.055,.055,.055,.085], csll:[.035,.035,.035,.035,.035,.075], cbs:[.14,.14,.14,.14,.14,.255], cpp:[.375,.375,.375,.375,.375,.235], ipi:[.075,.075,.075,.075,.075,.35], icms:[.224,.224,.224,.224,.224,0], ibs:[.096,.096,.096,.096,.096,0] },
+    III:{ irpj:[.04,.04,.04,.04,.04,.35], csll:[.035,.035,.035,.035,.035,.15], cbs:[.156,.171,.166,.166,.156,.195], cpp:[.434,.434,.434,.434,.434,.305], iss:[.2345,.224,.2275,.2275,.2345,0], ibs:[.1005,.096,.0975,.0975,.1005,0] },
+    IV: { irpj:[.188,.198,.208,.178,.188,.535], csll:[.152,.152,.152,.192,.192,.215], cbs:[.215,.25,.24,.23,.22,.25], iss:[.3115,.28,.28,.28,.28,0], ibs:[.1335,.12,.12,.12,.12,0] },
+    V:  { irpj:[.25,.23,.24,.21,.23,.35], csll:[.15,.15,.15,.15,.125,.155], cbs:[.1715,.1715,.1815,.1915,.1715,.2], cpp:[.2885,.2785,.2385,.2385,.2385,.295], iss:[.098,.119,.133,.147,.1645,0], ibs:[.042,.051,.057,.063,.0705,0] },
+  },
+  2032: {
+    I:  { irpj:[.055,.055,.055,.055,.055,.135], csll:[.035,.035,.035,.035,.035,.1], cbs:[.155,.155,.155,.155,.155,.344], cpp:[.415,.415,.42,.42,.42,.421], icms:[.204,.204,.201,.201,.201,0], ibs:[.136,.136,.134,.134,.134,0] },
+    II: { irpj:[.055,.055,.055,.055,.055,.085], csll:[.035,.035,.035,.035,.035,.075], cbs:[.14,.14,.14,.14,.14,.255], cpp:[.375,.375,.375,.375,.375,.235], ipi:[.075,.075,.075,.075,.075,.35], icms:[.192,.192,.192,.192,.192,0], ibs:[.128,.128,.128,.128,.128,0] },
+    III:{ irpj:[.04,.04,.04,.04,.04,.35], csll:[.035,.035,.035,.035,.035,.15], cbs:[.156,.171,.166,.166,.156,.195], cpp:[.434,.434,.434,.434,.434,.305], iss:[.201,.192,.195,.195,.201,0], ibs:[.134,.128,.13,.13,.134,0] },
+    IV: { irpj:[.188,.198,.208,.178,.188,.535], csll:[.152,.152,.152,.192,.192,.215], cbs:[.215,.25,.24,.23,.22,.25], iss:[.267,.24,.24,.24,.24,0], ibs:[.178,.16,.16,.16,.16,0] },
+    V:  { irpj:[.25,.23,.24,.21,.23,.35], csll:[.15,.15,.15,.15,.125,.155], cbs:[.1715,.1715,.1815,.1915,.1715,.2], cpp:[.2885,.2785,.2385,.2385,.2385,.295], iss:[.084,.102,.114,.126,.141,0], ibs:[.056,.068,.076,.084,.094,0] },
+  },
+  2033: {
+    I:  { irpj:[.055,.055,.055,.055,.055,.135], csll:[.035,.035,.035,.035,.035,.1], cbs:[.155,.155,.155,.155,.155,.344], cpp:[.415,.415,.42,.42,.42,.421], ibs:[.34,.34,.335,.335,.335,0] },
+    II: { irpj:[.055,.055,.055,.055,.055,.085], csll:[.035,.035,.035,.035,.035,.075], cbs:[.14,.14,.14,.14,.14,.255], cpp:[.375,.375,.375,.375,.375,.235], ipi:[.075,.075,.075,.075,.075,.35], ibs:[.32,.32,.32,.32,.32,0] },
+    III:{ irpj:[.04,.04,.04,.04,.04,.35], csll:[.035,.035,.035,.035,.035,.15], cbs:[.156,.171,.166,.166,.156,.195], cpp:[.434,.434,.434,.434,.434,.305], ibs:[.335,.32,.325,.325,.335,0] },
+    IV: { irpj:[.188,.198,.208,.178,.188,.535], csll:[.152,.152,.152,.192,.192,.215], cbs:[.215,.25,.24,.23,.22,.25], ibs:[.445,.4,.4,.4,.4,0] },
+    V:  { irpj:[.25,.23,.24,.21,.23,.35], csll:[.15,.15,.15,.15,.125,.155], cbs:[.1715,.1715,.1815,.1915,.1715,.2], cpp:[.2885,.2785,.2385,.2385,.2385,.295], ibs:[.14,.17,.19,.21,.235,0] },
+  },
+};
+// D7: o rodapé da trava de ICMS do Anexo II no DOU usa os fatores do Anexo I/III (21%/125.640 e
+// 33,50→20,10) — erro material aparente (o IBS do mesmo rodapé usa 14,70%/85.500 e 2033 está correto).
+// Trava implementada por SIMETRIA com o próprio anexo; conferir na versão certificada do DOU.
+// Anexo Único da Res. 190 (novo Anexo XIII da Res. 140) — valores fixos mensais do MEI, referência:
+const MEI190 = {2027:{icms:1,iss:5,cbs:.994,ibs:.006},2029:{icms:.9,iss:4.5,cbs:1,ibs:.2},2030:{icms:.8,iss:4,cbs:1,ibs:.4},2031:{icms:.7,iss:3.5,cbs:1,ibs:.6},2032:{icms:.6,iss:3,cbs:1,ibs:.8},2033:{cbs:1,ibs:2}};
+function repTribAno(ano){ return (!ano || ano<=2026) ? REP_TRIB : (REP190[vig190(ano)] || REP_TRIB); }
+
 // v7.1: repartição efetiva — partes de consumo (ICMS/ISS/PIS+COFINS) e CPP vêm dos ANEXOS EM USO
 // (editáveis nos Parâmetros); o residual é distribuído entre os demais tributos na proporção da
 // repartição padrão da LC 123, normalizado para fechar 100% em cada faixa.
@@ -1876,12 +1936,14 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const rbt12 = m===0
       ? (cfg.rbt12Direto>0 ? cfg.rbt12Direto : rbt12Cfg)
       : S(cfg.rbt12Lanc.slice(m)) + S(totalPrev);
-    // Fator R do mês: folha dos 12 meses anteriores ÷ RBT12 do mês (planilha linha 144)
+    const rbt12Exp = m===0 ? rbt12ExpCfg : S((cfg.rbt12ExpLanc||z12()).slice(m)) + S(totalPrevExp);
+    // Fator R do mês: folha dos 12 meses anteriores ÷ RBT12r (planilha linha 144).
+    // v7.17.0: a RBT12r do Fator R é CONJUNTA — mercado interno + exportação (Res. CGSN 140, art. 26,
+    // na redação da Res. 190/2026) — enquanto a alíquota segue em bases distintas (art. 16, §3º, II).
     const folha12m = m===0 ? folha12Cfg : S(cfg.folha12Lanc.slice(m)) + S(folhaPrev);
-    const fatorR = rbt12 > 0 ? folha12m / rbt12 : 0;
+    const fatorR = (rbt12 + rbt12Exp) > 0 ? folha12m / (rbt12 + rbt12Exp) : 0;
     out.fatorRMensal.push(fatorR);
     if (m===0) out.fatorR = fatorR;
-    const rbt12Exp = m===0 ? rbt12ExpCfg : S((cfg.rbt12ExpLanc||z12()).slice(m)) + S(totalPrevExp);
     const fx = faixaDe(rbt12);
     const fxE = faixaDe(rbt12Exp);
     const efE = A => rbt12Exp>0 ? (rbt12Exp*A.aliq[fxE] - A.ded[fxE])/rbt12Exp : 0;
@@ -1914,6 +1976,12 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
 
     const dasExp = KEXP.reduce((s,k)=>s + R[k][m]*efb[k], 0);
     const das = K.reduce((s,k)=>s + R[k][m]*efb[k], 0) + dasExp;
+    // v7.17.0: DAS por anexo do mês — insumo da partilha por vigência (Res. CGSN 190/2026)
+    const dasAx = {I:0,II:0,III:0,IV:0,V:0};
+    { const _axDe = k => k.startsWith('a1')&&k!=='a1_exp' ? 'I' : k.startsWith('a2')&&k!=='a2_exp' ? 'II'
+        : k==='a4' ? 'IV' : k==='a5r' ? (fatorR>=.28?'III':'V') : 'III';
+      for (const k of K)    dasAx[_axDe(k)] += R[k][m]*efb[k];
+      dasAx.I += R.a1_exp[m]*efb.a1_exp; dasAx.II += R.a2_exp[m]*efb.a2_exp; dasAx.III += R.a3_exp[m]*efb.a3_exp; }
     const recInt = totalRec(m), recExp = totalExp(m);
     const receita = recInt + recExp;
     totalPrev.push(recInt);            // o RBT12 interno não é contaminado pela exportação
@@ -1939,7 +2007,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // ── SUBLIMITE ICMS/ISS (Res. CGSN 140/2018, art. 24) ──
     // RBT12 acima de R$ 3,6 mi: ICMS/ISS saem da repartição da 6ª faixa, mas continuam
     // devidos no DAS pela alíquota efetiva travada na 5ª faixa. ISS limitado a 5% (LC 116).
-    let subIcms = 0, subIss = 0;
+    let subIcms = 0, subIss = 0, trv190 = null;
     const subLim = +cfg.sublimiteValor || 3600000;
     if ((cfg.sublimite||'auto') !== 'off' && rbt12 > subLim) {
       const ef5 = A => (subLim*A.aliq[4] - A.ded[4])/subLim;
@@ -1955,6 +2023,14 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       subIss = R.a3_semret[m]*pIss3 + R.a4[m]*pIss4
              + R.a5r[m]*(fatorR >= .28 ? pIss3 : pIss5);
       // receitas com ST e com retenção de ISS ficam de fora (ICMS-ST recolhido antes; ISS retido pelo tomador)
+      // v7.17.0: componentes brutos (sem teto) p/ recompor a trava por vigência — Res. 190:
+      // ISS decresce com teto próprio por ano (Anexos III/IV) e o IBS entra pela fórmula do rodapé, sem teto.
+      trv190 = { icms: subIcms, iss: [] };
+      const _rw3 = ef5(A3)*A3.iss[4], _rw4 = ef5(A4)*((A4.iss&&A4.iss[4]!=null)?A4.iss[4]:.40), _rw5 = ef5(A5)*((A5.iss&&A5.iss[4]!=null)?A5.iss[4]:.235);
+      const _b3 = R.a3_semret[m] + (fatorR>=.28 ? R.a5r[m] : 0), _b5 = fatorR<.28 ? R.a5r[m] : 0;
+      if (_b3>0) trv190.iss.push(['III',_b3,_rw3]);
+      if (R.a4[m]>0) trv190.iss.push(['IV',R.a4[m],_rw4]);
+      if (_b5>0) trv190.iss.push(['V',_b5,_rw5]);
     }
     dasIcmsIss += subIcms + subIss;
 
@@ -2043,7 +2119,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const lr_csll = baseIRCS>0 ? baseIRCS*.09 : 0;
     const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
 
-    out.meses.push({ m, rbt12, rbt12Exp, recInt, recExp, dasExp, faixaExp: fxE+1, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasTrib: dt, recCom, recServ,
+    out.meses.push({ m, rbt12, rbt12Exp, recInt, recExp, dasExp, faixaExp: fxE+1, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasAx, trv190, dasTrib: dt, recCom, recServ,
       fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal,
       simples: { das, fgts, sublimite: subIcms+subIss, issRetido, cppRetida,
         // v7.1 (A1): CPP do Anexo IV é devida FORA do DAS — proxy pela participação da receita a4 no mês
@@ -2627,11 +2703,12 @@ function anRecalcular() {
   try {
     const C = calcCenariosReforma(r, AN.reforma);
     const R33 = C.REF[C.REF.length-1];
-    const mn33 = Math.min(T.simples, R33.hib, R33.regular);
+    const dentro33 = T.simples + (R33.p190 ? R33.p190.trava - (T.sublimite||0) : 0);   // v7.17.0: trava recomposta (Res. 190)
+    const mn33 = Math.min(dentro33, R33.hib, R33.regular);
     const st = (rot,v,sub,on) => `<div class="stat ${on?'melhor':''}"><div class="n" style="font-size:17px">${fmtR(v)}</div><div class="l">${rot}</div><div class="sub">${sub}</div></div>`;
     refHtml = `<div style="margin-top:14px;border-top:1px solid var(--borda,#e5e7eb);padding-top:12px"><b style="font-size:13px">Reforma Tributária — ano pleno (2033)</b>
       <div class="grid c3" style="margin-top:8px">
-      ${st('Simples "por dentro"', T.simples, 'tudo no DAS — crédito reduzido ao cliente', mn33===T.simples)}
+      ${st('Simples "por dentro"', dentro33, 'tudo no DAS — crédito reduzido ao cliente', mn33===dentro33)}
       ${st('Simples híbrido (LC 214)', R33.hib, 'DAS sem consumo + IBS/CBS por fora — crédito integral', mn33===R33.hib)}
       ${st('Fora do Simples', R33.regular, 'regime regular pleno ('+R33.regNome+' + IBS/CBS)', mn33===R33.regular)}
       </div><div class="hint" style="margin-top:6px">Quadro ano a ano (2026–2033) na aba <b>Relatórios → Comparativo de Regimes</b>.${C.usouFallback?' Aba Reforma sem dados: usei alíquotas-padrão e a receita da análise, sem créditos de compras.':''}</div></div>`;
@@ -3116,15 +3193,50 @@ function calcCenariosReforma(res, reforma) {
   const lrPis=sLR('pis'), lrCof=sLR('cofins'), lrIcms=sLR('icms'), lrIpi=sLR('ipi'), lrIss=sLR('iss');
   const lpResto = T.lp - lpPis - lpCof - lpIcms - lpIpi - lpIss;
   const lrResto = T.lr - lrPis - lrCof - lrIcms - lrIpi - lrIss;
+  // ═══ v7.17.0 · Res. CGSN nº 190/2026: partilha do DAS por vigência ═══
+  // Faixas 1–5: CBS(v)+IBS(v) = PIS/COFINS antigos + ICMS/ISS×(1−rem) — identidade conferida no CI
+  // contra as tabelas do DOU; a 6ª faixa de 2027-28 tem CBS próprio (delta aplicado aos meses na faixa).
+  // Trava da 5ª faixa recomposta por vigência: ICMS×rem + IBS×(1−rem) (soma invariante) e ISS com
+  // teto decrescente (Anexos III/IV) + IBS pela fórmula do rodapé, sem teto (art. 21, III e IV).
+  const CBS27_D6 = {I:-.0038,II:-.0028,III:-.0021,IV:-.0030,V:-.0022};   // CBS da 6ª faixa 2027-28 − PIS/COFINS atuais
+  const subIcmsTot = meses.reduce((s,M)=>s+(M.subIcms||0),0);
+  const subIssTot  = meses.reduce((s,M)=>s+(M.subIss||0),0);
+  const coreII = (T.dasIcmsIss||0) - subIcmsTot - subIssTot;             // partilha ICMS/ISS sem a trava
+  const p190 = a => {
+    if (a<=2026) return null;
+    const v = vig190(a), rem = REM190[v] ?? 0, teto = TETO_ISS_190[v] ?? 0;
+    let issV = 0, ibsTrava = subIcmsTot*(1-rem);
+    for (const M of meses) for (const [ax,b,p] of ((M.trv190&&M.trv190.iss)||[])) {
+      issV += b*Math.min(p*rem, ax==='V' ? p*rem : teto);                // teto decrescente só nos Anexos III/IV
+      ibsTrava += b*p*(1-rem);
+    }
+    let corr6 = 0, ibs27 = 0;
+    if (a<=2028) for (const M of meses) {
+      if (!M.dasAx) continue;
+      if (M.faixa===6) for (const ax of Object.keys(CBS27_D6)) corr6 += (M.dasAx[ax]||0)*CBS27_D6[ax];
+      const RP = REP190[2027];
+      for (const ax of Object.keys(M.dasAx)) if (RP[ax] && RP[ax].ibs) ibs27 += (M.dasAx[ax]||0)*RP[ax].ibs[Math.min((M.faixa||1),6)-1];
+    }
+    const cbs = Math.max(0, (T.dasPisCof||0) + corr6 - ibs27);
+    const ibs = coreII*(1-rem) + ibsTrava + ibs27;
+    const icmsIss = coreII*rem + subIcmsTot*rem + issV;
+    const icmsIssTrava = subIcmsTot*rem + issV;
+    return { rem, cbs, ibs, icmsIss, icmsIssTrava, ibsTrava,
+             trava: icmsIssTrava + ibsTrava, dasMaisTrava: (T.das||0) + icmsIssTrava + ibsTrava };
+  };
   const REF = RF_ANOS.map(a=>{
     const L = rfLinhaBase(rfx, a), q = L.q;
     const rPC = +q.remPisCof||0, rII = +q.remIcmsIss||0;
-    const dasHib = dasResto + (T.dasPisCof||0)*rPC + (T.dasIcmsIss||0)*rII;
+    const P = p190(a);
+    // v7.17.0 · art. 22-A (Res. 190): híbrido = DAS (com a trava do ano) − parcelas de CBS/IBS da partilha.
+    // ≤2026 permanece a regra atual (tudo dentro).
+    const dasHib = P ? (P.dasMaisTrava - P.cbs - P.ibs)
+                     : dasResto + (T.dasPisCof||0)*rPC + (T.dasIcmsIss||0)*rII;
     const hib = dasHib + (T.fgts||0) + (T.issRetido||0)*rII + (T.cppRetida||0) + (T.cppForaDAS||0) + L.liquido + L.is;
     const regLP = lpResto + (lpIcms+lpIss)*rII + (lpPis+lpCof)*rPC + (a<=2026?lpIpi:0) + L.liquido + L.is;
     const regLR = lrResto + (lrIcms+lrIss)*rII + (lrPis+lrCof)*rPC + (a<=2026?lrIpi:0) + L.liquido + L.is;
     const regular = Math.min(regLP, regLR);
-    return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, anoTeste:L.anoTeste, dasHib, hib, regular, regLP, regLR, regNome: regular===regLP?'Presumido':'Real' };
+    return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, anoTeste:L.anoTeste, dasHib, hib, regular, regLP, regLR, p190:P, regNome: regular===regLP?'Presumido':'Real' };
   });
   const semCreditos = REF.every(l=>l.cred<=0.005);
   return { rfx, REF, usouFallback: !reforma, proxyCompras, semCreditos };
@@ -3169,7 +3281,7 @@ function rfCalcular() {
   // notas técnicas
   const notas = [];
   notas.push('Débitos e créditos "por fora": alíquotas aplicadas sobre os valores informados, com reduções da EC 132/LC 214 nas parcelas indicadas. O IS não gera crédito.');
-  notas.push('<b>Transição (auditada):</b> os tributos que saem são descontados ano a ano pelos percentuais remanescentes — PIS/COFINS deixam de existir em 2027 (substituídos pela CBS plena); ICMS e ISS caem 10% ao ano de 2029 a 2032 e zeram em 2033 (substituídos pelo IBS); o IPI permanece apenas até 2026 (depois, zerado exceto ZFM). Os novos (CBS/IBS/IS) entram pelas alíquotas da tabela acima. Em 2026 (ano-teste), a CBS de 0,9% e o IBS de 0,1% são compensáveis com o PIS/COFINS devidos.');
+  notas.push('<b>Transição (auditada):</b> os tributos que saem são descontados ano a ano pelos percentuais remanescentes — PIS/COFINS deixam de existir em 2027 (substituídos pela CBS plena); ICMS e ISS caem 10% ao ano de 2029 a 2032 e zeram em 2033 (substituídos pelo IBS); o IPI permanece apenas até 2026 (depois, zerado exceto ZFM). Os novos (CBS/IBS/IS) entram pelas alíquotas da tabela acima. Em 2026 (ano-teste), a CBS de 0,9% e o IBS de 0,1% são compensáveis com o PIS/COFINS devidos. <b>Dentro do Simples</b>, a partilha do DAS na transição segue os novos Anexos I–V da <b>Res. CGSN nº 190/2026</b> (CBS na partilha já em 2027; ICMS/ISS→IBS em degraus; híbrido pelo art. 22-A).');
   if ((RF.contra.vendas_lrlp||0) > 0) notas.push('Vendas a PJ do Lucro Real/Presumido: o IBS/CBS destacado gera crédito integral ao cliente — tende a ser neutro na cadeia.');
   if ((RF.contra.vendas_pf||0) > 0 || (RF.contra.vendas_simples||0) > 0) notas.push('Vendas a PF e a optantes do Simples: o imposto é custo final do comprador — atenção ao impacto no preço.');
   if ((RF.contra.compras_simples||0) > 0) notas.push('Compras de fornecedores do Simples: crédito limitado ao montante de IBS/CBS efetivamente recolhido no DAS (ajuste o % conforme o fornecedor).');
@@ -4451,7 +4563,7 @@ function parecerDados(){
   if ((RL.dados?.receitas?.a4||[]).some(v=>+v>0)) alertas.push('Receitas do Anexo IV: o CPP é recolhido fora do DAS — conferir o INSS patronal informado na Folha.');
   // séries anuais (2027–2033)
   const sAnos = anos.map(l=>l.ano);
-  const sDentro = anos.map(()=> T.simples);
+  const sDentro = anos.map(l=> T.simples + (l.p190 ? l.p190.trava - (T.sublimite||0) : 0));   // v7.17.0: trava por vigência (Res. 190)
   const sHib = anos.map(l=>l.hib);
   const sReg = anos.map(l=>l.regular);
   const sLP = anos.map(l=>l.regLP), sLR = anos.map(l=>l.regLR);
@@ -4628,6 +4740,7 @@ function rlParecer(){
     ${TX.parecer2?`<p class="pp-p">${TX.parecer2}</p>`:''}
     <div class="pp-final">${TX.recomendacao}</div>
     <div id="pp-notas"></div>
+    ${D.variante!=='acima'?`<p class="pp-p" style="font-size:9.5pt"><b>Prazos da Res. CGSN nº 190/2026:</b> a opção pelo Simples Nacional passa a ser formalizada de 1º a 30 de setembro, com efeitos a partir de 1º de janeiro seguinte — para produzir efeitos em 2027, portanto, em setembro/2026 (art. 6º). A opção pelo recolhimento de IBS/CBS no regime regular (cenário híbrido) é semestral, nas janelas de setembro e março (art. 40-D). Quem ingressar no Simples em 1º/01/2027 deve confirmar receitas e folhas anteriores no módulo "Receitas Anteriores à Opção" do PGDAS-D até 20/12/2026 (competências dez/2025 a nov/2026) e até 20/01/2027 (dez/2026); sem manifestação, prevalece o pré-preenchimento da Receita Federal (arts. 144-D e 144-E).</p>`:''}
     <p class="pp-p">Colocamo-nos à disposição para esclarecimentos adicionais.</p>
     <div class="pp-assin"><p>Atenciosamente,</p><div style="height:14mm"></div><div class="pp-traco"></div><b>Responsável técnico</b><div class="hint">Artecon Artes Contábeis · Palhoça/SC</div></div>
     <div class="pp-notaia">Texto interpretativo ${RL._ia?'gerado por inteligência artificial':'padrão do sistema'} a partir dos valores calculados pelo motor do Análise Tributária Pro. Os números não são gerados pela IA. ${D.cen&&D.cen.semCreditos?'Cenários da Reforma sem créditos de IBS/CBS informados. ':(D.cen&&D.cen.proxyCompras?'Créditos de IBS/CBS estimados pelas compras de revenda da análise. ':'')}Valores em moeda constante do ano-base. Estimativas direcionais — não substituem a apuração formal de cada período.</div>
@@ -4699,13 +4812,19 @@ function rlRfTribHtml(cen){
       const parte = k => totQ>0 ? L.liquido*(+q[k]||0)/totQ : 0;
       const rPC = +q.remPisCof||0, rII = +q.remIcmsIss||0;
       if (cen==='dentro'){
-        // carga do Simples decomposta como no motor: DAS + trava do sublimite + FGTS + retenções
+        // carga do Simples decomposta como no motor: DAS + trava do sublimite + FGTS + retenções.
+        // v7.17.0: a trava é recomposta por vigência (Res. 190) e a abertura ↳ mostra a partilha
+        // oficial de CBS/IBS dentro do DAS — linhas informativas, fora do TOTAL.
+        const P = L.p190;
         add('DAS (Simples Nacional)', L.ano, T.das||0);
-        add('ICMS/ISS do sublimite (5ª faixa)', L.ano, T.sublimite||0);
+        add('ICMS/ISS do sublimite (5ª faixa)', L.ano, P ? P.icmsIssTrava : (T.sublimite||0));
+        if (P && P.ibsTrava > 0.005) add('IBS do sublimite (5ª faixa)', L.ano, P.ibsTrava);
         add('FGTS', L.ano, T.fgts||0);
         add('ISS retido pelo tomador', L.ano, T.issRetido||0);
         add('CPP retida pelo tomador', L.ano, T.cppRetida||0);
         add('INSS patronal fora do DAS (Anexo IV)', L.ano, T.cppForaDAS||0);
+        if (P){ add('↳ CBS dentro do DAS', L.ano, P.cbs); add('↳ IBS dentro do DAS', L.ano, P.ibs);
+                add('↳ ICMS/ISS dentro do DAS', L.ano, P.icmsIss); }
       } else if (cen==='hibrido'){
         add('DAS ajustado (sem a parcela de consumo)', L.ano, L.dasHib);
         if (L.anoTeste) { add('FGTS', L.ano, T.fgts||0); add('ISS retido pelo tomador (remanescente)', L.ano, (T.issRetido||0)*rII);
@@ -4745,20 +4864,20 @@ function rlRfTribHtml(cen){
     // ordem fixa das linhas (v7.16.2): sem isso, os tributos que não existem em 2026
     // seriam criados só na coluna de 2027 e cairiam para o fim da tabela.
     const ORDEM = {
-      dentro: ['DAS (Simples Nacional)','ICMS/ISS do sublimite (5ª faixa)','FGTS','ISS retido pelo tomador','CPP retida pelo tomador','INSS patronal fora do DAS (Anexo IV)'],
+      dentro: ['DAS (Simples Nacional)','ICMS/ISS do sublimite (5ª faixa)','IBS do sublimite (5ª faixa)','FGTS','ISS retido pelo tomador','CPP retida pelo tomador','INSS patronal fora do DAS (Anexo IV)','↳ CBS dentro do DAS','↳ IBS dentro do DAS','↳ ICMS/ISS dentro do DAS'],
       hibrido: ['DAS ajustado (sem a parcela de consumo)','FGTS','ISS retido pelo tomador (remanescente)','CPP retida pelo tomador','INSS patronal fora do DAS (Anexo IV)','CBS (líquida de créditos)','IBS estadual (líquido)','IBS municipal (líquido)','Imposto Seletivo'],
       fora: ['CBS (líquida de créditos)','IBS estadual (líquido)','IBS municipal (líquido)','Imposto Seletivo','PIS remanescente','COFINS remanescente','ICMS remanescente','ISS remanescente','IPI (até 2026)','IRPJ','Adicional de IRPJ','CSLL','INSS patronal','FGTS'],
     };
     const rots = (ORDEM[cen]||[]).filter(r=>cel[r]).concat(
       Object.keys(cel).filter(r=>r!=='_regime' && !(ORDEM[cen]||[]).includes(r)));
-    const totalAno = {}; for (const a of anos) totalAno[a] = rots.reduce((s,r)=>s+(cel[r][a]||0),0);
+    const totalAno = {}; for (const a of anos) totalAno[a] = rots.filter(r=>!r.startsWith('↳')).reduce((s,r)=>s+(cel[r][a]||0),0);   // ↳ = abertura informativa, não soma
     let h = '<div style="overflow-x:auto"><table><thead><tr><th>Tributo</th>' + anos.map(a=>`<th class="num">${a}</th>`).join('') + '</tr></thead><tbody>';
-    for (const r of rots) h += `<tr><td>${r}</td>` + anos.map(a=>`<td class="num">${cel[r][a]==null?'—':F(cel[r][a])}</td>`).join('') + '</tr>';
+    for (const r of rots) h += `<tr${r.startsWith('↳')?' class="hint" style="font-size:12px;opacity:.85"':''}><td>${r}</td>` + anos.map(a=>`<td class="num">${cel[r][a]==null?'—':F(cel[r][a])}</td>`).join('') + '</tr>';
     h += `<tr style="font-weight:700"><td>TOTAL do ano</td>` + anos.map(a=>`<td class="num">${F(totalAno[a])}</td>`).join('') + '</tr>';
     h += `<tr><td>% da receita</td>` + anos.map(a=>`<td class="num">${pctR(totalAno[a])}</td>`).join('') + '</tr>';
     if (cen==='fora') h += `<tr class="hint"><td>Regime adotado no ano</td>` + anos.map(a=>`<td class="num">${(cel._regime?.[a]||0)===1?'Presumido':'Real'}</td>`).join('') + '</tr>';
     h += '</tbody></table></div>';
-    h += `<div class="hint" style="margin-top:8px">Em <b>2026 (ano-teste)</b> não há IBS/CBS a recolher — por isso as linhas aparecem vazias; o PIS/COFINS do ano permanece integral. Alíquotas do ano conforme Parâmetros (Res. CGIBS nº 14/2026); IBS/CBS líquidos repartidos na proporção CBS × IBS UF × IBS Mun. ${cen==='dentro'?'No "por dentro", a carga permanece a do Simples atual — sem IBS/CBS destacados (premissa da leitura corrente da LC 214, pendente de regulamentação do CGSN).':cen==='hibrido'?'Híbrido: DAS sem a parcela de consumo + IBS/CBS por fora com crédito integral ao cliente.':'Regime regular: melhor entre Presumido e Real em cada ano, com os remanescentes da transição.'}${C.usouFallback?' <b>⚠️ Aba Reforma sem dados salvos — usei alíquotas-padrão e a receita da análise.</b>':''}</div>`;
+    h += `<div class="hint" style="margin-top:8px">Em <b>2026 (ano-teste)</b> não há IBS/CBS a recolher — por isso as linhas aparecem vazias; o PIS/COFINS do ano permanece integral. Alíquotas do ano conforme Parâmetros (Res. CGIBS nº 14/2026); IBS/CBS líquidos repartidos na proporção CBS × IBS UF × IBS Mun. ${cen==='dentro'?'No "por dentro", o DAS permanece devido integralmente; as linhas ↳ abrem a partilha oficial de CBS/IBS dentro do DAS por vigência e a trava da 5ª faixa é recomposta ano a ano (teto do ISS decrescente + IBS pela fórmula própria) — <b>Res. CGSN nº 190/2026</b>, novos Anexos I–V da Res. 140/2018.':cen==='hibrido'?'Híbrido (art. 22-A da Res. CGSN 140/2018, incluído pela <b>Res. 190/2026</b>): DAS deduzido das parcelas de CBS/IBS da faixa/vigência + IBS/CBS por fora, no regime regular, com crédito integral ao cliente. Opção semestral nas janelas de setembro e março (art. 40-D); quem recebeu ressarcimento de créditos fica vedado ao regime único no ano do ressarcimento e no seguinte (art. 40-E).':'Regime regular: melhor entre Presumido e Real em cada ano, com os remanescentes da transição.'}${C.usouFallback?' <b>⚠️ Aba Reforma sem dados salvos — usei alíquotas-padrão e a receita da análise.</b>':''}</div>`;
     return h;
   } catch(e){ console.error('rlRfTribHtml:', e); return '<div class="hint">Não foi possível montar o quadro da Reforma para esta análise.</div>'; }
 }
