@@ -15,3 +15,5 @@ jobs:
         with: { node-version: 20 }
       - name: Suíte completa (motor + parecer + gabaritos)
         run: node tests/run.js
+      - name: Sessão — renovação automática de token (v7.17.1)
+        run: node tests/t_sessao.mjs
