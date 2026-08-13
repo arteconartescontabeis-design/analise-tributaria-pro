@@ -8,6 +8,7 @@
 //   3. Sensibilidade de parâmetros (edições de alíquotas fluem ao resultado)
 //   4. Parecer (3 variantes renderizam sem exceção, com aviso de premissa)
 //   5. Regressão dos gabaritos (tests/fixtures/caso1.json e caso2.json)
+//   5d. Res. CGSN nº 190/2026 — partilha por vigência, art. 22-A e travas (v7.17.0)
 //  Sai com código ≠ 0 em qualquer falha — o CI bloqueia o push quebrado.
 // ═══════════════════════════════════════════════════════════════════════════
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -177,6 +178,87 @@ console.log('\n■ Reforma: padrão vigente e registro antigo');
   chk('registro antigo da Reforma é completado (rfNormalizar)',
     norm && norm.benefRec && norm.benefCred && norm.contra && norm.aliq
       && Object.values(norm.benefRec).every(v => v === 0) && norm.receita === 50000);
+}
+
+// ═══ 5d. Res. CGSN nº 190/2026 — partilha do DAS por vigência ═══
+console.log('\n■ Res. CGSN nº 190/2026 — partilha por vigência');
+{
+  const R190 = vm.runInContext('REP190', ctx);
+  const REM = vm.runInContext('REM190', ctx);
+  // 5d.1 integridade: toda faixa soma 100% (±0,011) em 5 anexos × 6 vigências
+  let soma = true, pior = 0;
+  for (const v of Object.keys(R190)) for (const ax of Object.keys(R190[v])) for (let f=0; f<6; f++) {
+    const s = Object.values(R190[v][ax]).reduce((a,arr)=>a+(arr[f]||0),0);
+    if (Math.abs(s-1) > 0.00011) { soma = false; pior = Math.max(pior, Math.abs(s-1)); }
+  }
+  chk('REP190: toda faixa soma 100% (5 anexos × 6 vigências)', soma, pior? 'Δmax '+pior : '');
+  // 5d.2 identidade com a LC 123 (faixas 1–5): CBS+IBS = PIS/COFINS + ICMS/ISS×(1−rem); ICMS/ISS = atual×rem
+  let ident = true, idet = '';
+  for (const v of [2027,2029,2030,2031,2032,2033]) for (const ax of Object.keys(RT)) for (let f=0; f<5; f++) {
+    const P = R190[v][ax], rem = REM[v];
+    const pc = RT[ax].pis[f]+RT[ax].cofins[f], ii = (RT[ax].icms||RT[ax].iss)[f];
+    const cbsibs = (P.cbs[f]||0) + ((P.ibs||[])[f]||0);
+    const iiV = ((P.icms||P.iss)||[])[f]||0;
+    if (Math.abs(cbsibs - (pc + ii*(1-rem))) > 0.00011 || Math.abs(iiV - ii*rem) > 0.00011) { ident = false; idet = `${ax}/${v}/f${f+1}`; }
+  }
+  chk('REP190 ≡ REP_TRIB com PIS/COFINS→CBS e ICMS/ISS→IBS pelos degraus (F1–F5)', ident, idet);
+  // 5d.3 resolvedora
+  chk('repTribAno: ≤2026 → REP_TRIB · 2028 → tabela 2027 · 2034 → 2033',
+    vm.runInContext('repTribAno(2026)===REP_TRIB && repTribAno(2028)===REP190[2027] && repTribAno(2034)===REP190[2033]', ctx));
+  // 5d.4 híbrido = art. 22-A (Anexo I puro, sem sublimite: identidades fechadas)
+  const inpA = mk({a1_semst:Array(12).fill(100000)},1200000);
+  const rA = g.calcular(inpA, clone(AD), {...FD});
+  const CA = g.calcCenariosReforma(rA, null), TA = rA.totais;
+  const lde = ano => CA.REF.find(l=>l.ano===ano);
+  chk('art. 22-A · 2033: dedução integral (CBS+IBS = todo o consumo do DAS)',
+    Math.abs(lde(2033).dasHib - (TA.das - TA.dasPisCof - TA.dasIcmsIss)) < 0.02,
+    'DAS_hib33='+lde(2033).dasHib.toFixed(2));
+  chk('art. 22-A · 2029: dedução = CBS + 10% do ICMS/ISS migrado ao IBS',
+    Math.abs(lde(2029).dasHib - (TA.das - TA.dasPisCof - TA.dasIcmsIss*0.1)) < 0.02);
+  const P27 = lde(2027).p190;
+  chk('art. 22-A · 2027: IBS simbólico presente e dedução = CBS+IBS da partilha',
+    P27 && P27.ibs > 0 && Math.abs(lde(2027).dasHib - (TA.das - P27.cbs - P27.ibs)) < 0.005,
+    'IBS27='+(P27?P27.ibs.toFixed(2):'—'));
+  chk('≤2026: híbrido inalterado (tudo dentro do DAS)',
+    Math.abs(lde(2026).dasHib - (TA.das + (TA.sublimite||0))) < 0.02);
+  // 5d.5 trava por vigência (Anexo III acima do sublimite, teto do ISS mordendo)
+  const inpS = mk({a3_semret:Array(12).fill(340000)},4080000,{folha12Lanc:Array(12).fill(120000)});
+  const rS = g.calcular(inpS, clone(AD), {...FD});
+  const CS = g.calcCenariosReforma(rS, null), TS = rS.totais;
+  const ps = ano => CS.REF.find(l=>l.ano===ano).p190;
+  chk('trava · 2027-28 = trava atual (rem 100%, teto 5%)',
+    Math.abs(ps(2027).trava - (TS.sublimite||0)) < 0.02, 'trava='+ps(2027).trava.toFixed(2));
+  // manual 2029: ISS por mês = base×min(rawP×0,9; 4,5%) + IBS = base×rawP×0,1 (sem teto)
+  let esp29 = 0;
+  for (const M of rS.meses) for (const [ax,b,praw] of ((M.trv190&&M.trv190.iss)||[]))
+    esp29 += b*Math.min(praw*0.9, 0.045) + b*praw*0.1;
+  chk('trava · 2029 = ISS×90% com teto 4,5% + IBS 10% sem teto (fórmula manual)',
+    Math.abs(ps(2029).trava - esp29) < 0.02, 'Δ='+(ps(2029).trava-esp29).toFixed(4));
+  chk('trava · teto mordendo: total 2029 > total 2027 (IBS sem teto compensa além do corte do ISS)',
+    ps(2029).trava > ps(2027).trava + 0.01);
+  chk('trava · 2033: ISS zera e o IBS assume integralmente, sem teto',
+    ps(2033).icmsIssTrava < 0.01 && Math.abs(ps(2033).ibsTrava - rS.meses.reduce((s,M)=>s+((M.trv190&&M.trv190.iss)||[]).reduce((a,[,b,p])=>a+b*p,0),0)) < 0.02);
+  // 5d.6 quadro tributo a tributo renderiza com a abertura ↳ e sem exceção nos 3 cenários
+  RL.dados = { ano:2025, cnpj:'00000000000000', receitas: inpA.receitas };
+  RL.res = rA; RL.reforma = null; RL.empresa = { razao_social:'TESTE', regime:'Simples Nacional' }; RL._ia = null;
+  let okQ = true, temAb = false, det = '';
+  for (const cenq of ['dentro','hibrido','fora']) {
+    const out = vm.runInContext(`rlRfTribHtml('${cenq}')`, ctx);
+    if (!out || out.includes('Não foi possível')) { okQ = false; det = cenq; }
+    if (cenq==='dentro' && out.includes('↳ CBS dentro do DAS') && out.includes('↳ IBS dentro do DAS')) temAb = true;
+  }
+  chk('quadro tributo a tributo renderiza nos 3 cenários, com abertura ↳ no "dentro"', okQ && temAb, det);
+  // 5d.7 gabaritos de cenário 2033 (caso1): híbrido e fora INALTERADOS; dentro recomposto = trava (comércio → invariante)
+  const fx1 = JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures','caso1.json'),'utf8')).inp;
+  const rG = g.calcular(fx1, clone(AD), {...FD});
+  const CG = g.calcCenariosReforma(rG, null);
+  const G33 = CG.REF[CG.REF.length-1];
+  chk('gabarito de cenários 2033 preservado: híbrido 775.348,96 · fora 719.178,18',
+    Math.abs(G33.hib - 775348.96) < 0.02 && Math.abs(G33.regular - 719178.18) < 0.02,
+    `hib=${G33.hib.toFixed(2)} reg=${G33.regular.toFixed(2)}`);
+  chk('gabarito · trava do caso1 (comércio) invariante por vigência: ICMS×rem + IBS×(1−rem)',
+    G33.p190 && Math.abs(G33.p190.trava - (rG.totais.sublimite||0)) < 0.02,
+    'trava33='+(G33.p190?G33.p190.trava.toFixed(2):'—'));
 }
 
 // ═══ 6. Integridade da interface ═══
