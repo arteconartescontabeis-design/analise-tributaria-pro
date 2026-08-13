@@ -240,7 +240,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.17.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.17.1</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -614,7 +614,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.17.0</b> <span class="badge ok">atual</span></td><td>13/08/2026</td><td><b>Adequação à Resolução CGSN nº 190/2026</b> (DOU 10/08/2026), que regulamenta o Simples Nacional na Reforma Tributária a partir de 1º/01/2027. A <b>partilha do DAS</b> passa a seguir os novos Anexos I–V por vigência (2027–28, 2029, 2030, 2031, 2032 e 2033+): PIS/COFINS saem da partilha já em 2027 (a fatia vira CBS), ICMS/ISS decrescem em degraus (90/80/70/60%) e zeram em 2033, com o IBS absorvendo a diferença. O <b>cenário híbrido</b> aplica exatamente o art. 22-A: DAS deduzido das parcelas de CBS e IBS da faixa/vigência (antes, aproximação pelos remanescentes — resultado idêntico nas faixas 1–5 e agora exato também na 6ª faixa de 2027–28). O quadro tributo a tributo do Comparativo ganhou a <b>abertura informativa "↳ CBS/IBS dentro do DAS"</b> no cenário por dentro e a linha própria do <b>IBS do sublimite</b>; a trava da 5ª faixa é recomposta por vigência, com teto do ISS decrescente (5% → 3%, Anexos III/IV) e IBS pela fórmula própria dos rodapés — o total do cenário "por dentro" pode variar levemente nos anos em que o teto do ISS morde. O <b>Fator R</b> passa a usar a receita conjunta dos mercados interno e externo (art. 26), mantidas as bases distintas para a alíquota (art. 16, §3º, II) — sem efeito para empresas sem exportação. Parecer com parágrafo de prazos (opção em setembro/2026; confirmação de receitas anteriores até 20/12/2026 — arts. 6º e 144-D/E) e nota do art. 40-D/40-E no quadro do híbrido. <b>Nota D7:</b> o rodapé da trava de ICMS do Anexo II no DOU aparenta erro material (usa os fatores do Anexo I/III); implementado por simetria com o próprio anexo — conferir na versão certificada antes de operar 2027. MEI (Anexo XIII) embutido como referência. Tabelas transcritas do DOU com 251 verificações; suíte de testes ampliada (partilha soma 100%, identidade com a LC 123, art. 22-A e travas). Blocos do art. 25, I-A e X, em backlog.</td></tr>
+                    <tr><td><b>v7.17.1</b> <span class="badge ok">atual</span></td><td>13/08/2026</td><td><b>Correção da sessão expirada na geração do parecer.</b> O token de acesso do Supabase vale ~1 hora e, até aqui, era obtido no login e nunca renovado — depois de 1 hora de uso, "Gerar textos com IA" devolvia <i>401: Sessão inválida ou expirada</i>, mesmo com o usuário logado. Agora o app guarda a validade do token e o <b>renova automaticamente</b> (pelo refresh_token) antes de qualquer chamada autenticada: Edge Functions (gerar-parecer e atualizar-classtrib) e todas as gravações/leituras no banco. A renovação é única mesmo com chamadas simultâneas e, se um 401 escapar no meio do caminho, a chamada é repetida uma única vez com token novo. Só é pedido novo login quando o próprio refresh_token não vale mais (ex.: sessão encerrada em outro dispositivo). Nenhuma mudança na Edge Function nem no banco.</td></tr>
+                    <tr><td><b>v7.17.0</b></td><td>13/08/2026</td><td><b>Adequação à Resolução CGSN nº 190/2026</b> (DOU 10/08/2026), que regulamenta o Simples Nacional na Reforma Tributária a partir de 1º/01/2027. A <b>partilha do DAS</b> passa a seguir os novos Anexos I–V por vigência (2027–28, 2029, 2030, 2031, 2032 e 2033+): PIS/COFINS saem da partilha já em 2027 (a fatia vira CBS), ICMS/ISS decrescem em degraus (90/80/70/60%) e zeram em 2033, com o IBS absorvendo a diferença. O <b>cenário híbrido</b> aplica exatamente o art. 22-A: DAS deduzido das parcelas de CBS e IBS da faixa/vigência (antes, aproximação pelos remanescentes — resultado idêntico nas faixas 1–5 e agora exato também na 6ª faixa de 2027–28). O quadro tributo a tributo do Comparativo ganhou a <b>abertura informativa "↳ CBS/IBS dentro do DAS"</b> no cenário por dentro e a linha própria do <b>IBS do sublimite</b>; a trava da 5ª faixa é recomposta por vigência, com teto do ISS decrescente (5% → 3%, Anexos III/IV) e IBS pela fórmula própria dos rodapés — o total do cenário "por dentro" pode variar levemente nos anos em que o teto do ISS morde. O <b>Fator R</b> passa a usar a receita conjunta dos mercados interno e externo (art. 26), mantidas as bases distintas para a alíquota (art. 16, §3º, II) — sem efeito para empresas sem exportação. Parecer com parágrafo de prazos (opção em setembro/2026; confirmação de receitas anteriores até 20/12/2026 — arts. 6º e 144-D/E) e nota do art. 40-D/40-E no quadro do híbrido. <b>Nota D7:</b> o rodapé da trava de ICMS do Anexo II no DOU aparenta erro material (usa os fatores do Anexo I/III); implementado por simetria com o próprio anexo — conferir na versão certificada antes de operar 2027. MEI (Anexo XIII) embutido como referência. Tabelas transcritas do DOU com 251 verificações; suíte de testes ampliada (partilha soma 100%, identidade com a LC 123, art. 22-A e travas). Blocos do art. 25, I-A e X, em backlog.</td></tr>
                     <tr><td><b>v7.16.3</b></td><td>10/08/2026</td><td><b>Atualizar os Parâmetros passou a recalcular tudo automaticamente.</b> As alíquotas da transição eram copiadas para dentro de cada análise no momento em que ela era criada, e a cópia vencia o padrão — por isso análises antigas continuavam exibindo a tabela anterior (26,80% em 2033) mesmo depois da atualização. Agora a análise usa sempre o padrão vigente do aplicativo, e alterar os Parâmetros reflete na hora na Análise Atual, na Reforma e nos Relatórios. <b>Correção da tela da Reforma que abria vazia.</b> Análises gravadas por versões anteriores não traziam todos os campos da Reforma e a montagem da tela parava no meio, em silêncio — daí a impressão de que a informação só aparecia depois de mexer no ano. O registro salvo passa a ser completado com os campos que faltam, como já era feito na análise do regime atual.</td></tr>
                     <tr><td><b>v7.16.2</b></td><td>10/08/2026</td><td><b>2026 (ano-teste) deixou de gerar IBS e CBS a pagar.</b> Antes, o 1% do ano-teste (CBS 0,9% + IBS 0,1%) era somado à carga de 2026 ao lado do PIS/COFINS integrais, o que superestimava o ano. Agora o ano-teste não gera valor a recolher em nenhum cenário — a apuração continua visível nas colunas de débito e crédito da aba Reforma, e no Detalhamento tributo a tributo as linhas de IBS, CBS e Imposto Seletivo aparecem vazias em 2026, com nota explicativa. Os demais anos não mudaram.</td></tr>
                     <tr><td><b>v7.16.1</b></td><td>10/08/2026</td><td>Ajustes dos testes da v7.16.0. O <b>Detalhamento tributo a tributo (ano) da Reforma</b> passou a exibir <b>cada tributo em sua própria linha</b> nos três cenários — no regime regular, IRPJ, adicional de IRPJ, CSLL, INSS patronal e FGTS aparecem separados, assim como PIS e COFINS remanescentes; no Simples "por dentro", o DAS, a trava do sublimite, o FGTS e as retenções; no híbrido, o DAS ajustado, o FGTS e cada retenção. Corrigido o <b>campo Ano, que caía para baixo do nome da empresa</b> nas telas de Análise Atual, Reforma, Importar Dados e Configuração da empresa: ao exibir o campo, o programa apagava o alinhamento definido no layout. E o <b>Dashboard passou a abrir já preenchido</b> — as estatísticas e a relação de empresas em análise só apareciam depois de navegar por outro módulo e voltar; além disso, a empresa e o ano da última sessão voltaram a ser lembrados ao entrar no sistema.</td></tr>
@@ -697,7 +698,7 @@ const SUPA_URL = 'https://kmdrqkiyhdmdtufrogke.supabase.co';
 const SUPA_KEY = 'sb_publishable_4eHrESOoQYRC7bR9rYKGBg_If2lOjnE';
 const TBL = 'atp_empresas';
 
-const APP = { token:null, user:null, page:'dashboard' };
+const APP = { token:null, user:null, page:'dashboard', tokenExp:0 };   // v7.17.1: tokenExp = validade do access_token (ms)
 let RESULTADOS = [];       // resultados da consulta corrente
 const $id = id => document.getElementById(id);
 
@@ -706,6 +707,7 @@ async function supa(method, table, opts = {}) {
   const { body, params, returning=false } = opts;
   const url = new URL(`${SUPA_URL}/rest/v1/${table}`);
   if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.append(k,v));
+  if (APP.token) await garantirToken();                    // v7.17.1: renova o token vencido antes do PostgREST
   const headers = { 'apikey':SUPA_KEY, 'Content-Type':'application/json' };
   if (APP.token) headers['Authorization'] = `Bearer ${APP.token}`;
   if (returning) headers['Prefer'] = 'return=representation,resolution=merge-duplicates';
@@ -727,12 +729,40 @@ async function doLogin() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || 'Credenciais inválidas');
-    APP.token = data.access_token; APP.user = data.user;
-    localStorage.setItem('atp_token', data.access_token);
-    localStorage.setItem('atp_refresh', data.refresh_token);
+    sessaoGuardar(data);                                   // v7.17.1
     entrar();
   } catch(e) { $id('login-err').textContent = e.message; }
   btn.disabled = false;
+}
+
+// ── v7.17.1 · SESSÃO COM RENOVAÇÃO AUTOMÁTICA ──────────────────────────
+// O access_token do Supabase expira em ~1 hora. Até a v7.17.0 ele era gravado no
+// login e nunca renovado: após 1 h de uso, a gerar-parecer devolvia
+// 401 "Sessão inválida ou expirada", mesmo com o usuário logado na tela.
+function sessaoGuardar(data){
+  APP.token = data.access_token; APP.user = data.user || APP.user;
+  APP.tokenExp = data.expires_at ? data.expires_at*1000                     // unix s → ms
+               : Date.now() + ((+data.expires_in || 3600) * 1000);
+  localStorage.setItem('atp_token', data.access_token);
+  localStorage.setItem('atp_refresh', data.refresh_token);
+}
+let SESS_RENOVANDO = null;   // single-flight: o refresh_token é ROTACIONADO — duas renovações simultâneas invalidariam a sessão
+async function garantirToken(forcar=false){
+  if (!APP.token) return false;
+  if (!forcar && APP.tokenExp && Date.now() < APP.tokenExp - 120000) return true;   // ainda vale ≥2 min: segue
+  if (!SESS_RENOVANDO) SESS_RENOVANDO = tentarSessao().finally(()=>{ SESS_RENOVANDO = null; });
+  return SESS_RENOVANDO;
+}
+// Toda chamada de Edge Function passa por aqui: renova o token antes e, se ainda
+// assim vier 401 (token caducou no meio do caminho), renova à força e repete UMA vez.
+async function supaFn(nome, payload){
+  if (!(await garantirToken())) throw new Error('Sessão expirada — saia e entre novamente no app.');
+  const chamar = () => fetch(`${SUPA_URL}/functions/v1/${nome}`, {
+    method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPA_KEY, 'Authorization':'Bearer '+APP.token },
+    body: JSON.stringify(payload) });
+  let r = await chamar();
+  if (r.status===401 && await garantirToken(true)) r = await chamar();
+  return r;
 }
 
 async function tentarSessao() {
@@ -745,9 +775,7 @@ async function tentarSessao() {
     });
     const data = await res.json();
     if (!res.ok) throw 0;
-    APP.token = data.access_token; APP.user = data.user;
-    localStorage.setItem('atp_token', data.access_token);
-    localStorage.setItem('atp_refresh', data.refresh_token);
+    sessaoGuardar(data);                                   // v7.17.1
     return true;
   } catch { localStorage.removeItem('atp_token'); localStorage.removeItem('atp_refresh'); return false; }
 }
@@ -4168,9 +4196,7 @@ function ctFonteRender(){
 async function ctOficialAtualizar(){
   toast('Buscando a tabela oficial…');
   try {
-    const r = await fetch(SUPA_URL + '/functions/v1/atualizar-classtrib', {
-      method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPA_KEY, 'Authorization':'Bearer '+(APP.token||SUPA_KEY) },
-      body: JSON.stringify({}) });
+    const r = await supaFn('atualizar-classtrib', {});     // v7.17.1: token renovado antes da chamada (e repetição única em 401)
     const j = await r.json().catch(()=>({}));
     if (!r.ok) throw new Error(j.error || ('HTTP '+r.status));
     await ctOficialCarregar();
@@ -4993,9 +5019,7 @@ async function parecerIA(){
       },
       premissas: { reformaFallback: !!(D.cen&&D.cen.usouFallback), creditosProxyCompras: !!(D.cen&&D.cen.proxyCompras), semCreditosIBSCBS: !!(D.cen&&D.cen.semCreditos), moedaConstante: true },
     };
-    const r = await fetch(SUPA_URL + '/functions/v1/gerar-parecer', {
-      method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPA_KEY, 'Authorization':'Bearer '+(APP.token||SUPA_KEY) },
-      body: JSON.stringify(payload) });
+    const r = await supaFn('gerar-parecer', payload);      // v7.17.1: token renovado antes da chamada (e repetição única em 401)
     if (!r.ok) { const t = await r.text().catch(()=> '');
       if (r.status===404) throw new Error('Edge Function "gerar-parecer" não encontrada — instale pelo painel do Supabase seguindo o GUIA_EDGE_FUNCTION.md.');
       throw new Error('Falha na function ('+r.status+'): '+t.slice(0,200)); }
