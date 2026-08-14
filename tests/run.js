@@ -416,6 +416,29 @@ console.log('\n■ v7.20.0 — dashboard de fornecedores, conferência da Reform
   })();
 }
 
+// ═══ 5i. v7.21.0 — produtos × IBS/CBS fora do parecer e em relatório próprio; fornecedores no CNPJ ═══
+console.log('\n■ v7.21.0 — relatório de produtos × IBS/CBS e fornecedores completos no CNPJ');
+{
+  // o parecer NÃO traz mais a seção de produtos
+  try { g.rlParecer(); const out = els['rl-corpo'].innerHTML;
+    chk('parecer · seção "Produtos vendidos" e o container pp-notas foram removidos',
+      !out.includes('Produtos vendidos no período') && !out.includes('pp-notas') && out.includes('pp-assin'));
+  } catch(e){ chk('parecer sem produtos', false, e.message); }
+  // relatório novo: caminho sem notas gravadas (supabase vazio) renderiza a orientação
+  var RES_PROD = (async () => {
+    try { await vm.runInContext('rlNotasPeriodo("rl-prod-box","24197146000137",2025)', ctx); } catch(e){ return 'EXC:'+e.message; }
+    return els['rl-prod-box'] ? els['rl-prod-box'].innerHTML : '';
+  })();
+  // fornecedores completos no relatório de CNPJ: relação integral (os 3 aparecem)
+  var RES_FORNCNPJ = (async () => {
+    vm.runInContext(`RL.forn = { revenda: { consultado_em: new Date().toISOString(), dados: { tipo:'revenda', periodo:'2025', stats:{},
+      itens: [ {cnpj:'11111111000191', razao:'FORN NORMAL LTDA', classe:'normal', valor:600000},
+               {cnpj:'22222222000191', razao:'FORN SIMPLES ME', classe:'simples', valor:300000},
+               {cnpj:'33333333000191', razao:'FORN MEI', classe:'mei', valor:100000} ] } } };`, ctx);
+    try { return await vm.runInContext('rlCnpjFornecedores("24197146000137", 6)', ctx); } catch(e){ return 'EXC:'+e.message; }
+  })();
+}
+
 // ═══ 6. Integridade da interface ═══
 // Todo elemento que o código acessa por $id() precisa existir no HTML.
 // Foi a ausência disso que deixou passar container removido e seletor duplicado.
@@ -450,6 +473,14 @@ console.log('\n■ Integridade da interface');
     b2 && b2.previaOK && /Prévia/.test(b2.previaHTML) && /15\.933,21|15933/.test(b2.previaHTML));
   chk('v7.19.0 · modo distribuir: lote anual rateia 1.200 em 100/mês',
     b2 && b2.Ma && Math.abs(b2.Ma['despesas.adm'][0]-100)<0.01 && Math.abs(b2.Ma['despesas.adm'][11]-100)<0.01);
+  const prodHtml = await Promise.race([RES_PROD, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  chk('v7.21.0 · relatório de produtos renderiza (sem notas gravadas → orientação ao Classificação RTC)',
+    typeof prodHtml==='string' && !prodHtml.startsWith('EXC:') && /Classificação|Nenhuma nota|não foi possível/i.test(prodHtml||''),
+    prodHtml&&prodHtml.startsWith('EXC:')?prodHtml:'ok');
+  const fornCnpj = await Promise.race([RES_FORNCNPJ, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  chk('v7.21.0 · CNPJ: resumo de fornecedores COMPLETO (os 3 fornecedores na relação, com %)',
+    typeof fornCnpj==='string' && fornCnpj.includes('Resumo estatístico de fornecedores') && fornCnpj.includes('FORN NORMAL LTDA') && fornCnpj.includes('FORN SIMPLES ME') && fornCnpj.includes('FORN MEI') && /60,0%/.test(fornCnpj),
+    fornCnpj&&fornCnpj.startsWith&&fornCnpj.startsWith('EXC:')?fornCnpj:'ok');
   const cnpjHtml = await Promise.race([RES_CNPJ, new Promise(r=>setTimeout(()=>r(null), 8000))]);
   chk('v7.20.0 · relatório de CNPJ monta identificação, CNAEs, QSA e regime',
     cnpjHtml && /EMPRESA TESTE LTDA/.test(cnpjHtml) && /Quadro societário/.test(cnpjHtml) && /FULANO DE TAL/.test(cnpjHtml) && /Atividades econômicas/.test(cnpjHtml) && /Optante/.test(cnpjHtml),
