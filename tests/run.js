@@ -290,6 +290,56 @@ console.log('\n■ Res. CGSN nº 190/2026 — partilha por vigência');
     'trava33='+(G33.p190?G33.p190.trava.toFixed(2):'—'));
 }
 
+// ═══ 5f. v7.18.3 — Lei 14.592/2023 e importadores substituem (não somam) ═══
+console.log('\n■ v7.18.3 — ICMS das compras fora do crédito de PIS/COFINS · importadores idempotentes');
+{ // Lei 14.592/2023: compras reduzem a base do LR LÍQUIDAS do ICMS
+  const compras = { semst: Array(12).fill(100000) };
+  const a = g.calcular(Object.assign(mk({a1_semst:Array(12).fill(300000)},3600000,{icmsC:.12}), {compras: Object.assign(Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred'].map(k=>[k,z()])), compras)}), clone(AD), {...FD});
+  const b = g.calcular(Object.assign(mk({a1_semst:Array(12).fill(300000)},3600000,{icmsC:0}),   {compras: Object.assign(Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred'].map(k=>[k,z()])), compras)}), clone(AD), {...FD});
+  const M0a=a.meses[0], M0b=b.meses[0];
+  chk('Lei 14.592: base PIS/COFINS do LR sobe 100.000×12% com ICMS de compras de 12%',
+    Math.abs((M0a.lr.basePCbruta - M0b.lr.basePCbruta) - 12000) < 0.01,
+    `Δbase=${(M0a.lr.basePCbruta-M0b.lr.basePCbruta).toFixed(2)}`);
+  chk('Lei 14.592: PIS +1,65% e COFINS +7,60% sobre o ICMS excluído do crédito',
+    Math.abs((M0a.lr.pis-M0b.lr.pis) - 12000*.0165) < 0.01 && Math.abs((M0a.lr.cofins-M0b.lr.cofins) - 12000*.076) < 0.01,
+    `ΔPIS=${(M0a.lr.pis-M0b.lr.pis).toFixed(2)} ΔCOFINS=${(M0a.lr.cofins-M0b.lr.cofins).toFixed(2)}`);
+  chk('Lei 14.592: icmsComprasPC gravado no mês p/ a conferência', Math.abs((M0a.icmsComprasPC||0)-12000)<0.01 && Math.abs(M0b.icmsComprasPC||0)<0.01);
+  chk('Lei 14.592: PIS/COFINS do LP não são afetados (cumulativo não credita compras)',
+    Math.abs((M0a.lp.pis+M0a.lp.cofins) - (M0b.lp.pis+M0b.lp.cofins)) < 0.01);
+}
+{ // balAplicar substitui os meses cobertos (bug da duplicação: 63.732,84 + 15.933,21 = 79.666,05)
+  const res = (async () => {
+    vm.runInContext('dlg = async()=>true', ctx);   // dlgSimNao resolve "sim" sem UI
+    vm.runInContext('garantirEmpresa = async()=>{}', ctx);   // sem Supabase no sandbox
+    vm.runInContext('AN = anNovo("24197146000137", 2025)', ctx);
+    vm.runInContext('AN.compras.semst[0] = 63732.84', ctx);          // resíduo gravado
+    vm.runInContext('BAL = {cnpj:"24197146000137", nome:"TESTE", ano:2025, mesIni:0, mesFim:0, contas:[{destino:"compras.semst", valor:15933.21}]}', ctx);
+    ctx.document.getElementById('bal-modo').value = 'rateio';
+    ctx.document.getElementById('an-ano').value = '2025';
+    try { await vm.runInContext('balAplicar()', ctx); } catch(e){}
+    const v1 = vm.runInContext('AN.compras.semst[0]', ctx);
+    try { await vm.runInContext('balAplicar()', ctx); } catch(e){}
+    const v2 = vm.runInContext('AN.compras.semst[0]', ctx);
+    return {v1, v2};
+  })();
+  var RES_BAL = res;
+}
+{ // _xmlAplicarBase não duplica ao reimportar o mesmo lote
+  const res = (async () => {
+    vm.runInContext('AN = anNovo("24197146000137", 2025)', ctx);
+    vm.runInContext('XN = {notas:[{incluir:true, valor:1000, mes:0, ano:2025, tipo:"NF-e", tomador:"1", ct:"000001"},{incluir:true, valor:500, mes:0, ano:2025, tipo:"NF-e", tomador:"1", ct:"000001"}]}', ctx);
+    ctx.document.getElementById('xml-bloco').value = 'a1_semst';
+    ctx.document.getElementById('xml-grade').checked = true;
+    ctx.document.getElementById('xml-iss').checked = false;
+    try { await vm.runInContext('_xmlAplicarBase()', ctx); } catch(e){}
+    const v1 = vm.runInContext('AN.receitas.a1_semst[0]', ctx);
+    try { await vm.runInContext('_xmlAplicarBase()', ctx); } catch(e){}
+    const v2 = vm.runInContext('AN.receitas.a1_semst[0]', ctx);
+    return {v1, v2};
+  })();
+  var RES_XML = res;
+}
+
 // ═══ 6. Integridade da interface ═══
 // Todo elemento que o código acessa por $id() precisa existir no HTML.
 // Foi a ausência disso que deixou passar container removido e seletor duplicado.
@@ -306,7 +356,18 @@ console.log('\n■ Integridade da interface');
       orfaos.length ? 'sem declaração: ' + orfaos.join(', ') : '');
 }
 
-// ═══ RESULTADO ═══
-console.log('\n══════════════════════════════════');
-console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
-process.exit(FALHAS.length ? 1 : 0);
+// ═══ RESULTADO (aguarda os testes assíncronos dos importadores) ═══
+(async () => {
+  const bal = await Promise.race([RES_BAL, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  chk('balAplicar SUBSTITUI o mês coberto (resíduo 63.732,84 dá lugar a 15.933,21)',
+    bal && Math.abs(bal.v1-15933.21)<0.01, bal?`após 1ª=${(+bal.v1).toFixed(2)}`:'timeout/travou');
+  chk('balAplicar idempotente: reimportar o mesmo balancete não duplica',
+    bal && Math.abs(bal.v2-15933.21)<0.01, bal?`após 2ª=${(+bal.v2).toFixed(2)}`:'timeout/travou');
+  const xml = await Promise.race([RES_XML, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  chk('XML: notas do lote somam entre si (1.000 + 500) e reimportar não duplica',
+    xml && Math.abs(xml.v1-1500)<0.01 && Math.abs(xml.v2-1500)<0.01,
+    xml?`1ª=${(+xml.v1).toFixed(2)} 2ª=${(+xml.v2).toFixed(2)}`:'timeout/travou');
+  console.log('\n══════════════════════════════════');
+  console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
+  process.exit(FALHAS.length ? 1 : 0);
+})();
