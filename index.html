@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.18.2</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.18.3</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -622,7 +622,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.18.2</b> <span class="badge ok">atual</span></td><td>13/08/2026</td><td><b>Impressão do parecer travada no A4, de forma estrutural.</b> A causa do desalinhamento persistente estava no próprio CSS de impressão: a página lógica tinha altura automática e uma regra antiga de <i>overflow visível</i> — qualquer conteúdo que passasse de 296mm (um texto de IA mais longo, uma tabela de notas maior) vazava para uma folha <b>sem timbrado</b> e desalinhava todas as seguintes. Agora cada página do parecer tem <b>altura fixa de uma folha A4</b> (uma página lógica = uma folha física, sempre): o fundo timbrado nunca mais desencontra do conteúdo. Junto com isso, o conteúdo foi redistribuído para caber com folga: a leitura dos três caminhos passou a abrir a página do split payment (a página dos cenários de 2033 ficou só com os gráficos e a tabela), e as notas do período (Classificação RTC) ganharam a página final própria, junto do encerramento e da assinatura — os "Pontos de atenção" e os prazos da Res. 190/2026 ficam em página exclusiva. O parecer fecha em 9 páginas mais a capa, todas alinhadas ao timbrado.</td></tr>
+                    <tr><td><b>v7.18.3</b> <span class="badge ok">atual</span></td><td>14/08/2026</td><td><b>Correções de importação e do crédito de PIS/COFINS no Lucro Real.</b> (1) <b>Fim da duplicação ao reimportar</b>: o balancete passou a <b>substituir</b> os meses que cobre em cada destino (Folha, Compras, Despesas), em vez de somar ao que já estava gravado — importar o mesmo arquivo duas vezes dobrava os valores (caso identificado nas Compras da análise, em que o valor da aba era a soma do resíduo anterior com as compras do balancete). Quando os meses cobertos já têm valores, o app pergunta antes de sobrescrever, e o mesmo tratamento foi dado ao lançamento de receitas por XML: reimportar o mesmo lote de notas não duplica mais a grade. Os importadores de PGDAS, Faturamento, Demonstrativo e Fornecedores já substituíam corretamente e foram conferidos um a um. (2) <b>Lei nº 14.592/2023 no Lucro Real</b>: o ICMS incidente sobre a aquisição deixou de compor o crédito de PIS/COFINS — as compras para revenda passam a reduzir a base <b>líquidas do ICMS</b> (estimado pelo % de ICMS de compras da configuração). A base de PIS/COFINS do Real sobe na medida do ICMS das compras, e o IRPJ/CSLL cai em consequência (PIS/COFINS maiores deduzem o lucro). A conferência de cálculos ganhou linha própria mostrando a parcela excluída, com a base legal. Gabaritos da suíte recalibrados com as diferenças documentadas.</td></tr>
+                    <tr><td><b>v7.18.2</b></td><td>13/08/2026</td><td><b>Impressão do parecer travada no A4, de forma estrutural.</b> A causa do desalinhamento persistente estava no próprio CSS de impressão: a página lógica tinha altura automática e uma regra antiga de <i>overflow visível</i> — qualquer conteúdo que passasse de 296mm (um texto de IA mais longo, uma tabela de notas maior) vazava para uma folha <b>sem timbrado</b> e desalinhava todas as seguintes. Agora cada página do parecer tem <b>altura fixa de uma folha A4</b> (uma página lógica = uma folha física, sempre): o fundo timbrado nunca mais desencontra do conteúdo. Junto com isso, o conteúdo foi redistribuído para caber com folga: a leitura dos três caminhos passou a abrir a página do split payment (a página dos cenários de 2033 ficou só com os gráficos e a tabela), e as notas do período (Classificação RTC) ganharam a página final própria, junto do encerramento e da assinatura — os "Pontos de atenção" e os prazos da Res. 190/2026 ficam em página exclusiva. O parecer fecha em 9 páginas mais a capa, todas alinhadas ao timbrado.</td></tr>
                     <tr><td><b>v7.18.1</b></td><td>13/08/2026</td><td><b>Ajustes finos sobre a v7.18.0.</b> (1) <b>Impressão do parecer</b>: as folhas 5 e 6 estouravam a página com o conteúdo ampliado — os gráficos dos cenários e da economia acumulada foram compactados, o texto dos três caminhos e a nota de leitura ganharam corpo menor, e a seção "Pontos de atenção" (com os prazos, as notas do período e a assinatura) passou a ocupar <b>página própria</b>, aliviando a página do plano de ação. (2) <b>Conferência de cálculos mais detalhada</b>: o Lucro Presumido e o Lucro Real agora mostram cada parcela com a fórmula e os valores substituídos — base bruta de PIS/COFINS (receita − monofásico − exportação; no Real, − compras e despesas com crédito), a exclusão do ICMS destacado (Tema 69) em linha própria, a base final, o lucro do mês aberto termo a termo (receita + financeiras − custos − folha − despesas − INSS − PIS/COFINS − ICMS − IPI − ISS), o adicional quando houver, o ICMS como débito − crédito com os valores, o ISS sobre os serviços do mês e o INSS patronal com salários, pró-labore e percentuais da empresa. (3) <b>Consolidado analítico</b>: novo quadro "Impostos do DAS — decomposição por período", abrindo PIS, COFINS, IRPJ, CSLL, CPP, ICMS, ISS e IPI na periodicidade escolhida (mensal, trimestral ou semestral), com trava do sublimite, ISS retido, CPP retida e CPP do Anexo IV quando existirem.</td></tr>
                     <tr><td><b>v7.18.0</b></td><td>13/08/2026</td><td><b>Revisão de cálculos e dos relatórios.</b> (1) <b>PIS/COFINS</b>: corrigida a dupla exclusão do monofásico na base do Lucro Presumido — o ICMS excluído (Tema 69 do STF, RE 574.706) passa a ser o <b>destacado</b> das saídas que permanecem na base (revenda sem ST e com redução) — e a mesma exclusão foi <b>estendida ao Lucro Real</b> (regime não cumulativo), conforme decisão de 13/08; a conferência de cálculos passou a citar a exclusão nas duas bases. (2) O <b>FGTS saiu de todos os totais</b>, quadros e relatórios: encargo idêntico em qualquer regime e não alterado pela Reforma, ele apenas inflava o "% da receita que vira imposto" — os quadros ganharam nota informando a premissa. (3) O <b>INSS patronal</b> do Presumido e do Real ganhou nota explícita (salários × (20% + RAT/FAP + terceiros) e pró-labore × 20%), e o verificador passou a alertar folha zerada, que zera o INSS e favorece indevidamente esses regimes na comparação. (4) A recomposição do ISS passou a ser exibida como <b>"ISS retido"</b>, com a base legal informada (LC 123, art. 21, § 4º). (5) Relatórios e parecer: o enquadramento cita o <b>período efetivamente analisado</b> em vez de "últimos 12 meses"; "O caminho da sua empresa" mostra o <b>melhor</b> cenário de 2033, não mais o pior; o retrato comércio × serviços só aparece quando a empresa tem <b>as duas atividades</b>; "Para onde vai cada real do DAS" ganhou texto explicativo; a evolução da carga traz <b>todas as simulações</b> — Simples por dentro ano a ano (Res. 190), híbrido, Presumido e Real; "Quanto da receita vira imposto" exibe todos os regimes com nota de leitura; a seção dos três caminhos foi ampliada com os critérios de decisão; e o parecer encerra com a nova seção <b>"Pontos de atenção"</b> (alíquotas estimadas, amostragem do período, vendas CNPJ × CPF, regime atual de clientes e fornecedores, créditos condicionados a documento fiscal e o calendário de setembro/2026). (6) <b>Impressão em A4</b> revisada também para os relatórios em cartões: tabelas sem corte, cabeçalhos repetidos por página e quebras controladas. Suíte de testes ampliada e gabaritos recalibrados (sem FGTS e com o Tema 69), com as diferenças documentadas no relatório de implementação.</td></tr>
                     <tr><td><b>v7.17.1</b></td><td>13/08/2026</td><td><b>Correção da sessão expirada na geração do parecer.</b> O token de acesso do Supabase vale ~1 hora e, até aqui, era obtido no login e nunca renovado — depois de 1 hora de uso, "Gerar textos com IA" devolvia <i>401: Sessão inválida ou expirada</i>, mesmo com o usuário logado. Agora o app guarda a validade do token e o <b>renova automaticamente</b> (pelo refresh_token) antes de qualquer chamada autenticada: Edge Functions (gerar-parecer e atualizar-classtrib) e todas as gravações/leituras no banco. A renovação é única mesmo com chamadas simultâneas e, se um 401 escapar no meio do caminho, a chamada é repetida uma única vez com token novo. Só é pedido novo login quando o próprio refresh_token não vale mais (ex.: sessão encerrada em outro dispositivo). Nenhuma mudança na Edge Function nem no banco.</td></tr>
@@ -2152,10 +2153,14 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const lp_irpj = (base32 + base8)*.15;
 
     // ── LUCRO REAL ──
+    // v7.18.3 · Lei 14.592/2023: o ICMS incidente na AQUISIÇÃO fica fora do crédito de PIS/COFINS
+    // no não cumulativo — as compras reduzem a base LÍQUIDAS do ICMS (estimado pelo % ICMS compras,
+    // o mesmo usado no crédito de ICMS; a conferência de cálculos expõe a parcela).
+    const icmsComprasPC = (C.semst[m]+C.comst[m])*cfg.icmsC;
     const basePisCofLR = R.a1_semst[m]+R.a1_red[m]+R.a1_comst[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_comst[m]
       + R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]
       + (fatorR<.28 ? R.a5r[m] : 0) + (fatorR>=.28 ? R.a5r[m] : 0)
-      + R.comtransp[m] - C.semst[m] - C.comst[m] - D.credLR[m];
+      + R.comtransp[m] - (C.semst[m]+C.comst[m] - icmsComprasPC) - D.credLR[m];
     // v7.18.0 · Tema 69 também no não cumulativo (decisão de 13/08): mesmo ICMS destacado excluído da base
     const _baseLRliq = Math.max(0, basePisCofLR - icmsDestacadoPC);
     const lr_pis = _baseLRliq*.0165 + R.fin[m]*.0065;
@@ -2165,7 +2170,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
 
     out.meses.push({ m, rbt12, rbt12Exp, recInt, recExp, dasExp, faixaExp: fxE+1, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasAx, trv190, dasTrib: dt, recCom, recServ,
-      fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal, icmsDestacadoPC,
+      fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal, icmsDestacadoPC, icmsComprasPC,
       simples: { das, fgts, sublimite: subIcms+subIss, issRetido, cppRetida,
         // v7.1 (A1): CPP do Anexo IV é devida FORA do DAS — proxy pela participação da receita a4 no mês
         inssPatrForaDAS: (receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0,
@@ -3795,6 +3800,16 @@ async function balAplicar() {
   if (BAL.ano && +AN.ano !== BAL.ano) { AN.ano = BAL.ano; $id('an-ano').value = BAL.ano; }
   const modo = $id('bal-modo').value;
   const meses = []; for (let m=BAL.mesIni; m<=BAL.mesFim; m++) meses.push(m);
+  // v7.18.3: o balancete SUBSTITUI o que traz — zera os meses cobertos de cada destino antes de
+  // aplicar (importar 2x somava e dobrava; várias contas no MESMO destino continuam somando entre si)
+  const mesesAlvo = modo==='ultimo' ? [BAL.mesFim] : meses;
+  const destinos = new Set();
+  for (const c of BAL.contas) { if (c.destino!=='ignorar') destinos.add(c.destino==='folha.fgtsValor' ? 'folha.baseFgts' : c.destino); }
+  const jaTem = [...destinos].some(dst => { const [g,cp]=dst.split('.'); return mesesAlvo.some(m => +((AN[g]?.[cp]||[])[m])>0); });
+  if (jaTem && !await dlgSimNao('Substituir os valores?',
+      'Os meses cobertos pelo balancete já têm valores nos destinos (Folha, Compras, Despesas…).\n\nO balancete SUBSTITUI esses meses — os demais meses e as outras seções não são tocados. Continuar?',
+      'Sim, substituir', 'Não')) return;
+  for (const dst of destinos) { const [g,cp]=dst.split('.'); if (!Array.isArray(AN[g][cp])) AN[g][cp]=Array(12).fill(0); for (const m of mesesAlvo) AN[g][cp][m]=0; }
   let aplicadas = 0, fgtsAcum = 0;
   for (const c of BAL.contas) {
     if (c.destino==='ignorar') continue;
@@ -4062,6 +4077,10 @@ async function _xmlAplicarBase() {
   if ($id('xml-iss')?.checked && aliqIssMax && !(+AN.cfg.iss)) { AN.cfg.iss = aliqIssMax/100; msg += ` · % ISS preenchido (${aliqIssMax.toLocaleString('pt-BR')}%)`; }
   if ($id('xml-grade')?.checked) {
     const bloco = $id('xml-bloco').value; let lanc=0;
+    // v7.18.3: reimportar o MESMO lote não duplica — os meses cobertos pelas notas incluídas são
+    // zerados no bloco de destino antes do lançamento (as notas do lote seguem somando entre si)
+    const mesesXml = [...new Set(inc.filter(n=>n.mes!=null && +n.ano===+AN.ano).map(n=>n.mes))];
+    for (const m of mesesXml) AN.receitas[bloco][m] = 0;
     for (const n of inc) { if (n.mes==null || +n.ano !== +AN.ano) continue; AN.receitas[bloco][n.mes] = (AN.receitas[bloco][n.mes]||0) + n.valor; lanc++; }
     msg += ` · ${lanc} receita(s) lançada(s) no bloco (ano ${AN.ano})`;
   }
@@ -5204,7 +5223,8 @@ function rlConferencia(){
       CF.lin('<b>Total do Lucro Presumido</b>','soma das parcelas acima (FGTS não considerado)', fmtR(P.total)),
     ];
     const LRl = [
-      CF.lin('Base PIS/COFINS (bruta)', `receitas tributadas (sem monofásico e exportação) − compras p/ revenda ${fmtR(_comprasLR)} − despesas com crédito ${fmtR(_credLRm)}`, fmtR(LR.basePCbruta||0)),
+      CF.lin('Base PIS/COFINS (bruta)', `receitas tributadas (sem monofásico e exportação) − compras p/ revenda líquidas do ICMS (${fmtR(_comprasLR)} − ${fmtR(M.icmsComprasPC||0)}) − despesas com crédito ${fmtR(_credLRm)}`, fmtR(LR.basePCbruta||0)),
+      ...((M.icmsComprasPC||0)>0.005?[CF.lin('(+) ICMS das aquisições fora do crédito — Lei 14.592/2023', `compras p/ revenda ${fmtR(_comprasLR)} × ${CF.pc(+D.cfg.icmsC||0)} (ICMS da aquisição não gera crédito de PIS/COFINS)`, fmtR(M.icmsComprasPC||0))]:[]),
       CF.lin('(−) ICMS destacado — Tema 69', `(revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706)`, fmtR(M.icmsDestacadoPC||0)),
       CF.lin('Base PIS/COFINS (final)', `${fmtR(LR.basePCbruta||0)} − ${fmtR(M.icmsDestacadoPC||0)}`, fmtR(LR.basePC||0)),
       CF.lin('PIS', `${fmtR(LR.basePC||0)} × 1,65% + financeiras ${fmtR(_fin)} × 0,65%`, fmtR(LR.pis)),
