@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.18.3</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.19.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -400,7 +400,7 @@ canvas{max-height:340px}
       </div>
       <div class="card" id="imp-bal-card" style="display:none">
         <h3>Importar balancete (Questor) <span class="hint" style="font-weight:400">— .xls/.xlsx mensal ou anual; alimenta folha, compras e despesas (receitas entram pelo Faturamento ou PGDAS)</span></h3>
-        <input type="file" id="imp-bal-file" accept=".xls,.xlsx" onchange="balLer(this)">
+        <input type="file" id="imp-bal-file" accept=".xls,.xlsx" multiple onchange="balLer(this)">
         <div id="imp-bal-review" style="margin-top:12px"></div>
       </div>
       <div class="card" id="imp-dem-card" style="display:none">
@@ -622,7 +622,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.18.3</b> <span class="badge ok">atual</span></td><td>14/08/2026</td><td><b>Correções de importação e do crédito de PIS/COFINS no Lucro Real.</b> (1) <b>Fim da duplicação ao reimportar</b>: o balancete passou a <b>substituir</b> os meses que cobre em cada destino (Folha, Compras, Despesas), em vez de somar ao que já estava gravado — importar o mesmo arquivo duas vezes dobrava os valores (caso identificado nas Compras da análise, em que o valor da aba era a soma do resíduo anterior com as compras do balancete). Quando os meses cobertos já têm valores, o app pergunta antes de sobrescrever, e o mesmo tratamento foi dado ao lançamento de receitas por XML: reimportar o mesmo lote de notas não duplica mais a grade. Os importadores de PGDAS, Faturamento, Demonstrativo e Fornecedores já substituíam corretamente e foram conferidos um a um. (2) <b>Lei nº 14.592/2023 no Lucro Real</b>: o ICMS incidente sobre a aquisição deixou de compor o crédito de PIS/COFINS — as compras para revenda passam a reduzir a base <b>líquidas do ICMS</b> (estimado pelo % de ICMS de compras da configuração). A base de PIS/COFINS do Real sobe na medida do ICMS das compras, e o IRPJ/CSLL cai em consequência (PIS/COFINS maiores deduzem o lucro). A conferência de cálculos ganhou linha própria mostrando a parcela excluída, com a base legal. Gabaritos da suíte recalibrados com as diferenças documentadas.</td></tr>
+                    <tr><td><b>v7.19.0</b> <span class="badge ok">atual</span></td><td>14/08/2026</td><td><b>Importação de balancetes reformulada.</b> (1) <b>Vários arquivos de uma vez</b>: o seletor aceita múltiplos balancetes (um por mês, por exemplo) e consolida tudo numa revisão única, arquivo a arquivo, com os destinos editáveis por conta — importar os 12 meses do ano virou uma operação só. Arquivos com mais de uma empresa continuam pedindo a escolha, agora considerando o conjunto. (2) <b>Nova opção "Lançar no mês de cada balancete"</b>: o período vem do cabeçalho do próprio arquivo ("Período: 01/01/2025 a 31/01/2025") e o lançamento cai direto no mês correspondente, sem rateio — é o padrão quando todos os balancetes são mensais. As opções de distribuir pelo período e lançar no último mês continuam disponíveis, agora aplicadas por balancete. (3) <b>Prévia antes de aplicar</b>: o botão "🔎 Prévia da aplicação" mostra a tabela destino × mês com o <b>valor exato que ficará gravado</b> em cada campo, o total por destino e a lista dos valores já existentes que serão substituídos (de → para). A prévia e a aplicação são calculadas pela <b>mesma matriz</b> — o que a prévia mostra é o que é gravado, por construção. A substituição segura da v7.18.3 (zerar os meses cobertos, perguntar antes de sobrescrever) vale para o conjunto todo.</td></tr>
+                    <tr><td><b>v7.18.3</b></td><td>14/08/2026</td><td><b>Correções de importação e do crédito de PIS/COFINS no Lucro Real.</b> (1) <b>Fim da duplicação ao reimportar</b>: o balancete passou a <b>substituir</b> os meses que cobre em cada destino (Folha, Compras, Despesas), em vez de somar ao que já estava gravado — importar o mesmo arquivo duas vezes dobrava os valores (caso identificado nas Compras da análise, em que o valor da aba era a soma do resíduo anterior com as compras do balancete). Quando os meses cobertos já têm valores, o app pergunta antes de sobrescrever, e o mesmo tratamento foi dado ao lançamento de receitas por XML: reimportar o mesmo lote de notas não duplica mais a grade. Os importadores de PGDAS, Faturamento, Demonstrativo e Fornecedores já substituíam corretamente e foram conferidos um a um. (2) <b>Lei nº 14.592/2023 no Lucro Real</b>: o ICMS incidente sobre a aquisição deixou de compor o crédito de PIS/COFINS — as compras para revenda passam a reduzir a base <b>líquidas do ICMS</b> (estimado pelo % de ICMS de compras da configuração). A base de PIS/COFINS do Real sobe na medida do ICMS das compras, e o IRPJ/CSLL cai em consequência (PIS/COFINS maiores deduzem o lucro). A conferência de cálculos ganhou linha própria mostrando a parcela excluída, com a base legal. Gabaritos da suíte recalibrados com as diferenças documentadas.</td></tr>
                     <tr><td><b>v7.18.2</b></td><td>13/08/2026</td><td><b>Impressão do parecer travada no A4, de forma estrutural.</b> A causa do desalinhamento persistente estava no próprio CSS de impressão: a página lógica tinha altura automática e uma regra antiga de <i>overflow visível</i> — qualquer conteúdo que passasse de 296mm (um texto de IA mais longo, uma tabela de notas maior) vazava para uma folha <b>sem timbrado</b> e desalinhava todas as seguintes. Agora cada página do parecer tem <b>altura fixa de uma folha A4</b> (uma página lógica = uma folha física, sempre): o fundo timbrado nunca mais desencontra do conteúdo. Junto com isso, o conteúdo foi redistribuído para caber com folga: a leitura dos três caminhos passou a abrir a página do split payment (a página dos cenários de 2033 ficou só com os gráficos e a tabela), e as notas do período (Classificação RTC) ganharam a página final própria, junto do encerramento e da assinatura — os "Pontos de atenção" e os prazos da Res. 190/2026 ficam em página exclusiva. O parecer fecha em 9 páginas mais a capa, todas alinhadas ao timbrado.</td></tr>
                     <tr><td><b>v7.18.1</b></td><td>13/08/2026</td><td><b>Ajustes finos sobre a v7.18.0.</b> (1) <b>Impressão do parecer</b>: as folhas 5 e 6 estouravam a página com o conteúdo ampliado — os gráficos dos cenários e da economia acumulada foram compactados, o texto dos três caminhos e a nota de leitura ganharam corpo menor, e a seção "Pontos de atenção" (com os prazos, as notas do período e a assinatura) passou a ocupar <b>página própria</b>, aliviando a página do plano de ação. (2) <b>Conferência de cálculos mais detalhada</b>: o Lucro Presumido e o Lucro Real agora mostram cada parcela com a fórmula e os valores substituídos — base bruta de PIS/COFINS (receita − monofásico − exportação; no Real, − compras e despesas com crédito), a exclusão do ICMS destacado (Tema 69) em linha própria, a base final, o lucro do mês aberto termo a termo (receita + financeiras − custos − folha − despesas − INSS − PIS/COFINS − ICMS − IPI − ISS), o adicional quando houver, o ICMS como débito − crédito com os valores, o ISS sobre os serviços do mês e o INSS patronal com salários, pró-labore e percentuais da empresa. (3) <b>Consolidado analítico</b>: novo quadro "Impostos do DAS — decomposição por período", abrindo PIS, COFINS, IRPJ, CSLL, CPP, ICMS, ISS e IPI na periodicidade escolhida (mensal, trimestral ou semestral), com trava do sublimite, ISS retido, CPP retida e CPP do Anexo IV quando existirem.</td></tr>
                     <tr><td><b>v7.18.0</b></td><td>13/08/2026</td><td><b>Revisão de cálculos e dos relatórios.</b> (1) <b>PIS/COFINS</b>: corrigida a dupla exclusão do monofásico na base do Lucro Presumido — o ICMS excluído (Tema 69 do STF, RE 574.706) passa a ser o <b>destacado</b> das saídas que permanecem na base (revenda sem ST e com redução) — e a mesma exclusão foi <b>estendida ao Lucro Real</b> (regime não cumulativo), conforme decisão de 13/08; a conferência de cálculos passou a citar a exclusão nas duas bases. (2) O <b>FGTS saiu de todos os totais</b>, quadros e relatórios: encargo idêntico em qualquer regime e não alterado pela Reforma, ele apenas inflava o "% da receita que vira imposto" — os quadros ganharam nota informando a premissa. (3) O <b>INSS patronal</b> do Presumido e do Real ganhou nota explícita (salários × (20% + RAT/FAP + terceiros) e pró-labore × 20%), e o verificador passou a alertar folha zerada, que zera o INSS e favorece indevidamente esses regimes na comparação. (4) A recomposição do ISS passou a ser exibida como <b>"ISS retido"</b>, com a base legal informada (LC 123, art. 21, § 4º). (5) Relatórios e parecer: o enquadramento cita o <b>período efetivamente analisado</b> em vez de "últimos 12 meses"; "O caminho da sua empresa" mostra o <b>melhor</b> cenário de 2033, não mais o pior; o retrato comércio × serviços só aparece quando a empresa tem <b>as duas atividades</b>; "Para onde vai cada real do DAS" ganhou texto explicativo; a evolução da carga traz <b>todas as simulações</b> — Simples por dentro ano a ano (Res. 190), híbrido, Presumido e Real; "Quanto da receita vira imposto" exibe todos os regimes com nota de leitura; a seção dos três caminhos foi ampliada com os critérios de decisão; e o parecer encerra com a nova seção <b>"Pontos de atenção"</b> (alíquotas estimadas, amostragem do período, vendas CNPJ × CPF, regime atual de clientes e fornecedores, créditos condicionados a documento fiscal e o calendário de setembro/2026). (6) <b>Impressão em A4</b> revisada também para os relatórios em cartões: tabelas sem corte, cabeçalhos repetidos por página e quebras controladas. Suíte de testes ampliada e gabaritos recalibrados (sem FGTS e com o Tema 69), com as diferenças documentadas no relatório de implementação.</td></tr>
@@ -3710,127 +3711,196 @@ function balDestino(cls, desc) {
 }
 
 let BAL_ABAS = null;
-function balParseRows(ws) {
-  try {
-      // cabeçalho: CNPJ e período
-      const plano = ws.map(r=>(r||[]).map(c=>String(c??'')));
-      const txtCab = plano.slice(0,4).flat().join(' ');
-      const per = txtCab.match(/Período:\s*(\d{2})\/(\d{2})\/(\d{4})\s*a\s*(\d{2})\/(\d{2})\/(\d{4})/);
-      const cnpjB = (txtCab.match(/CNPJ:\s*([\d.\/\-]+)/)||[])[1];
-      // localizar linha de cabeçalho de colunas
-      let hdr = -1;
-      for (let i=0;i<Math.min(plano.length,10);i++) if (plano[i].join('|').includes('Classificação')) { hdr = i; break; }
-      if (hdr<0) { toast('Formato não reconhecido (sem linha "Classificação Conta").'); return; }
-      const cols = plano[hdr]; 
-      const ix = nomeCol => cols.findIndex(c=>c.toLowerCase().includes(nomeCol));
-      const iCls = ix('classificação'), iTipo = ix('s/a'), iDesc = ix('descrição'), iDeb = ix('débito'), iCred = ix('crédito');
-      const contas = [];
-      for (let r=hdr+1; r<ws.length; r++) {
-        const row = ws[r]||[];
-        const cls = String(row[iCls]||''), tipo = String(row[iTipo]||''), desc = String(row[iDesc]||'');
-        if (!cls || tipo!=='A' || !'456'.includes(cls[0])) continue;
-        const deb = +row[iDeb]||0, cred = +row[iCred]||0;
-        let valor = cls[0]==='4' ? cred : deb;               // giro da conta
-        if (deb!==cred) valor = cls[0]==='4' ? (cred-deb) : (deb-cred);  // balancete mensal (sem encerramento)
-        if (desc.trim().startsWith('(-)')) valor = -Math.abs(valor);
-        if (!valor) continue;
-        contas.push({ cls, desc: desc.trim(), valor, destino: balDestino(cls, desc) });
-      }
-      const nomeB = (txtCab.match(/\d{3,4}\s*-\s*(.+?)(?:\s{2,}|Emissão|CNPJ)/)||[])[1];
-      BAL = { cnpj: cnpjB, nome: (nomeB||'').trim(), contas,
-        mesIni: per ? +per[2]-1 : 0, mesFim: per ? +per[5]-1 : 11, ano: per ? +per[3] : null };
-      balReview();
-  } catch(err) { console.error(err); toast('Erro ao ler o balancete: '+err.message); }
+// ═══ v7.19.0: balancete multi-arquivo com prévia e lançamento no mês do próprio balancete ═══
+function balParseLote(ws, arquivo) {
+  const plano = ws.map(r=>(r||[]).map(c=>String(c??'')));
+  const txtCab = plano.slice(0,4).flat().join(' ');
+  const per = txtCab.match(/Período:\s*(\d{2})\/(\d{2})\/(\d{4})\s*a\s*(\d{2})\/(\d{2})\/(\d{4})/);
+  const cnpjB = (txtCab.match(/CNPJ:\s*([\d.\/\-]+)/)||[])[1];
+  let hdr = -1;
+  for (let i=0;i<Math.min(plano.length,10);i++) if (plano[i].join('|').includes('Classificação')) { hdr = i; break; }
+  if (hdr<0) return null;
+  const cols = plano[hdr];
+  const ix = nomeCol => cols.findIndex(c=>c.toLowerCase().includes(nomeCol));
+  const iCls = ix('classificação'), iTipo = ix('s/a'), iDesc = ix('descrição'), iDeb = ix('débito'), iCred = ix('crédito');
+  const contas = [];
+  for (let r=hdr+1; r<ws.length; r++) {
+    const row = ws[r]||[];
+    const cls = String(row[iCls]||''), tipo = String(row[iTipo]||''), desc = String(row[iDesc]||'');
+    if (!cls || tipo!=='A' || !'456'.includes(cls[0])) continue;
+    const deb = +row[iDeb]||0, cred = +row[iCred]||0;
+    let valor = cls[0]==='4' ? cred : deb;               // giro da conta
+    if (deb!==cred) valor = cls[0]==='4' ? (cred-deb) : (deb-cred);  // balancete mensal (sem encerramento)
+    if (desc.trim().startsWith('(-)')) valor = -Math.abs(valor);
+    if (!valor) continue;
+    contas.push({ cls, desc: desc.trim(), valor, destino: balDestino(cls, desc) });
+  }
+  const nomeB = (txtCab.match(/\d{3,4}\s*-\s*(.+?)(?:\s{2,}|Emissão|CNPJ)/)||[])[1];
+  return { arquivo, cnpj: cnpjB||'', nome: (nomeB||'').trim(), contas,
+    mesIni: per ? +per[2]-1 : 0, mesFim: per ? +per[5]-1 : 11, ano: per ? +per[3] : null };
 }
-function balEscolherAba(i) { if (BAL_ABAS && BAL_ABAS[i]) balParseRows(BAL_ABAS[i].s); }
+function balEscolherEmpresa(cnpj) {
+  const lotes = BAL_ABAS.filter(l => (l.cnpj||l.nome) === cnpj);
+  if (!lotes.length) return;
+  balMontar(lotes);
+}
+function balMontar(lotes) {
+  // dedupe entre ARQUIVOS: mesmo período + mesmas contas/valores = mesmo balancete selecionado 2x
+  const vis = {}, unicos = [];
+  for (const l of lotes) {
+    const k = l.mesIni+'|'+l.mesFim+'|'+l.ano+'|'+l.contas.length+'|'+l.contas.reduce((s,c)=>s+c.valor,0).toFixed(2);
+    if (vis[k]) continue; vis[k]=1; unicos.push(l);
+  }
+  if (unicos.length < lotes.length) toast(`${lotes.length-unicos.length} balancete(s) idêntico(s) ignorado(s) (mesmo período e valores).`);
+  lotes = unicos;
+  // sobreposição de período com valores DIFERENTES (ex.: original + retificado): os dois somariam — avisar
+  const cober = {};
+  for (const l of lotes) for (let m=l.mesIni;m<=l.mesFim;m++) (cober[m]=cober[m]||[]).push(l.arquivo||'?');
+  const sobrep = Object.entries(cober).filter(([,a])=>a.length>1);
+  if (sobrep.length) toast(`⚠️ Período sobreposto em ${sobrep.map(([m])=>MESES[+m]).join(', ')} — mais de um balancete cobre o mesmo mês e os valores serão SOMADOS na aplicação. Confira na prévia.`);
+  // vários lotes do MESMO mês (dois balancetes de jan): o mais recente na lista prevalece, com aviso
+  const anos = [...new Set(lotes.map(l=>l.ano).filter(a=>a!=null))];
+  if (anos.length > 1) {
+    const anoSel = Math.max(...anos);
+    toast(`Os arquivos cobrem ${anos.length} anos (${anos.sort().join(', ')}). A análise é anual — aplicando só ${anoSel}; importe os demais anos na análise correspondente.`);
+    lotes = lotes.filter(l => l.ano === anoSel);
+  }
+  BAL = { cnpj: lotes[0].cnpj, nome: lotes[0].nome, ano: lotes[0].ano,
+    mesIni: Math.min(...lotes.map(l=>l.mesIni)), mesFim: Math.max(...lotes.map(l=>l.mesFim)), lotes };
+  balReview();
+}
 function balLer(input) {
-  const f = input.files[0]; if (!f) return;
-  const rd = new FileReader();
-  rd.onload = e => {
-    try {
-      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-      // v6: identifica a empresa pelo CABEÇALHO INTERNO de cada aba (nunca pelo nome da aba),
-      // deduplica abas repetidas e, havendo empresas distintas no mesmo arquivo, pede a escolha.
-      const cands = [];
-      for (const n of wb.SheetNames) {
-        const s = XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1});
-        if (s.length>4 && s.slice(0,10).some(r=>(r||[]).join('|').includes('Classificação'))) {
-          const cab = s.slice(0,3).map(r=>(r||[]).map(c=>String(c??'')).join(' ')).join(' ');
-          const cnpjA = (cab.match(/CNPJ:\s*([\d.\/\-]+)/)||[])[1]||'';
-          const empA = (cab.match(/\d{1,5}\s*-\s*(.+?)(?:\s{2,}|Emissão|CNPJ|$)/)||[])[1]||n;
-          cands.push({ aba:n, s, cnpj:cnpjA, emp:String(empA).trim(), linhas:s.length });
+  const fs = [...input.files]; if (!fs.length) return;
+  const leituras = fs.map(f => new Promise(res => {
+    const rd = new FileReader();
+    rd.onload = e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+        const lotes = [];
+        for (const n of wb.SheetNames) {
+          const sj = XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1});
+          if (sj.length>4 && sj.slice(0,10).some(r=>(r||[]).join('|').includes('Classificação'))) {
+            const l = balParseLote(sj, f.name); if (l) lotes.push(l);
+          }
         }
-      }
-      if (!cands.length) { toast('Planilha vazia ou sem a coluna "Classificação Conta".'); return; }
-      const vistos = {}, unicos = [];
-      for (const c of cands) { const k = (c.cnpj||c.emp)+'|'+c.linhas; if (!vistos[k]) { vistos[k]=1; unicos.push(c); } }
-      const cnpjsDist = [...new Set(unicos.map(c=>c.cnpj||c.emp))];
-      if (cnpjsDist.length > 1) {
-        BAL_ABAS = unicos;
-        $id('imp-bal-review').innerHTML = '<div class="hint" style="margin-bottom:8px">⚠️ O arquivo contém <b>'+cnpjsDist.length+' empresas</b> (identificação pelo cabeçalho interno de cada aba, não pelo nome da aba). Escolha qual importar:</div>' +
-          unicos.map((c,i)=>`<button class="btn" style="margin:4px" onclick="balEscolherAba(${i})">${c.emp} — CNPJ ${c.cnpj||'?'} · ${c.linhas} linhas</button>`).join('');
-        return;
-      }
-      if (cands.length > unicos.length) toast('Aviso: o arquivo tem '+cands.length+' abas, mas todas com a mesma empresa — usando uma só.');
-      balParseRows(unicos[0].s);
-    } catch(err) { console.error(err); toast('Erro ao ler o balancete: '+err.message); }
-  };
-  rd.readAsArrayBuffer(f);
+        // deduplica abas repetidas do mesmo arquivo (mesma empresa + mesmo período + mesmas linhas)
+        const vistos = {}, unicos = [];
+        for (const l of lotes) { const k = (l.cnpj||l.nome)+'|'+l.mesIni+'|'+l.mesFim+'|'+l.contas.length;
+          if (!vistos[k]) { vistos[k]=1; unicos.push(l); } }
+        res(unicos);
+      } catch(err) { console.error(err); toast('Erro ao ler '+f.name+': '+err.message); res([]); }
+    };
+    rd.onerror = () => res([]);
+    rd.readAsArrayBuffer(f);
+  }));
+  Promise.all(leituras).then(tudo => {
+    const lotes = tudo.flat();
+    if (!lotes.length) { toast('Nenhuma aba de balancete reconhecida (coluna "Classificação Conta").'); return; }
+    const cnpjs = [...new Set(lotes.map(l=>l.cnpj||l.nome))];
+    if (cnpjs.length > 1) {
+      BAL_ABAS = lotes;
+      $id('imp-bal-review').innerHTML = '<div class="hint" style="margin-bottom:8px">⚠️ Os arquivos contêm <b>'+cnpjs.length+' empresas</b> (identificação pelo cabeçalho interno de cada aba). Escolha qual importar:</div>' +
+        cnpjs.map(c=>{ const ls = lotes.filter(l=>(l.cnpj||l.nome)===c);
+          return `<button class="btn" style="margin:4px" onclick="balEscolherEmpresa('${esc(c)}')">${esc(ls[0].nome||c)} — CNPJ ${esc(ls[0].cnpj||'?')} · ${ls.length} balancete(s)</button>`; }).join('');
+      return;
+    }
+    balMontar(lotes);
+  });
 }
-
+const balPeriodoTxt = l => l.mesIni===l.mesFim ? MESES[l.mesIni] : MESES[l.mesIni]+'–'+MESES[l.mesFim];
 function balReview() {
-  const nMeses = BAL.mesFim - BAL.mesIni + 1;
-  const selD = (i,atual) => `<select onchange="BAL.contas[${i}].destino=this.value" style="min-width:230px">` +
+  const todosMensais = BAL.lotes.every(l=>l.mesIni===l.mesFim);
+  const selD = (li,i,atual) => `<select onchange="BAL.lotes[${li}].contas[${i}].destino=this.value" style="min-width:230px">` +
     BAL_DESTINOS.map(([k,r])=>`<option value="${k}" ${k===atual?'selected':''}>${r}</option>`).join('') + '</select>';
-  let h = `<div class="hint" style="margin-bottom:8px">CNPJ ${BAL.cnpj||'?'} · período ${MESES[BAL.mesIni]}–${MESES[BAL.mesFim]}${BAL.ano?'/'+BAL.ano:''} (${nMeses} mês(es)) · ${BAL.contas.length} contas de resultado com movimento. Ajuste os destinos e aplique.</div>
-  <table class="gtable"><thead><tr><th>Conta</th><th>Descrição</th><th class="num">Valor no período</th><th>Destino na análise</th></tr></thead><tbody>`;
-  BAL.contas.forEach((c,i)=>{ h += `<tr><td class="rot">${c.cls}</td><td style="font-size:12px">${c.desc}</td><td class="num">${fmt(c.valor)}</td><td>${selD(i,c.destino)}</td></tr>`; });
-  h += `</tbody></table>
-  <div class="toolbar" style="margin:12px 0 0">
-    <div><label>Aplicação nos meses</label><select id="bal-modo"><option value="distribuir">Distribuir igualmente pelo período</option><option value="ultimo">Lançar tudo no último mês do período</option></select></div>
+  let h = `<div class="hint" style="margin-bottom:8px">CNPJ ${BAL.cnpj||'?'} · ${BAL.lotes.length} balancete(s) · período ${MESES[BAL.mesIni]}–${MESES[BAL.mesFim]}${BAL.ano?'/'+BAL.ano:''}. Ajuste os destinos, gere a prévia e confirme.</div>`;
+  BAL.lotes.forEach((l,li)=>{
+    h += `<div style="margin:10px 0 4px;font-weight:600">📄 ${esc(l.arquivo||'balancete')} — ${balPeriodoTxt(l)}${l.ano?'/'+l.ano:''} · ${l.contas.length} contas</div>
+    <table class="gtable"><thead><tr><th>Conta</th><th>Descrição</th><th class="num">Valor no período</th><th>Destino na análise</th></tr></thead><tbody>`;
+    l.contas.forEach((c,i)=>{ h += `<tr><td class="rot">${c.cls}</td><td style="font-size:12px">${esc(c.desc)}</td><td class="num">${fmt(c.valor)}</td><td>${selD(li,i,c.destino)}</td></tr>`; });
+    h += `</tbody></table>`;
+  });
+  h += `<div class="toolbar" style="margin:12px 0 0">
+    <div><label>Aplicação nos meses</label><select id="bal-modo">
+      <option value="proprio" ${todosMensais?'selected':''}>Lançar no mês de cada balancete</option>
+      <option value="distribuir" ${todosMensais?'':'selected'}>Distribuir igualmente pelo período de cada balancete</option>
+      <option value="ultimo">Lançar tudo no último mês do período de cada balancete</option></select></div>
     <span style="flex:1"></span>
+    <button class="btn" onclick="balPrevia()">🔎 Prévia da aplicação</button>
     <button class="btn solid" onclick="balAplicar()">✅ Aplicar à análise</button>
-  </div>`;
+  </div>
+  <div id="bal-previa" style="margin-top:12px"></div>`;
   $id('imp-bal-review').innerHTML = h;
 }
-
+// Matriz ÚNICA usada pela prévia e pela aplicação: {destino: {mes: valorFinal}} — o que a prévia
+// mostra é exatamente o que será gravado. FGTS em valor já convertido para folha.baseFgts.
+function balMatriz(modo) {
+  const M = {};
+  const add = (dst, m, v) => { (M[dst] = M[dst] || {})[m] = (M[dst][m]||0) + v; };
+  const lotes = BAL.lotes || [{ arquivo:'', mesIni:BAL.mesIni, mesFim:BAL.mesFim, ano:BAL.ano, contas:BAL.contas }];  // compat formato antigo
+  for (const l of lotes) {
+    const meses = []; for (let m=l.mesIni; m<=l.mesFim; m++) meses.push(m);
+    const alvo = modo==='ultimo' ? [l.mesFim] : (modo==='proprio' && l.mesIni===l.mesFim) ? [l.mesIni] : meses;
+    for (const c of l.contas) {
+      if (c.destino==='ignorar') continue;
+      const dst = c.destino==='folha.fgtsValor' ? 'folha.baseFgts' : c.destino;
+      const val = c.destino==='folha.fgtsValor' ? c.valor/(PARAMS.folha.fgts||.08) : c.valor;
+      const cota = val/alvo.length;
+      for (const m of alvo) add(dst, m, cota);
+    }
+  }
+  return M;
+}
+function balPrevia() {
+  const modo = $id('bal-modo').value, M = balMatriz(modo);
+  const dsts = Object.keys(M);
+  if (!dsts.length) { $id('bal-previa').innerHTML = '<div class="hint">Nada a aplicar — todas as contas estão como "Ignorar".</div>'; return; }
+  const rot = dst => { const [g,cp]=dst.split('.'); const par = BAL_DESTINOS.find(x=>x[0]===dst); return par?par[1] : (dst==='folha.baseFgts'?'Folha — base FGTS (convertida do valor)':g+'.'+cp); };
+  const mesesUsados = [...new Set(dsts.flatMap(d=>Object.keys(M[d]).map(Number)))].sort((a,b)=>a-b);
+  let subst = [];
+  let h = `<div class="hint" style="margin-bottom:6px"><b>Prévia</b> — valor que ficará gravado em cada campo/mês após a aplicação (os meses cobertos são <b>substituídos</b>; os demais não são tocados):</div>
+  <div style="overflow:auto"><table class="gtable"><thead><tr><th>Destino</th>${mesesUsados.map(m=>`<th class="num">${MESES[m]}</th>`).join('')}<th class="num">Total</th></tr></thead><tbody>`;
+  for (const dst of dsts) {
+    const [g,cp] = dst.split('.');
+    let tot = 0;
+    h += `<tr><td class="rot">${rot(dst)}</td>`;
+    for (const m of mesesUsados) {
+      const v = M[dst][m];
+      const atual = AN ? +((AN[g]?.[cp]||[])[m])||0 : 0;
+      if (v!=null && atual>0 && Math.abs(atual-v)>0.005) subst.push(`${rot(dst)} · ${MESES[m]}: ${fmt(atual)} → ${fmt(v)}`);
+      tot += v||0;
+      h += `<td class="num">${v!=null?fmt(v):'—'}</td>`;
+    }
+    h += `<td class="num"><b>${fmt(tot)}</b></td></tr>`;
+  }
+  h += `</tbody></table></div>`;
+  if (subst.length) h += `<div style="margin-top:8px;padding:8px 10px;border-left:4px solid #b9770e;background:#fef9e7;font-size:12px"><b>⚠️ ${subst.length} valor(es) já gravado(s) serão substituídos:</b><br>${subst.slice(0,12).map(esc).join('<br>')}${subst.length>12?'<br>… e mais '+(subst.length-12):''}</div>`;
+  $id('bal-previa').innerHTML = h;
+}
 async function balAplicar() {
   await garantirEmpresa(BAL.cnpj, BAL.nome, null);
   if (!AN) AN = anNovo('', +$id('an-ano').value);
   if (BAL.ano && +AN.ano !== BAL.ano) { AN.ano = BAL.ano; $id('an-ano').value = BAL.ano; }
   const modo = $id('bal-modo').value;
-  const meses = []; for (let m=BAL.mesIni; m<=BAL.mesFim; m++) meses.push(m);
-  // v7.18.3: o balancete SUBSTITUI o que traz — zera os meses cobertos de cada destino antes de
-  // aplicar (importar 2x somava e dobrava; várias contas no MESMO destino continuam somando entre si)
-  const mesesAlvo = modo==='ultimo' ? [BAL.mesFim] : meses;
-  const destinos = new Set();
-  for (const c of BAL.contas) { if (c.destino!=='ignorar') destinos.add(c.destino==='folha.fgtsValor' ? 'folha.baseFgts' : c.destino); }
-  const jaTem = [...destinos].some(dst => { const [g,cp]=dst.split('.'); return mesesAlvo.some(m => +((AN[g]?.[cp]||[])[m])>0); });
+  const M = balMatriz(modo);
+  const dsts = Object.keys(M);
+  if (!dsts.length) { toast('Nada a aplicar — todas as contas estão como "Ignorar".'); return; }
+  // v7.18.3/v7.19.0: o balancete SUBSTITUI o que traz — os pares (destino, mês) da matriz são
+  // zerados e recebem o valor final; meses e seções fora da matriz não são tocados
+  const jaTem = dsts.some(dst => { const [g,cp]=dst.split('.'); return Object.keys(M[dst]).some(m => +((AN[g]?.[cp]||[])[m])>0); });
   if (jaTem && !await dlgSimNao('Substituir os valores?',
-      'Os meses cobertos pelo balancete já têm valores nos destinos (Folha, Compras, Despesas…).\n\nO balancete SUBSTITUI esses meses — os demais meses e as outras seções não são tocados. Continuar?',
+      'Os meses cobertos pelos balancetes já têm valores nos destinos (Folha, Compras, Despesas…).\n\nOs balancetes SUBSTITUEM esses meses — os demais meses e as outras seções não são tocados. Continuar?',
       'Sim, substituir', 'Não')) return;
-  for (const dst of destinos) { const [g,cp]=dst.split('.'); if (!Array.isArray(AN[g][cp])) AN[g][cp]=Array(12).fill(0); for (const m of mesesAlvo) AN[g][cp][m]=0; }
-  let aplicadas = 0, fgtsAcum = 0;
-  for (const c of BAL.contas) {
-    if (c.destino==='ignorar') continue;
-    if (c.destino==='folha.fgtsValor') { fgtsAcum += c.valor; aplicadas++; continue; }
-    const [grp, campo] = c.destino.split('.');
-    const arr = AN[grp][campo];
-    if (modo==='ultimo') arr[BAL.mesFim] = (arr[BAL.mesFim]||0) + c.valor;
-    else { const cota = c.valor/meses.length; for (const m of meses) arr[m] = (arr[m]||0) + cota; }
-    aplicadas++;
-  }
-  if (fgtsAcum) {  // FGTS em valor → base (valor / 8%)
-    const base = fgtsAcum / (PARAMS.folha.fgts || .08);
-    if (modo==='ultimo') AN.folha.baseFgts[BAL.mesFim] += base;
-    else { const cota = base/meses.length; for (const m of meses) AN.folha.baseFgts[m] += cota; }
+  let celulas = 0;
+  for (const dst of dsts) {
+    const [g,cp] = dst.split('.');
+    if (!Array.isArray(AN[g][cp])) AN[g][cp] = Array(12).fill(0);
+    for (const m of Object.keys(M[dst])) { AN[g][cp][+m] = M[dst][+m]; celulas++; }
   }
   $id('imp-bal-card').style.display='none';
   anAplicado();
-  toast(`Balancete aplicado: ${aplicadas} conta(s). Revise a aba Folha/Compras e salve a análise.`);
+  const nLotes = (BAL.lotes||[1]).length;
+  toast(`${nLotes} balancete(s) aplicado(s): ${celulas} campo/mês gravado(s). Revise as abas e salve a análise.`);
 }
-
-
 
 // ═══════════ v6: MAPA cClassTrib (Tabelas 01/02 do usuário — item LC 116 → cClassTrib → % redução IBS/CBS) ═══════════
 // lc: item → lista de cClassTrib possíveis (o 1º é o padrão) · lcN: descrição do item · ct: código → [redIBS, redCBS, nome]
