@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.20.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.21.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -525,6 +525,7 @@ canvas{max-height:340px}
           <option value="parecer">Parecer Reforma Tributária — com IA</option>
           <option value="conferencia">Conferência de cálculos — memória (interno)</option>
           <option value="cnpj">Consulta CNPJ — cadastro completo</option>
+          <option value="produtos">Produtos vendidos × Reforma (IBS/CBS)</option>
         </select></div>
         <div><label>Periodicidade</label><select id="rl-per" onchange="rlRender()">
           <option value="1">Mensal</option><option value="2">Bimestral</option>
@@ -623,7 +624,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.20.0</b> <span class="badge ok">atual</span></td><td>14/08/2026</td><td><b>Relatórios ampliados.</b> (1) <b>Parecer com dashboard de fornecedores</b>: quando existe análise de fornecedores salva para a empresa, o parecer da Reforma ganha página própria "Fornecedores e o crédito de IBS/CBS" — cartões com o número de fornecedores, o valor do período e o percentual em regime normal (crédito pleno esperado), barra de distribuição por enquadramento (regime normal, Simples, MEI, não identificado), os 8 maiores fornecedores com valores, e o texto explicando a regra de crédito por regime do fornecedor (LC 214/2025 e art. 58 da Res. CGSN 190/2026). A página usa a consulta mais recente de cada tipo (revenda e serviços). (2) <b>Novo relatório "Consulta CNPJ — cadastro completo"</b>: documento imprimível da empresa selecionada com identificação, situação cadastral, endereço e contato, regime tributário (Simples/SIMEI com datas), TODAS as atividades econômicas (principal e secundárias) e o quadro societário com qualificação e data de entrada — direto dos dados abertos da RFB, com fonte e data da consulta no rodapé. (3) <b>Conferência de cálculos ampliada</b>: novo bloco "Reforma Tributária — conferência ano a ano" com débito, crédito, líquido, IS, DAS ajustado pelo art. 22-A, cenário híbrido e regime regular de 2026 a 2033, a trava do sublimite recomposta na vigência final e o alerta de créditos zerados; e a seção de divergências foi atualizada — Tema 69 e Lei 14.592/2023 agora constam como <b>aplicados por estimativa</b> (não mais como omissões), refletindo as versões 7.18.0 e 7.18.3.</td></tr>
+                    <tr><td><b>v7.21.0</b> <span class="badge ok">atual</span></td><td>14/08/2026</td><td><b>Reorganização dos relatórios de fornecedores e de produtos.</b> (1) O relatório <b>Consulta CNPJ — cadastro completo</b> ganhou a seção <b>"Resumo estatístico de fornecedores"</b> em forma COMPLETA: por tipo de consulta (revenda e serviços), cartões com o número de fornecedores, o valor do período e o percentual em regime normal, a barra de distribuição por enquadramento e a <b>relação integral</b> dos fornecedores (CNPJ, razão social, enquadramento, valor e participação), ordenada por valor — com a data da consulta e a regra de crédito de IBS/CBS por regime do fornecedor. (2) A seção <b>"Produtos vendidos no período e classificação para a Reforma (IBS/CBS)"</b> saiu da página final do <b>parecer</b>, que agora encerra direto com a disposição e a assinatura. (3) Ela virou <b>relatório próprio</b> no layout Artecon: novo tipo <b>"Produtos vendidos × Reforma (IBS/CBS)"</b> no módulo Relatórios, imprimível em A4, com a mesma relação de produtos consolidados do ano (código, NCM, CFOP, valor, participação), a classificação CST · cClassTrib decidida por produto com percentuais de redução, confiança e autor, os pendentes de decisão e os totais por CFOP como régua de conferência — direto das notas gravadas no aplicativo Classificação RTC, sem exigir análise salva.</td></tr>
+                    <tr><td><b>v7.20.0</b></td><td>14/08/2026</td><td><b>Relatórios ampliados.</b> (1) <b>Parecer com dashboard de fornecedores</b>: quando existe análise de fornecedores salva para a empresa, o parecer da Reforma ganha página própria "Fornecedores e o crédito de IBS/CBS" — cartões com o número de fornecedores, o valor do período e o percentual em regime normal (crédito pleno esperado), barra de distribuição por enquadramento (regime normal, Simples, MEI, não identificado), os 8 maiores fornecedores com valores, e o texto explicando a regra de crédito por regime do fornecedor (LC 214/2025 e art. 58 da Res. CGSN 190/2026). A página usa a consulta mais recente de cada tipo (revenda e serviços). (2) <b>Novo relatório "Consulta CNPJ — cadastro completo"</b>: documento imprimível da empresa selecionada com identificação, situação cadastral, endereço e contato, regime tributário (Simples/SIMEI com datas), TODAS as atividades econômicas (principal e secundárias) e o quadro societário com qualificação e data de entrada — direto dos dados abertos da RFB, com fonte e data da consulta no rodapé. (3) <b>Conferência de cálculos ampliada</b>: novo bloco "Reforma Tributária — conferência ano a ano" com débito, crédito, líquido, IS, DAS ajustado pelo art. 22-A, cenário híbrido e regime regular de 2026 a 2033, a trava do sublimite recomposta na vigência final e o alerta de créditos zerados; e a seção de divergências foi atualizada — Tema 69 e Lei 14.592/2023 agora constam como <b>aplicados por estimativa</b> (não mais como omissões), refletindo as versões 7.18.0 e 7.18.3.</td></tr>
                     <tr><td><b>v7.19.0</b></td><td>14/08/2026</td><td><b>Importação de balancetes reformulada.</b> (1) <b>Vários arquivos de uma vez</b>: o seletor aceita múltiplos balancetes (um por mês, por exemplo) e consolida tudo numa revisão única, arquivo a arquivo, com os destinos editáveis por conta — importar os 12 meses do ano virou uma operação só. Arquivos com mais de uma empresa continuam pedindo a escolha, agora considerando o conjunto. (2) <b>Nova opção "Lançar no mês de cada balancete"</b>: o período vem do cabeçalho do próprio arquivo ("Período: 01/01/2025 a 31/01/2025") e o lançamento cai direto no mês correspondente, sem rateio — é o padrão quando todos os balancetes são mensais. As opções de distribuir pelo período e lançar no último mês continuam disponíveis, agora aplicadas por balancete. (3) <b>Prévia antes de aplicar</b>: o botão "🔎 Prévia da aplicação" mostra a tabela destino × mês com o <b>valor exato que ficará gravado</b> em cada campo, o total por destino e a lista dos valores já existentes que serão substituídos (de → para). A prévia e a aplicação são calculadas pela <b>mesma matriz</b> — o que a prévia mostra é o que é gravado, por construção. A substituição segura da v7.18.3 (zerar os meses cobertos, perguntar antes de sobrescrever) vale para o conjunto todo.</td></tr>
                     <tr><td><b>v7.18.3</b></td><td>14/08/2026</td><td><b>Correções de importação e do crédito de PIS/COFINS no Lucro Real.</b> (1) <b>Fim da duplicação ao reimportar</b>: o balancete passou a <b>substituir</b> os meses que cobre em cada destino (Folha, Compras, Despesas), em vez de somar ao que já estava gravado — importar o mesmo arquivo duas vezes dobrava os valores (caso identificado nas Compras da análise, em que o valor da aba era a soma do resíduo anterior com as compras do balancete). Quando os meses cobertos já têm valores, o app pergunta antes de sobrescrever, e o mesmo tratamento foi dado ao lançamento de receitas por XML: reimportar o mesmo lote de notas não duplica mais a grade. Os importadores de PGDAS, Faturamento, Demonstrativo e Fornecedores já substituíam corretamente e foram conferidos um a um. (2) <b>Lei nº 14.592/2023 no Lucro Real</b>: o ICMS incidente sobre a aquisição deixou de compor o crédito de PIS/COFINS — as compras para revenda passam a reduzir a base <b>líquidas do ICMS</b> (estimado pelo % de ICMS de compras da configuração). A base de PIS/COFINS do Real sobe na medida do ICMS das compras, e o IRPJ/CSLL cai em consequência (PIS/COFINS maiores deduzem o lucro). A conferência de cálculos ganhou linha própria mostrando a parcela excluída, com a base legal. Gabaritos da suíte recalibrados com as diferenças documentadas.</td></tr>
                     <tr><td><b>v7.18.2</b></td><td>13/08/2026</td><td><b>Impressão do parecer travada no A4, de forma estrutural.</b> A causa do desalinhamento persistente estava no próprio CSS de impressão: a página lógica tinha altura automática e uma regra antiga de <i>overflow visível</i> — qualquer conteúdo que passasse de 296mm (um texto de IA mais longo, uma tabela de notas maior) vazava para uma folha <b>sem timbrado</b> e desalinhava todas as seguintes. Agora cada página do parecer tem <b>altura fixa de uma folha A4</b> (uma página lógica = uma folha física, sempre): o fundo timbrado nunca mais desencontra do conteúdo. Junto com isso, o conteúdo foi redistribuído para caber com folga: a leitura dos três caminhos passou a abrir a página do split payment (a página dos cenários de 2033 ficou só com os gráficos e a tabela), e as notas do período (Classificação RTC) ganharam a página final própria, junto do encerramento e da assinatura — os "Pontos de atenção" e os prazos da Res. 190/2026 ficam em página exclusiva. O parecer fecha em 9 páginas mais a capa, todas alinhadas ao timbrado.</td></tr>
@@ -4553,8 +4555,45 @@ async function rlCnpjRender(cnpj){
     <table class="gtable"><thead><tr><th>Nome</th><th>Qualificação</th><th>Entrada</th><th>Faixa etária</th></tr></thead><tbody>
     ${qsa.map(sx=>`<tr><td>${esc(sx.nome_socio||sx.nome||'')}</td><td>${esc(sx.qualificacao_socio||sx.qualificacao||'')}</td><td>${dtBR(sx.data_entrada_sociedade)||'—'}</td><td>${esc(sx.faixa_etaria||'')||'—'}</td></tr>`).join('')}
     </tbody></table></div>`;
+  h += await rlCnpjFornecedores(cnpj, qsa.length?6:5);
   h += `<div class="card"><div class="hint">Fonte: ${fonte} (dados abertos do CNPJ da Receita Federal, defasagem de até ~1 mês) · consulta gerada em ${new Date().toLocaleString('pt-BR')} · Artecon Artes Contábeis. Para comprovação com fé pública, emita o Comprovante de Inscrição no site da RFB.</div></div>`;
   box.innerHTML = h;
+}
+// v7.21.0: resumo estatístico de fornecedores COMPLETO no relatório de CNPJ
+async function rlCnpjFornecedores(cnpj, nSec){
+  let F = RL.forn;
+  if (!F){ try { const fr = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+cnpj, order:'consultado_em.desc', select:'*' } }) || [];
+    const f = {}; for (const r of fr){ const t = (r.dados&&r.dados.tipo)||'servico'; if (!f[t]) f[t]=r; }
+    if (Object.keys(f).length) F = f;
+  } catch(e){} }
+  if (!F || (!F.revenda && !F.servico)) return '';
+  const ROT = { mei:['MEI','#1e8449'], simples:['Simples Nacional','#1a5276'], normal:['Regime normal','#b9770e'], nid:['Não identificado','#7f8c8d'], pf:['Pessoa física','#7f8c8d'] };
+  const bloco = (r, titulo) => {
+    if (!r || !r.dados) return '';
+    const itens = r.dados.itens||[];
+    const tot = itens.reduce((a,i)=>a+(+i.valor||0),0) || 1;
+    const porC = {}; for (const i of itens){ const c=i.classe||'nid'; porC[c]=porC[c]||{n:0,v:0}; porC[c].n++; porC[c].v+=(+i.valor||0); }
+    const ordem = ['normal','simples','mei','nid','pf'].filter(c=>porC[c]);
+    const barra = ordem.map(c=>`<div style="height:10px;width:${(porC[c].v/tot*100).toFixed(1)}%;background:${ROT[c][1]}"></div>`).join('');
+    const leg = ordem.map(c=>`<span style="font-size:11px;margin-right:12px"><span style="display:inline-block;width:9px;height:9px;background:${ROT[c][1]};border-radius:2px"></span> ${ROT[c][0]}: ${porC[c].n} forn. · ${fmtR(porC[c].v)} (${(porC[c].v/tot*100).toFixed(1).replace('.',',')}%)</span>`).join('');
+    const pctCred = ((porC.normal?porC.normal.v:0)/tot*100).toFixed(1).replace('.',',');
+    const linhas = [...itens].sort((a,b)=>(+b.valor||0)-(+a.valor||0)).map(i=>{const rr=ROT[i.classe||'nid']||ROT.nid;
+      return `<tr><td style="white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td>${esc(i.razao)}</td><td>${rr[0]}</td><td class="num">${fmt(i.valor)}</td><td class="num">${(i.valor/tot*100).toFixed(1).replace('.',',')}%</td></tr>`;}).join('');
+    return `<div style="margin-bottom:14px"><b>${titulo}</b> <span class="hint">consulta de ${new Date(r.consultado_em).toLocaleDateString('pt-BR')}${r.dados.periodo?' · período '+esc(r.dados.periodo):''}</span>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0">
+        <div class="stat"><div class="n" style="font-size:17px">${itens.length}</div><div class="l">fornecedores</div></div>
+        <div class="stat"><div class="n" style="font-size:17px">${fmtR(tot)}</div><div class="l">valor no período</div></div>
+        <div class="stat"><div class="n" style="font-size:17px">${pctCred}%</div><div class="l">em regime normal (crédito pleno esperado de IBS/CBS)</div></div>
+      </div>
+      <div style="display:flex;border-radius:4px;overflow:hidden;margin:4px 0">${barra}</div><div style="margin-bottom:6px">${leg}</div>
+      <table class="gtable"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th class="num">Valor (R$)</th><th class="num">% do total</th></tr></thead>
+      <tbody>${linhas}</tbody></table></div>`;
+  };
+  const corpo = bloco(F.revenda,'Fornecedores de revenda (entradas de mercadorias)') + bloco(F.servico,'Fornecedores de serviços e despesas');
+  if (!corpo) return '';
+  return `<div class="card"><h3 style="margin-top:0">${nSec}. Resumo estatístico de fornecedores</h3>
+    <div class="hint" style="margin-bottom:8px">Relação COMPLETA dos fornecedores analisados pelo escritório, com o enquadramento tributário consultado nos dados abertos da RFB. No IVA dual, o crédito de IBS/CBS depende do regime do fornecedor: regime normal gera crédito pleno destacado; Simples Nacional, crédito limitado ao percentual da faixa do fornecedor (LC 214/2025; Res. CGSN 190/2026, art. 58); MEI e pessoas físicas, em regra, não geram crédito.</div>
+    ${corpo}</div>`;
 }
 
 // ═══════════ v6: RELATÓRIO CONSOLIDADO ANALÍTICO ═══════════
@@ -5017,16 +5056,14 @@ function rlParecer(){
     ${D.variante!=='acima'?`<p class="pp-p" style="font-size:9.5pt"><b>Prazos da Res. CGSN nº 190/2026:</b> a opção pelo Simples Nacional passa a ser formalizada de 1º a 30 de setembro, com efeitos a partir de 1º de janeiro seguinte — para produzir efeitos em 2027, portanto, em setembro/2026 (art. 6º). A opção pelo recolhimento de IBS/CBS no regime regular (cenário híbrido) é semestral, nas janelas de setembro e março (art. 40-D). Quem ingressar no Simples em 1º/01/2027 deve confirmar receitas e folhas anteriores no módulo "Receitas Anteriores à Opção" do PGDAS-D até 20/12/2026 (competências dez/2025 a nov/2026) e até 20/01/2027 (dez/2026); sem manifestação, prevalece o pré-preenchimento da Receita Federal (arts. 144-D e 144-E).</p>`:''}
   </div></div>`;
 
-  // ── PÁG: notas do período (Classificação RTC) + encerramento e assinatura ──
+  // ── PÁG: encerramento e assinatura (v7.21.0: a relação de produtos × IBS/CBS virou relatório próprio) ──
   h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
-    <div id="pp-notas"></div>
     <p class="pp-p">Colocamo-nos à disposição para esclarecimentos adicionais.</p>
     <div class="pp-assin"><p>Atenciosamente,</p><div style="height:14mm"></div><div class="pp-traco"></div><b>Responsável técnico</b><div class="hint">Artecon Artes Contábeis · Palhoça/SC</div></div>
     <div class="pp-notaia">Texto interpretativo ${RL._ia?'gerado por inteligência artificial':'padrão do sistema'} a partir dos valores calculados pelo motor do Análise Tributária Pro. Os números não são gerados pela IA. ${D.cen&&D.cen.semCreditos?'Cenários da Reforma sem créditos de IBS/CBS informados. ':(D.cen&&D.cen.proxyCompras?'Créditos de IBS/CBS estimados pelas compras de revenda da análise. ':'')}Valores em moeda constante do ano-base. Estimativas direcionais — não substituem a apuração formal de cada período.</div>
   </div></div>`;
 
   $id('rl-corpo').innerHTML = h;
-  rlNotasPeriodo();
 
   // ── GRÁFICOS ──
   const CORES = { verde:'#0f7a5a', gold:'#d99a2b', azul:'#1a5276', graf:'#2b3240', vinho:'#8c2f39' };
@@ -5162,8 +5199,8 @@ function rlRfTribHtml(cen){
 }
 function rlRfTribTrocar(cen){ const alvo = $id('rl-rf-trib'); if (alvo) alvo.innerHTML = rlRfTribHtml(cen); }
 
-async function rlCtBuscar(){
-  const cnpj = limparCNPJ(RL.dados.cnpj), ano = RL.dados.ano;
+async function rlCtBuscar(cnpjP, anoP){
+  const cnpj = limparCNPJ(cnpjP != null ? cnpjP : RL.dados.cnpj), ano = anoP != null ? anoP : RL.dados.ano;
   const [periodos, decisoes] = await Promise.all([
     supa('GET','atp_ct_periodo',{ params:{ cnpj_cliente:`eq.${cnpj}`, de:`lte.${ano}-12-31`, ate:`gte.${ano}-01-01`, order:'de.asc' } }).catch(()=>[]),
     supa('GET','atp_ct_decisao',{ params:{ cnpj_cliente:`eq.${cnpj}`, select:'*' } }).catch(()=>[]),
@@ -5206,15 +5243,16 @@ function rlCtResumoIA(){
       tratamento: i.min ? i.min.t + (i.min.p ? ` (redução CBS ${i.min.p.CBS||'-'}% · IBS ${i.min.p.IBS||'-'}%)` : '') : '' })),
   };
 }
-async function rlNotasPeriodo(){
-  const box = $id('pp-notas'); if (!box) return;
+async function rlNotasPeriodo(alvoId, cnpjP, anoP){
+  const box = $id(alvoId); if (!box) return;
+  const _ano = anoP != null ? anoP : (RL.dados && RL.dados.ano);
   box.innerHTML = '<div class="hint">Carregando notas do período (Classificação RTC)…</div>';
   try {
-    const C = await rlCtBuscar();
+    const C = await rlCtBuscar(cnpjP, _ano);
     const br = d => String(d||'').split('-').reverse().join('/');
     if (!C.periodos.length && !C.decisoes.length){
       box.innerHTML = `<div class="pp-h2">Produtos vendidos e classificação para a Reforma (IBS/CBS)</div>
-        <div class="hint">Nenhuma nota gravada para ${RL.dados.ano}. No <a href="classificacao.html" target="_blank">Classificação RTC</a>,
+        <div class="hint">Nenhuma nota gravada para ${_ano}. No <a href="classificacao.html" target="_blank">Classificação RTC</a>,
         importe os XMLs do cliente, ajuste o período e use <b>“Gravar notas do período p/ relatórios”</b> — a relação passa a compor este parecer.</div>`;
       return;
     }
@@ -5238,7 +5276,7 @@ async function rlNotasPeriodo(){
         ${C.comBeneficio ? `Do total, <b>${fmtR(C.comBeneficio)}</b> (${(C.comBeneficio/C.total*100).toFixed(1)}%) referem-se a
         produtos com tratamento diferenciado (imunidade, redução, suspensão ou diferimento).` : ''}
         ${C.pendentes ? `<b style="color:#b03a2e">${C.pendentes} produto(s) seguem pendentes de decisão.</b>` : ''}</p>` :
-        `<p class="pp-p">Sem notas gravadas para ${RL.dados.ano} — a relação abaixo traz as classificações já decididas por produto, sem valores de venda.</p>`}
+        `<p class="pp-p">Sem notas gravadas para ${_ano} — a relação abaixo traz as classificações já decididas por produto, sem valores de venda.</p>`}
       <table class="gtable"><thead><tr><th>Produto</th><th>NCM</th><th>CFOP</th><th class="num">Valor</th><th class="num">%</th><th>Classificação IBS/CBS</th></tr></thead>
       <tbody>${linhas || `<tr><td colspan="6"><i>—</i></td></tr>`}</tbody></table>
       ${C.periodos.length ? `<div class="hint" style="margin-top:6px">Totais por CFOP: ${cfopRod} · <b>TOTAL ${fmtR(C.total)}</b> —
@@ -5508,12 +5546,24 @@ function rlRender() {
   rlLimparCharts();
   const tipo = $id('rl-tipo').value, n = +$id('rl-per').value;
   // parecer e Reforma são documentos formatados: comparação entre anos não entra neles
-  const w = $id('rl-ano2-wrap'); if (w) w.style.display = (tipo==='parecer' || tipo==='reforma' || tipo==='conferencia' || tipo==='cnpj') ? 'none' : '';
+  const w = $id('rl-ano2-wrap'); if (w) w.style.display = (tipo==='parecer' || tipo==='reforma' || tipo==='conferencia' || tipo==='cnpj' || tipo==='produtos') ? 'none' : '';
   const conf = tipo === 'conferencia';
   { const e1 = $id('rl-conf-modo-wrap'); if (e1) e1.style.display = conf ? '' : 'none';
     const sm = $id('rl-conf-mes'), e2 = $id('rl-conf-mes-wrap');
     if (conf && sm && !sm.options.length) sm.innerHTML = MESES_ROT.map((r,i)=>`<option value="${i}">${r}</option>`).join('');
     if (e2) e2.style.display = (conf && ($id('rl-conf-modo')||{}).value === 'mes') ? '' : 'none'; }
+  if (tipo==='produtos'){                                 // v7.21.0: relação Classificação RTC — não depende de análise salva
+    const cnpjSel = $id('rl-empresa').value, anoSel = +$id('rl-ano').value;
+    $id('rl-cab').style.display = cnpjSel ? 'block' : 'none';
+    if (!cnpjSel){ $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Selecione a empresa</h2><p>O relatório traz os produtos vendidos no período e a classificação IBS/CBS gravadas no Classificação RTC.</p></div>'; return; }
+    const empP = RL.empresa || EMPRESAS.find(e=>e.cnpj===cnpjSel) || {};
+    $id('rl-titulo').textContent = 'Produtos Vendidos no Período e Classificação para a Reforma (IBS/CBS)';
+    $id('rl-sub').innerHTML = `<b>${esc(empP.razao_social||'')}</b> · CNPJ ${fmtCNPJ(cnpjSel)} · Ano-base ${anoSel} · Artecon Artes Contábeis`;
+    $id('rl-corpo').innerHTML = `<div class="card"><div id="rl-prod-box"></div>
+      <div class="hint" style="margin-top:8px">Documento gerado em ${new Date().toLocaleString('pt-BR')} · Artecon Artes Contábeis · fonte: aplicativo Classificação Tributária RTC (notas gravadas do período e decisões por produto, com autor e data).</div></div>`;
+    rlNotasPeriodo('rl-prod-box', cnpjSel, anoSel);
+    return;
+  }
   if (tipo==='cnpj'){                                     // v7.20.0: não depende de análise salva
     const cnpjSel = $id('rl-empresa').value;
     $id('rl-cab').style.display = cnpjSel ? 'block' : 'none';
