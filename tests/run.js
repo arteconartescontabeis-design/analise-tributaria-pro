@@ -9,6 +9,7 @@
 //   4. Parecer (3 variantes renderizam sem exceção, com aviso de premissa)
 //   5. Regressão dos gabaritos (tests/fixtures/caso1.json e caso2.json)
 //   5d. Res. CGSN nº 190/2026 — partilha por vigência, art. 22-A e travas (v7.17.0)
+//   5e. v7.18.0 — Tema 69 (LP sem dupla exclusão do mono; LR com exclusão) e FGTS fora dos totais
 //  Sai com código ≠ 0 em qualquer falha — o CI bloqueia o push quebrado.
 // ═══════════════════════════════════════════════════════════════════════════
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -76,7 +77,7 @@ console.log('\n■ Motor do Simples');
 // ═══ 2. CORREÇÕES v7.1 ═══
 console.log('\n■ Correções da revisão (v7.1)');
 { const r = g.calcular(mk({a4:Array(12).fill(50000)},600000), clone(AD), {...FD}); const M = r.meses[0];
-  chk('A1 · CPP do Anexo IV no total do Simples', Math.abs(M.simples.total-(M.das+M.fgts+M.inssPatr))<0.01); }
+  chk('A1 · CPP do Anexo IV no total do Simples (sem FGTS desde a v7.18.0)', Math.abs(M.simples.total-(M.das+M.inssPatr))<0.01); }
 { const a = g.calcular(mk({a3_semret:Array(12).fill(50000)},600000), clone(AD), {...FD});
   const b = g.calcular(mk({a3_retiss:Array(12).fill(50000)},600000), clone(AD), {...FD});
   chk('A2 · carga igual com e sem retenção de ISS', Math.abs(a.totais.simples-b.totais.simples)<0.5, b.totais.issRetido.toFixed(2)+' recompostos'); }
@@ -116,6 +117,32 @@ for (const [esperada, rec, rbt, regime] of [
     chk('parecer '+esperada, out.includes('pp-capa') && /Créditos de IBS\/CBS estimados|SEM créditos/.test(out),
         (out.match(/pp-page/g)||[]).length+' páginas');
   } catch(e) { chk('parecer '+esperada, false, e.message); } }
+
+// ═══ 4b. v7.18.0 — TEMA 69 E FGTS ═══
+console.log('\n■ v7.18.0 — Tema 69 e FGTS fora dos totais');
+{ // LP: monofásico não sofre dupla exclusão — só o destacado das saídas que ficam na base sai
+  const r = g.calcular(mk({a1_semst:Array(12).fill(50000), a1_mono:Array(12).fill(50000), a1_mono_pct:Array(12).fill(1)},1200000), clone(AD), {...FD});
+  const M = r.meses[0], baseEsp = Math.max(0, 50000 - 50000*.17);   // mono já fora da base; destacado só sobre semst
+  chk('Tema 69 · LP sem dupla exclusão do monofásico', Math.abs(M.lp.pis - baseEsp*.0065)<0.01 && Math.abs(M.lp.cofins - baseEsp*.03)<0.01,
+      'pis='+M.lp.pis.toFixed(2)+' (base '+baseEsp.toFixed(2)+')'); }
+{ // LR: exclusão do ICMS destacado também no não cumulativo
+  const r = g.calcular(mk({a1_semst:Array(12).fill(100000)},1200000), clone(AD), {...FD});
+  const M = r.meses[0], baseEsp = Math.max(0, 100000 - 100000*.17);
+  chk('Tema 69 · LR exclui o ICMS destacado da base', Math.abs(M.lr.pis - baseEsp*.0165)<0.01 && Math.abs(M.lr.cofins - baseEsp*.076)<0.01,
+      'pis='+M.lr.pis.toFixed(2)); }
+{ // FGTS fora de todos os totais (mas ainda apurado no mês)
+  const r = g.calcular(mk({a1_semst:Array(12).fill(100000)},1200000), clone(AD), {...FD});
+  const M = r.meses[0];
+  const lpSoma = M.lp.pis+M.lp.cofins+M.lp.csll+M.lp.irpj+M.lp.adicional+M.lp.inssPatr+M.lp.icms+M.lp.ipi+M.lp.iss;
+  chk('FGTS · fora do total do Simples', M.fgts>1 && Math.abs(M.simples.total - M.das)<0.01, 'fgts do mês='+M.fgts.toFixed(2));
+  chk('FGTS · fora dos totais de LP e LR', Math.abs(M.lp.total-lpSoma)<0.005 && Math.abs(M.lr.total-(M.lr.pis+M.lr.cofins+M.lr.csll+M.lr.irpj+M.lr.adicional+M.lr.inssPatr+M.lr.icms+M.lr.ipi+M.lr.iss))<0.005);
+  const cen = g.calcCenariosReforma(r, null), L33 = cen.REF.find(l=>l.ano===2033);
+  chk('FGTS · fora do cenário híbrido', Math.abs(L33.hib - (L33.dasHib + L33.liquido + L33.is))<0.01); }
+{ // ISS retido × sublimite: mesma carga com e sem retenção, sem duplicidade com a trava
+  const a = g.calcular(mk({a3_semret:Array(12).fill(350000)},4200000,{folha12Lanc:Array(12).fill(120000)}), clone(AD), {...FD});
+  const b = g.calcular(mk({a3_retiss:Array(12).fill(350000)},4200000,{folha12Lanc:Array(12).fill(120000)}), clone(AD), {...FD});
+  chk('ISS retido · sem duplicidade com a trava acima do sublimite', Math.abs(a.totais.simples-b.totais.simples)<1,
+      'Δ='+(a.totais.simples-b.totais.simples).toFixed(2)+' · retido='+b.totais.issRetido.toFixed(2)); }
 
 // ═══ 5. REGRESSÃO DOS GABARITOS ═══
 console.log('\n■ Regressão contra os gabaritos da planilha v15');
@@ -253,8 +280,10 @@ console.log('\n■ Res. CGSN nº 190/2026 — partilha por vigência');
   const rG = g.calcular(fx1, clone(AD), {...FD});
   const CG = g.calcCenariosReforma(rG, null);
   const G33 = CG.REF[CG.REF.length-1];
-  chk('gabarito de cenários 2033 preservado: híbrido 775.348,96 · fora 719.178,18',
-    Math.abs(G33.hib - 775348.96) < 0.02 && Math.abs(G33.regular - 719178.18) < 0.02,
+  // v7.18.0: gabaritos recalibrados SEM o FGTS (16.794,50/ano neste caso) — antes: hib 775.348,96 · fora 719.178,18.
+  // O caso é de serviços (sem ICMS), então o Tema 69 não altera estes números; a diferença é só o FGTS.
+  chk('gabarito de cenários 2033 preservado (v7.18.0, sem FGTS): híbrido 758.554,46 · fora 702.383,68',
+    Math.abs(G33.hib - 758554.46) < 0.02 && Math.abs(G33.regular - 702383.68) < 0.02,
     `hib=${G33.hib.toFixed(2)} reg=${G33.regular.toFixed(2)}`);
   chk('gabarito · trava do caso1 (comércio) invariante por vigência: ICMS×rem + IBS×(1−rem)',
     G33.p190 && Math.abs(G33.p190.trava - (rG.totais.sublimite||0)) < 0.02,
