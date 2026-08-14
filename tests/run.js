@@ -373,6 +373,49 @@ console.log('\n■ v7.19.0 — balancete multi-arquivo, mês próprio e prévia'
   var RES_BAL2 = RES;
 }
 
+// ═══ 5h. v7.20.0 — parecer c/ fornecedores, conferência da Reforma, relatório CNPJ ═══
+console.log('\n■ v7.20.0 — dashboard de fornecedores, conferência da Reforma e relatório CNPJ');
+{
+  // parecer ganha a página de fornecedores quando RL.forn existe
+  const inp = mk({a1_semst:Array(12).fill(60000)},1200000); inp.compras.semst = Array(12).fill(20000);
+  vm.runInContext('RL.dados = '+JSON.stringify({ano:2025,cnpj:'00000000000000',receitas:inp.receitas}), ctx);
+  ctx.__res = g.calcular(inp, clone(AD), {...FD});
+  vm.runInContext('RL.res = __res; RL.reforma = null; RL.empresa = {razao_social:"TESTE", regime:"Simples Nacional"}; RL._ia = null;', ctx);
+  vm.runInContext(`RL.forn = { revenda: { consultado_em: new Date().toISOString(), dados: { tipo:'revenda', periodo:'01/2025 a 12/2025', stats:{},
+    itens: [ {cnpj:'11111111000191', razao:'FORN NORMAL LTDA', classe:'normal', valor:600000},
+             {cnpj:'22222222000191', razao:'FORN SIMPLES ME', classe:'simples', valor:300000},
+             {cnpj:'33333333000191', razao:'FORN MEI', classe:'mei', valor:100000} ] } } };`, ctx);
+  try { g.rlParecer(); const out = els['rl-corpo'].innerHTML;
+    chk('parecer · página "Fornecedores e o crédito de IBS/CBS" renderiza com os números',
+      out.includes('Fornecedores e o crédito de IBS/CBS') && out.includes('FORN NORMAL LTDA') && /60,0%/.test(out.replace(/\u00a0/g,' ')),
+      (out.match(/pp-page/g)||[]).length+' páginas');
+  } catch(e){ chk('parecer · página de fornecedores', false, e.message); }
+  // sem consulta salva, a página NÃO aparece
+  vm.runInContext('RL.forn = null', ctx);
+  try { g.rlParecer(); const out2 = els['rl-corpo'].innerHTML;
+    chk('parecer · sem consulta de fornecedores, a página não aparece', !out2.includes('Fornecedores e o crédito de IBS/CBS'));
+  } catch(e){ chk('parecer · sem fornecedores', false, e.message); }
+  // conferência da Reforma ano a ano
+  try { const h = vm.runInContext('rlConfReforma()', ctx);
+    chk('conferência · bloco Reforma ano a ano com 2026–2033 e art. 22-A',
+      /2026/.test(h) && /2033/.test(h) && /22-A/.test(h) && /Débito IBS\/CBS/.test(h));
+  } catch(e){ chk('conferência Reforma', false, e.message); }
+  // relatório de CNPJ: fetch mockado devolve um cadastro mínimo e o render monta as seções
+  var RES_CNPJ = (async () => {
+    const fetchOrig = ctx.fetch;
+    ctx.fetch = async url => ({ ok:true, json: async () => ({ razao_social:'EMPRESA TESTE LTDA', nome_fantasia:'TESTE',
+      descricao_situacao_cadastral:'ATIVA', data_situacao_cadastral:'2020-01-01', data_inicio_atividade:'2019-05-10',
+      natureza_juridica:'206-2 - Sociedade Empresária Limitada', porte:'ME', capital_social: 10000,
+      opcao_pelo_simples:true, data_opcao_pelo_simples:'2019-05-10', opcao_pelo_mei:false,
+      cnae_fiscal:'6201501', cnae_fiscal_descricao:'Desenvolvimento de programas', cnaes_secundarios:[{codigo:'6202300',descricao:'Desenvolvimento e licenciamento'}],
+      logradouro:'RUA X', numero:'1', bairro:'CENTRO', municipio:'PALHOCA', uf:'SC', cep:'88130000',
+      qsa:[{nome_socio:'FULANO DE TAL', qualificacao_socio:'Sócio-Administrador', data_entrada_sociedade:'2019-05-10'}] }) });
+    try { await vm.runInContext('rlCnpjRender("24197146000137")', ctx); } catch(e){}
+    ctx.fetch = fetchOrig;
+    return els['rl-corpo'].innerHTML;
+  })();
+}
+
 // ═══ 6. Integridade da interface ═══
 // Todo elemento que o código acessa por $id() precisa existir no HTML.
 // Foi a ausência disso que deixou passar container removido e seletor duplicado.
@@ -407,6 +450,10 @@ console.log('\n■ Integridade da interface');
     b2 && b2.previaOK && /Prévia/.test(b2.previaHTML) && /15\.933,21|15933/.test(b2.previaHTML));
   chk('v7.19.0 · modo distribuir: lote anual rateia 1.200 em 100/mês',
     b2 && b2.Ma && Math.abs(b2.Ma['despesas.adm'][0]-100)<0.01 && Math.abs(b2.Ma['despesas.adm'][11]-100)<0.01);
+  const cnpjHtml = await Promise.race([RES_CNPJ, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  chk('v7.20.0 · relatório de CNPJ monta identificação, CNAEs, QSA e regime',
+    cnpjHtml && /EMPRESA TESTE LTDA/.test(cnpjHtml) && /Quadro societário/.test(cnpjHtml) && /FULANO DE TAL/.test(cnpjHtml) && /Atividades econômicas/.test(cnpjHtml) && /Optante/.test(cnpjHtml),
+    cnpjHtml?'ok':'timeout');
   const xml = await Promise.race([RES_XML, new Promise(r=>setTimeout(()=>r(null), 8000))]);
   chk('XML: notas do lote somam entre si (1.000 + 500) e reimportar não duplica',
     xml && Math.abs(xml.v1-1500)<0.01 && Math.abs(xml.v2-1500)<0.01,
