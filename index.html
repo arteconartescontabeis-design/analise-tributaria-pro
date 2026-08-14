@@ -179,6 +179,15 @@ canvas{max-height:340px}
   .pp-tab tr{break-inside:avoid}
   .pp-page{overflow:visible!important}
   .pp-page, .pp-miolo{max-width:210mm}
+  /* v7.18.0 · relatórios em cartões: A4 sem cortes */
+  #rl-corpo>.card{width:210mm;max-width:210mm;box-sizing:border-box;margin:0;padding:8mm 10mm;border:none;border-radius:0;page-break-inside:avoid}
+  #rl-corpo>.card[style*="page-break-before"]{page-break-before:always}
+  #rl-corpo .card table{width:100%!important;font-size:8.5pt;border-collapse:collapse}
+  #rl-corpo .card th,#rl-corpo .card td{padding:2px 4px;word-break:break-word}
+  #rl-corpo .card div[style*="overflow"]{overflow:visible!important;max-height:none!important}
+  #rl-corpo thead{display:table-header-group}
+  #rl-corpo tr{page-break-inside:avoid}
+  #rl-corpo .grid,#rl-corpo .stat{page-break-inside:avoid}
 }
 @media screen and (max-width:760px){ .pp-duo{grid-template-columns:1fr} .pp-jornada{grid-template-columns:1fr} .pp-jseta{transform:rotate(90deg)} .pp-miolo{padding:24mm 6mm 20mm 6mm} }
 
@@ -240,7 +249,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.17.1</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.18.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -614,7 +623,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.17.1</b> <span class="badge ok">atual</span></td><td>13/08/2026</td><td><b>Correção da sessão expirada na geração do parecer.</b> O token de acesso do Supabase vale ~1 hora e, até aqui, era obtido no login e nunca renovado — depois de 1 hora de uso, "Gerar textos com IA" devolvia <i>401: Sessão inválida ou expirada</i>, mesmo com o usuário logado. Agora o app guarda a validade do token e o <b>renova automaticamente</b> (pelo refresh_token) antes de qualquer chamada autenticada: Edge Functions (gerar-parecer e atualizar-classtrib) e todas as gravações/leituras no banco. A renovação é única mesmo com chamadas simultâneas e, se um 401 escapar no meio do caminho, a chamada é repetida uma única vez com token novo. Só é pedido novo login quando o próprio refresh_token não vale mais (ex.: sessão encerrada em outro dispositivo). Nenhuma mudança na Edge Function nem no banco.</td></tr>
+                    <tr><td><b>v7.18.0</b> <span class="badge ok">atual</span></td><td>13/08/2026</td><td><b>Revisão de cálculos e dos relatórios.</b> (1) <b>PIS/COFINS</b>: corrigida a dupla exclusão do monofásico na base do Lucro Presumido — o ICMS excluído (Tema 69 do STF, RE 574.706) passa a ser o <b>destacado</b> das saídas que permanecem na base (revenda sem ST e com redução) — e a mesma exclusão foi <b>estendida ao Lucro Real</b> (regime não cumulativo), conforme decisão de 13/08; a conferência de cálculos passou a citar a exclusão nas duas bases. (2) O <b>FGTS saiu de todos os totais</b>, quadros e relatórios: encargo idêntico em qualquer regime e não alterado pela Reforma, ele apenas inflava o "% da receita que vira imposto" — os quadros ganharam nota informando a premissa. (3) O <b>INSS patronal</b> do Presumido e do Real ganhou nota explícita (salários × (20% + RAT/FAP + terceiros) e pró-labore × 20%), e o verificador passou a alertar folha zerada, que zera o INSS e favorece indevidamente esses regimes na comparação. (4) A recomposição do ISS passou a ser exibida como <b>"ISS retido"</b>, com a base legal informada (LC 123, art. 21, § 4º). (5) Relatórios e parecer: o enquadramento cita o <b>período efetivamente analisado</b> em vez de "últimos 12 meses"; "O caminho da sua empresa" mostra o <b>melhor</b> cenário de 2033, não mais o pior; o retrato comércio × serviços só aparece quando a empresa tem <b>as duas atividades</b>; "Para onde vai cada real do DAS" ganhou texto explicativo; a evolução da carga traz <b>todas as simulações</b> — Simples por dentro ano a ano (Res. 190), híbrido, Presumido e Real; "Quanto da receita vira imposto" exibe todos os regimes com nota de leitura; a seção dos três caminhos foi ampliada com os critérios de decisão; e o parecer encerra com a nova seção <b>"Pontos de atenção"</b> (alíquotas estimadas, amostragem do período, vendas CNPJ × CPF, regime atual de clientes e fornecedores, créditos condicionados a documento fiscal e o calendário de setembro/2026). (6) <b>Impressão em A4</b> revisada também para os relatórios em cartões: tabelas sem corte, cabeçalhos repetidos por página e quebras controladas. Suíte de testes ampliada e gabaritos recalibrados (sem FGTS e com o Tema 69), com as diferenças documentadas no relatório de implementação.</td></tr>
+                    <tr><td><b>v7.17.1</b></td><td>13/08/2026</td><td><b>Correção da sessão expirada na geração do parecer.</b> O token de acesso do Supabase vale ~1 hora e, até aqui, era obtido no login e nunca renovado — depois de 1 hora de uso, "Gerar textos com IA" devolvia <i>401: Sessão inválida ou expirada</i>, mesmo com o usuário logado. Agora o app guarda a validade do token e o <b>renova automaticamente</b> (pelo refresh_token) antes de qualquer chamada autenticada: Edge Functions (gerar-parecer e atualizar-classtrib) e todas as gravações/leituras no banco. A renovação é única mesmo com chamadas simultâneas e, se um 401 escapar no meio do caminho, a chamada é repetida uma única vez com token novo. Só é pedido novo login quando o próprio refresh_token não vale mais (ex.: sessão encerrada em outro dispositivo). Nenhuma mudança na Edge Function nem no banco.</td></tr>
                     <tr><td><b>v7.17.0</b></td><td>13/08/2026</td><td><b>Adequação à Resolução CGSN nº 190/2026</b> (DOU 10/08/2026), que regulamenta o Simples Nacional na Reforma Tributária a partir de 1º/01/2027. A <b>partilha do DAS</b> passa a seguir os novos Anexos I–V por vigência (2027–28, 2029, 2030, 2031, 2032 e 2033+): PIS/COFINS saem da partilha já em 2027 (a fatia vira CBS), ICMS/ISS decrescem em degraus (90/80/70/60%) e zeram em 2033, com o IBS absorvendo a diferença. O <b>cenário híbrido</b> aplica exatamente o art. 22-A: DAS deduzido das parcelas de CBS e IBS da faixa/vigência (antes, aproximação pelos remanescentes — resultado idêntico nas faixas 1–5 e agora exato também na 6ª faixa de 2027–28). O quadro tributo a tributo do Comparativo ganhou a <b>abertura informativa "↳ CBS/IBS dentro do DAS"</b> no cenário por dentro e a linha própria do <b>IBS do sublimite</b>; a trava da 5ª faixa é recomposta por vigência, com teto do ISS decrescente (5% → 3%, Anexos III/IV) e IBS pela fórmula própria dos rodapés — o total do cenário "por dentro" pode variar levemente nos anos em que o teto do ISS morde. O <b>Fator R</b> passa a usar a receita conjunta dos mercados interno e externo (art. 26), mantidas as bases distintas para a alíquota (art. 16, §3º, II) — sem efeito para empresas sem exportação. Parecer com parágrafo de prazos (opção em setembro/2026; confirmação de receitas anteriores até 20/12/2026 — arts. 6º e 144-D/E) e nota do art. 40-D/40-E no quadro do híbrido. <b>Nota D7:</b> o rodapé da trava de ICMS do Anexo II no DOU aparenta erro material (usa os fatores do Anexo I/III); implementado por simetria com o próprio anexo — conferir na versão certificada antes de operar 2027. MEI (Anexo XIII) embutido como referência. Tabelas transcritas do DOU com 251 verificações; suíte de testes ampliada (partilha soma 100%, identidade com a LC 123, art. 22-A e travas). Blocos do art. 25, I-A e X, em backlog.</td></tr>
                     <tr><td><b>v7.16.3</b></td><td>10/08/2026</td><td><b>Atualizar os Parâmetros passou a recalcular tudo automaticamente.</b> As alíquotas da transição eram copiadas para dentro de cada análise no momento em que ela era criada, e a cópia vencia o padrão — por isso análises antigas continuavam exibindo a tabela anterior (26,80% em 2033) mesmo depois da atualização. Agora a análise usa sempre o padrão vigente do aplicativo, e alterar os Parâmetros reflete na hora na Análise Atual, na Reforma e nos Relatórios. <b>Correção da tela da Reforma que abria vazia.</b> Análises gravadas por versões anteriores não traziam todos os campos da Reforma e a montagem da tela parava no meio, em silêncio — daí a impressão de que a informação só aparecia depois de mexer no ano. O registro salvo passa a ser completado com os campos que faltam, como já era feito na análise do regime atual.</td></tr>
                     <tr><td><b>v7.16.2</b></td><td>10/08/2026</td><td><b>2026 (ano-teste) deixou de gerar IBS e CBS a pagar.</b> Antes, o 1% do ano-teste (CBS 0,9% + IBS 0,1%) era somado à carga de 2026 ao lado do PIS/COFINS integrais, o que superestimava o ano. Agora o ano-teste não gera valor a recolher em nenhum cenário — a apuração continua visível nas colunas de débito e crédito da aba Reforma, e no Detalhamento tributo a tributo as linhas de IBS, CBS e Imposto Seletivo aparecem vazias em 2026, com nota explicativa. Os demais anos não mudaram.</td></tr>
@@ -2124,7 +2134,11 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // v7.1 (A3): revenda monofásica tem alíquota zero de PIS/COFINS também no cumulativo —
     // excluídos TODOS os blocos monofásicos (antes só os "com ST e monofásico" saíam da base)
     const basePisCofLP = receita - R.a1_comst_mono[m] - R.a2_comst_mono[m] - R.a1_mono[m] - R.a2_mono[m] - recExp;
-    const _baseLPliq = Math.max(0, basePisCofLP - icmsDeb);   // exclusão do ICMS nunca negativa a base
+    // v7.18.0 · Tema 69 (STF, RE 574.706): exclui o ICMS DESTACADO das saídas que permanecem na base —
+    // revenda sem ST e com redução (Anexos I/II). O monofásico já saiu da base inteira (corrigida a dupla
+    // exclusão que subtraía o icmsDeb cheio); venda com ST não tem destaque próprio; exportação é imune.
+    const icmsDestacadoPC = (R.a1_semst[m]+R.a1_red[m]+R.a2_semst[m]+R.a2_red[m])*cfg.icmsV;
+    const _baseLPliq = Math.max(0, basePisCofLP - icmsDestacadoPC);   // exclusão nunca negativa a base
     const lp_pis = _baseLPliq*.0065;
     const lp_cof = _baseLPliq*.03;
     const servIR = serv + R.a3_exp[m];                       // exportação é imune a PIS/COFINS/ICMS/ISS,
@@ -2141,8 +2155,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       + R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]
       + (fatorR<.28 ? R.a5r[m] : 0) + (fatorR>=.28 ? R.a5r[m] : 0)
       + R.comtransp[m] - C.semst[m] - C.comst[m] - D.credLR[m];
-    const lr_pis = basePisCofLR*.0165 + R.fin[m]*.0065;
-    const lr_cof = basePisCofLR*.076  + R.fin[m]*.04;
+    // v7.18.0 · Tema 69 também no não cumulativo (decisão de 13/08): mesmo ICMS destacado excluído da base
+    const _baseLRliq = Math.max(0, basePisCofLR - icmsDestacadoPC);
+    const lr_pis = _baseLRliq*.0165 + R.fin[m]*.0065;
+    const lr_cof = _baseLRliq*.076  + R.fin[m]*.04;
     const baseIRCS = receita + R.fin[m] - custos - folhaTotal - despTotal - inssPatr - lr_pis - lr_cof - icmsPagar - ipiPagar - iss;
     const lr_csll = baseIRCS>0 ? baseIRCS*.09 : 0;
     const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
@@ -2152,7 +2168,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       simples: { das, fgts, sublimite: subIcms+subIss, issRetido, cppRetida,
         // v7.1 (A1): CPP do Anexo IV é devida FORA do DAS — proxy pela participação da receita a4 no mês
         inssPatrForaDAS: (receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0,
-        total: das + fgts + subIcms + subIss + issRetido + cppRetida + ((receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0) },
+        total: das + subIcms + subIss + issRetido + cppRetida + ((receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0) },   // v7.18.0: sem FGTS
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
             baseAdic: base32+base8 },
       lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
@@ -2176,8 +2192,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     }
   }
   for (const M of out.meses) {
-    M.lp.total = M.lp.pis+M.lp.cofins+M.lp.csll+M.lp.irpj+M.lp.adicional+M.lp.inssPatr+M.lp.icms+M.lp.ipi+M.lp.iss+M.lp.fgts;
-    M.lr.total = M.lr.pis+M.lr.cofins+M.lr.csll+M.lr.irpj+M.lr.adicional+M.lr.inssPatr+M.lr.icms+M.lr.ipi+M.lr.iss+M.lr.fgts;
+    M.lp.total = M.lp.pis+M.lp.cofins+M.lp.csll+M.lp.irpj+M.lp.adicional+M.lp.inssPatr+M.lp.icms+M.lp.ipi+M.lp.iss;   // v7.18.0: sem FGTS
+    M.lr.total = M.lr.pis+M.lr.cofins+M.lr.csll+M.lr.irpj+M.lr.adicional+M.lr.inssPatr+M.lr.icms+M.lr.ipi+M.lr.iss;   // v7.18.0: sem FGTS
   }
   out.totais = {
     receita: S(out.meses.map(x=>x.receita)),
@@ -2535,14 +2551,15 @@ function anExplicarSimples(){
   if (!AN || !AN._res) { toast('Recalcule a análise primeiro.'); return; }
   const M = AN._res.meses;
   const som = f => M.reduce((s,x)=>s+(+f(x)||0),0);
-  const das = som(x=>x.simples.das), fgts = som(x=>x.simples.fgts), sub = som(x=>x.simples.sublimite);
+  const das = som(x=>x.simples.das), sub = som(x=>x.simples.sublimite);
   const iss = som(x=>x.simples.issRetido), cpp = som(x=>x.simples.cppRetida), a4 = som(x=>x.simples.inssPatrForaDAS);
-  const tot = das+fgts+sub+iss+cpp+a4;
+  const tot = das+sub+iss+cpp+a4;
   const li = (rot,v) => v ? `\n  ${rot.padEnd(38,'.')} ${fmtR(v)}` : '';
   alert('Composição do custo do Simples Nacional no ano\n'
-    + li('DAS (guia)', das) + li('FGTS sobre a folha', fgts)
+    + '(FGTS não considerado — idêntico em todos os regimes)\n'
+    + li('DAS (guia)', das)
     + li('Trava do sublimite (ICMS/ISS 5ª faixa)', sub)
-    + li('ISS retido pelo tomador (recomposto)', iss)
+    + li('ISS retido (recomposto)', iss)
     + li('INSS retido (recomposto)', cpp)
     + li('CPP do Anexo IV, fora do DAS', a4)
     + `\n  ${''.padEnd(38,'=')} \n  ${'TOTAL do regime'.padEnd(38,'.')} ${fmtR(tot)}`
@@ -2561,6 +2578,7 @@ function anAvisoConfig(){
   const semFolha = !['prolabore','salarios'].some(k => (AN.folha[k]||[]).some(v=>+v>0))
                 && !(AN.cfg.folha12Lanc||[]).some(v=>+v>0);
   if (temServ && semFolha) falta.push('a folha — sem ela o Fator R fica em 0% e os serviços caem no Anexo V, o pior enquadramento');
+  else if (semFolha) falta.push('a folha — sem ela o INSS patronal do Lucro Presumido/Real fica em R$ 0 e a comparação favorece indevidamente esses regimes');
   if (!falta.length){ el.style.display='none'; return; }
   el.style.display = '';
   el.innerHTML = `<b>Configuração incompleta.</b> Falta ${falta.join(', ').replace(/, ([^,]*)$/, ' e $1')}.
@@ -3260,7 +3278,7 @@ function calcCenariosReforma(res, reforma) {
     // ≤2026 permanece a regra atual (tudo dentro).
     const dasHib = P ? (P.dasMaisTrava - P.cbs - P.ibs)
                      : dasResto + (T.dasPisCof||0)*rPC + (T.dasIcmsIss||0)*rII;
-    const hib = dasHib + (T.fgts||0) + (T.issRetido||0)*rII + (T.cppRetida||0) + (T.cppForaDAS||0) + L.liquido + L.is;
+    const hib = dasHib + (T.issRetido||0)*rII + (T.cppRetida||0) + (T.cppForaDAS||0) + L.liquido + L.is;   // v7.18.0: sem FGTS
     const regLP = lpResto + (lpIcms+lpIss)*rII + (lpPis+lpCof)*rPC + (a<=2026?lpIpi:0) + L.liquido + L.is;
     const regLR = lrResto + (lrIcms+lrIss)*rII + (lrPis+lrCof)*rPC + (a<=2026?lrIpi:0) + L.liquido + L.is;
     const regular = Math.min(regLP, regLR);
@@ -4440,12 +4458,11 @@ function rlConsolidado(rot, n) {
     ${lin3('INSS patronal / CPP', DT?DT.cpp + (RL.res.totais.cppRetida||0) + (RL.res.totais.cppForaDAS||0):null, sLP('inssPatr'), sLR('inssPatr'))}
     ${lin3('ICMS', DT?DT.icms:null, sLP('icms'), sLR('icms'))}
     ${lin3('IPI', DT?DT.ipi:null, sLP('ipi'), sLR('ipi'))}
-    ${lin3('ISS', DT?DT.iss + (RL.res.totais.issRetido||0):null, sLP('iss'), sLR('iss'))}
-    ${lin3('FGTS', T.fgts, sLP('fgts'), sLR('fgts'))}
+    ${lin3('ISS (inclui ISS retido)', DT?DT.iss + (RL.res.totais.issRetido||0):null, sLP('iss'), sLR('iss'))}
     <tr style="font-weight:700"><td class="rot">TOTAL ANUAL</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr>
     <tr><td class="rot">% da receita bruta</td><td class="num">${T.receita?(T.simples/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${T.receita?(T.lp/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${T.receita?(T.lr/T.receita*100).toFixed(2)+'%':'—'}</td></tr>
     </tbody></table>
-    <div class="hint" style="margin-top:6px">Coluna do Simples: tributos embutidos no DAS pela repartição da LC 123 (Anexos I–V, por faixa). PIS×COFINS e ICMS×ISS distribuídos na proporção da repartição cheia em meses com ST, monofásico ou retenções. Na coluna do Simples, ISS e CPP incluem também as parcelas retidas na fonte e a CPP do Anexo IV devida fora do DAS (v7.1) — por isso os totais por tributo podem superar o DAS.</div></div>`;
+    <div class="hint" style="margin-top:6px">Coluna do Simples: tributos embutidos no DAS pela repartição da LC 123 (Anexos I–V, por faixa). PIS×COFINS e ICMS×ISS distribuídos na proporção da repartição cheia em meses com ST, monofásico ou retenções. Na coluna do Simples, ISS e CPP incluem também as parcelas retidas na fonte e a CPP do Anexo IV devida fora do DAS (v7.1) — por isso os totais por tributo podem superar o DAS. <b>ISS retido</b>: recolhido na fonte pelo tomador e recomposto no total do Simples para comparação entre regimes (LC 123, art. 21, § 4º). Lucro Presumido e Lucro Real <b>incluem o INSS patronal</b> sobre a folha (salários × (20% + RAT/FAP + terceiros) e pró-labore × 20%). <b>FGTS não considerado</b> em nenhum regime — encargo idêntico em todos e não alterado pela Reforma Tributária (v7.18.0).</div></div>`;
 
   // ── 3. MEMÓRIA SIMPLES ──
   h += `<div class="card" style="page-break-before:always"><h3>3. Memória de cálculo — Simples Nacional</h3><div style="overflow-x:auto"><table><thead>${cab}</thead><tbody>
@@ -4462,11 +4479,10 @@ function rlConsolidado(rot, n) {
     ${linha('· IPI', g(x=>x.dasTrib?x.dasTrib.ipi:0))}
     ${linha('DAS', g(x=>x.das))}
     ${linha('ICMS/ISS da trava do sublimite', g(x=>(x.subIcms||0)+(x.subIss||0)))}
-    ${linha('ISS retido na fonte (custo do prestador)', g(x=>x.simples.issRetido||0))}
+    ${linha('ISS retido', g(x=>x.simples.issRetido||0))}
     ${linha('CPP retida na fonte', g(x=>x.simples.cppRetida||0))}
     ${linha('CPP fora do DAS — Anexo IV (proxy receita)', g(x=>x.simples.inssPatrForaDAS||0))}
-    ${linha('FGTS', g(x=>x.fgts))}
-    ${linha('Total Simples', g(x=>x.simples.total), true)}
+    ${linha('Total Simples (sem FGTS)', g(x=>x.simples.total), true)}
   </tbody></table></div>
   ${rlQuadroTribPgdas()}
   <div class="hint" style="margin-top:6px">Alíquota efetiva média do DAS: ${T.receita?((T.das||0)/T.receita*100).toFixed(4)+'%':'—'}${RL.dados._pgdas?' · DAS declarado no PGDAS (ano): '+fmt((RL.dados._pgdas.das||[]).reduce((a,b)=>a+(+b||0),0)):''}</div></div>`;
@@ -4587,6 +4603,13 @@ function parecerDados(){
   if ((AN?.receitas?.a5r||RL.dados?.receitas?.a5r||[]).some(v=>+v>0) && frMed>0.25 && frMed<0.31)
     alertas.push('Fator R médio de '+(frMed*100).toFixed(1)+'% — no limiar de 28% que decide entre Anexos III e V: pequenas variações de folha mudam a alíquota.');
   if ((RL.dados?.receitas?.a4||[]).some(v=>+v>0)) alertas.push('Receitas do Anexo IV: o CPP é recolhido fora do DAS — conferir o INSS patronal informado na Folha.');
+  // v7.18.0: janela efetivamente lançada (texto do enquadramento e dos pontos de atenção)
+  const MAB = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const _lanc = Mm.map((x,i)=>i).filter(i => (+Mm[i].receita||0) > 0.005);
+  const janelaTxt = _lanc.length
+    ? (_lanc[0]===_lanc[_lanc.length-1] ? MAB[_lanc[0]] : MAB[_lanc[0]]+'–'+MAB[_lanc[_lanc.length-1]])+'/'+(RL.dados.ano||'')
+    : 'sem meses lançados';
+  const janelaMeses = _lanc.length ? (_lanc[_lanc.length-1]-_lanc[0]+1) : 0;
   // séries anuais (2027–2033)
   const sAnos = anos.map(l=>l.ano);
   const sDentro = anos.map(l=> T.simples + (l.p190 ? l.p190.trava - (T.sublimite||0) : 0));   // v7.17.0: trava por vigência (Res. 190)
@@ -4597,7 +4620,7 @@ function parecerDados(){
   const split = { fonteMes: L32 ? (L32.deb||0)/12 : 0 };
   split.giroAno = split.fonteMes*12; split.custoAno = split.fonteMes*0.15;
   return { T, Mm, cen, REF, anos, sAnos, sDentro, sHib, sReg, sLP, sLR, sHoje, variante, regime, regimeHojeNome,
-           rbtMax, acima, optante, hojeAnual, L33, L32, frMed, alertas, split,
+           rbtMax, acima, optante, hojeAnual, L33, L32, frMed, alertas, split, janelaTxt, janelaMeses,
            recCom: Mm.map(x=>x.recCom||0), recServ: Mm.map(x=>x.recServ||0), dasTrib: T.dasTrib||null };
 }
 
@@ -4607,17 +4630,19 @@ function parecerTextosPadrao(D){
   const b = {};
   b.intro = 'A Emenda Constitucional nº 132/2023 e a Lei Complementar nº 214/2025 substituem PIS, COFINS, ICMS, ISS e IPI por um IVA dual — a CBS (federal) e o IBS (estados e municípios) —, com transição gradual de 2027 a 2033, quando o novo sistema estará pleno. Este estudo projeta, ano a ano, o impacto da reforma sobre '+emp+', com estimativas direcionais que não substituem a apuração formal de cada período.';
   if (D.variante==='simples'){
-    b.enquadramento = 'Empresa optante do Simples Nacional (RBT12 de '+fmtR(D.rbtMax)+', dentro do limite legal). Com a reforma, surge uma decisão nova: manter o IBS/CBS dentro do DAS ("por dentro"), recolhê-lo separadamente ("híbrido") ou sair do regime.';
+    b.enquadramento = 'Empresa optante do Simples Nacional (RBT12 de '+fmtR(D.rbtMax)+', dentro do limite legal). Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?' — os valores refletem esse período, não o ano-calendário completo':'')+'. Com a reforma, surge uma decisão nova: manter o IBS/CBS dentro do DAS ("por dentro"), recolhê-lo separadamente ("híbrido") ou sair do regime.';
     b.caminho = 'Permanecendo "por dentro" do DAS, a carga do Simples não é alterada pela reforma. Os caminhos alternativos foram quantificados nos quadros a seguir — a decisão depende sobretudo do perfil da clientela (quem aproveita o crédito de IBS/CBS).';
-    b.cenarios = D.L33 ? ('Em 2033 (modelo pleno): por dentro '+fmtR(D.T.simples)+'/ano; híbrido '+fmtR(D.L33.hib)+'/ano; fora do Simples '+fmtR(D.L33.regular)+'/ano ('+D.L33.regNome+'). O caminho de menor desembolso próprio está destacado no gráfico; o híbrido e a saída do regime geram crédito integral ao cliente PJ — vantagem comercial que deve ser pesada contra o custo adicional.') : 'Preencha e salve a aba Reforma para os cenários 2033.';
+    b.cenarios = D.L33 ? (function(){ const d33 = D.sDentro.length ? D.sDentro[D.sDentro.length-1] : D.T.simples;
+      return 'Em 2033 (modelo pleno): por dentro '+fmtR(d33)+'/ano; híbrido '+fmtR(D.L33.hib)+'/ano; fora do Simples '+fmtR(D.L33.regular)+'/ano ('+D.L33.regNome+'). Como decidir entre eles: o caminho POR DENTRO mantém tudo no DAS — é o de menor burocracia e preserva o caixa (nada é retido na fonte), mas o cliente PJ do regime regular recebe crédito reduzido de IBS/CBS, o que pode pesar no preço quando a clientela é majoritariamente empresarial. O HÍBRIDO (art. 22-A da Res. CGSN 140/2018) desconta do DAS as parcelas de CBS/IBS e recolhe esses tributos por fora, no regime regular: o cliente passa a receber crédito integral — vantagem comercial concreta em vendas B2B —, ao custo de duas apurações, do split payment sobre os recebimentos e de opção semestral nas janelas de setembro e março (art. 40-D). SAIR DO SIMPLES leva ao regime regular pleno ('+D.L33.regNome+' no caso), fazendo sentido quando o crescimento aproxima a empresa do teto ou quando praticamente toda a clientela exige crédito integral. Em resumo: clientela de consumo final favorece o por dentro; clientela PJ relevante pede a comparação entre o ganho comercial do crédito e o custo adicional quantificado acima.'; })() : 'Preencha e salve a aba Reforma para os cenários 2033.';
   } else if (D.variante==='acima'){
-    b.enquadramento = 'Com receita bruta acumulada de '+fmtR(D.rbtMax)+' nos últimos 12 meses, a empresa está acima do limite de R$ 4,8 milhões e não pode optar pelo Simples Nacional. A análise compara os regimes aplicáveis — Lucro Presumido e Lucro Real — e mede, ano a ano, o que passará a pagar a mais ou a menos com a reforma.';
+    b.enquadramento = 'Com RBT12 máximo de '+fmtR(D.rbtMax)+', a empresa está acima do limite de R$ 4,8 milhões e não pode optar pelo Simples Nacional. Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?' — os valores refletem esse período, não o ano-calendário completo':'')+'. A análise compara os regimes aplicáveis — Lucro Presumido e Lucro Real — e mede, ano a ano, o que passará a pagar a mais ou a menos com a reforma.';
     b.caminho = 'O regime de menor carga em cada ano da transição está identificado nos quadros. O aumento decorrente da reforma é estrutural e atinge todo o mercado: o que está ao alcance da empresa é pagar o menor valor possível em cada exercício e preparar o caixa para o split payment.';
     b.cenarios = '';
   } else {
-    b.enquadramento = 'A empresa apura hoje pelo regime regular ('+D.regimeHojeNome+'), com RBT12 de '+fmtR(D.rbtMax)+' — dentro do limite do Simples Nacional. Além do efeito da reforma no regime atual, este parecer simula a entrada no Simples e os três caminhos que ele oferece na transição.';
+    b.enquadramento = 'A empresa apura hoje pelo regime regular ('+D.regimeHojeNome+'), com RBT12 de '+fmtR(D.rbtMax)+' — dentro do limite do Simples Nacional. Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?' — os valores refletem esse período, não o ano-calendário completo':'')+'. Além do efeito da reforma no regime atual, este parecer simula a entrada no Simples e os três caminhos que ele oferece na transição.';
     b.caminho = 'O comparativo responde duas perguntas: quanto a reforma encarece o regime atual, ano a ano; e se a opção pelo Simples reduziria a carga — inclusive nos cenários "por dentro" e híbrido de 2033.';
-    b.cenarios = D.L33 ? ('Em 2033: Simples por dentro '+fmtR(D.T.simples)+'/ano; híbrido '+fmtR(D.L33.hib)+'/ano; regime regular '+fmtR(D.L33.regular)+'/ano ('+D.L33.regNome+').') : '';
+    b.cenarios = D.L33 ? (function(){ const d33 = D.sDentro.length ? D.sDentro[D.sDentro.length-1] : D.T.simples;
+      return 'Em 2033: Simples por dentro '+fmtR(d33)+'/ano; híbrido '+fmtR(D.L33.hib)+'/ano; regime regular '+fmtR(D.L33.regular)+'/ano ('+D.L33.regNome+'). A leitura é a mesma da seção anterior: o por dentro minimiza burocracia e preserva o caixa, mas limita o crédito repassado ao cliente PJ; o híbrido troca custo e split payment por crédito integral ao cliente (opção semestral — art. 40-D); o regime regular pleno se justifica com clientela quase toda PJ ou crescimento além do teto. A opção pelo Simples é formalizada em setembro, com efeitos a partir de janeiro seguinte.'; })() : '';
   }
   b.retrato = 'Os quadros desta seção mostram os fatores do negócio que pesaram na conclusão: a composição da receita entre comércio/indústria e serviços e, quando houver PGDAS importado, a decomposição do DAS por tributo.';
   b.split = D.split.fonteMes>0.005
@@ -4650,7 +4675,7 @@ function rlParecer(){
   const hoje = new Date().toLocaleDateString('pt-BR');
   const mm = v => fmtR(v/12)+'/mês';
   const anoTx = RL.dados.ano;
-  const temCS = D.recCom.some(v=>v>0.005) || D.recServ.some(v=>v>0.005);
+  const temCS = D.recCom.some(v=>v>0.005) && D.recServ.some(v=>v>0.005);   // v7.18.0: só com as DUAS atividades
   const temDT = D.dasTrib && ['pis','cofins','irpj','csll','cpp','icms','iss','ipi'].some(k=>(D.dasTrib[k]||0)>0.005);
   const temREF = D.anos.length>0;
   const statusIA = RL._ia ? '🤖 Textos gerados pela IA em '+RL._ia.quando : 'Textos padrão — clique em “Gerar textos com IA” para o parecer redigido sob medida';
@@ -4689,7 +4714,15 @@ function rlParecer(){
     <div class="pp-jornada">
       <div class="pp-jbox" style="background:#2b3240"><div class="pp-jet">Hoje · ${anoTx}</div><div class="pp-jbig">${D.regimeHojeNome}</div><div class="pp-jsm">Carga anual de <b>${fmtR(D.hojeAnual)}</b> (${mm(D.hojeAnual)}) sobre receita de ${fmtR(D.T.receita)}.</div></div>
       <div class="pp-jseta">➜</div>
-      <div class="pp-jbox" style="background:#8c2f39"><div class="pp-jet">2033 · modelo pleno</div><div class="pp-jbig">${D.L33?fmtR(D.variante==='simples'?Math.max(D.L33.hib,D.L33.regular):(D.variante==='acima'?D.L33.regular:D.L33.regular)):'—'}</div><div class="pp-jsm">${D.variante==='simples'?'Pior caminho fora do "por dentro" do DAS.':'Carga anual no melhor regime, já com IBS/CBS plenos.'}</div></div>
+      <div class="pp-jbox" style="background:#8c2f39"><div class="pp-jet">2033 · modelo pleno</div><div class="pp-jbig">${(function(){ if(!D.L33) return '—';
+        if (D.variante==='acima') return fmtR(D.L33.regular);
+        const d33 = D.sDentro.length ? D.sDentro[D.sDentro.length-1] : D.T.simples;
+        return fmtR(Math.min(d33, D.L33.hib, D.L33.regular)); })()}</div><div class="pp-jsm">${(function(){ if(!D.L33) return '';
+        if (D.variante==='acima') return 'Carga anual no melhor regime, já com IBS/CBS plenos.';
+        const d33 = D.sDentro.length ? D.sDentro[D.sDentro.length-1] : D.T.simples;
+        const mn = Math.min(d33, D.L33.hib, D.L33.regular);
+        const nm = mn===d33 ? 'permanecer "por dentro" do DAS' : mn===D.L33.hib ? 'o cenário híbrido (art. 22-A)' : 'o regime regular ('+D.L33.regNome+')';
+        return 'Melhor caminho: '+nm+'.'; })()}</div></div>
     </div>
     <p class="pp-p">${TX.caminho}</p>
   </div></div>`;
@@ -4700,7 +4733,8 @@ function rlParecer(){
     <p class="pp-p">${TX.retrato}</p>
     ${temCS?`<div class="pp-chartbox"><div class="pp-ct">Receita mensal por atividade · comércio/indústria × serviços</div><canvas id="pc-recms" height="150"></canvas>
       <div class="hint">Comércio/Indústria: ${fmtR(D.T.recCom)} (${D.T.receita?((D.T.recCom)/D.T.receita*100).toFixed(1):0}%) · Serviços: ${fmtR(D.T.recServ)} (${D.T.receita?((D.T.recServ)/D.T.receita*100).toFixed(1):0}%)</div></div>`:''}
-    ${temDT?`<div class="pp-duo"><div class="pp-chartbox"><div class="pp-ct">Para onde vai cada real do DAS</div><canvas id="pc-das" height="190"></canvas></div>
+    ${temDT?`<div class="pp-duo"><div class="pp-chartbox"><div class="pp-ct">Para onde vai cada real do DAS</div><canvas id="pc-das" height="190"></canvas>
+      <div class="hint" style="margin-top:6px">O DAS é uma guia única que a lei reparte entre até oito tributos (LC 123, Anexos I–V, percentuais por faixa de receita). A fatia de <b>consumo</b> — PIS, COFINS, ICMS, ISS e IPI — é a parcela substituída pela CBS e pelo IBS na Reforma; IRPJ, CSLL e CPP permanecem como são. Em meses com ST, monofásico ou retenções, a distribuição é proporcional estimada.</div></div>
       <div class="pp-chartbox"><div class="pp-ct">Valores por tributo · ano</div><table class="pp-tab">${[['PIS','pis'],['COFINS','cofins'],['IRPJ','irpj'],['CSLL','csll'],['CPP','cpp'],['ICMS','icms'],['ISS','iss'],['IPI','ipi']].filter(([,k])=>(D.dasTrib[k]||0)>0.005).map(([n,k])=>`<tr><td class="rot">${n}</td><td class="num">${fmt(D.dasTrib[k])}</td><td class="num">${(D.dasTrib[k]/((D.T.das||0)+(D.T.sublimite||0))*100).toFixed(1)}%</td></tr>`).join('')}</table>
       <div class="hint" style="margin-top:6px">Consumo (PIS+COFINS+ICMS+ISS+IPI): <b>${(( (D.dasTrib.pis+D.dasTrib.cofins+D.dasTrib.icms+D.dasTrib.iss+D.dasTrib.ipi) / ((D.T.das||0)+(D.T.sublimite||0)) )*100).toFixed(1)}% do DAS</b> — é a parcela em jogo na Reforma.</div></div></div>`:''}
   </div></div>`;
@@ -4711,22 +4745,24 @@ function rlParecer(){
     h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
       ${secao(++NS,'Como fica a carga em cada regime, com a Reforma','Carga anual estimada, ano a ano, na transição 2027–2033.')}
       <div class="pp-chartbox"><canvas id="pc-evo" height="185"></canvas></div>
-      <table class="pp-tab pp-tab-f"><thead><tr><th>Ano</th>${D.variante==='simples'?'<th class="num">Por dentro</th><th class="num">Híbrido</th>':''}<th class="num">L. Presumido</th><th class="num">L. Real</th><th>Menor</th></tr></thead><tbody>
-      ${D.anos.map((L,i)=>{ const cand = D.variante==='simples' ? [['Por dentro',D.T.simples],['Híbrido',L.hib],['Presumido',L.regLP],['Real',L.regLR]] : [['Presumido',L.regLP],['Real',L.regLR]]; const menor = cand.reduce((a,b)=>b[1]<a[1]?b:a);
-        return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td>${D.variante==='simples'?`<td class="num">${fmt(D.T.simples)}</td><td class="num">${fmt(L.hib)}</td>`:''}<td class="num">${fmt(L.regLP)}</td><td class="num">${fmt(L.regLR)}</td><td><span class="pp-pill">${menor[0]}</span></td></tr>`; }).join('')}
+      <table class="pp-tab pp-tab-f"><thead><tr><th>Ano</th>${D.variante!=='acima'?'<th class="num">Por dentro</th><th class="num">Híbrido</th>':''}<th class="num">L. Presumido</th><th class="num">L. Real</th><th>Menor</th></tr></thead><tbody>
+      ${D.anos.map((L,i)=>{ const d = D.sDentro[i]!=null ? D.sDentro[i] : D.T.simples;
+        const cand = D.variante!=='acima' ? [['Por dentro',d],['Híbrido',L.hib],['Presumido',L.regLP],['Real',L.regLR]] : [['Presumido',L.regLP],['Real',L.regLR]]; const menor = cand.reduce((a,b)=>b[1]<a[1]?b:a);
+        return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td>${D.variante!=='acima'?`<td class="num">${fmt(d)}</td><td class="num">${fmt(L.hib)}</td>`:''}<td class="num">${fmt(L.regLP)}</td><td class="num">${fmt(L.regLR)}</td><td><span class="pp-pill">${menor[0]}</span></td></tr>`; }).join('')}
       </tbody></table>
     </div></div>`;
 
     // ── PÁG: % da receita (+ cenários 2033 quando couber) ──
     h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
-      <div class="pp-chartbox"><div class="pp-ct">Quanto da receita vira imposto · %</div><canvas id="pc-pct" height="130"></canvas></div>`;
+      <div class="pp-chartbox"><div class="pp-ct">Quanto da receita vira imposto · %</div><canvas id="pc-pct" height="130"></canvas>
+      <div class="hint" style="margin-top:6px"><b>Como ler:</b> cada linha divide a carga total do cenário no ano pela receita do período analisado. A carga inclui todos os tributos do cenário (guia do Simples, trava do sublimite, retenções recompostas, IBS/CBS e Imposto Seletivo quando por fora; no Presumido/Real, os tributos federais, ICMS/ISS/IPI e o INSS patronal) e <b>não inclui o FGTS</b>, idêntico em todos os regimes. O "por dentro" pode variar entre os anos porque o teto do ISS da trava da 5ª faixa decresce a cada vigência (Res. CGSN nº 190/2026). Valores em moeda constante do ano-base.</div></div>`;
     if (D.variante!=='acima' && D.L33) {
       h += `${secao(++NS,'Os três caminhos do Simples em 2033 — economiza ou paga a mais?')}
       <div class="pp-chartbox"><canvas id="pc-cen33" height="150"></canvas></div>
       <table class="pp-tab"><thead><tr><th>Cenário em 2033</th><th class="num">Carga anual</th><th class="num">vs. por dentro</th><th>Quando faz sentido</th></tr></thead><tbody>
-        <tr><td><span class="pp-pill">Por dentro</span></td><td class="num"><b>${fmt(D.T.simples)}</b></td><td class="num">—</td><td>Clientela de consumo final; sem split payment</td></tr>
-        <tr><td><span class="pp-pill" style="background:#2b3240">Fora do Simples</span></td><td class="num">${fmt(D.L33.regular)}</td><td class="num" style="color:${D.L33.regular>D.T.simples?'#8c2f39':'#0f7a5a'}">${D.L33.regular>D.T.simples?'+':''}${fmt(D.L33.regular-D.T.simples)}</td><td>Crescimento além do teto ou clientela quase toda PJ</td></tr>
-        <tr><td><span class="pp-pill" style="background:#d99a2b">Híbrido</span></td><td class="num">${fmt(D.L33.hib)}</td><td class="num" style="color:${D.L33.hib>D.T.simples?'#8c2f39':'#0f7a5a'}">${D.L33.hib>D.T.simples?'+':''}${fmt(D.L33.hib-D.T.simples)}</td><td>Clientes PJ exigem crédito integral de IBS/CBS</td></tr>
+        ${(d33 => `<tr><td><span class="pp-pill">Por dentro</span></td><td class="num"><b>${fmt(d33)}</b></td><td class="num">—</td><td>Clientela de consumo final; sem split payment</td></tr>
+        <tr><td><span class="pp-pill" style="background:#2b3240">Fora do Simples</span></td><td class="num">${fmt(D.L33.regular)}</td><td class="num" style="color:${D.L33.regular>d33?'#8c2f39':'#0f7a5a'}">${D.L33.regular>d33?'+':''}${fmt(D.L33.regular-d33)}</td><td>Crescimento além do teto ou clientela quase toda PJ</td></tr>
+        <tr><td><span class="pp-pill" style="background:#d99a2b">Híbrido</span></td><td class="num">${fmt(D.L33.hib)}</td><td class="num" style="color:${D.L33.hib>d33?'#8c2f39':'#0f7a5a'}">${D.L33.hib>d33?'+':''}${fmt(D.L33.hib-d33)}</td><td>Clientes PJ exigem crédito integral de IBS/CBS</td></tr>`)(D.sDentro.length?D.sDentro[D.sDentro.length-1]:D.T.simples)}
       </tbody></table>
       <p class="pp-p">${TX.cenarios}</p>`;
     }
@@ -4766,6 +4802,15 @@ function rlParecer(){
     ${TX.parecer2?`<p class="pp-p">${TX.parecer2}</p>`:''}
     <div class="pp-final">${TX.recomendacao}</div>
     <div id="pp-notas"></div>
+    ${secao(++NS,'Pontos de atenção')}
+    <ol class="pp-p" style="padding-left:16px;margin:0 0 8px">
+      <li>As alíquotas de IBS e CBS utilizadas são <b>estimativas de referência</b> (EC 132/2023, LC 214/2025 e Res. CGIBS nº 14/2026): a alíquota efetiva de cada ente ainda não foi publicada, e os valores serão recalibrados a cada nova regulamentação.</li>
+      <li>A análise foi elaborada com <b>dados reais da empresa</b>, tomando como amostragem o período de <b>${D.janelaTxt}</b>; os resultados devem ser revisitados à medida que novos meses forem lançados.</li>
+      <li>Analisamos o <b>percentual de vendas destinadas a CNPJ e a CPF</b> — informação de suma importância para a tomada de decisão, pois clientes PJ do regime regular tenderão a exigir crédito integral de IBS/CBS.</li>
+      <li>O regime tributário de <b>clientes e fornecedores</b> foi considerado pela situação <b>atual</b> de cada um. Uma análise de mercado mais aprofundada exige tratativa direta com esses parceiros: a decisão que eles tomarem na transição altera o resultado desta análise.</li>
+      <li>A análise considerou os <b>documentos disponíveis</b>. Na Reforma, toda e qualquer despesa destinada ao uso da empresa poderá gerar crédito de IBS/CBS — por isso é essencial <b>exigir o documento fiscal em todas as aquisições</b>, para que a análise permaneça fidedigna à realidade da empresa.</li>
+      <li>A decisão a ser formalizada em <b>setembro/2026</b> valerá para o período de <b>janeiro a junho/2027</b>, com possibilidade de nova opção em <b>março/2027</b>, válida para o segundo semestre (art. 40-D da Res. CGSN 140/2018, incluído pela Res. 190/2026).</li>
+    </ol>
     ${D.variante!=='acima'?`<p class="pp-p" style="font-size:9.5pt"><b>Prazos da Res. CGSN nº 190/2026:</b> a opção pelo Simples Nacional passa a ser formalizada de 1º a 30 de setembro, com efeitos a partir de 1º de janeiro seguinte — para produzir efeitos em 2027, portanto, em setembro/2026 (art. 6º). A opção pelo recolhimento de IBS/CBS no regime regular (cenário híbrido) é semestral, nas janelas de setembro e março (art. 40-D). Quem ingressar no Simples em 1º/01/2027 deve confirmar receitas e folhas anteriores no módulo "Receitas Anteriores à Opção" do PGDAS-D até 20/12/2026 (competências dez/2025 a nov/2026) e até 20/01/2027 (dez/2026); sem manifestação, prevalece o pré-preenchimento da Receita Federal (arts. 144-D e 144-E).</p>`:''}
     <p class="pp-p">Colocamo-nos à disposição para esclarecimentos adicionais.</p>
     <div class="pp-assin"><p>Atenciosamente,</p><div style="height:14mm"></div><div class="pp-traco"></div><b>Responsável técnico</b><div class="hint">Artecon Artes Contábeis · Palhoça/SC</div></div>
@@ -4795,10 +4840,12 @@ function rlParecer(){
         { label:'Carga de hoje (referência)', data:D.sHoje, borderColor:CORES.verde, borderDash:[3,4], borderWidth:2, pointRadius:0 },
         ...(D.variante==='eleg'?[{ label:'Simples por dentro (se optar)', data:D.sDentro, borderColor:CORES.verde, borderWidth:3, tension:.2, pointRadius:2 }]:[]) ];
     rlChart('pc-evo', { type:'line', data:{ labels:D.sAnos, datasets:dsEvo }, options:{ responsive:true, plugins:{legend:{position:'bottom'}} } });
-    const pctBase = D.variante==='simples' ? [['Por dentro',D.sDentro,CORES.verde],['Híbrido',D.sHib,CORES.gold]] : [['Melhor regime',D.sReg,CORES.azul],['Hoje',D.sHoje,CORES.verde]];
+    const pctBase = D.variante==='acima'
+      ? [['L. Presumido',D.sLP,CORES.azul],['L. Real',D.sLR,CORES.vinho],['Hoje',D.sHoje,CORES.verde]]
+      : [['Por dentro',D.sDentro,CORES.verde],['Híbrido',D.sHib,CORES.gold],['L. Presumido',D.sLP,CORES.azul],['L. Real',D.sLR,CORES.vinho]];
     rlChart('pc-pct', { type:'line', data:{ labels:D.sAnos, datasets:pctBase.map(([l,s,c])=>({ label:l+' · % receita', data:s.map(v=>D.T.receita?+(v/D.T.receita*100).toFixed(2):0), borderColor:c, borderWidth:2.5, tension:.2, pointRadius:2 })) },
       options:{ responsive:true, plugins:{legend:{position:'bottom'}}, scales:{ y:{ ticks:{ callback:v=>v+'%' } } } } });
-    if (D.variante!=='acima' && D.L33) rlChart('pc-cen33', { type:'bar', data:{ labels:['Por dentro','Fora do Simples','Híbrido'], datasets:[{ data:[D.T.simples, D.L33.regular, D.L33.hib], backgroundColor:[CORES.verde, CORES.graf, CORES.gold] }] },
+    if (D.variante!=='acima' && D.L33) rlChart('pc-cen33', { type:'bar', data:{ labels:['Por dentro','Fora do Simples','Híbrido'], datasets:[{ data:[(D.sDentro.length?D.sDentro[D.sDentro.length-1]:D.T.simples), D.L33.regular, D.L33.hib], backgroundColor:[CORES.verde, CORES.graf, CORES.gold] }] },
       options:{ responsive:true, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>fmtR(c.raw)+' ('+(D.T.receita?(c.raw/D.T.receita*100).toFixed(1):0)+'% da receita)'}}} } });
     if (D.variante!=='simples') rlChart('pc-delta', { type:'bar', data:{ labels:D.sAnos, datasets:[{ data:D.sReg.map(v=>v-D.hojeAnual), backgroundColor:D.sReg.map(v=>v-D.hojeAnual>0?CORES.vinho:CORES.verde) }] },
       options:{ responsive:true, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>(c.raw>0?'paga a mais ':'paga a menos ')+fmtR(Math.abs(c.raw))+'/ano'}}} } });
@@ -4845,18 +4892,16 @@ function rlRfTribHtml(cen){
         add('DAS (Simples Nacional)', L.ano, T.das||0);
         add('ICMS/ISS do sublimite (5ª faixa)', L.ano, P ? P.icmsIssTrava : (T.sublimite||0));
         if (P && P.ibsTrava > 0.005) add('IBS do sublimite (5ª faixa)', L.ano, P.ibsTrava);
-        add('FGTS', L.ano, T.fgts||0);
-        add('ISS retido pelo tomador', L.ano, T.issRetido||0);
+        add('ISS retido', L.ano, T.issRetido||0);
         add('CPP retida pelo tomador', L.ano, T.cppRetida||0);
         add('INSS patronal fora do DAS (Anexo IV)', L.ano, T.cppForaDAS||0);
         if (P){ add('↳ CBS dentro do DAS', L.ano, P.cbs); add('↳ IBS dentro do DAS', L.ano, P.ibs);
                 add('↳ ICMS/ISS dentro do DAS', L.ano, P.icmsIss); }
       } else if (cen==='hibrido'){
         add('DAS ajustado (sem a parcela de consumo)', L.ano, L.dasHib);
-        if (L.anoTeste) { add('FGTS', L.ano, T.fgts||0); add('ISS retido pelo tomador (remanescente)', L.ano, (T.issRetido||0)*rII);
+        if (L.anoTeste) { add('ISS retido (remanescente)', L.ano, (T.issRetido||0)*rII);
           add('CPP retida pelo tomador', L.ano, T.cppRetida||0); add('INSS patronal fora do DAS (Anexo IV)', L.ano, T.cppForaDAS||0); continue; }
-        add('FGTS', L.ano, T.fgts||0);
-        add('ISS retido pelo tomador (remanescente)', L.ano, (T.issRetido||0)*rII);
+        add('ISS retido (remanescente)', L.ano, (T.issRetido||0)*rII);
         add('CPP retida pelo tomador', L.ano, T.cppRetida||0);
         add('INSS patronal fora do DAS (Anexo IV)', L.ano, T.cppForaDAS||0);
         add('CBS (líquida de créditos)', L.ano, parte('cbs'));
@@ -5093,11 +5138,10 @@ function rlConferencia(){
       fmtR(T.irpj+T.csll+T.cofins+T.pis+T.cpp+T.icms+T.iss+T.ipi)));
     const S = M.simples;
     if (S.sublimite) L.push(CF.lin('Trava do sublimite','ICMS/ISS da 5ª faixa, RBT12 acima de R$ 3,6 mi (Res. CGSN 140, art. 24)', fmtR(S.sublimite)));
-    if (S.issRetido) L.push(CF.lin('ISS retido (recomposto)','LC 123, art. 21, § 4º', fmtR(S.issRetido)));
+    if (S.issRetido) L.push(CF.lin('ISS retido','recolhido na fonte pelo tomador e recomposto (LC 123, art. 21, § 4º)', fmtR(S.issRetido)));
     if (S.cppRetida) L.push(CF.lin('INSS retido (recomposto)','LC 123, art. 21, § 4º', fmtR(S.cppRetida)));
     if (S.inssPatrForaDAS) L.push(CF.lin('CPP do Anexo IV','devida fora da guia', fmtR(S.inssPatrForaDAS)));
-    L.push(CF.lin('FGTS','base de FGTS × alíquota da folha', fmtR(S.fgts)));
-    L.push(CF.lin('<b>Custo total do regime</b>','DAS + FGTS + trava + retenções + CPP fora do DAS', fmtR(S.total)));
+    L.push(CF.lin('<b>Custo total do regime</b>','DAS + trava + retenções + CPP fora do DAS · FGTS não considerado (v7.18.0)', fmtR(S.total)));
 
     const E = [];
     if (M.recExp){
@@ -5117,19 +5161,19 @@ function rlConferencia(){
       CF.lin('Base IRPJ', `comércio × ${CF.pc(+D.cfg.lpBaseCom||0)} + serviços × ${CF.pc(+D.cfg.lpBaseServ||0)} + receitas financeiras`, fmtR(P.baseAdic||0)),
       CF.lin('IRPJ','base × 15%', fmtR(P.irpj)),
       CF.lin('CSLL','base × 9%', fmtR(P.csll)),
-      CF.lin('PIS','base cumulativa × 0,65% (sem monofásico e sem exportação)', fmtR(P.pis)),
-      CF.lin('COFINS','base cumulativa × 3,00%', fmtR(P.cofins)),
+      CF.lin('PIS','base cumulativa × 0,65% (sem monofásico, sem exportação e sem o ICMS destacado — Tema 69)', fmtR(P.pis)),
+      CF.lin('COFINS','base cumulativa × 3,00% (mesma base)', fmtR(P.cofins)),
       CF.lin('ICMS','débito − crédito', fmtR(P.icms)),
       CF.lin('ISS','serviços × alíquota do município', fmtR(P.iss)),
-      CF.lin('INSS patronal + FGTS','folha × percentuais da empresa', fmtR(P.inssPatr + P.fgts)),
+      CF.lin('INSS patronal','salários × (20% + RAT/FAP + terceiros) + pró-labore × 20%', fmtR(P.inssPatr)),
       CF.lin('<b>Total do Lucro Presumido</b>','', fmtR(P.total)),
     ];
     const LRl = [
       CF.lin('Receita − custos − despesas', `${fmtR(M.receita)} − ${fmtR(M.custos)} − ${fmtR(M.despTotal)}`, fmtR(M.receita-M.custos-M.despTotal)),
       CF.lin('IRPJ','lucro × 15% (prejuízo não é compensado entre meses)', fmtR(LR.irpj)),
       CF.lin('CSLL','lucro × 9%', fmtR(LR.csll)),
-      CF.lin('PIS','base não cumulativa × 1,65%', fmtR(LR.pis)),
-      CF.lin('COFINS','base não cumulativa × 7,60%', fmtR(LR.cofins)),
+      CF.lin('PIS','base não cumulativa × 1,65% (sem o ICMS destacado — Tema 69)', fmtR(LR.pis)),
+      CF.lin('COFINS','base não cumulativa × 7,60% (mesma base)', fmtR(LR.cofins)),
       CF.lin('<b>Total do Lucro Real</b>','', fmtR(LR.total)),
     ];
 
@@ -5244,14 +5288,15 @@ function rlRegimes(rot, n) {
     { nome:'Lucro Presumido', sub:'regime atual · '+RL.dados.ano, v:T.lp, cor:'#b9770e' },
     { nome:'Lucro Real', sub:'regime atual · '+RL.dados.ano, v:T.lr, cor:'#943126' },
     ...(R33 ? [
-    { nome:'Simples "por dentro"', sub:'Reforma · pleno 2033', v:T.simples, cor:'#2874a6' },
+    { nome:'Simples "por dentro"', sub:'Reforma · pleno 2033', v:(T.simples + (R33.p190 ? R33.p190.trava - (T.sublimite||0) : 0)), cor:'#2874a6' },
     { nome:'Simples híbrido', sub:'Reforma · pleno 2033 (LC 214)', v:R33.hib, cor:'#7d3c98' },
     { nome:'Fora do Simples', sub:'Reforma · pleno 2033 ('+R33.regNome+')', v:R33.regular, cor:'#117864' } ] : []),
   ];
   const melhorGeral = Math.min(...CEN.map(c=>c.v));
   const ordGeral = CEN.map(c=>c.v).sort((a,b)=>a-b);
-  const ord33 = R33 ? [T.simples,R33.hib,R33.regular].sort((a,b)=>a-b) : null;
-  const nome33 = R33 ? (ord33[0]===T.simples?'Simples "por dentro"':ord33[0]===R33.hib?'Simples híbrido':'Fora do Simples') : '';
+  const dentro33 = R33 ? (T.simples + (R33.p190 ? R33.p190.trava - (T.sublimite||0) : 0)) : T.simples;   // v7.18.0
+  const ord33 = R33 ? [dentro33,R33.hib,R33.regular].sort((a,b)=>a-b) : null;
+  const nome33 = R33 ? (ord33[0]===dentro33?'Simples "por dentro"':ord33[0]===R33.hib?'Simples híbrido':'Fora do Simples') : '';
 
   let h = `<div class="grid c4">
     ${CEN.slice(0,3).map(c=>`<div class="stat ${c.v===menor?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(c.v)}</div><div class="l">${c.nome}</div><div class="sub">${c.sub} · ${pctR(c.v)}</div></div>`).join('')}
@@ -5287,10 +5332,10 @@ function rlRegimes(rot, n) {
   const linhas = [['DAS (Simples)', T.das, null, null], ...(T.sublimite>0?[['ICMS/ISS sublimite (5ª faixa)', T.sublimite, null, null]]:[]), ['PIS', null, somaLP('pis'), somaLR('pis')], ['COFINS', null, somaLP('cofins'), somaLR('cofins')],
     ['CSLL', null, somaLP('csll'), somaLR('csll')], ['IRPJ', null, somaLP('irpj'), somaLR('irpj')], ['Adicional IRPJ', null, somaLP('adicional'), somaLR('adicional')],
     ['INSS patronal', null, somaLP('inssPatr'), somaLR('inssPatr')], ['ICMS', null, somaLP('icms'), somaLR('icms')], ['IPI', null, somaLP('ipi'), somaLR('ipi')],
-    ['ISS', null, somaLP('iss'), somaLR('iss')], ['FGTS', M.reduce((s,x)=>s+x.fgts,0), somaLP('fgts'), somaLR('fgts')]];
+    ['ISS', null, somaLP('iss'), somaLR('iss')]];
   for (const [nm,a,b,c] of linhas) h += `<tr><td>${nm}</td><td class="num">${a==null?'—':fmt(a)}</td><td class="num">${b==null?'—':fmt(b)}</td><td class="num">${c==null?'—':fmt(c)}</td></tr>`;
   h += `<tr style="font-weight:700"><td>TOTAL</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr></tbody></table></div>
-  <div class="hint" style="margin-top:8px">Simples: DAS + FGTS${RL.dados.receitas?.a4?.some(v=>v>0)?' — atenção: receitas do Anexo IV têm CPP fora do DAS':''}. Valores simulados pelo motor validado contra a planilha de planejamento.</div></div>`;
+  <div class="hint" style="margin-top:8px">Simples: DAS${RL.dados.receitas?.a4?.some(v=>v>0)?' — atenção: receitas do Anexo IV têm CPP fora do DAS':''}. Lucro Presumido e Lucro Real incluem o INSS patronal sobre a folha. <b>FGTS não considerado</b> — encargo idêntico em todos os regimes e não alterado pela Reforma Tributária. Valores simulados pelo motor validado contra a planilha de planejamento.</div></div>`;
 
   // v7.16.0 (Ponto 3): tributo a tributo da Reforma, ano a ano, por cenário
   if (REF) h += `<div class="card"><h3>Detalhamento tributo a tributo (ano) — Reforma Tributária</h3>
@@ -5304,24 +5349,25 @@ function rlRegimes(rot, n) {
 
   // ── Reforma Tributária no comparativo: por dentro × híbrido × fora do Simples ──
   if (REF) {
-  const melhor33 = Math.min(T.simples, R33.hib, R33.regular);
+  const melhor33 = Math.min(dentro33, R33.hib, R33.regular);
   h += `<div class="card"><h3>Reforma Tributária no comparativo — cenários do Simples (2026–2033)</h3>
   <div class="grid c3" style="margin-top:10px">
-    <div class="stat ${melhor33===T.simples?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(T.simples)}</div><div class="l">Simples "por dentro" (2033)</div><div class="sub">tudo no DAS — crédito reduzido ao cliente</div></div>
+    <div class="stat ${melhor33===dentro33?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(dentro33)}</div><div class="l">Simples "por dentro" (2033)</div><div class="sub">tudo no DAS — crédito reduzido ao cliente</div></div>
     <div class="stat ${melhor33===R33.hib?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(R33.hib)}</div><div class="l">Simples híbrido (2033)</div><div class="sub">DAS sem consumo + IBS/CBS por fora — crédito integral ao cliente</div></div>
     <div class="stat ${melhor33===R33.regular?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(R33.regular)}</div><div class="l">Fora do Simples (2033)</div><div class="sub">regime regular pleno (${R33.regNome} + IBS/CBS)</div></div>
   </div>
   <div style="overflow-x:auto;margin-top:14px"><table>
     <thead><tr><th>Ano</th><th class="num">Alíq. IBS+CBS</th><th class="num">Simples por dentro</th><th class="num">DAS ajustado (híbrido)</th><th class="num">IBS/CBS por fora</th><th class="num">Total híbrido</th><th class="num">Fora do Simples</th><th>Melhor</th></tr></thead><tbody>`;
   for (const L of REF) {
-    const mn = Math.min(T.simples, L.hib, L.regular);
-    h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(L.dasHib+T.fgts)}</td><td class="num">${fmt(L.liquido+L.is)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${mn===T.simples?'Por dentro':mn===L.hib?'Híbrido':'Fora ('+L.regNome+')'}</td></tr>`;
+    const dentroAno = T.simples + (L.p190 ? L.p190.trava - (T.sublimite||0) : 0);   // v7.18.0: por dentro ano a ano (Res. 190)
+    const mn = Math.min(dentroAno, L.hib, L.regular);
+    h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(dentroAno)}</td><td class="num">${fmt(L.dasHib)}</td><td class="num">${fmt(L.liquido+L.is)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${mn===dentroAno?'Por dentro':mn===L.hib?'Híbrido':'Fora ('+L.regNome+')'}</td></tr>`;
   }
   h += `</tbody></table></div>
 
   <div class="card" style="margin-top:14px"><h3>Composição do cenário híbrido, ano a ano</h3><div style="overflow-x:auto"><table>
-    <thead><tr><th>Ano</th><th class="num">DAS ajustado</th><th class="num">FGTS</th><th class="num">Débito IBS/CBS</th><th class="num">Crédito IBS/CBS</th><th class="num">IBS/CBS líquido</th><th class="num">IS</th><th class="num">Total híbrido</th></tr></thead><tbody>
-    ${REF.map(L=>`<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(L.dasHib)}</td><td class="num">${fmt(T.fgts)}</td><td class="num">${fmt(L.deb)}</td><td class="num">${fmt(L.cred)}</td><td class="num">${fmt(L.liquido)}</td><td class="num">${fmt(L.is)}</td><td class="num">${fmt(L.hib)}</td></tr>`).join('')}
+    <thead><tr><th>Ano</th><th class="num">DAS ajustado</th><th class="num">Débito IBS/CBS</th><th class="num">Crédito IBS/CBS</th><th class="num">IBS/CBS líquido</th><th class="num">IS</th><th class="num">Total híbrido</th></tr></thead><tbody>
+    ${REF.map(L=>`<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(L.dasHib)}</td><td class="num">${fmt(L.deb)}</td><td class="num">${fmt(L.cred)}</td><td class="num">${fmt(L.liquido)}</td><td class="num">${fmt(L.is)}</td><td class="num">${fmt(L.hib)}</td></tr>`).join('')}
     </tbody></table></div><div class="hint" style="margin-top:6px">DAS ajustado = DAS atual menos as parcelas de PIS/COFINS e ICMS/ISS conforme os remanescentes de cada ano da transição${T.sublimite>0?' (inclui a trava do sublimite)':''}.</div></div>
 
   <div class="card" style="margin-top:14px"><h3>Cenário fora do Simples, ano a ano</h3><div style="overflow-x:auto"><table>
