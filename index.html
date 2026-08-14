@@ -171,10 +171,10 @@ canvas{max-height:340px}
   .pp-chartbox canvas{max-width:100%!important;width:100%!important;height:auto!important}
   #pc-evo{height:70mm!important}
   #pc-pct{height:36mm!important}
-  #pc-cen33{height:55mm!important}
+  #pc-cen33{height:40mm!important}
   #pc-recms{height:55mm!important}
   #pc-delta{height:58mm!important}
-  #pc-acum{height:52mm!important}
+  #pc-acum{height:42mm!important}
   #pc-das{width:auto!important;max-height:80mm!important}
   .pp-tab tr{break-inside:avoid}
   .pp-page{overflow:visible!important}
@@ -249,7 +249,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.18.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.18.1</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -623,7 +623,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.18.0</b> <span class="badge ok">atual</span></td><td>13/08/2026</td><td><b>Revisão de cálculos e dos relatórios.</b> (1) <b>PIS/COFINS</b>: corrigida a dupla exclusão do monofásico na base do Lucro Presumido — o ICMS excluído (Tema 69 do STF, RE 574.706) passa a ser o <b>destacado</b> das saídas que permanecem na base (revenda sem ST e com redução) — e a mesma exclusão foi <b>estendida ao Lucro Real</b> (regime não cumulativo), conforme decisão de 13/08; a conferência de cálculos passou a citar a exclusão nas duas bases. (2) O <b>FGTS saiu de todos os totais</b>, quadros e relatórios: encargo idêntico em qualquer regime e não alterado pela Reforma, ele apenas inflava o "% da receita que vira imposto" — os quadros ganharam nota informando a premissa. (3) O <b>INSS patronal</b> do Presumido e do Real ganhou nota explícita (salários × (20% + RAT/FAP + terceiros) e pró-labore × 20%), e o verificador passou a alertar folha zerada, que zera o INSS e favorece indevidamente esses regimes na comparação. (4) A recomposição do ISS passou a ser exibida como <b>"ISS retido"</b>, com a base legal informada (LC 123, art. 21, § 4º). (5) Relatórios e parecer: o enquadramento cita o <b>período efetivamente analisado</b> em vez de "últimos 12 meses"; "O caminho da sua empresa" mostra o <b>melhor</b> cenário de 2033, não mais o pior; o retrato comércio × serviços só aparece quando a empresa tem <b>as duas atividades</b>; "Para onde vai cada real do DAS" ganhou texto explicativo; a evolução da carga traz <b>todas as simulações</b> — Simples por dentro ano a ano (Res. 190), híbrido, Presumido e Real; "Quanto da receita vira imposto" exibe todos os regimes com nota de leitura; a seção dos três caminhos foi ampliada com os critérios de decisão; e o parecer encerra com a nova seção <b>"Pontos de atenção"</b> (alíquotas estimadas, amostragem do período, vendas CNPJ × CPF, regime atual de clientes e fornecedores, créditos condicionados a documento fiscal e o calendário de setembro/2026). (6) <b>Impressão em A4</b> revisada também para os relatórios em cartões: tabelas sem corte, cabeçalhos repetidos por página e quebras controladas. Suíte de testes ampliada e gabaritos recalibrados (sem FGTS e com o Tema 69), com as diferenças documentadas no relatório de implementação.</td></tr>
+                    <tr><td><b>v7.18.1</b> <span class="badge ok">atual</span></td><td>13/08/2026</td><td><b>Ajustes finos sobre a v7.18.0.</b> (1) <b>Impressão do parecer</b>: as folhas 5 e 6 estouravam a página com o conteúdo ampliado — os gráficos dos cenários e da economia acumulada foram compactados, o texto dos três caminhos e a nota de leitura ganharam corpo menor, e a seção "Pontos de atenção" (com os prazos, as notas do período e a assinatura) passou a ocupar <b>página própria</b>, aliviando a página do plano de ação. (2) <b>Conferência de cálculos mais detalhada</b>: o Lucro Presumido e o Lucro Real agora mostram cada parcela com a fórmula e os valores substituídos — base bruta de PIS/COFINS (receita − monofásico − exportação; no Real, − compras e despesas com crédito), a exclusão do ICMS destacado (Tema 69) em linha própria, a base final, o lucro do mês aberto termo a termo (receita + financeiras − custos − folha − despesas − INSS − PIS/COFINS − ICMS − IPI − ISS), o adicional quando houver, o ICMS como débito − crédito com os valores, o ISS sobre os serviços do mês e o INSS patronal com salários, pró-labore e percentuais da empresa. (3) <b>Consolidado analítico</b>: novo quadro "Impostos do DAS — decomposição por período", abrindo PIS, COFINS, IRPJ, CSLL, CPP, ICMS, ISS e IPI na periodicidade escolhida (mensal, trimestral ou semestral), com trava do sublimite, ISS retido, CPP retida e CPP do Anexo IV quando existirem.</td></tr>
+                    <tr><td><b>v7.18.0</b></td><td>13/08/2026</td><td><b>Revisão de cálculos e dos relatórios.</b> (1) <b>PIS/COFINS</b>: corrigida a dupla exclusão do monofásico na base do Lucro Presumido — o ICMS excluído (Tema 69 do STF, RE 574.706) passa a ser o <b>destacado</b> das saídas que permanecem na base (revenda sem ST e com redução) — e a mesma exclusão foi <b>estendida ao Lucro Real</b> (regime não cumulativo), conforme decisão de 13/08; a conferência de cálculos passou a citar a exclusão nas duas bases. (2) O <b>FGTS saiu de todos os totais</b>, quadros e relatórios: encargo idêntico em qualquer regime e não alterado pela Reforma, ele apenas inflava o "% da receita que vira imposto" — os quadros ganharam nota informando a premissa. (3) O <b>INSS patronal</b> do Presumido e do Real ganhou nota explícita (salários × (20% + RAT/FAP + terceiros) e pró-labore × 20%), e o verificador passou a alertar folha zerada, que zera o INSS e favorece indevidamente esses regimes na comparação. (4) A recomposição do ISS passou a ser exibida como <b>"ISS retido"</b>, com a base legal informada (LC 123, art. 21, § 4º). (5) Relatórios e parecer: o enquadramento cita o <b>período efetivamente analisado</b> em vez de "últimos 12 meses"; "O caminho da sua empresa" mostra o <b>melhor</b> cenário de 2033, não mais o pior; o retrato comércio × serviços só aparece quando a empresa tem <b>as duas atividades</b>; "Para onde vai cada real do DAS" ganhou texto explicativo; a evolução da carga traz <b>todas as simulações</b> — Simples por dentro ano a ano (Res. 190), híbrido, Presumido e Real; "Quanto da receita vira imposto" exibe todos os regimes com nota de leitura; a seção dos três caminhos foi ampliada com os critérios de decisão; e o parecer encerra com a nova seção <b>"Pontos de atenção"</b> (alíquotas estimadas, amostragem do período, vendas CNPJ × CPF, regime atual de clientes e fornecedores, créditos condicionados a documento fiscal e o calendário de setembro/2026). (6) <b>Impressão em A4</b> revisada também para os relatórios em cartões: tabelas sem corte, cabeçalhos repetidos por página e quebras controladas. Suíte de testes ampliada e gabaritos recalibrados (sem FGTS e com o Tema 69), com as diferenças documentadas no relatório de implementação.</td></tr>
                     <tr><td><b>v7.17.1</b></td><td>13/08/2026</td><td><b>Correção da sessão expirada na geração do parecer.</b> O token de acesso do Supabase vale ~1 hora e, até aqui, era obtido no login e nunca renovado — depois de 1 hora de uso, "Gerar textos com IA" devolvia <i>401: Sessão inválida ou expirada</i>, mesmo com o usuário logado. Agora o app guarda a validade do token e o <b>renova automaticamente</b> (pelo refresh_token) antes de qualquer chamada autenticada: Edge Functions (gerar-parecer e atualizar-classtrib) e todas as gravações/leituras no banco. A renovação é única mesmo com chamadas simultâneas e, se um 401 escapar no meio do caminho, a chamada é repetida uma única vez com token novo. Só é pedido novo login quando o próprio refresh_token não vale mais (ex.: sessão encerrada em outro dispositivo). Nenhuma mudança na Edge Function nem no banco.</td></tr>
                     <tr><td><b>v7.17.0</b></td><td>13/08/2026</td><td><b>Adequação à Resolução CGSN nº 190/2026</b> (DOU 10/08/2026), que regulamenta o Simples Nacional na Reforma Tributária a partir de 1º/01/2027. A <b>partilha do DAS</b> passa a seguir os novos Anexos I–V por vigência (2027–28, 2029, 2030, 2031, 2032 e 2033+): PIS/COFINS saem da partilha já em 2027 (a fatia vira CBS), ICMS/ISS decrescem em degraus (90/80/70/60%) e zeram em 2033, com o IBS absorvendo a diferença. O <b>cenário híbrido</b> aplica exatamente o art. 22-A: DAS deduzido das parcelas de CBS e IBS da faixa/vigência (antes, aproximação pelos remanescentes — resultado idêntico nas faixas 1–5 e agora exato também na 6ª faixa de 2027–28). O quadro tributo a tributo do Comparativo ganhou a <b>abertura informativa "↳ CBS/IBS dentro do DAS"</b> no cenário por dentro e a linha própria do <b>IBS do sublimite</b>; a trava da 5ª faixa é recomposta por vigência, com teto do ISS decrescente (5% → 3%, Anexos III/IV) e IBS pela fórmula própria dos rodapés — o total do cenário "por dentro" pode variar levemente nos anos em que o teto do ISS morde. O <b>Fator R</b> passa a usar a receita conjunta dos mercados interno e externo (art. 26), mantidas as bases distintas para a alíquota (art. 16, §3º, II) — sem efeito para empresas sem exportação. Parecer com parágrafo de prazos (opção em setembro/2026; confirmação de receitas anteriores até 20/12/2026 — arts. 6º e 144-D/E) e nota do art. 40-D/40-E no quadro do híbrido. <b>Nota D7:</b> o rodapé da trava de ICMS do Anexo II no DOU aparenta erro material (usa os fatores do Anexo I/III); implementado por simetria com o próprio anexo — conferir na versão certificada antes de operar 2027. MEI (Anexo XIII) embutido como referência. Tabelas transcritas do DOU com 251 verificações; suíte de testes ampliada (partilha soma 100%, identidade com a LC 123, art. 22-A e travas). Blocos do art. 25, I-A e X, em backlog.</td></tr>
                     <tr><td><b>v7.16.3</b></td><td>10/08/2026</td><td><b>Atualizar os Parâmetros passou a recalcular tudo automaticamente.</b> As alíquotas da transição eram copiadas para dentro de cada análise no momento em que ela era criada, e a cópia vencia o padrão — por isso análises antigas continuavam exibindo a tabela anterior (26,80% em 2033) mesmo depois da atualização. Agora a análise usa sempre o padrão vigente do aplicativo, e alterar os Parâmetros reflete na hora na Análise Atual, na Reforma e nos Relatórios. <b>Correção da tela da Reforma que abria vazia.</b> Análises gravadas por versões anteriores não traziam todos os campos da Reforma e a montagem da tela parava no meio, em silêncio — daí a impressão de que a informação só aparecia depois de mexer no ano. O registro salvo passa a ser completado com os campos que faltam, como já era feito na análise do regime atual.</td></tr>
@@ -2164,15 +2165,15 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
 
     out.meses.push({ m, rbt12, rbt12Exp, recInt, recExp, dasExp, faixaExp: fxE+1, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasAx, trv190, dasTrib: dt, recCom, recServ,
-      fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal,
+      fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal, icmsDestacadoPC,
       simples: { das, fgts, sublimite: subIcms+subIss, issRetido, cppRetida,
         // v7.1 (A1): CPP do Anexo IV é devida FORA do DAS — proxy pela participação da receita a4 no mês
         inssPatrForaDAS: (receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0,
         total: das + subIcms + subIss + issRetido + cppRetida + ((receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0) },   // v7.18.0: sem FGTS
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
-            baseAdic: base32+base8 },
+            baseAdic: base32+base8, basePC:_baseLPliq, basePCbruta:basePisCofLP },
       lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
-            baseIRCS, credCsll: baseIRCS<0 ? baseIRCS*.09 : 0, credIrpj: baseIRCS<0 ? baseIRCS*.15 : 0 },
+            baseIRCS, basePC:_baseLRliq, basePCbruta:basePisCofLR, credCsll: baseIRCS<0 ? baseIRCS*.09 : 0, credIrpj: baseIRCS<0 ? baseIRCS*.15 : 0 },
     });
   }
 
@@ -4464,6 +4465,20 @@ function rlConsolidado(rot, n) {
     </tbody></table>
     <div class="hint" style="margin-top:6px">Coluna do Simples: tributos embutidos no DAS pela repartição da LC 123 (Anexos I–V, por faixa). PIS×COFINS e ICMS×ISS distribuídos na proporção da repartição cheia em meses com ST, monofásico ou retenções. Na coluna do Simples, ISS e CPP incluem também as parcelas retidas na fonte e a CPP do Anexo IV devida fora do DAS (v7.1) — por isso os totais por tributo podem superar o DAS. <b>ISS retido</b>: recolhido na fonte pelo tomador e recomposto no total do Simples para comparação entre regimes (LC 123, art. 21, § 4º). Lucro Presumido e Lucro Real <b>incluem o INSS patronal</b> sobre a folha (salários × (20% + RAT/FAP + terceiros) e pró-labore × 20%). <b>FGTS não considerado</b> em nenhum regime — encargo idêntico em todos e não alterado pela Reforma Tributária (v7.18.0).</div></div>`;
 
+  // ── 2b. DAS POR TRIBUTO, POR PERÍODO (v7.18.1) ──
+  const gDT = k => agrupar(M.map(x=>x.dasTrib?(+x.dasTrib[k]||0):0), n);
+  const TRIBS = [['PIS','pis'],['COFINS','cofins'],['IRPJ','irpj'],['CSLL','csll'],['CPP (INSS patronal)','cpp'],['ICMS','icms'],['ISS','iss'],['IPI','ipi']].filter(([,k])=>(DT?(+DT[k]||0):0)>0.005);
+  h += `<div class="card" style="margin-top:14px"><h3>2b. Impostos do DAS — decomposição por período</h3><div style="overflow-x:auto"><table><thead>${cab}</thead><tbody>
+    ${TRIBS.map(([nm,k])=>linha('· '+nm, gDT(k))).join('')}
+    ${linha('DAS (guia)', g(x=>x.das), true)}
+    ${T.sublimite>0.005?linha('ICMS/ISS da trava do sublimite (5ª faixa)', g(x=>(x.subIcms||0)+(x.subIss||0))):''}
+    ${T.issRetido>0.005?linha('ISS retido (LC 123, art. 21, § 4º)', g(x=>x.simples.issRetido||0)):''}
+    ${T.cppRetida>0.005?linha('CPP retida na fonte', g(x=>x.simples.cppRetida||0)):''}
+    ${T.cppForaDAS>0.005?linha('CPP fora do DAS — Anexo IV', g(x=>x.simples.inssPatrForaDAS||0)):''}
+    ${linha('Total do Simples', g(x=>x.simples.total), true)}
+  </tbody></table></div>
+  <div class="hint" style="margin-top:6px">Decomposição do DAS pela repartição da LC 123 (Anexos I–V, percentuais por faixa). Em períodos com ST, monofásico ou retenções, PIS×COFINS e ICMS×ISS são distribuídos na proporção da repartição cheia — estimativa. FGTS não considerado.</div></div>`;
+
   // ── 3. MEMÓRIA SIMPLES ──
   h += `<div class="card" style="page-break-before:always"><h3>3. Memória de cálculo — Simples Nacional</h3><div style="overflow-x:auto"><table><thead>${cab}</thead><tbody>
     ${linha('Receita — comércio/indústria', g(x=>x.recCom||0))}
@@ -4755,7 +4770,7 @@ function rlParecer(){
     // ── PÁG: % da receita (+ cenários 2033 quando couber) ──
     h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
       <div class="pp-chartbox"><div class="pp-ct">Quanto da receita vira imposto · %</div><canvas id="pc-pct" height="130"></canvas>
-      <div class="hint" style="margin-top:6px"><b>Como ler:</b> cada linha divide a carga total do cenário no ano pela receita do período analisado. A carga inclui todos os tributos do cenário (guia do Simples, trava do sublimite, retenções recompostas, IBS/CBS e Imposto Seletivo quando por fora; no Presumido/Real, os tributos federais, ICMS/ISS/IPI e o INSS patronal) e <b>não inclui o FGTS</b>, idêntico em todos os regimes. O "por dentro" pode variar entre os anos porque o teto do ISS da trava da 5ª faixa decresce a cada vigência (Res. CGSN nº 190/2026). Valores em moeda constante do ano-base.</div></div>`;
+      <div class="hint" style="margin-top:6px;font-size:8pt;line-height:1.35"><b>Como ler:</b> cada linha divide a carga total do cenário no ano pela receita do período analisado. A carga inclui todos os tributos do cenário (guia do Simples, trava do sublimite, retenções recompostas, IBS/CBS e Imposto Seletivo quando por fora; no Presumido/Real, os tributos federais, ICMS/ISS/IPI e o INSS patronal) e <b>não inclui o FGTS</b>, idêntico em todos os regimes. O "por dentro" pode variar entre os anos porque o teto do ISS da trava da 5ª faixa decresce a cada vigência (Res. CGSN nº 190/2026). Valores em moeda constante do ano-base.</div></div>`;
     if (D.variante!=='acima' && D.L33) {
       h += `${secao(++NS,'Os três caminhos do Simples em 2033 — economiza ou paga a mais?')}
       <div class="pp-chartbox"><canvas id="pc-cen33" height="150"></canvas></div>
@@ -4764,7 +4779,7 @@ function rlParecer(){
         <tr><td><span class="pp-pill" style="background:#2b3240">Fora do Simples</span></td><td class="num">${fmt(D.L33.regular)}</td><td class="num" style="color:${D.L33.regular>d33?'#8c2f39':'#0f7a5a'}">${D.L33.regular>d33?'+':''}${fmt(D.L33.regular-d33)}</td><td>Crescimento além do teto ou clientela quase toda PJ</td></tr>
         <tr><td><span class="pp-pill" style="background:#d99a2b">Híbrido</span></td><td class="num">${fmt(D.L33.hib)}</td><td class="num" style="color:${D.L33.hib>d33?'#8c2f39':'#0f7a5a'}">${D.L33.hib>d33?'+':''}${fmt(D.L33.hib-d33)}</td><td>Clientes PJ exigem crédito integral de IBS/CBS</td></tr>`)(D.sDentro.length?D.sDentro[D.sDentro.length-1]:D.T.simples)}
       </tbody></table>
-      <p class="pp-p">${TX.cenarios}</p>`;
+      <p class="pp-p" style="font-size:9.5pt">${TX.cenarios}</p>`;
     }
     h += `</div></div>`;
 
@@ -4801,9 +4816,12 @@ function rlParecer(){
     <p class="pp-p">${TX.parecer1}</p>
     ${TX.parecer2?`<p class="pp-p">${TX.parecer2}</p>`:''}
     <div class="pp-final">${TX.recomendacao}</div>
-    <div id="pp-notas"></div>
+  </div></div>`;
+
+  // ── PÁG: pontos de atenção + prazos + notas + assinatura (v7.18.1: página própria) ──
+  h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
     ${secao(++NS,'Pontos de atenção')}
-    <ol class="pp-p" style="padding-left:16px;margin:0 0 8px">
+    <ol class="pp-p" style="padding-left:16px;margin:0 0 8px;font-size:9.5pt">
       <li>As alíquotas de IBS e CBS utilizadas são <b>estimativas de referência</b> (EC 132/2023, LC 214/2025 e Res. CGIBS nº 14/2026): a alíquota efetiva de cada ente ainda não foi publicada, e os valores serão recalibrados a cada nova regulamentação.</li>
       <li>A análise foi elaborada com <b>dados reais da empresa</b>, tomando como amostragem o período de <b>${D.janelaTxt}</b>; os resultados devem ser revisitados à medida que novos meses forem lançados.</li>
       <li>Analisamos o <b>percentual de vendas destinadas a CNPJ e a CPF</b> — informação de suma importância para a tomada de decisão, pois clientes PJ do regime regular tenderão a exigir crédito integral de IBS/CBS.</li>
@@ -4811,6 +4829,7 @@ function rlParecer(){
       <li>A análise considerou os <b>documentos disponíveis</b>. Na Reforma, toda e qualquer despesa destinada ao uso da empresa poderá gerar crédito de IBS/CBS — por isso é essencial <b>exigir o documento fiscal em todas as aquisições</b>, para que a análise permaneça fidedigna à realidade da empresa.</li>
       <li>A decisão a ser formalizada em <b>setembro/2026</b> valerá para o período de <b>janeiro a junho/2027</b>, com possibilidade de nova opção em <b>março/2027</b>, válida para o segundo semestre (art. 40-D da Res. CGSN 140/2018, incluído pela Res. 190/2026).</li>
     </ol>
+    <div id="pp-notas"></div>
     ${D.variante!=='acima'?`<p class="pp-p" style="font-size:9.5pt"><b>Prazos da Res. CGSN nº 190/2026:</b> a opção pelo Simples Nacional passa a ser formalizada de 1º a 30 de setembro, com efeitos a partir de 1º de janeiro seguinte — para produzir efeitos em 2027, portanto, em setembro/2026 (art. 6º). A opção pelo recolhimento de IBS/CBS no regime regular (cenário híbrido) é semestral, nas janelas de setembro e março (art. 40-D). Quem ingressar no Simples em 1º/01/2027 deve confirmar receitas e folhas anteriores no módulo "Receitas Anteriores à Opção" do PGDAS-D até 20/12/2026 (competências dez/2025 a nov/2026) e até 20/01/2027 (dez/2026); sem manifestação, prevalece o pré-preenchimento da Receita Federal (arts. 144-D e 144-E).</p>`:''}
     <p class="pp-p">Colocamo-nos à disposição para esclarecimentos adicionais.</p>
     <div class="pp-assin"><p>Atenciosamente,</p><div style="height:14mm"></div><div class="pp-traco"></div><b>Responsável técnico</b><div class="hint">Artecon Artes Contábeis · Palhoça/SC</div></div>
@@ -5157,24 +5176,42 @@ function rlConferencia(){
     }
 
     const P = M.lp, LR = M.lr;
+    // v7.18.1: fórmulas com os valores substituídos, parcela a parcela
+    const _monoEx = Math.max(0, M.receita - (M.recExp||0) - (P.basePCbruta!=null?P.basePCbruta:M.receita));
+    const _fin = +((D.receitas.fin||[])[m])||0;
+    const _sal = +((D.folha.salarios||[])[m])||0, _pro = +((D.folha.prolabore||[])[m])||0;
+    const _fp = folhaPercDaEmpresa(D.cfg);
+    const _comprasLR = (+((D.compras.semst||[])[m])||0) + (+((D.compras.comst||[])[m])||0);
+    const _credLRm = +((D.despesas.credLR||[])[m])||0;
     const LPl = [
-      CF.lin('Base IRPJ', `comércio × ${CF.pc(+D.cfg.lpBaseCom||0)} + serviços × ${CF.pc(+D.cfg.lpBaseServ||0)} + receitas financeiras`, fmtR(P.baseAdic||0)),
-      CF.lin('IRPJ','base × 15%', fmtR(P.irpj)),
-      CF.lin('CSLL','base × 9%', fmtR(P.csll)),
-      CF.lin('PIS','base cumulativa × 0,65% (sem monofásico, sem exportação e sem o ICMS destacado — Tema 69)', fmtR(P.pis)),
-      CF.lin('COFINS','base cumulativa × 3,00% (mesma base)', fmtR(P.cofins)),
-      CF.lin('ICMS','débito − crédito', fmtR(P.icms)),
-      CF.lin('ISS','serviços × alíquota do município', fmtR(P.iss)),
-      CF.lin('INSS patronal','salários × (20% + RAT/FAP + terceiros) + pró-labore × 20%', fmtR(P.inssPatr)),
-      CF.lin('<b>Total do Lucro Presumido</b>','', fmtR(P.total)),
+      CF.lin('Base PIS/COFINS (bruta)', `receita ${fmtR(M.receita)} − revenda monofásica ${fmtR(_monoEx)} − exportação ${fmtR(M.recExp||0)}`, fmtR(P.basePCbruta||0)),
+      CF.lin('(−) ICMS destacado — Tema 69', `(revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706)`, fmtR(M.icmsDestacadoPC||0)),
+      CF.lin('Base PIS/COFINS (final)', `${fmtR(P.basePCbruta||0)} − ${fmtR(M.icmsDestacadoPC||0)}`, fmtR(P.basePC||0)),
+      CF.lin('PIS', `${fmtR(P.basePC||0)} × 0,65%`, fmtR(P.pis)),
+      CF.lin('COFINS', `${fmtR(P.basePC||0)} × 3,00%`, fmtR(P.cofins)),
+      CF.lin('Base IRPJ', `comércio ${fmtR(M.recCom||0)} × ${CF.pc(+D.cfg.lpBaseCom||0)} + serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.lpBaseServ||0)} + financeiras ${fmtR(_fin)} (exportação incluída na presunção)`, fmtR(P.baseAdic||0)),
+      CF.lin('IRPJ', `${fmtR(P.baseAdic||0)} × 15%`, fmtR(P.irpj)),
+      ...(P.adicional>0.005?[CF.lin('Adicional de IRPJ', `parcela da base acima do limite × 10%`, fmtR(P.adicional))]:[]),
+      CF.lin('CSLL','bases próprias de comércio e serviços × 9%', fmtR(P.csll)),
+      CF.lin('ICMS', `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`, fmtR(P.icms)),
+      CF.lin('ISS', `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(P.iss)),
+      CF.lin('INSS patronal', `salários ${fmtR(_sal)} × ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)} + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)}${m===11?' + 13º':''}`, fmtR(P.inssPatr)),
+      CF.lin('<b>Total do Lucro Presumido</b>','soma das parcelas acima (FGTS não considerado)', fmtR(P.total)),
     ];
     const LRl = [
-      CF.lin('Receita − custos − despesas', `${fmtR(M.receita)} − ${fmtR(M.custos)} − ${fmtR(M.despTotal)}`, fmtR(M.receita-M.custos-M.despTotal)),
-      CF.lin('IRPJ','lucro × 15% (prejuízo não é compensado entre meses)', fmtR(LR.irpj)),
-      CF.lin('CSLL','lucro × 9%', fmtR(LR.csll)),
-      CF.lin('PIS','base não cumulativa × 1,65% (sem o ICMS destacado — Tema 69)', fmtR(LR.pis)),
-      CF.lin('COFINS','base não cumulativa × 7,60% (mesma base)', fmtR(LR.cofins)),
-      CF.lin('<b>Total do Lucro Real</b>','', fmtR(LR.total)),
+      CF.lin('Base PIS/COFINS (bruta)', `receitas tributadas (sem monofásico e exportação) − compras p/ revenda ${fmtR(_comprasLR)} − despesas com crédito ${fmtR(_credLRm)}`, fmtR(LR.basePCbruta||0)),
+      CF.lin('(−) ICMS destacado — Tema 69', `(revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706)`, fmtR(M.icmsDestacadoPC||0)),
+      CF.lin('Base PIS/COFINS (final)', `${fmtR(LR.basePCbruta||0)} − ${fmtR(M.icmsDestacadoPC||0)}`, fmtR(LR.basePC||0)),
+      CF.lin('PIS', `${fmtR(LR.basePC||0)} × 1,65% + financeiras ${fmtR(_fin)} × 0,65%`, fmtR(LR.pis)),
+      CF.lin('COFINS', `${fmtR(LR.basePC||0)} × 7,60% + financeiras ${fmtR(_fin)} × 4,00%`, fmtR(LR.cofins)),
+      CF.lin('Lucro do mês (base IRPJ/CSLL)', `receita ${fmtR(M.receita)} + financeiras ${fmtR(_fin)} − custos ${fmtR(M.custos)} − folha ${fmtR(M.folhaTotal)} − despesas ${fmtR(M.despTotal)} − INSS patronal ${fmtR(M.inssPatr)} − PIS/COFINS ${fmtR(LR.pis+LR.cofins)} − ICMS ${fmtR(M.icmsPagar)} − IPI ${fmtR(M.ipiPagar)} − ISS ${fmtR(M.iss)}`, fmtR(LR.baseIRCS)),
+      CF.lin('IRPJ', `${fmtR(Math.max(0,LR.baseIRCS))} × 15% (prejuízo não é compensado entre meses)`, fmtR(LR.irpj)),
+      ...(LR.adicional>0.005?[CF.lin('Adicional de IRPJ', `parcela do lucro acima do limite × 10%`, fmtR(LR.adicional))]:[]),
+      CF.lin('CSLL', `${fmtR(Math.max(0,LR.baseIRCS))} × 9%`, fmtR(LR.csll)),
+      CF.lin('ICMS', `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`, fmtR(LR.icms)),
+      CF.lin('ISS', `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(LR.iss)),
+      CF.lin('INSS patronal', `salários ${fmtR(_sal)} × ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)} + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)}${m===11?' + 13º':''}`, fmtR(LR.inssPatr)),
+      CF.lin('<b>Total do Lucro Real</b>','soma das parcelas acima (FGTS não considerado)', fmtR(LR.total)),
     ];
 
     let conf = '';
