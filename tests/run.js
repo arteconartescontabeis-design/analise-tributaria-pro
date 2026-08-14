@@ -326,6 +326,7 @@ console.log('\n■ v7.18.3 — ICMS das compras fora do crédito de PIS/COFINS �
 }
 { // _xmlAplicarBase não duplica ao reimportar o mesmo lote
   const res = (async () => {
+    await RES_BAL;                                  // serializa: o contexto (AN) é compartilhado
     vm.runInContext('AN = anNovo("24197146000137", 2025)', ctx);
     vm.runInContext('XN = {notas:[{incluir:true, valor:1000, mes:0, ano:2025, tipo:"NF-e", tomador:"1", ct:"000001"},{incluir:true, valor:500, mes:0, ano:2025, tipo:"NF-e", tomador:"1", ct:"000001"}]}', ctx);
     ctx.document.getElementById('xml-bloco').value = 'a1_semst';
@@ -338,6 +339,38 @@ console.log('\n■ v7.18.3 — ICMS das compras fora do crédito de PIS/COFINS �
     return {v1, v2};
   })();
   var RES_XML = res;
+}
+
+// ═══ 5g. v7.19.0 — balancete multi-arquivo, mês próprio e prévia ═══
+console.log('\n■ v7.19.0 — balancete multi-arquivo, mês próprio e prévia');
+{
+  const RES = (async () => {
+    await RES_XML;                                  // serializa: o contexto (AN) é compartilhado
+    vm.runInContext('garantirEmpresa = async()=>{}; dlg = async()=>true;', ctx);
+    vm.runInContext('AN = anNovo("24197146000137", 2025)', ctx);
+    vm.runInContext(`BAL = {cnpj:"24197146000137", nome:"T", ano:2025, mesIni:0, mesFim:1, lotes:[
+      {arquivo:"01-2025.xls", ano:2025, mesIni:0, mesFim:0, contas:[{destino:"compras.semst", valor:15933.21},{destino:"folha.salarios", valor:10000}]},
+      {arquivo:"02-2025.xls", ano:2025, mesIni:1, mesFim:1, contas:[{destino:"compras.semst", valor:20000}]}]}`, ctx);
+    ctx.document.getElementById('bal-modo').value = 'proprio';
+    ctx.document.getElementById('an-ano').value = '2025';
+    // matriz: mês próprio de cada lote
+    const M = vm.runInContext('balMatriz("proprio")', ctx);
+    // prévia gera HTML sem exceção
+    let previaOK = true;
+    try { vm.runInContext('balPrevia()', ctx); } catch(e){ previaOK = false; }
+    const previaHTML = ctx.document.getElementById('bal-previa').innerHTML;
+    try { await vm.runInContext('balAplicar()', ctx); } catch(e){}
+    const jan = vm.runInContext('AN.compras.semst[0]', ctx), fev = vm.runInContext('AN.compras.semst[1]', ctx),
+          sal = vm.runInContext('AN.folha.salarios[0]', ctx);
+    try { await vm.runInContext('balAplicar()', ctx); } catch(e){}
+    const jan2 = vm.runInContext('AN.compras.semst[0]', ctx), fev2 = vm.runInContext('AN.compras.semst[1]', ctx);
+    // modo distribuir com lote anual: 1/12 por mês
+    const Md = vm.runInContext('balMatriz.call(null, "distribuir")', ctx);
+    vm.runInContext('BAL = {cnpj:"1", nome:"T", ano:2025, mesIni:0, mesFim:11, lotes:[{arquivo:"anual.xls", ano:2025, mesIni:0, mesFim:11, contas:[{destino:"despesas.adm", valor:1200}]}]}', ctx);
+    const Ma = vm.runInContext('balMatriz("distribuir")', ctx);
+    return {M, previaOK, previaHTML, jan, fev, sal, jan2, fev2, Ma};
+  })();
+  var RES_BAL2 = RES;
 }
 
 // ═══ 6. Integridade da interface ═══
@@ -363,6 +396,17 @@ console.log('\n■ Integridade da interface');
     bal && Math.abs(bal.v1-15933.21)<0.01, bal?`após 1ª=${(+bal.v1).toFixed(2)}`:'timeout/travou');
   chk('balAplicar idempotente: reimportar o mesmo balancete não duplica',
     bal && Math.abs(bal.v2-15933.21)<0.01, bal?`após 2ª=${(+bal.v2).toFixed(2)}`:'timeout/travou');
+  const b2 = await Promise.race([RES_BAL2, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  chk('v7.19.0 · matriz "mês próprio": jan=15.933,21+salários, fev=20.000, nada rateado',
+    b2 && Math.abs(b2.M['compras.semst'][0]-15933.21)<0.01 && Math.abs(b2.M['compras.semst'][1]-20000)<0.01 && Math.abs(b2.M['folha.salarios'][0]-10000)<0.01 && b2.M['compras.semst'][2]===undefined,
+    b2?'ok':'timeout');
+  chk('v7.19.0 · aplicação multi-lote grava nos meses certos e reimportar não duplica',
+    b2 && Math.abs(b2.jan-15933.21)<0.01 && Math.abs(b2.fev-20000)<0.01 && Math.abs(b2.sal-10000)<0.01 && Math.abs(b2.jan2-15933.21)<0.01 && Math.abs(b2.fev2-20000)<0.01,
+    b2?`jan=${(+b2.jan).toFixed(2)} fev=${(+b2.fev).toFixed(2)} 2ª: jan=${(+b2.jan2).toFixed(2)} fev=${(+b2.fev2).toFixed(2)}`:'timeout');
+  chk('v7.19.0 · prévia renderiza a matriz sem exceção (mesma fonte da aplicação)',
+    b2 && b2.previaOK && /Prévia/.test(b2.previaHTML) && /15\.933,21|15933/.test(b2.previaHTML));
+  chk('v7.19.0 · modo distribuir: lote anual rateia 1.200 em 100/mês',
+    b2 && b2.Ma && Math.abs(b2.Ma['despesas.adm'][0]-100)<0.01 && Math.abs(b2.Ma['despesas.adm'][11]-100)<0.01);
   const xml = await Promise.race([RES_XML, new Promise(r=>setTimeout(()=>r(null), 8000))]);
   chk('XML: notas do lote somam entre si (1.000 + 500) e reimportar não duplica',
     xml && Math.abs(xml.v1-1500)<0.01 && Math.abs(xml.v2-1500)<0.01,
