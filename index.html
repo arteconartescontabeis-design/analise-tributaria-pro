@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.21.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.23.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -373,8 +373,9 @@ canvas{max-height:340px}
       <div class="card"><h3>Resultado mês a mês</h3>
         <div class="hint" style="margin:-6px 0 10px">
           <b>DAS</b> é a guia do Simples. <b>SIMPLES</b> é o custo total do regime e por isso é maior:
-          soma ao DAS o FGTS, a trava do sublimite quando o RBT12 passa de R$ 3,6 mi, o ISS e o INSS retidos pelo tomador
-          (recompostos conforme a LC 123, art. 21, § 4º) e a contribuição previdenciária do Anexo IV, devida fora do DAS.
+          soma ao DAS a trava do sublimite quando o RBT12 passa de R$ 3,6 mi, o INSS retido pelo tomador
+          (recomposto conforme a LC 123, art. 21, § 4º) e a contribuição previdenciária do Anexo IV, devida fora do DAS.
+          O ISS retido na fonte não compõe o total de nenhum regime (v7.23.0) — já recolhido pelo tomador.
           <b>PRESUMIDO</b> e <b>REAL</b> também incluem FGTS e INSS patronal — é o que torna a comparação entre os três justa.
           <a href="#" onclick="anExplicarSimples();return false">ver a composição deste ano</a>
         </div>
@@ -524,7 +525,7 @@ canvas{max-height:340px}
           <option value="reforma">Reforma Tributária</option>
           <option value="parecer">Parecer Reforma Tributária — com IA</option>
           <option value="conferencia">Conferência de cálculos — memória (interno)</option>
-          <option value="cnpj">Consulta CNPJ — cadastro completo</option>
+          <option value="cnpj">Resumo estatístico de fornecedores</option>
           <option value="produtos">Produtos vendidos × Reforma (IBS/CBS)</option>
         </select></div>
         <div><label>Periodicidade</label><select id="rl-per" onchange="rlRender()">
@@ -605,6 +606,16 @@ canvas{max-height:340px}
     </div>
     <div id="page-usuarios" style="display:none">
       <div class="page-title"><h1>Usuários</h1><span class="crumb">Equipe Artecon</span></div>
+      <div class="card"><!-- v7.23.0: o usuário logado altera a própria senha sem depender de e-mail -->
+        <h3>Alterar minha senha</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 170px;gap:14px;align-items:end">
+          <div><label>Senha atual</label><input id="us-sn-atual" type="password" autocomplete="current-password"></div>
+          <div><label>Nova senha</label><input id="us-sn-nova" type="password" autocomplete="new-password" placeholder="mín. 8 caracteres"></div>
+          <div><label>Confirmar a nova senha</label><input id="us-sn-conf" type="password" autocomplete="new-password"></div>
+          <button class="btn solid" onclick="usAlterarMinhaSenha()">🔑 Alterar senha</button>
+        </div>
+        <div class="hint" style="margin-top:8px">Vale para o usuário conectado (<span id="us-sn-quem"></span>) e passa a valer imediatamente, inclusive no Classificação RTC (mesmo login). Para outra pessoa da equipe, use "Redefinir senha" na lista abaixo (envia e-mail).</div>
+      </div>
       <div class="card">
         <h3>Criar acesso</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr 200px 140px;gap:14px;align-items:end">
@@ -624,7 +635,9 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.21.0</b> <span class="badge ok">atual</span></td><td>14/08/2026</td><td><b>Reorganização dos relatórios de fornecedores e de produtos.</b> (1) O relatório <b>Consulta CNPJ — cadastro completo</b> ganhou a seção <b>"Resumo estatístico de fornecedores"</b> em forma COMPLETA: por tipo de consulta (revenda e serviços), cartões com o número de fornecedores, o valor do período e o percentual em regime normal, a barra de distribuição por enquadramento e a <b>relação integral</b> dos fornecedores (CNPJ, razão social, enquadramento, valor e participação), ordenada por valor — com a data da consulta e a regra de crédito de IBS/CBS por regime do fornecedor. (2) A seção <b>"Produtos vendidos no período e classificação para a Reforma (IBS/CBS)"</b> saiu da página final do <b>parecer</b>, que agora encerra direto com a disposição e a assinatura. (3) Ela virou <b>relatório próprio</b> no layout Artecon: novo tipo <b>"Produtos vendidos × Reforma (IBS/CBS)"</b> no módulo Relatórios, imprimível em A4, com a mesma relação de produtos consolidados do ano (código, NCM, CFOP, valor, participação), a classificação CST · cClassTrib decidida por produto com percentuais de redução, confiança e autor, os pendentes de decisão e os totais por CFOP como régua de conferência — direto das notas gravadas no aplicativo Classificação RTC, sem exigir análise salva.</td></tr>
+                    <tr><td><b>v7.23.0</b> <span class="badge ok">atual</span></td><td>14/08/2026</td><td><b>ISS retido fora dos totais, fontes unificadas e troca de senha.</b> (1) <b>O ISS retido na fonte deixou de ser recomposto</b> no total do Simples (LC 123, art. 21, § 4º — recolhido pelo tomador, não é desembolso em guia da empresa): a linha somada saiu da memória de cálculo (vira nota informativa), do quadro tributo a tributo, da composição do ano e do cenário híbrido da Reforma; por simetria, no <b>Presumido e no Real o ISS próprio também exclui as receitas com retenção</b> — a comparação entre os três regimes segue equivalente. O INSS retido e a CPP do Anexo IV continuam recompostos (não alterados). (2) <b>Parecer e memória de cálculo alinhados</b>: a fórmula do cenário "por dentro" estava copiada em cinco pontos (veredito, parecer, comparativo em três quadros) — agora existe uma única função usada por todos, a conferência ganhou a coluna "Por dentro" com o mesmo valor do parecer, e a suíte passou a travar essa igualdade; a retirada do ISS retido corrige simultaneamente as duas pontas que divergiam. (3) Auditoria das fontes dos relatórios: corrigido o alerta do Fator R do parecer, que lia as receitas da análise <b>aberta em tela</b> mesmo quando era de outra empresa — todos os relatórios agora partem exclusivamente da análise do relatório. (4) <b>Alterar minha senha</b> na aba Usuários: o usuário conectado troca a própria senha pelo aplicativo (senha atual revalidada no servidor, nova com mínimo de 8 caracteres e confirmação), com efeito imediato também no Classificação RTC (mesmo login); o "Redefinir senha" por e-mail continua disponível para os demais usuários.</td></tr>
+                    <tr><td><b>v7.22.0</b></td><td>14/08/2026</td><td><b>Dois relatórios no layout do parecer, prontos para envio ao cliente.</b> O relatório de consulta cadastral foi <b>renomeado para "Resumo estatístico de fornecedores"</b> e, junto com o relatório <b>"Produtos vendidos × Reforma (IBS/CBS)"</b>, passou ao <b>layout do parecer</b>: páginas A4 com o papel timbrado da Artecon, cabeçalho do documento com cliente, CNPJ e data. Como esses documentos têm tabelas de tamanho variável, foi criado um <b>paginador automático</b>: a relação completa de fornecedores (ou de produtos) é dividida em quantas páginas timbradas forem necessárias, com o cabeçalho da tabela repetido em cada página e cada página travada na altura exata de uma folha (a mesma regra estrutural da v7.18.2 — o timbrado nunca desalinha). O Resumo de fornecedores abre com a identificação da empresa (situação, CNAE, Simples, endereço) e o quadro societário, seguidos do resumo completo por tipo de consulta — cartões, distribuição por enquadramento e a relação integral dos fornecedores — e fecha com a regra de crédito de IBS/CBS por regime do fornecedor. O relatório de produtos mantém a relação consolidada do ano com a classificação por produto, os pendentes e os totais por CFOP.</td></tr>
+                    <tr><td><b>v7.21.0</b></td><td>14/08/2026</td><td><b>Reorganização dos relatórios de fornecedores e de produtos.</b> (1) O relatório <b>Consulta CNPJ — cadastro completo</b> ganhou a seção <b>"Resumo estatístico de fornecedores"</b> em forma COMPLETA: por tipo de consulta (revenda e serviços), cartões com o número de fornecedores, o valor do período e o percentual em regime normal, a barra de distribuição por enquadramento e a <b>relação integral</b> dos fornecedores (CNPJ, razão social, enquadramento, valor e participação), ordenada por valor — com a data da consulta e a regra de crédito de IBS/CBS por regime do fornecedor. (2) A seção <b>"Produtos vendidos no período e classificação para a Reforma (IBS/CBS)"</b> saiu da página final do <b>parecer</b>, que agora encerra direto com a disposição e a assinatura. (3) Ela virou <b>relatório próprio</b> no layout Artecon: novo tipo <b>"Produtos vendidos × Reforma (IBS/CBS)"</b> no módulo Relatórios, imprimível em A4, com a mesma relação de produtos consolidados do ano (código, NCM, CFOP, valor, participação), a classificação CST · cClassTrib decidida por produto com percentuais de redução, confiança e autor, os pendentes de decisão e os totais por CFOP como régua de conferência — direto das notas gravadas no aplicativo Classificação RTC, sem exigir análise salva.</td></tr>
                     <tr><td><b>v7.20.0</b></td><td>14/08/2026</td><td><b>Relatórios ampliados.</b> (1) <b>Parecer com dashboard de fornecedores</b>: quando existe análise de fornecedores salva para a empresa, o parecer da Reforma ganha página própria "Fornecedores e o crédito de IBS/CBS" — cartões com o número de fornecedores, o valor do período e o percentual em regime normal (crédito pleno esperado), barra de distribuição por enquadramento (regime normal, Simples, MEI, não identificado), os 8 maiores fornecedores com valores, e o texto explicando a regra de crédito por regime do fornecedor (LC 214/2025 e art. 58 da Res. CGSN 190/2026). A página usa a consulta mais recente de cada tipo (revenda e serviços). (2) <b>Novo relatório "Consulta CNPJ — cadastro completo"</b>: documento imprimível da empresa selecionada com identificação, situação cadastral, endereço e contato, regime tributário (Simples/SIMEI com datas), TODAS as atividades econômicas (principal e secundárias) e o quadro societário com qualificação e data de entrada — direto dos dados abertos da RFB, com fonte e data da consulta no rodapé. (3) <b>Conferência de cálculos ampliada</b>: novo bloco "Reforma Tributária — conferência ano a ano" com débito, crédito, líquido, IS, DAS ajustado pelo art. 22-A, cenário híbrido e regime regular de 2026 a 2033, a trava do sublimite recomposta na vigência final e o alerta de créditos zerados; e a seção de divergências foi atualizada — Tema 69 e Lei 14.592/2023 agora constam como <b>aplicados por estimativa</b> (não mais como omissões), refletindo as versões 7.18.0 e 7.18.3.</td></tr>
                     <tr><td><b>v7.19.0</b></td><td>14/08/2026</td><td><b>Importação de balancetes reformulada.</b> (1) <b>Vários arquivos de uma vez</b>: o seletor aceita múltiplos balancetes (um por mês, por exemplo) e consolida tudo numa revisão única, arquivo a arquivo, com os destinos editáveis por conta — importar os 12 meses do ano virou uma operação só. Arquivos com mais de uma empresa continuam pedindo a escolha, agora considerando o conjunto. (2) <b>Nova opção "Lançar no mês de cada balancete"</b>: o período vem do cabeçalho do próprio arquivo ("Período: 01/01/2025 a 31/01/2025") e o lançamento cai direto no mês correspondente, sem rateio — é o padrão quando todos os balancetes são mensais. As opções de distribuir pelo período e lançar no último mês continuam disponíveis, agora aplicadas por balancete. (3) <b>Prévia antes de aplicar</b>: o botão "🔎 Prévia da aplicação" mostra a tabela destino × mês com o <b>valor exato que ficará gravado</b> em cada campo, o total por destino e a lista dos valores já existentes que serão substituídos (de → para). A prévia e a aplicação são calculadas pela <b>mesma matriz</b> — o que a prévia mostra é o que é gravado, por construção. A substituição segura da v7.18.3 (zerar os meses cobertos, perguntar antes de sobrescrever) vale para o conjunto todo.</td></tr>
                     <tr><td><b>v7.18.3</b></td><td>14/08/2026</td><td><b>Correções de importação e do crédito de PIS/COFINS no Lucro Real.</b> (1) <b>Fim da duplicação ao reimportar</b>: o balancete passou a <b>substituir</b> os meses que cobre em cada destino (Folha, Compras, Despesas), em vez de somar ao que já estava gravado — importar o mesmo arquivo duas vezes dobrava os valores (caso identificado nas Compras da análise, em que o valor da aba era a soma do resíduo anterior com as compras do balancete). Quando os meses cobertos já têm valores, o app pergunta antes de sobrescrever, e o mesmo tratamento foi dado ao lançamento de receitas por XML: reimportar o mesmo lote de notas não duplica mais a grade. Os importadores de PGDAS, Faturamento, Demonstrativo e Fornecedores já substituíam corretamente e foram conferidos um a um. (2) <b>Lei nº 14.592/2023 no Lucro Real</b>: o ICMS incidente sobre a aquisição deixou de compor o crédito de PIS/COFINS — as compras para revenda passam a reduzir a base <b>líquidas do ICMS</b> (estimado pelo % de ICMS de compras da configuração). A base de PIS/COFINS do Real sobe na medida do ICMS das compras, e o IRPJ/CSLL cai em consequência (PIS/COFINS maiores deduzem o lucro). A conferência de cálculos ganhou linha própria mostrando a parcela excluída, com a base legal. Gabaritos da suíte recalibrados com as diferenças documentadas.</td></tr>
@@ -850,7 +863,7 @@ function go(page) {
   if (page==='reforma') { empCarregar().then(()=>{ const sel=$id('rf-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; sel.value=at||''; if (EMP_GLOBAL.cnpj) empGlobalAplicar('rf-empresa','rf-ano');
     if (sel.value && (!RF || RF.cnpj!==sel.value || +RF.ano!==+$id('rf-ano').value)) { rfTrocar(); }
     else if(!RF){ RF=rfNovo('', +$id('rf-ano').value); rfRenderBenef(); rfCalcular(); } }); }
-  if (page==='usuarios') usCarregar();
+  if (page==='usuarios'){ usCarregar(); const q=$id('us-sn-quem'); if (q) q.textContent = APP.user?.email || '—'; }
   empCarregar().then(()=>gSincronizar(page)).catch(()=>gSincronizar(page));
 }
 
@@ -2135,7 +2148,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const com  = R.a1_semst[m]+R.a1_red[m]+R.a1_mono[m]+R.a1_comst[m]+R.a1_comst_mono[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m]+R.a2_comst[m]+R.a2_comst_mono[m]+R.comtransp[m];
     const custos = C.baixaSemst[m]+C.baixaMono[m]+C.baixaComst[m]+C.baixaComstMono[m];
     const despTotal = D.adm[m]+D.vendas[m]+D.fiscais[m]+D.financeiras[m]+D.outras[m]+D.credLR[m];
-    const iss = serv*cfg.iss;
+    // v7.23.0: nas receitas com retenção (a3_retiss / a3_retissinss) o ISS é retido pelo tomador
+    // também no Presumido/Real — sai da guia própria, mantendo a comparação entre regimes simétrica.
+    const issRetLPLR = (R.a3_retiss[m]+R.a3_retissinss[m])*cfg.iss;
+    const iss = (serv - R.a3_retiss[m] - R.a3_retissinss[m])*cfg.iss;
 
     // ── LUCRO PRESUMIDO ──
     // v7.1 (A3): revenda monofásica tem alíquota zero de PIS/COFINS também no cumulativo —
@@ -2176,10 +2192,12 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
 
     out.meses.push({ m, rbt12, rbt12Exp, recInt, recExp, dasExp, faixaExp: fxE+1, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasAx, trv190, dasTrib: dt, recCom, recServ,
       fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal, icmsDestacadoPC, icmsComprasPC,
+      // v7.23.0: ISS retido deixa de ser RECOMPOSTO no total (recolhido na fonte pelo tomador,
+      // LC 123, art. 21, §4º — não é desembolso em guia da empresa); campo mantido como informativo.
       simples: { das, fgts, sublimite: subIcms+subIss, issRetido, cppRetida,
         // v7.1 (A1): CPP do Anexo IV é devida FORA do DAS — proxy pela participação da receita a4 no mês
         inssPatrForaDAS: (receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0,
-        total: das + subIcms + subIss + issRetido + cppRetida + ((receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0) },   // v7.18.0: sem FGTS
+        total: das + subIcms + subIss + cppRetida + ((receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0) },   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
             baseAdic: base32+base8, basePC:_baseLPliq, basePCbruta:basePisCofLP },
       lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
@@ -2564,13 +2582,13 @@ function anExplicarSimples(){
   const som = f => M.reduce((s,x)=>s+(+f(x)||0),0);
   const das = som(x=>x.simples.das), sub = som(x=>x.simples.sublimite);
   const iss = som(x=>x.simples.issRetido), cpp = som(x=>x.simples.cppRetida), a4 = som(x=>x.simples.inssPatrForaDAS);
-  const tot = das+sub+iss+cpp+a4;
+  const tot = das+sub+cpp+a4;                              // v7.23.0: ISS retido fora do total
   const li = (rot,v) => v ? `\n  ${rot.padEnd(38,'.')} ${fmtR(v)}` : '';
   alert('Composição do custo do Simples Nacional no ano\n'
     + '(FGTS não considerado — idêntico em todos os regimes)\n'
     + li('DAS (guia)', das)
     + li('Trava do sublimite (ICMS/ISS 5ª faixa)', sub)
-    + li('ISS retido (recomposto)', iss)
+    + (iss ? `\n  ${'(ISS retido pelo tomador — informativo)'.padEnd(38,'.')} ${fmtR(iss)}  [fora do total]` : '')
     + li('INSS retido (recomposto)', cpp)
     + li('CPP do Anexo IV, fora do DAS', a4)
     + `\n  ${''.padEnd(38,'=')} \n  ${'TOTAL do regime'.padEnd(38,'.')} ${fmtR(tot)}`
@@ -2760,7 +2778,7 @@ function anRecalcular() {
   try {
     const C = calcCenariosReforma(r, AN.reforma);
     const R33 = C.REF[C.REF.length-1];
-    const dentro33 = T.simples + (R33.p190 ? R33.p190.trava - (T.sublimite||0) : 0);   // v7.17.0: trava recomposta (Res. 190)
+    const dentro33 = cenDentro(T, R33);   // v7.23.0: fórmula única (veredito = parecer = conferência)
     const mn33 = Math.min(dentro33, R33.hib, R33.regular);
     const st = (rot,v,sub,on) => `<div class="stat ${on?'melhor':''}"><div class="n" style="font-size:17px">${fmtR(v)}</div><div class="l">${rot}</div><div class="sub">${sub}</div></div>`;
     refHtml = `<div style="margin-top:14px;border-top:1px solid var(--borda,#e5e7eb);padding-top:12px"><b style="font-size:13px">Reforma Tributária — ano pleno (2033)</b>
@@ -3083,6 +3101,32 @@ async function usEditar(email) {
     toast('Usuário atualizado.'); usCarregar(); }
   catch(e){ toast('Erro: '+e.message); }
 }
+// v7.23.0: troca da PRÓPRIA senha pelo app — revalida a senha atual e grava via PUT /auth/v1/user
+async function usAlterarMinhaSenha(){
+  const email = APP.user?.email;
+  if (!email){ toast('Sessão sem e-mail identificado — entre novamente.'); return; }
+  const atual = $id('us-sn-atual').value, nova = $id('us-sn-nova').value, conf = $id('us-sn-conf').value;
+  if (!atual){ toast('Informe a senha atual.'); return; }
+  if (nova.length < 8){ toast('A nova senha precisa de pelo menos 8 caracteres.'); return; }
+  if (nova !== conf){ toast('A confirmação não confere com a nova senha.'); return; }
+  if (nova === atual){ toast('A nova senha precisa ser diferente da atual.'); return; }
+  try {
+    // 1) revalida a senha atual (não confia só na sessão aberta)
+    const rv = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, { method:'POST',
+      headers:{ 'apikey':SUPA_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ email, password: atual }) });
+    if (!rv.ok){ toast('Senha atual incorreta.'); return; }
+    const sess = await rv.json();
+    // 2) grava a nova senha com o token recém-validado
+    const up = await fetch(`${SUPA_URL}/auth/v1/user`, { method:'PUT',
+      headers:{ 'apikey':SUPA_KEY, 'Content-Type':'application/json', 'Authorization':'Bearer '+sess.access_token },
+      body: JSON.stringify({ password: nova }) });
+    if (!up.ok){ const d = await up.json().catch(()=>({})); throw new Error(d.error_description||d.msg||('HTTP '+up.status)); }
+    // 3) adota a sessão nova (o token da revalidação segue válido) e limpa os campos
+    if (sess.access_token) sessaoGuardar(sess);            // adota a sessão revalidada (v7.17.1)
+    ['us-sn-atual','us-sn-nova','us-sn-conf'].forEach(i=>$id(i).value='');
+    toast('Senha alterada com sucesso — já vale no próximo login em qualquer dispositivo.');
+  } catch(e){ toast('Erro ao alterar a senha: '+e.message); }
+}
 async function usSenha(email) {
   if (!confirm(`Enviar e-mail de redefinição de senha para ${email}?`)) return;
   try {
@@ -3225,6 +3269,10 @@ function rfLinhaBase(rf, a) {
     is: anoTeste ? 0 : (rf.baseIS||0)*(q.is/100) };
 }
 
+// v7.23.0 · fórmula ÚNICA do cenário "por dentro" (Simples permanece 100% no DAS):
+// total do Simples do ano-base com a trava do sublimite RECOMPOSTA pela vigência (Res. 190).
+// Usada pelo veredito da análise, pelo parecer e pela conferência — uma fonte, sem divergência.
+function cenDentro(T, L){ return (T.simples||0) + (L && L.p190 ? L.p190.trava - (T.sublimite||0) : 0); }
 // Cenários da Reforma p/ empresa do Simples: por dentro × híbrido (LC 214) × fora do Simples.
 // Mescla os dados salvos com os padrões ano a ano (análises antigas podem não ter todos os campos).
 function calcCenariosReforma(res, reforma) {
@@ -3289,7 +3337,7 @@ function calcCenariosReforma(res, reforma) {
     // ≤2026 permanece a regra atual (tudo dentro).
     const dasHib = P ? (P.dasMaisTrava - P.cbs - P.ibs)
                      : dasResto + (T.dasPisCof||0)*rPC + (T.dasIcmsIss||0)*rII;
-    const hib = dasHib + (T.issRetido||0)*rII + (T.cppRetida||0) + (T.cppForaDAS||0) + L.liquido + L.is;   // v7.18.0: sem FGTS
+    const hib = dasHib + (T.cppRetida||0) + (T.cppForaDAS||0) + L.liquido + L.is;   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
     const regLP = lpResto + (lpIcms+lpIss)*rII + (lpPis+lpCof)*rPC + (a<=2026?lpIpi:0) + L.liquido + L.is;
     const regLR = lrResto + (lrIcms+lrIss)*rII + (lrPis+lrCof)*rPC + (a<=2026?lrIpi:0) + L.liquido + L.is;
     const regular = Math.min(regLP, regLR);
@@ -4509,91 +4557,110 @@ async function consultaIndividual() {
   <div class="hint" style="margin-top:8px">Fonte: ${fonte} (dados abertos da RFB, defasagem de até ~1 mês). Para comprovação com fé pública, use os links oficiais acima.</div>`;
 }
 
-// ═══ v7.20.0: RELATÓRIO IMPRIMÍVEL DA CONSULTA DE CNPJ (empresa selecionada) ═══
+// ═══ v7.22.0: MONTADOR DE DOCUMENTO NO LAYOUT DO PARECER (timbrado + paginação automática) ═══
+// A página do parecer tem altura FIXA (v7.18.2); tabelas variáveis são quebradas em quantas
+// páginas timbradas forem necessárias, repetindo o cabeçalho da tabela. Custos em "unidades"
+// (~7mm): capacidade útil de 26 por página (miolo de 196mm).
+const PP_CAP = 26;
+function ppDocumento(blocos){
+  const pags = []; let cur = '', usado = 0;
+  const fecha = () => { if (cur){ pags.push(cur); cur=''; usado=0; } };
+  for (const b of blocos){
+    if (b.linhas){                                   // grupo com tabela quebrável
+      const custoCab = (b.custoFixo||0) + 1;
+      if (usado>0 && usado + custoCab + 3 > PP_CAP) fecha();
+      cur += b.htmlFixo||''; usado += b.custoFixo||0;
+      let aberta = false;
+      const abrir = () => { cur += `<table class="pp-tab"${b.estilo?` style="${b.estilo}"`:''}><thead>${b.thead}</thead><tbody>`; usado += 1; aberta = true; };
+      const fecharTb = () => { if (aberta){ cur += '</tbody></table>'; aberta = false; } };
+      abrir();
+      for (const L of b.linhas){
+        const c = L.custo||1;
+        if (usado + c > PP_CAP){ fecharTb(); fecha(); abrir(); }
+        cur += L.html; usado += c;
+      }
+      fecharTb();
+    } else {
+      const c = b.custo||2;
+      if (usado>0 && usado + c > PP_CAP) fecha();
+      cur += b.html; usado += c;
+    }
+  }
+  fecha();
+  return pags.map(p=>`<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">${p}</div></div>`).join('');
+}
+const ppDocCab = (titulo, empNome, cnpj, extra) => ({ html: `<h3 class="pp-sec" style="margin-top:0">${titulo}</h3>
+  <div class="hint" style="margin-bottom:10px"><b>${esc(empNome||'')}</b> · CNPJ ${fmtCNPJ(cnpj)}${extra?' · '+extra:''} · ${new Date().toLocaleDateString('pt-BR')} · Artecon Artes Contábeis</div>`, custo: 5 });
+
+// ═══ v7.20.0/v7.22.0: RESUMO ESTATÍSTICO DE FORNECEDORES (com o cadastro do CNPJ) — layout do parecer ═══
 async function rlCnpjRender(cnpj){
   const box = $id('rl-corpo');
-  box.innerHTML = '<div class="card"><div class="hint">Consultando dados abertos da RFB…</div></div>';
+  box.innerHTML = '<div class="card"><div class="hint">Consultando dados abertos da RFB e as análises de fornecedores…</div></div>';
   let d = null, fonte = '';
   try { const r = await fetch(`https://minhareceita.org/${cnpj}`); if (r.ok) { d = await r.json(); fonte = 'minhareceita.org'; } } catch {}
   if (!d) { try { const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
     if (r.ok) { d = await r.json(); fonte = 'BrasilAPI'; } } catch {} }
-  if (!d) { box.innerHTML = '<div class="card"><div class="hint" style="color:var(--danger)">Falha de comunicação com as fontes de dados abertos — tente novamente.</div></div>'; return; }
-  const li = (r,v) => (v!=null && v!=='' && v!=='undefined') ? `<tr><td class="rot" style="white-space:nowrap">${r}</td><td>${v}</td></tr>` : '';
-  const dtBR = v => { if(!v) return ''; const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})/); return m?`${m[3]}/${m[2]}/${m[1]}`:String(v); };
-  const sec = d.cnaes_secundarios||[];
-  let h = `<div class="card"><h3 style="margin-top:0">1. Identificação</h3><table class="gtable"><tbody>
-    ${li('Razão social', `<b>${esc(d.razao_social)||''}</b>`)}
-    ${li('Nome fantasia', esc(d.nome_fantasia))}
-    ${li('CNPJ', fmtCNPJ(cnpj) + (d.identificador_matriz_filial===1||d.descricao_identificador_matriz_filial==='MATRIZ'?' · Matriz':d.identificador_matriz_filial===2?' · Filial':''))}
-    ${li('Situação cadastral', `${d.descricao_situacao_cadastral||''}${d.data_situacao_cadastral?' desde '+dtBR(d.data_situacao_cadastral):''}${d.descricao_motivo_situacao_cadastral&&d.descricao_situacao_cadastral!=='ATIVA'?' · '+esc(d.descricao_motivo_situacao_cadastral):''}`)}
-    ${li('Início de atividade', dtBR(d.data_inicio_atividade))}
-    ${li('Natureza jurídica', esc(d.natureza_juridica||d.descricao_natureza_juridica))}
-    ${li('Porte', esc(d.porte))}
-    ${li('Capital social', d.capital_social!=null ? fmtR(+d.capital_social) : null)}
-    ${li('Ente federativo responsável', esc(d.ente_federativo_responsavel))}
-  </tbody></table></div>
-  <div class="card"><h3 style="margin-top:0">2. Endereço e contato</h3><table class="gtable"><tbody>
-    ${li('Endereço', esc([d.descricao_tipo_de_logradouro,d.logradouro,d.numero,d.complemento].filter(Boolean).join(' ')))}
-    ${li('Bairro', esc(d.bairro))}
-    ${li('Município / UF', (d.municipio||'')+(d.uf?'/'+d.uf:''))}
-    ${li('CEP', d.cep)}
-    ${li('Telefone', [d.ddd_telefone_1,d.ddd_telefone_2].filter(Boolean).join(' · '))}
-    ${li('E-mail', esc(d.email))}
-  </tbody></table></div>
-  <div class="card"><h3 style="margin-top:0">3. Regime tributário</h3><table class="gtable"><tbody>
-    ${li('Simples Nacional', d.opcao_pelo_simples===true ? ('<span class="badge ok">Optante</span>'+(d.data_opcao_pelo_simples?' desde '+dtBR(d.data_opcao_pelo_simples):'')) : d.opcao_pelo_simples===false ? ('Não optante'+(d.data_exclusao_do_simples?' · excluído em '+dtBR(d.data_exclusao_do_simples):'')) : '—')}
-    ${li('SIMEI (MEI)', d.opcao_pelo_mei===true?'<span class="badge ok">Optante</span>':d.opcao_pelo_mei===false?'Não optante':'—')}
-  </tbody></table>
-  <div class="hint" style="margin-top:6px">Opção pelo Simples conforme a carga mensal de dados abertos da RFB — para decisões formais, confirme no portal do Simples Nacional.</div></div>
-  <div class="card"><h3 style="margin-top:0">4. Atividades econômicas (CNAE)</h3>
-    <table class="gtable"><thead><tr><th style="width:110px">Código</th><th>Descrição</th><th style="width:80px"></th></tr></thead><tbody>
-    <tr style="font-weight:600"><td>${d.cnae_fiscal||''}</td><td>${esc(d.cnae_fiscal_descricao||'')}</td><td><span class="badge info">Principal</span></td></tr>
-    ${sec.map(c=>`<tr><td>${c.codigo||c.cnae||''}</td><td>${esc(c.descricao||'')}</td><td></td></tr>`).join('')}
-    </tbody></table>${sec.length?`<div class="hint" style="margin-top:6px">${sec.length} atividade(s) secundária(s).</div>`:''}</div>`;
-  const qsa = d.qsa||[];
-  if (qsa.length) h += `<div class="card"><h3 style="margin-top:0">5. Quadro societário e administradores</h3>
-    <table class="gtable"><thead><tr><th>Nome</th><th>Qualificação</th><th>Entrada</th><th>Faixa etária</th></tr></thead><tbody>
-    ${qsa.map(sx=>`<tr><td>${esc(sx.nome_socio||sx.nome||'')}</td><td>${esc(sx.qualificacao_socio||sx.qualificacao||'')}</td><td>${dtBR(sx.data_entrada_sociedade)||'—'}</td><td>${esc(sx.faixa_etaria||'')||'—'}</td></tr>`).join('')}
-    </tbody></table></div>`;
-  h += await rlCnpjFornecedores(cnpj, qsa.length?6:5);
-  h += `<div class="card"><div class="hint">Fonte: ${fonte} (dados abertos do CNPJ da Receita Federal, defasagem de até ~1 mês) · consulta gerada em ${new Date().toLocaleString('pt-BR')} · Artecon Artes Contábeis. Para comprovação com fé pública, emita o Comprovante de Inscrição no site da RFB.</div></div>`;
-  box.innerHTML = h;
-}
-// v7.21.0: resumo estatístico de fornecedores COMPLETO no relatório de CNPJ
-async function rlCnpjFornecedores(cnpj, nSec){
   let F = RL.forn;
   if (!F){ try { const fr = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+cnpj, order:'consultado_em.desc', select:'*' } }) || [];
     const f = {}; for (const r of fr){ const t = (r.dados&&r.dados.tipo)||'servico'; if (!f[t]) f[t]=r; }
     if (Object.keys(f).length) F = f;
   } catch(e){} }
-  if (!F || (!F.revenda && !F.servico)) return '';
+  const li = (r,v) => (v!=null && v!=='' && v!=='undefined') ? {html:`<tr><td class="rot" style="white-space:nowrap">${r}</td><td colspan="4">${v}</td></tr>`, custo:1} : null;
+  const dtBR = v => { if(!v) return ''; const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})/); return m?`${m[3]}/${m[2]}/${m[1]}`:String(v); };
+  const B = [];
+  B.push(ppDocCab('Resumo Estatístico de Fornecedores', d?d.razao_social:'', cnpj));
+  if (d){
+    B.push({ htmlFixo:`<div class="pp-h2" style="font-weight:700;margin:6px 0">1. Identificação da empresa</div>`, custoFixo:2,
+      thead:'<tr><th style="width:44mm;text-align:left">Campo</th><th colspan="4" style="text-align:left">Informação</th></tr>',
+      linhas:[
+        li('Razão social', `<b>${esc(d.razao_social)||''}</b>${d.nome_fantasia?' · '+esc(d.nome_fantasia):''}`),
+        li('Situação cadastral', `${d.descricao_situacao_cadastral||''}${d.data_situacao_cadastral?' desde '+dtBR(d.data_situacao_cadastral):''}`),
+        li('Início de atividade', dtBR(d.data_inicio_atividade)),
+        li('Natureza jurídica', esc(d.natureza_juridica||d.descricao_natureza_juridica)),
+        li('Porte', esc(d.porte)),
+        li('Capital social', d.capital_social!=null ? fmtR(+d.capital_social) : null),
+        li('CNAE principal', `${d.cnae_fiscal||''} — ${esc(d.cnae_fiscal_descricao||'')}${(d.cnaes_secundarios||[]).length?` <span class="hint">(+${d.cnaes_secundarios.length} secundários)</span>`:''}`),
+        li('Simples Nacional', d.opcao_pelo_simples===true ? ('Optante'+(d.data_opcao_pelo_simples?' desde '+dtBR(d.data_opcao_pelo_simples):'')) : d.opcao_pelo_simples===false ? 'Não optante' : '—'),
+        li('SIMEI (MEI)', d.opcao_pelo_mei===true?'Optante':d.opcao_pelo_mei===false?'Não optante':'—'),
+        li('Endereço', esc([d.descricao_tipo_de_logradouro,d.logradouro,d.numero,d.complemento,d.bairro].filter(Boolean).join(' '))+((d.municipio||d.uf)?' — '+(d.municipio||'')+'/'+(d.uf||''):'')+(d.cep?' · CEP '+d.cep:'')),
+        li('Contato', [d.ddd_telefone_1,d.email&&esc(d.email)].filter(Boolean).join(' · ')),
+      ].filter(Boolean) });
+    const qsa = d.qsa||[];
+    if (qsa.length) B.push({ htmlFixo:`<div class="pp-h2" style="font-weight:700;margin:10px 0 6px">2. Quadro societário e administradores</div>`, custoFixo:2,
+      thead:'<tr><th style="text-align:left">Nome</th><th style="text-align:left">Qualificação</th><th>Entrada</th><th>Faixa etária</th></tr>',
+      linhas: qsa.map(sx=>({html:`<tr><td style="text-align:left">${esc(sx.nome_socio||sx.nome||'')}</td><td style="text-align:left">${esc(sx.qualificacao_socio||sx.qualificacao||'')}</td><td>${dtBR(sx.data_entrada_sociedade)||'—'}</td><td>${esc(sx.faixa_etaria||'')||'—'}</td></tr>`, custo:1})) });
+  } else {
+    B.push({ html:'<div class="hint">Cadastro do CNPJ indisponível no momento (falha nas fontes de dados abertos) — o resumo de fornecedores segue abaixo.</div>', custo:3 });
+  }
   const ROT = { mei:['MEI','#1e8449'], simples:['Simples Nacional','#1a5276'], normal:['Regime normal','#b9770e'], nid:['Não identificado','#7f8c8d'], pf:['Pessoa física','#7f8c8d'] };
-  const bloco = (r, titulo) => {
-    if (!r || !r.dados) return '';
+  let nSec = (d && (d.qsa||[]).length) ? 3 : (d ? 2 : 1);
+  const tipoBloco = (r, titulo) => {
+    if (!r || !r.dados) return;
     const itens = r.dados.itens||[];
     const tot = itens.reduce((a,i)=>a+(+i.valor||0),0) || 1;
     const porC = {}; for (const i of itens){ const c=i.classe||'nid'; porC[c]=porC[c]||{n:0,v:0}; porC[c].n++; porC[c].v+=(+i.valor||0); }
     const ordem = ['normal','simples','mei','nid','pf'].filter(c=>porC[c]);
     const barra = ordem.map(c=>`<div style="height:10px;width:${(porC[c].v/tot*100).toFixed(1)}%;background:${ROT[c][1]}"></div>`).join('');
-    const leg = ordem.map(c=>`<span style="font-size:11px;margin-right:12px"><span style="display:inline-block;width:9px;height:9px;background:${ROT[c][1]};border-radius:2px"></span> ${ROT[c][0]}: ${porC[c].n} forn. · ${fmtR(porC[c].v)} (${(porC[c].v/tot*100).toFixed(1).replace('.',',')}%)</span>`).join('');
+    const leg = ordem.map(c=>`<span style="font-size:8.5pt;margin-right:10px"><span style="display:inline-block;width:8px;height:8px;background:${ROT[c][1]};border-radius:2px"></span> ${ROT[c][0]}: ${porC[c].n} forn. · ${fmtR(porC[c].v)} (${(porC[c].v/tot*100).toFixed(1).replace('.',',')}%)</span>`).join('');
     const pctCred = ((porC.normal?porC.normal.v:0)/tot*100).toFixed(1).replace('.',',');
-    const linhas = [...itens].sort((a,b)=>(+b.valor||0)-(+a.valor||0)).map(i=>{const rr=ROT[i.classe||'nid']||ROT.nid;
-      return `<tr><td style="white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td>${esc(i.razao)}</td><td>${rr[0]}</td><td class="num">${fmt(i.valor)}</td><td class="num">${(i.valor/tot*100).toFixed(1).replace('.',',')}%</td></tr>`;}).join('');
-    return `<div style="margin-bottom:14px"><b>${titulo}</b> <span class="hint">consulta de ${new Date(r.consultado_em).toLocaleDateString('pt-BR')}${r.dados.periodo?' · período '+esc(r.dados.periodo):''}</span>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0">
-        <div class="stat"><div class="n" style="font-size:17px">${itens.length}</div><div class="l">fornecedores</div></div>
-        <div class="stat"><div class="n" style="font-size:17px">${fmtR(tot)}</div><div class="l">valor no período</div></div>
-        <div class="stat"><div class="n" style="font-size:17px">${pctCred}%</div><div class="l">em regime normal (crédito pleno esperado de IBS/CBS)</div></div>
+    const fixo = `<div class="pp-h2" style="font-weight:700;margin:10px 0 6px">${nSec++}. ${titulo}</div>
+      <div class="hint" style="margin-bottom:6px">Consulta de ${new Date(r.consultado_em).toLocaleDateString('pt-BR')}${r.dados.periodo?' · período '+esc(r.dados.periodo):''} — enquadramento pelos dados abertos da RFB.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0">
+        <div class="pp-card" style="flex:1;min-width:80px"><div class="t">Fornecedores</div><div class="v">${itens.length}</div></div>
+        <div class="pp-card" style="flex:2;min-width:140px"><div class="t">Valor no período</div><div class="v">${fmtR(tot)}</div></div>
+        <div class="pp-card" style="flex:2;min-width:170px"><div class="t">Regime normal — crédito pleno esperado</div><div class="v">${pctCred}%</div></div>
       </div>
-      <div style="display:flex;border-radius:4px;overflow:hidden;margin:4px 0">${barra}</div><div style="margin-bottom:6px">${leg}</div>
-      <table class="gtable"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th class="num">Valor (R$)</th><th class="num">% do total</th></tr></thead>
-      <tbody>${linhas}</tbody></table></div>`;
+      <div style="display:flex;border-radius:4px;overflow:hidden;margin:4px 0">${barra}</div><div style="margin-bottom:4px">${leg}</div>`;
+    B.push({ htmlFixo: fixo, custoFixo: 9, estilo:'font-size:8.5pt',
+      thead:'<tr><th style="text-align:left">CNPJ</th><th style="text-align:left">Fornecedor</th><th style="text-align:left">Enquadramento</th><th>Valor (R$)</th><th>% do total</th></tr>',
+      linhas: [...itens].sort((a,b)=>(+b.valor||0)-(+a.valor||0)).map(i=>{const rr=ROT[i.classe||'nid']||ROT.nid;
+        return {html:`<tr><td style="text-align:left;white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td style="text-align:left">${esc(i.razao)}</td><td style="text-align:left">${rr[0]}</td><td>${fmt(i.valor)}</td><td>${(i.valor/tot*100).toFixed(1).replace('.',',')}%</td></tr>`, custo:1};}) });
   };
-  const corpo = bloco(F.revenda,'Fornecedores de revenda (entradas de mercadorias)') + bloco(F.servico,'Fornecedores de serviços e despesas');
-  if (!corpo) return '';
-  return `<div class="card"><h3 style="margin-top:0">${nSec}. Resumo estatístico de fornecedores</h3>
-    <div class="hint" style="margin-bottom:8px">Relação COMPLETA dos fornecedores analisados pelo escritório, com o enquadramento tributário consultado nos dados abertos da RFB. No IVA dual, o crédito de IBS/CBS depende do regime do fornecedor: regime normal gera crédito pleno destacado; Simples Nacional, crédito limitado ao percentual da faixa do fornecedor (LC 214/2025; Res. CGSN 190/2026, art. 58); MEI e pessoas físicas, em regra, não geram crédito.</div>
-    ${corpo}</div>`;
+  if (F){ tipoBloco(F.revenda,'Fornecedores de revenda (entradas de mercadorias)'); tipoBloco(F.servico,'Fornecedores de serviços e despesas'); }
+  else B.push({ html:'<div class="hint" style="margin-top:8px">Nenhuma análise de fornecedores salva para esta empresa — importe o relatório de fornecedores na Consulta CNPJ (🚚) e grave a consulta.</div>', custo:3 });
+  B.push({ html:`<div class="hint" style="margin-top:8px">No IVA dual, o crédito de IBS/CBS do adquirente depende do regime do fornecedor: regime normal gera crédito pleno destacado no documento fiscal; Simples Nacional, crédito limitado ao percentual da faixa do fornecedor (LC 214/2025; Res. CGSN 190/2026, art. 58); MEI e pessoas físicas, em regra, não geram crédito.</div>
+    <div class="hint" style="margin-top:6px">Fontes: ${fonte||'dados abertos da RFB indisponíveis'}; análises de fornecedores do escritório (com data indicada por consulta). Documento gerado em ${new Date().toLocaleString('pt-BR')} · Artecon Artes Contábeis.</div>`, custo:5 });
+  box.innerHTML = ppDocumento(B);
 }
 
 // ═══════════ v6: RELATÓRIO CONSOLIDADO ANALÍTICO ═══════════
@@ -4639,11 +4706,11 @@ function rlConsolidado(rot, n) {
     ${lin3('INSS patronal / CPP', DT?DT.cpp + (RL.res.totais.cppRetida||0) + (RL.res.totais.cppForaDAS||0):null, sLP('inssPatr'), sLR('inssPatr'))}
     ${lin3('ICMS', DT?DT.icms:null, sLP('icms'), sLR('icms'))}
     ${lin3('IPI', DT?DT.ipi:null, sLP('ipi'), sLR('ipi'))}
-    ${lin3('ISS (inclui ISS retido)', DT?DT.iss + (RL.res.totais.issRetido||0):null, sLP('iss'), sLR('iss'))}
+    ${lin3('ISS', DT?DT.iss:null, sLP('iss'), sLR('iss'))}
     <tr style="font-weight:700"><td class="rot">TOTAL ANUAL</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr>
     <tr><td class="rot">% da receita bruta</td><td class="num">${T.receita?(T.simples/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${T.receita?(T.lp/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${T.receita?(T.lr/T.receita*100).toFixed(2)+'%':'—'}</td></tr>
     </tbody></table>
-    <div class="hint" style="margin-top:6px">Coluna do Simples: tributos embutidos no DAS pela repartição da LC 123 (Anexos I–V, por faixa). PIS×COFINS e ICMS×ISS distribuídos na proporção da repartição cheia em meses com ST, monofásico ou retenções. Na coluna do Simples, ISS e CPP incluem também as parcelas retidas na fonte e a CPP do Anexo IV devida fora do DAS (v7.1) — por isso os totais por tributo podem superar o DAS. <b>ISS retido</b>: recolhido na fonte pelo tomador e recomposto no total do Simples para comparação entre regimes (LC 123, art. 21, § 4º). Lucro Presumido e Lucro Real <b>incluem o INSS patronal</b> sobre a folha (salários × (20% + RAT/FAP + terceiros) e pró-labore × 20%). <b>FGTS não considerado</b> em nenhum regime — encargo idêntico em todos e não alterado pela Reforma Tributária (v7.18.0).</div></div>`;
+    <div class="hint" style="margin-top:6px">Coluna do Simples: tributos embutidos no DAS pela repartição da LC 123 (Anexos I–V, por faixa). PIS×COFINS e ICMS×ISS distribuídos na proporção da repartição cheia em meses com ST, monofásico ou retenções. Na coluna do Simples, ISS e CPP incluem também as parcelas retidas na fonte e a CPP do Anexo IV devida fora do DAS (v7.1) — por isso os totais por tributo podem superar o DAS. <b>ISS retido</b> (LC 123, art. 21, § 4º): recolhido na fonte pelo tomador, <b>não compõe</b> os totais de nenhum regime desde a v7.23.0 — no Presumido e no Real, o ISS próprio também exclui as receitas com retenção. Lucro Presumido e Lucro Real <b>incluem o INSS patronal</b> sobre a folha (salários × (20% + RAT/FAP + terceiros) e pró-labore × 20%). <b>FGTS não considerado</b> em nenhum regime — encargo idêntico em todos e não alterado pela Reforma Tributária (v7.18.0).</div></div>`;
 
   // ── 2b. DAS POR TRIBUTO, POR PERÍODO (v7.18.1) ──
   const gDT = k => agrupar(M.map(x=>x.dasTrib?(+x.dasTrib[k]||0):0), n);
@@ -4652,7 +4719,7 @@ function rlConsolidado(rot, n) {
     ${TRIBS.map(([nm,k])=>linha('· '+nm, gDT(k))).join('')}
     ${linha('DAS (guia)', g(x=>x.das), true)}
     ${T.sublimite>0.005?linha('ICMS/ISS da trava do sublimite (5ª faixa)', g(x=>(x.subIcms||0)+(x.subIss||0))):''}
-    ${T.issRetido>0.005?linha('ISS retido (LC 123, art. 21, § 4º)', g(x=>x.simples.issRetido||0)):''}
+    ${T.issRetido>0.005?linha('(info) ISS retido pelo tomador — fora do total (LC 123, art. 21, § 4º)', g(x=>x.simples.issRetido||0)):''}
     ${T.cppRetida>0.005?linha('CPP retida na fonte', g(x=>x.simples.cppRetida||0)):''}
     ${T.cppForaDAS>0.005?linha('CPP fora do DAS — Anexo IV', g(x=>x.simples.inssPatrForaDAS||0)):''}
     ${linha('Total do Simples', g(x=>x.simples.total), true)}
@@ -4835,7 +4902,8 @@ function parecerDados(){
   if (acima && cadSimples) alertas.push('Cadastro indica Simples Nacional, mas o RBT12 apurado supera o teto de R$ 4,8 mi — a empresa está sujeita à exclusão do regime; o parecer trata o cenário do regime regular.');
   if (!acima && rbtMax > 4320000) alertas.push('RBT12 em '+fmtR(rbtMax)+' — acima de 90% do teto do Simples (R$ 4,8 mi): monitorar o risco de exclusão.');
   if (optante && rbtMax > 3600000) alertas.push('RBT12 acima do sublimite de R$ 3,6 mi: ICMS/ISS devidos fora da repartição (trava da 5ª faixa) — já considerado no cálculo.');
-  if ((AN?.receitas?.a5r||RL.dados?.receitas?.a5r||[]).some(v=>+v>0) && frMed>0.25 && frMed<0.31)
+  // v7.23.0: só a análise DO RELATÓRIO (RL.dados) — AN pode ser outra empresa aberta na aba Análise
+  if ((RL.dados?.receitas?.a5r||[]).some(v=>+v>0) && frMed>0.25 && frMed<0.31)
     alertas.push('Fator R médio de '+(frMed*100).toFixed(1)+'% — no limiar de 28% que decide entre Anexos III e V: pequenas variações de folha mudam a alíquota.');
   if ((RL.dados?.receitas?.a4||[]).some(v=>+v>0)) alertas.push('Receitas do Anexo IV: o CPP é recolhido fora do DAS — conferir o INSS patronal informado na Folha.');
   // v7.18.0: janela efetivamente lançada (texto do enquadramento e dos pontos de atenção)
@@ -4847,7 +4915,7 @@ function parecerDados(){
   const janelaMeses = _lanc.length ? (_lanc[_lanc.length-1]-_lanc[0]+1) : 0;
   // séries anuais (2027–2033)
   const sAnos = anos.map(l=>l.ano);
-  const sDentro = anos.map(l=> T.simples + (l.p190 ? l.p190.trava - (T.sublimite||0) : 0));   // v7.17.0: trava por vigência (Res. 190)
+  const sDentro = anos.map(l=> cenDentro(T, l));   // v7.23.0: fórmula única (veredito = parecer = conferência)
   const sHib = anos.map(l=>l.hib);
   const sReg = anos.map(l=>l.regular);
   const sLP = anos.map(l=>l.regLP), sLR = anos.map(l=>l.regLR);
@@ -5243,52 +5311,48 @@ function rlCtResumoIA(){
       tratamento: i.min ? i.min.t + (i.min.p ? ` (redução CBS ${i.min.p.CBS||'-'}% · IBS ${i.min.p.IBS||'-'}%)` : '') : '' })),
   };
 }
-async function rlNotasPeriodo(alvoId, cnpjP, anoP){
-  const box = $id(alvoId); if (!box) return;
-  const _ano = anoP != null ? anoP : (RL.dados && RL.dados.ano);
-  box.innerHTML = '<div class="hint">Carregando notas do período (Classificação RTC)…</div>';
+// ═══ v7.22.0: PRODUTOS VENDIDOS × REFORMA (IBS/CBS) — layout do parecer, paginado ═══
+async function rlProdRender(cnpj, ano, empNome){
+  const box = $id('rl-corpo');
+  box.innerHTML = '<div class="card"><div class="hint">Carregando notas do período (Classificação RTC)…</div></div>';
   try {
-    const C = await rlCtBuscar(cnpjP, _ano);
+    const C = await rlCtBuscar(cnpj, ano);
     const br = d => String(d||'').split('-').reverse().join('/');
+    const B = [];
+    B.push(ppDocCab('Produtos Vendidos no Período e Classificação para a Reforma (IBS/CBS)', empNome, cnpj, 'Ano-base '+ano));
     if (!C.periodos.length && !C.decisoes.length){
-      box.innerHTML = `<div class="pp-h2">Produtos vendidos e classificação para a Reforma (IBS/CBS)</div>
-        <div class="hint">Nenhuma nota gravada para ${_ano}. No <a href="classificacao.html" target="_blank">Classificação RTC</a>,
-        importe os XMLs do cliente, ajuste o período e use <b>“Gravar notas do período p/ relatórios”</b> — a relação passa a compor este parecer.</div>`;
-      return;
+      B.push({ html:`<div class="hint">Nenhuma nota gravada para ${ano}. No aplicativo <b>Classificação RTC</b>, importe os XMLs do cliente, ajuste o período e use "Gravar notas do período p/ relatórios" — a relação passa a compor este documento.</div>`, custo:4 });
+      box.innerHTML = ppDocumento(B); return;
     }
-    const linhas = C.lista.map(i => `<tr>
-        <td>${esc(i.xprod)}<div class="hint">${esc(i.cprod)}</div></td>
-        <td>${i.ncm ? i.ncm.replace(/^(\d{4})(\d{2})(\d{2})$/,'$1.$2.$3') : '—'}</td>
-        <td>${esc(i.cfop||'—')}</td>
-        <td class="num">${fmtR(i.valor)}</td>
-        <td class="num">${C.total ? (i.valor/C.total*100).toFixed(1) : '—'}%</td>
-        <td>${i.dec ? `<b>CST ${esc(i.dec.cst)} · ${esc(i.dec.cclasstrib)}</b>${i.min ? '<br>'+esc(i.min.t) + (i.min.p ? ` — <b>redução CBS ${i.min.p.CBS||'-'}% · IBS ${i.min.p.IBS||'-'}%</b>` : '') : ''}${i.dec.cclasstrib_reg ? `<div class="hint">Tributação regular: CST ${esc(i.dec.cst_reg||'')} · ${esc(i.dec.cclasstrib_reg)}</div>` : ''}<div class="hint">${esc(i.dec.confianca||'')}${i.dec.decidido_por ? ' · ' + esc(String(i.dec.decidido_por).split('@')[0]) : ''}</div>` : '<i>pendente de decisão</i>'}</td>
-      </tr>`).join('');
-    const cfopRod = Object.entries(C.cfops).sort((a,b)=>a[0].localeCompare(b[0]))
-      .map(([c,x])=>`${c}: ${fmtR(x.valor)}`).join(' · ');
     const perTx = C.periodos.map(p=>`${br(p.de)} a ${br(p.ate)}`).join('; ');
-    const iaTx = RL._ia && RL._ia.textos && RL._ia.textos.notasPeriodo;
-    box.innerHTML = `<div class="pp-h2">Produtos vendidos no período e classificação para a Reforma (IBS/CBS)</div>
-      ${iaTx ? `<p class="pp-p">${iaTx}</p>` : ''}
-      ${C.periodos.length ? `<p class="pp-p">Com base nas notas fiscais gravadas para o período de <b>${perTx}</b>
+    B.push({ html: C.periodos.length ? `<p class="pp-p">Com base nas notas fiscais gravadas para o período de <b>${perTx}</b>
         (${C.lista.length} produto(s), total de <b>${fmtR(C.total)}</b>), relacionam-se abaixo os produtos vendidos e a
         classificação tributária definida para o grupo IBS/CBS dos documentos fiscais, conforme a LC 214/2025.
-        ${C.comBeneficio ? `Do total, <b>${fmtR(C.comBeneficio)}</b> (${(C.comBeneficio/C.total*100).toFixed(1)}%) referem-se a
+        ${C.comBeneficio ? `Do total, <b>${fmtR(C.comBeneficio)}</b> (${(C.comBeneficio/C.total*100).toFixed(1).replace('.',',')}%) referem-se a
         produtos com tratamento diferenciado (imunidade, redução, suspensão ou diferimento).` : ''}
         ${C.pendentes ? `<b style="color:#b03a2e">${C.pendentes} produto(s) seguem pendentes de decisão.</b>` : ''}</p>` :
-        `<p class="pp-p">Sem notas gravadas para ${_ano} — a relação abaixo traz as classificações já decididas por produto, sem valores de venda.</p>`}
-      <table class="gtable"><thead><tr><th>Produto</th><th>NCM</th><th>CFOP</th><th class="num">Valor</th><th class="num">%</th><th>Classificação IBS/CBS</th></tr></thead>
-      <tbody>${linhas || `<tr><td colspan="6"><i>—</i></td></tr>`}</tbody></table>
-      ${C.periodos.length ? `<div class="hint" style="margin-top:6px">Totais por CFOP: ${cfopRod} · <b>TOTAL ${fmtR(C.total)}</b> —
-        régua de conferência contra o livro de saídas do período.</div>` : ''}
-      <div class="hint">Fonte: Classificação Tributária RTC (Artecon) — notas gravadas ${C.periodos.map(p=>`em ${new Date(p.gravado_em).toLocaleDateString('pt-BR')}${p.gravado_por?' por '+esc(String(p.gravado_por).split('@')[0]):''}`).join('; ') || '—'};
-        decisões de classificação por produto com autor e data registrados. Números calculados pelo sistema — a IA não gera valores.</div>`;
+        `<p class="pp-p">Sem notas gravadas para ${ano} — a relação abaixo traz as classificações já decididas por produto, sem valores de venda.</p>`, custo:6 });
+    B.push({ estilo:'font-size:8.5pt',
+      thead:'<tr><th style="text-align:left">Produto</th><th>NCM</th><th>CFOP</th><th>Valor</th><th>%</th><th style="text-align:left">Classificação IBS/CBS</th></tr>',
+      linhas: C.lista.map(i => ({custo:3, html:`<tr>
+        <td style="text-align:left">${esc(i.xprod)}<div class="hint">${esc(i.cprod)}</div></td>
+        <td>${i.ncm ? i.ncm.replace(/^(\d{4})(\d{2})(\d{2})$/,'$1.$2.$3') : '—'}</td>
+        <td>${esc(i.cfop||'—')}</td>
+        <td>${fmtR(i.valor)}</td>
+        <td>${C.total ? (i.valor/C.total*100).toFixed(1).replace('.',',') : '—'}%</td>
+        <td style="text-align:left">${i.dec ? `<b>CST ${esc(i.dec.cst)} · ${esc(i.dec.cclasstrib)}</b>${i.min ? '<br>'+esc(i.min.t) + (i.min.p ? ` — <b>redução CBS ${i.min.p.CBS||'-'}% · IBS ${i.min.p.IBS||'-'}%</b>` : '') : ''}${i.dec.cclasstrib_reg ? `<div class="hint">Tributação regular: CST ${esc(i.dec.cst_reg||'')} · ${esc(i.dec.cclasstrib_reg)}</div>` : ''}<div class="hint">${esc(i.dec.confianca||'')}${i.dec.decidido_por ? ' · ' + esc(String(i.dec.decidido_por).split('@')[0]) : ''}</div>` : '<i>pendente de decisão</i>'}</td>
+      </tr>`})) });
+    if (C.periodos.length){
+      const cfopRod = Object.entries(C.cfops).sort((a,b)=>a[0].localeCompare(b[0])).map(([c,x])=>`${c}: ${fmtR(x.valor)}`).join(' · ');
+      B.push({ html:`<div class="hint" style="margin-top:6px">Totais por CFOP: ${cfopRod} · <b>TOTAL ${fmtR(C.total)}</b> — régua de conferência contra o livro de saídas do período.</div>`, custo:3 });
+    }
+    B.push({ html:`<div class="hint">Fonte: Classificação Tributária RTC (Artecon) — notas gravadas ${C.periodos.map(p=>`em ${new Date(p.gravado_em).toLocaleDateString('pt-BR')}${p.gravado_por?' por '+esc(String(p.gravado_por).split('@')[0]):''}`).join('; ') || '—'}; decisões de classificação por produto com autor e data registrados. Números calculados pelo sistema. Documento gerado em ${new Date().toLocaleString('pt-BR')} · Artecon Artes Contábeis.</div>`, custo:3 });
+    box.innerHTML = ppDocumento(B);
   } catch(e){
-    console.error('rlNotasPeriodo', e);
-    box.innerHTML = '<div class="hint">Não foi possível carregar as notas do período: ' + esc(e.message||e) + ' — verifique se o setup_ct_v5.sql foi executado.</div>';
+    console.error('rlProdRender', e);
+    box.innerHTML = '<div class="card"><div class="hint">Não foi possível carregar as notas do período: ' + esc(e.message||e) + ' — verifique se o setup_ct_v5.sql foi executado.</div></div>';
   }
 }
-
 // ── chamada à Edge Function gerar-parecer (Supabase) ──
 async function parecerIA(){
   const btn = $id('pp-ia-btn'); if (btn){ btn.disabled = true; btn.textContent = '⏳ Gerando…'; }
@@ -5490,6 +5554,7 @@ function rlConfReforma(){
       return `<tr><td class="rot">${L.ano}${notaTeste}</td>
         <td class="num">${fmtR(L.deb)}</td><td class="num">${fmtR(L.cred)}</td><td class="num">${fmtR(L.liquido)}</td>
         <td class="num">${(+L.is||0)>0.005?fmtR(L.is):'—'}</td>
+        <td class="num">${fmtR(cenDentro(RL.res.totais, L))}</td>
         <td class="num">${fmtR(L.dasHib!=null?L.dasHib:0)}</td><td class="num"><b>${fmtR(L.hib)}</b></td>
         <td class="num">${fmtR(L.regular)} <span class="hint">(${L.regNome||''})</span></td></tr>`;
     }).join('');
@@ -5502,10 +5567,10 @@ function rlConfReforma(){
       : (C.proxyCompras ? '<div class="hint">Créditos estimados pelas compras de revenda da análise (proxy) — preencha a aba Reforma para refinar.</div>' : '');
     return `<div class="card"><h3 style="margin-top:0">Reforma Tributária — conferência ano a ano (2026–2033)</h3>
       <div class="hint">Débito = base tributável (receita − reduções por cClassTrib) × alíquotas de referência do ano (Parâmetros › Reforma, Res. CGIBS nº 14/2026). Crédito = aquisições com direito a crédito × mesmas alíquotas. Híbrido = art. 22-A da Res. CGSN 140/2018 (Res. 190/2026): DAS + trava − parcelas de CBS/IBS da partilha da faixa, mais IBS/CBS apurados por fora.</div>
-      <table class="gtable"><thead><tr><th>Ano</th><th class="num">Débito IBS/CBS</th><th class="num">Crédito</th><th class="num">Líquido</th><th class="num">IS</th><th class="num">DAS ajustado (22-A)</th><th class="num">Cenário híbrido</th><th class="num">Regime regular</th></tr></thead>
+      <table class="gtable"><thead><tr><th>Ano</th><th class="num">Débito IBS/CBS</th><th class="num">Crédito</th><th class="num">Líquido</th><th class="num">IS</th><th class="num">Por dentro</th><th class="num">DAS ajustado (22-A)</th><th class="num">Cenário híbrido</th><th class="num">Regime regular</th></tr></thead>
       <tbody>${linhas}</tbody></table>
       ${travaTx}${credTx}
-      <div class="hint" style="margin-top:6px">Cenário "por dentro" (permanecer 100% no Simples) conferível no quadro tributo a tributo da aba Reforma. Valores em moeda constante do ano-base.</div></div>`;
+      <div class="hint" style="margin-top:6px">A coluna "Por dentro" (permanecer 100% no Simples) usa a mesma fórmula do veredito e do parecer — total do Simples do ano-base com a trava recomposta pela vigência (Res. 190). Valores em moeda constante do ano-base.</div></div>`;
   } catch(e){ console.error('conferência Reforma', e); return ''; }
 }
 function rlConfDivergencias(){
@@ -5559,17 +5624,15 @@ function rlRender() {
     const empP = RL.empresa || EMPRESAS.find(e=>e.cnpj===cnpjSel) || {};
     $id('rl-titulo').textContent = 'Produtos Vendidos no Período e Classificação para a Reforma (IBS/CBS)';
     $id('rl-sub').innerHTML = `<b>${esc(empP.razao_social||'')}</b> · CNPJ ${fmtCNPJ(cnpjSel)} · Ano-base ${anoSel} · Artecon Artes Contábeis`;
-    $id('rl-corpo').innerHTML = `<div class="card"><div id="rl-prod-box"></div>
-      <div class="hint" style="margin-top:8px">Documento gerado em ${new Date().toLocaleString('pt-BR')} · Artecon Artes Contábeis · fonte: aplicativo Classificação Tributária RTC (notas gravadas do período e decisões por produto, com autor e data).</div></div>`;
-    rlNotasPeriodo('rl-prod-box', cnpjSel, anoSel);
+    rlProdRender(cnpjSel, anoSel, empP.razao_social||'');
     return;
   }
   if (tipo==='cnpj'){                                     // v7.20.0: não depende de análise salva
     const cnpjSel = $id('rl-empresa').value;
     $id('rl-cab').style.display = cnpjSel ? 'block' : 'none';
-    if (!cnpjSel){ $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Selecione a empresa</h2><p>O relatório traz o cadastro completo do CNPJ nos dados abertos da RFB.</p></div>'; return; }
+    if (!cnpjSel){ $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Selecione a empresa</h2><p>O relatório traz o cadastro do CNPJ e o resumo estatístico completo de fornecedores, no layout do parecer.</p></div>'; return; }
     const empC = RL.empresa || EMPRESAS.find(e=>e.cnpj===cnpjSel) || {};
-    $id('rl-titulo').textContent = 'Consulta CNPJ — Cadastro Completo';
+    $id('rl-titulo').textContent = 'Resumo Estatístico de Fornecedores';
     $id('rl-sub').innerHTML = `<b>${esc(empC.razao_social||'')}</b> · CNPJ ${fmtCNPJ(cnpjSel)} · Artecon Artes Contábeis`;
     rlCnpjRender(cnpjSel);
     return;
@@ -5606,13 +5669,13 @@ function rlRegimes(rot, n) {
     { nome:'Lucro Presumido', sub:'regime atual · '+RL.dados.ano, v:T.lp, cor:'#b9770e' },
     { nome:'Lucro Real', sub:'regime atual · '+RL.dados.ano, v:T.lr, cor:'#943126' },
     ...(R33 ? [
-    { nome:'Simples "por dentro"', sub:'Reforma · pleno 2033', v:(T.simples + (R33.p190 ? R33.p190.trava - (T.sublimite||0) : 0)), cor:'#2874a6' },
+    { nome:'Simples "por dentro"', sub:'Reforma · pleno 2033', v:cenDentro(T, R33), cor:'#2874a6' },
     { nome:'Simples híbrido', sub:'Reforma · pleno 2033 (LC 214)', v:R33.hib, cor:'#7d3c98' },
     { nome:'Fora do Simples', sub:'Reforma · pleno 2033 ('+R33.regNome+')', v:R33.regular, cor:'#117864' } ] : []),
   ];
   const melhorGeral = Math.min(...CEN.map(c=>c.v));
   const ordGeral = CEN.map(c=>c.v).sort((a,b)=>a-b);
-  const dentro33 = R33 ? (T.simples + (R33.p190 ? R33.p190.trava - (T.sublimite||0) : 0)) : T.simples;   // v7.18.0
+  const dentro33 = R33 ? cenDentro(T, R33) : T.simples;   // v7.23.0: fórmula única
   const ord33 = R33 ? [dentro33,R33.hib,R33.regular].sort((a,b)=>a-b) : null;
   const nome33 = R33 ? (ord33[0]===dentro33?'Simples "por dentro"':ord33[0]===R33.hib?'Simples híbrido':'Fora do Simples') : '';
 
@@ -5677,7 +5740,7 @@ function rlRegimes(rot, n) {
   <div style="overflow-x:auto;margin-top:14px"><table>
     <thead><tr><th>Ano</th><th class="num">Alíq. IBS+CBS</th><th class="num">Simples por dentro</th><th class="num">DAS ajustado (híbrido)</th><th class="num">IBS/CBS por fora</th><th class="num">Total híbrido</th><th class="num">Fora do Simples</th><th>Melhor</th></tr></thead><tbody>`;
   for (const L of REF) {
-    const dentroAno = T.simples + (L.p190 ? L.p190.trava - (T.sublimite||0) : 0);   // v7.18.0: por dentro ano a ano (Res. 190)
+    const dentroAno = cenDentro(T, L);   // v7.23.0: fórmula única (veredito = parecer = comparativo = conferência)
     const mn = Math.min(dentroAno, L.hib, L.regular);
     h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(dentroAno)}</td><td class="num">${fmt(L.dasHib)}</td><td class="num">${fmt(L.liquido+L.is)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${mn===dentroAno?'Por dentro':mn===L.hib?'Híbrido':'Fora ('+L.regNome+')'}</td></tr>`;
   }
