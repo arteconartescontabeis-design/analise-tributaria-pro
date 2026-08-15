@@ -80,7 +80,9 @@ console.log('\n■ Correções da revisão (v7.1)');
   chk('A1 · CPP do Anexo IV no total do Simples (sem FGTS desde a v7.18.0)', Math.abs(M.simples.total-(M.das+M.inssPatr))<0.01); }
 { const a = g.calcular(mk({a3_semret:Array(12).fill(50000)},600000), clone(AD), {...FD});
   const b = g.calcular(mk({a3_retiss:Array(12).fill(50000)},600000), clone(AD), {...FD});
-  chk('A2 · carga igual com e sem retenção de ISS', Math.abs(a.totais.simples-b.totais.simples)<0.5, b.totais.issRetido.toFixed(2)+' recompostos'); }
+  chk('A2 (v7.23.0) · com retenção, o total do Simples é MENOR exatamente pelo ISS retido (não recomposto)',
+    b.totais.issRetido>1 && Math.abs((a.totais.simples-b.totais.simples)-b.totais.issRetido)<0.5,
+    'Δ='+(a.totais.simples-b.totais.simples).toFixed(2)+' · retido='+b.totais.issRetido.toFixed(2)); }
 { const r = g.calcular(mk({a1_mono:Array(12).fill(100000)},1200000), clone(AD), {...FD});
   chk('A3 · LP monofásico: PIS+COFINS = 0', Math.abs(r.meses[0].lp.pis+r.meses[0].lp.cofins)<0.005); }
 { const inp = mk({a1_semst:Array(12).fill(100000)},1200000); inp.compras.semst = Array(12).fill(60000);
@@ -141,8 +143,9 @@ console.log('\n■ v7.18.0 — Tema 69 e FGTS fora dos totais');
 { // ISS retido × sublimite: mesma carga com e sem retenção, sem duplicidade com a trava
   const a = g.calcular(mk({a3_semret:Array(12).fill(350000)},4200000,{folha12Lanc:Array(12).fill(120000)}), clone(AD), {...FD});
   const b = g.calcular(mk({a3_retiss:Array(12).fill(350000)},4200000,{folha12Lanc:Array(12).fill(120000)}), clone(AD), {...FD});
-  chk('ISS retido · sem duplicidade com a trava acima do sublimite', Math.abs(a.totais.simples-b.totais.simples)<1,
-      'Δ='+(a.totais.simples-b.totais.simples).toFixed(2)+' · retido='+b.totais.issRetido.toFixed(2)); }
+  chk('ISS retido (v7.23.0) · acima do sublimite: total menor pelo retido, sem duplicidade com a trava',
+    b.totais.issRetido>1 && Math.abs((a.totais.simples-b.totais.simples)-b.totais.issRetido)<1,
+    'Δ='+(a.totais.simples-b.totais.simples).toFixed(2)+' · retido='+b.totais.issRetido.toFixed(2)); }
 
 // ═══ 5. REGRESSÃO DOS GABARITOS ═══
 console.log('\n■ Regressão contra os gabaritos da planilha v15');
@@ -426,16 +429,82 @@ console.log('\n■ v7.21.0 — relatório de produtos × IBS/CBS e fornecedores 
   } catch(e){ chk('parecer sem produtos', false, e.message); }
   // relatório novo: caminho sem notas gravadas (supabase vazio) renderiza a orientação
   var RES_PROD = (async () => {
-    try { await vm.runInContext('rlNotasPeriodo("rl-prod-box","24197146000137",2025)', ctx); } catch(e){ return 'EXC:'+e.message; }
-    return els['rl-prod-box'] ? els['rl-prod-box'].innerHTML : '';
+    try { await vm.runInContext('rlProdRender("24197146000137",2025,"EMPRESA TESTE")', ctx); } catch(e){ return 'EXC:'+e.message; }
+    return els['rl-corpo'].innerHTML;
   })();
-  // fornecedores completos no relatório de CNPJ: relação integral (os 3 aparecem)
+  // v7.22.0: documento "Resumo Estatístico de Fornecedores" no layout do parecer, com paginação
   var RES_FORNCNPJ = (async () => {
+    await RES_PROD;                                 // serializa (fetch/els compartilhados)
     vm.runInContext(`RL.forn = { revenda: { consultado_em: new Date().toISOString(), dados: { tipo:'revenda', periodo:'2025', stats:{},
       itens: [ {cnpj:'11111111000191', razao:'FORN NORMAL LTDA', classe:'normal', valor:600000},
                {cnpj:'22222222000191', razao:'FORN SIMPLES ME', classe:'simples', valor:300000},
-               {cnpj:'33333333000191', razao:'FORN MEI', classe:'mei', valor:100000} ] } } };`, ctx);
-    try { return await vm.runInContext('rlCnpjFornecedores("24197146000137", 6)', ctx); } catch(e){ return 'EXC:'+e.message; }
+               {cnpj:'33333333000191', razao:'FORN MEI', classe:'mei', valor:100000},
+               ...Array.from({length:57},(_,k)=>({cnpj:'4444444400019'+ (k%10), razao:'FORN '+k, classe:'normal', valor:1000+k})) ] } } };`, ctx);
+    const fetchOrig = ctx.fetch;
+    ctx.fetch = async url => ({ ok:true, json: async () => ({ razao_social:'EMPRESA TESTE LTDA', nome_fantasia:'TESTE',
+      descricao_situacao_cadastral:'ATIVA', data_situacao_cadastral:'2020-01-01', data_inicio_atividade:'2019-05-10',
+      natureza_juridica:'206-2 - Sociedade Empresária Limitada', porte:'ME', capital_social: 10000,
+      opcao_pelo_simples:true, data_opcao_pelo_simples:'2019-05-10', opcao_pelo_mei:false,
+      cnae_fiscal:'6201501', cnae_fiscal_descricao:'Desenvolvimento de programas', cnaes_secundarios:[{codigo:'6202300',descricao:'Dev'}],
+      logradouro:'RUA X', numero:'1', bairro:'CENTRO', municipio:'PALHOCA', uf:'SC', cep:'88130000',
+      qsa:[{nome_socio:'FULANO DE TAL', qualificacao_socio:'Sócio-Administrador', data_entrada_sociedade:'2019-05-10'}] }) });
+    try { await vm.runInContext('rlCnpjRender("24197146000137")', ctx); } catch(e){ ctx.fetch=fetchOrig; return 'EXC:'+e.message; }
+    ctx.fetch = fetchOrig;
+    return els['rl-corpo'].innerHTML;
+  })();
+}
+
+// ═══ 5j. v7.23.0 — ISS retido fora dos totais · consistência parecer×conferência · senha ═══
+console.log('\n■ v7.23.0 — ISS retido fora dos totais e fontes unificadas');
+{ // simetria: ISS do LP/LR também exclui as receitas com retenção
+  const a = g.calcular(mk({a3_semret:Array(12).fill(50000)},600000,{iss:.05}), clone(AD), {...FD});
+  const b = g.calcular(mk({a3_retiss:Array(12).fill(50000)},600000,{iss:.05}), clone(AD), {...FD});
+  chk('v7.23.0 · LP/LR: ISS próprio exclui receitas com retenção (guia menor em 50.000×5%)',
+    Math.abs((a.meses[0].iss - b.meses[0].iss) - 2500) < 0.01,
+    'Δiss='+(a.meses[0].iss-b.meses[0].iss).toFixed(2));
+  // híbrido sem a recomposição: hib = dasHib + cppRetida + cppForaDAS + liquido + IS (sem issRetido)
+  const cb = g.calcCenariosReforma(b, null);
+  const L33b = cb.REF.find(l=>l.ano===2033);
+  chk('v7.23.0 · híbrido sem o termo do ISS retido (identidade das parcelas em 2033)',
+    Math.abs(L33b.hib - (L33b.dasHib + (b.totais.cppRetida||0) + (b.totais.cppForaDAS||0) + L33b.liquido + L33b.is)) < 0.01);
+}
+{ // consistência: parecer, veredito e conferência usam a MESMA fórmula do "por dentro" (cenDentro)
+  const inp = mk({a1_semst:Array(12).fill(60000)},1200000);
+  ctx.__res2 = g.calcular(inp, clone(AD), {...FD});
+  vm.runInContext('RL.dados = {ano:2025,cnpj:"00000000000000",receitas:'+JSON.stringify(inp.receitas)+'}; RL.res = __res2; RL.reforma = null; RL.empresa = {razao_social:"T", regime:"Simples Nacional"}; RL._ia = null; RL.forn = null;', ctx);
+  try {
+    const D = vm.runInContext('parecerDados()', ctx);
+    const dManual = vm.runInContext('cenDentro(RL.res.totais, parecerDados().L33)', ctx);
+    chk('v7.23.0 · parecer usa cenDentro: sDentro(2033) === fórmula única',
+      Math.abs(D.sDentro[D.sDentro.length-1] - dManual) < 0.01,
+      'parecer='+D.sDentro[D.sDentro.length-1].toFixed(2));
+    const confH = vm.runInContext('rlConfReforma()', ctx);
+    chk('v7.23.0 · conferência exibe a coluna "Por dentro" com o MESMO valor do parecer',
+      confH.includes('Por dentro') && confH.includes(vm.runInContext('fmtR(cenDentro(RL.res.totais, parecerDados().REF[parecerDados().REF.length-1]))', ctx)));
+  } catch(e){ chk('v7.23.0 · consistência parecer×conferência', false, e.message); }
+}
+{ // troca de senha: valida atual, exige 8+, confirma, grava via PUT /auth/v1/user
+  var RES_SENHA = (async () => {
+    await RES_FORNCNPJ;                                    // serializa (fetch compartilhado)
+    vm.runInContext('APP.user = {email:"teste@artecon.com.br"}', ctx);
+    const doc = ctx.document;
+    doc.getElementById('us-sn-atual').value='senha-antiga'; doc.getElementById('us-sn-nova').value='curta';
+    doc.getElementById('us-sn-conf').value='curta';
+    const chamadas = [];
+    const fetchOrig = ctx.fetch;
+    ctx.fetch = async (url, opt) => { chamadas.push({url:String(url), method:opt&&opt.method, body:opt&&opt.body});
+      return { ok:true, json: async()=>({ access_token:'tok-novo', expires_at: Math.floor(Date.now()/1000)+3600, user:{email:'teste@artecon.com.br'} }) }; };
+    await vm.runInContext('usAlterarMinhaSenha()', ctx);   // nova curta → deve barrar SEM chamar a rede
+    const bloqueiaCurta = !chamadas.some(c=>/\/auth\//.test(c.url));
+    doc.getElementById('us-sn-nova').value='senha-nova-segura'; doc.getElementById('us-sn-conf').value='diferente';
+    await vm.runInContext('usAlterarMinhaSenha()', ctx);   // confirmação divergente → barra
+    const bloqueiaConf = !chamadas.some(c=>/\/auth\//.test(c.url));
+    doc.getElementById('us-sn-conf').value='senha-nova-segura';
+    await vm.runInContext('usAlterarMinhaSenha()', ctx);   // agora: revalida + PUT
+    ctx.fetch = fetchOrig;
+    // rotinas async de blocos anteriores ainda resolvem no mesmo fetch — só as chamadas de auth interessam
+    const auth = chamadas.filter(c=>/\/auth\//.test(c.url));
+    return { bloqueiaCurta, bloqueiaConf, chamadas: auth };
   })();
 }
 
@@ -474,21 +543,29 @@ console.log('\n■ Integridade da interface');
   chk('v7.19.0 · modo distribuir: lote anual rateia 1.200 em 100/mês',
     b2 && b2.Ma && Math.abs(b2.Ma['despesas.adm'][0]-100)<0.01 && Math.abs(b2.Ma['despesas.adm'][11]-100)<0.01);
   const prodHtml = await Promise.race([RES_PROD, new Promise(r=>setTimeout(()=>r(null), 8000))]);
-  chk('v7.21.0 · relatório de produtos renderiza (sem notas gravadas → orientação ao Classificação RTC)',
-    typeof prodHtml==='string' && !prodHtml.startsWith('EXC:') && /Classificação|Nenhuma nota|não foi possível/i.test(prodHtml||''),
+  chk('v7.22.0 · relatório de produtos no LAYOUT DO PARECER (pp-page) — sem notas, orientação ao RTC',
+    typeof prodHtml==='string' && !prodHtml.startsWith('EXC:') && /pp-page/.test(prodHtml||'') && /Classificação|Nenhuma nota|não foi possível/i.test(prodHtml||''),
     prodHtml&&prodHtml.startsWith('EXC:')?prodHtml:'ok');
   const fornCnpj = await Promise.race([RES_FORNCNPJ, new Promise(r=>setTimeout(()=>r(null), 8000))]);
-  chk('v7.21.0 · CNPJ: resumo de fornecedores COMPLETO (os 3 fornecedores na relação, com %)',
-    typeof fornCnpj==='string' && fornCnpj.includes('Resumo estatístico de fornecedores') && fornCnpj.includes('FORN NORMAL LTDA') && fornCnpj.includes('FORN SIMPLES ME') && fornCnpj.includes('FORN MEI') && /60,0%/.test(fornCnpj),
+  chk('v7.22.0 · Resumo de fornecedores no LAYOUT DO PARECER (pp-page timbrada) com identificação e QSA',
+    typeof fornCnpj==='string' && /Resumo Estatístico de Fornecedores/.test(fornCnpj) && /pp-page/.test(fornCnpj) && /EMPRESA TESTE LTDA/.test(fornCnpj) && /FULANO DE TAL/.test(fornCnpj),
     fornCnpj&&fornCnpj.startsWith&&fornCnpj.startsWith('EXC:')?fornCnpj:'ok');
-  const cnpjHtml = await Promise.race([RES_CNPJ, new Promise(r=>setTimeout(()=>r(null), 8000))]);
-  chk('v7.20.0 · relatório de CNPJ monta identificação, CNAEs, QSA e regime',
-    cnpjHtml && /EMPRESA TESTE LTDA/.test(cnpjHtml) && /Quadro societário/.test(cnpjHtml) && /FULANO DE TAL/.test(cnpjHtml) && /Atividades econômicas/.test(cnpjHtml) && /Optante/.test(cnpjHtml),
-    cnpjHtml?'ok':'timeout');
+  chk('v7.22.0 · relação INTEGRAL de fornecedores (3 nomeados + 57 extras) com % em regime normal',
+    typeof fornCnpj==='string' && fornCnpj.includes('FORN NORMAL LTDA') && fornCnpj.includes('FORN SIMPLES ME') && fornCnpj.includes('FORN MEI') && fornCnpj.includes('FORN 56'),
+    'ok');
+  chk('v7.22.0 · paginador: 60 fornecedores geram mais de uma página timbrada, thead repetido',
+    typeof fornCnpj==='string' && (fornCnpj.match(/pp-page/g)||[]).length>=3 && (fornCnpj.match(/<thead>/g)||[]).length>=3,
+    typeof fornCnpj==='string'?((fornCnpj.match(/pp-page/g)||[]).length+' páginas'):'—');
   const xml = await Promise.race([RES_XML, new Promise(r=>setTimeout(()=>r(null), 8000))]);
   chk('XML: notas do lote somam entre si (1.000 + 500) e reimportar não duplica',
     xml && Math.abs(xml.v1-1500)<0.01 && Math.abs(xml.v2-1500)<0.01,
     xml?`1ª=${(+xml.v1).toFixed(2)} 2ª=${(+xml.v2).toFixed(2)}`:'timeout/travou');
+  const sn = await Promise.race([RES_SENHA, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  chk('v7.23.0 · alterar senha: barra nova curta e confirmação divergente sem tocar a rede',
+    sn && sn.bloqueiaCurta && sn.bloqueiaConf, sn?'ok':'timeout');
+  chk('v7.23.0 · alterar senha: revalida a atual (grant password) e grava via PUT /auth/v1/user',
+    sn && sn.chamadas.length===2 && /grant_type=password/.test(sn.chamadas[0].url) && /auth\/v1\/user/.test(sn.chamadas[1].url) && sn.chamadas[1].method==='PUT' && /senha-nova-segura/.test(sn.chamadas[1].body||''),
+    sn?sn.chamadas.map(c=>c.method+' '+c.url.split('/auth/')[1]).join(' → '):'—');
   console.log('\n══════════════════════════════════');
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
   process.exit(FALHAS.length ? 1 : 0);
