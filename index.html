@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.30.1</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.31.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -330,7 +330,7 @@ canvas{max-height:340px}
       </div>
       <div class="card"><!-- v7.25.0: triagens dos analíticos por documento (Questor) -->
         <h3>Triagem de venda × compra — analíticos por documento</h3>
-        <div class="hint" style="margin-bottom:8px">Relatórios analíticos do Questor (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF). A triagem consolida por parceiro, consulta o enquadramento na Receita (cache de 30 dias) e monta o dashboard. Movimentação da própria empresa é separada; CPF é consumidor final (venda) e não vai à consulta.</div>
+        <div class="hint" style="margin-bottom:8px">Relatórios analíticos do Questor (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF). A consulta dos CNPJs na Receita é <b>automática ao importar</b> (cache de 30 dias; o botão reexecuta se precisar). A triagem consolida por parceiro, consulta o enquadramento na Receita (cache de 30 dias) e monta o dashboard. Movimentação da própria empresa é separada; CPF é consumidor final (venda) e não vai à consulta.</div>
         <input type="file" id="tri-arq-venda" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'venda')">
         <input type="file" id="tri-arq-compra" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'compra')">
         <div style="border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe;margin-bottom:12px">
@@ -551,7 +551,7 @@ canvas{max-height:340px}
           <option value="reforma">Reforma Tributária</option>
           <option value="parecer">Parecer Reforma Tributária — com IA</option>
           <option value="conferencia">Conferência de cálculos — memória (interno)</option>
-          <option value="cnpj">Resumo estatístico de fornecedores</option>
+          <option value="cnpj">Resumo estatístico de fornecedores e clientes</option>
           <option value="produtos">Produtos vendidos × Reforma (IBS/CBS)</option>
         </select></div>
         <div><label>Periodicidade</label><select id="rl-per" onchange="rlRender()">
@@ -662,7 +662,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.30.1</b> <span class="badge ok">atual</span></td><td>16/08/2026</td><td><b>Consulta CNPJ de volta ao layout da v7.26.</b> A unificação da v7.27.0 foi <b>desfeita a pedido</b>: o card <b>"Triagem de venda × compra — analíticos por documento"</b> voltou como estava, com os seus dois botões próprios ("Importar analítico de clientes" e "Importar analítico de fornecedores"), e o item 2 ("Informe os CNPJs") voltou a receber apenas os "Totais ISS/ICMS por Fornecedor/Cliente" e listas de CNPJs, como na v7.26.0. <b>Permanece tudo o mais do pacote</b>: trilha de origem por campo (v7.28.0), crédito do art. 58 e triagem de compra alimentando a Reforma e a aba Compras (v7.29.0 — os botões "Gravar triagem" e "➕ Lançar total nas Compras" continuam no dashboard da triagem), CBS 9,11% no biênio (v7.29.1) e o 🔏 Lacre do motor (v7.30.0, selo inalterado — o motor não foi tocado).</td></tr>
+                    <tr><td><b>v7.31.0</b> <span class="badge ok">atual</span></td><td>16/08/2026</td><td><b>Triagem com a esteira completa do item 2</b> (conforme relatório de melhoria aprovado). (1) <b>Consulta automática na Receita</b>: ao importar qualquer analítico, o app consulta os CNPJs sozinho — cache de 30 dias primeiro (instantâneo), Receita nos novos, com progresso na tela; a pergunta de confirmação deixou de existir e o botão "Consultar enquadramentos" virou reexecução manual. (2) <b>Serviços tomados separados</b>: no "➕ Lançar total nas Compras", os CFOPs <b>1933/2933</b> são identificados e o app pergunta se deseja lançá-los <b>em Despesas › Outras</b>, separados das mercadorias — respondendo "não", ficam de fora; as mercadorias seguem para a aba Compras no destino escolhido (tudo com trilha de origem R). (3) O dashboard da compra ganhou o <b>crédito de IBS/CBS estimado no regime pleno</b> (regime normal à alíquota cheia + Simples/MEI pelo art. 58, 1ª faixa), como no painel do item 2. (4) <b>A triagem de venda não lança nada</b> — só informa: preenche automaticamente os campos <b>Vendas para PF / PJ Simples / PJ LR-LP</b> da aba Reforma (respeitando valores já digitados, com nota explicativa da leitura da cadeia), segue alimentando a página da clientela do parecer e o relatório estatístico. (5) O relatório foi renomeado para <b>"Resumo Estatístico de Fornecedores e Clientes"</b>, com os blocos um abaixo do outro: identificação, quadro societário, fornecedores (revenda, serviços), triagem de compra e clientes (triagem de venda). Motor de cálculo intocado — o 🔏 lacre mantém o selo.</td></tr>
+                    <tr><td><b>v7.30.1</b></td><td>16/08/2026</td><td><b>Consulta CNPJ de volta ao layout da v7.26.</b> A unificação da v7.27.0 foi <b>desfeita a pedido</b>: o card <b>"Triagem de venda × compra — analíticos por documento"</b> voltou como estava, com os seus dois botões próprios ("Importar analítico de clientes" e "Importar analítico de fornecedores"), e o item 2 ("Informe os CNPJs") voltou a receber apenas os "Totais ISS/ICMS por Fornecedor/Cliente" e listas de CNPJs, como na v7.26.0. <b>Permanece tudo o mais do pacote</b>: trilha de origem por campo (v7.28.0), crédito do art. 58 e triagem de compra alimentando a Reforma e a aba Compras (v7.29.0 — os botões "Gravar triagem" e "➕ Lançar total nas Compras" continuam no dashboard da triagem), CBS 9,11% no biênio (v7.29.1) e o 🔏 Lacre do motor (v7.30.0, selo inalterado — o motor não foi tocado).</td></tr>
                     <tr><td><b>v7.30.0</b></td><td>16/08/2026</td><td><b>🔏 Lacre do motor de cálculo.</b> Os dois casos-gabarito da suíte de testes (comércio Anexo I com trava do sublimite; serviços Anexo III com Fator R e 13º) agora viajam <b>dentro do próprio app</b>, com um <b>selo (hash) dos resultados</b> gravado em cada entrega. <b>A cada troca de versão</b>, o app recalcula os dois casos com os <b>padrões de fábrica</b> (anexos, folha e alíquotas da Reforma — parâmetros editados não interferem) e confere centenas de números <b>ao centavo</b> — todos os meses do DAS, Lucro Presumido e Lucro Real, os totais anuais e os cenários da Reforma de 2026 a 2033. Se tudo bater, a aba Versões mostra o cartão verde "Lacre ÍNTEGRO" com os totais de referência; se qualquer número divergir, o app exibe <b>alerta vermelho imediato</b> ("Lacre VIOLADO") orientando a não usar os resultados e restaurar a versão anterior. O botão "Revalidar agora" repete a conferência a qualquer momento. Mudanças <b>deliberadas</b> de regra (como o art. 58 e a D5 desta semana) são <b>re-seladas na entrega</b> e registradas no changelog — e a suíte do CI passa a conferir o selo embutido: se o motor mudar sem o selo ser refeito, o CI quebra antes de qualquer publicação.</td></tr>
                     <tr><td><b>v7.29.1</b></td><td>16/08/2026</td><td><b>D5 resolvida — CBS de 2027-2028 corrigida para 9,11%.</b> Pelo art. 347 da LC 214/2025 (e art. 127 do ADCT), no biênio 2027-2028 a CBS é cobrada pela alíquota de referência <b>reduzida em 0,1 ponto percentual</b>, exatamente para compensar o IBS-teste de 0,05% estadual + 0,05% municipal. O app usava CBS 9,21% + IBS 0,10% = <b>9,31% combinada — 0,1 p.p. a mais que o correto</b>; agora usa <b>9,11% + 0,10% = 9,21%</b>, igual à referência (que segue 9,21% de 2029 a 2033, quando a redução deixa de existir). Parâmetros já <b>salvos com o padrão antigo</b> (9,21 no biênio) são corrigidos automaticamente ao carregar; percentuais personalizados não são tocados. A nota técnica da transição passou a citar a regra. Efeito prático: os anos de 2027 e 2028 dos cenários da Reforma (aba, parecer e relatório) ficam levemente menores.</td></tr>
                     <tr><td><b>v7.29.0</b></td><td>16/08/2026</td><td><b>Crédito do art. 58 (Res. CGSN 190) e triagem de compra alimentando a Reforma.</b> (1) As compras de fornecedores optantes do Simples passam a gerar crédito de IBS/CBS <b>pela regra do art. 58, §§4º a 6º, da Res. CGSN nº 190/2026</b>: os percentuais de CBS e IBS da faixa do fornecedor, variando por vigência. Sem o RBT12 do fornecedor, o app adota o cenário <b>conservador — 1ª faixa do Anexo I</b>: ≈0,62% do valor da compra em 2027-28, 0,76% em 2029, subindo em degraus até <b>1,98% em 2033</b> (antes o campo "% crédito s/ compras do Simples" valia zero até ser preenchido à mão). O % manual continua existindo como <b>substituição</b> — útil quando o fornecedor optar pelo regime regular de IBS/CBS (crédito integral) ou quando a faixa real for conhecida; a nota técnica da aba e o parecer explicam a premissa. A regra vale de uma vez na aba Reforma, nos 3 cenários do parecer e no relatório da transição (fórmula única). (2) A <b>triagem de compra</b> (analítico por documento) agora <b>alimenta a Reforma</b>: gravada, ela preenche os campos de compras (regime normal × Simples/MEI, por item classificado, excluindo movimentação própria e CPF) — como ela e o "Totais ICMS por Fornecedor" retratam as mesmas entradas, vale a <b>mais recente</b> das duas; e ganhou o botão <b>"➕ Lançar total nas Compras da análise"</b>, que rateia o total externo pelos meses do período na linha escolhida (com trilha de origem R da v7.28.0).</td></tr>
@@ -1484,18 +1485,18 @@ function triArquivo(input, tipo){
       t.arquivo = f.name; TRI[tipo] = t;
       $id('tri-btn-'+tipo).style.display = t.itens.some(i=>i.classe===null) ? '' : 'none';
       triDash(tipo);
-      toast(`${t.itens.length} ${tipo==='venda'?'cliente(s)':'fornecedor(es)'} consolidado(s) de ${t.docs} documento(s) — período ${t.periodo||'?'}. ${t.itens.some(i=>i.classe===null)?'Consulte os enquadramentos.':''}`);
+      toast(`${t.itens.length} ${tipo==='venda'?'cliente(s)':'fornecedor(es)'} consolidado(s) de ${t.docs} documento(s) — período ${t.periodo||'?'}. Consultando os enquadramentos na Receita…`);
+      triConsultar(tipo, true);                            // v7.31.0: consulta automática a cada nova tabela
     } catch(err){ console.error(err); toast('Erro ao ler '+f.name+': '+err.message); }
   };
   rd.readAsArrayBuffer(f);
 }
-async function triConsultar(tipo){
+async function triConsultar(tipo, auto){
   const T = TRI[tipo]; if (!T) return;
   const alvos = T.itens.filter(i=>i.classe===null || i.classe==='nid');
-  if (!alvos.length){ toast('Nada a consultar.'); return; }
-  const emCache = await cnpjCacheContar(alvos.map(i=>i.cnpj));
-  const novos = alvos.length - emCache;
-  if (novos>3 && !await dlgSimNao('Consultar na Receita?', `${alvos.length} CNPJ(s): ${emCache} em cache (na hora) e ${novos} irão à Receita (~${Math.ceil(novos*0.35)}s). Continuar?`, 'Consultar', 'Cancelar')) return;
+  if (!alvos.length){ if (!auto) toast('Nada a consultar.'); return; }
+  // v7.31.0 (decisão dele): consulta SEMPRE DIRETO — cache de 30 dias primeiro, Receita nos novos,
+  // progresso na tela. O botão "Consultar enquadramentos" segue como reexecução manual.
   let n=0;
   for (const i of T.itens){
     if (i.classe && i.classe!=='nid') continue;
@@ -1540,6 +1541,12 @@ function triDash(tipo){
   </div>
   <div style="display:flex;border-radius:4px;overflow:hidden;margin:4px 0">${barra}</div><div>${leg}</div>`;
   if (S.proprio>0.005) h += `<div class="hint" style="margin-top:6px">Movimentação da própria empresa separada do ranking: ${fmtR(S.proprio)} (transferências/retornos internos).</div>`;
+  if (!venda){                                             // v7.31.0: crédito de IBS/CBS estimado, como no painel do item 2
+    const aliq33 = (RF_ALIQ_DEFAULT[2033].cbs + RF_ALIQ_DEFAULT[2033].ibse + RF_ALIQ_DEFAULT[2033].ibsm)/100;
+    const vSM = (S.porC.simples?S.porC.simples.v:0) + (S.porC.mei?S.porC.mei.v:0);
+    const cN = credPleno*aliq33, cS = vSM*credSimplesArt58(2033);
+    if (cN+cS > 0.005) h += `<div class="hint" style="margin-top:6px"><b>Crédito de IBS/CBS estimado no regime pleno (2033):</b> ${fmtR(cN+cS)} — regime normal ${fmtR(cN)} (alíquota cheia) + Simples/MEI ${fmtR(cS)} (art. 58, 1ª faixa). Estes valores alimentam a aba Reforma automaticamente quando a triagem está gravada.</div>`;
+  }
   const cf = Object.entries(S.cfops).sort((a,b)=>b[1]-a[1]);
   h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px"><div>
     <b style="font-size:12px">${venda?'Vendas':'Compras'} por CFOP</b>
@@ -1569,7 +1576,7 @@ async function triSalvar(tipo, auto){
       itens: T.itens.map(i=>({cnpj:i.cnpj, razao:i.razao, classe:i.classe, valor:i.valor, cfops:i.cfops})),
       stats:{ tot:S.tot, pj:S.pj, pf:S.pf, exp:S.exp, proprio:S.proprio } } } });
     T._salvo = new Date().toISOString(); triDash(tipo);
-    toast(`Triagem de ${tipo} gravada ✓ — alimenta o parecer e o Resumo Estatístico de Fornecedores.`);
+    toast(`Triagem de ${tipo} gravada ✓ — alimenta o parecer, a Reforma e o Resumo Estatístico de Fornecedores e Clientes.`);
     return true;
   } catch(e){ if(!auto) alert('Erro ao gravar a triagem: '+e.message); return false; }
 }
@@ -1834,13 +1841,30 @@ async function triLancarCompras(){
   const T = TRI.compra; if (!T) return;
   const cnpjT = limparCNPJ(T.cnpjEmpresa||'');
   if (!AN || !AN.cnpj || limparCNPJ(AN.cnpj) !== cnpjT){ toast('Abra a análise da empresa '+(cnpjT?fmtCNPJ(cnpjT):'da triagem')+' primeiro (módulo Análise Atual).'); return; }
-  const destino = await dlg('A que se referem estas compras?',
-    'Informe o tratamento das mercadorias para a linha de destino na aba Compras.',
-    [...FO_DESTINOS.map((d,i)=>({rotulo:d[1], valor:d[0], destaque:i===0})), {rotulo:'Cancelar', valor:null}]);
-  if (destino === null) return;
   const S = triStats(T);                                 // total EXTERNO — movimentação própria fica de fora
-  const rot = (FO_DESTINOS.find(x=>x[0]===destino)||['','Compras'])[1];
-  if (await fornRatear('compras', destino, S.tot, T.periodo, rot)) anAplicado();
+  // v7.31.0 (decisão dele): serviços tomados (CFOP 1933/2933) separados, com pergunta —
+  // "sim" lança em Despesas › Outras; "não" ficam de fora. Mercadorias seguem para a aba Compras.
+  let totServ = 0;
+  for (const i of T.itens){ if (i.classe==='proprio') continue;
+    for (const [c,v] of Object.entries(i.cfops||{})) if (/^[12]933/.test(c)) totServ += (+v||0); }
+  totServ = Math.round(totServ*100)/100;
+  const totMerc = Math.round((S.tot - totServ)*100)/100;
+  let lancou = false;
+  if (totServ > 0 && await dlgSimNao('Serviços tomados no analítico',
+      `Há ${fmtR(totServ)} em CFOPs 1933/2933 (serviços tomados de terceiros). Deseja lançá-los em Despesas › Outras, separados das mercadorias?`,
+      'Lançar em Despesas › Outras', 'Deixar de fora')){
+    if (await fornRatear('despesas', 'outras', totServ, T.periodo, 'Despesas › Outras (serviços tomados)')) lancou = true;
+  }
+  if (totMerc > 0){
+    const destino = await dlg('A que se referem estas compras?',
+      'Informe o tratamento das mercadorias para a linha de destino na aba Compras.',
+      [...FO_DESTINOS.map((d,i)=>({rotulo:d[1], valor:d[0], destaque:i===0})), {rotulo:'Cancelar', valor:null}]);
+    if (destino !== null){
+      const rot = (FO_DESTINOS.find(x=>x[0]===destino)||['','Compras'])[1];
+      if (await fornRatear('compras', destino, totMerc, T.periodo, rot)) lancou = true;
+    }
+  }
+  if (lancou) anAplicado();
 }
 async function fornResumo(cnpj){
   const rs = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+cnpj, order:'consultado_em.desc', select:'*' } }) || [];
@@ -1870,7 +1894,7 @@ function fornMesesPeriodo(p){
 // Só preenche se os campos estiverem vazios — valor digitado à mão nunca é sobrescrito sem o usuário mandar.
 // v7.6.0: soma a consulta mais recente de CADA tipo (serviço e revenda)
 async function fornAutoAplicar(){
-  RF._forn = null;
+  RF._forn = null; RF._vend = null;
   if (!RF || !RF.cnpj) return;
   let rs = [];
   try { rs = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+RF.cnpj, order:'consultado_em.desc', limit:'40', select:'*' } }) || []; }
@@ -1904,6 +1928,18 @@ async function fornAutoAplicar(){
     partes.push({ tipo:t, data:r.consultado_em, periodo:r.dados.periodo||'',
                   meses: fornMesesPeriodo(r.dados.periodo), presumido: !(r.dados && r.dados.tipo), lrlp:pl, simp:ps });
   }
+  // v7.31.0 (decisão dele): a triagem de VENDA (clientes) não lança nada — só INFORMA os campos
+  // de vendas da Reforma (PF × PJ Simples × PJ LR/LP), respeitando valores já digitados.
+  const rv = porTipo.venda;
+  if (rv && rv.dados && Array.isArray(rv.dados.itens)){
+    const soma = f => Math.round(rv.dados.itens.filter(f).reduce((a,i)=>a+(+i.valor||0),0)*100)/100;
+    const vpf = soma(i=>i.classe==='pf'), vsimp = soma(i=>i.classe==='simples'||i.classe==='mei'), vlrlp = soma(i=>i.classe==='normal');
+    if (vpf+vsimp+vlrlp > 0){
+      const jaTemV = (RF.contra.vendas_pf||0)>0 || (RF.contra.vendas_simples||0)>0 || (RF.contra.vendas_lrlp||0)>0;
+      RF._vend = { data: rv.consultado_em, periodo: rv.dados.periodo||'', meses: fornMesesPeriodo(rv.dados.periodo), vpf, vsimp, vlrlp, aplicado: !jaTemV };
+      if (!jaTemV){ RF.contra.vendas_pf = vpf; RF.contra.vendas_simples = vsimp; RF.contra.vendas_lrlp = vlrlp; }
+    }
+  } else RF._vend = null;
   if (!partes.length) return;
   const jaTem = (RF.contra.compras_lrlp||0) > 0 || (RF.contra.compras_simples||0) > 0;
   RF._forn = { partes, lrlp: Math.round(lrlp*100)/100, simp: Math.round(simp*100)/100, aplicado: !jaTem };
@@ -1922,7 +1958,15 @@ function fornNotaHtml(){
     <a href="#" onclick="fornAplicarReforma();return false" style="margin-left:6px">substituir pelos fornecedores</a></div>`;
   return `<div class="hint" style="margin-top:10px;padding:10px 12px;border-left:4px solid ${parcial?'var(--alerta,#b9770e)':'var(--ok,#117a65)'};background:${parcial?'#fef6e7':'#eafaf1'};color:${parcial?'#7e5109':'#0e6251'}">
     Compras preenchidas automaticamente pelas análises de fornecedores (última em ${quando}) — ${linhas}.
-    ${parcial ? `<b>Atenção:</b> algum relatório cobre menos de doze meses e a Reforma projeta o ano inteiro — esses valores estão subdimensionados.` : ''}</div>`;
+    ${parcial ? `<b>Atenção:</b> algum relatório cobre menos de doze meses e a Reforma projeta o ano inteiro — esses valores estão subdimensionados.` : ''}</div>` + fornNotaVendasHtml();
+}
+function fornNotaVendasHtml(){                             // v7.31.0
+  const v = RF && RF._vend; if (!v) return '';
+  const det = `PF ${fmtR(v.vpf)} · PJ Simples/MEI ${fmtR(v.vsimp)} · PJ LR/LP ${fmtR(v.vlrlp)}${v.periodo?` · período ${esc(v.periodo)}`:''}${v.meses && v.meses<12?` · <b>só ${v.meses} ${v.meses===1?'mês':'meses'}</b>`:''}`;
+  if (!v.aplicado) return `<div class="hint" style="margin-top:6px;padding:10px 12px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109">
+    A triagem de venda (clientes, ${new Date(v.data).toLocaleDateString('pt-BR')}) informa ${det}, mas os campos de vendas acima já estavam preenchidos e não foram tocados.</div>`;
+  return `<div class="hint" style="margin-top:6px;padding:10px 12px;border-left:4px solid var(--ok,#117a65);background:#eafaf1;color:#0e6251">
+    Vendas preenchidas automaticamente pela triagem de clientes (${new Date(v.data).toLocaleDateString('pt-BR')}) — ${det}. Somente informação para a leitura da cadeia (PF/Simples = imposto vira custo do comprador; LR/LP = crédito integral ao cliente); nada é lançado na análise.</div>`;
 }
 async function fornAplicarReforma(){
   if (!RF || !RF.cnpj){ toast('Selecione a empresa na aba Reforma primeiro.'); return; }
@@ -3145,7 +3189,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.30.1';
+const APP_VERSAO = '7.31.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -5024,7 +5068,7 @@ async function rlCnpjRender(cnpj){
   const li = (r,v) => (v!=null && v!=='' && v!=='undefined') ? {html:`<tr><td class="rot" style="white-space:nowrap">${r}</td><td colspan="4">${v}</td></tr>`, custo:1} : null;
   const dtBR = v => { if(!v) return ''; const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})/); return m?`${m[3]}/${m[2]}/${m[1]}`:String(v); };
   const B = [];
-  B.push(ppDocCab('Resumo Estatístico de Fornecedores', d?d.razao_social:'', cnpj));
+  B.push(ppDocCab('Resumo Estatístico de Fornecedores e Clientes', d?d.razao_social:'', cnpj));
   if (d){
     B.push({ htmlFixo:`<div class="pp-h2" style="font-weight:700;margin:6px 0">1. Identificação da empresa</div>`, custoFixo:2,
       thead:'<tr><th style="width:44mm;text-align:left">Campo</th><th colspan="4" style="text-align:left">Informação</th></tr>',
@@ -6140,7 +6184,7 @@ function rlRender() {
     $id('rl-cab').style.display = cnpjSel ? 'block' : 'none';
     if (!cnpjSel){ $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Selecione a empresa</h2><p>O relatório traz o cadastro do CNPJ e o resumo estatístico completo de fornecedores, no layout do parecer.</p></div>'; return; }
     const empC = RL.empresa || EMPRESAS.find(e=>e.cnpj===cnpjSel) || {};
-    $id('rl-titulo').textContent = 'Resumo Estatístico de Fornecedores';
+    $id('rl-titulo').textContent = 'Resumo Estatístico de Fornecedores e Clientes';
     $id('rl-sub').innerHTML = `<b>${esc(empC.razao_social||'')}</b> · CNPJ ${fmtCNPJ(cnpjSel)} · Artecon Artes Contábeis`;
     rlCnpjRender(cnpjSel);
     return;
