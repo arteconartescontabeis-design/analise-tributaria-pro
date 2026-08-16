@@ -589,9 +589,18 @@ console.log('\n■ v7.25.0 — triagem de venda/compra (analíticos) e redefini�
     const fetchOrig = ctx.fetch;
     ctx.fetch = async (url, opt) => { chamadas.push({url:String(url), body:opt&&opt.body});
       return { ok:true, json: async()=>({ ok:true }) }; };
+    let msgs = 0;
+    vm.runInContext('toast = ()=>{ this.__msg=(this.__msg||0)+1 }; alert = ()=>{ this.__msg=(this.__msg||0)+1 };', ctx);
+    ctx.fetch = async (url, opt) => { chamadas.push({url:String(url), body:opt&&opt.body});
+      return { ok:true, status:200, json: async()=>({ ok:true }) }; };
     try { await vm.runInContext('usSenhaMenu("colega@artecon.com.br")', ctx); } catch(e){ ctx.fetch=fetchOrig; return 'EXC:'+e.message; }
+    // resposta de ERRO também tem que gerar mensagem (v7.26.1 — antes silenciava)
+    ctx.fetch = async (url, opt) => { chamadas.push({url:String(url), body:opt&&opt.body});
+      return { ok:false, status:403, json: async()=>({ ok:false, erro:'fora da lista' }) }; };
+    try { await vm.runInContext('usSenhaMenu("colega@artecon.com.br")', ctx); } catch(e){}
+    msgs = vm.runInContext('this.__msg||0', ctx);
     ctx.fetch = fetchOrig;
-    return chamadas.filter(c=>/admin-senha/.test(c.url));
+    return { auth: chamadas.filter(c=>/admin-senha/.test(c.url)), msgs };
   })();
 }
 
@@ -698,8 +707,10 @@ console.log('\n■ Integridade da interface');
     sn?sn.chamadas.map(c=>c.method+' '+c.url.split('/auth/')[1]).join(' → '):'—');
   const s2 = await Promise.race([RES_SENHA2, new Promise(r=>setTimeout(()=>r(null), 8000))]);
   chk('v7.25.0 · "Redefinir agora" chama a Edge Function admin-senha com e-mail e nova senha',
-    Array.isArray(s2) && s2.length===1 && /colega@artecon/.test(s2[0].body||'') && /senha-nova-de-terceiro/.test(s2[0].body||''),
-    Array.isArray(s2)?'ok':'timeout/'+s2);
+    s2 && Array.isArray(s2.auth) && s2.auth.length===2 && /colega@artecon/.test(s2.auth[0].body||'') && /senha-nova-de-terceiro/.test(s2.auth[0].body||''),
+    s2&&s2.auth?'ok':'timeout/'+s2);
+  chk('v7.26.1 · sucesso E erro sempre geram mensagem (toast/alert) — nunca silêncio',
+    s2 && s2.msgs>=2, s2?('mensagens: '+s2.msgs):'—');
   const tv = await Promise.race([RES_TRAVA, new Promise(r=>setTimeout(()=>r(null), 8000))]);
   chk('v7.26.0 · fechar grava snapshot e o status muda para fechada',
     tv && tv.st1==='fechada' && tv.temSnap, tv?tv.st1:'timeout');
