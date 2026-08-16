@@ -508,6 +508,136 @@ console.log('\n■ v7.23.0 — ISS retido fora dos totais e fontes unificadas');
   })();
 }
 
+// ═══ 5k. v7.24.0 — exportação fora da base do IBS/CBS ═══
+console.log('\n■ v7.24.0 — exportação imune ao IBS/CBS (LC 214, art. 8º)');
+{
+  const inpE = mk({a1_semst:Array(12).fill(50000)},1200000);
+  inpE.receitas.a1_exp = Array(12).fill(30000);            // 360.000 de exportação no ano
+  const rE = g.calcular(inpE, clone(AD), {...FD});
+  chk('v7.24.0 · motor expõe T.receitaExp separada (360.000) e T.receita segue total (960.000)',
+    Math.abs(rE.totais.receitaExp-360000)<0.01 && Math.abs(rE.totais.receita-960000)<0.01,
+    `exp=${rE.totais.receitaExp.toFixed(2)} tot=${rE.totais.receita.toFixed(2)}`);
+  const CE = g.calcCenariosReforma(rE, null);              // fallback: aba Reforma vazia
+  chk('v7.24.0 · fallback da Reforma usa a receita INTERNA (600.000, não 960.000)',
+    Math.abs(CE.rfx.receita-600000)<0.01, `rfx.receita=${CE.rfx.receita.toFixed(2)}`);
+  const L33E = CE.REF.find(l=>l.ano===2033);
+  chk('v7.24.0 · débito de IBS/CBS 2033 = alíquota × receita interna apenas',
+    Math.abs(L33E.deb - 600000*L33E.alq) < 0.01, `deb=${L33E.deb.toFixed(2)} alq=${(L33E.alq*100).toFixed(2)}%`);
+  const rS = g.calcular(mk({a1_semst:Array(12).fill(50000)},1200000), clone(AD), {...FD});
+  const CS = g.calcCenariosReforma(rS, null);
+  chk('v7.24.0 · sem exportação, nada muda (receita da Reforma = 600.000 nos dois casos)',
+    Math.abs(CS.rfx.receita-600000)<0.01 && Math.abs((rS.totais.receitaExp||0))<0.01);
+}
+
+// ═══ 5l. v7.25.0 — triagens de venda/compra e senha em 2 opções ═══
+console.log('\n■ v7.25.0 — triagem de venda/compra (analíticos) e redefinição em 2 opções');
+{
+  // parser + stats com dados no formato real dos arquivos da Weeedo
+  vm.runInContext('EMP_GLOBAL = {cnpj:"24197146000137", razao_social:"WEEEDO"}', ctx);
+  const rowsV = [['Data Emissão','Natureza','Empresa','Valor Contábil','CNPJ/CPF/CNO'],
+    ['15/01/2025','5102002','356',53000,'02.307.029/0001-46'],
+    ['22/01/2025','6502002','356',20000,'01.864.215/0008-90'],        // exportação (fim específico)
+    ['14/01/2025','5102002','356',10000,'597.333.142-34'],            // CPF consumidor
+    ['23/01/2025','9000008','356',17000,'29.897.180/0001-38']];
+  ctx.__rowsV = rowsV;
+  const TV = vm.runInContext('triParse(__rowsV, "venda")', ctx);
+  chk('v7.25.0 · triagem de venda: consolida 4 parceiros, período e CPF=consumidor',
+    TV && TV.itens.length===4 && TV.periodo==='14/01/2025 a 23/01/2025' && TV.itens.some(i=>i.classe==='pf'),
+    TV?`${TV.itens.length} parceiros · ${TV.periodo}`:'parse falhou');
+  ctx.__TV = TV;
+  const SV = vm.runInContext('TRI.venda = __TV; triStats(TRI.venda)', ctx);
+  chk('v7.25.0 · stats da venda: total 100.000, B2B 90.000, B2C 10.000, exportação 20.000',
+    Math.abs(SV.tot-100000)<0.01 && Math.abs(SV.pj-90000)<0.01 && Math.abs(SV.pf-10000)<0.01 && Math.abs(SV.exp-20000)<0.01,
+    `tot=${SV.tot} pj=${SV.pj} exp=${SV.exp}`);
+  // compra com movimentação própria (CNPJ da própria Weeedo sai do ranking/total)
+  const rowsC = [['Data Entrada','Natureza','Empresa','Valor Contábil','Razão Social','CNPJ/CPF/CNO'],
+    ['02/01/2025','1102001','356',50000,'FORN A LTDA','11.111.111/0001-91'],
+    ['02/01/2025','1949015','356',999,'WEEEDO GER','24.197.146/0001-37'],
+    ['03/01/2025','2102001','356',30000,'FORN B ME','22.222.222/0001-91']];
+  ctx.__rowsC = rowsC;
+  const TC = vm.runInContext('TRI.compra = triParse(__rowsC, "compra"); TRI.compra', ctx);
+  const SC = vm.runInContext('triStats(TRI.compra)', ctx);
+  chk('v7.25.0 · triagem de compra: própria empresa separada (total externo 80.000, próprio 999)',
+    TC && TC.itens.some(i=>i.classe==='proprio') && Math.abs(SC.tot-80000)<0.01 && Math.abs(SC.proprio-999)<0.01,
+    `tot=${SC.tot} proprio=${SC.proprio}`);
+  // dashboards renderizam
+  try { vm.runInContext('triDash("venda"); triDash("compra")', ctx);
+    const hv = els['tri-dash-venda'].innerHTML, hc = els['tri-dash-compra'].innerHTML;
+    chk('v7.25.0 · dashboards renderizam (B2B/B2C na venda, exportação destacada, ranking na compra)',
+      /B2B/.test(hv) && /exportação/.test(hv) && /FORN A LTDA/.test(hc));
+  } catch(e){ chk('v7.25.0 · dashboards', false, e.message); }
+  // página do parecer: perfil da clientela quando RL.forn.venda existe
+  try {
+    vm.runInContext(`RL.forn = { venda: { consultado_em:new Date().toISOString(), dados:{ tipo:'venda', periodo:'01/2025',
+      stats:{tot:100000,pj:90000,pf:10000,exp:20000,proprio:0},
+      itens: __TV.itens.map(i=>({cnpj:i.cnpj,razao:i.razao,classe:i.classe||'normal',valor:i.valor})) } } };`, ctx);
+    g.rlParecer();
+    const out = els['rl-corpo'].innerHTML;
+    chk('v7.25.0 · parecer ganha "Perfil da clientela" com B2B×B2C quando há triagem de venda',
+      out.includes('Perfil da clientela') && /90,0%/.test(out));
+    vm.runInContext('RL.forn = null', ctx);
+    g.rlParecer();
+    chk('v7.25.0 · sem triagem, o parecer não ganha a página', !els['rl-corpo'].innerHTML.includes('Perfil da clientela'));
+  } catch(e){ chk('v7.25.0 · página da clientela', false, e.message); }
+  // senha 2 opções: "agora" chama a Edge Function admin-senha via supaFn
+  var RES_SENHA2 = (async () => {
+    await RES_SENHA;
+    vm.runInContext('dlg = async()=>"agora"', ctx);
+    ctx.prompt = () => 'senha-nova-de-terceiro';
+    vm.runInContext('this.prompt = (m)=>"senha-nova-de-terceiro"', ctx);
+    const chamadas = [];
+    const fetchOrig = ctx.fetch;
+    ctx.fetch = async (url, opt) => { chamadas.push({url:String(url), body:opt&&opt.body});
+      return { ok:true, json: async()=>({ ok:true }) }; };
+    try { await vm.runInContext('usSenhaMenu("colega@artecon.com.br")', ctx); } catch(e){ ctx.fetch=fetchOrig; return 'EXC:'+e.message; }
+    ctx.fetch = fetchOrig;
+    return chamadas.filter(c=>/admin-senha/.test(c.url));
+  })();
+}
+
+// ═══ 5m. v7.26.0 — dados de entrada na conferência e trava de análises ═══
+console.log('\n■ v7.26.0 — bloco 0 (dados de entrada) e trava de análises fechadas');
+{
+  // bloco 0: dados de entrada abrem a conferência com receitas/folha/compras/config
+  const inp0 = mk({a1_semst:Array(12).fill(50000)},1200000,{iss:.05});
+  inp0.receitas.a1_exp = Array(12).fill(10000);
+  inp0.compras.semst = Array(12).fill(8000);               // linhas zeradas são (corretamente) omitidas
+  ctx.__res0 = g.calcular(inp0, clone(AD), {...FD});
+  vm.runInContext('RL.dados = '+JSON.stringify({ano:2025,cnpj:'00000000000000',receitas:inp0.receitas,folha:inp0.folha,compras:inp0.compras,despesas:inp0.despesas,cfg:inp0.cfg,icms:{cred:null,deb:null},ipi:{cred:null,deb:null}})+'; RL.res = __res0; RL.empresa={razao_social:"T"};', ctx);
+  try {
+    const e0 = vm.runInContext('rlConfEntrada()', ctx);
+    chk('v7.26.0 · bloco 0 lista receitas (incl. exportação), folha, compras e configuração',
+      /Dados de entrada/.test(e0) && /[Ee]xporta/.test(e0) && /Pró-labore/.test(e0) && /Revenda sem ST/.test(e0) && /Configuração vigente/.test(e0));
+    const conf = vm.runInContext('rlConferencia()', ctx);
+    chk('v7.26.0 · conferência abre com o bloco 0 em todos os modos',
+      conf.indexOf('Dados de entrada') > -1 && conf.indexOf('Dados de entrada') < conf.indexOf('Simples Nacional'));
+  } catch(e){ chk('v7.26.0 · bloco 0', false, e.message); }
+  // trava: fechada bloqueia salvar e importar; snapshot compara e detecta divergência
+  var RES_TRAVA = (async () => {
+    await RES_SENHA2;
+    vm.runInContext('garantirEmpresa = async()=>{}; dlg = async()=>true; APP.user={email:"t@artecon"}; supa = async()=>[];', ctx);
+    vm.runInContext('AN = anNovo("24197146000137", 2025); AN.receitas.a1_semst[0]=100000;', ctx);
+    vm.runInContext('AN._res = calcular(AN, PARAMS.anexos, folhaPercDaEmpresa(AN.cfg)); AN_SUJO = false;', ctx);
+    const chamadas = [];
+    const fetchOrig = ctx.fetch;
+    ctx.fetch = async (url, opt) => { chamadas.push({url:String(url), method:opt&&opt.method});
+      return { ok:true, json: async()=>([]) }; };
+    await vm.runInContext('anFecharAbrir()', ctx);          // fecha (dlg=true, AN_SUJO=false)
+    const st1 = vm.runInContext('AN._status', ctx);
+    const snap = vm.runInContext('AN._snapshot', ctx);
+    const salvou = await vm.runInContext('anSalvar()', ctx); // deve recusar
+    // importador bloqueado: balAplicar → anAplicado barra a gravação? (a guarda está no anAplicado)
+    vm.runInContext('BAL = {cnpj:"24197146000137", nome:"T", ano:2025, mesIni:0, mesFim:0, lotes:[{arquivo:"x", ano:2025, mesIni:0, mesFim:0, contas:[{destino:"compras.semst", valor:111}]}]}', ctx);
+    ctx.document.getElementById('bal-modo').value='proprio';
+    try { await vm.runInContext('balAplicar()', ctx); } catch(e){}
+    // divergência: simula "atualização que mudou o motor" alterando o recálculo
+    vm.runInContext('AN.receitas.a1_semst[0]=120000; AN._res = calcular(AN, PARAMS.anexos, folhaPercDaEmpresa(AN.cfg)); anTravaRender();', ctx);
+    const aviso = ctx.document.getElementById('an-trava-aviso').innerHTML;
+    ctx.fetch = fetchOrig;
+    return { st1, temSnap: !!(snap&&snap.totais), salvou, aviso };
+  })();
+}
+
 // ═══ 6. Integridade da interface ═══
 // Todo elemento que o código acessa por $id() precisa existir no HTML.
 // Foi a ausência disso que deixou passar container removido e seletor duplicado.
@@ -566,6 +696,17 @@ console.log('\n■ Integridade da interface');
   chk('v7.23.0 · alterar senha: revalida a atual (grant password) e grava via PUT /auth/v1/user',
     sn && sn.chamadas.length===2 && /grant_type=password/.test(sn.chamadas[0].url) && /auth\/v1\/user/.test(sn.chamadas[1].url) && sn.chamadas[1].method==='PUT' && /senha-nova-segura/.test(sn.chamadas[1].body||''),
     sn?sn.chamadas.map(c=>c.method+' '+c.url.split('/auth/')[1]).join(' → '):'—');
+  const s2 = await Promise.race([RES_SENHA2, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  chk('v7.25.0 · "Redefinir agora" chama a Edge Function admin-senha com e-mail e nova senha',
+    Array.isArray(s2) && s2.length===1 && /colega@artecon/.test(s2[0].body||'') && /senha-nova-de-terceiro/.test(s2[0].body||''),
+    Array.isArray(s2)?'ok':'timeout/'+s2);
+  const tv = await Promise.race([RES_TRAVA, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  chk('v7.26.0 · fechar grava snapshot e o status muda para fechada',
+    tv && tv.st1==='fechada' && tv.temSnap, tv?tv.st1:'timeout');
+  chk('v7.26.0 · análise fechada recusa gravação (anSalvar → false)',
+    tv && tv.salvou===false);
+  chk('v7.26.0 · divergência pós-atualização detectada e avisada (de → para), sem alterar o snapshot',
+    tv && /diverge/.test(tv.aviso||'') && /(Simples|Presumido|Real): R\$/.test(tv.aviso||'') && /→/.test(tv.aviso||''), tv?('aviso['+String(tv.aviso||'').length+']: '+String(tv.aviso||'').replace(/<[^>]*>/g,' ').slice(0,120)):'timeout');
   console.log('\n══════════════════════════════════');
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
   process.exit(FALHAS.length ? 1 : 0);
