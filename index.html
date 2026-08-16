@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.23.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.26.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -328,6 +328,30 @@ canvas{max-height:340px}
         </div>
         <div class="hint" style="margin-top:12px">Fonte: dados abertos do CNPJ da Receita Federal (minhareceita.org, com contingência BrasilAPI). Os dados de opção pelo Simples seguem a carga mensal da RFB — para decisões formais, confirme casos individuais no portal do Simples Nacional. A data de referência aparece em cada registro.</div>
       </div>
+      <div class="card"><!-- v7.25.0: triagens dos analíticos por documento (Questor) -->
+        <h3>Triagem de venda × compra — analíticos por documento</h3>
+        <div class="hint" style="margin-bottom:8px">Relatórios analíticos do Questor (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF). A triagem consolida por parceiro, consulta o enquadramento na Receita (cache de 30 dias) e monta o dashboard. Movimentação da própria empresa é separada; CPF é consumidor final (venda) e não vai à consulta.</div>
+        <input type="file" id="tri-arq-venda" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'venda')">
+        <input type="file" id="tri-arq-compra" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'compra')">
+        <div style="border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe;margin-bottom:12px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <b>📈 Resultado da triagem de venda (clientes)</b>
+            <button class="btn solid" onclick="$id('tri-arq-venda').click()">Importar analítico de clientes</button>
+            <button class="btn" id="tri-btn-venda" style="display:none" onclick="comBotao('tri-btn-venda','Consultando clientes',()=>triConsultar('venda'))">Consultar enquadramentos</button>
+            <span class="hint" id="tri-prog-venda"></span>
+          </div>
+          <div id="tri-dash-venda" style="margin-top:10px"></div>
+        </div>
+        <div style="border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <b>📉 Resultado da triagem de compra (fornecedores)</b>
+            <button class="btn solid" onclick="$id('tri-arq-compra').click()">Importar analítico de fornecedores</button>
+            <button class="btn" id="tri-btn-compra" style="display:none" onclick="comBotao('tri-btn-compra','Consultando fornecedores',()=>triConsultar('compra'))">Consultar enquadramentos</button>
+            <span class="hint" id="tri-prog-compra"></span>
+          </div>
+          <div id="tri-dash-compra" style="margin-top:10px"></div>
+        </div>
+      </div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <h3 style="margin:0">3. Resultado da triagem</h3>
@@ -357,11 +381,13 @@ canvas{max-height:340px}
         <button class="btn solid" id="an-btn-salvar" onclick="comBotao('an-btn-salvar','Salvando',()=>anSalvar())">💾 Salvar análise</button>
         <button class="btn" onclick="anRecalcular()">Recalcular</button>
         <button class="btn" onclick="anHistorico()" title="As três gravações mais recentes desta análise, com data e autor">🕘 Histórico</button>
+        <button class="btn" id="an-trava-btn" onclick="anFecharAbrir()" title="Fechada: os números ficam congelados no snapshot; edição e importação bloqueadas até reabrir">🔒 Fechar análise</button>
         <button class="btn" onclick="anVerificarMostrar()" title="Varre a análise e lista o que impede o cálculo, o que distorce o resultado e o que merece conferência">🔎 Verificar</button>
       </div>
       <div style="display:none"><select id="an-empresa" onchange="anTrocarEmpresa()"></select>
         <input type="number" id="an-ano" value="2026" onchange="anMudou()"></div>
       <div class="card" id="an-hist" style="display:none"></div>
+      <div id="an-trava-aviso"></div><!-- v7.26.0: banner da análise fechada / divergência pós-atualização -->
       <div class="card" id="an-verif" style="display:none"></div>
       <div class="card" id="an-cfg-aviso" style="display:none;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109"></div>
       <div class="grid c4" id="an-resumo" style="margin-bottom:18px"></div>
@@ -492,7 +518,7 @@ canvas{max-height:340px}
         <div id="rf-contrapartes" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px"></div>
         <div id="rf-forn-nota"></div>
         <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap">
-          <div><label>Receita anual total</label><input id="rf-receita" style="width:160px" onchange="rfCalcular()"></div>
+          <div><label>Receita anual tributável (interna — exportação imune, LC 214 art. 8º)</label><input id="rf-receita" style="width:160px" onchange="rfCalcular()"></div>
           <div><label>Compras com crédito (auto: LR/LP + Simples)</label><input id="rf-compras" style="width:160px" disabled></div>
           <div><label>Base anual do Imposto Seletivo</label><input id="rf-baseis" style="width:160px" onchange="rfCalcular()"></div>
           <div><label>% crédito s/ compras do Simples</label><input id="rf-credsimples" style="width:120px" value="0" onchange="rfCalcular()"></div>
@@ -635,7 +661,10 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.23.0</b> <span class="badge ok">atual</span></td><td>14/08/2026</td><td><b>ISS retido fora dos totais, fontes unificadas e troca de senha.</b> (1) <b>O ISS retido na fonte deixou de ser recomposto</b> no total do Simples (LC 123, art. 21, § 4º — recolhido pelo tomador, não é desembolso em guia da empresa): a linha somada saiu da memória de cálculo (vira nota informativa), do quadro tributo a tributo, da composição do ano e do cenário híbrido da Reforma; por simetria, no <b>Presumido e no Real o ISS próprio também exclui as receitas com retenção</b> — a comparação entre os três regimes segue equivalente. O INSS retido e a CPP do Anexo IV continuam recompostos (não alterados). (2) <b>Parecer e memória de cálculo alinhados</b>: a fórmula do cenário "por dentro" estava copiada em cinco pontos (veredito, parecer, comparativo em três quadros) — agora existe uma única função usada por todos, a conferência ganhou a coluna "Por dentro" com o mesmo valor do parecer, e a suíte passou a travar essa igualdade; a retirada do ISS retido corrige simultaneamente as duas pontas que divergiam. (3) Auditoria das fontes dos relatórios: corrigido o alerta do Fator R do parecer, que lia as receitas da análise <b>aberta em tela</b> mesmo quando era de outra empresa — todos os relatórios agora partem exclusivamente da análise do relatório. (4) <b>Alterar minha senha</b> na aba Usuários: o usuário conectado troca a própria senha pelo aplicativo (senha atual revalidada no servidor, nova com mínimo de 8 caracteres e confirmação), com efeito imediato também no Classificação RTC (mesmo login); o "Redefinir senha" por e-mail continua disponível para os demais usuários.</td></tr>
+                    <tr><td><b>v7.26.0</b> <span class="badge ok">atual</span></td><td>15/08/2026</td><td><b>Dados de origem na conferência e trava de análises fechadas.</b> (1) O relatório <b>Conferência de cálculos</b> passou a abrir com o bloco <b>"0. Dados de entrada — origem de todos os cálculos"</b>: tudo o que o motor recebeu, mês a mês — receitas por bloco (exportação destacada), folha, compras por linha, despesas, a indicação de ICMS/IPI automáticos ou substituídos manualmente, a configuração vigente (ISS, ICMS, presunções, adicional, sublimite, RBT12) e os parâmetros da Reforma aplicados. Qualquer número de saída do documento agora é rastreável até a sua entrada, no mesmo relatório, nos três modos (mês, resumo anual e completo). (2) <b>Análises fechadas</b>: novo botão <b>🔒 Fechar análise</b> na Análise Atual — o fechamento grava um <b>snapshot dos resultados</b> (totais por regime, DAS mês a mês, cenários 2033) com a versão do aplicativo, registra quem fechou e quando, e <b>bloqueia edição, gravação e importação</b>. Reabrir (🔓) exige confirmação e fica registrado no histórico. O ponto central: após qualquer <b>atualização do aplicativo</b>, ao abrir uma análise fechada o sistema recalcula em segundo plano e <b>compara com o snapshot</b> — se houver divergência, mostra um aviso objetivo com os valores (de → para, com a diferença) em vez de trocar em silêncio números já entregues ao cliente; a decisão de manter o snapshot ou reabrir e reprocessar é sua. Requer o script <b>setup_v726.sql</b> no Supabase (colunas status, fechado_por, fechado_em e snapshot em atp_analises); sem o script, o app avisa no momento do fechamento.</td></tr>
+                    <tr><td><b>v7.25.0</b></td><td>15/08/2026</td><td><b>Triagem de venda e de compra + redefinição de senha em duas opções.</b> (1) A Consulta CNPJ ganhou o card <b>"Triagem de venda × compra — analíticos por documento"</b>, com dois blocos empilhados, cada um com seu dashboard: importa os relatórios analíticos do Questor (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF), consolida por parceiro, consulta o enquadramento na Receita (cache de 30 dias) e mostra — na <b>venda</b>: total, nº de clientes, <b>B2B × B2C</b> (CNPJ × CPF), distribuição dos clientes PJ por regime, vendas por CFOP com a <b>exportação destacada</b> (CFOP 7xxx/x501/x502, imune) e os maiores clientes; na <b>compra</b>: total de entradas, distribuição por regime do fornecedor (crédito pleno × limitado × sem crédito), compras por CFOP e os maiores fornecedores. Movimentação da própria empresa é identificada e separada do ranking; CPF na venda é consumidor final e não vai à consulta. As triagens são <b>gravadas</b> no histórico (automático após a consulta) e alimentam o <b>parecer</b> — que ganhou a página <b>"Perfil da clientela e a decisão do crédito"</b>, com a leitura B2B×B2C aplicada à escolha por dentro × híbrido × regular — e o <b>Resumo Estatístico de Fornecedores</b>, que passa a listar também as duas triagens. (2) Na aba Usuários, o "Redefinir senha" de cada pessoa passou a oferecer <b>duas opções</b>: enviar o link por e-mail (fluxo atual) ou <b>redefinir agora</b>, digitando a nova senha — este segundo modo usa a nova função administrativa <b>admin-senha</b> (publicação no Supabase junto desta versão), restrita à lista de e-mails administradores configurada na própria função.</td></tr>
+                    <tr><td><b>v7.24.0</b></td><td>15/08/2026</td><td><b>Exportações fora da base do IBS/CBS.</b> Correção fiscal: as receitas decorrentes de exportação são <b>imunes</b> ao IBS e à CBS (LC 214/2025, art. 8º), mas o cálculo da Reforma vinha usando a receita total da análise (interna + exportação) em dois caminhos — quando a aba Reforma não tinha receita salva e no botão "⚡ Preencher da análise", que gravava o valor cheio. Agora o motor separa a receita de exportação, a base do IBS/CBS usa exclusivamente a <b>receita interna</b> nos dois caminhos, o campo da aba Reforma e os quadros deixam a regra explícita, e o preenchimento automático informa o valor de exportação excluído. Ponto técnico preservado: os <b>créditos das aquisições são mantidos</b> — a LC 214 garante o crédito do exportador, então apenas o débito cai. Simples, Presumido, Real e sublimite já excluíam a exportação desde a v7.10 e não mudam. Empresas exportadoras (revenda ao exterior e remessas com fim específico, CFOP 6501/6502) terão débito de IBS/CBS menor nos cenários híbrido e fora do Simples. <b>Atenção</b>: se a aba Reforma tiver receita GRAVADA por um "Preencher da análise" antigo, reabra a empresa e clique de novo em "⚡ Preencher da análise" para regravar o valor correto.</td></tr>
+                    <tr><td><b>v7.23.0</b></td><td>14/08/2026</td><td><b>ISS retido fora dos totais, fontes unificadas e troca de senha.</b> (1) <b>O ISS retido na fonte deixou de ser recomposto</b> no total do Simples (LC 123, art. 21, § 4º — recolhido pelo tomador, não é desembolso em guia da empresa): a linha somada saiu da memória de cálculo (vira nota informativa), do quadro tributo a tributo, da composição do ano e do cenário híbrido da Reforma; por simetria, no <b>Presumido e no Real o ISS próprio também exclui as receitas com retenção</b> — a comparação entre os três regimes segue equivalente. O INSS retido e a CPP do Anexo IV continuam recompostos (não alterados). (2) <b>Parecer e memória de cálculo alinhados</b>: a fórmula do cenário "por dentro" estava copiada em cinco pontos (veredito, parecer, comparativo em três quadros) — agora existe uma única função usada por todos, a conferência ganhou a coluna "Por dentro" com o mesmo valor do parecer, e a suíte passou a travar essa igualdade; a retirada do ISS retido corrige simultaneamente as duas pontas que divergiam. (3) Auditoria das fontes dos relatórios: corrigido o alerta do Fator R do parecer, que lia as receitas da análise <b>aberta em tela</b> mesmo quando era de outra empresa — todos os relatórios agora partem exclusivamente da análise do relatório. (4) <b>Alterar minha senha</b> na aba Usuários: o usuário conectado troca a própria senha pelo aplicativo (senha atual revalidada no servidor, nova com mínimo de 8 caracteres e confirmação), com efeito imediato também no Classificação RTC (mesmo login); o "Redefinir senha" por e-mail continua disponível para os demais usuários.</td></tr>
                     <tr><td><b>v7.22.0</b></td><td>14/08/2026</td><td><b>Dois relatórios no layout do parecer, prontos para envio ao cliente.</b> O relatório de consulta cadastral foi <b>renomeado para "Resumo estatístico de fornecedores"</b> e, junto com o relatório <b>"Produtos vendidos × Reforma (IBS/CBS)"</b>, passou ao <b>layout do parecer</b>: páginas A4 com o papel timbrado da Artecon, cabeçalho do documento com cliente, CNPJ e data. Como esses documentos têm tabelas de tamanho variável, foi criado um <b>paginador automático</b>: a relação completa de fornecedores (ou de produtos) é dividida em quantas páginas timbradas forem necessárias, com o cabeçalho da tabela repetido em cada página e cada página travada na altura exata de uma folha (a mesma regra estrutural da v7.18.2 — o timbrado nunca desalinha). O Resumo de fornecedores abre com a identificação da empresa (situação, CNAE, Simples, endereço) e o quadro societário, seguidos do resumo completo por tipo de consulta — cartões, distribuição por enquadramento e a relação integral dos fornecedores — e fecha com a regra de crédito de IBS/CBS por regime do fornecedor. O relatório de produtos mantém a relação consolidada do ano com a classificação por produto, os pendentes e os totais por CFOP.</td></tr>
                     <tr><td><b>v7.21.0</b></td><td>14/08/2026</td><td><b>Reorganização dos relatórios de fornecedores e de produtos.</b> (1) O relatório <b>Consulta CNPJ — cadastro completo</b> ganhou a seção <b>"Resumo estatístico de fornecedores"</b> em forma COMPLETA: por tipo de consulta (revenda e serviços), cartões com o número de fornecedores, o valor do período e o percentual em regime normal, a barra de distribuição por enquadramento e a <b>relação integral</b> dos fornecedores (CNPJ, razão social, enquadramento, valor e participação), ordenada por valor — com a data da consulta e a regra de crédito de IBS/CBS por regime do fornecedor. (2) A seção <b>"Produtos vendidos no período e classificação para a Reforma (IBS/CBS)"</b> saiu da página final do <b>parecer</b>, que agora encerra direto com a disposição e a assinatura. (3) Ela virou <b>relatório próprio</b> no layout Artecon: novo tipo <b>"Produtos vendidos × Reforma (IBS/CBS)"</b> no módulo Relatórios, imprimível em A4, com a mesma relação de produtos consolidados do ano (código, NCM, CFOP, valor, participação), a classificação CST · cClassTrib decidida por produto com percentuais de redução, confiança e autor, os pendentes de decisão e os totais por CFOP como régua de conferência — direto das notas gravadas no aplicativo Classificação RTC, sem exigir análise salva.</td></tr>
                     <tr><td><b>v7.20.0</b></td><td>14/08/2026</td><td><b>Relatórios ampliados.</b> (1) <b>Parecer com dashboard de fornecedores</b>: quando existe análise de fornecedores salva para a empresa, o parecer da Reforma ganha página própria "Fornecedores e o crédito de IBS/CBS" — cartões com o número de fornecedores, o valor do período e o percentual em regime normal (crédito pleno esperado), barra de distribuição por enquadramento (regime normal, Simples, MEI, não identificado), os 8 maiores fornecedores com valores, e o texto explicando a regra de crédito por regime do fornecedor (LC 214/2025 e art. 58 da Res. CGSN 190/2026). A página usa a consulta mais recente de cada tipo (revenda e serviços). (2) <b>Novo relatório "Consulta CNPJ — cadastro completo"</b>: documento imprimível da empresa selecionada com identificação, situação cadastral, endereço e contato, regime tributário (Simples/SIMEI com datas), TODAS as atividades econômicas (principal e secundárias) e o quadro societário com qualificação e data de entrada — direto dos dados abertos da RFB, com fonte e data da consulta no rodapé. (3) <b>Conferência de cálculos ampliada</b>: novo bloco "Reforma Tributária — conferência ano a ano" com débito, crédito, líquido, IS, DAS ajustado pelo art. 22-A, cenário híbrido e regime regular de 2026 a 2033, a trava do sublimite recomposta na vigência final e o alerta de créditos zerados; e a seção de divergências foi atualizada — Tema 69 e Lei 14.592/2023 agora constam como <b>aplicados por estimativa</b> (não mais como omissões), refletindo as versões 7.18.0 e 7.18.3.</td></tr>
@@ -1387,6 +1416,134 @@ async function fornConsultar(forcar){
   const br = $id('fo-refazer'); if (br) br.style.display = '';
   await fornSalvar(true);          // grava sozinha: a consulta vivia só na memória e sumia sem aviso
 }
+// ═══ v7.25.0: TRIAGEM DE VENDA (clientes) E DE COMPRA (fornecedores) — analíticos por documento ═══
+let TRI = { venda:null, compra:null };
+const TRI_EXP_CFOPS = /^(7\d{3}|5501|5502|6501|6502)$/;    // exportação direta + fim específico (imunes)
+function triParse(rows, tipo){
+  const cab = (rows[0]||[]).map(c=>String(c||'').toLowerCase());
+  const ix = t => cab.findIndex(c=>c.includes(t));
+  const iData = ix('data'), iNat = ix('natureza'), iVal = ix('valor'), iDoc = ix('cnpj'), iRz = ix('razão')>=0?ix('razão'):ix('razao');
+  if (iData<0 || iNat<0 || iVal<0 || iDoc<0) return null;
+  const propRaiz = (EMP_GLOBAL?.cnpj || AN?.cnpj || '').replace(/\D/g,'').slice(0,8);
+  const por = {}; let de=null, ate=null, docs=0;
+  for (let r=1; r<rows.length; r++){
+    const row = rows[r]||[]; const val = +row[iVal]||0; if (!val) continue;
+    const doc = String(row[iDoc]||'').replace(/\D/g,''); if (!doc) continue;
+    const nat = String(row[iNat]||'').replace(/\D/g,'');
+    const cfop = nat.length>=4 ? nat.slice(0,4) : nat;
+    const d = String(row[iData]||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if (d){ const iso = `${d[3]}-${d[2]}-${d[1]}`; if (!de||iso<de) de=iso; if (!ate||iso>ate) ate=iso; }
+    const ehCpf = doc.length===11;
+    const ehProprio = !ehCpf && propRaiz && doc.slice(0,8)===propRaiz;
+    const k = doc;
+    if (!por[k]) por[k] = { cnpj: doc, razao: iRz>=0 ? String(row[iRz]||'').trim() : '', valor:0, notas:0, cfops:{},
+      classe: ehCpf ? 'pf' : ehProprio ? 'proprio' : null };
+    por[k].valor += val; por[k].notas++; por[k].cfops[cfop] = (por[k].cfops[cfop]||0) + val;
+    if (iRz>=0 && !por[k].razao) por[k].razao = String(row[iRz]||'').trim();
+    docs++;
+  }
+  const itens = Object.values(por).sort((a,b)=>b.valor-a.valor);
+  if (!itens.length) return null;
+  return { tipo, itens, de, ate, docs, periodo: de&&ate ? `${de.split('-').reverse().join('/')} a ${ate.split('-').reverse().join('/')}` : '',
+    cnpjEmpresa: (EMP_GLOBAL?.cnpj || AN?.cnpj || ''), nomeEmpresa: (EMP_GLOBAL?.razao_social || ''), _salvo:null };
+}
+function triArquivo(input, tipo){
+  const f = input.files[0]; if (!f) return; input.value='';
+  const rd = new FileReader();
+  rd.onload = e => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      let t = null;
+      for (const n of wb.SheetNames){ const sj = XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1}); t = triParse(sj, tipo); if (t) break; }
+      if (!t){ toast('Cabeçalho não reconhecido — esperado: Data · Natureza · Valor Contábil · CNPJ/CPF.'); return; }
+      t.arquivo = f.name; TRI[tipo] = t;
+      $id('tri-btn-'+tipo).style.display = t.itens.some(i=>i.classe===null) ? '' : 'none';
+      triDash(tipo);
+      toast(`${t.itens.length} ${tipo==='venda'?'cliente(s)':'fornecedor(es)'} consolidado(s) de ${t.docs} documento(s) — período ${t.periodo||'?'}. ${t.itens.some(i=>i.classe===null)?'Consulte os enquadramentos.':''}`);
+    } catch(err){ console.error(err); toast('Erro ao ler '+f.name+': '+err.message); }
+  };
+  rd.readAsArrayBuffer(f);
+}
+async function triConsultar(tipo){
+  const T = TRI[tipo]; if (!T) return;
+  const alvos = T.itens.filter(i=>i.classe===null || i.classe==='nid');
+  if (!alvos.length){ toast('Nada a consultar.'); return; }
+  const emCache = await cnpjCacheContar(alvos.map(i=>i.cnpj));
+  const novos = alvos.length - emCache;
+  if (novos>3 && !await dlgSimNao('Consultar na Receita?', `${alvos.length} CNPJ(s): ${emCache} em cache (na hora) e ${novos} irão à Receita (~${Math.ceil(novos*0.35)}s). Continuar?`, 'Consultar', 'Cancelar')) return;
+  let n=0;
+  for (const i of T.itens){
+    if (i.classe && i.classe!=='nid') continue;
+    $id('tri-prog-'+tipo).textContent = `Consultando ${++n} de ${alvos.length}…`;
+    const r = await consultarUm(i.cnpj);
+    Object.assign(i, { situacao:r.situacao||'', razao: r.razao_social || i.razao, classe: fornClasse(r) });
+    if (n<alvos.length) await new Promise(rs=>setTimeout(rs,350));
+  }
+  $id('tri-prog-'+tipo).textContent = 'Concluído.';
+  triDash(tipo);
+  await triSalvar(tipo, true);
+}
+const TRI_ROT = { normal:['Regime normal','#b9770e'], simples:['Simples Nacional','#1a5276'], mei:['MEI','#1e8449'],
+  pf:['Pessoa física (consumidor)','#7f8c8d'], nid:['Não identificado','#95a5a6'], proprio:['Movimentação própria','#5d6d7e'] };
+function triStats(T){
+  const ext = T.itens.filter(i=>i.classe!=='proprio');
+  const tot = ext.reduce((a,i)=>a+i.valor,0)||1;
+  const porC = {}; for (const i of ext){ const c=i.classe||'nid'; porC[c]=porC[c]||{n:0,v:0}; porC[c].n++; porC[c].v+=i.valor; }
+  const cfops = {}; for (const i of ext) for (const [c,v] of Object.entries(i.cfops)) cfops[c]=(cfops[c]||0)+v;
+  const exp = Object.entries(cfops).filter(([c])=>TRI_EXP_CFOPS.test(c)).reduce((a,[,v])=>a+v,0);
+  const proprio = T.itens.filter(i=>i.classe==='proprio').reduce((a,i)=>a+i.valor,0);
+  const pj = ext.filter(i=>i.classe!=='pf').reduce((a,i)=>a+i.valor,0);
+  return { tot, porC, cfops, exp, proprio, pj, pf: tot-pj, nExt: ext.length };
+}
+function triDash(tipo){
+  const T = TRI[tipo]; const box = $id('tri-dash-'+tipo); if (!T){ box.innerHTML=''; return; }
+  const S = triStats(T);
+  const venda = tipo==='venda';
+  const pc = v => (v/S.tot*100).toFixed(1).replace('.',',')+'%';
+  const ordem = ['normal','simples','mei','pf','nid'].filter(c=>S.porC[c]);
+  const barra = ordem.map(c=>`<div style="height:12px;width:${(S.porC[c].v/S.tot*100).toFixed(1)}%;background:${TRI_ROT[c][1]}"></div>`).join('');
+  const leg = ordem.map(c=>`<span style="font-size:12px;margin-right:12px"><span style="display:inline-block;width:9px;height:9px;background:${TRI_ROT[c][1]};border-radius:2px"></span> ${TRI_ROT[c][0]}: ${S.porC[c].n} · ${fmtR(S.porC[c].v)} (${pc(S.porC[c].v)})</span>`).join('');
+  const credPleno = S.porC.normal ? S.porC.normal.v : 0;
+  const st = (n,l) => `<div class="stat"><div class="n" style="font-size:17px">${n}</div><div class="l">${l}</div></div>`;
+  let h = `<div class="hint">${esc(T.arquivo||'')} · período ${esc(T.periodo||'?')} · ${T.docs} documento(s)${T._salvo?` · <span class="badge ok">gravada ${new Date(T._salvo).toLocaleString('pt-BR')}</span>`:' · <span class="badge warn">não gravada</span>'}</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0">
+    ${st(S.nExt, venda?'clientes':'fornecedores')}
+    ${st(fmtR(S.tot), venda?'total vendido no período':'total de entradas no período')}
+    ${venda ? st(pc(S.pj), 'B2B — vendas p/ CNPJ (podem exigir crédito de IBS/CBS)') + st(pc(S.pf), 'B2C — consumidor final (CPF)')
+            : st(pc(credPleno), 'em regime normal — crédito pleno esperado')}
+    ${S.exp>0.005 ? st(pc(S.exp), 'exportação (CFOP 7xxx/x501/x502 — imune a IBS/CBS)') : ''}
+  </div>
+  <div style="display:flex;border-radius:4px;overflow:hidden;margin:4px 0">${barra}</div><div>${leg}</div>`;
+  if (S.proprio>0.005) h += `<div class="hint" style="margin-top:6px">Movimentação da própria empresa separada do ranking: ${fmtR(S.proprio)} (transferências/retornos internos).</div>`;
+  const cf = Object.entries(S.cfops).sort((a,b)=>b[1]-a[1]);
+  h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px"><div>
+    <b style="font-size:12px">${venda?'Vendas':'Compras'} por CFOP</b>
+    <table class="tbl"><thead><tr><th>CFOP</th><th style="text-align:right">Valor</th><th style="text-align:right">%</th></tr></thead><tbody>
+    ${cf.map(([c,v])=>`<tr><td>${c}${TRI_EXP_CFOPS.test(c)?' <span class="badge info">exportação</span>':''}</td><td style="text-align:right">${fmt(v)}</td><td style="text-align:right">${pc(v)}</td></tr>`).join('')}
+    </tbody></table></div><div>
+    <b style="font-size:12px">Maiores ${venda?'clientes':'fornecedores'}</b>
+    <table class="tbl"><thead><tr><th>${venda?'Cliente':'Fornecedor'}</th><th>Enquadr.</th><th style="text-align:right">Valor</th></tr></thead><tbody>
+    ${T.itens.filter(i=>i.classe!=='proprio').slice(0,10).map(i=>`<tr><td style="white-space:nowrap">${i.razao?esc(i.razao.slice(0,26)):fmtCNPJ(i.cnpj)}</td><td>${(TRI_ROT[i.classe||'nid']||TRI_ROT.nid)[0]}</td><td style="text-align:right">${fmt(i.valor)}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+  if (!T._salvo && T.itens.some(i=>i.classe && i.classe!=='pf' && i.classe!=='proprio'))
+    h += `<div style="margin-top:8px"><button class="btn solid" onclick="triSalvar('${tipo}')">💾 Gravar triagem no histórico da empresa</button></div>`;
+  box.innerHTML = h;
+}
+async function triSalvar(tipo, auto){
+  const T = TRI[tipo]; if (!T) return false;
+  if (!T.cnpjEmpresa){ if(!auto) alert('Selecione a empresa (barra do topo) antes de gravar — a triagem precisa de um dono.'); return false; }
+  try {
+    await garantirEmpresa(T.cnpjEmpresa, T.nomeEmpresa||null, null);
+    const S = triStats(T);
+    await supa('POST','atp_fornec',{ body:{ cnpj: T.cnpjEmpresa, dados: { periodo: T.periodo, tipo, origem:'Analítico por documento (Questor)', arquivo: T.arquivo||'',
+      itens: T.itens.map(i=>({cnpj:i.cnpj, razao:i.razao, classe:i.classe, valor:i.valor, cfops:i.cfops})),
+      stats:{ tot:S.tot, pj:S.pj, pf:S.pf, exp:S.exp, proprio:S.proprio } } } });
+    T._salvo = new Date().toISOString(); triDash(tipo);
+    toast(`Triagem de ${tipo} gravada ✓ — alimenta o parecer e o Resumo Estatístico de Fornecedores.`);
+    return true;
+  } catch(e){ if(!auto) alert('Erro ao gravar a triagem: '+e.message); return false; }
+}
+
 async function fornSalvar(auto){
   if (!FO || !FO.itens.some(i=>i.classe)) { if (!auto) toast('Consulte os fornecedores antes de salvar.'); return false; }
   if (!FO.cnpjEmpresa){
@@ -2226,6 +2383,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   }
   out.totais = {
     receita: S(out.meses.map(x=>x.receita)),
+    receitaExp: S(out.meses.map(x=>x.recExp||0)),          // v7.24.0: exportação separada (imune a IBS/CBS)
     simples: S(out.meses.map(x=>x.simples.total)),
     lp: S(out.meses.map(x=>x.lp.total)),
     lr: S(out.meses.map(x=>x.lr.total)),
@@ -2249,7 +2407,8 @@ let PARAMS = { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha: {...FO
 let AN = null;          // análise corrente
 let AN_SUJO = false;    // v7.5.7: há importação/edição ainda não salva no banco
 // todo importador chama isto depois de mexer na análise: marca pendência e redesenha
-function anAplicado(){ AN_SUJO = true; anRenderTabs(); anRenderGrid(); anRecalcular(); anSalvarAuto(); }
+function anAplicado(){
+  if (anTravada()){ toast('Análise FECHADA 🔒 — a importação não foi gravada. Reabra (🔓) para aplicar.'); return; } AN_SUJO = true; anRenderTabs(); anRenderGrid(); anRecalcular(); anSalvarAuto(); }
 // grava sozinho depois de importar; sem empresa definida não há onde gravar, e aí o aviso explica o porquê
 async function anSalvarAuto(){
   if (!AN) return;
@@ -2754,6 +2913,7 @@ function snAvisoHtml(el) {
       <a href="#" onclick="snPerguntarAnterior(true);return false" style="margin-left:6px">informar o ano anterior</a></div></div>`;
 }
 function anRecalcular() {
+  setTimeout(()=>{ try{ anTravaRender(); }catch(e){} }, 0);   // v7.26.0: banner da trava acompanha o recálculo
   if (!AN) return;
   let r;
   try { r = calcular(AN, PARAMS.anexos, folhaPercDaEmpresa()); } catch(e) { console.error(e); return; }
@@ -2786,7 +2946,7 @@ function anRecalcular() {
       ${st('Simples "por dentro"', dentro33, 'tudo no DAS — crédito reduzido ao cliente', mn33===dentro33)}
       ${st('Simples híbrido (LC 214)', R33.hib, 'DAS sem consumo + IBS/CBS por fora — crédito integral', mn33===R33.hib)}
       ${st('Fora do Simples', R33.regular, 'regime regular pleno ('+R33.regNome+' + IBS/CBS)', mn33===R33.regular)}
-      </div><div class="hint" style="margin-top:6px">Quadro ano a ano (2026–2033) na aba <b>Relatórios → Comparativo de Regimes</b>.${C.usouFallback?' Aba Reforma sem dados: usei alíquotas-padrão e a receita da análise, sem créditos de compras.':''}</div></div>`;
+      </div><div class="hint" style="margin-top:6px">Quadro ano a ano (2026–2033) na aba <b>Relatórios → Comparativo de Regimes</b>.${C.usouFallback?' Aba Reforma sem dados: usei alíquotas-padrão e a receita INTERNA da análise (exportação imune — LC 214, art. 8º), sem créditos de compras.':''}</div></div>`;
   } catch(e) { console.error('Cenários da Reforma (análise):', e); }
   $id('an-veredito').innerHTML = `<h3 style="margin-bottom:6px">Melhor regime: ${nomeMenor}</h3>
     ${snAvisoHtml(EL)}
@@ -2828,6 +2988,11 @@ async function anTrocarEmpresa() {
     AN = anNormalizar(rows.length ? rows[0].dados : null, cnpj, ano);
     AN.cnpj = cnpj; AN.ano = ano;
     AN._verEm = rows.length ? (rows[0].atualizado_em || null) : null;   // marca da versão lida
+    if (rows.length){                                    // v7.26.0: estado da trava vem do banco
+      AN._status = rows[0].status || 'aberta';
+      AN._snapshot = rows[0].snapshot || null;
+      AN._fechadoPor = rows[0].fechado_por || ''; AN._fechadoEm = rows[0].fechado_em || null;
+    }
   } catch { AN = anNovo(cnpj, ano); }
   AN_SUJO = false;
   anRenderTabs(); anRenderGrid(); anRecalcular();
@@ -2890,7 +3055,61 @@ async function anHistRestaurar(id){
   $id('an-hist').style.display = 'none';
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
+// ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
+const APP_VERSAO = '7.26.0';
+function anTravada(){ return !!(AN && AN._status==='fechada'); }
+function anSnapshotCalc(){
+  const T = AN?._res?.totais || {};
+  let cen = null;
+  try { const C = calcCenariosReforma(AN._res, AN.reforma||null); const L33 = C.REF[C.REF.length-1];
+    cen = { dentro: cenDentro(T, L33), hib: L33.hib, regular: L33.regular }; } catch(e){}
+  return { versao: APP_VERSAO, em: new Date().toISOString(),
+    totais: { receita:T.receita||0, receitaExp:T.receitaExp||0, simples:T.simples||0, lp:T.lp||0, lr:T.lr||0, das:T.das||0 },
+    cen2033: cen, dasMeses: (AN?._res?.meses||[]).map(M=>+(M.das||0).toFixed(2)) };
+}
+async function anFecharAbrir(){
+  if (!AN || !AN.cnpj){ toast('Selecione a empresa e abra a análise primeiro.'); return; }
+  if (anTravada()){
+    if (!await dlgSimNao('Reabrir a análise?', 'Reabrir libera edição e importação e o recálculo passa a valer — os números podem mudar em relação ao snapshot do fechamento. A reabertura fica registrada no histórico.', 'Sim, reabrir', 'Não')) return;
+    AN._status = 'aberta';
+    try { await supa('PATCH', `atp_analises?cnpj=eq.${AN.cnpj}&ano=eq.${AN.ano}`, { body:{ status:'aberta' } });
+      await anHistGravar({ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN,_res:undefined,_verEm:undefined}, resumo:{ evento:'reaberta', por: APP?.user?.email||'' } });
+    } catch(e){ console.error(e); }
+    toast('Análise reaberta — edição liberada.'); anTravaRender(); return;
+  }
+  if (AN_SUJO){ toast('Salve a análise antes de fechar (o snapshot congela a versão gravada).'); return; }
+  if (!await dlgSimNao('Fechar a análise?', 'O fechamento congela os resultados num snapshot (com a versão do app), registra quem fechou e bloqueia edição e importação. Após futuras atualizações do aplicativo, qualquer divergência entre o recálculo e o snapshot será avisada em vez de aplicada em silêncio.', 'Sim, fechar', 'Não')) return;
+  const snap = anSnapshotCalc();
+  AN._status = 'fechada'; AN._snapshot = snap; AN._fechadoPor = APP?.user?.email||''; AN._fechadoEm = snap.em;
+  try {
+    await supa('PATCH', `atp_analises?cnpj=eq.${AN.cnpj}&ano=eq.${AN.ano}`,
+      { body:{ status:'fechada', fechado_por: AN._fechadoPor, fechado_em: snap.em, snapshot: snap } });
+    toast(`Análise ${AN.ano} fechada ✓ — snapshot gravado (app v${APP_VERSAO}).`);
+  } catch(e){ alert('Não foi possível gravar o fechamento: '+e.message+'\n\nRode o setup_v726.sql no Supabase (colunas status/snapshot) e tente de novo.'); AN._status='aberta'; }
+  anTravaRender();
+}
+function anTravaRender(){
+  const btn = $id('an-trava-btn'), box = $id('an-trava-aviso');
+  if (!btn || !box) return;
+  if (!anTravada()){ btn.textContent = '🔒 Fechar análise'; box.innerHTML=''; return; }
+  btn.textContent = '🔓 Reabrir análise';
+  const snap = AN._snapshot||{}, T = AN?._res?.totais||{};
+  let divg = '';
+  if (snap.totais){
+    const difs = [];
+    for (const [k,rot] of [['simples','Simples'],['lp','Presumido'],['lr','Real'],['das','DAS']]){
+      const a = +snap.totais[k]||0, b = +T[k]||0;
+      if (Math.abs(a-b)>0.015) difs.push(`${rot}: ${fmtR(a)} → ${fmtR(b)} (${b>a?'+':''}${fmtR(b-a)})`);
+    }
+    if (difs.length) divg = `<div style="margin-top:6px;padding:8px 10px;border-left:4px solid #b03a2e;background:#fdedec;font-size:12px">
+      <b>⚠️ O recálculo atual (app v${APP_VERSAO}) diverge do snapshot do fechamento (app v${snap.versao||'?'})</b> — os valores fechados permanecem no snapshot; nada foi alterado:<br>${difs.map(esc).join('<br>')}
+      <br><span class="hint">Para adotar os números novos, reabra a análise (🔓), recalcule e feche de novo.</span></div>`;
+  }
+  box.innerHTML = `<div class="card" style="border-left:4px solid #1e8449"><b>🔒 Análise fechada</b> por ${esc(AN._fechadoPor||'?')} em ${AN._fechadoEm?new Date(AN._fechadoEm).toLocaleString('pt-BR'):'?'} (app v${esc(String((AN._snapshot||{}).versao||'?'))}) — edição e importação bloqueadas.${divg}</div>`;
+}
+
 async function anSalvar() {
+  if (anTravada()){ toast('Análise FECHADA 🔒 — reabra (🔓) para editar e gravar.'); return false; }
   if (!AN || !AN.cnpj) { toast('Selecione a empresa no topo (ou importe PGDAS/Faturamento, que o cadastro é automático).'); return false; }
   // ninguém deve sobrescrever, sem saber, o trabalho de outra pessoa na mesma empresa/ano
   try {
@@ -3087,7 +3306,7 @@ async function usCarregar() {
   try { const rows = await supa('GET','atp_usuarios',{ params:{ select:'*', order:'criado_em.asc' } });
     $id('us-tbody').innerHTML = rows.length ? rows.map(u=>`<tr><td>${u.nome||'—'}</td><td>${u.email}</td><td>${(u.criado_em||'').slice(0,10)}</td>
       <td style="white-space:nowrap"><button class="btn" onclick="usEditar('${u.email}')">Editar</button>
-      <button class="btn" onclick="usSenha('${u.email}')">Redefinir senha</button>
+      <button class="btn" onclick="usSenhaMenu('${u.email}')">Redefinir senha</button>
       <button class="btn" style="color:var(--danger)" onclick="usExcluir('${u.email}')">Excluir</button></td></tr>`).join('')
       : '<tr><td colspan="4" class="hint" style="padding:16px;text-align:center">Nenhum usuário listado ainda.</td></tr>';
   } catch { $id('us-tbody').innerHTML = '<tr><td colspan="4" class="hint" style="padding:16px">Execute o setup_v2.sql para habilitar a lista.</td></tr>'; }
@@ -3126,6 +3345,24 @@ async function usAlterarMinhaSenha(){
     ['us-sn-atual','us-sn-nova','us-sn-conf'].forEach(i=>$id(i).value='');
     toast('Senha alterada com sucesso — já vale no próximo login em qualquer dispositivo.');
   } catch(e){ toast('Erro ao alterar a senha: '+e.message); }
+}
+// v7.25.0: redefinição com 2 opções — e-mail (fluxo atual) ou imediata via Edge Function admin-senha
+async function usSenhaMenu(email){
+  const op = await dlg('Redefinir a senha de '+email,
+    'Escolha como redefinir:\n\n• "Enviar por e-mail" manda o link de redefinição para o próprio usuário.\n• "Redefinir agora" grava uma nova senha imediatamente (restrito a administradores — exige a função admin-senha publicada).',
+    [ {rotulo:'📧 Enviar por e-mail', valor:'email', destaque:true}, {rotulo:'🔑 Redefinir agora', valor:'agora'}, {rotulo:'Cancelar', valor:null} ]);
+  if (op==='email') return usSenha(email);
+  if (op!=='agora') return;
+  const nova = prompt(`Nova senha para ${email} (mínimo 8 caracteres):`);
+  if (nova===null) return;
+  if ((nova||'').length < 8){ toast('A nova senha precisa de pelo menos 8 caracteres.'); return; }
+  try {
+    const r = await supaFn('admin-senha', { email, senha: nova });
+    if (r && r.ok !== false){ toast(`Senha de ${email} redefinida ✓ — informe a pessoa pelo canal seguro de sempre.`); }
+    else throw new Error((r&&r.erro)||'resposta inválida');
+  } catch(e){
+    alert('Não foi possível redefinir agora: '+e.message+'\n\nVerifique se a Edge Function admin-senha está publicada e se o seu e-mail consta na lista ADMIN_EMAILS dela. A opção por e-mail continua disponível.');
+  }
 }
 async function usSenha(email) {
   if (!confirm(`Enviar e-mail de redefinição de senha para ${email}?`)) return;
@@ -3290,7 +3527,9 @@ function calcCenariosReforma(res, reforma) {
   const aliqApp = PARAMS.reforma || RF_ALIQ_DEFAULT;
   const aliq = {}; for (const a of RF_ANOS) aliq[a] = Object.assign({}, RF_ALIQ_DEFAULT[a], aliqApp[a]||{});
   rfx.aliq = aliq;
-  if (!(rfx.receita>0)) rfx.receita = T.receita;
+  // v7.24.0: exportações são IMUNES a IBS/CBS (LC 214/2025, art. 8º) — a base usa só a receita
+  // interna; os créditos das aquisições são MANTIDOS (a LC preserva o crédito do exportador).
+  if (!(rfx.receita>0)) rfx.receita = Math.max(0, T.receita - (T.receitaExp||0));
   const dasCheio = (T.das||0) + (T.sublimite||0);
   const dasResto = dasCheio - (T.dasPisCof||0) - (T.dasIcmsIss||0);
   const sLP = k => meses.reduce((s,x)=>s+(+x.lp[k]||0),0), sLR = k => meses.reduce((s,x)=>s+(+x.lr[k]||0),0);
@@ -4463,11 +4702,13 @@ function rfAutoPreencher() {
   if (!RF) { toast('Abra a aba Reforma com uma empresa selecionada.'); return; }
   if (!AN || !AN._res) { toast('Sem análise calculada — abra a empresa na aba Análise Atual (ou selecione-a aqui) e recalcule.'); return; }
   const T = AN._res.totais;
-  RF.receita = T.receita || RF.receita || 0;
+  // v7.24.0: a Reforma tributa só a receita INTERNA — exportação imune (LC 214, art. 8º)
+  RF.receita = Math.max(0, (T.receita||0) - (T.receitaExp||0)) || RF.receita || 0;
   const sArr = a => (a||[]).reduce((x,y)=>x+(+y||0),0);
   const comprasTot = ['semst','mono','comst','comstMono'].reduce((s,k)=>s+sArr(AN.compras?.[k]),0);
   if (comprasTot > 0) RF.contra.compras_lrlp = Math.round(comprasTot*100)/100;
   let extra = '';
+  if ((T.receitaExp||0) > 0.005) extra += ` Exportação de ${fmtR(T.receitaExp)} EXCLUÍDA da receita (imune a IBS/CBS — LC 214, art. 8º); os créditos das compras foram mantidos.`;
   if (AN.notas && AN.notas.total > 0) {
     const mapB = {'30':'r30','40':'r40','50':'r50','60':'r60','70':'r70','80':'r80','100':'r100'};
     const fator = (T.receita||0) > 0 ? (T.receita)/AN.notas.total : 1;
@@ -4632,14 +4873,14 @@ async function rlCnpjRender(cnpj){
   } else {
     B.push({ html:'<div class="hint">Cadastro do CNPJ indisponível no momento (falha nas fontes de dados abertos) — o resumo de fornecedores segue abaixo.</div>', custo:3 });
   }
-  const ROT = { mei:['MEI','#1e8449'], simples:['Simples Nacional','#1a5276'], normal:['Regime normal','#b9770e'], nid:['Não identificado','#7f8c8d'], pf:['Pessoa física','#7f8c8d'] };
+  const ROT = { mei:['MEI','#1e8449'], simples:['Simples Nacional','#1a5276'], normal:['Regime normal','#b9770e'], nid:['Não identificado','#7f8c8d'], pf:['Pessoa física','#7f8c8d'], proprio:['Movimentação própria','#5d6d7e'] };
   let nSec = (d && (d.qsa||[]).length) ? 3 : (d ? 2 : 1);
   const tipoBloco = (r, titulo) => {
     if (!r || !r.dados) return;
     const itens = r.dados.itens||[];
     const tot = itens.reduce((a,i)=>a+(+i.valor||0),0) || 1;
     const porC = {}; for (const i of itens){ const c=i.classe||'nid'; porC[c]=porC[c]||{n:0,v:0}; porC[c].n++; porC[c].v+=(+i.valor||0); }
-    const ordem = ['normal','simples','mei','nid','pf'].filter(c=>porC[c]);
+    const ordem = ['normal','simples','mei','nid','pf','proprio'].filter(c=>porC[c]);
     const barra = ordem.map(c=>`<div style="height:10px;width:${(porC[c].v/tot*100).toFixed(1)}%;background:${ROT[c][1]}"></div>`).join('');
     const leg = ordem.map(c=>`<span style="font-size:8.5pt;margin-right:10px"><span style="display:inline-block;width:8px;height:8px;background:${ROT[c][1]};border-radius:2px"></span> ${ROT[c][0]}: ${porC[c].n} forn. · ${fmtR(porC[c].v)} (${(porC[c].v/tot*100).toFixed(1).replace('.',',')}%)</span>`).join('');
     const pctCred = ((porC.normal?porC.normal.v:0)/tot*100).toFixed(1).replace('.',',');
@@ -4656,7 +4897,8 @@ async function rlCnpjRender(cnpj){
       linhas: [...itens].sort((a,b)=>(+b.valor||0)-(+a.valor||0)).map(i=>{const rr=ROT[i.classe||'nid']||ROT.nid;
         return {html:`<tr><td style="text-align:left;white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td style="text-align:left">${esc(i.razao)}</td><td style="text-align:left">${rr[0]}</td><td>${fmt(i.valor)}</td><td>${(i.valor/tot*100).toFixed(1).replace('.',',')}%</td></tr>`, custo:1};}) });
   };
-  if (F){ tipoBloco(F.revenda,'Fornecedores de revenda (entradas de mercadorias)'); tipoBloco(F.servico,'Fornecedores de serviços e despesas'); }
+  if (F){ tipoBloco(F.revenda,'Fornecedores de revenda (entradas de mercadorias)'); tipoBloco(F.servico,'Fornecedores de serviços e despesas');
+    tipoBloco(F.compra,'Triagem de compra — analítico por documento'); tipoBloco(F.venda,'Triagem de venda — clientes (analítico por documento)'); }   // v7.25.0
   else B.push({ html:'<div class="hint" style="margin-top:8px">Nenhuma análise de fornecedores salva para esta empresa — importe o relatório de fornecedores na Consulta CNPJ (🚚) e grave a consulta.</div>', custo:3 });
   B.push({ html:`<div class="hint" style="margin-top:8px">No IVA dual, o crédito de IBS/CBS do adquirente depende do regime do fornecedor: regime normal gera crédito pleno destacado no documento fiscal; Simples Nacional, crédito limitado ao percentual da faixa do fornecedor (LC 214/2025; Res. CGSN 190/2026, art. 58); MEI e pessoas físicas, em regra, não geram crédito.</div>
     <div class="hint" style="margin-top:6px">Fontes: ${fonte||'dados abertos da RFB indisponíveis'}; análises de fornecedores do escritório (com data indicada por consulta). Documento gerado em ${new Date().toLocaleString('pt-BR')} · Artecon Artes Contábeis.</div>`, custo:5 });
@@ -4872,6 +5114,38 @@ function parecerPagFornecedores(secao, prox){
     <p class="pp-p" style="font-size:9.5pt">No IVA dual, o crédito de IBS/CBS que a empresa poderá apropriar depende do <b>regime do fornecedor</b>: aquisições de empresas no regime regular geram crédito pleno destacado no documento fiscal; aquisições de optantes do Simples Nacional geram crédito limitado ao percentual efetivamente cobrado na faixa do fornecedor (LC 214/2025 e Res. CGSN 190/2026, art. 58); e aquisições de MEI ou de pessoas físicas, em regra, não geram crédito. O retrato abaixo vem da análise de fornecedores realizada pelo escritório sobre os relatórios de entradas do período.</p>
     ${corpo}
     <div class="hint" style="font-size:8pt;margin-top:4px">Enquadramento consultado nos dados abertos da RFB na data indicada — sujeito a alteração. O crédito efetivo dependerá do destaque em documento fiscal a partir de 2026/2027.</div>
+  </div></div>`;
+}
+
+// ═══ v7.25.0: página do parecer — perfil da clientela (triagem de venda) ═══
+function parecerPagClientela(secao, prox){
+  const V = RL.forn && RL.forn.venda; if (!V || !V.dados) return '';
+  const it = V.dados.itens||[]; if (!it.length) return '';
+  const ext = it.filter(i=>i.classe!=='proprio');
+  const tot = ext.reduce((a,i)=>a+(+i.valor||0),0)||1;
+  const pj = ext.filter(i=>i.classe!=='pf').reduce((a,i)=>a+(+i.valor||0),0);
+  const st = V.dados.stats||{}; const exp = +st.exp||0;
+  const pc = v => (v/tot*100).toFixed(1).replace('.',',');
+  const porC = {}; for (const i of ext){ const c=i.classe||'nid'; porC[c]=porC[c]||{n:0,v:0}; porC[c].n++; porC[c].v+=(+i.valor||0); }
+  const ROT = { normal:['Regime normal','#b9770e'], simples:['Simples Nacional','#1a5276'], mei:['MEI','#1e8449'], pf:['Consumidor final (CPF)','#7f8c8d'], nid:['Não identificado','#95a5a6'] };
+  const ordem = ['normal','simples','mei','pf','nid'].filter(c=>porC[c]);
+  const barra = ordem.map(c=>`<div style="height:10px;width:${(porC[c].v/tot*100).toFixed(1)}%;background:${ROT[c][1]}"></div>`).join('');
+  const leg = ordem.map(c=>`<span style="font-size:8.5pt;margin-right:10px"><span style="display:inline-block;width:8px;height:8px;background:${ROT[c][1]};border-radius:2px"></span> ${ROT[c][0]}: ${porC[c].n} · ${fmtR(porC[c].v)} (${pc(porC[c].v)}%)</span>`).join('');
+  const b2b = pc(pj), b2c = pc(tot-pj);
+  return `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
+    ${secao(prox(),'Perfil da clientela e a decisão do crédito')}
+    <p class="pp-p" style="font-size:9.5pt">A escolha entre permanecer integralmente no Simples, adotar o regime híbrido ou migrar para o regime regular depende, antes de tudo, de <b>quem compra</b> da empresa: clientes pessoa jurídica no regime regular tendem a exigir o crédito integral de IBS/CBS destacado no documento fiscal, enquanto o consumidor final não aproveita crédito — para ele, o Simples "por dentro" permanece competitivo. O retrato abaixo vem da triagem de venda realizada pelo escritório sobre o analítico de saídas do período (${esc(V.dados.periodo||'?')}).</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0">
+      <div class="pp-card" style="flex:1;min-width:120px"><div class="t">Vendas p/ CNPJ (B2B)</div><div class="v">${b2b}%</div></div>
+      <div class="pp-card" style="flex:1;min-width:120px"><div class="t">Consumidor final (B2C)</div><div class="v">${b2c}%</div></div>
+      ${exp>0.005?`<div class="pp-card" style="flex:1;min-width:120px"><div class="t">Exportação (imune)</div><div class="v">${pc(exp)}%</div></div>`:''}
+      ${porC.normal?`<div class="pp-card" style="flex:1;min-width:150px"><div class="t">Clientes no regime regular</div><div class="v">${pc(porC.normal.v)}%</div></div>`:''}
+    </div>
+    <div style="display:flex;border-radius:4px;overflow:hidden;margin:4px 0">${barra}</div><div>${leg}</div>
+    <p class="pp-p" style="font-size:9.5pt;margin-top:8px">${(pj/tot)>=0.5
+      ? 'Com a maior parte do faturamento destinada a pessoas jurídicas, a pressão pelo crédito de IBS/CBS tende a ser relevante — os cenários <b>híbrido</b> e <b>regime regular</b> merecem atenção especial na comparação da Seção anterior, e a manutenção "por dentro" pode implicar perda de competitividade junto a esses clientes.'
+      : 'Com a maior parte do faturamento destinada ao consumidor final, a ausência de crédito ao cliente tem impacto comercial reduzido — a permanência integral no Simples ("por dentro") tende a preservar a competitividade, e a comparação financeira da Seção anterior decide.'}${exp>0.005?' As receitas de exportação identificadas são imunes ao IBS/CBS (LC 214, art. 8º) e não pressionam a decisão do crédito.':''}</p>
+    <div class="hint" style="font-size:8pt;margin-top:4px">Enquadramento dos clientes PJ consultado nos dados abertos da RFB na data da triagem — sujeito a alteração.</div>
   </div></div>`;
 }
 
@@ -5109,6 +5383,9 @@ function rlParecer(){
 
   // ── PÁG (v7.20.0): dashboard de fornecedores — só quando há consulta salva ──
   h += parecerPagFornecedores(secao, ()=>++NS);
+
+  // ── PÁG (v7.25.0): perfil da clientela — só quando há triagem de venda gravada ──
+  h += parecerPagClientela(secao, ()=>++NS);
 
   // ── PÁG: pontos de atenção + prazos + notas + assinatura (v7.18.1: página própria) ──
   h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
@@ -5404,6 +5681,49 @@ const CF = {
       <table class="gtable"><tbody>${linhas.join('')}</tbody></table>`,
   pc: v => (v*100).toFixed(4).replace('.',',') + '%',
 };
+// ═══ v7.26.0: bloco "0. Dados de entrada" — os dados que originaram TODOS os cálculos ═══
+function rlConfEntrada(){
+  const D = RL.dados; if (!D) return '';
+  const linha = (rot, arr, forte) => {
+    const a = (arr||[]).map(v=>+v||0); const tot = a.reduce((x,y)=>x+y,0);
+    if (Math.abs(tot) < 0.005) return '';
+    return `<tr${forte?' style="font-weight:600"':''}><td class="rot">${rot}</td>${a.map(v=>`<td class="num">${v?fmt(v):'—'}</td>`).join('')}<td class="num"><b>${fmt(tot)}</b></td></tr>`;
+  };
+  const grade = (titulo, linhas) => {
+    const corpo = linhas.filter(Boolean).join('');
+    if (!corpo) return '';
+    return `<div style="overflow:auto;margin:6px 0"><b style="font-size:12px">${titulo}</b>
+      <table class="gtable" style="font-size:11px"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m}</th>`).join('')}<th class="num">Total</th></tr></thead><tbody>${corpo}</tbody></table></div>`;
+  };
+  const R = D.receitas||{}, F = D.folha||{}, C = D.compras||{}, DE = D.despesas||{}, cfg = D.cfg||{};
+  const rotBloco = k => (PG_BLOCOS.find(b=>b[0]===k)||[,k])[1];
+  const recLinhas = Object.keys(R).filter(k=>Array.isArray(R[k]) && !k.endsWith('_pct')).map(k=>linha(rotBloco(k), R[k], k.endsWith('_exp')));
+  const cfgTx = [
+    ['ISS', CF.pc(+cfg.iss||0)], ['ICMS vendas', CF.pc(+cfg.icmsV||0)], ['ICMS compras', CF.pc(+cfg.icmsC||0)],
+    ['IPI vendas', CF.pc(+cfg.ipiV||0)], ['IPI compras', CF.pc(+cfg.ipiC||0)],
+    ['Presunção serviços (LP)', CF.pc(+cfg.lpBaseServ||0)], ['Presunção comércio (LP)', CF.pc(+cfg.lpBaseCom||0)],
+    ['Adicional de IRPJ', cfg.adicionalIR||'off'], ['Sublimite', cfg.sublimite||'auto'],
+    ['RBT12 direto', +cfg.rbt12Direto ? fmtR(+cfg.rbt12Direto) : '— (lançado mês a mês)'],
+  ].map(([r,v])=>`<tr><td class="rot">${r}</td><td>${v}</td></tr>`).join('');
+  const subst = [];
+  if (D.icms && (D.icms.cred||D.icms.deb)) subst.push('ICMS substituído manualmente (crédito/débito informados na aba ICMS·IPI)');
+  if (D.ipi && (D.ipi.cred||D.ipi.deb)) subst.push('IPI substituído manualmente');
+  return `<div class="card"><h3 style="margin-top:0">0. Dados de entrada — origem de todos os cálculos</h3>
+    <div class="hint">Tudo o que o motor recebeu para esta análise (valores lançados/importados, antes de qualquer cálculo). Linhas zeradas são omitidas. ${subst.length?('<b>'+subst.join('; ')+'.</b>'):'ICMS e IPI em modo automático (calculados pelos percentuais da configuração).'}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px"><div>
+      <b style="font-size:12px">Configuração vigente</b>
+      <table class="gtable" style="font-size:11px"><tbody>${cfgTx}</tbody></table></div><div>
+      <b style="font-size:12px">Parâmetros da Reforma aplicados</b>
+      <table class="gtable" style="font-size:11px"><tbody>${[2027,2029,2031,2033].map(a=>{
+        const q = Object.assign({}, RF_ALIQ_DEFAULT[a]||{}, (PARAMS.reforma||{})[a]||{});
+        return `<tr><td class="rot">${a}</td><td>CBS ${(q.cbs||0).toFixed(2)}% · IBS ${((q.ibse||0)+(q.ibsm||0)).toFixed(2)}%</td></tr>`;}).join('')}
+      <tr><td colspan="2" class="hint">Fonte: Parâmetros › Reforma (Res. CGIBS nº 14/2026)</td></tr></tbody></table></div></div>
+    ${grade('Receitas por bloco (R$/mês)', recLinhas)}
+    ${grade('Folha (R$/mês)', [linha('Pró-labore', F.prolabore), linha('Salários', F.salarios), linha('Base FGTS', F.baseFgts), linha('Provisão 13º', F.prov13), linha('Provisão férias', F.provFerias)])}
+    ${grade('Compras (R$/mês)', [linha('Revenda sem ST', C.semst), linha('Revenda com ST', C.comst), linha('Monofásicas', C.mono), linha('ST + Mono', C.comstMono), linha('Baixa estoque s/ ST (CMV)', C.baixaSemst), linha('Baixa c/ ST', C.baixaComst), linha('Baixa mono', C.baixaMono), linha('Base IPI crédito', C.baseIpiCred)])}
+    ${grade('Despesas (R$/mês)', [linha('Administrativas', DE.adm), linha('Vendas', DE.vendas), linha('Fiscais', DE.fiscais), linha('Financeiras', DE.financeiras), linha('Outras', DE.outras), linha('Com crédito PIS/COFINS (LR)', DE.credLR)])}
+  </div>`;
+}
 function rlConferencia(){
   const R = RL.res, D = RL.dados, A = PARAMS.anexos;
   const modo = ($id('rl-conf-modo')||{}).value || 'mes';
@@ -5424,9 +5744,9 @@ function rlConferencia(){
         (D.compras?.semst||[]).some(v=>+v>0) ? 'compras lançadas' : null
       ].filter(Boolean).join(' · ') || 'lançamento manual'}</div></div>`;
 
-  if (modo === 'anual') return cab + rlConfAnual();      // (rlConfAnual inclui Reforma e divergências)
+  if (modo === 'anual') return cab + rlConfEntrada() + rlConfAnual();      // (rlConfAnual inclui Reforma e divergências)
 
-  let h = cab;
+  let h = cab + rlConfEntrada();   // v7.26.0: dados de entrada abrem todos os modos
   for (const m of meses){
     const M = R.meses[m]; if (!M) continue;
     const AN1 = A.I, AN3 = A.III, fx = M.faixa-1;
@@ -5566,7 +5886,7 @@ function rlConfReforma(){
       ? '<div class="hint" style="color:#b9770e">⚠️ Créditos de IBS/CBS = ZERO — nenhuma compra informada (aba Reforma e Compras vazias).</div>'
       : (C.proxyCompras ? '<div class="hint">Créditos estimados pelas compras de revenda da análise (proxy) — preencha a aba Reforma para refinar.</div>' : '');
     return `<div class="card"><h3 style="margin-top:0">Reforma Tributária — conferência ano a ano (2026–2033)</h3>
-      <div class="hint">Débito = base tributável (receita − reduções por cClassTrib) × alíquotas de referência do ano (Parâmetros › Reforma, Res. CGIBS nº 14/2026). Crédito = aquisições com direito a crédito × mesmas alíquotas. Híbrido = art. 22-A da Res. CGSN 140/2018 (Res. 190/2026): DAS + trava − parcelas de CBS/IBS da partilha da faixa, mais IBS/CBS apurados por fora.</div>
+      <div class="hint">Débito = base tributável (receita INTERNA − reduções por cClassTrib; exportações imunes — LC 214, art. 8º, com créditos mantidos) × alíquotas de referência do ano (Parâmetros › Reforma, Res. CGIBS nº 14/2026). Crédito = aquisições com direito a crédito × mesmas alíquotas. Híbrido = art. 22-A da Res. CGSN 140/2018 (Res. 190/2026): DAS + trava − parcelas de CBS/IBS da partilha da faixa, mais IBS/CBS apurados por fora.</div>
       <table class="gtable"><thead><tr><th>Ano</th><th class="num">Débito IBS/CBS</th><th class="num">Crédito</th><th class="num">Líquido</th><th class="num">IS</th><th class="num">Por dentro</th><th class="num">DAS ajustado (22-A)</th><th class="num">Cenário híbrido</th><th class="num">Regime regular</th></tr></thead>
       <tbody>${linhas}</tbody></table>
       ${travaTx}${credTx}
