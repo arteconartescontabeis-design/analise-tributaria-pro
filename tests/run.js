@@ -29,7 +29,7 @@ const doc = { getElementById:id=>els[id]||(els[id]=mkEl()), querySelector:()=>mk
 const ctx = { document:doc, window:{ addEventListener(){}, print(){} },
   localStorage:{getItem:()=>null,setItem(){},removeItem(){}}, sessionStorage:{getItem:()=>null,setItem(){}},
   fetch:async()=>({ok:true,json:async()=>({}),text:async()=>''}), navigator:{}, console:{...console,log(){},error(){}},
-  setTimeout, clearTimeout, alert(){}, confirm:()=>true, URL, atob:s=>s, btoa:s=>s };
+  setTimeout, clearTimeout, alert(){}, confirm:()=>true, URL, atob:s=>s, btoa:s=>s, AbortController, AbortSignal };
 ctx.window.document = doc; vm.createContext(ctx);
 try { vm.runInContext(js, ctx); } catch(e) { /* init sem DOM real */ }
 
@@ -647,6 +647,185 @@ console.log('\n■ v7.26.0 — bloco 0 (dados de entrada) e trava de análises f
   })();
 }
 
+// ═══ 5n. v7.27.0 — analíticos por documento unificados no item 2 + supaFn v7.26.2 ═══
+console.log('\n■ v7.27.0 — analítico entra pelo item 2 (card avulso extinto) e supaFn localiza timeout');
+{
+  chk('v7.27.0 · card avulso da triagem foi removido do HTML (sem tri-arq-*, sem triArquivo)',
+    !html.includes('tri-arq-venda') && !html.includes('tri-arq-compra') && !html.includes('triArquivo'));
+  chk('v7.27.0 · painéis das triagens vivem DENTRO do card 2 (tri-painel-venda/compra antes da lista de CNPJs)',
+    html.includes('id="tri-painel-venda"') && html.includes('id="tri-painel-compra"')
+    && html.indexOf('id="tri-painel-venda"') > html.indexOf('2. Informe os CNPJs')
+    && html.indexOf('id="tri-painel-venda"') < html.indexOf('Colar lista (um CNPJ por linha'));
+  var RES_TRI27 = (async () => {
+    await RES_TRAVA;                                       // serializa (contexto compartilhado)
+    vm.runInContext('EMP_GLOBAL = {cnpj:"24197146000137", razao_social:"WEEEDO"}; TRI={venda:null,compra:null};', ctx);
+    // (a) saídas puras (5xxx/6xxx; 9xxx ignorado) → VENDA sem perguntar
+    ctx.__r27v = [['Data Emissão','Natureza','Empresa','Valor Contábil','CNPJ/CPF/CNO'],
+      ['15/01/2025','5102002','356',53000,'02.307.029/0001-46'],
+      ['22/01/2025','6502002','356',20000,'01.864.215/0008-90'],
+      ['23/01/2025','9000008','356',17000,'29.897.180/0001-38']];
+    vm.runInContext('dlg = async()=>{ this.__dlg27=(this.__dlg27||0)+1; return null; };', ctx);
+    const okV = await vm.runInContext('triReceber(__r27v, "CLIENTES_012025.xls")', ctx);
+    const tv27 = vm.runInContext('TRI.venda', ctx);
+    const pv = ctx.document.getElementById('tri-painel-venda').style.display;
+    // (b) entradas puras (1xxx/2xxx) → COMPRA sem perguntar
+    ctx.__r27c = [['Data Entrada','Natureza','Empresa','Valor Contábil','Razão Social','CNPJ/CPF/CNO'],
+      ['02/01/2025','1102001','356',50000,'FORN A LTDA','11.111.111/0001-91'],
+      ['03/01/2025','2102001','356',30000,'FORN B ME','22.222.222/0001-91']];
+    const okC = await vm.runInContext('triReceber(__r27c, "FORNECEDORES_012025.xls")', ctx);
+    const tc27 = vm.runInContext('TRI.compra', ctx);
+    const semDlg = vm.runInContext('this.__dlg27||0', ctx) === 0;
+    // (c) misto (1xxx + 5xxx) → pergunta; dlg responde "compra"
+    vm.runInContext('dlg = async()=>{ this.__dlg27=(this.__dlg27||0)+1; return "compra"; }; TRI.compra=null;', ctx);
+    ctx.__r27m = [['Data','Natureza','Empresa','Valor Contábil','CNPJ/CPF/CNO'],
+      ['02/01/2025','1102001','356',40000,'11.111.111/0001-91'],
+      ['05/01/2025','5102002','356',10000,'02.307.029/0001-46']];
+    const okM = await vm.runInContext('triReceber(__r27m, "MISTO.xls")', ctx);
+    const perguntou = vm.runInContext('this.__dlg27||0', ctx) === 1;
+    const tm27 = vm.runInContext('TRI.compra', ctx);
+    // (d) planilha de lista de CNPJs (sem cabeçalho do analítico) → false: extração de CNPJs segue viva
+    ctx.__r27n = [['Empresa','Documento'],['A','11.111.111/0001-91'],['B','22.222.222/0001-91']];
+    const okN = await vm.runInContext('triReceber(__r27n, "lista.xlsx")', ctx);
+    // (e) supaFn v7.26.2: função pendurada → erro que LOCALIZA (nome da função + Logs)
+    vm.runInContext('APP.token="tok"; APP.tokenExp=Date.now()+3600000; SUPAFN_T.fn=60;', ctx);
+    const fetchOrig = ctx.fetch;
+    ctx.fetch = (url, opt) => new Promise((res, rej) => {
+      if (opt && opt.signal) opt.signal.addEventListener('abort',
+        () => rej(Object.assign(new Error('aborted'), { name:'AbortError' })));
+    });
+    let erroFn = '';
+    try { await vm.runInContext('supaFn("admin-senha", {})', ctx); } catch(e){ erroFn = e.message; }
+    ctx.fetch = fetchOrig;
+    vm.runInContext('SUPAFN_T.fn=12000;', ctx);
+    return { okV, tv27, pv, okC, tc27, semDlg, okM, perguntou, tm27, okN, erroFn };
+  })();
+}
+
+// ═══ 5o. v7.28.0 — Fase B: trilha de origem por campo ═══
+console.log('\n■ v7.28.0 — trilha de origem por campo (Fase B)');
+{
+  var RES_ORIG = (async () => {
+    await RES_TRI27;                                       // serializa (AN/stubs compartilhados)
+    vm.runInContext('garantirEmpresa = async()=>{}; anPodeSobrescrever = ()=>true; APP.user={email:"t@artecon"};', ctx);
+    vm.runInContext('AN = anNovo("24197146000137", 2025); AN_SUJO=false;', ctx);
+    ctx.document.getElementById('an-ano').value = '2025';
+    // (a) grade: anSet marca D; anRepetir herda a origem de janeiro
+    vm.runInContext('anSet("receitas.a3_semret", 0, "1000", ""); anRepetir("receitas.a3_semret");', ctx);
+    const ogGrade = vm.runInContext('AN.origem["receitas.a3_semret"]', ctx);
+    // (b) PGDAS marca P nos meses do lote, em TODAS as linhas de receitas (inclusive as zeradas)
+    vm.runInContext(`PG_DADOS = { cnpj:"24197146000137", nome:"WEEEDO", meses: { "03/2025": {
+      atividades:[{bloco:"a1_semst", valor:50000, texto:"revenda"}], receita:50000, das:2000, tributos:{}, rbtAnt:{}, rbtExpAnt:{}, rba:51000 } } };`, ctx);
+    try { await vm.runInContext('pgdasAplicar()', ctx); } catch(e){ return 'EXC-pgdas:'+e.message; }
+    const ogP  = vm.runInContext('(AN.origem["receitas.a1_semst"]||[])[2]', ctx);
+    const ogP2 = vm.runInContext('(AN.origem["receitas.a2_semst"]||[])[2]', ctx);   // zerada pelo lote → também P
+    const ogPfora = vm.runInContext('(AN.origem["receitas.a1_semst"]||[])[5]', ctx); // mês fora do lote → intocado
+    // (c) balancete marca B só nos pares (destino, mês) da matriz
+    vm.runInContext(`BAL = { cnpj:"24197146000137", nome:"WEEEDO", ano:2025, mesIni:0, mesFim:0,
+      lotes:[{arquivo:"01-2025.xls", ano:2025, mesIni:0, mesFim:0, contas:[{destino:"compras.semst", valor:15933.21}]}] };`, ctx);
+    ctx.document.getElementById('bal-modo').value = 'proprio';
+    try { await vm.runInContext('balAplicar()', ctx); } catch(e){ return 'EXC-bal:'+e.message; }
+    const ogB = vm.runInContext('AN.origem["compras.semst"]', ctx);
+    // (d) rateio de fornecedores marca R
+    vm.runInContext('dlg = async()=>"rel";', ctx);
+    try { await vm.runInContext('fornRatear("despesas","outras", 1200, "01/01/2025 a 31/12/2025", "Despesas › Outras")', ctx); } catch(e){ return 'EXC-forn:'+e.message; }
+    const ogR = vm.runInContext('AN.origem["despesas.outras"]', ctx);
+    // (e) persistência: o corpo do anSalvar preserva origem; anNormalizar cria/preserva
+    const persiste = vm.runInContext('Object.keys(JSON.parse(JSON.stringify({...AN, _res:undefined, _verEm:undefined})).origem||{}).length', ctx);
+    const normNovo  = vm.runInContext('Object.keys(anNormalizar({cnpj:"1",ano:2025}).origem||{}).length === 0 && !Array.isArray(anNormalizar({cnpj:"1",ano:2025}).origem)', ctx);
+    const normMantem = vm.runInContext('(anNormalizar(JSON.parse(JSON.stringify(AN))).origem["compras.semst"]||[])[0]', ctx);
+    // (f) conferência: bloco 0 com letras + legenda; análise antiga → "não registrada"
+    vm.runInContext('RL.dados = JSON.parse(JSON.stringify({...AN, _res:undefined})); RL.empresa={razao_social:"W"};', ctx);
+    const h1 = vm.runInContext('rlConfEntrada()', ctx);
+    vm.runInContext('RL.dados = anNormalizar({cnpj:"24197146000137", ano:2025, receitas:{a1_semst:[1,0,0,0,0,0,0,0,0,0,0,0]}});', ctx);
+    const h0 = vm.runInContext('rlConfEntrada()', ctx);
+    return { ogGrade, ogP, ogP2, ogPfora, ogB, ogR, persiste, normNovo, normMantem, h1, h0 };
+  })();
+}
+
+// ═══ 5p. v7.29.0 — art. 58 (crédito por faixa) e triagem de compra → Reforma/Compras ═══
+console.log('\n■ v7.29.0 — art. 58 §§4º-6º (Res. 190) e triagem de compra alimentando Reforma/Compras');
+{
+  chk('v7.29.0 · fórmula ÚNICA: credSimplesArt58 na definição, na aba Reforma (rfLinhaBase) e no Relatório',
+    (html.match(/credSimplesArt58\(/g)||[]).length >= 4);
+  var RES_A58 = (async () => {
+    await RES_ORIG;                                        // serializa (AN/RF/stubs compartilhados)
+    // (a) percentuais por vigência = alíquota 1ª faixa Anexo I × (CBS+IBS da faixa na vigência)
+    const esp = a => vm.runInContext(`ANEXOS_DEFAULT.I.aliq[0] * (((repTribAno(${a}).I.cbs||[])[0]||0) + ((repTribAno(${a}).I.ibs||[])[0]||0))`, ctx);
+    const c26 = vm.runInContext('credSimplesArt58(2026)', ctx), c27 = vm.runInContext('credSimplesArt58(2027)', ctx),
+          c29 = vm.runInContext('credSimplesArt58(2029)', ctx), c33 = vm.runInContext('credSimplesArt58(2033)', ctx);
+    // (b) rfLinhaBase: automático com % manual zerado; override quando preenchido
+    vm.runInContext('__rfT = { receita:0, baseIS:0, credSimplesPct:0, benefRec:{}, benefCred:{}, contra:{ compras_simples:100000 } };', ctx);
+    const credAuto33 = vm.runInContext('rfLinhaBase(__rfT, 2033).cred', ctx);
+    const credAuto26 = vm.runInContext('rfLinhaBase(__rfT, 2026).cred', ctx);
+    const credManual = vm.runInContext('__rfT.credSimplesPct = 5; rfLinhaBase(__rfT, 2033).cred', ctx);
+    // (c) fornAutoAplicar: triagem de COMPRA mais recente vence a revenda e soma com o serviço
+    vm.runInContext(`RF = rfNovo('24197146000137', 2025); RF.cnpj='24197146000137';
+      supa = async () => ([
+        { consultado_em:'2026-08-16T10:00:00Z', dados:{ tipo:'compra', periodo:'01/01/2025 a 31/12/2025', stats:{tot:80999},
+          itens:[{classe:'normal',valor:50000,cfops:{}},{classe:'simples',valor:20000,cfops:{}},{classe:'mei',valor:10000,cfops:{}},{classe:'pf',valor:999,cfops:{}},{classe:'proprio',valor:483,cfops:{}}] } },
+        { consultado_em:'2026-08-10T10:00:00Z', dados:{ tipo:'revenda', periodo:'01/01/2025 a 31/12/2025', stats:{ grupos:{ normal:{v:11111}, simples:{v:2222}, mei:{v:0}, nid:{v:0}, pf:{v:0} } } } },
+        { consultado_em:'2026-08-01T10:00:00Z', dados:{ tipo:'servico', periodo:'01/01/2025 a 31/12/2025', stats:{ grupos:{ normal:{v:1000}, simples:{v:500}, mei:{v:0}, nid:{v:0}, pf:{v:0} } } } } ]);`, ctx);
+    try { await vm.runInContext('fornAutoAplicar()', ctx); } catch(e){ return 'EXC-forn:'+e.message; }
+    const fLrlp = vm.runInContext('RF.contra.compras_lrlp', ctx), fSimp = vm.runInContext('RF.contra.compras_simples', ctx);
+    const fNota = vm.runInContext('fornNotaHtml()', ctx);
+    // (d) inverso: revenda mais recente vence a triagem
+    vm.runInContext(`RF = rfNovo('24197146000137', 2025); RF.cnpj='24197146000137';
+      supa = async () => ([
+        { consultado_em:'2026-08-16T10:00:00Z', dados:{ tipo:'revenda', periodo:'01/2025', stats:{ grupos:{ normal:{v:11111}, simples:{v:2222}, mei:{v:0}, nid:{v:0}, pf:{v:0} } } } },
+        { consultado_em:'2026-08-10T10:00:00Z', dados:{ tipo:'compra', periodo:'01/2025', stats:{tot:80999}, itens:[{classe:'normal',valor:50000,cfops:{}}] } } ]);`, ctx);
+    try { await vm.runInContext('fornAutoAplicar()', ctx); } catch(e){ return 'EXC-forn2:'+e.message; }
+    const rLrlp = vm.runInContext('RF.contra.compras_lrlp', ctx);
+    // (e) triLancarCompras: rateia o total EXTERNO (com PF, sem movimentação própria) com origem R
+    vm.runInContext(`AN = anNovo('24197146000137', 2025); AN_SUJO=false;
+      EMP_GLOBAL = {cnpj:'24197146000137', razao_social:'WEEEDO'};
+      TRI.compra = { tipo:'compra', cnpjEmpresa:'24197146000137', periodo:'01/01/2025 a 31/01/2025', docs:5, arquivo:'F.xls',
+        itens:[{cnpj:'1',razao:'A',classe:'normal',valor:50000,cfops:{},notas:1},{cnpj:'2',razao:'B',classe:'simples',valor:20000,cfops:{},notas:1},
+               {cnpj:'3',razao:'C',classe:'mei',valor:10000,cfops:{},notas:1},{cnpj:'4',razao:'D',classe:'pf',valor:999,cfops:{},notas:1},
+               {cnpj:'24197146000137',razao:'WEEEDO',classe:'proprio',valor:483,cfops:{},notas:1}] };
+      dlg = async () => 'semst';`, ctx);
+    try { await vm.runInContext('triLancarCompras()', ctx); } catch(e){ return 'EXC-tri:'+e.message; }
+    const lanJan = vm.runInContext('AN.compras.semst[0]', ctx), lanFev = vm.runInContext('AN.compras.semst[1]', ctx);
+    const lanOg = vm.runInContext('(AN.origem["compras.semst"]||[])[0]', ctx);
+    return { esp27:esp(2027), esp33:esp(2033), c26, c27, c29, c33, credAuto33, credAuto26, credManual, fLrlp, fSimp, fNota, rLrlp, lanJan, lanFev, lanOg };
+  })();
+}
+
+// ═══ 5q. v7.29.1 — D5: CBS 2027-28 = referência − 0,1 p.p. (LC 214, art. 347) ═══
+console.log('\n■ v7.29.1 — D5: CBS do biênio 2027-2028 reduzida em 0,1 p.p.');
+{
+  var RES_D5 = (async () => {
+    await RES_A58;
+    const d = vm.runInContext('RF_ALIQ_DEFAULT', ctx);
+    const alq27 = vm.runInContext('rfLinhaBase({receita:0,baseIS:0,credSimplesPct:0,benefRec:{},benefCred:{},contra:{}}, 2027).alq', ctx);
+    // migração: padrão antigo salvo (9,21 no biênio) corrige; personalizado fica
+    vm.runInContext(`__pSnap = PARAMS;
+      supa = async () => ([{ valor: { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha: {...FOLHA_PERC_DEFAULT},
+        reforma: { 2027:{cbs:9.21, is:0, ibse:0.05, ibsm:0.05}, 2028:{cbs:8.8, is:0, ibse:0.05, ibsm:0.05} } } }]);`, ctx);
+    try { await vm.runInContext('prCarregar()', ctx); } catch(e){ return 'EXC-pr:'+e.message; }
+    const mig27 = vm.runInContext('PARAMS.reforma[2027].cbs', ctx);
+    const mig28 = vm.runInContext('PARAMS.reforma[2028].cbs', ctx);
+    vm.runInContext('PARAMS = __pSnap;', ctx);
+    return { d, alq27, mig27, mig28 };
+  })();
+}
+
+// ═══ 5r. v7.30.0 — Lacre do motor de cálculo ═══
+console.log('\n■ v7.30.0 — lacre do motor (selo embutido conferido no app e no CI)');
+{
+  var RES_LACRE = (async () => {
+    await RES_D5;                                          // serializa (PARAMS compartilhado)
+    let r; try { r = vm.runInContext('lacreRodar()', ctx); } catch(e){ return 'EXC-lacre:'+e.message; }
+    // violação simulada: mexer numa alíquota de fábrica muda o resultado → lacre acusa
+    const aliqSnap = vm.runInContext('ANEXOS_DEFAULT.I.aliq[5]', ctx);
+    vm.runInContext('ANEXOS_DEFAULT.I.aliq[5] = ANEXOS_DEFAULT.I.aliq[5] + 0.001;', ctx);
+    let rV; try { rV = vm.runInContext('lacreRodar()', ctx); } catch(e){ rV = { ok:'EXC:'+e.message }; }
+    vm.runInContext('ANEXOS_DEFAULT.I.aliq[5] = '+aliqSnap+';', ctx);
+    const rOk2 = vm.runInContext('lacreRodar().ok', ctx);   // restaurado → volta a bater
+    let boot; try { vm.runInContext('lacreBoot(true)', ctx); boot = vm.runInContext('LACRE_ST', ctx); } catch(e){ boot = null; }
+    return { r, rV, rOk2, boot };
+  })();
+}
+
 // ═══ 6. Integridade da interface ═══
 // Todo elemento que o código acessa por $id() precisa existir no HTML.
 // Foi a ausência disso que deixou passar container removido e seletor duplicado.
@@ -718,6 +897,76 @@ console.log('\n■ Integridade da interface');
     tv && tv.salvou===false);
   chk('v7.26.0 · divergência pós-atualização detectada e avisada (de → para), sem alterar o snapshot',
     tv && /diverge/.test(tv.aviso||'') && /(Simples|Presumido|Real): R\$/.test(tv.aviso||'') && /→/.test(tv.aviso||''), tv?('aviso['+String(tv.aviso||'').length+']: '+String(tv.aviso||'').replace(/<[^>]*>/g,' ').slice(0,120)):'timeout');
+  const t27 = await Promise.race([RES_TRI27, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  chk('v7.27.0 · saídas (5xxx/6xxx) → triagem de VENDA sem perguntar (9xxx ignorado)',
+    t27 && t27.okV===true && t27.tv27 && t27.tv27.tipo==='venda' && t27.tv27.itens.length===3 && t27.tv27.arquivo==='CLIENTES_012025.xls',
+    t27&&t27.tv27?`${t27.tv27.itens.length} clientes`:'timeout');
+  chk('v7.27.0 · painel da venda aparece dentro do card 2 (display=block explícito)',
+    t27 && t27.pv==='block', t27?('display='+t27.pv):'—');
+  chk('v7.27.0 · entradas (1xxx/2xxx) → triagem de COMPRA sem perguntar',
+    t27 && t27.okC===true && t27.tc27 && t27.tc27.tipo==='compra' && t27.tc27.itens.length===2 && t27.semDlg,
+    t27&&t27.tc27?`${t27.tc27.itens.length} fornecedores · dlg não chamado`:'timeout');
+  chk('v7.27.0 · analítico MISTO pergunta uma vez e respeita a escolha (compra)',
+    t27 && t27.okM===true && t27.perguntou && t27.tm27 && t27.tm27.tipo==='compra' && t27.tm27.arquivo==='MISTO.xls');
+  chk('v7.27.0 · planilha de lista de CNPJs NÃO é capturada (triReceber → false; extração de CNPJs segue)',
+    t27 && t27.okN===false);
+  chk('v7.26.2 · supaFn: função pendurada gera erro LOCALIZADO (nome da função + orientação aos Logs)',
+    t27 && /admin-senha/.test(t27.erroFn) && /não respondeu/.test(t27.erroFn) && /Logs/.test(t27.erroFn),
+    t27?String(t27.erroFn).slice(0,90):'—');
+  const og = await Promise.race([RES_ORIG, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  const ogErr = typeof og==='string' ? og : '';
+  chk('v7.28.0 · grade: anSet marca D e o ⇉ (repetir janeiro) herda a origem nos 12 meses',
+    og && og.ogGrade && og.ogGrade[0]==='D' && og.ogGrade[11]==='D', ogErr || (og&&og.ogGrade?og.ogGrade.join(''):'timeout'));
+  chk('v7.28.0 · PGDAS marca P nos meses do lote em TODAS as linhas (inclusive zeradas), sem tocar meses de fora',
+    og && og.ogP==='P' && og.ogP2==='P' && og.ogPfora==null, ogErr);
+  chk('v7.28.0 · balancete marca B só nos pares (destino, mês) da matriz',
+    og && og.ogB && og.ogB[0]==='B' && og.ogB[1]==null, ogErr || (og&&og.ogB?('jan='+og.ogB[0]+' fev='+og.ogB[1]):'—'));
+  chk('v7.28.0 · rateio de fornecedores 🚚 marca R nos meses rateados',
+    og && og.ogR && og.ogR[0]==='R' && og.ogR[11]==='R', ogErr);
+  chk('v7.28.0 · origem PERSISTE no corpo do anSalvar e sobrevive ao anNormalizar (análise antiga ganha {})',
+    og && og.persiste>=3 && og.normNovo===true && og.normMantem==='B', ogErr || (og?('paths='+og.persiste+' norm='+og.normMantem):'—'));
+  chk('v7.28.0 · bloco 0 mostra a letra da origem ao lado de cada valor, com legenda e contagem por fonte',
+    og && /<sup[^>]*>P<\/sup>/.test(og.h1||'') && /<sup[^>]*>B<\/sup>/.test(og.h1||'') && /Origem de cada valor/.test(og.h1||'') && /PGDAS-D \(/.test(og.h1||''), ogErr);
+  chk('v7.28.0 · análise gravada antes da v7.28 avisa "origem não registrada" (e nada quebra)',
+    og && /não registrada/.test(og.h0||'') && !/<sup/.test(og.h0||''), ogErr);
+  const a58 = await Promise.race([RES_A58, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  const aErr = typeof a58==='string' ? a58 : '';
+  chk('v7.29.0 · credSimplesArt58 por vigência: 2026=0 · 2027 ≈0,62% · 2029 ≈0,76% · 2033 ≈1,98% (= alíq. 1ª faixa I × CBS+IBS)',
+    a58 && a58.c26===0 && Math.abs(a58.c27-a58.esp27)<1e-9 && Math.abs(a58.c33-a58.esp33)<1e-9
+      && Math.abs(a58.c27-0.0062)<0.0005 && Math.abs(a58.c29-0.00756)<0.0005 && Math.abs(a58.c33-0.0198)<0.0005,
+    aErr || (a58?`27=${(a58.c27*100).toFixed(3)}% 29=${(a58.c29*100).toFixed(3)}% 33=${(a58.c33*100).toFixed(3)}%`:'timeout'));
+  chk('v7.29.0 · rfLinhaBase: crédito AUTOMÁTICO nas compras do Simples (100.000 → ≈1.980 em 2033; 0 em 2026)',
+    a58 && Math.abs(a58.credAuto33 - 100000*a58.c33) < 0.01 && a58.credAuto26 === 0,
+    aErr || (a58?('2033='+(+a58.credAuto33).toFixed(2)):'—'));
+  chk('v7.29.0 · % manual preenchido SUBSTITUI o automático (5% → 5.000,00)',
+    a58 && Math.abs(a58.credManual - 5000) < 0.01, aErr);
+  chk('v7.29.0 · fornAutoAplicar: triagem de compra mais recente VENCE a revenda e soma com o serviço (51.000 normal · 30.500 Simples/MEI)',
+    a58 && Math.abs(a58.fLrlp-51000)<0.01 && Math.abs(a58.fSimp-30500)<0.01 && /entradas \(analítico\)/.test(a58.fNota||''),
+    aErr || (a58?`lrlp=${a58.fLrlp} simp=${a58.fSimp}`:'—'));
+  chk('v7.29.0 · revenda mais recente vence a triagem (compras_lrlp = 11.111)',
+    a58 && Math.abs(a58.rLrlp-11111)<0.01, aErr);
+  chk('v7.29.0 · "Lançar nas Compras": rateia o total EXTERNO (80.999 — com PF, sem movimentação própria) no mês do período, origem R',
+    a58 && Math.abs(a58.lanJan-80999)<0.01 && !(+a58.lanFev) && a58.lanOg==='R',
+    aErr || (a58?`jan=${a58.lanJan} origem=${a58.lanOg}`:'—'));
+  const d5 = await Promise.race([RES_D5, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  const dErr = typeof d5==='string' ? d5 : '';
+  chk('v7.29.1 · D5: CBS 9,11 em 2027-28 (referência − 0,1 p.p., LC 214 art. 347) → combinada 9,21% = referência; 2029-33 seguem 9,21',
+    d5 && d5.d[2027].cbs===9.11 && d5.d[2028].cbs===9.11 && Math.abs(d5.d[2027].cbs+d5.d[2027].ibse+d5.d[2027].ibsm-9.21)<1e-9
+      && d5.d[2029].cbs===9.21 && d5.d[2033].cbs===9.21 && Math.abs(d5.alq27-0.0921)<1e-9,
+    dErr || (d5?`27=${d5.d[2027].cbs} alq=${(d5.alq27*100).toFixed(2)}%`:'timeout'));
+  chk('v7.29.1 · migração: parâmetro salvo com o padrão antigo (9,21) vira 9,11; personalizado (8,8) fica intacto',
+    d5 && d5.mig27===9.11 && d5.mig28===8.8, dErr || (d5?`27=${d5.mig27} 28=${d5.mig28}`:'—'));
+  const lc = await Promise.race([RES_LACRE, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  const lErr = typeof lc==='string' ? lc : '';
+  chk('v7.30.0 · LACRE ÍNTEGRO: selo embutido confere com o motor desta entrega (128 números ao centavo) — mudou regra? RE-SELE',
+    lc && lc.r && lc.r.ok===true && lc.r.hash===vm.runInContext('LACRE_HASH',ctx) && lc.r.n===128,
+    lErr || (lc&&lc.r?`hash=${lc.r.hash} n=${lc.r.n}`:'timeout'));
+  chk('v7.30.0 · lacre bate com os gabaritos pinados (caso1: LR 1.169.013,17 · 2033 híbrido 758.554,46 · regular 702.383,68)',
+    lc && lc.r && Math.abs(lc.r.resumo[0].lr-1169013.17)<0.01 && Math.abs(lc.r.resumo[0].h33-758554.46)<0.01 && Math.abs(lc.r.resumo[0].r33-702383.68)<0.01, lErr);
+  chk('v7.30.0 · violação simulada (alíquota de fábrica alterada) → lacre acusa; restaurada → volta a ÍNTEGRO',
+    lc && lc.rV && lc.rV.ok===false && lc.rOk2===true, lErr || (lc&&lc.rV?('violado ok='+lc.rV.ok+' depois='+lc.rOk2):'—'));
+  chk('v7.30.0 · lacreBoot grava o estado (versão + selo) e marca íntegro na versão atual',
+    lc && lc.boot && lc.boot.ok===true && lc.boot.versao===vm.runInContext('APP_VERSAO',ctx), lErr);
   console.log('\n══════════════════════════════════');
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
   process.exit(FALHAS.length ? 1 : 0);
