@@ -814,6 +814,61 @@ console.log('\n■ v7.30.0 — lacre do motor (selo embutido conferido no app e 
   })();
 }
 
+// ═══ 5s. v7.31.0 — esteira completa do item 2 na triagem ═══
+console.log('\n■ v7.31.0 — consulta automática, serviços tomados, venda→Reforma e Resumo renomeado');
+{
+  chk('v7.31.0 · consulta automática ligada no código: triArquivo chama triConsultar(tipo, true) e a pergunta de quantidade saiu',
+    html.includes('triConsultar(tipo, true)') && !html.includes('Consultar na Receita?'));
+  chk('v7.31.0 · relatório renomeado para "Resumo Estatístico de Fornecedores e Clientes" (título, cabeçalho e opção)',
+    (html.match(/Resumo Estatístico de Fornecedores e Clientes/g)||[]).length >= 3
+    && html.includes('Resumo estatístico de fornecedores e clientes</option>'));
+  var RES_T31 = (async () => {
+    await RES_LACRE;                                       // serializa (contexto compartilhado)
+    // (a) consulta SEMPRE DIRETO: 5 CNPJs novos, nenhum dlg, consultarUm 5x, classes preenchidas
+    vm.runInContext(`EMP_GLOBAL = {cnpj:"24197146000137", razao_social:"WEEEDO"};
+      supa = async () => []; __nDlg=0; __nCons=0;
+      dlg = async () => { __nDlg++; return true; };
+      consultarUm = async (c) => { __nCons++; return { simples: (__nCons%2)===0, simei:false, razao_social:'F'+__nCons, situacao:'ATIVA' }; };
+      TRI = { venda:null, compra:null };
+      TRI.venda = { tipo:'venda', cnpjEmpresa:'24197146000137', periodo:'01/2025', docs:5, arquivo:'C.xls',
+        itens: [1,2,3,4,5].map(n=>({cnpj:'0000000000019'+n, razao:'', classe:null, valor:1000*n, cfops:{'5102001':1000*n}, notas:1})) };`, ctx);
+    try { await vm.runInContext('triConsultar("venda")', ctx); } catch(e){ return 'EXC-cons:'+e.message; }
+    const consultados = vm.runInContext('TRI.venda.itens.filter(i=>i.classe).length', ctx);
+    const nDlg = vm.runInContext('__nDlg', ctx), nCons = vm.runInContext('__nCons', ctx);
+    let autoSil = true;
+    try { await vm.runInContext('triConsultar("venda", true)', ctx); } catch(e){ autoSil = 'EXC:'+e.message; }
+    // (b) lançar nas Compras separando serviços tomados (sim → Despesas › Outras)
+    vm.runInContext(`AN = anNovo('24197146000137', 2025); AN_SUJO=false;
+      garantirEmpresa = async()=>{}; anPodeSobrescrever = ()=>true;
+      TRI.compra = { tipo:'compra', cnpjEmpresa:'24197146000137', periodo:'01/01/2025 a 31/01/2025', docs:4, arquivo:'F.xls',
+        itens:[{cnpj:'1',razao:'A',classe:'normal',valor:45000,cfops:{'1102001':45000},notas:1},
+               {cnpj:'2',razao:'B',classe:'simples',valor:5000,cfops:{'1933001':5000},notas:1}] };
+      dlg = async (t) => /Serviços tomados/.test(t) ? true : 'semst';`, ctx);
+    try { await vm.runInContext('triLancarCompras()', ctx); } catch(e){ return 'EXC-lan:'+e.message; }
+    const dOut = vm.runInContext('AN.despesas.outras[0]', ctx), cSem = vm.runInContext('AN.compras.semst[0]', ctx);
+    const ogD = vm.runInContext('(AN.origem["despesas.outras"]||[])[0]', ctx), ogC = vm.runInContext('(AN.origem["compras.semst"]||[])[0]', ctx);
+    // (c) recusa: serviços ficam de fora — só mercadorias vão
+    vm.runInContext(`AN = anNovo('24197146000137', 2025);
+      dlg = async (t) => /Serviços tomados/.test(t) ? false : 'semst';`, ctx);
+    try { await vm.runInContext('triLancarCompras()', ctx); } catch(e){ return 'EXC-lan2:'+e.message; }
+    const dOut2 = vm.runInContext('AN.despesas.outras[0]', ctx), cSem2 = vm.runInContext('AN.compras.semst[0]', ctx);
+    // (d) dashboard da compra com o crédito estimado
+    vm.runInContext('triDash("compra")', ctx);
+    const dashCred = ctx.document.getElementById('tri-dash-compra').innerHTML;
+    // (e) venda informa a Reforma (vendas_pf/simples/lrlp) sem sobrescrever
+    vm.runInContext(`RF = rfNovo('24197146000137', 2025); RF.cnpj='24197146000137';
+      supa = async () => ([{ consultado_em:'2026-08-16T10:00:00Z', dados:{ tipo:'venda', periodo:'01/01/2025 a 31/12/2025',
+        itens:[{classe:'pf',valor:30000},{classe:'simples',valor:8000},{classe:'mei',valor:2000},{classe:'normal',valor:60000},{classe:'proprio',valor:500}] } }]);`, ctx);
+    try { await vm.runInContext('fornAutoAplicar()', ctx); } catch(e){ return 'EXC-vend:'+e.message; }
+    const vpf = vm.runInContext('RF.contra.vendas_pf', ctx), vsim = vm.runInContext('RF.contra.vendas_simples', ctx), vlr = vm.runInContext('RF.contra.vendas_lrlp', ctx);
+    const notaV = vm.runInContext('fornNotaVendasHtml()', ctx);
+    vm.runInContext('RF.contra.vendas_pf = 1;', ctx);
+    try { await vm.runInContext('fornAutoAplicar()', ctx); } catch(e){ return 'EXC-vend2:'+e.message; }
+    const vpf2 = vm.runInContext('RF.contra.vendas_pf', ctx), aplic2 = vm.runInContext('RF._vend && RF._vend.aplicado', ctx);
+    return { consultados, nDlg, nCons, autoSil, dOut, cSem, ogD, ogC, dOut2, cSem2, dashCred, vpf, vsim, vlr, notaV, vpf2, aplic2 };
+  })();
+}
+
 // ═══ 6. Integridade da interface ═══
 // Todo elemento que o código acessa por $id() precisa existir no HTML.
 // Foi a ausência disso que deixou passar container removido e seletor duplicado.
@@ -952,6 +1007,23 @@ console.log('\n■ Integridade da interface');
     lc && lc.rV && lc.rV.ok===false && lc.rOk2===true, lErr || (lc&&lc.rV?('violado ok='+lc.rV.ok+' depois='+lc.rOk2):'—'));
   chk('v7.30.0 · lacreBoot grava o estado (versão + selo) e marca íntegro na versão atual',
     lc && lc.boot && lc.boot.ok===true && lc.boot.versao===vm.runInContext('APP_VERSAO',ctx), lErr);
+  const t31 = await Promise.race([RES_T31, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  const tErr = typeof t31==='string' ? t31 : '';
+  chk('v7.31.0 · consulta SEMPRE DIRETO: 5 CNPJs consultados sem nenhuma pergunta (dlg=0) e classes preenchidas; modo auto silencioso',
+    t31 && t31.consultados===5 && t31.nDlg===0 && t31.nCons===5 && t31.autoSil===true,
+    tErr || (t31?`cons=${t31.consultados} dlg=${t31.nDlg}`:'timeout'));
+  chk('v7.31.0 · serviços tomados (1933) separados com "sim": 5.000 em Despesas › Outras + 45.000 nas Compras, ambos origem R',
+    t31 && Math.abs(t31.dOut-5000)<0.01 && Math.abs(t31.cSem-45000)<0.01 && t31.ogD==='R' && t31.ogC==='R',
+    tErr || (t31?`desp=${t31.dOut} comp=${t31.cSem}`:'—'));
+  chk('v7.31.0 · com "não", os serviços ficam DE FORA: Despesas zeradas e só as mercadorias (45.000) nas Compras',
+    t31 && !(+t31.dOut2) && Math.abs(t31.cSem2-45000)<0.01, tErr);
+  chk('v7.31.0 · dashboard da compra exibe o crédito de IBS/CBS estimado (2033: normal cheio + Simples art. 58)',
+    t31 && /Crédito de IBS\/CBS estimado/.test(t31.dashCred||''), tErr);
+  chk('v7.31.0 · triagem de venda INFORMA a Reforma: PF 30.000 · Simples/MEI 10.000 · LR/LP 60.000 (próprio fora), com nota explicativa',
+    t31 && t31.vpf===30000 && t31.vsim===10000 && t31.vlr===60000 && /Vendas preenchidas automaticamente/.test(t31.notaV||''),
+    tErr || (t31?`pf=${t31.vpf} sim=${t31.vsim} lr=${t31.vlr}`:'—'));
+  chk('v7.31.0 · campos de vendas já preenchidos NÃO são sobrescritos (informa sem aplicar)',
+    t31 && t31.vpf2===1 && t31.aplic2===false, tErr);
   console.log('\n══════════════════════════════════');
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
   process.exit(FALHAS.length ? 1 : 0);
