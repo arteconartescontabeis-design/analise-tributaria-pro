@@ -869,6 +869,52 @@ console.log('\n■ v7.31.0 — consulta automática, serviços tomados, venda→
   })();
 }
 
+// ═══ 5t. v7.32.0 — analíticos como abas do painel do item 2 ═══
+console.log('\n■ v7.32.0 — analíticos rodam todo o processo do item 2 (abas do painel 🚚)');
+{
+  chk('v7.32.0 · HTML: abas "Analítico de compra" e "Analítico de venda — clientes" existem no item 2 (ocultas até importar)',
+    html.includes('id="fo-aba-compra"') && html.includes('id="fo-aba-venda"')
+    && html.includes("Analítico de compra") && html.includes("Analítico de venda — clientes"));
+  var RES_T32 = (async () => {
+    await RES_T31;                                         // serializa (FOT/TRI/stubs compartilhados)
+    vm.runInContext(`EMP_GLOBAL = {cnpj:'24197146000137', razao_social:'WEEEDO'};
+      FOT = { servico:null, revenda:null, compra:null, venda:null }; FO=null; FO_TIPO='servico';
+      TRI.compra = { tipo:'compra', cnpjEmpresa:'24197146000137', periodo:'01/01/2025 a 31/01/2025', docs:4, arquivo:'F.xls', _salvo:'2026-08-16T20:00:00Z',
+        itens:[{cnpj:'1',razao:'A',classe:'normal',valor:45000,cfops:{'1102001':45000},notas:1},
+               {cnpj:'2',razao:'B',classe:'simples',valor:5000,cfops:{'1933001':5000},notas:1},
+               {cnpj:'24197146000137',razao:'WEEEDO',classe:'proprio',valor:483,cfops:{},notas:1}] };
+      triIntegrarItem2('compra');`, ctx);
+    const dsC = vm.runInContext('FOT.compra', ctx);
+    const tipoAtivo = vm.runInContext('FO_TIPO', ctx);
+    const painel = ctx.document.getElementById('fo-painel').style.display;
+    const emp = ctx.document.getElementById('fo-emp').textContent || '';
+    // itens COMPARTILHADOS: mudar a classe na triagem reflete na aba do item 2
+    vm.runInContext('TRI.compra.itens[0].classe = "mei";', ctx);
+    const compartilhado = vm.runInContext('FOT.compra.itens[0].classe', ctx);
+    vm.runInContext('TRI.compra.itens[0].classe = "normal";', ctx);
+    // ações da aba compra: salvar via triSalvar + lançar via triLancarCompras; venda sem lançamento
+    vm.runInContext('fornAcoes()', ctx);
+    const acoesC = ctx.document.getElementById('fo-acoes').innerHTML;
+    vm.runInContext(`TRI.venda = { tipo:'venda', cnpjEmpresa:'24197146000137', periodo:'01/2025', docs:3, arquivo:'C.xls', _salvo:null,
+      itens:[{cnpj:'3',razao:'PJ1',classe:'normal',valor:60000,cfops:{'5102001':60000},notas:1},
+             {cnpj:'4',razao:'PF',classe:'pf',valor:30000,cfops:{'5102001':30000},notas:1},
+             {cnpj:'24197146000137',razao:'WEEEDO',classe:'proprio',valor:100,cfops:{},notas:1}] };
+      triIntegrarItem2('venda'); fornAcoes();`, ctx);
+    const dsV = vm.runInContext('FOT.venda', ctx);
+    const dsVLen = vm.runInContext('FOT.venda.itens.length', ctx);   // capturado ANTES do push do teste seguinte (referência viva)
+    const acoesV = ctx.document.getElementById('fo-acoes').innerHTML;
+    // fornConsultar na aba analítica roteia para triConsultar (classes nulas são consultadas)
+    vm.runInContext(`TRI.venda.itens.push({cnpj:'5',razao:'',classe:null,valor:1,cfops:{},notas:1});
+      FOT.venda.itens.push(TRI.venda.itens[TRI.venda.itens.length-1]);
+      __nCons2=0; consultarUm = async()=>{ __nCons2++; return {simples:true, simei:false, razao_social:'X', situacao:'ATIVA'}; };
+      supa = async()=>[];`, ctx);
+    try { await vm.runInContext('fornConsultar()', ctx); } catch(e){ return 'EXC-fc:'+e.message; }
+    const nCons2 = vm.runInContext('__nCons2', ctx);
+    const classeNova = vm.runInContext('TRI.venda.itens[TRI.venda.itens.length-1].classe', ctx);
+    return { dsC, tipoAtivo, painel, emp, compartilhado, acoesC, dsV, dsVLen, acoesV, nCons2, classeNova };
+  })();
+}
+
 // ═══ 6. Integridade da interface ═══
 // Todo elemento que o código acessa por $id() precisa existir no HTML.
 // Foi a ausência disso que deixou passar container removido e seletor duplicado.
@@ -1024,6 +1070,20 @@ console.log('\n■ Integridade da interface');
     tErr || (t31?`pf=${t31.vpf} sim=${t31.vsim} lr=${t31.vlr}`:'—'));
   chk('v7.31.0 · campos de vendas já preenchidos NÃO são sobrescritos (informa sem aplicar)',
     t31 && t31.vpf2===1 && t31.aplic2===false, tErr);
+  const t32 = await Promise.race([RES_T32, new Promise(r=>setTimeout(()=>r(null), 8000))]);
+  const t32e = typeof t32==='string' ? t32 : '';
+  chk('v7.32.0 · analítico de compra vira ABA do painel 🚚 (painel aberto, aba ativa, título ANALÍTICO, próprio fora, total 50.000)',
+    t32 && t32.dsC && t32.dsC.analitico===true && t32.tipoAtivo==='compra' && t32.painel==='block'
+      && /ANALÍTICO DE COMPRA/.test(t32.emp) && t32.dsC.itens.length===2 && Math.abs(t32.dsC.totalRelatorio-50000)<0.01,
+    t32e || (t32?`itens=${t32.dsC?t32.dsC.itens.length:'—'} painel=${t32.painel}`:'timeout'));
+  chk('v7.32.0 · itens COMPARTILHADOS com a triagem (classe mudada na triagem reflete na aba do item 2)',
+    t32 && t32.compartilhado==='mei', t32e);
+  chk('v7.32.0 · ações da aba de compra: salvar via triSalvar + "Lançar em Compras" via triLancarCompras (selo "gravada")',
+    t32 && /triSalvar\('compra'\)/.test(t32.acoesC||'') && /triLancarCompras\(\)/.test(t32.acoesC||'') && /gravada/.test(t32.acoesC||''), t32e);
+  chk('v7.32.0 · aba de clientes: só PJ (PF e próprio fora), SEM botão de lançamento, com a nota informativa',
+    t32 && t32.dsV && t32.dsVLen===1 && !/Lançar total/.test(t32.acoesV||'') && /não geram lançamento/.test(t32.acoesV||''), t32e);
+  chk('v7.32.0 · "Reconsultar" do painel nas abas analíticas roteia para a consulta da triagem (CNPJ nulo consultado)',
+    t32 && t32.nCons2===1 && t32.classeNova==='simples', t32e || (t32?`cons=${t32.nCons2}`:'—'));
   console.log('\n══════════════════════════════════');
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
   process.exit(FALHAS.length ? 1 : 0);
