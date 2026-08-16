@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.26.1</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.30.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -286,7 +286,7 @@ canvas{max-height:340px}
       </div>
       <div class="card">
         <h3>2. Informe os CNPJs — triagem ou análise de fornecedores</h3>
-        <div class="hint" style="margin-bottom:8px">Cole uma lista de CNPJs (triagem simples) <b>ou importe um arquivo</b> — o sistema detecta sozinho: relatório <b>Totais ISS por Fornecedor/Cliente</b> (Questor) abre a análise de fornecedores 🚚 com valores, percentuais e crédito de IBS/CBS da Reforma; qualquer outro arquivo/lista segue como triagem.</div>
+        <div class="hint" style="margin-bottom:8px">Cole uma lista de CNPJs (triagem simples) <b>ou importe um arquivo</b> — o sistema detecta sozinho: relatório <b>Totais ISS por Fornecedor/Cliente</b> (Questor) abre a análise de fornecedores 🚚 com valores, percentuais e crédito de IBS/CBS da Reforma; <b>analítico por documento</b> (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF) abre a <b>triagem de venda ou de compra</b> logo abaixo — o tipo é decidido pelos CFOPs (entradas × saídas); qualquer outro arquivo/lista segue como triagem simples de CNPJs.</div>
         <input type="file" id="fo-arq" accept=".csv,.txt,.xls,.xlsx" multiple style="display:none" onchange="fornArquivo(this)">
         <div id="fo-abas" style="display:flex;gap:8px;align-items:center;margin:10px 0 0;flex-wrap:wrap">
           <button class="btn" id="fo-aba-servico" onclick="fornTrocarAba('servico')">🧾 Fornecedores de serviço</button>
@@ -309,6 +309,24 @@ canvas{max-height:340px}
           <div style="overflow:auto"><table class="tbl"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead><tbody id="fo-body"></tbody></table></div>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn solid" id="fo-salvar" style="display:none" onclick="fornSalvar()">💾 Salvar análise no histórico da empresa</button><button class="btn" id="fo-desp" style="display:none" onclick="fornLancarDespesas()" title="Rateia o total do relatório pelos meses do período em Despesas › Outras, na análise da empresa">➕ Lançar total nas Despesas da análise</button></div>
         </div>
+        <!-- v7.27.0: as triagens dos analíticos por documento vivem AQUI — o card avulso foi extinto;
+             o arquivo entra pelos mesmos botões do item 2 e é reconhecido pelo cabeçalho -->
+        <div id="tri-painel-venda" style="display:none;margin:10px 0;border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <b>📈 Resultado da triagem de venda (clientes — analítico por documento)</b>
+            <button class="btn" id="tri-btn-venda" style="display:none" onclick="comBotao('tri-btn-venda','Consultando clientes',()=>triConsultar('venda'))">Consultar enquadramentos</button>
+            <span class="hint" id="tri-prog-venda"></span>
+          </div>
+          <div id="tri-dash-venda" style="margin-top:10px"></div>
+        </div>
+        <div id="tri-painel-compra" style="display:none;margin:10px 0;border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <b>📉 Resultado da triagem de compra (fornecedores — analítico por documento)</b>
+            <button class="btn" id="tri-btn-compra" style="display:none" onclick="comBotao('tri-btn-compra','Consultando fornecedores',()=>triConsultar('compra'))">Consultar enquadramentos</button>
+            <span class="hint" id="tri-prog-compra"></span>
+          </div>
+          <div id="tri-dash-compra" style="margin-top:10px"></div>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 260px;gap:20px">
           <div>
             <label>Colar lista (um CNPJ por linha, com ou sem pontuação)</label>
@@ -327,30 +345,6 @@ canvas{max-height:340px}
           <span class="hint" id="prog-txt"></span>
         </div>
         <div class="hint" style="margin-top:12px">Fonte: dados abertos do CNPJ da Receita Federal (minhareceita.org, com contingência BrasilAPI). Os dados de opção pelo Simples seguem a carga mensal da RFB — para decisões formais, confirme casos individuais no portal do Simples Nacional. A data de referência aparece em cada registro.</div>
-      </div>
-      <div class="card"><!-- v7.25.0: triagens dos analíticos por documento (Questor) -->
-        <h3>Triagem de venda × compra — analíticos por documento</h3>
-        <div class="hint" style="margin-bottom:8px">Relatórios analíticos do Questor (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF). A triagem consolida por parceiro, consulta o enquadramento na Receita (cache de 30 dias) e monta o dashboard. Movimentação da própria empresa é separada; CPF é consumidor final (venda) e não vai à consulta.</div>
-        <input type="file" id="tri-arq-venda" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'venda')">
-        <input type="file" id="tri-arq-compra" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'compra')">
-        <div style="border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe;margin-bottom:12px">
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <b>📈 Resultado da triagem de venda (clientes)</b>
-            <button class="btn solid" onclick="$id('tri-arq-venda').click()">Importar analítico de clientes</button>
-            <button class="btn" id="tri-btn-venda" style="display:none" onclick="comBotao('tri-btn-venda','Consultando clientes',()=>triConsultar('venda'))">Consultar enquadramentos</button>
-            <span class="hint" id="tri-prog-venda"></span>
-          </div>
-          <div id="tri-dash-venda" style="margin-top:10px"></div>
-        </div>
-        <div style="border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe">
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <b>📉 Resultado da triagem de compra (fornecedores)</b>
-            <button class="btn solid" onclick="$id('tri-arq-compra').click()">Importar analítico de fornecedores</button>
-            <button class="btn" id="tri-btn-compra" style="display:none" onclick="comBotao('tri-btn-compra','Consultando fornecedores',()=>triConsultar('compra'))">Consultar enquadramentos</button>
-            <span class="hint" id="tri-prog-compra"></span>
-          </div>
-          <div id="tri-dash-compra" style="margin-top:10px"></div>
-        </div>
       </div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -521,7 +515,7 @@ canvas{max-height:340px}
           <div><label>Receita anual tributável (interna — exportação imune, LC 214 art. 8º)</label><input id="rf-receita" style="width:160px" onchange="rfCalcular()"></div>
           <div><label>Compras com crédito (auto: LR/LP + Simples)</label><input id="rf-compras" style="width:160px" disabled></div>
           <div><label>Base anual do Imposto Seletivo</label><input id="rf-baseis" style="width:160px" onchange="rfCalcular()"></div>
-          <div><label>% crédito s/ compras do Simples</label><input id="rf-credsimples" style="width:120px" value="0" onchange="rfCalcular()"></div>
+          <div><label>% crédito s/ compras do Simples <span class="hint" style="display:block">0 = automático (art. 58, 1ª faixa)</span></label><input id="rf-credsimples" style="width:120px" value="0" onchange="rfCalcular()"></div>
         </div>
       </div>
       <div class="grid c4" id="rf-resumo" style="margin-bottom:18px"></div>
@@ -658,10 +652,16 @@ canvas{max-height:340px}
     </div>
     <div id="page-versoes" style="display:none">
       <div class="page-title"><h1>Versões do sistema</h1><span class="crumb">Histórico de releases</span></div>
+      <div id="lacre-box"></div>
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.26.1</b> <span class="badge ok">atual</span></td><td>15/08/2026</td><td><b>Correção do "Redefinir agora".</b> A chamada à função admin-senha tratava a resposta do servidor no formato errado e, em parte dos retornos, terminava sem mensagem nenhuma — nem sucesso, nem erro. Agora a resposta é lida corretamente, todo resultado gera mensagem (sucesso com ✓; falha com o motivo exato — função não publicada, e-mail fora da lista ADMIN_EMAILS, sessão expirada), há tempo-limite de 20 segundos para a chamada nunca silenciar, e o resultado sai também no console do navegador (F12) para diagnóstico. De quebra: as senhas passam por limpeza de espaços nas pontas ("Redefinir agora" e "Alterar minha senha") — senha colada da área de transferência costuma carregar um espaço ou quebra de linha invisível, que gravava uma senha diferente da que se tenta digitar depois, causando "Invalid login credentials" no login.</td></tr>
+                    <tr><td><b>v7.30.0</b> <span class="badge ok">atual</span></td><td>16/08/2026</td><td><b>🔏 Lacre do motor de cálculo.</b> Os dois casos-gabarito da suíte de testes (comércio Anexo I com trava do sublimite; serviços Anexo III com Fator R e 13º) agora viajam <b>dentro do próprio app</b>, com um <b>selo (hash) dos resultados</b> gravado em cada entrega. <b>A cada troca de versão</b>, o app recalcula os dois casos com os <b>padrões de fábrica</b> (anexos, folha e alíquotas da Reforma — parâmetros editados não interferem) e confere centenas de números <b>ao centavo</b> — todos os meses do DAS, Lucro Presumido e Lucro Real, os totais anuais e os cenários da Reforma de 2026 a 2033. Se tudo bater, a aba Versões mostra o cartão verde "Lacre ÍNTEGRO" com os totais de referência; se qualquer número divergir, o app exibe <b>alerta vermelho imediato</b> ("Lacre VIOLADO") orientando a não usar os resultados e restaurar a versão anterior. O botão "Revalidar agora" repete a conferência a qualquer momento. Mudanças <b>deliberadas</b> de regra (como o art. 58 e a D5 desta semana) são <b>re-seladas na entrega</b> e registradas no changelog — e a suíte do CI passa a conferir o selo embutido: se o motor mudar sem o selo ser refeito, o CI quebra antes de qualquer publicação.</td></tr>
+                    <tr><td><b>v7.29.1</b></td><td>16/08/2026</td><td><b>D5 resolvida — CBS de 2027-2028 corrigida para 9,11%.</b> Pelo art. 347 da LC 214/2025 (e art. 127 do ADCT), no biênio 2027-2028 a CBS é cobrada pela alíquota de referência <b>reduzida em 0,1 ponto percentual</b>, exatamente para compensar o IBS-teste de 0,05% estadual + 0,05% municipal. O app usava CBS 9,21% + IBS 0,10% = <b>9,31% combinada — 0,1 p.p. a mais que o correto</b>; agora usa <b>9,11% + 0,10% = 9,21%</b>, igual à referência (que segue 9,21% de 2029 a 2033, quando a redução deixa de existir). Parâmetros já <b>salvos com o padrão antigo</b> (9,21 no biênio) são corrigidos automaticamente ao carregar; percentuais personalizados não são tocados. A nota técnica da transição passou a citar a regra. Efeito prático: os anos de 2027 e 2028 dos cenários da Reforma (aba, parecer e relatório) ficam levemente menores.</td></tr>
+                    <tr><td><b>v7.29.0</b></td><td>16/08/2026</td><td><b>Crédito do art. 58 (Res. CGSN 190) e triagem de compra alimentando a Reforma.</b> (1) As compras de fornecedores optantes do Simples passam a gerar crédito de IBS/CBS <b>pela regra do art. 58, §§4º a 6º, da Res. CGSN nº 190/2026</b>: os percentuais de CBS e IBS da faixa do fornecedor, variando por vigência. Sem o RBT12 do fornecedor, o app adota o cenário <b>conservador — 1ª faixa do Anexo I</b>: ≈0,62% do valor da compra em 2027-28, 0,76% em 2029, subindo em degraus até <b>1,98% em 2033</b> (antes o campo "% crédito s/ compras do Simples" valia zero até ser preenchido à mão). O % manual continua existindo como <b>substituição</b> — útil quando o fornecedor optar pelo regime regular de IBS/CBS (crédito integral) ou quando a faixa real for conhecida; a nota técnica da aba e o parecer explicam a premissa. A regra vale de uma vez na aba Reforma, nos 3 cenários do parecer e no relatório da transição (fórmula única). (2) A <b>triagem de compra</b> (analítico por documento) agora <b>alimenta a Reforma</b>: gravada, ela preenche os campos de compras (regime normal × Simples/MEI, por item classificado, excluindo movimentação própria e CPF) — como ela e o "Totais ICMS por Fornecedor" retratam as mesmas entradas, vale a <b>mais recente</b> das duas; e ganhou o botão <b>"➕ Lançar total nas Compras da análise"</b>, que rateia o total externo pelos meses do período na linha escolhida (com trilha de origem R da v7.28.0).</td></tr>
+                    <tr><td><b>v7.28.0</b></td><td>16/08/2026</td><td><b>Fase B — trilha de origem por campo.</b> Cada célula (campo × mês) da análise passa a registrar <b>de onde o valor veio</b>, no momento da gravação: <b>D</b> digitado na grade, <b>P</b> PGDAS-D, <b>X</b> XML de notas, <b>B</b> balancete, <b>M</b> Demonstrativo do Simples, <b>F</b> Relatório de Faturamento, <b>R</b> relatório de fornecedores 🚚 e <b>L</b> planilha modelo. A trilha é gravada junto da análise (campo <code>origem</code>), acompanha o histórico de versões e o "repetir janeiro" (⇉) herda a origem do mês copiado. Na <b>Conferência de cálculos</b>, o bloco "0. Dados de entrada" agora mostra a <b>letra colorida da origem ao lado de cada valor</b>, com legenda e contagem por fonte — qualquer número do relatório é rastreável até a sua entrada E até <b>quem/o quê o lançou</b>. Na grade da Análise Atual, o passar do mouse em cada campo informa a origem. Análises gravadas antes desta versão aparecem como "origem não registrada" e passam a ganhar a trilha a cada nova edição ou importação — reimportar os arquivos preenche tudo de uma vez. Sem SQL novo: o campo viaja dentro do JSON já existente.</td></tr>
+                    <tr><td><b>v7.27.0</b></td><td>15/08/2026</td><td><b>Analíticos por documento unificados no item 2 da Consulta CNPJ.</b> O card avulso <b>"Triagem de venda × compra — analíticos por documento" foi extinto</b>: os relatórios analíticos do Questor (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF) agora entram pelos <b>mesmos botões do item 2 — "Informe os CNPJs"</b> ("Importar relatório(s)" ou "Ou importar arquivo"), com <b>detecção automática pelo cabeçalho</b>, exatamente como já ocorre com os "Totais ISS/ICMS por Fornecedor/Cliente". O <b>tipo é decidido sozinho pelos CFOPs</b> — 1/2/3 (entradas) = triagem de <b>compra</b>; 5/6/7 (saídas) = triagem de <b>venda</b>; quando o arquivo mistura os dois ou os CFOPs não decidem, o sistema pergunta. Os <b>dashboards de venda e de compra passam a aparecer dentro do próprio item 2</b>, logo abaixo da análise de fornecedores 🚚, e todo o restante segue igual: consulta de enquadramento com cache de 30 dias, movimentação própria separada, CPF como consumidor final, gravação no histórico e alimentação do parecer ("Perfil da clientela") e do Resumo Estatístico de Fornecedores. Inclui também a correção da <b>v7.26.2</b>: o tempo-limite das chamadas às funções do servidor (parecer com IA, admin-senha, cClassTrib) passou a ser <b>por etapa</b> — renovação da sessão (10s) e execução da função (12s) — e a mensagem de erro agora <b>diz exatamente onde travou</b> (sessão, função sem resposta ou chamada bloqueada antes de chegar/CORS), orientando a checagem nos Logs do Supabase.</td></tr>
+                    <tr><td><b>v7.26.1</b></td><td>15/08/2026</td><td><b>Correção do "Redefinir agora".</b> A chamada à função admin-senha tratava a resposta do servidor no formato errado e, em parte dos retornos, terminava sem mensagem nenhuma — nem sucesso, nem erro. Agora a resposta é lida corretamente, todo resultado gera mensagem (sucesso com ✓; falha com o motivo exato — função não publicada, e-mail fora da lista ADMIN_EMAILS, sessão expirada), há tempo-limite de 20 segundos para a chamada nunca silenciar, e o resultado sai também no console do navegador (F12) para diagnóstico. De quebra: as senhas passam por limpeza de espaços nas pontas ("Redefinir agora" e "Alterar minha senha") — senha colada da área de transferência costuma carregar um espaço ou quebra de linha invisível, que gravava uma senha diferente da que se tenta digitar depois, causando "Invalid login credentials" no login.</td></tr>
                     <tr><td><b>v7.26.0</b></td><td>15/08/2026</td><td><b>Dados de origem na conferência e trava de análises fechadas.</b> (1) O relatório <b>Conferência de cálculos</b> passou a abrir com o bloco <b>"0. Dados de entrada — origem de todos os cálculos"</b>: tudo o que o motor recebeu, mês a mês — receitas por bloco (exportação destacada), folha, compras por linha, despesas, a indicação de ICMS/IPI automáticos ou substituídos manualmente, a configuração vigente (ISS, ICMS, presunções, adicional, sublimite, RBT12) e os parâmetros da Reforma aplicados. Qualquer número de saída do documento agora é rastreável até a sua entrada, no mesmo relatório, nos três modos (mês, resumo anual e completo). (2) <b>Análises fechadas</b>: novo botão <b>🔒 Fechar análise</b> na Análise Atual — o fechamento grava um <b>snapshot dos resultados</b> (totais por regime, DAS mês a mês, cenários 2033) com a versão do aplicativo, registra quem fechou e quando, e <b>bloqueia edição, gravação e importação</b>. Reabrir (🔓) exige confirmação e fica registrado no histórico. O ponto central: após qualquer <b>atualização do aplicativo</b>, ao abrir uma análise fechada o sistema recalcula em segundo plano e <b>compara com o snapshot</b> — se houver divergência, mostra um aviso objetivo com os valores (de → para, com a diferença) em vez de trocar em silêncio números já entregues ao cliente; a decisão de manter o snapshot ou reabrir e reprocessar é sua. Requer o script <b>setup_v726.sql</b> no Supabase (colunas status, fechado_por, fechado_em e snapshot em atp_analises); sem o script, o app avisa no momento do fechamento.</td></tr>
                     <tr><td><b>v7.25.0</b></td><td>15/08/2026</td><td><b>Triagem de venda e de compra + redefinição de senha em duas opções.</b> (1) A Consulta CNPJ ganhou o card <b>"Triagem de venda × compra — analíticos por documento"</b>, com dois blocos empilhados, cada um com seu dashboard: importa os relatórios analíticos do Questor (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF), consolida por parceiro, consulta o enquadramento na Receita (cache de 30 dias) e mostra — na <b>venda</b>: total, nº de clientes, <b>B2B × B2C</b> (CNPJ × CPF), distribuição dos clientes PJ por regime, vendas por CFOP com a <b>exportação destacada</b> (CFOP 7xxx/x501/x502, imune) e os maiores clientes; na <b>compra</b>: total de entradas, distribuição por regime do fornecedor (crédito pleno × limitado × sem crédito), compras por CFOP e os maiores fornecedores. Movimentação da própria empresa é identificada e separada do ranking; CPF na venda é consumidor final e não vai à consulta. As triagens são <b>gravadas</b> no histórico (automático após a consulta) e alimentam o <b>parecer</b> — que ganhou a página <b>"Perfil da clientela e a decisão do crédito"</b>, com a leitura B2B×B2C aplicada à escolha por dentro × híbrido × regular — e o <b>Resumo Estatístico de Fornecedores</b>, que passa a listar também as duas triagens. (2) Na aba Usuários, o "Redefinir senha" de cada pessoa passou a oferecer <b>duas opções</b>: enviar o link por e-mail (fluxo atual) ou <b>redefinir agora</b>, digitando a nova senha — este segundo modo usa a nova função administrativa <b>admin-senha</b> (publicação no Supabase junto desta versão), restrita à lista de e-mails administradores configurada na própria função.</td></tr>
                     <tr><td><b>v7.24.0</b></td><td>15/08/2026</td><td><b>Exportações fora da base do IBS/CBS.</b> Correção fiscal: as receitas decorrentes de exportação são <b>imunes</b> ao IBS e à CBS (LC 214/2025, art. 8º), mas o cálculo da Reforma vinha usando a receita total da análise (interna + exportação) em dois caminhos — quando a aba Reforma não tinha receita salva e no botão "⚡ Preencher da análise", que gravava o valor cheio. Agora o motor separa a receita de exportação, a base do IBS/CBS usa exclusivamente a <b>receita interna</b> nos dois caminhos, o campo da aba Reforma e os quadros deixam a regra explícita, e o preenchimento automático informa o valor de exportação excluído. Ponto técnico preservado: os <b>créditos das aquisições são mantidos</b> — a LC 214 garante o crédito do exportador, então apenas o débito cai. Simples, Presumido, Real e sublimite já excluíam a exportação desde a v7.10 e não mudam. Empresas exportadoras (revenda ao exterior e remessas com fim específico, CFOP 6501/6502) terão débito de IBS/CBS menor nos cenários híbrido e fora do Simples. <b>Atenção</b>: se a aba Reforma tiver receita GRAVADA por um "Preencher da análise" antigo, reabra a empresa e clique de novo em "⚡ Preencher da análise" para regravar o valor correto.</td></tr>
@@ -815,11 +815,27 @@ async function garantirToken(forcar=false){
 }
 // Toda chamada de Edge Function passa por aqui: renova o token antes e, se ainda
 // assim vier 401 (token caducou no meio do caminho), renova à força e repete UMA vez.
+// v7.26.2: timeout POR ETAPA — quando algo pendura, o erro DIZ onde travou
+// (renovação da sessão × a própria função × bloqueio antes de chegar / CORS).
+const SUPAFN_T = { ren: 10000, fn: 12000 };        // ms — a suíte de testes encurta para simular
 async function supaFn(nome, payload){
-  if (!(await garantirToken())) throw new Error('Sessão expirada — saia e entre novamente no app.');
-  const chamar = () => fetch(`${SUPA_URL}/functions/v1/${nome}`, {
-    method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPA_KEY, 'Authorization':'Bearer '+APP.token },
-    body: JSON.stringify(payload) });
+  let __tmr;
+  const ren = await Promise.race([ garantirToken().finally(()=>clearTimeout(__tmr)),
+    new Promise(res => { __tmr = setTimeout(()=>res('__tempo__'), SUPAFN_T.ren); }) ]);
+  if (ren === '__tempo__') throw new Error(`a renovação da sessão não respondeu em ${Math.round(SUPAFN_T.ren/1000)}s — verifique a internet e o Supabase (Auth).`);
+  if (!ren) throw new Error('Sessão expirada — saia e entre novamente no app.');
+  const chamar = async () => {
+    const ab = new AbortController(); const tm = setTimeout(()=>ab.abort(), SUPAFN_T.fn);
+    try {
+      return await fetch(`${SUPA_URL}/functions/v1/${nome}`, {
+        method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPA_KEY, 'Authorization':'Bearer '+APP.token },
+        body: JSON.stringify(payload), signal: ab.signal });
+    } catch(e){
+      if (e && e.name === 'AbortError')
+        throw new Error(`a função ${nome} não respondeu em ${Math.round(SUPAFN_T.fn/1000)}s — confira em Supabase → Edge Functions → ${nome} → Logs se a chamada chegou (sem invocação registrada = problema no deploy/nome).`);
+      throw new Error(`a chamada à função ${nome} foi bloqueada antes de chegar ao servidor (rede/CORS/preflight) — confira se a função existe com esse nome EXATO e se "Verify JWT" está DESLIGADO.`);
+    } finally { clearTimeout(tm); }
+  };
   let r = await chamar();
   if (r.status===401 && await garantirToken(true)) r = await chamar();
   return r;
@@ -847,6 +863,7 @@ function doLogout() {
 
 function entrar() {
   prCarregar();
+  lacreBoot();                                             // v7.30.0: confere o lacre a cada troca de versão
   dlLc116Montar();
   ctOficialCarregar();
   empGlobalRestaurar();
@@ -1040,9 +1057,14 @@ function importarArquivo(inp) {
 function importarArquivoTriagemInput(inp) {
   const f = inp.files[0]; if (!f) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     try {
       const wb = XLSX.read(e.target.result, { type:'array' });
+      // v7.27.0: analítico por documento é reconhecido também por este botão (item 2)
+      for (const n of wb.SheetNames){
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header:1 });
+        if (await triReceber(rows, f.name)){ inp.value=''; return; }
+      }
       let achados = [];
       wb.SheetNames.forEach(sn => {
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header:1, raw:false });
@@ -1231,6 +1253,12 @@ async function fornArquivo(inp){
   if (!arqs.length) return;
   const lotes = [];
   for (const f of arqs){
+    if (/\.(xls|xlsx)$/i.test(f.name) && window.XLSX){       // v7.27.0: analítico por documento entra pelo mesmo botão
+      const abas = await arqLerAbas(f);
+      let ehAnalitico = false;
+      for (const rows of (abas||[])){ if (await triReceber(rows, f.name)){ ehAnalitico = true; break; } }
+      if (ehAnalitico) continue;
+    }
     const { texto, nome } = await fornLerArquivo(f);
     const r = fornParse(texto);
     if (!r.itens.length){
@@ -1238,7 +1266,8 @@ async function fornArquivo(inp){
       const prim = texto.split(/\r?\n/).find(l=>l.trim()) || '';
       alert(`Não consegui ler "${nome}" como relatório de fornecedores.\n\n`
         + `Encontrei ${cnpjs} CNPJ(s) no arquivo, mas nenhuma linha com CNPJ e valor no formato esperado.\n\n`
-        + `O leitor foi feito para o "Totais ISS por Fornecedor/Cliente" do Questor.\n`
+        + `Os leitores atendem o "Totais ISS/ICMS por Fornecedor/Cliente" e o analítico por documento\n`
+        + `(Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF), ambos do Questor.\n`
         + `Primeira linha do arquivo:\n${prim.slice(0,160)}`);
       continue;
     }
@@ -1448,22 +1477,40 @@ function triParse(rows, tipo){
   return { tipo, itens, de, ate, docs, periodo: de&&ate ? `${de.split('-').reverse().join('/')} a ${ate.split('-').reverse().join('/')}` : '',
     cnpjEmpresa: (EMP_GLOBAL?.cnpj || AN?.cnpj || ''), nomeEmpresa: (EMP_GLOBAL?.razao_social || ''), _salvo:null };
 }
-function triArquivo(input, tipo){
-  const f = input.files[0]; if (!f) return; input.value='';
-  const rd = new FileReader();
-  rd.onload = e => {
-    try {
-      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-      let t = null;
-      for (const n of wb.SheetNames){ const sj = XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1}); t = triParse(sj, tipo); if (t) break; }
-      if (!t){ toast('Cabeçalho não reconhecido — esperado: Data · Natureza · Valor Contábil · CNPJ/CPF.'); return; }
-      t.arquivo = f.name; TRI[tipo] = t;
-      $id('tri-btn-'+tipo).style.display = t.itens.some(i=>i.classe===null) ? '' : 'none';
-      triDash(tipo);
-      toast(`${t.itens.length} ${tipo==='venda'?'cliente(s)':'fornecedor(es)'} consolidado(s) de ${t.docs} documento(s) — período ${t.periodo||'?'}. ${t.itens.some(i=>i.classe===null)?'Consulte os enquadramentos.':''}`);
-    } catch(err){ console.error(err); toast('Erro ao ler '+f.name+': '+err.message); }
-  };
-  rd.readAsArrayBuffer(f);
+// v7.27.0: o card avulso foi extinto — o analítico entra pelos botões do item 2 e é
+// reconhecido pelo cabeçalho (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF).
+// O tipo (venda × compra) é decidido pelos CFOPs: 1/2/3 = entradas, 5/6/7 = saídas;
+// mistura ou indefinição pergunta ao usuário. Devolve true quando o arquivo É um analítico
+// (mesmo se cancelado), para os demais fluxos do item 2 não o consumirem de novo.
+function arqLerAbas(f){
+  return new Promise(res => { const rd = new FileReader();
+    rd.onload = e => { try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+        res(wb.SheetNames.map(n => XLSX.utils.sheet_to_json(wb.Sheets[n], {header:1})));
+      } catch(err){ res(null); } };
+    rd.readAsArrayBuffer(f); });
+}
+async function triReceber(rows, nomeArquivo){
+  let t = triParse(rows, 'venda');                 // tipo provisório — decidido a seguir pelos CFOPs
+  if (!t) return false;                            // não é analítico por documento: outros fluxos seguem
+  let ent = 0, sai = 0;
+  for (const i of t.itens) for (const [c,v] of Object.entries(i.cfops)){
+    if (/^[123]/.test(c)) ent += v; else if (/^[567]/.test(c)) sai += v; }
+  let tipo = (sai > 0 && ent === 0) ? 'venda' : (ent > 0 && sai === 0) ? 'compra' : null;
+  if (!tipo){
+    tipo = await dlg('Este analítico é de venda ou de compra?',
+      `"${nomeArquivo}": os CFOPs não decidem sozinhos (entradas ${fmtR(ent)} × saídas ${fmtR(sai)}).`,
+      [{rotulo:'📈 Triagem de venda (clientes)', valor:'venda', destaque: sai >= ent},
+       {rotulo:'📉 Triagem de compra (fornecedores)', valor:'compra', destaque: ent > sai},
+       {rotulo:'Cancelar', valor:null}]);
+    if (!tipo) return true;                        // é analítico, mas o usuário desistiu
+  }
+  t.tipo = tipo; t.arquivo = nomeArquivo; TRI[tipo] = t;
+  const pn = $id('tri-painel-'+tipo); if (pn) pn.style.display = 'block';   // valor explícito — '' cai na folha de estilo
+  $id('tri-btn-'+tipo).style.display = t.itens.some(i=>i.classe===null) ? '' : 'none';
+  triDash(tipo);
+  toast(`Analítico reconhecido como ${tipo==='venda'?'VENDA (clientes)':'COMPRA (fornecedores)'}: ${t.itens.length} parceiro(s) de ${t.docs} documento(s) — período ${t.periodo||'?'}. ${t.itens.some(i=>i.classe===null)?'Consulte os enquadramentos.':''}`);
+  return true;
 }
 async function triConsultar(tipo){
   const T = TRI[tipo]; if (!T) return;
@@ -1498,6 +1545,7 @@ function triStats(T){
 }
 function triDash(tipo){
   const T = TRI[tipo]; const box = $id('tri-dash-'+tipo); if (!T){ box.innerHTML=''; return; }
+  const pn = $id('tri-painel-'+tipo); if (pn) pn.style.display = 'block';   // v7.27.0: painel vive no card 2
   const S = triStats(T);
   const venda = tipo==='venda';
   const pc = v => (v/S.tot*100).toFixed(1).replace('.',',')+'%';
@@ -1526,8 +1574,13 @@ function triDash(tipo){
     <table class="tbl"><thead><tr><th>${venda?'Cliente':'Fornecedor'}</th><th>Enquadr.</th><th style="text-align:right">Valor</th></tr></thead><tbody>
     ${T.itens.filter(i=>i.classe!=='proprio').slice(0,10).map(i=>`<tr><td style="white-space:nowrap">${i.razao?esc(i.razao.slice(0,26)):fmtCNPJ(i.cnpj)}</td><td>${(TRI_ROT[i.classe||'nid']||TRI_ROT.nid)[0]}</td><td style="text-align:right">${fmt(i.valor)}</td></tr>`).join('')}
     </tbody></table></div></div>`;
+  const acoes = [];
   if (!T._salvo && T.itens.some(i=>i.classe && i.classe!=='pf' && i.classe!=='proprio'))
-    h += `<div style="margin-top:8px"><button class="btn solid" onclick="triSalvar('${tipo}')">💾 Gravar triagem no histórico da empresa</button></div>`;
+    acoes.push(`<button class="btn solid" onclick="triSalvar('${tipo}')">💾 Gravar triagem no histórico da empresa</button>`);
+  if (tipo==='compra')
+    acoes.push(`<button class="btn" onclick="triLancarCompras()" title="Rateia o total externo pelos meses do período na linha escolhida da aba Compras">➕ Lançar total nas Compras da análise</button>`);
+  if (acoes.length) h += `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">${acoes.join('')}</div>`;
+  if (tipo==='compra' && T._salvo) h += `<div class="hint" style="margin-top:6px">Gravada, esta triagem alimenta os campos de compras da aba <b>Reforma</b> (crédito de IBS/CBS) — vale a mais recente entre ela e o "Totais ICMS por Fornecedor".</div>`;
   box.innerHTML = h;
 }
 async function triSalvar(tipo, auto){
@@ -1738,6 +1791,7 @@ function anModeloImportar(inp){
         const { o, k } = anPath(AN, path);
         if (/_pct$/.test(path)) { for (let m=0;m<12;m++) o[k][m] = vals[m]/100; }
         else { for (let m=0;m<12;m++) o[k][m] = vals[m]; }
+        anOrigemMarcar(path, 'all', 'L');                  // v7.28.0: trilha de origem
         aplicados++;
       }
       anRenderTabs(); anRenderConfig(); anRenderGrid(); anRecalcular();
@@ -1781,6 +1835,7 @@ async function fornRatear(secao, campo, total, periodo, rotulo){
       `${rotulo} já tem valores nos meses do período.\n\nSubstituir pelo rateio do relatório de fornecedores?`,
       'Sim, substituir', 'Não')) return false;
   for (const m of meses) AN[secao][campo][m] = porMes;
+  anOrigemMarcar(secao+'.'+campo, meses, 'R');             // v7.28.0: trilha de origem
   toast(`R$ ${fmt(total)} rateados em ${meses.length} ${meses.length===1?'mês':'meses'} (${fmt(porMes)}/mês) em ${rotulo} ✓`);
   return true;
 }
@@ -1797,6 +1852,19 @@ async function fornLancarCompras(){           // revenda → Compras, na linha i
   const tot = d.itens.reduce((s,i)=>s+i.valor,0);
   // a baixa de custos (CMV) NÃO é escrita aqui — continua vindo do balancete
   if (await fornRatear('compras', campo, tot, d.periodo, rot)) anAplicado();
+}
+// v7.29.0: a triagem de compra (analítico por documento) também lança na aba Compras da análise
+async function triLancarCompras(){
+  const T = TRI.compra; if (!T) return;
+  const cnpjT = limparCNPJ(T.cnpjEmpresa||'');
+  if (!AN || !AN.cnpj || limparCNPJ(AN.cnpj) !== cnpjT){ toast('Abra a análise da empresa '+(cnpjT?fmtCNPJ(cnpjT):'da triagem')+' primeiro (módulo Análise Atual).'); return; }
+  const destino = await dlg('A que se referem estas compras?',
+    'Informe o tratamento das mercadorias para a linha de destino na aba Compras.',
+    [...FO_DESTINOS.map((d,i)=>({rotulo:d[1], valor:d[0], destaque:i===0})), {rotulo:'Cancelar', valor:null}]);
+  if (destino === null) return;
+  const S = triStats(T);                                 // total EXTERNO — movimentação própria fica de fora
+  const rot = (FO_DESTINOS.find(x=>x[0]===destino)||['','Compras'])[1];
+  if (await fornRatear('compras', destino, S.tot, T.periodo, rot)) anAplicado();
 }
 async function fornResumo(cnpj){
   const rs = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+cnpj, order:'consultado_em.desc', select:'*' } }) || [];
@@ -1837,12 +1905,25 @@ async function fornAutoAplicar(){
     const t = (r.dados && r.dados.tipo) || 'servico';   // consultas antigas não têm tipo: valem como serviço
     if (!porTipo[t]) porTipo[t] = r;                     // rs já vem do mais recente para o mais antigo
   }
+  // v7.29.0: a triagem de COMPRA (analítico por documento) também alimenta a Reforma.
+  // Ela e o "Totais ICMS" (revenda) retratam as MESMAS entradas — vale a mais RECENTE das duas.
+  if (porTipo.compra && porTipo.revenda){
+    if (porTipo.compra.consultado_em > porTipo.revenda.consultado_em) porTipo.revenda = null;
+    else porTipo.compra = null;
+  }
   const partes = [];
   let lrlp = 0, simp = 0;
-  for (const t of ['servico','revenda']){
+  for (const t of ['servico','revenda','compra']){
     const r = porTipo[t]; if (!r) continue;
-    const g = r.dados.stats.grupos;
-    const pl = Math.round(g.normal.v*100)/100, ps = Math.round((g.mei.v + g.simples.v)*100)/100;
+    let pl, ps;
+    if (t === 'compra'){                                 // triagem grava itens com classe — soma por item
+      const ext = (r.dados.itens||[]).filter(i => i.classe !== 'proprio' && i.classe !== 'pf');
+      pl = Math.round(ext.filter(i=>i.classe==='normal').reduce((s,i)=>s+(+i.valor||0),0)*100)/100;
+      ps = Math.round(ext.filter(i=>i.classe==='simples'||i.classe==='mei').reduce((s,i)=>s+(+i.valor||0),0)*100)/100;
+    } else {
+      const g = r.dados.stats.grupos;
+      pl = Math.round(g.normal.v*100)/100; ps = Math.round((g.mei.v + g.simples.v)*100)/100;
+    }
     lrlp += pl; simp += ps;
     partes.push({ tipo:t, data:r.consultado_em, periodo:r.dados.periodo||'',
                   meses: fornMesesPeriodo(r.dados.periodo), presumido: !(r.dados && r.dados.tipo), lrlp:pl, simp:ps });
@@ -1854,7 +1935,7 @@ async function fornAutoAplicar(){
 }
 function fornNotaHtml(){
   const f = RF && RF._forn; if (!f || !f.partes) return '';
-  const rotT = t => t==='revenda' ? 'revenda' : 'serviço';
+  const rotT = t => t==='revenda' ? 'revenda' : t==='compra' ? 'entradas (analítico)' : 'serviço';
   const linhas = f.partes.map(p => `${rotT(p.tipo)}${p.presumido?' (tipo presumido)':''}: ${fmtR(p.lrlp+p.simp)}`
     + (p.periodo?` · período ${p.periodo}`:'') + (p.meses && p.meses<12 ? ` · <b>só ${p.meses} ${p.meses===1?'mês':'meses'}</b>` : '')).join(' &nbsp;|&nbsp; ');
   const parcial = f.partes.some(p => p.meses && p.meses < 12);
@@ -2077,6 +2158,18 @@ const REP190 = {
 // Anexo Único da Res. 190 (novo Anexo XIII da Res. 140) — valores fixos mensais do MEI, referência:
 const MEI190 = {2027:{icms:1,iss:5,cbs:.994,ibs:.006},2029:{icms:.9,iss:4.5,cbs:1,ibs:.2},2030:{icms:.8,iss:4,cbs:1,ibs:.4},2031:{icms:.7,iss:3.5,cbs:1,ibs:.6},2032:{icms:.6,iss:3,cbs:1,ibs:.8},2033:{cbs:1,ibs:2}};
 function repTribAno(ano){ return (!ano || ano<=2026) ? REP_TRIB : (REP190[vig190(ano)] || REP_TRIB); }
+// v7.29.0 — art. 58, §§4º a 6º (Res. CGSN 190/2026): compras de optante do Simples dão ao
+// adquirente crédito de IBS/CBS igual aos PERCENTUAIS DE CBS E IBS DA FAIXA do fornecedor.
+// Sem conhecer o RBT12 do fornecedor, adota-se a 1ª FAIXA (conservador — decisão de 16/08)
+// e o Anexo I (o de menor crédito entre I e III, mantendo o conservadorismo).
+// Resultado: fração do valor da compra que vira crédito, POR VIGÊNCIA — 2027-28 ≈ 0,62%,
+// 2029 ≈ 0,76%, sobe em degraus até 2033 ≈ 1,98%. Antes de 2027 não há CBS/IBS no DAS → 0.
+function credSimplesArt58(ano){
+  if (!ano || ano <= 2026) return 0;
+  const R = repTribAno(ano).I || {};
+  const aliq1 = ((PARAMS.anexos||ANEXOS_DEFAULT).I?.aliq?.[0]) || ANEXOS_DEFAULT.I.aliq[0];
+  return aliq1 * (((R.cbs||[])[0]||0) + (((R.ibs||[])[0])||0));
+}
 
 // v7.1: repartição efetiva — partes de consumo (ICMS/ISS/PIS+COFINS) e CPP vêm dos ANEXOS EM USO
 // (editáveis nos Parâmetros); o residual é distribuído entre os demais tributos na proporção da
@@ -2448,7 +2541,8 @@ function anNovo(cnpj, ano) {
     compras: Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred'].map(k=>[k,z12()])),
     icms: { cred:Array(12).fill(null), deb:Array(12).fill(null) },
     ipi:  { cred:Array(12).fill(null), deb:Array(12).fill(null) },
-    despesas: Object.fromEntries(['adm','vendas','fiscais','financeiras','outras','credLR'].map(k=>[k,z12()])) };
+    despesas: Object.fromEntries(['adm','vendas','fiscais','financeiras','outras','credLR'].map(k=>[k,z12()])),
+    origem: {} };                                          // v7.28.0: trilha de origem por campo×mês
 }
 
 // ═══════════ ANÁLISE: DEFINIÇÃO DAS SEÇÕES/LINHAS ═══════════
@@ -2501,6 +2595,20 @@ let AN_TAB = 'rbt12';
 
 function anPath(obj, path) { const p = path.split('.'); return { o: obj[p[0]], k: p[1] }; }
 
+// ═══ v7.28.0 (Fase B): TRILHA DE ORIGEM POR CAMPO ═══
+// Cada célula (campo × mês) da análise registra DE ONDE o valor veio. O mapa vive em
+// AN.origem['secao.campo'][mes] = código de 1 letra e é gravado junto da análise
+// (sem underscore — o anSalvar preserva). Célula sem código = lançada antes da v7.28.
+const ORIGEM_ROT = { D:['digitado na grade','#5d6d7e'], P:['PGDAS-D','#1a5276'], X:['XML de notas','#7d3c98'],
+  B:['balancete (Questor)','#1e8449'], M:['Demonstrativo do Simples','#b9770e'], F:['Relatório de Faturamento','#117864'],
+  R:['relatório de fornecedores 🚚','#a04000'], L:['planilha modelo','#6c3483'] };
+function anOrigemMarcar(path, meses, cod){
+  if (!AN) return;
+  if (!AN.origem || typeof AN.origem !== 'object' || Array.isArray(AN.origem)) AN.origem = {};
+  if (!Array.isArray(AN.origem[path])) AN.origem[path] = Array(12).fill(null);
+  for (const m of (meses === 'all' ? [...Array(12).keys()] : meses)) AN.origem[path][+m] = cod;
+}
+
 function anRenderTabs() {
   $id('an-tabs').innerHTML = AN_SECOES.map(s=>`<div class="an-tab ${AN_TAB===s.id?'on':''}" onclick="AN_TAB='${s.id}';anRenderTabs();anRenderGrid()">${s.nome}</div>`).join('');
 }
@@ -2511,6 +2619,7 @@ function anRepetir(path) {
   const { o, k } = anPath(AN, path);
   const v = o[k][0];
   for (let m = 1; m < 12; m++) o[k][m] = v;
+  anOrigemMarcar(path, [1,2,3,4,5,6,7,8,9,10,11], ((AN.origem||{})[path]||[])[0] || 'D');   // v7.28.0: cópia herda a origem de jan
   anRenderGrid(); anRecalcular();
   toast('Valor de janeiro repetido nos 12 meses.');
 }
@@ -2533,6 +2642,7 @@ function anNormalizar(d, cnpj, ano){
   out.cfg.rbt12ExpLanc = a12(out.cfg.rbt12ExpLanc);
   out.cfg.folha12Lanc = a12(out.cfg.folha12Lanc);
   out.folha13 = { ...base.folha13, ...(d.folha13||{}) };
+  out.origem = (d.origem && typeof d.origem === 'object' && !Array.isArray(d.origem)) ? d.origem : {};   // v7.28.0
   for (const sec of ['icms','ipi']){                       // aqui null significa "automático" — não virar zero
     out[sec] = { ...base[sec], ...(d[sec]||{}) };
     for (const k of Object.keys(out[sec])){
@@ -2563,7 +2673,8 @@ function anRenderGrid() {
       const { o,k } = anPath(AN, path);
       const v = o[k][m];
       const shown = tipo==='nul' ? (v==null?'':fmt(v)) : (tipo==='pct' ? (v?String(+(v*100).toFixed(4)).replace('.',','):'') : (v?fmt(v):''));
-      h += `<td><input inputmode="decimal" value="${shown}" onchange="anSet('${path}',${m},this.value,'${tipo||''}');anRenderGrid()"></td>`;
+      const _og = ((AN.origem||{})[path]||[])[m];
+      h += `<td><input inputmode="decimal" value="${shown}" title="${_og?('Origem: '+ORIGEM_ROT[_og][0]):''}" onchange="anSet('${path}',${m},this.value,'${tipo||''}');anRenderGrid()"></td>`;
     }
     h += '</tr>';
   }
@@ -2631,6 +2742,7 @@ function anSet(path, m, val, tipo) {
   if (tipo==='nul') o[k][m] = String(val).trim()==='' ? null : num(val);
   else if (tipo==='pct') o[k][m] = num(val)/100;
   else o[k][m] = num(val);
+  anOrigemMarcar(path, [m], 'D');                          // v7.28.0: trilha de origem
   anRecalcular();
 }
 
@@ -3057,7 +3169,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.26.1';
+const APP_VERSAO = '7.30.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -3174,6 +3286,11 @@ async function prCarregar() {
       PARAMS = r[0].valor;
       for (const k of Object.keys(ANEXOS_DEFAULT)) PARAMS.anexos[k] = Object.assign({}, ANEXOS_DEFAULT[k], PARAMS.anexos[k]||{});
       PARAMS.folha = Object.assign({}, FOLHA_PERC_DEFAULT, PARAMS.folha||{});
+      // v7.29.1 (D5): cópia salva com o padrão ANTIGO do biênio (CBS 9,21) é corrigida para 9,11
+      // (LC 214, art. 347). Percentual personalizado (diferente de 9,21) não é tocado.
+      let __d5 = false;
+      for (const a of [2027,2028]) if (PARAMS.reforma?.[a] && +PARAMS.reforma[a].cbs === 9.21){ PARAMS.reforma[a].cbs = 9.11; __d5 = true; }
+      if (__d5) console.log('D5: CBS 2027-28 corrigida de 9,21 → 9,11 (LC 214, art. 347) nos parâmetros salvos.');
     } } catch {}
 }
 
@@ -3359,10 +3476,9 @@ async function usSenhaMenu(email){
   nova = String(nova).trim();                              // v7.26.1: senha colada carrega espaço/quebra invisível
   if (nova.length < 8){ toast('A nova senha precisa de pelo menos 8 caracteres (espaços das pontas são ignorados).'); return; }
   try {
-    // v7.26.1: supaFn devolve o Response CRU — ler o JSON e tratar o status; timeout p/ nunca silenciar
-    const r = await Promise.race([
-      supaFn('admin-senha', { email, senha: nova }),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('sem resposta em 20s — verifique a publicação da função e a internet')), 20000)) ]);
+    // v7.26.1: supaFn devolve o Response CRU — ler o JSON e tratar o status.
+    // v7.26.2: o tempo-limite mora na própria supaFn, por etapa, e a mensagem localiza a falha.
+    const r = await supaFn('admin-senha', { email, senha: nova });
     const d = await r.json().catch(()=>null);
     console.log('admin-senha →', r.status, d);
     if (r.ok && d && d.ok) toast(`Senha de ${email} redefinida ✓ — informe a pessoa pelo canal seguro de sempre.`);
@@ -3399,8 +3515,10 @@ const RF_ANOS = [2026,2027,2028,2029,2030,2031,2032,2033];
 // pelo Senado Federal a partir do cálculo do TCU (encaminhamento até 30/10/2026).
 const RF_ALIQ_DEFAULT = {
   2026:{cbs:0.9,  is:0,  ibse:0.05, ibsm:0.05, remIcmsIss:1.00, remPisCof:1.00},
-  2027:{cbs:9.21, is:0,  ibse:0.05, ibsm:0.05, remIcmsIss:1.00, remPisCof:0},
-  2028:{cbs:9.21, is:0,  ibse:0.05, ibsm:0.05, remIcmsIss:1.00, remPisCof:0},
+  // v7.29.1 (D5): em 2027-2028 a CBS é a REFERÊNCIA REDUZIDA EM 0,1 p.p. (LC 214, art. 347;
+  // ADCT, art. 127), compensando o IBS-teste de 0,05%+0,05% — combinada 9,21%, não 9,31%.
+  2027:{cbs:9.11, is:0,  ibse:0.05, ibsm:0.05, remIcmsIss:1.00, remPisCof:0},
+  2028:{cbs:9.11, is:0,  ibse:0.05, ibsm:0.05, remIcmsIss:1.00, remPisCof:0},
   2029:{cbs:9.21, is:0,  ibse:1.66, ibsm:0.21, remIcmsIss:0.90, remPisCof:0},
   2030:{cbs:9.21, is:0,  ibse:3.32, ibsm:0.42, remIcmsIss:0.80, remPisCof:0},
   2031:{cbs:9.21, is:0,  ibse:4.99, ibsm:0.62, remIcmsIss:0.70, remPisCof:0},
@@ -3507,7 +3625,8 @@ function rfLinhaBase(rf, a) {
   for (const [k,,red] of RF_REDUCOES) deb += (rf.benefRec?.[k]||0)*alq*(1-red);
   let cred = Math.max(0, (rf.contra?.compras_lrlp||0) - credBenefTot)*alq;
   for (const [k,,red] of RF_REDUCOES) cred += (rf.benefCred?.[k]||0)*alq*(1-red);
-  cred += (rf.contra?.compras_simples||0)*((rf.credSimplesPct||0)/100);
+  // v7.29.0: % manual preenchido prevalece (override); zerado = automático pelo art. 58 (1ª faixa)
+  cred += (rf.contra?.compras_simples||0) * ((rf.credSimplesPct||0) > 0 ? (rf.credSimplesPct/100) : credSimplesArt58(a));
   const anoTeste = (a <= 2026);
   return { q, alq, deb, cred, anoTeste,
     liquido: anoTeste ? 0 : Math.max(0, deb - cred),
@@ -3594,6 +3713,69 @@ function calcCenariosReforma(res, reforma) {
   return { rfx, REF, usouFallback: !reforma, proxyCompras, semCreditos };
 }
 
+// ═══ v7.30.0 — LACRE DO MOTOR DE CÁLCULO ═══
+// Dois casos-gabarito (os mesmos da suíte de testes/CI) viajam DENTRO do app. A cada troca de
+// versão, o app recalcula tudo com os PADRÕES DE FÁBRICA (anexos, folha, alíquotas da Reforma —
+// parâmetros editados pelo usuário NÃO entram) e confere o resultado, ao centavo, contra o selo
+// (hash) gravado nesta versão. Divergência = o motor mudou sem intenção → alerta vermelho.
+// Mudança DELIBERADA de regra re-sela na entrega, e a suíte do CI quebra se o selo não for refeito.
+const LACRE_CASOS = [
+  { nome:'Caso 1 — Comércio (Anexo I, 6ª faixa, trava do sublimite)', inp: {"cfg":{"ano":2025,"iss":0,"icmsV":0.12,"icmsC":0.12,"ipiV":0,"ipiC":0,"rbt12Direto":0,"rbt12Lanc":[233957.74,180464.53,228650,204621.46,189091.64,229826.08,212736.02,261640.46,259296.98,376003.65,380401.48,257979.83],"folha12Lanc":[0,0,0,0,0,0,0,0,0,0,0,0],"lpBaseServ":0.32,"lpBaseCom":0.08,"adicionalIR":"trimestral","sublimite":"auto"},"receitas":{"a1_semst":[377050.87,484066.42,376975.8,416574.89,447563.54,453176.74,548964.77,427892.17,0,0,0,0],"a1_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_semret":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retiss":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retissinss":[0,0,0,0,0,0,0,0,0,0,0,0],"a4":[0,0,0,0,0,0,0,0,0,0,0,0],"a5r":[0,0,0,0,0,0,0,0,0,0,0,0],"fin":[0,0,0,0,0,0,0,0,0,0,0,0],"comtransp":[0,0,0,0,0,0,0,0,0,0,0,0]},"folha":{"prolabore":[10251.43,10251.43,10251.43,10251.43,10251.43,10251.43,0,0,0,0,0,0],"salarios":[34988.54,34988.54,34988.54,34988.54,34988.54,34988.54,0,0,0,0,0,0],"baseFgts":[34988.54,34988.54,34988.54,34988.54,34988.54,34988.54,0,0,0,0,0,0],"prov13":[2915.71,2915.71,2915.71,2915.71,2915.71,2915.71,0,0,0,0,0,0],"provFerias":[3887.62,3887.62,3887.62,3887.62,3887.62,3887.62,0,0,0,0,0,0]},"compras":{"semst":[232039.67,155316.58,291099.36,327885.35,248658.21,345140.42,0,0,0,0,0,0],"baixaSemst":[0,0,0,0,0,0,0,0,0,0,0,0],"mono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaMono":[0,0,0,0,0,0,0,0,0,0,0,0],"comst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComst":[0,0,0,0,0,0,0,0,0,0,0,0],"comstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baseIpiCred":[0,0,0,0,0,0,0,0,0,0,0,0]},"despesas":{"adm":[77361.45,90697.16,91478,95598.78,143160.24,109482.63,0,0,0,0,0,0],"vendas":[0,0,0,0,0,0,0,0,0,0,0,0],"fiscais":[0,0,0,0,0,0,0,0,0,0,0,0],"financeiras":[0,0,0,0,0,0,0,0,0,0,0,0],"outras":[0,0,0,0,0,0,0,0,0,0,0,0],"credLR":[0,0,0,0,0,0,0,0,0,0,0,0]},"icms":{"cred":null,"deb":null},"ipi":{"cred":null,"deb":null},"folha13":{"prolabore13":0,"salarios13":0,"baseFgts13":0}} },
+  { nome:'Caso 2 — Serviços (Anexo III, Fator R, 13º)',              inp: {"cfg":{"ano":2026,"iss":0.02,"icmsV":0,"icmsC":0,"ipiV":0,"ipiC":0,"rbt12Direto":0,"rbt12Lanc":[4500,0,8500,0,11000,21400,32850,15000,0,0,0,0],"folha12Lanc":[0,0,0,0,0,0,0,0,0,0,0,0],"lpBaseServ":0.32,"lpBaseCom":0.08,"adicionalIR":"trimestral","sublimite":"auto"},"receitas":{"a1_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_semret":[100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000],"a3_retiss":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retissinss":[0,0,0,0,0,0,0,0,0,0,0,0],"a4":[0,0,0,0,0,0,0,0,0,0,0,0],"a5r":[0,0,0,0,0,0,0,0,0,0,0,0],"fin":[0,0,0,0,0,0,0,0,0,0,0,0],"comtransp":[0,0,0,0,0,0,0,0,0,0,0,0]},"folha":{"prolabore":[1518,1518,1518,1518,1518,1518,1518,1518,1518,1518,1518,1518],"salarios":[24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77],"baseFgts":[24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77],"prov13":[2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65],"provFerias":[2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86]},"compras":{"semst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaSemst":[0,0,0,0,0,0,0,0,0,0,0,0],"mono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaMono":[0,0,0,0,0,0,0,0,0,0,0,0],"comst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComst":[0,0,0,0,0,0,0,0,0,0,0,0],"comstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baseIpiCred":[0,0,0,0,0,0,0,0,0,0,0,0]},"despesas":{"adm":[10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89],"vendas":[488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13],"fiscais":[41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76],"financeiras":[14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47],"outras":[0,0,0,0,0,0,0,0,0,0,0,0],"credLR":[0,0,0,0,0,0,0,0,0,0,0,0]},"icms":{"cred":null,"deb":null},"ipi":{"cred":null,"deb":null},"folha13":{"prolabore13":0,"salarios13":24739.77,"baseFgts13":24739.77}} } ];
+const LACRE_HASH = 'b394cf9e';   // selo da v7.30.0 — refeito a cada mudança deliberada de regra (o CI confere)
+function lacreHash(str){ let h = 0x811c9dc5;
+  for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(16).padStart(8,'0'); }
+function lacreRodar(){
+  const pSnap = PARAMS;
+  PARAMS = { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha: {...FOLHA_PERC_DEFAULT} };  // fábrica
+  try {
+    const nums = [], resumo = [];
+    for (const c of LACRE_CASOS){
+      const r = calcular(JSON.parse(JSON.stringify(c.inp)), JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), {...FOLHA_PERC_DEFAULT});
+      const T = r.totais;
+      for (const m of r.meses){ nums.push(m.das, m.lp.total, m.lr.total); }
+      nums.push(T.receita, T.simples, T.lp, T.lr);
+      const cen = calcCenariosReforma(r, null);
+      const L33 = (cen.linhas||cen.REF||[]).find(x=>x.ano===2033) || {};
+      for (const L of (cen.linhas||cen.REF||[])) nums.push(L.dentro??L.hib??0, L.hib??0, L.regular??0);
+      resumo.push({ nome:c.nome, das:T.simples, lp:T.lp, lr:T.lr, d33:L33.dentro, h33:L33.hib, r33:L33.regular });
+    }
+    const canon = nums.map(v => (Math.round((+v||0)*100)/100).toFixed(2)).join(';');
+    const hash = lacreHash(canon);
+    return { hash, ok: hash === LACRE_HASH, n: nums.length, resumo };
+  } finally { PARAMS = pSnap; }
+}
+function lacreBoot(forcar){
+  let ultimo = null; try { ultimo = JSON.parse(localStorage.getItem('atp_lacre')||'null'); } catch {}
+  if (!forcar && ultimo && ultimo.versao === APP_VERSAO){ LACRE_ST = ultimo; lacreRender(); return; }
+  let r; try { r = lacreRodar(); } catch(e){ r = { hash:'erro', ok:false, n:0, resumo:[], erro: e.message }; }
+  LACRE_ST = { versao: APP_VERSAO, em: new Date().toISOString(), ...r,
+    resumo: r.resumo.map(x=>({ ...x })) };
+  try { localStorage.setItem('atp_lacre', JSON.stringify(LACRE_ST)); } catch {}
+  if (!r.ok) toast('⚠️ LACRE DO MOTOR: os cálculos desta versão DIVERGEM do selo — veja a aba Versões.');
+  lacreRender();
+}
+let LACRE_ST = null;
+function lacreRender(){
+  const box = $id('lacre-box'); if (!box || !LACRE_ST) return;
+  const ok = LACRE_ST.ok;
+  const linhas = (LACRE_ST.resumo||[]).map(x =>
+    `<tr><td class="rot">${x.nome}</td><td class="num">${fmt(x.das)}</td><td class="num">${fmt(x.lp)}</td><td class="num">${fmt(x.lr)}</td><td class="num">${fmt(x.h33)}</td><td class="num">${fmt(x.r33)}</td></tr>`).join('');
+  box.innerHTML = `<div style="border:1px solid ${ok?'#a9dfbf':'#f5b7b1'};border-left:6px solid ${ok?'var(--ok,#117a65)':'var(--danger,#c0392b)'};border-radius:10px;padding:12px 14px;background:${ok?'#eafaf1':'#fdedec'};margin-bottom:14px">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <b>🔏 Lacre do motor de cálculo — ${ok?'ÍNTEGRO':'VIOLADO'}</b>
+      <span class="badge ${ok?'ok':''}" style="${ok?'':'background:#c0392b;color:#fff'}">${LACRE_ST.n||0} números conferidos ao centavo</span>
+      <span class="hint">selo ${LACRE_ST.hash} · conferido em ${LACRE_ST.em?new Date(LACRE_ST.em).toLocaleString('pt-BR'):'—'} (v${LACRE_ST.versao})</span>
+      <button class="btn" style="margin-left:auto" onclick="lacreBoot(true)">Revalidar agora</button>
+    </div>
+    <div class="hint" style="margin-top:6px">${ok
+      ? 'Os dois casos-gabarito embutidos foram recalculados nesta versão com os padrões de fábrica e bateram, ao centavo, com o selo gravado na entrega — o motor não sofreu alteração acidental. Regras alteradas de propósito são re-seladas e registradas no changelog abaixo.'
+      : (LACRE_ST.erro ? ('Erro ao recalcular: '+LACRE_ST.erro) : 'Os cálculos produzidos por esta versão NÃO batem com o selo gravado na entrega. Não use os resultados para decisão até verificar — restaure a versão anterior e reporte.')}</div>
+    ${linhas?`<table style="margin-top:8px"><thead><tr><th>Caso-gabarito</th><th class="num">DAS anual</th><th class="num">Lucro Presumido</th><th class="num">Lucro Real</th><th class="num">2033 híbrido</th><th class="num">2033 regular</th></tr></thead><tbody>${linhas}</tbody></table>`:''}
+  </div>`;
+}
+
 function rfCalcular() {
   if (!RF) return;
   RF.receita = num($id('rf-receita').value);
@@ -3633,10 +3815,12 @@ function rfCalcular() {
   // notas técnicas
   const notas = [];
   notas.push('Débitos e créditos "por fora": alíquotas aplicadas sobre os valores informados, com reduções da EC 132/LC 214 nas parcelas indicadas. O IS não gera crédito.');
-  notas.push('<b>Transição (auditada):</b> os tributos que saem são descontados ano a ano pelos percentuais remanescentes — PIS/COFINS deixam de existir em 2027 (substituídos pela CBS plena); ICMS e ISS caem 10% ao ano de 2029 a 2032 e zeram em 2033 (substituídos pelo IBS); o IPI permanece apenas até 2026 (depois, zerado exceto ZFM). Os novos (CBS/IBS/IS) entram pelas alíquotas da tabela acima. Em 2026 (ano-teste), a CBS de 0,9% e o IBS de 0,1% são compensáveis com o PIS/COFINS devidos. <b>Dentro do Simples</b>, a partilha do DAS na transição segue os novos Anexos I–V da <b>Res. CGSN nº 190/2026</b> (CBS na partilha já em 2027; ICMS/ISS→IBS em degraus; híbrido pelo art. 22-A).');
+  notas.push('<b>Transição (auditada):</b> os tributos que saem são descontados ano a ano pelos percentuais remanescentes — PIS/COFINS deixam de existir em 2027 (substituídos pela CBS plena); ICMS e ISS caem 10% ao ano de 2029 a 2032 e zeram em 2033 (substituídos pelo IBS); o IPI permanece apenas até 2026 (depois, zerado exceto ZFM). Os novos (CBS/IBS/IS) entram pelas alíquotas da tabela acima. Em 2026 (ano-teste), a CBS de 0,9% e o IBS de 0,1% são compensáveis com o PIS/COFINS devidos. Em <b>2027-2028</b>, a CBS é cobrada com <b>redução de 0,1 p.p.</b> (LC 214, art. 347), compensando o IBS de 0,05%+0,05% — a combinada fica em 9,21%, igual à referência. <b>Dentro do Simples</b>, a partilha do DAS na transição segue os novos Anexos I–V da <b>Res. CGSN nº 190/2026</b> (CBS na partilha já em 2027; ICMS/ISS→IBS em degraus; híbrido pelo art. 22-A).');
   if ((RF.contra.vendas_lrlp||0) > 0) notas.push('Vendas a PJ do Lucro Real/Presumido: o IBS/CBS destacado gera crédito integral ao cliente — tende a ser neutro na cadeia.');
   if ((RF.contra.vendas_pf||0) > 0 || (RF.contra.vendas_simples||0) > 0) notas.push('Vendas a PF e a optantes do Simples: o imposto é custo final do comprador — atenção ao impacto no preço.');
-  if ((RF.contra.compras_simples||0) > 0) notas.push('Compras de fornecedores do Simples: crédito limitado ao montante de IBS/CBS efetivamente recolhido no DAS (ajuste o % conforme o fornecedor).');
+  if ((RF.contra.compras_simples||0) > 0) notas.push((RF.credSimplesPct||0) > 0
+    ? `Compras de fornecedores do Simples: crédito pelo <b>percentual manual de ${(+RF.credSimplesPct).toLocaleString('pt-BR')}%</b> informado no campo (substitui o automático do art. 58).`
+    : `Compras de fornecedores do Simples: crédito <b>automático pelo art. 58, §§4º-6º, da Res. CGSN nº 190/2026</b> — percentuais de CBS e IBS da faixa do fornecedor, adotada a <b>1ª faixa do Anexo I</b> por conservadorismo (sem o RBT12 do fornecedor): ${[2027,2029,2031,2033].map(a=>a+' '+(credSimplesArt58(a)*100).toFixed(2).replace('.',',')+'%').join(' · ')} do valor da compra. Fornecedor que optar pelo regime regular de IBS/CBS dá crédito integral — nesse caso informe o % manual. MEI recolhe valores fixos (crédito real ainda menor).`);
   if (atual?.nota) notas.push(atual.nota);
   $id('rf-notas').innerHTML = '• ' + notas.join('<br>• ');
 }
@@ -3867,6 +4051,8 @@ async function pgdasAplicar() {
     if (_difRpa > 0.02) { const bl = M.rpaBloco||'a2_semst'; AN.receitas[bl][m] = (AN.receitas[bl][m]||0) + _difRpa; aplicados++; rpaFallback++; }
     AN._pgdas.das[m] = M.das||0; AN._pgdas.tributos[m] = M.tributos;
   }
+  for (const k of Object.keys(AN.receitas))                // v7.28.0: o PGDAS determinou estes meses (inclusive os zerados)
+    if (Array.isArray(AN.receitas[k])) anOrigemMarcar('receitas.'+k, mesesImp, 'P');
   if ($id('pg-rbt').checked) {
     const ref = PG_DADOS.meses[chaves.sort()[0]] || PG_DADOS.meses[chaves[0]];
     const tabela = Object.values(PG_DADOS.meses).map(x=>x.rbtAnt).reduce((a,b)=>Object.assign(a,b),{});
@@ -3973,6 +4159,7 @@ async function fatAplicar() {
   if (FAT.ano && +AN.ano !== FAT.ano) { AN.ano = FAT.ano; $id('an-ano').value = FAT.ano; }
   const bloco = $id('fat-bloco').value, modo = $id('fat-modo').value;
   for (let m=0;m<12;m++) AN.receitas[bloco][m] = (modo==='somar' ? (AN.receitas[bloco][m]||0) : 0) + FAT.valores[m];
+  anOrigemMarcar('receitas.'+bloco, modo==='somar' ? FAT.valores.map((v,m)=>+v?m:-1).filter(m=>m>=0) : 'all', 'F');   // v7.28.0
   $id('imp-fat-card').style.display='none';
   anAplicado();
   toast('Faturamento aplicado no bloco selecionado. Salve a análise para persistir.');
@@ -4194,6 +4381,7 @@ async function balAplicar() {
     const [g,cp] = dst.split('.');
     if (!Array.isArray(AN[g][cp])) AN[g][cp] = Array(12).fill(0);
     for (const m of Object.keys(M[dst])) { AN[g][cp][+m] = M[dst][+m]; celulas++; }
+    anOrigemMarcar(dst, Object.keys(M[dst]), 'B');         // v7.28.0: trilha de origem
   }
   $id('imp-bal-card').style.display='none';
   anAplicado();
@@ -4451,6 +4639,7 @@ async function _xmlAplicarBase() {
     const mesesXml = [...new Set(inc.filter(n=>n.mes!=null && +n.ano===+AN.ano).map(n=>n.mes))];
     for (const m of mesesXml) AN.receitas[bloco][m] = 0;
     for (const n of inc) { if (n.mes==null || +n.ano !== +AN.ano) continue; AN.receitas[bloco][n.mes] = (AN.receitas[bloco][n.mes]||0) + n.valor; lanc++; }
+    anOrigemMarcar('receitas.'+bloco, mesesXml, 'X');      // v7.28.0: trilha de origem
     msg += ` · ${lanc} receita(s) lançada(s) no bloco (ano ${AN.ano})`;
   }
   $id('imp-xml-card').style.display='none';
@@ -4560,15 +4749,17 @@ async function demAplicar() {
   if (+AN.ano !== ano) { AN.ano = ano; $id('an-ano').value = ano; }
   const mesKey = (a,m) => `${String(m+1).padStart(2,'0')}/${a}`;
   let msg = [];
-  if ($id('dem-rec').checked) { const bloco = $id('dem-bloco').value; let c=0;
-    for (let m=0;m<12;m++){ const v = DEM.rec[mesKey(ano,m)]; if (v!=null){ AN.receitas[bloco][m]=v; c++; } }
+  if ($id('dem-rec').checked) { const bloco = $id('dem-bloco').value; let c=0; const mm=[];
+    for (let m=0;m<12;m++){ const v = DEM.rec[mesKey(ano,m)]; if (v!=null){ AN.receitas[bloco][m]=v; mm.push(m); c++; } }
+    anOrigemMarcar('receitas.'+bloco, mm, 'M');            // v7.28.0
     msg.push(`${c} mês(es) de receita no bloco`); }
   if ($id('dem-rbt').checked) { let c=0;
     for (let m=0;m<12;m++){ const r=DEM.rec[mesKey(antAno,m)], f=DEM.fol[mesKey(antAno,m)];
       if (r!=null){ AN.cfg.rbt12Lanc[m]=r; c++; } if (f!=null) AN.cfg.folha12Lanc[m]=f; }
     AN.cfg.rbt12Direto = 0; msg.push(`Config ${antAno}: ${c} mês(es)`); }
-  if ($id('dem-fol').checked) { let c=0;
-    for (let m=0;m<12;m++){ const v = DEM.fol[mesKey(ano,m)]; if (v!=null){ AN.folha.salarios[m]=v; c++; } }
+  if ($id('dem-fol').checked) { let c=0; const mm=[];
+    for (let m=0;m<12;m++){ const v = DEM.fol[mesKey(ano,m)]; if (v!=null){ AN.folha.salarios[m]=v; mm.push(m); c++; } }
+    anOrigemMarcar('folha.salarios', mm, 'M');             // v7.28.0
     msg.push(`${c} mês(es) de folha (confira encargos)`); }
   $id('imp-dem-card').style.display='none';
   anAplicado();
@@ -5692,11 +5883,23 @@ const CF = {
 // ═══ v7.26.0: bloco "0. Dados de entrada" — os dados que originaram TODOS os cálculos ═══
 function rlConfEntrada(){
   const D = RL.dados; if (!D) return '';
-  const linha = (rot, arr, forte) => {
+  // v7.28.0 (Fase B): cada valor sai com a LETRA da origem (P=PGDAS, B=balancete, X=XML,
+  // D=digitado, M=Demonstrativo, F=Faturamento, R=fornecedores, L=modelo); sem letra = não registrada
+  const OG = (D.origem && typeof D.origem === 'object' && !Array.isArray(D.origem)) ? D.origem : {};
+  const ogSup = (path, m) => { const c = (OG[path]||[])[m];
+    return c && ORIGEM_ROT[c] ? `<sup style="color:${ORIGEM_ROT[c][1]};font-weight:700" title="${ORIGEM_ROT[c][0]}">${c}</sup>` : ''; };
+  const linha = (rot, arr, forte, path) => {
     const a = (arr||[]).map(v=>+v||0); const tot = a.reduce((x,y)=>x+y,0);
     if (Math.abs(tot) < 0.005) return '';
-    return `<tr${forte?' style="font-weight:600"':''}><td class="rot">${rot}</td>${a.map(v=>`<td class="num">${v?fmt(v):'—'}</td>`).join('')}<td class="num"><b>${fmt(tot)}</b></td></tr>`;
+    return `<tr${forte?' style="font-weight:600"':''}><td class="rot">${rot}</td>${a.map((v,m)=>`<td class="num">${v?fmt(v):'—'}${path?ogSup(path,m):''}</td>`).join('')}<td class="num"><b>${fmt(tot)}</b></td></tr>`;
   };
+  // resumo por fonte + legenda (só das origens que aparecem nesta análise)
+  const cont = {}; let comOrigem = 0, comValor = 0;
+  for (const [pt, arr] of Object.entries(OG)) if (Array.isArray(arr)) for (let m=0;m<12;m++) if (arr[m] && ORIGEM_ROT[arr[m]]) { cont[arr[m]] = (cont[arr[m]]||0)+1; comOrigem++; }
+  for (const sec of ['receitas','folha','compras','despesas']) for (const a of Object.values(D[sec]||{})) if (Array.isArray(a)) for (const v of a) if (+v) comValor++;
+  const legenda = Object.keys(cont).length
+    ? `<div class="hint" style="margin-top:6px"><b>Origem de cada valor</b> (letra ao lado do número): ${Object.entries(cont).sort((x,y)=>y[1]-x[1]).map(([c,n])=>`<span style="white-space:nowrap"><b style="color:${ORIGEM_ROT[c][1]}">${c}</b> ${ORIGEM_ROT[c][0]} (${n} célula${n>1?'s':''})</span>`).join(' · ')}${comValor>comOrigem?` · <span>células sem letra: lançadas antes da v7.28 — a origem passa a ser registrada daqui em diante</span>`:''}</div>`
+    : `<div class="hint" style="margin-top:6px"><b>Origem de cada valor:</b> ainda não registrada nesta análise — os lançamentos são anteriores à v7.28. Reimporte ou edite os campos e a trilha passa a ser gravada célula a célula.</div>`;
   const grade = (titulo, linhas) => {
     const corpo = linhas.filter(Boolean).join('');
     if (!corpo) return '';
@@ -5705,7 +5908,7 @@ function rlConfEntrada(){
   };
   const R = D.receitas||{}, F = D.folha||{}, C = D.compras||{}, DE = D.despesas||{}, cfg = D.cfg||{};
   const rotBloco = k => (PG_BLOCOS.find(b=>b[0]===k)||[,k])[1];
-  const recLinhas = Object.keys(R).filter(k=>Array.isArray(R[k]) && !k.endsWith('_pct')).map(k=>linha(rotBloco(k), R[k], k.endsWith('_exp')));
+  const recLinhas = Object.keys(R).filter(k=>Array.isArray(R[k]) && !k.endsWith('_pct')).map(k=>linha(rotBloco(k), R[k], k.endsWith('_exp'), 'receitas.'+k));
   const cfgTx = [
     ['ISS', CF.pc(+cfg.iss||0)], ['ICMS vendas', CF.pc(+cfg.icmsV||0)], ['ICMS compras', CF.pc(+cfg.icmsC||0)],
     ['IPI vendas', CF.pc(+cfg.ipiV||0)], ['IPI compras', CF.pc(+cfg.ipiC||0)],
@@ -5718,6 +5921,7 @@ function rlConfEntrada(){
   if (D.ipi && (D.ipi.cred||D.ipi.deb)) subst.push('IPI substituído manualmente');
   return `<div class="card"><h3 style="margin-top:0">0. Dados de entrada — origem de todos os cálculos</h3>
     <div class="hint">Tudo o que o motor recebeu para esta análise (valores lançados/importados, antes de qualquer cálculo). Linhas zeradas são omitidas. ${subst.length?('<b>'+subst.join('; ')+'.</b>'):'ICMS e IPI em modo automático (calculados pelos percentuais da configuração).'}</div>
+    ${legenda}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px"><div>
       <b style="font-size:12px">Configuração vigente</b>
       <table class="gtable" style="font-size:11px"><tbody>${cfgTx}</tbody></table></div><div>
@@ -5727,9 +5931,9 @@ function rlConfEntrada(){
         return `<tr><td class="rot">${a}</td><td>CBS ${(q.cbs||0).toFixed(2)}% · IBS ${((q.ibse||0)+(q.ibsm||0)).toFixed(2)}%</td></tr>`;}).join('')}
       <tr><td colspan="2" class="hint">Fonte: Parâmetros › Reforma (Res. CGIBS nº 14/2026)</td></tr></tbody></table></div></div>
     ${grade('Receitas por bloco (R$/mês)', recLinhas)}
-    ${grade('Folha (R$/mês)', [linha('Pró-labore', F.prolabore), linha('Salários', F.salarios), linha('Base FGTS', F.baseFgts), linha('Provisão 13º', F.prov13), linha('Provisão férias', F.provFerias)])}
-    ${grade('Compras (R$/mês)', [linha('Revenda sem ST', C.semst), linha('Revenda com ST', C.comst), linha('Monofásicas', C.mono), linha('ST + Mono', C.comstMono), linha('Baixa estoque s/ ST (CMV)', C.baixaSemst), linha('Baixa c/ ST', C.baixaComst), linha('Baixa mono', C.baixaMono), linha('Base IPI crédito', C.baseIpiCred)])}
-    ${grade('Despesas (R$/mês)', [linha('Administrativas', DE.adm), linha('Vendas', DE.vendas), linha('Fiscais', DE.fiscais), linha('Financeiras', DE.financeiras), linha('Outras', DE.outras), linha('Com crédito PIS/COFINS (LR)', DE.credLR)])}
+    ${grade('Folha (R$/mês)', [linha('Pró-labore', F.prolabore, 0, 'folha.prolabore'), linha('Salários', F.salarios, 0, 'folha.salarios'), linha('Base FGTS', F.baseFgts, 0, 'folha.baseFgts'), linha('Provisão 13º', F.prov13, 0, 'folha.prov13'), linha('Provisão férias', F.provFerias, 0, 'folha.provFerias')])}
+    ${grade('Compras (R$/mês)', [linha('Revenda sem ST', C.semst, 0, 'compras.semst'), linha('Revenda com ST', C.comst, 0, 'compras.comst'), linha('Monofásicas', C.mono, 0, 'compras.mono'), linha('ST + Mono', C.comstMono, 0, 'compras.comstMono'), linha('Baixa estoque s/ ST (CMV)', C.baixaSemst, 0, 'compras.baixaSemst'), linha('Baixa c/ ST', C.baixaComst, 0, 'compras.baixaComst'), linha('Baixa mono', C.baixaMono, 0, 'compras.baixaMono'), linha('Base IPI crédito', C.baseIpiCred, 0, 'compras.baseIpiCred')])}
+    ${grade('Despesas (R$/mês)', [linha('Administrativas', DE.adm, 0, 'despesas.adm'), linha('Vendas', DE.vendas, 0, 'despesas.vendas'), linha('Fiscais', DE.fiscais, 0, 'despesas.fiscais'), linha('Financeiras', DE.financeiras, 0, 'despesas.financeiras'), linha('Outras', DE.outras, 0, 'despesas.outras'), linha('Com crédito PIS/COFINS (LR)', DE.credLR, 0, 'despesas.credLR')])}
   </div>`;
 }
 function rlConferencia(){
@@ -6189,7 +6393,7 @@ function rlReforma() {
     const alq = (+q.cbs + +q.ibse + +q.ibsm)/100;
     let deb = recCheia*alq; for (const [k,r] of reds) deb += (+rf.benefRec?.[k]||0)*alq*(1-r);
     let cred = compCheia*alq; for (const [k,r] of reds) cred += (+rf.benefCred?.[k]||0)*alq*(1-r);
-    cred += (+rf.contra?.compras_simples||0)*((+rf.credSimplesPct||0)/100);
+    cred += (+rf.contra?.compras_simples||0) * ((+rf.credSimplesPct||0) > 0 ? (+rf.credSimplesPct/100) : credSimplesArt58(a));   // v7.29.0: art. 58 automático
     const liq = Math.max(0, deb-cred), is_ = (+rf.baseIS||0)*(+q.is/100);
     let rem = 0; if (atualCons.consumo!=null) rem = (atualCons.icms+atualCons.iss)*(+q.remIcmsIss||0) + (atualCons.pis+atualCons.cof)*(+q.remPisCof||0) + (a<=2026?atualCons.ipi:0);
     return { ano:a, alq, deb, cred, liq, is:is_, rem, total: liq+is_+rem }; });
