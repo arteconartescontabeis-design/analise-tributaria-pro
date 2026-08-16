@@ -647,45 +647,33 @@ console.log('\n■ v7.26.0 — bloco 0 (dados de entrada) e trava de análises f
   })();
 }
 
-// ═══ 5n. v7.27.0 — analíticos por documento unificados no item 2 + supaFn v7.26.2 ═══
-console.log('\n■ v7.27.0 — analítico entra pelo item 2 (card avulso extinto) e supaFn localiza timeout');
+// ═══ 5n. v7.30.1 — card da triagem restaurado (layout v7.26) + supaFn v7.26.2 ═══
+console.log('\n■ v7.30.1 — Consulta CNPJ no layout v7.26 (card próprio) e supaFn localiza timeout');
 {
-  chk('v7.27.0 · card avulso da triagem foi removido do HTML (sem tri-arq-*, sem triArquivo)',
-    !html.includes('tri-arq-venda') && !html.includes('tri-arq-compra') && !html.includes('triArquivo'));
-  chk('v7.27.0 · painéis das triagens vivem DENTRO do card 2 (tri-painel-venda/compra antes da lista de CNPJs)',
-    html.includes('id="tri-painel-venda"') && html.includes('id="tri-painel-compra"')
-    && html.indexOf('id="tri-painel-venda"') > html.indexOf('2. Informe os CNPJs')
-    && html.indexOf('id="tri-painel-venda"') < html.indexOf('Colar lista (um CNPJ por linha'));
+  chk('v7.30.1 · card "Triagem de venda × compra" está de volta, com os 2 botões próprios (tri-arq-venda/compra + triArquivo)',
+    html.includes('Triagem de venda × compra — analíticos por documento')
+    && html.includes('id="tri-arq-venda"') && html.includes('id="tri-arq-compra"') && html.includes('function triArquivo'));
+  chk('v7.30.1 · unificação da v7.27.0 desfeita: item 2 sem detecção de analítico (sem triReceber/arqLerAbas/tri-painel-*)',
+    !html.includes('triReceber') && !html.includes('arqLerAbas') && !html.includes('tri-painel-venda')
+    && html.indexOf('id="tri-arq-venda"') > html.indexOf('2. Informe os CNPJs'));
   var RES_TRI27 = (async () => {
     await RES_TRAVA;                                       // serializa (contexto compartilhado)
     vm.runInContext('EMP_GLOBAL = {cnpj:"24197146000137", razao_social:"WEEEDO"}; TRI={venda:null,compra:null};', ctx);
-    // (a) saídas puras (5xxx/6xxx; 9xxx ignorado) → VENDA sem perguntar
+    // triParse com tipo EXPLÍCITO (vem do botão do card, como na v7.26)
     ctx.__r27v = [['Data Emissão','Natureza','Empresa','Valor Contábil','CNPJ/CPF/CNO'],
       ['15/01/2025','5102002','356',53000,'02.307.029/0001-46'],
       ['22/01/2025','6502002','356',20000,'01.864.215/0008-90'],
       ['23/01/2025','9000008','356',17000,'29.897.180/0001-38']];
-    vm.runInContext('dlg = async()=>{ this.__dlg27=(this.__dlg27||0)+1; return null; };', ctx);
-    const okV = await vm.runInContext('triReceber(__r27v, "CLIENTES_012025.xls")', ctx);
-    const tv27 = vm.runInContext('TRI.venda', ctx);
-    const pv = ctx.document.getElementById('tri-painel-venda').style.display;
-    // (b) entradas puras (1xxx/2xxx) → COMPRA sem perguntar
+    const tv27 = vm.runInContext('triParse(__r27v, "venda")', ctx);
     ctx.__r27c = [['Data Entrada','Natureza','Empresa','Valor Contábil','Razão Social','CNPJ/CPF/CNO'],
       ['02/01/2025','1102001','356',50000,'FORN A LTDA','11.111.111/0001-91'],
       ['03/01/2025','2102001','356',30000,'FORN B ME','22.222.222/0001-91']];
-    const okC = await vm.runInContext('triReceber(__r27c, "FORNECEDORES_012025.xls")', ctx);
-    const tc27 = vm.runInContext('TRI.compra', ctx);
-    const semDlg = vm.runInContext('this.__dlg27||0', ctx) === 0;
-    // (c) misto (1xxx + 5xxx) → pergunta; dlg responde "compra"
-    vm.runInContext('dlg = async()=>{ this.__dlg27=(this.__dlg27||0)+1; return "compra"; }; TRI.compra=null;', ctx);
-    ctx.__r27m = [['Data','Natureza','Empresa','Valor Contábil','CNPJ/CPF/CNO'],
-      ['02/01/2025','1102001','356',40000,'11.111.111/0001-91'],
-      ['05/01/2025','5102002','356',10000,'02.307.029/0001-46']];
-    const okM = await vm.runInContext('triReceber(__r27m, "MISTO.xls")', ctx);
-    const perguntou = vm.runInContext('this.__dlg27||0', ctx) === 1;
-    const tm27 = vm.runInContext('TRI.compra', ctx);
-    // (d) planilha de lista de CNPJs (sem cabeçalho do analítico) → false: extração de CNPJs segue viva
+    const tc27 = vm.runInContext('triParse(__r27c, "compra")', ctx);
     ctx.__r27n = [['Empresa','Documento'],['A','11.111.111/0001-91'],['B','22.222.222/0001-91']];
-    const okN = await vm.runInContext('triReceber(__r27n, "lista.xlsx")', ctx);
+    const tn27 = vm.runInContext('triParse(__r27n, "venda")', ctx);
+    // v7.29 preservada no card restaurado: dashboard da COMPRA com o botão de lançar nas Compras
+    vm.runInContext('TRI.compra = Object.assign(triParse(__r27c, "compra"), {arquivo:"F.xls", _salvo:true}); TRI.compra.itens.forEach(i=>i.classe="normal"); triDash("compra");', ctx);
+    const dashC = ctx.document.getElementById('tri-dash-compra').innerHTML;
     // (e) supaFn v7.26.2: função pendurada → erro que LOCALIZA (nome da função + Logs)
     vm.runInContext('APP.token="tok"; APP.tokenExp=Date.now()+3600000; SUPAFN_T.fn=60;', ctx);
     const fetchOrig = ctx.fetch;
@@ -697,7 +685,7 @@ console.log('\n■ v7.27.0 — analítico entra pelo item 2 (card avulso extinto
     try { await vm.runInContext('supaFn("admin-senha", {})', ctx); } catch(e){ erroFn = e.message; }
     ctx.fetch = fetchOrig;
     vm.runInContext('SUPAFN_T.fn=12000;', ctx);
-    return { okV, tv27, pv, okC, tc27, semDlg, okM, perguntou, tm27, okN, erroFn };
+    return { tv27, tc27, tn27, dashC, erroFn };
   })();
 }
 
@@ -898,18 +886,15 @@ console.log('\n■ Integridade da interface');
   chk('v7.26.0 · divergência pós-atualização detectada e avisada (de → para), sem alterar o snapshot',
     tv && /diverge/.test(tv.aviso||'') && /(Simples|Presumido|Real): R\$/.test(tv.aviso||'') && /→/.test(tv.aviso||''), tv?('aviso['+String(tv.aviso||'').length+']: '+String(tv.aviso||'').replace(/<[^>]*>/g,' ').slice(0,120)):'timeout');
   const t27 = await Promise.race([RES_TRI27, new Promise(r=>setTimeout(()=>r(null), 8000))]);
-  chk('v7.27.0 · saídas (5xxx/6xxx) → triagem de VENDA sem perguntar (9xxx ignorado)',
-    t27 && t27.okV===true && t27.tv27 && t27.tv27.tipo==='venda' && t27.tv27.itens.length===3 && t27.tv27.arquivo==='CLIENTES_012025.xls',
-    t27&&t27.tv27?`${t27.tv27.itens.length} clientes`:'timeout');
-  chk('v7.27.0 · painel da venda aparece dentro do card 2 (display=block explícito)',
-    t27 && t27.pv==='block', t27?('display='+t27.pv):'—');
-  chk('v7.27.0 · entradas (1xxx/2xxx) → triagem de COMPRA sem perguntar',
-    t27 && t27.okC===true && t27.tc27 && t27.tc27.tipo==='compra' && t27.tc27.itens.length===2 && t27.semDlg,
-    t27&&t27.tc27?`${t27.tc27.itens.length} fornecedores · dlg não chamado`:'timeout');
-  chk('v7.27.0 · analítico MISTO pergunta uma vez e respeita a escolha (compra)',
-    t27 && t27.okM===true && t27.perguntou && t27.tm27 && t27.tm27.tipo==='compra' && t27.tm27.arquivo==='MISTO.xls');
-  chk('v7.27.0 · planilha de lista de CNPJs NÃO é capturada (triReceber → false; extração de CNPJs segue)',
-    t27 && t27.okN===false);
+  chk('v7.30.1 · triParse com tipo explícito do botão: venda 3 parceiros · compra 2 fornecedores (soma 80.000)',
+    t27 && t27.tv27 && t27.tv27.tipo==='venda' && t27.tv27.itens.length===3
+      && t27.tc27 && t27.tc27.tipo==='compra' && t27.tc27.itens.length===2
+      && Math.abs(t27.tc27.itens.reduce((s,i)=>s+i.valor,0)-80000)<0.01,
+    t27&&t27.tv27?`v=${t27.tv27.itens.length} c=${t27.tc27?t27.tc27.itens.length:'—'}`:'timeout');
+  chk('v7.30.1 · planilha de lista de CNPJs NÃO é analítico (triParse → null; fluxo do item 2 preservado)',
+    t27 && t27.tn27===null);
+  chk('v7.30.1 · v7.29 preservada no card restaurado: dashboard da compra com "➕ Lançar total nas Compras da análise"',
+    t27 && /Lançar total nas Compras/.test(t27.dashC||'') && /alimenta os campos de compras/.test(t27.dashC||''));
   chk('v7.26.2 · supaFn: função pendurada gera erro LOCALIZADO (nome da função + orientação aos Logs)',
     t27 && /admin-senha/.test(t27.erroFn) && /não respondeu/.test(t27.erroFn) && /Logs/.test(t27.erroFn),
     t27?String(t27.erroFn).slice(0,90):'—');
