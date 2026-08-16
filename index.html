@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.31.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.32.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -291,6 +291,8 @@ canvas{max-height:340px}
         <div id="fo-abas" style="display:flex;gap:8px;align-items:center;margin:10px 0 0;flex-wrap:wrap">
           <button class="btn" id="fo-aba-servico" onclick="fornTrocarAba('servico')">🧾 Fornecedores de serviço</button>
           <button class="btn" id="fo-aba-revenda"  onclick="fornTrocarAba('revenda')">📦 Fornecedores de revenda</button>
+          <button class="btn" id="fo-aba-compra" style="display:none" onclick="fornTrocarAba('compra')">📄 Analítico de compra</button>
+          <button class="btn" id="fo-aba-venda" style="display:none" onclick="fornTrocarAba('venda')">👥 Analítico de venda — clientes</button>
           <button class="btn solid" id="fo-btn-imp" onclick="$id('fo-arq').click()">Importar relatório(s)</button>
           <span class="hint" id="fo-aba-hint"></span>
         </div>
@@ -662,7 +664,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.31.0</b> <span class="badge ok">atual</span></td><td>16/08/2026</td><td><b>Triagem com a esteira completa do item 2</b> (conforme relatório de melhoria aprovado). (1) <b>Consulta automática na Receita</b>: ao importar qualquer analítico, o app consulta os CNPJs sozinho — cache de 30 dias primeiro (instantâneo), Receita nos novos, com progresso na tela; a pergunta de confirmação deixou de existir e o botão "Consultar enquadramentos" virou reexecução manual. (2) <b>Serviços tomados separados</b>: no "➕ Lançar total nas Compras", os CFOPs <b>1933/2933</b> são identificados e o app pergunta se deseja lançá-los <b>em Despesas › Outras</b>, separados das mercadorias — respondendo "não", ficam de fora; as mercadorias seguem para a aba Compras no destino escolhido (tudo com trilha de origem R). (3) O dashboard da compra ganhou o <b>crédito de IBS/CBS estimado no regime pleno</b> (regime normal à alíquota cheia + Simples/MEI pelo art. 58, 1ª faixa), como no painel do item 2. (4) <b>A triagem de venda não lança nada</b> — só informa: preenche automaticamente os campos <b>Vendas para PF / PJ Simples / PJ LR-LP</b> da aba Reforma (respeitando valores já digitados, com nota explicativa da leitura da cadeia), segue alimentando a página da clientela do parecer e o relatório estatístico. (5) O relatório foi renomeado para <b>"Resumo Estatístico de Fornecedores e Clientes"</b>, com os blocos um abaixo do outro: identificação, quadro societário, fornecedores (revenda, serviços), triagem de compra e clientes (triagem de venda). Motor de cálculo intocado — o 🔏 lacre mantém o selo.</td></tr>
+                    <tr><td><b>v7.32.0</b> <span class="badge ok">atual</span></td><td>17/08/2026</td><td><b>Analíticos integrados ao processo do item 2.</b> Os dois arquivos do card "Triagem de venda × compra" agora rodam <b>todo o processo do "Informe os CNPJs — análise de fornecedores"</b>: ao importar, o analítico vira uma <b>aba do próprio painel 🚚</b> — <b>"📄 Analítico de compra"</b> (fornecedores) e <b>"👥 Analítico de venda — clientes"</b> (clientes PJ) — ao lado das abas de serviço e revenda, com a mesma tela: empresa, período, total conferido, cartões por regime, barra de distribuição, relação completa com o enquadramento de cada CNPJ e o crédito estimado. A <b>consulta na Receita é automática</b> na importação (cache de 30 dias) e atualiza o painel ao concluir; o "Reconsultar" do painel funciona nas abas novas. Os <b>botões do painel valem para os analíticos</b>: "💾 Salvar análise no histórico" (grava a triagem) e, na aba de compra, "➕ Lançar total em Compras da análise" — com a pergunta dos serviços tomados (1933/2933 → Despesas › Outras) e trilha de origem R. A aba de <b>clientes não gera lançamento</b> (decisão de 16/08): informa o parecer, os campos de vendas da Reforma e o Resumo Estatístico. O card da triagem continua no lugar, com seus dashboards — nada foi removido; "Limpar tudo" agora zera também as duas abas novas. Motor intocado — 🔏 lacre mantém o selo.</td></tr>
+                    <tr><td><b>v7.31.0</b></td><td>16/08/2026</td><td><b>Triagem com a esteira completa do item 2</b> (conforme relatório de melhoria aprovado). (1) <b>Consulta automática na Receita</b>: ao importar qualquer analítico, o app consulta os CNPJs sozinho — cache de 30 dias primeiro (instantâneo), Receita nos novos, com progresso na tela; a pergunta de confirmação deixou de existir e o botão "Consultar enquadramentos" virou reexecução manual. (2) <b>Serviços tomados separados</b>: no "➕ Lançar total nas Compras", os CFOPs <b>1933/2933</b> são identificados e o app pergunta se deseja lançá-los <b>em Despesas › Outras</b>, separados das mercadorias — respondendo "não", ficam de fora; as mercadorias seguem para a aba Compras no destino escolhido (tudo com trilha de origem R). (3) O dashboard da compra ganhou o <b>crédito de IBS/CBS estimado no regime pleno</b> (regime normal à alíquota cheia + Simples/MEI pelo art. 58, 1ª faixa), como no painel do item 2. (4) <b>A triagem de venda não lança nada</b> — só informa: preenche automaticamente os campos <b>Vendas para PF / PJ Simples / PJ LR-LP</b> da aba Reforma (respeitando valores já digitados, com nota explicativa da leitura da cadeia), segue alimentando a página da clientela do parecer e o relatório estatístico. (5) O relatório foi renomeado para <b>"Resumo Estatístico de Fornecedores e Clientes"</b>, com os blocos um abaixo do outro: identificação, quadro societário, fornecedores (revenda, serviços), triagem de compra e clientes (triagem de venda). Motor de cálculo intocado — o 🔏 lacre mantém o selo.</td></tr>
                     <tr><td><b>v7.30.1</b></td><td>16/08/2026</td><td><b>Consulta CNPJ de volta ao layout da v7.26.</b> A unificação da v7.27.0 foi <b>desfeita a pedido</b>: o card <b>"Triagem de venda × compra — analíticos por documento"</b> voltou como estava, com os seus dois botões próprios ("Importar analítico de clientes" e "Importar analítico de fornecedores"), e o item 2 ("Informe os CNPJs") voltou a receber apenas os "Totais ISS/ICMS por Fornecedor/Cliente" e listas de CNPJs, como na v7.26.0. <b>Permanece tudo o mais do pacote</b>: trilha de origem por campo (v7.28.0), crédito do art. 58 e triagem de compra alimentando a Reforma e a aba Compras (v7.29.0 — os botões "Gravar triagem" e "➕ Lançar total nas Compras" continuam no dashboard da triagem), CBS 9,11% no biênio (v7.29.1) e o 🔏 Lacre do motor (v7.30.0, selo inalterado — o motor não foi tocado).</td></tr>
                     <tr><td><b>v7.30.0</b></td><td>16/08/2026</td><td><b>🔏 Lacre do motor de cálculo.</b> Os dois casos-gabarito da suíte de testes (comércio Anexo I com trava do sublimite; serviços Anexo III com Fator R e 13º) agora viajam <b>dentro do próprio app</b>, com um <b>selo (hash) dos resultados</b> gravado em cada entrega. <b>A cada troca de versão</b>, o app recalcula os dois casos com os <b>padrões de fábrica</b> (anexos, folha e alíquotas da Reforma — parâmetros editados não interferem) e confere centenas de números <b>ao centavo</b> — todos os meses do DAS, Lucro Presumido e Lucro Real, os totais anuais e os cenários da Reforma de 2026 a 2033. Se tudo bater, a aba Versões mostra o cartão verde "Lacre ÍNTEGRO" com os totais de referência; se qualquer número divergir, o app exibe <b>alerta vermelho imediato</b> ("Lacre VIOLADO") orientando a não usar os resultados e restaurar a versão anterior. O botão "Revalidar agora" repete a conferência a qualquer momento. Mudanças <b>deliberadas</b> de regra (como o art. 58 e a D5 desta semana) são <b>re-seladas na entrega</b> e registradas no changelog — e a suíte do CI passa a conferir o selo embutido: se o motor mudar sem o selo ser refeito, o CI quebra antes de qualquer publicação.</td></tr>
                     <tr><td><b>v7.29.1</b></td><td>16/08/2026</td><td><b>D5 resolvida — CBS de 2027-2028 corrigida para 9,11%.</b> Pelo art. 347 da LC 214/2025 (e art. 127 do ADCT), no biênio 2027-2028 a CBS é cobrada pela alíquota de referência <b>reduzida em 0,1 ponto percentual</b>, exatamente para compensar o IBS-teste de 0,05% estadual + 0,05% municipal. O app usava CBS 9,21% + IBS 0,10% = <b>9,31% combinada — 0,1 p.p. a mais que o correto</b>; agora usa <b>9,11% + 0,10% = 9,21%</b>, igual à referência (que segue 9,21% de 2029 a 2033, quando a redução deixa de existir). Parâmetros já <b>salvos com o padrão antigo</b> (9,21 no biênio) são corrigidos automaticamente ao carregar; percentuais personalizados não são tocados. A nota técnica da transição passou a citar a regra. Efeito prático: os anos de 2027 e 2028 dos cenários da Reforma (aba, parecer e relatório) ficam levemente menores.</td></tr>
@@ -1162,8 +1165,10 @@ async function consultarUmDireto(cnpj) {
 
 // ═══ v7.4: análise de fornecedores (crédito de IBS/CBS da Reforma) ═══
 let FO = null;                                   // dataset da aba ativa
-let FOT = { servico:null, revenda:null };        // v7.6.0: um conjunto por tipo de fornecedor
+let FOT = { servico:null, revenda:null, compra:null, venda:null };   // v7.32.0: analíticos são abas do MESMO painel
 let FO_TIPO = 'servico';
+const FO_ABAS = ['servico','revenda','compra','venda'];
+const FO_ROT_ABA = { servico:'de serviço', revenda:'de revenda', compra:'analítico de compra', venda:'analítico de venda (clientes)' };
 const FO_DESTINOS = [['semst','Compras sem ST'],['comst','Compras com ST'],
                      ['mono','Compras monofásicas'],['comstMono','Compras com ST e monofásicas']];
 function fornParse(txt){
@@ -1189,15 +1194,18 @@ function fornParse(txt){
 }
 function fornTrocarAba(tipo){
   FO_TIPO = tipo; FO = FOT[tipo];
-  for (const t of ['servico','revenda']){
-    const b = $id('fo-aba-'+t);
-    if (b){ b.className = 'btn' + (t===tipo ? ' solid' : ''); b.style.opacity = t===tipo ? '1' : '.55'; }
+  const analitico = (tipo==='compra' || tipo==='venda');
+  for (const t of FO_ABAS){
+    const b = $id('fo-aba-'+t); if (!b) continue;
+    if (t==='compra' || t==='venda') b.style.display = FOT[t] ? 'inline-block' : 'none';   // v7.32.0: aba aparece quando o analítico é importado
+    b.className = 'btn' + (t===tipo ? ' solid' : ''); b.style.opacity = t===tipo ? '1' : '.55';
   }
   const bi = $id('fo-btn-imp');
-  if (bi) bi.textContent = 'Importar relatório(s) de ' + (tipo==='servico' ? 'SERVIÇO' : 'REVENDA');
-  const outro = tipo==='servico' ? 'revenda' : 'servico';
-  $id('fo-aba-hint').textContent = FOT[outro]
-    ? `${FOT[outro].itens.length} fornecedor(es) carregados na outra aba` : '';
+  if (bi){ bi.style.display = analitico ? 'none' : 'inline-block';   // analítico entra pelo card da triagem, logo abaixo
+    if (!analitico) bi.textContent = 'Importar relatório(s) de ' + (tipo==='servico' ? 'SERVIÇO' : 'REVENDA'); }
+  const outros = FO_ABAS.filter(t => t!==tipo && FOT[t]);
+  $id('fo-aba-hint').textContent = outros.length
+    ? outros.map(t => `${FOT[t].itens.length} na aba ${FO_ROT_ABA[t]}`).join(' · ') : '';
   if (!FO) { $id('fo-painel').style.display='none'; return; }
   fornMostrarPainel();
 }
@@ -1325,21 +1333,28 @@ function fornUnirPeriodos(a, b){
 function fornAcoes(){
   const alvo = $id('fo-acoes'); if (!alvo) return;
   if (!FO || !FO.itens.some(i=>i.classe)) { alvo.innerHTML = ''; return; }
-  const rev = FO_TIPO === 'revenda';
-  const selo = FO._salvo
-    ? `<span class="badge ok" style="align-self:center">✓ gravada em ${new Date(FO._salvo).toLocaleString('pt-BR')}</span>`
+  const analitico = FO_TIPO==='compra' || FO_TIPO==='venda';   // v7.32.0
+  const salvo = analitico ? (TRI[FO_TIPO] && TRI[FO_TIPO]._salvo) : FO._salvo;
+  const selo = salvo
+    ? `<span class="badge ok" style="align-self:center">✓ gravada em ${new Date(salvo).toLocaleString('pt-BR')}</span>`
     : `<span class="badge err" style="align-self:center">não gravada — existe só nesta tela</span>`;
-  alvo.innerHTML = selo + `<button class="btn solid" id="fo-btn-salvar" onclick="comBotao('fo-btn-salvar','Salvando',()=>fornSalvar())">💾 Salvar análise no histórico da empresa</button>`
-    + `<button class="btn" onclick="${rev?'fornLancarCompras()':'fornLancarDespesas()'}">`
-    + `➕ Lançar total ${rev?'em Compras':'nas Despesas'} da análise</button>`;
+  const salvar = analitico
+    ? `<button class="btn solid" id="fo-btn-salvar" onclick="comBotao('fo-btn-salvar','Salvando',async()=>{ await triSalvar('${FO_TIPO}'); fornAcoes(); })">💾 Salvar análise no histórico da empresa</button>`
+    : `<button class="btn solid" id="fo-btn-salvar" onclick="comBotao('fo-btn-salvar','Salvando',()=>fornSalvar())">💾 Salvar análise no histórico da empresa</button>`;
+  const lancar = FO_TIPO==='revenda' ? `<button class="btn" onclick="fornLancarCompras()">➕ Lançar total em Compras da análise</button>`
+    : FO_TIPO==='servico' ? `<button class="btn" onclick="fornLancarDespesas()">➕ Lançar total nas Despesas da análise</button>`
+    : FO_TIPO==='compra' ? `<button class="btn" onclick="triLancarCompras()" title="Serviços tomados (1933/2933) são identificados e o app pergunta se vão separados para Despesas › Outras">➕ Lançar total em Compras da análise</button>`
+    : '';                                                      // venda (clientes): só informação — sem lançamento (decisão de 16/08)
+  alvo.innerHTML = selo + salvar + lancar
+    + (FO_TIPO==='venda' ? `<span class="hint" style="align-self:center">clientes não geram lançamento — alimentam o parecer, a Reforma e o Resumo Estatístico</span>` : '');
 }
 function fornMostrarPainel(){
   const soma = FO.itens.reduce((s,i)=>s+i.valor,0);
   $id('fo-painel').style.display = 'block';
   $id('fo-emp').textContent = (FO.nomeEmpresa||'Empresa') + ' · ' + fmtCNPJ(FO.cnpjEmpresa||'')
-    + (FO_TIPO==='revenda' ? ' · REVENDA' : ' · SERVIÇO');
+    + ({servico:' · SERVIÇO', revenda:' · REVENDA', compra:' · ANALÍTICO DE COMPRA', venda:' · ANALÍTICO DE VENDA (CLIENTES PJ)'}[FO_TIPO]||'');
   const dst = FO_TIPO==='revenda' && FO.destino ? ' · ' + (FO_DESTINOS.find(d=>d[0]===FO.destino)||[])[1] : '';
-  $id('fo-per').textContent = (FO.periodo?('Período '+FO.periodo+' · '):'') + FO.itens.length + ' fornecedores · R$ ' + fmt(soma)
+  $id('fo-per').textContent = (FO.periodo?('Período '+FO.periodo+' · '):'') + FO.itens.length + (FO_TIPO==='venda'?' clientes PJ':' fornecedores') + ' · R$ ' + fmt(soma)
     + (FO.lotes && FO.lotes.length>1 ? ` · ${FO.lotes.length} relatórios` : '')
     + (FO.totalRelatorio ? (Math.abs(soma-FO.totalRelatorio)<0.02?' ✓ confere com o total dos relatórios':' ⚠️ difere do total: '+fmt(FO.totalRelatorio)) : '') + dst;
   $id('fo-salvar').style.display = 'none';
@@ -1411,6 +1426,7 @@ function fornMesesDoPeriodo(per){
   return out.length ? [...new Set(out)] : [...Array(12).keys()];
 }
 async function fornConsultar(forcar){
+  if (FO && FO.analitico){ await triConsultar(FO_TIPO); fornMostrarPainel(); return; }   // v7.32.0
   if (!FO) return;
   const alvos = FO.itens.filter(i => i.classe !== 'pf');
   if (!alvos.length){ toast('Nenhum CNPJ a consultar (só pessoas físicas na lista).'); return; }
@@ -1486,10 +1502,25 @@ function triArquivo(input, tipo){
       $id('tri-btn-'+tipo).style.display = t.itens.some(i=>i.classe===null) ? '' : 'none';
       triDash(tipo);
       toast(`${t.itens.length} ${tipo==='venda'?'cliente(s)':'fornecedor(es)'} consolidado(s) de ${t.docs} documento(s) — período ${t.periodo||'?'}. Consultando os enquadramentos na Receita…`);
+      triIntegrarItem2(tipo);                              // v7.32.0: roda todo o processo do item 2 (aba no painel 🚚)
       triConsultar(tipo, true);                            // v7.31.0: consulta automática a cada nova tabela
     } catch(err){ console.error(err); toast('Erro ao ler '+f.name+': '+err.message); }
   };
   rd.readAsArrayBuffer(f);
+}
+// v7.32.0: o analítico importado no card da triagem roda TODO o processo do item 2 —
+// vira uma ABA do painel 🚚 "Análise de fornecedores" (compra = fornecedores; venda = clientes PJ,
+// que não geram lançamento). Os itens são COMPARTILHADOS com a triagem: a consulta atualiza os dois.
+function triIntegrarItem2(tipo){
+  const T = TRI[tipo]; if (!T) return;
+  const itens = T.itens.filter(i => i.classe!=='proprio' && (tipo!=='venda' || i.classe!=='pf'));
+  FOT[tipo] = { cnpjEmpresa: limparCNPJ(T.cnpjEmpresa||'') || ((typeof EMP_GLOBAL!=='undefined' && EMP_GLOBAL && EMP_GLOBAL.cnpj)||''),
+    nomeEmpresa: (typeof EMP_GLOBAL!=='undefined' && EMP_GLOBAL && EMP_GLOBAL.razao_social) || '',
+    periodo: T.periodo||'', itens,
+    totalRelatorio: Math.round(itens.reduce((a,i)=>a+(+i.valor||0),0)*100)/100,
+    lotes: [{ arquivo: T.arquivo||'analítico', periodo: T.periodo||'', total: itens.reduce((a,i)=>a+(+i.valor||0),0) }],
+    analitico: true };
+  fornTrocarAba(tipo);
 }
 async function triConsultar(tipo, auto){
   const T = TRI[tipo]; if (!T) return;
@@ -1508,6 +1539,7 @@ async function triConsultar(tipo, auto){
   $id('tri-prog-'+tipo).textContent = 'Concluído.';
   triDash(tipo);
   await triSalvar(tipo, true);
+  if (FOT[tipo] && FOT[tipo].analitico) fornTrocarAba(FO_TIPO);   // v7.32.0: painel do item 2 reflete a consulta
 }
 const TRI_ROT = { normal:['Regime normal','#b9770e'], simples:['Simples Nacional','#1a5276'], mei:['MEI','#1e8449'],
   pf:['Pessoa física (consumidor)','#7f8c8d'], nid:['Não identificado','#95a5a6'], proprio:['Movimentação própria','#5d6d7e'] };
@@ -3189,7 +3221,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.31.0';
+const APP_VERSAO = '7.32.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -4979,7 +5011,8 @@ async function anLimparDados() {
     }
   } catch(e){ alert('Erro ao excluir: '+e.message); return; }
   if (tudo || +AN?.ano === +alvoAno){ AN = anNovo(cnpj, AN?.ano || +$id('an-ano').value); AN_SUJO = false; }
-  if (tudo){ FOT = { servico:null, revenda:null }; FO = null; $id('fo-painel').style.display='none'; }
+  if (tudo){ FOT = { servico:null, revenda:null, compra:null, venda:null }; FO = null; $id('fo-painel').style.display='none';
+    for (const t of ['compra','venda']){ const b = $id('fo-aba-'+t); if (b) b.style.display='none'; } }
   anRenderTabs(); anRenderGrid(); anRecalcular();
   toast(`Excluído: ${oQue}.`);
 }
