@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.30.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.30.1</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -286,7 +286,7 @@ canvas{max-height:340px}
       </div>
       <div class="card">
         <h3>2. Informe os CNPJs — triagem ou análise de fornecedores</h3>
-        <div class="hint" style="margin-bottom:8px">Cole uma lista de CNPJs (triagem simples) <b>ou importe um arquivo</b> — o sistema detecta sozinho: relatório <b>Totais ISS por Fornecedor/Cliente</b> (Questor) abre a análise de fornecedores 🚚 com valores, percentuais e crédito de IBS/CBS da Reforma; <b>analítico por documento</b> (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF) abre a <b>triagem de venda ou de compra</b> logo abaixo — o tipo é decidido pelos CFOPs (entradas × saídas); qualquer outro arquivo/lista segue como triagem simples de CNPJs.</div>
+        <div class="hint" style="margin-bottom:8px">Cole uma lista de CNPJs (triagem simples) <b>ou importe um arquivo</b> — o sistema detecta sozinho: relatório <b>Totais ISS por Fornecedor/Cliente</b> (Questor) abre a análise de fornecedores 🚚 com valores, percentuais e crédito de IBS/CBS da Reforma; qualquer outro arquivo/lista segue como triagem.</div>
         <input type="file" id="fo-arq" accept=".csv,.txt,.xls,.xlsx" multiple style="display:none" onchange="fornArquivo(this)">
         <div id="fo-abas" style="display:flex;gap:8px;align-items:center;margin:10px 0 0;flex-wrap:wrap">
           <button class="btn" id="fo-aba-servico" onclick="fornTrocarAba('servico')">🧾 Fornecedores de serviço</button>
@@ -309,24 +309,6 @@ canvas{max-height:340px}
           <div style="overflow:auto"><table class="tbl"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead><tbody id="fo-body"></tbody></table></div>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn solid" id="fo-salvar" style="display:none" onclick="fornSalvar()">💾 Salvar análise no histórico da empresa</button><button class="btn" id="fo-desp" style="display:none" onclick="fornLancarDespesas()" title="Rateia o total do relatório pelos meses do período em Despesas › Outras, na análise da empresa">➕ Lançar total nas Despesas da análise</button></div>
         </div>
-        <!-- v7.27.0: as triagens dos analíticos por documento vivem AQUI — o card avulso foi extinto;
-             o arquivo entra pelos mesmos botões do item 2 e é reconhecido pelo cabeçalho -->
-        <div id="tri-painel-venda" style="display:none;margin:10px 0;border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe">
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <b>📈 Resultado da triagem de venda (clientes — analítico por documento)</b>
-            <button class="btn" id="tri-btn-venda" style="display:none" onclick="comBotao('tri-btn-venda','Consultando clientes',()=>triConsultar('venda'))">Consultar enquadramentos</button>
-            <span class="hint" id="tri-prog-venda"></span>
-          </div>
-          <div id="tri-dash-venda" style="margin-top:10px"></div>
-        </div>
-        <div id="tri-painel-compra" style="display:none;margin:10px 0;border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe">
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <b>📉 Resultado da triagem de compra (fornecedores — analítico por documento)</b>
-            <button class="btn" id="tri-btn-compra" style="display:none" onclick="comBotao('tri-btn-compra','Consultando fornecedores',()=>triConsultar('compra'))">Consultar enquadramentos</button>
-            <span class="hint" id="tri-prog-compra"></span>
-          </div>
-          <div id="tri-dash-compra" style="margin-top:10px"></div>
-        </div>
         <div style="display:grid;grid-template-columns:1fr 260px;gap:20px">
           <div>
             <label>Colar lista (um CNPJ por linha, com ou sem pontuação)</label>
@@ -345,6 +327,30 @@ canvas{max-height:340px}
           <span class="hint" id="prog-txt"></span>
         </div>
         <div class="hint" style="margin-top:12px">Fonte: dados abertos do CNPJ da Receita Federal (minhareceita.org, com contingência BrasilAPI). Os dados de opção pelo Simples seguem a carga mensal da RFB — para decisões formais, confirme casos individuais no portal do Simples Nacional. A data de referência aparece em cada registro.</div>
+      </div>
+      <div class="card"><!-- v7.25.0: triagens dos analíticos por documento (Questor) -->
+        <h3>Triagem de venda × compra — analíticos por documento</h3>
+        <div class="hint" style="margin-bottom:8px">Relatórios analíticos do Questor (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF). A triagem consolida por parceiro, consulta o enquadramento na Receita (cache de 30 dias) e monta o dashboard. Movimentação da própria empresa é separada; CPF é consumidor final (venda) e não vai à consulta.</div>
+        <input type="file" id="tri-arq-venda" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'venda')">
+        <input type="file" id="tri-arq-compra" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'compra')">
+        <div style="border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe;margin-bottom:12px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <b>📈 Resultado da triagem de venda (clientes)</b>
+            <button class="btn solid" onclick="$id('tri-arq-venda').click()">Importar analítico de clientes</button>
+            <button class="btn" id="tri-btn-venda" style="display:none" onclick="comBotao('tri-btn-venda','Consultando clientes',()=>triConsultar('venda'))">Consultar enquadramentos</button>
+            <span class="hint" id="tri-prog-venda"></span>
+          </div>
+          <div id="tri-dash-venda" style="margin-top:10px"></div>
+        </div>
+        <div style="border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <b>📉 Resultado da triagem de compra (fornecedores)</b>
+            <button class="btn solid" onclick="$id('tri-arq-compra').click()">Importar analítico de fornecedores</button>
+            <button class="btn" id="tri-btn-compra" style="display:none" onclick="comBotao('tri-btn-compra','Consultando fornecedores',()=>triConsultar('compra'))">Consultar enquadramentos</button>
+            <span class="hint" id="tri-prog-compra"></span>
+          </div>
+          <div id="tri-dash-compra" style="margin-top:10px"></div>
+        </div>
       </div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -656,7 +662,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.30.0</b> <span class="badge ok">atual</span></td><td>16/08/2026</td><td><b>🔏 Lacre do motor de cálculo.</b> Os dois casos-gabarito da suíte de testes (comércio Anexo I com trava do sublimite; serviços Anexo III com Fator R e 13º) agora viajam <b>dentro do próprio app</b>, com um <b>selo (hash) dos resultados</b> gravado em cada entrega. <b>A cada troca de versão</b>, o app recalcula os dois casos com os <b>padrões de fábrica</b> (anexos, folha e alíquotas da Reforma — parâmetros editados não interferem) e confere centenas de números <b>ao centavo</b> — todos os meses do DAS, Lucro Presumido e Lucro Real, os totais anuais e os cenários da Reforma de 2026 a 2033. Se tudo bater, a aba Versões mostra o cartão verde "Lacre ÍNTEGRO" com os totais de referência; se qualquer número divergir, o app exibe <b>alerta vermelho imediato</b> ("Lacre VIOLADO") orientando a não usar os resultados e restaurar a versão anterior. O botão "Revalidar agora" repete a conferência a qualquer momento. Mudanças <b>deliberadas</b> de regra (como o art. 58 e a D5 desta semana) são <b>re-seladas na entrega</b> e registradas no changelog — e a suíte do CI passa a conferir o selo embutido: se o motor mudar sem o selo ser refeito, o CI quebra antes de qualquer publicação.</td></tr>
+                    <tr><td><b>v7.30.1</b> <span class="badge ok">atual</span></td><td>16/08/2026</td><td><b>Consulta CNPJ de volta ao layout da v7.26.</b> A unificação da v7.27.0 foi <b>desfeita a pedido</b>: o card <b>"Triagem de venda × compra — analíticos por documento"</b> voltou como estava, com os seus dois botões próprios ("Importar analítico de clientes" e "Importar analítico de fornecedores"), e o item 2 ("Informe os CNPJs") voltou a receber apenas os "Totais ISS/ICMS por Fornecedor/Cliente" e listas de CNPJs, como na v7.26.0. <b>Permanece tudo o mais do pacote</b>: trilha de origem por campo (v7.28.0), crédito do art. 58 e triagem de compra alimentando a Reforma e a aba Compras (v7.29.0 — os botões "Gravar triagem" e "➕ Lançar total nas Compras" continuam no dashboard da triagem), CBS 9,11% no biênio (v7.29.1) e o 🔏 Lacre do motor (v7.30.0, selo inalterado — o motor não foi tocado).</td></tr>
+                    <tr><td><b>v7.30.0</b></td><td>16/08/2026</td><td><b>🔏 Lacre do motor de cálculo.</b> Os dois casos-gabarito da suíte de testes (comércio Anexo I com trava do sublimite; serviços Anexo III com Fator R e 13º) agora viajam <b>dentro do próprio app</b>, com um <b>selo (hash) dos resultados</b> gravado em cada entrega. <b>A cada troca de versão</b>, o app recalcula os dois casos com os <b>padrões de fábrica</b> (anexos, folha e alíquotas da Reforma — parâmetros editados não interferem) e confere centenas de números <b>ao centavo</b> — todos os meses do DAS, Lucro Presumido e Lucro Real, os totais anuais e os cenários da Reforma de 2026 a 2033. Se tudo bater, a aba Versões mostra o cartão verde "Lacre ÍNTEGRO" com os totais de referência; se qualquer número divergir, o app exibe <b>alerta vermelho imediato</b> ("Lacre VIOLADO") orientando a não usar os resultados e restaurar a versão anterior. O botão "Revalidar agora" repete a conferência a qualquer momento. Mudanças <b>deliberadas</b> de regra (como o art. 58 e a D5 desta semana) são <b>re-seladas na entrega</b> e registradas no changelog — e a suíte do CI passa a conferir o selo embutido: se o motor mudar sem o selo ser refeito, o CI quebra antes de qualquer publicação.</td></tr>
                     <tr><td><b>v7.29.1</b></td><td>16/08/2026</td><td><b>D5 resolvida — CBS de 2027-2028 corrigida para 9,11%.</b> Pelo art. 347 da LC 214/2025 (e art. 127 do ADCT), no biênio 2027-2028 a CBS é cobrada pela alíquota de referência <b>reduzida em 0,1 ponto percentual</b>, exatamente para compensar o IBS-teste de 0,05% estadual + 0,05% municipal. O app usava CBS 9,21% + IBS 0,10% = <b>9,31% combinada — 0,1 p.p. a mais que o correto</b>; agora usa <b>9,11% + 0,10% = 9,21%</b>, igual à referência (que segue 9,21% de 2029 a 2033, quando a redução deixa de existir). Parâmetros já <b>salvos com o padrão antigo</b> (9,21 no biênio) são corrigidos automaticamente ao carregar; percentuais personalizados não são tocados. A nota técnica da transição passou a citar a regra. Efeito prático: os anos de 2027 e 2028 dos cenários da Reforma (aba, parecer e relatório) ficam levemente menores.</td></tr>
                     <tr><td><b>v7.29.0</b></td><td>16/08/2026</td><td><b>Crédito do art. 58 (Res. CGSN 190) e triagem de compra alimentando a Reforma.</b> (1) As compras de fornecedores optantes do Simples passam a gerar crédito de IBS/CBS <b>pela regra do art. 58, §§4º a 6º, da Res. CGSN nº 190/2026</b>: os percentuais de CBS e IBS da faixa do fornecedor, variando por vigência. Sem o RBT12 do fornecedor, o app adota o cenário <b>conservador — 1ª faixa do Anexo I</b>: ≈0,62% do valor da compra em 2027-28, 0,76% em 2029, subindo em degraus até <b>1,98% em 2033</b> (antes o campo "% crédito s/ compras do Simples" valia zero até ser preenchido à mão). O % manual continua existindo como <b>substituição</b> — útil quando o fornecedor optar pelo regime regular de IBS/CBS (crédito integral) ou quando a faixa real for conhecida; a nota técnica da aba e o parecer explicam a premissa. A regra vale de uma vez na aba Reforma, nos 3 cenários do parecer e no relatório da transição (fórmula única). (2) A <b>triagem de compra</b> (analítico por documento) agora <b>alimenta a Reforma</b>: gravada, ela preenche os campos de compras (regime normal × Simples/MEI, por item classificado, excluindo movimentação própria e CPF) — como ela e o "Totais ICMS por Fornecedor" retratam as mesmas entradas, vale a <b>mais recente</b> das duas; e ganhou o botão <b>"➕ Lançar total nas Compras da análise"</b>, que rateia o total externo pelos meses do período na linha escolhida (com trilha de origem R da v7.28.0).</td></tr>
                     <tr><td><b>v7.28.0</b></td><td>16/08/2026</td><td><b>Fase B — trilha de origem por campo.</b> Cada célula (campo × mês) da análise passa a registrar <b>de onde o valor veio</b>, no momento da gravação: <b>D</b> digitado na grade, <b>P</b> PGDAS-D, <b>X</b> XML de notas, <b>B</b> balancete, <b>M</b> Demonstrativo do Simples, <b>F</b> Relatório de Faturamento, <b>R</b> relatório de fornecedores 🚚 e <b>L</b> planilha modelo. A trilha é gravada junto da análise (campo <code>origem</code>), acompanha o histórico de versões e o "repetir janeiro" (⇉) herda a origem do mês copiado. Na <b>Conferência de cálculos</b>, o bloco "0. Dados de entrada" agora mostra a <b>letra colorida da origem ao lado de cada valor</b>, com legenda e contagem por fonte — qualquer número do relatório é rastreável até a sua entrada E até <b>quem/o quê o lançou</b>. Na grade da Análise Atual, o passar do mouse em cada campo informa a origem. Análises gravadas antes desta versão aparecem como "origem não registrada" e passam a ganhar a trilha a cada nova edição ou importação — reimportar os arquivos preenche tudo de uma vez. Sem SQL novo: o campo viaja dentro do JSON já existente.</td></tr>
@@ -1057,14 +1064,9 @@ function importarArquivo(inp) {
 function importarArquivoTriagemInput(inp) {
   const f = inp.files[0]; if (!f) return;
   const reader = new FileReader();
-  reader.onload = async e => {
+  reader.onload = e => {
     try {
       const wb = XLSX.read(e.target.result, { type:'array' });
-      // v7.27.0: analítico por documento é reconhecido também por este botão (item 2)
-      for (const n of wb.SheetNames){
-        const rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header:1 });
-        if (await triReceber(rows, f.name)){ inp.value=''; return; }
-      }
       let achados = [];
       wb.SheetNames.forEach(sn => {
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header:1, raw:false });
@@ -1253,12 +1255,6 @@ async function fornArquivo(inp){
   if (!arqs.length) return;
   const lotes = [];
   for (const f of arqs){
-    if (/\.(xls|xlsx)$/i.test(f.name) && window.XLSX){       // v7.27.0: analítico por documento entra pelo mesmo botão
-      const abas = await arqLerAbas(f);
-      let ehAnalitico = false;
-      for (const rows of (abas||[])){ if (await triReceber(rows, f.name)){ ehAnalitico = true; break; } }
-      if (ehAnalitico) continue;
-    }
     const { texto, nome } = await fornLerArquivo(f);
     const r = fornParse(texto);
     if (!r.itens.length){
@@ -1266,8 +1262,7 @@ async function fornArquivo(inp){
       const prim = texto.split(/\r?\n/).find(l=>l.trim()) || '';
       alert(`Não consegui ler "${nome}" como relatório de fornecedores.\n\n`
         + `Encontrei ${cnpjs} CNPJ(s) no arquivo, mas nenhuma linha com CNPJ e valor no formato esperado.\n\n`
-        + `Os leitores atendem o "Totais ISS/ICMS por Fornecedor/Cliente" e o analítico por documento\n`
-        + `(Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF), ambos do Questor.\n`
+        + `O leitor foi feito para o "Totais ISS por Fornecedor/Cliente" do Questor.\n`
         + `Primeira linha do arquivo:\n${prim.slice(0,160)}`);
       continue;
     }
@@ -1477,40 +1472,22 @@ function triParse(rows, tipo){
   return { tipo, itens, de, ate, docs, periodo: de&&ate ? `${de.split('-').reverse().join('/')} a ${ate.split('-').reverse().join('/')}` : '',
     cnpjEmpresa: (EMP_GLOBAL?.cnpj || AN?.cnpj || ''), nomeEmpresa: (EMP_GLOBAL?.razao_social || ''), _salvo:null };
 }
-// v7.27.0: o card avulso foi extinto — o analítico entra pelos botões do item 2 e é
-// reconhecido pelo cabeçalho (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF).
-// O tipo (venda × compra) é decidido pelos CFOPs: 1/2/3 = entradas, 5/6/7 = saídas;
-// mistura ou indefinição pergunta ao usuário. Devolve true quando o arquivo É um analítico
-// (mesmo se cancelado), para os demais fluxos do item 2 não o consumirem de novo.
-function arqLerAbas(f){
-  return new Promise(res => { const rd = new FileReader();
-    rd.onload = e => { try {
-        const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-        res(wb.SheetNames.map(n => XLSX.utils.sheet_to_json(wb.Sheets[n], {header:1})));
-      } catch(err){ res(null); } };
-    rd.readAsArrayBuffer(f); });
-}
-async function triReceber(rows, nomeArquivo){
-  let t = triParse(rows, 'venda');                 // tipo provisório — decidido a seguir pelos CFOPs
-  if (!t) return false;                            // não é analítico por documento: outros fluxos seguem
-  let ent = 0, sai = 0;
-  for (const i of t.itens) for (const [c,v] of Object.entries(i.cfops)){
-    if (/^[123]/.test(c)) ent += v; else if (/^[567]/.test(c)) sai += v; }
-  let tipo = (sai > 0 && ent === 0) ? 'venda' : (ent > 0 && sai === 0) ? 'compra' : null;
-  if (!tipo){
-    tipo = await dlg('Este analítico é de venda ou de compra?',
-      `"${nomeArquivo}": os CFOPs não decidem sozinhos (entradas ${fmtR(ent)} × saídas ${fmtR(sai)}).`,
-      [{rotulo:'📈 Triagem de venda (clientes)', valor:'venda', destaque: sai >= ent},
-       {rotulo:'📉 Triagem de compra (fornecedores)', valor:'compra', destaque: ent > sai},
-       {rotulo:'Cancelar', valor:null}]);
-    if (!tipo) return true;                        // é analítico, mas o usuário desistiu
-  }
-  t.tipo = tipo; t.arquivo = nomeArquivo; TRI[tipo] = t;
-  const pn = $id('tri-painel-'+tipo); if (pn) pn.style.display = 'block';   // valor explícito — '' cai na folha de estilo
-  $id('tri-btn-'+tipo).style.display = t.itens.some(i=>i.classe===null) ? '' : 'none';
-  triDash(tipo);
-  toast(`Analítico reconhecido como ${tipo==='venda'?'VENDA (clientes)':'COMPRA (fornecedores)'}: ${t.itens.length} parceiro(s) de ${t.docs} documento(s) — período ${t.periodo||'?'}. ${t.itens.some(i=>i.classe===null)?'Consulte os enquadramentos.':''}`);
-  return true;
+function triArquivo(input, tipo){
+  const f = input.files[0]; if (!f) return; input.value='';
+  const rd = new FileReader();
+  rd.onload = e => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      let t = null;
+      for (const n of wb.SheetNames){ const sj = XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1}); t = triParse(sj, tipo); if (t) break; }
+      if (!t){ toast('Cabeçalho não reconhecido — esperado: Data · Natureza · Valor Contábil · CNPJ/CPF.'); return; }
+      t.arquivo = f.name; TRI[tipo] = t;
+      $id('tri-btn-'+tipo).style.display = t.itens.some(i=>i.classe===null) ? '' : 'none';
+      triDash(tipo);
+      toast(`${t.itens.length} ${tipo==='venda'?'cliente(s)':'fornecedor(es)'} consolidado(s) de ${t.docs} documento(s) — período ${t.periodo||'?'}. ${t.itens.some(i=>i.classe===null)?'Consulte os enquadramentos.':''}`);
+    } catch(err){ console.error(err); toast('Erro ao ler '+f.name+': '+err.message); }
+  };
+  rd.readAsArrayBuffer(f);
 }
 async function triConsultar(tipo){
   const T = TRI[tipo]; if (!T) return;
@@ -1545,7 +1522,6 @@ function triStats(T){
 }
 function triDash(tipo){
   const T = TRI[tipo]; const box = $id('tri-dash-'+tipo); if (!T){ box.innerHTML=''; return; }
-  const pn = $id('tri-painel-'+tipo); if (pn) pn.style.display = 'block';   // v7.27.0: painel vive no card 2
   const S = triStats(T);
   const venda = tipo==='venda';
   const pc = v => (v/S.tot*100).toFixed(1).replace('.',',')+'%';
@@ -3169,7 +3145,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.30.0';
+const APP_VERSAO = '7.30.1';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
