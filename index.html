@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.33.1</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.34.3</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -286,13 +286,12 @@ canvas{max-height:340px}
       </div>
       <div class="card">
         <h3>2. Informe os CNPJs — triagem ou análise de fornecedores</h3>
-        <div class="hint" style="margin-bottom:8px">Cole uma lista de CNPJs (triagem simples) <b>ou importe um arquivo</b> — relatório <b>Totais ISS por Fornecedor/Cliente</b> (Questor) abre a análise de fornecedores 🚚; e as abas <b>📄 Analítico de compra</b> e <b>👥 Analítico de venda</b> importam os relatórios analíticos por documento (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF), com <b>consulta automática na Receita</b>, dashboard, gravação e lançamentos no mesmo painel. Qualquer outro arquivo/lista segue como triagem simples.</div>
+        <div class="hint" style="margin-bottom:8px">Cole uma lista de CNPJs (triagem simples) <b>ou importe um arquivo</b> — os botões <b>📄 Arquivo de compra</b> e <b>👥 Arquivo de venda</b> importam os analíticos por documento do Questor (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF) e a aba <b>📋 Totais</b> aceita os relatórios de entrada (Totais ISS e Totais ICMS). <b>O tipo é detectado pelo conteúdo e confirmado na tela antes de qualquer coisa entrar</b> — o nome do arquivo não decide nada. Depois vêm a consulta automática na Receita, o dashboard, a gravação e o lançamento por CFOP. Qualquer outro arquivo/lista segue como triagem simples.</div>
         <input type="file" id="fo-arq" accept=".csv,.txt,.xls,.xlsx" multiple style="display:none" onchange="fornArquivo(this)">
         <div id="fo-abas" style="display:flex;gap:8px;align-items:center;margin:10px 0 0;flex-wrap:wrap">
-          <button class="btn" id="fo-aba-servico" onclick="fornTrocarAba('servico')">🧾 Fornecedores de serviço</button>
-          <button class="btn" id="fo-aba-revenda"  onclick="fornTrocarAba('revenda')">📦 Fornecedores de revenda</button>
-          <button class="btn" id="fo-aba-compra" onclick="fornTrocarAba('compra')">📄 Analítico de compra</button>
-          <button class="btn" id="fo-aba-venda" onclick="fornTrocarAba('venda')">👥 Analítico de venda — clientes</button>
+          <button class="btn" id="fo-aba-compra" onclick="fornTrocarAba('compra')">📄 Arquivo de compra (fornecedor)</button>
+          <button class="btn" id="fo-aba-venda" onclick="fornTrocarAba('venda')">👥 Arquivo de venda (cliente)</button>
+          <button class="btn" id="fo-aba-totais" onclick="fornTrocarAba('totais')">📋 Totais — relatórios de entrada</button>
           <input type="file" id="tri-arq-compra" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'compra')">
           <input type="file" id="tri-arq-venda" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'venda')">
           <button class="btn solid" id="fo-btn-imp" onclick="$id('fo-arq').click()">Importar relatório(s)</button>
@@ -302,7 +301,6 @@ canvas{max-height:340px}
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
             <b>🚚 Análise de fornecedores</b>
             <div><b id="fo-emp"></b> <span class="hint" id="fo-per"></span></div>
-            <button class="btn solid" id="fo-btn" onclick="comBotao('fo-btn','Consultando fornecedores',()=>fornConsultar())">Consultar fornecedores na Receita</button>
             <span class="hint" id="fo-prog"></span>
           </div>
           <div id="fo-acoes" style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap"></div>
@@ -535,7 +533,7 @@ canvas{max-height:340px}
           <option value="reforma">Reforma Tributária</option>
           <option value="parecer">Parecer Reforma Tributária — com IA</option>
           <option value="conferencia">Conferência de cálculos — memória (interno)</option>
-          <option value="cnpj">Resumo estatístico de fornecedores e clientes</option>
+          <option value="cnpj">Resumo Estatístico</option>
           <option value="produtos">Produtos vendidos × Reforma (IBS/CBS)</option>
         </select></div>
         <div><label>Periodicidade</label><select id="rl-per" onchange="rlRender()">
@@ -646,7 +644,11 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.33.1</b> <span class="badge ok">atual</span></td><td>17/08/2026</td><td><b>Parecer com IA voltou a concluir — tempo-limite por função.</b> O limite de 12 segundos criado na v7.26.2 (para diagnosticar funções travadas) estava sendo aplicado a <b>todas</b> as chamadas — inclusive ao <b>gerar-parecer</b>, que usa a IA e legitimamente leva de 20 a 60 segundos para escrever os textos: gerações que estavam funcionando eram <b>abortadas no meio</b> com a mensagem "não respondeu em 12s". Agora o limite é <b>por função</b>: <b>gerar-parecer 150s</b>, <b>atualizar-classtrib 90s</b>, demais (como admin-senha) seguem em 12s. A mensagem de erro também melhorou: informa o limite usado e orienta que, se a invocação aparece nos Logs, o problema é na execução (ver o erro do log) — e não no deploy.</td></tr>
+                    <tr><td><b>v7.34.3</b> <span class="badge ok">atual</span></td><td>17/08/2026</td><td><b>Analítico importado pelo campo errado deixou de virar só uma lista de CNPJs.</b> O campo <b>"Ou importar arquivo (CSV/Excel)"</b> do item 2 pertence à <b>triagem simples</b>: ele apenas colhe os CNPJs da planilha e classifica o regime de cada um — por isso, quem largava ali o analítico do Questor via a consulta rodar normalmente, mas <b>sem dashboard, sem os botões de salvar e de lançar</b>, já que nenhuma aba do painel 🚚 havia recebido dados. Agora, quando o arquivo tem as colunas do analítico (Natureza/CFOP · Valor Contábil · CNPJ), o app <b>pergunta</b> antes: importar como analítico (com o painel completo) ou seguir como triagem simples. (2) A importação do analítico passou a <b>avisar quando não há empresa selecionada</b> na barra do topo: a leitura e a consulta funcionam, mas sem empresa dona não há como gravar no histórico nem lançar — o aviso aparece antes, em vez de o botão de salvar falhar depois. (3) O processamento do analítico virou função própria (<b>triProcessarWorkbook</b>), usada tanto pelos botões de arquivo de compra e de venda quanto por esse novo caminho.</td></tr>
+                    <tr><td><b>v7.34.2</b></td><td>17/08/2026</td><td><b>Razão social na exportação única e retornos fora do lançamento.</b> (1) A exportação única do Questor passou a sair com a coluna <b>Razão Social</b>, e a leitura já a aproveita: o nome do parceiro aparece na relação, no dashboard e no top 5 <b>antes mesmo da consulta na Receita</b> — que continua sendo quem confirma o enquadramento e atualiza a razão social oficial. No arquivo real os 38 fornecedores e os 19 clientes vieram todos com nome. (2) A <b>base global de CFOPs</b> ganhou os retornos, que não são compra: <b>1503/2503 e 1504/2504</b> (entrada por devolução de mercadoria remetida com fim específico de exportação — decisão dele, 16/08) e <b>1201/2201 e 1202/2202</b> (devolução de venda), todos como <b>não lançar</b>. Lançar esses valores como entrada inflaria as compras e, no caso da devolução de venda, contaria duas vezes o que já vem descontado do faturamento. Como toda regra da base, ficam sobrescrevíveis na camada por empresa.</td></tr>
+                    <tr><td><b>v7.34.1</b></td><td>17/08/2026</td><td><b>Exportação única do Questor (coluna Tipo) alimenta as duas abas de uma vez.</b> O novo relatório traz <b>Entrada e Saída na mesma planilha</b>, com uma coluna <b>Tipo</b>. Lido como estava, os dois lados entravam <b>somados no mesmo conjunto</b> e o lado de maior valor decidia o tipo do arquivo — no exemplo real, R$ 76.599,96 de entradas seriam contados como clientes dentro de um total de R$ 671.771,15 classificado como venda. Agora a leitura <b>separa pelo próprio campo Tipo</b>: as entradas vão para <b>📄 arquivo de compra</b> e as saídas para <b>👥 arquivo de venda</b>, em uma única importação, com <b>uma só faixa de confirmação</b> mostrando os dois blocos (lançamentos, parceiros, total e CFOPs de cada lado) antes de qualquer coisa entrar. Em seguida a consulta na Receita roda nos dois conjuntos e cada aba abre com seu dashboard. O aviso de <b>sobreposição</b> passou a valer nos dois sentidos — antes só alertava ao importar Totais tendo analítico; agora também ao importar analítico tendo Totais.</td></tr>
+                    <tr><td><b>v7.34.0</b></td><td>17/08/2026</td><td><b>Consulta CNPJ reorganizada: dois arquivos, confirmação obrigatória e lançamento por CFOP.</b> (1) O painel 🚚 passou a ter <b>📄 Arquivo de compra (fornecedor)</b>, <b>👥 Arquivo de venda (cliente)</b> e uma única aba <b>📋 Totais — relatórios de entrada</b>, que reconhece tanto o <b>Totais ISS</b> quanto o <b>Totais ICMS</b> do Questor. (2) <b>Nada entra sem confirmação</b>: ao importar, o app mostra o tipo detectado <b>pelo conteúdo</b> (nunca pelo nome do arquivo), período, quantidade, total e CFOPs, e espera o "Confirmar" — um arquivo chamado "NF_entrada" pode conter saídas, e agora isso aparece antes de qualquer coisa entrar. (3) A <b>natureza do Questor tem 7 dígitos</b> e o CFOP são os 4 primeiros: a leitura foi corrigida nos dois formatos, e o Totais ICMS passou a trazer o CFOP de cada lançamento. (4) <b>Serviço tomado é natureza 8xxx</b> (NFS-e), não 1933/2933 — na Weeedo isso era 28% da compra de janeiro entrando como mercadoria; agora vai para Despesas. (5) O botão de lançar virou <b>📥 Lançar total na análise</b>, com destino <b>por CFOP</b>: base global para o que não muda de empresa (1102/2102 e 1403/2403 → Compras; 8xxx, 1933/2933, 1556, 1653, 1253, 1303, 1353 → Despesas; 1551 ativo e 1910 bonificação → não lança) e, para todo CFOP fora dela, <b>uma pergunta que bloqueia o lançamento</b> — a resposta fica gravada <b>naquela empresa</b>, nunca como regra geral do app, e é reaplicada nas importações seguintes. Quando o CFOP tem parceiro com CNAE de combustível, bebida, medicamento, autopeça ou cosmético, a pergunta avisa para avaliar "Compras monofásicas". (6) Aviso de <b>sobreposição</b>: Totais e analítico retratam as mesmas entradas (o Totais só não traz as NFS-e), e importar os dois da mesma competência duplicaria tudo que não é serviço. (7) <b>CPF 999.999.999-99</b> passou a ser tratado como consumidor final não identificado, fora do ranking. (8) As ações do painel são <b>🔎 Consulta Receita</b>, <b>💾 Salvar análise no histórico da empresa</b> e <b>📥 Lançar total na análise</b>. (9) O relatório passou a se chamar <b>Resumo Estatístico</b> e traz os <b>dashboards</b> (CFOPs, exportação, B2B×B2C) junto das <b>relações completas</b> de clientes e fornecedores. (10) No <b>Parecer</b>, as páginas de fornecedores e de clientela viraram <b>uma só</b>, com o resumo das duas consultas, os dashboards e os <b>5 maiores clientes e 5 maiores fornecedores</b>, com a linha de concentração acumulada. Motor de cálculo intocado — 🔏 lacre mantém o selo.</td></tr>
+                    <tr><td><b>v7.33.1</b></td><td>17/08/2026</td><td><b>Parecer com IA voltou a concluir — tempo-limite por função.</b> O limite de 12 segundos criado na v7.26.2 (para diagnosticar funções travadas) estava sendo aplicado a <b>todas</b> as chamadas — inclusive ao <b>gerar-parecer</b>, que usa a IA e legitimamente leva de 20 a 60 segundos para escrever os textos: gerações que estavam funcionando eram <b>abortadas no meio</b> com a mensagem "não respondeu em 12s". Agora o limite é <b>por função</b>: <b>gerar-parecer 150s</b>, <b>atualizar-classtrib 90s</b>, demais (como admin-senha) seguem em 12s. A mensagem de erro também melhorou: informa o limite usado e orienta que, se a invocação aparece nos Logs, o problema é na execução (ver o erro do log) — e não no deploy.</td></tr>
                     <tr><td><b>v7.33.0</b></td><td>17/08/2026</td><td><b>Triagem de venda × compra INCORPORADA ao item 2 — tela única.</b> O card avulso "Triagem de venda × compra — analíticos por documento" <b>deixou de existir</b>: agora tudo vive no <b>"2. Informe os CNPJs — triagem ou análise de fornecedores"</b>. As abas <b>📄 Analítico de compra</b> e <b>👥 Analítico de venda — clientes</b> ficam permanentemente ao lado das abas de serviço e revenda, e <b>o próprio botão de importar do painel</b> muda conforme a aba ("Importar analítico de FORNECEDORES/CLIENTES"). Importou → <b>consulta automática na Receita</b> (cache de 30 dias, progresso na tela) → o painel 🚚 abre com o <b>dashboard completo do analítico</b> (regimes, B2B×B2C, CFOPs com exportação destacada, maiores parceiros, crédito estimado) <b>mais a relação CNPJ a CNPJ</b> com o enquadramento — e as ações no topo: "💾 Salvar análise no histórico" e, na compra, "➕ Lançar total em Compras" com a pergunta dos serviços tomados (1933/2933 → Despesas › Outras) e trilha de origem R. A aba de clientes segue <b>sem lançamento</b> — informa o parecer, os campos de vendas da Reforma e o Resumo Estatístico. "Limpar tudo" zera as quatro abas. Motor intocado — 🔏 lacre mantém o selo.</td></tr>
                     <tr><td><b>v7.32.0</b></td><td>17/08/2026</td><td><b>Analíticos integrados ao processo do item 2.</b> Os dois arquivos do card "Triagem de venda × compra" agora rodam <b>todo o processo do "Informe os CNPJs — análise de fornecedores"</b>: ao importar, o analítico vira uma <b>aba do próprio painel 🚚</b> — <b>"📄 Analítico de compra"</b> (fornecedores) e <b>"👥 Analítico de venda — clientes"</b> (clientes PJ) — ao lado das abas de serviço e revenda, com a mesma tela: empresa, período, total conferido, cartões por regime, barra de distribuição, relação completa com o enquadramento de cada CNPJ e o crédito estimado. A <b>consulta na Receita é automática</b> na importação (cache de 30 dias) e atualiza o painel ao concluir; o "Reconsultar" do painel funciona nas abas novas. Os <b>botões do painel valem para os analíticos</b>: "💾 Salvar análise no histórico" (grava a triagem) e, na aba de compra, "➕ Lançar total em Compras da análise" — com a pergunta dos serviços tomados (1933/2933 → Despesas › Outras) e trilha de origem R. A aba de <b>clientes não gera lançamento</b> (decisão de 16/08): informa o parecer, os campos de vendas da Reforma e o Resumo Estatístico. O card da triagem continua no lugar, com seus dashboards — nada foi removido; "Limpar tudo" agora zera também as duas abas novas. Motor intocado — 🔏 lacre mantém o selo.</td></tr>
                     <tr><td><b>v7.31.0</b></td><td>16/08/2026</td><td><b>Triagem com a esteira completa do item 2</b> (conforme relatório de melhoria aprovado). (1) <b>Consulta automática na Receita</b>: ao importar qualquer analítico, o app consulta os CNPJs sozinho — cache de 30 dias primeiro (instantâneo), Receita nos novos, com progresso na tela; a pergunta de confirmação deixou de existir e o botão "Consultar enquadramentos" virou reexecução manual. (2) <b>Serviços tomados separados</b>: no "➕ Lançar total nas Compras", os CFOPs <b>1933/2933</b> são identificados e o app pergunta se deseja lançá-los <b>em Despesas › Outras</b>, separados das mercadorias — respondendo "não", ficam de fora; as mercadorias seguem para a aba Compras no destino escolhido (tudo com trilha de origem R). (3) O dashboard da compra ganhou o <b>crédito de IBS/CBS estimado no regime pleno</b> (regime normal à alíquota cheia + Simples/MEI pelo art. 58, 1ª faixa), como no painel do item 2. (4) <b>A triagem de venda não lança nada</b> — só informa: preenche automaticamente os campos <b>Vendas para PF / PJ Simples / PJ LR-LP</b> da aba Reforma (respeitando valores já digitados, com nota explicativa da leitura da cadeia), segue alimentando a página da clientela do parecer e o relatório estatístico. (5) O relatório foi renomeado para <b>"Resumo Estatístico de Fornecedores e Clientes"</b>, com os blocos um abaixo do outro: identificação, quadro societário, fornecedores (revenda, serviços), triagem de compra e clientes (triagem de venda). Motor de cálculo intocado — o 🔏 lacre mantém o selo.</td></tr>
@@ -1056,9 +1058,29 @@ function importarArquivo(inp) {
 function importarArquivoTriagemInput(inp) {
   const f = inp.files[0]; if (!f) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     try {
       const wb = XLSX.read(e.target.result, { type:'array' });
+      // v7.34.3: este campo é o da TRIAGEM SIMPLES (só colhe CNPJs). Quando o arquivo é um
+      // analítico por documento, colher CNPJs desperdiça o arquivo — sem dashboard, sem gravação
+      // e sem lançamento. Em vez de fazer isso em silêncio, o app pergunta.
+      for (const n of wb.SheetNames){
+        const cab = (XLSX.utils.sheet_to_json(wb.Sheets[n], {header:1})[0]||[]).map(c=>String(c||'').toLowerCase());
+        const ehAnalitico = cab.some(c=>c.includes('natureza')) && cab.some(c=>c.includes('valor')) && cab.some(c=>c.includes('cnpj'));
+        if (!ehAnalitico) continue;
+        const r = await dlg('Este arquivo é um analítico por documento',
+          '"' + f.name + '" tem as colunas do analítico do Questor (Natureza/CFOP · Valor Contábil · CNPJ).\n\n'
+          + 'Importado por aqui, ele vira apenas uma lista de CNPJs para a triagem simples: classifica o regime de cada um, '
+          + 'mas NÃO abre o dashboard, não grava a análise no histórico e não permite lançar.\n\n'
+          + 'Importado como analítico, você tem o painel 🚚 completo — dashboard, gravação e lançamento por CFOP.',
+          [{rotulo:'Importar como analítico (recomendado)', valor:'ana', destaque:true},
+           {rotulo:'Seguir como triagem simples', valor:'tri'},
+           {rotulo:'Cancelar', valor:null}]);
+        inp.value = '';
+        if (r === null) return;
+        if (r === 'ana'){ await triProcessarWorkbook(wb, f.name, 'compra'); return; }
+        break;
+      }
       let achados = [];
       wb.SheetNames.forEach(sn => {
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header:1, raw:false });
@@ -1156,14 +1178,51 @@ let FO = null;                                   // dataset da aba ativa
 let FOT = { servico:null, revenda:null, compra:null, venda:null };   // v7.32.0: analíticos são abas do MESMO painel
 let FO_TIPO = 'servico';
 const FO_ABAS = ['servico','revenda','compra','venda'];
-const FO_ROT_ABA = { servico:'de serviço', revenda:'de revenda', compra:'analítico de compra', venda:'analítico de venda (clientes)' };
+const FO_ABAS_UI = ['compra','venda','totais'];              // v7.34.0: serviço e revenda viraram UMA aba
+const FO_UI = t => (t==='servico'||t==='revenda') ? 'totais' : t;
+let FO_TOT_ULT = 'servico';                                  // último subtipo importado na aba de Totais
+// ═══ v7.34.0: destino do lançamento pelo CFOP ═══
+// Base GLOBAL — só CFOPs cujo significado não muda de empresa para empresa.
+// Tudo que não estiver aqui é PERGUNTADO e a resposta fica gravada NA EMPRESA (decisão dele, 16/08).
+const CFOP_BASE = {
+  '1101':'compras.semst','2101':'compras.semst','1102':'compras.semst','2102':'compras.semst',
+  '1401':'compras.comst','2401':'compras.comst','1403':'compras.comst','2403':'compras.comst',
+  '1407':'compras.comst','2407':'compras.comst',
+  '8000':'despesas.outras','1933':'despesas.outras','2933':'despesas.outras',   // 8xxx = NFS-e tomada (Questor)
+  '1556':'despesas.adm','2556':'despesas.adm','1253':'despesas.adm','2253':'despesas.adm',
+  '1303':'despesas.adm','2303':'despesas.adm',
+  '1651':'despesas.adm','2651':'despesas.adm','1652':'despesas.adm','2652':'despesas.adm',
+  '1653':'despesas.adm','2653':'despesas.adm',
+  '1353':'despesas.vendas','2353':'despesas.vendas',
+  '1551':'fora','2551':'fora','1910':'fora','2910':'fora',                      // ativo imobilizado e bonificação
+  '1503':'fora','2503':'fora','1504':'fora','2504':'fora',                      // v7.34.2: retorno de remessa com fim específico de exportação
+  '1201':'fora','2201':'fora','1202':'fora','2202':'fora'                       // devolução de venda — não é compra e não mexe na receita (já vem líquida)
+};
+const CFOP_ROT = { 'compras.semst':'Compras — sem ST', 'compras.comst':'Compras — com ST',
+  'compras.mono':'Compras — monofásicas', 'compras.comstMono':'Compras — com ST e monofásicas',
+  'despesas.adm':'Despesas — administrativas', 'despesas.vendas':'Despesas — com vendas',
+  'despesas.fiscais':'Despesas — fiscais', 'despesas.financeiras':'Despesas — financeiras',
+  'despesas.outras':'Despesas — outras', 'fora':'Não lançar' };
+const CFOP_OPCOES = [
+  {rotulo:'Compras — sem ST', valor:'compras.semst', destaque:true},
+  {rotulo:'Compras — com ST', valor:'compras.comst'},
+  {rotulo:'Compras — monofásicas', valor:'compras.mono'},
+  {rotulo:'Despesas — administrativas', valor:'despesas.adm'},
+  {rotulo:'Despesas — com vendas', valor:'despesas.vendas'},
+  {rotulo:'Despesas — outras', valor:'despesas.outras'},
+  {rotulo:'Não lançar', valor:'fora'}];
+const CNAE_MONO = /combust|bebida|refrigerante|cerveja|medicament|farmac|autope|pneu|cosm|perfum/i;
+function cfopMapLer(cnpj){ try { return JSON.parse(localStorage.getItem('atp_cfop_'+limparCNPJ(cnpj||''))||'{}')||{}; } catch(e){ return {}; } }
+function cfopMapGravar(cnpj, m){ try { localStorage.setItem('atp_cfop_'+limparCNPJ(cnpj||''), JSON.stringify(m)); } catch(e){} }
+function cfopDestino(cfop, mapa){ return (mapa && mapa[cfop]) || CFOP_BASE[cfop] || null; }
+const FO_ROT_ABA = { servico:'Totais de serviço (ISS)', revenda:'Totais de entrada (ICMS)', compra:'arquivo de compra', venda:'arquivo de venda' };
 const FO_DESTINOS = [['semst','Compras sem ST'],['comst','Compras com ST'],
                      ['mono','Compras monofásicas'],['comstMono','Compras com ST e monofásicas']];
 function fornParse(txt){
   // "Totais ICMS por Fornecedor/Cliente": parceiro na linha Pessoa:, valor na linha Total Pessoa:
   if (/Total\s+Pessoa:/i.test(txt)) return fornParseICMS(txt);
   const linhas = txt.split(/\r?\n/);
-  const out = { cnpjEmpresa:'', nomeEmpresa:'', periodo:'', itens:[], totalRelatorio:0 };
+  const out = { cnpjEmpresa:'', nomeEmpresa:'', periodo:'', itens:[], totalRelatorio:0, sub:'servico' };
   let secao = 'entradas';
   for (const ln of linhas){
     const mEmp = ln.match(/CNPJ:\s*([\d./-]{14,18})/i);
@@ -1181,26 +1240,28 @@ function fornParse(txt){
   return out;
 }
 function fornTrocarAba(tipo){
+  if (tipo==='totais') tipo = FOT[FO_TOT_ULT] ? FO_TOT_ULT : (FOT.revenda ? 'revenda' : 'servico');
   FO_TIPO = tipo; FO = FOT[tipo];
   const analitico = (tipo==='compra' || tipo==='venda');
-  for (const t of FO_ABAS){
+  const ui = FO_UI(tipo);
+  for (const t of FO_ABAS_UI){
     const b = $id('fo-aba-'+t); if (!b) continue;
-    b.className = 'btn' + (t===tipo ? ' solid' : ''); b.style.opacity = t===tipo ? '1' : '.55';
+    b.className = 'btn' + (t===ui ? ' solid' : ''); b.style.opacity = t===ui ? '1' : '.55';
   }
   const bi = $id('fo-btn-imp');
-  if (bi){                                                 // v7.33.0: o MESMO botão importa — Totais nas abas clássicas, analítico nas novas
+  if (bi){                                                 // v7.34.0: dois arquivos analíticos + a aba de Totais
     bi.textContent = analitico
-      ? 'Importar analítico de ' + (tipo==='venda' ? 'CLIENTES' : 'FORNECEDORES')
-      : 'Importar relatório(s) de ' + (tipo==='servico' ? 'SERVIÇO' : 'REVENDA');
+      ? (tipo==='venda' ? 'Importar arquivo de venda (CLIENTE)' : 'Importar arquivo de compra (FORNECEDOR)')
+      : 'Importar relatório de entrada (Totais ISS/ICMS)';
     bi.onclick = () => $id(analitico ? ('tri-arq-' + tipo) : 'fo-arq').click();
   }
   const outros = FO_ABAS.filter(t => t!==tipo && FOT[t]);
-  $id('fo-aba-hint').textContent = outros.length
-    ? outros.map(t => `${FOT[t].itens.length} na aba ${FO_ROT_ABA[t]}`).join(' · ') : '';
+  $id('fo-aba-hint').innerHTML = outros.length
+    ? outros.map(t => `<a href="#" onclick="fornTrocarAba('${t}');return false">${FOT[t].itens.length} em ${FO_ROT_ABA[t]}</a>`).join(' · ') : '';
   if (!FO) { $id('fo-painel').style.display='none';
-    $id('fo-aba-hint').textContent = analitico
-      ? 'Nenhum analítico de ' + (tipo==='venda'?'clientes':'fornecedores') + ' importado — use o botão acima (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF, do Questor). A consulta na Receita é automática.'
-      : $id('fo-aba-hint').textContent;
+    $id('fo-aba-hint').innerHTML = analitico
+      ? 'Nenhum arquivo de ' + (tipo==='venda'?'venda':'compra') + ' importado — use o botão acima (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF, do Questor). O que foi lido é confirmado na tela antes de entrar; a consulta na Receita é automática.'
+      : 'Nenhum relatório de entrada importado — o leitor reconhece os <b>Totais ISS</b> e os <b>Totais ICMS</b> do Questor e confirma na tela o que detectou.';
     return; }
   fornMostrarPainel();
 }
@@ -1222,7 +1283,7 @@ function fornLerArquivo(f){
     rd.readAsArrayBuffer(f); });
 }
 function fornParseICMS(txt){
-  const out = { cnpjEmpresa:'', nomeEmpresa:'', periodo:'', itens:[], totalRelatorio:0 };
+  const out = { cnpjEmpresa:'', nomeEmpresa:'', periodo:'', itens:[], totalRelatorio:0, sub:'revenda' };
   const idx = {}; let secao = 'entradas', pend = null;
   for (let ln of txt.split(/\r?\n/)){
     ln = ln.replace(/\r$/,'');
@@ -1239,6 +1300,14 @@ function fornParseICMS(txt){
     if (mTot){ out.totalRelatorio = num(mTot[1]); continue; }
     const mp = ln.match(/^"?Pessoa:\s*(\d+)\s+(.+?)\s*-\s*Inscr\.\s*Federal:\s*([\d./-]+)/i);
     if (mp){ pend = { cod:mp[1], razao:mp[2].trim(), doc:mp[3].replace(/\D/g,'') }; continue; }
+    if (pend && secao === 'entradas' && ln && ln[0] !== '"'){        // v7.34.0: natureza (7 dígitos) por lançamento — CFOP = 4 primeiros
+      const f = ln.split(';');
+      if (f.length >= 11){
+        const nat = String(f[f.length-6]||'').replace(/\D/g,'');
+        const cfop = nat.slice(0,4);
+        if (cfop.length === 4){ pend.cfops = pend.cfops || {}; pend.cfops[cfop] = (pend.cfops[cfop]||0) + num(f[f.length-5]); }
+      }
+    }
     const mt = ln.match(/^"?Total Pessoa:\s*(\d+)\s+(.+?)"?;([\d.,]+)/i);
     if (mt && secao === 'entradas'){
       const d = (pend && pend.cod === mt[1]) ? pend : null;
@@ -1246,13 +1315,21 @@ function fornParseICMS(txt){
       pend = null;
       if (!doc) continue;
       const valor = num(mt[3]);                     // Vlr Contábil — bate com o total do relatório
-      if (idx[doc] != null){ out.itens[idx[doc]].valor += valor; continue; }
+      const cfs = (d && d.cfops) || {};
+      if (idx[doc] != null){ const ja = out.itens[idx[doc]]; ja.valor += valor;
+        ja.cfops = ja.cfops || {}; for (const k in cfs) ja.cfops[k] = (ja.cfops[k]||0) + cfs[k]; continue; }
       idx[doc] = out.itens.length;
-      out.itens.push({ cnpj: doc, razao: (d ? d.razao : mt[2]).trim(), valor,
+      out.itens.push({ cnpj: doc, razao: (d ? d.razao : mt[2]).trim(), valor, cfops: cfs,
                        classe: doc.length === 11 ? 'pf' : null });   // CPF não se consulta na base de CNPJ
     }
   }
   return out;
+}
+// v7.34.0: resumo dos CFOPs de um lote, para a faixa de confirmação
+function fornCfopResumo(itens){
+  const t = {}; for (const i of itens||[]) for (const [c,v] of Object.entries(i.cfops||{})) t[c]=(t[c]||0)+(+v||0);
+  const l = Object.entries(t).sort((a,b)=>b[1]-a[1]);
+  return l.length ? l.slice(0,8).map(([c,v])=>c+' ('+fmt(v)+')').join(', ') + (l.length>8?' …':'') : '';
 }
 async function fornArquivo(inp){
   const arqs = [...(inp.files||[])]; inp.value='';
@@ -1270,10 +1347,43 @@ async function fornArquivo(inp){
         + `Primeira linha do arquivo:\n${prim.slice(0,160)}`);
       continue;
     }
-    r.arquivo = nome; lotes.push(r);
+    r.arquivo = nome;
+    // v7.34.0 (decisão dele, 16/08): SEMPRE confirmar o que foi detectado — o nome do arquivo não decide nada
+    const sub = r.sub || 'servico';
+    const tot = r.itens.reduce((a,i)=>a+(+i.valor||0),0);
+    const cf = fornCfopResumo(r.itens);
+    const ok = await dlgSimNao('Confirme o que foi lido em "' + nome + '"',
+      'Relatório detectado: ' + (sub==='revenda' ? 'TOTAIS ICMS por Fornecedor/Cliente (entradas)' : 'TOTAIS ISS por Fornecedor/Cliente (serviços)') + '\n'
+      + 'Período: ' + (r.periodo || 'não identificado') + '\n'
+      + 'Parceiros: ' + r.itens.length + '  ·  Total: R$ ' + fmt(tot) + '\n'
+      + (cf ? 'CFOPs: ' + cf + '\n' : '')
+      + '\nConfere? Nada entra na análise antes de você confirmar.',
+      'Confirmar e importar', 'Cancelar');
+    if (!ok) continue;
+    r._sub = sub; lotes.push(r);
   }
   if (!lotes.length) return;
-  await fornIncorporar(lotes, FO_TIPO);
+  for (const sub of ['servico','revenda']){
+    const doTipo = lotes.filter(l => l._sub === sub);
+    if (!doTipo.length) continue;
+    if (!await fornAvisoSobreposicao(sub, doTipo[0].periodo)) continue;
+    FO_TOT_ULT = sub;
+    await fornIncorporar(doTipo, sub);
+  }
+}
+// v7.34.0: Totais e analítico retratam as MESMAS entradas (o Totais apenas não traz as NFS-e).
+// Importar os dois da mesma competência duplica tudo que não é serviço — por isso o aviso.
+async function fornAvisoSobreposicao(tipo, periodo){
+  const par = (tipo==='revenda' || tipo==='servico') ? 'compra' : (tipo==='compra' ? 'revenda' : null);
+  const outro = par && FOT[par];
+  if (!outro || !outro.itens || !outro.itens.length) return true;
+  return await dlgSimNao('Atenção — possível sobreposição',
+    'Já existe ' + (par==='compra' ? 'um arquivo de compra' : 'um relatório de Totais de entrada') + ' importado (período '
+    + (outro.periodo||'?') + ', ' + outro.itens.length + ' parceiros).\n\n'
+    + 'O relatório de Totais e o analítico de compra retratam as MESMAS entradas — o Totais apenas não traz as notas de serviço. '
+    + 'Se as competências se sobrepõem, lançar os dois duplica tudo que não for serviço.\n\n'
+    + 'Período que está entrando agora: ' + (periodo||'não identificado'),
+    'Importar mesmo assim', 'Cancelar');
 }
 // junta os lotes ao que já existe na aba, perguntando substituir ou somar
 async function fornIncorporar(lotes, tipo){
@@ -1292,13 +1402,7 @@ async function fornIncorporar(lotes, tipo){
     if (r === null) return;
     if (r === 'sub') base = null;
   }
-  let destino = base ? base.destino : null;
-  if (tipo === 'revenda' && !destino){
-    destino = await dlg('A que se referem estas compras?',
-      'Enquanto não existe classificação automática por NCM, informe aqui o tratamento das mercadorias.',
-      [...FO_DESTINOS.map((d,i)=>({rotulo:d[1], valor:d[0], destaque:i===0})), {rotulo:'Cancelar', valor:null}]);
-    if (destino === null) return;
-  }
+  const destino = base ? base.destino : null;   // v7.34.0: o destino não é mais perguntado aqui — sai do CFOP no lançamento
   const novo = base ? JSON.parse(JSON.stringify(base))
                     : { cnpjEmpresa:'', nomeEmpresa:'', periodo:'', itens:[], totalRelatorio:0, lotes:[], destino };
   novo.destino = destino;
@@ -1315,7 +1419,7 @@ async function fornIncorporar(lotes, tipo){
   }
   FOT[tipo] = novo; if (tipo === FO_TIPO) FO = novo;
   fornTrocarAba(tipo);
-  toast(`${lotes.length} relatório(s) incorporados · ${novo.itens.length} fornecedores na aba ${tipo==='servico'?'de serviço':'de revenda'}.`);
+  toast(`${lotes.length} relatório(s) incorporados · ${novo.itens.length} parceiros em ${FO_ROT_ABA[tipo]}.`);
 }
 function fornUnirPeriodos(a, b){
   const d = p => { const m = String(p||'').match(/(\d{2})\/(\d{2})\/(\d{4})\D+?(\d{2})\/(\d{2})\/(\d{4})/); return m ? m : null; };
@@ -1333,21 +1437,20 @@ function fornAcoes(){
   const selo = salvo
     ? `<span class="badge ok" style="align-self:center">✓ gravada em ${new Date(salvo).toLocaleString('pt-BR')}</span>`
     : `<span class="badge err" style="align-self:center">não gravada — existe só nesta tela</span>`;
+  const consultar = `<button class="btn" id="fo-btn-rec" onclick="comBotao('fo-btn-rec','Consultando',()=>fornConsultar())">🔎 Consulta Receita</button>`;
   const salvar = analitico
     ? `<button class="btn solid" id="fo-btn-salvar" onclick="comBotao('fo-btn-salvar','Salvando',async()=>{ await triSalvar('${FO_TIPO}'); fornAcoes(); })">💾 Salvar análise no histórico da empresa</button>`
     : `<button class="btn solid" id="fo-btn-salvar" onclick="comBotao('fo-btn-salvar','Salvando',()=>fornSalvar())">💾 Salvar análise no histórico da empresa</button>`;
-  const lancar = FO_TIPO==='revenda' ? `<button class="btn" onclick="fornLancarCompras()">➕ Lançar total em Compras da análise</button>`
-    : FO_TIPO==='servico' ? `<button class="btn" onclick="fornLancarDespesas()">➕ Lançar total nas Despesas da análise</button>`
-    : FO_TIPO==='compra' ? `<button class="btn" onclick="triLancarCompras()" title="Serviços tomados (1933/2933) são identificados e o app pergunta se vão separados para Despesas › Outras">➕ Lançar total em Compras da análise</button>`
-    : '';                                                      // venda (clientes): só informação — sem lançamento (decisão de 16/08)
-  alvo.innerHTML = selo + salvar + lancar
+  const lancar = FO_TIPO==='venda' ? ''                        // venda (clientes): só informação — sem lançamento (decisão de 16/08)
+    : `<button class="btn" id="fo-btn-lanc" onclick="comBotao('fo-btn-lanc','Lançando',()=>foLancar())" title="Cada CFOP vai para Compras, Despesas ou fica fora — CFOP sem destino é perguntado e a resposta fica gravada nesta empresa">📥 Lançar total na análise</button>`;
+  alvo.innerHTML = selo + consultar + salvar + lancar
     + (FO_TIPO==='venda' ? `<span class="hint" style="align-self:center">clientes não geram lançamento — alimentam o parecer, a Reforma e o Resumo Estatístico</span>` : '');
 }
 function fornMostrarPainel(){
   const soma = FO.itens.reduce((s,i)=>s+i.valor,0);
   $id('fo-painel').style.display = 'block';
   $id('fo-emp').textContent = (FO.nomeEmpresa||'Empresa') + ' · ' + fmtCNPJ(FO.cnpjEmpresa||'')
-    + ({servico:' · SERVIÇO', revenda:' · REVENDA', compra:' · ANALÍTICO DE COMPRA', venda:' · ANALÍTICO DE VENDA (CLIENTES PJ)'}[FO_TIPO]||'');
+    + ({servico:' · TOTAIS ISS (SERVIÇO)', revenda:' · TOTAIS ICMS (ENTRADAS)', compra:' · ARQUIVO DE COMPRA (FORNECEDOR)', venda:' · ARQUIVO DE VENDA (CLIENTE)'}[FO_TIPO]||'');
   const dst = FO_TIPO==='revenda' && FO.destino ? ' · ' + (FO_DESTINOS.find(d=>d[0]===FO.destino)||[])[1] : '';
   $id('fo-per').textContent = (FO.periodo?('Período '+FO.periodo+' · '):'') + FO.itens.length + (FO_TIPO==='venda'?' clientes PJ':' fornecedores') + ' · R$ ' + fmt(soma)
     + (FO.lotes && FO.lotes.length>1 ? ` · ${FO.lotes.length} relatórios` : '')
@@ -1442,13 +1545,12 @@ async function fornConsultar(forcar){
         + `Deseja continuar?`)) return;
     }
   }
-  const btn = $id('fo-btn');
   for (let i=0;i<FO.itens.length;i++){
     if (FO.itens[i].classe === 'pf') continue;          // CPF não existe na base de CNPJ
     $id('fo-prog').textContent = `Consultando ${i+1} de ${FO.itens.length}…`;
     const r = await consultarUm(FO.itens[i].cnpj);
     Object.assign(FO.itens[i], { situacao:r.situacao||'', simples:!!r.simples, simei:!!r.simei, erro:r.erro||null,
-      razao: r.razao_social || FO.itens[i].razao, classe: fornClasse(r) });
+      razao: r.razao_social || FO.itens[i].razao, cnae: r.cnae||'', classe: fornClasse(r) });
     fornRender();
     if (i<FO.itens.length-1) await new Promise(r=>setTimeout(r,350));
   }
@@ -1460,15 +1562,19 @@ async function fornConsultar(forcar){
 // ═══ v7.25.0: TRIAGEM DE VENDA (clientes) E DE COMPRA (fornecedores) — analíticos por documento ═══
 let TRI = { venda:null, compra:null };
 const TRI_EXP_CFOPS = /^(7\d{3}|5501|5502|6501|6502)$/;    // exportação direta + fim específico (imunes)
-function triParse(rows, tipo){
+function triParse(rows, tipo, lado){
   const cab = (rows[0]||[]).map(c=>String(c||'').toLowerCase());
   const ix = t => cab.findIndex(c=>c.includes(t));
   const iData = ix('data'), iNat = ix('natureza'), iVal = ix('valor'), iDoc = ix('cnpj'), iRz = ix('razão')>=0?ix('razão'):ix('razao');
+  const iTipo = cab.findIndex(c=>c.trim()==='tipo');          // v7.34.1: relatório único traz Entrada/Saída na mesma planilha
   if (iData<0 || iNat<0 || iVal<0 || iDoc<0) return null;
+  if (lado && iTipo<0) return null;
   const propRaiz = (EMP_GLOBAL?.cnpj || AN?.cnpj || '').replace(/\D/g,'').slice(0,8);
   const por = {}; let de=null, ate=null, docs=0;
   for (let r=1; r<rows.length; r++){
     const row = rows[r]||[]; const val = +row[iVal]||0; if (!val) continue;
+    if (lado){ const tv = String(row[iTipo]||'').toLowerCase();
+      if (lado==='e' ? !/entrad/.test(tv) : !/sa[íi]d/.test(tv)) continue; }
     const doc = String(row[iDoc]||'').replace(/\D/g,''); if (!doc) continue;
     const nat = String(row[iNat]||'').replace(/\D/g,'');
     const cfop = nat.length>=4 ? nat.slice(0,4) : nat;
@@ -1477,8 +1583,9 @@ function triParse(rows, tipo){
     const ehCpf = doc.length===11;
     const ehProprio = !ehCpf && propRaiz && doc.slice(0,8)===propRaiz;
     const k = doc;
-    if (!por[k]) por[k] = { cnpj: doc, razao: iRz>=0 ? String(row[iRz]||'').trim() : '', valor:0, notas:0, cfops:{},
-      classe: ehCpf ? 'pf' : ehProprio ? 'proprio' : null };
+    const generico = doc === '99999999999' || /^0+$/.test(doc);   // v7.34.0: consumidor final não identificado
+    if (!por[k]) por[k] = { cnpj: doc, razao: generico ? 'Consumidor final não identificado' : (iRz>=0 ? String(row[iRz]||'').trim() : ''),
+      valor:0, notas:0, cfops:{}, generico, classe: ehCpf ? 'pf' : ehProprio ? 'proprio' : null };
     por[k].valor += val; por[k].notas++; por[k].cfops[cfop] = (por[k].cfops[cfop]||0) + val;
     if (iRz>=0 && !por[k].razao) por[k].razao = String(row[iRz]||'').trim();
     docs++;
@@ -1488,23 +1595,93 @@ function triParse(rows, tipo){
   return { tipo, itens, de, ate, docs, periodo: de&&ate ? `${de.split('-').reverse().join('/')} a ${ate.split('-').reverse().join('/')}` : '',
     cnpjEmpresa: (EMP_GLOBAL?.cnpj || AN?.cnpj || ''), nomeEmpresa: (EMP_GLOBAL?.razao_social || ''), _salvo:null };
 }
+// v7.34.0: 1/2/3 = entrada (compra) · 5/6/7 = saída (venda) · 8xxx = NFS-e tomada (entrada, Questor) · 9xxx = NFS-e emitida (saída)
+function triDetectar(t){
+  let ent = 0, sai = 0;
+  for (const i of t.itens||[]) for (const [c,v] of Object.entries(i.cfops||{})){
+    const d = c[0];
+    if (d==='1'||d==='2'||d==='3'||d==='8') ent += (+v||0);
+    else if (d==='5'||d==='6'||d==='7'||d==='9') sai += (+v||0);
+  }
+  const tot = ent + sai || 1;
+  return { tipo: sai > ent ? 'venda' : 'compra', misto: Math.min(ent,sai)/tot > 0.05 };
+}
 function triArquivo(input, tipo){
   const f = input.files[0]; if (!f) return; input.value='';
   const rd = new FileReader();
-  rd.onload = e => {
+  rd.onload = async e => {
     try {
       const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-      let t = null;
-      for (const n of wb.SheetNames){ const sj = XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1}); t = triParse(sj, tipo); if (t) break; }
-      if (!t){ toast('Cabeçalho não reconhecido — esperado: Data · Natureza · Valor Contábil · CNPJ/CPF.'); return; }
-      t.arquivo = f.name; TRI[tipo] = t;
-      triDash(tipo);
-      toast(`${t.itens.length} ${tipo==='venda'?'cliente(s)':'fornecedor(es)'} consolidado(s) de ${t.docs} documento(s) — período ${t.periodo||'?'}. Consultando os enquadramentos na Receita…`);
-      triIntegrarItem2(tipo);                              // v7.32.0: roda todo o processo do item 2 (aba no painel 🚚)
-      triConsultar(tipo, true);                            // v7.31.0: consulta automática a cada nova tabela
+      await triProcessarWorkbook(wb, f.name, tipo);
     } catch(err){ console.error(err); toast('Erro ao ler '+f.name+': '+err.message); }
   };
   rd.readAsArrayBuffer(f);
+}
+// v7.34.3: o processamento do analítico saiu de dentro do leitor de arquivo para poder ser
+// chamado também pelo importador da triagem simples, quando o arquivo é, na verdade, um analítico.
+async function triProcessarWorkbook(wb, nomeArq, tipo){
+    {
+      if (!EMP_GLOBAL || !EMP_GLOBAL.cnpj){
+        if (!await dlgSimNao('Nenhuma empresa selecionada',
+            'A barra do topo está em "— selecione a empresa —".\n\n'
+            + 'A leitura e a consulta na Receita funcionam assim mesmo, mas a análise NÃO poderá ser gravada no histórico nem lançada — '
+            + 'não há empresa dona do arquivo.\n\nSelecione a empresa antes, ou siga só para conferir na tela.',
+            'Seguir assim mesmo', 'Cancelar')) return;
+      }
+      let t = null, sjOk = null;
+      for (const n of wb.SheetNames){ const sj = XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1}); t = triParse(sj, tipo); if (t){ sjOk = sj; break; } }
+      if (!t){ toast('Cabeçalho não reconhecido — esperado: Data · Natureza · Valor Contábil · CNPJ/CPF.'); return; }
+      // v7.34.1: exportação única do Questor (coluna Tipo = Entrada/Saída) — um arquivo alimenta as DUAS abas.
+      // Sem isso os dois lados entrariam somados no mesmo conjunto e a maior parte decidiria o tipo.
+      const cabT = (sjOk[0]||[]).map(c=>String(c||'').trim().toLowerCase());
+      if (cabT.includes('tipo')){
+        const tE = triParse(sjOk, 'compra', 'e'), tS = triParse(sjOk, 'venda', 's');
+        if (!tE && !tS){ toast('A coluna Tipo não trouxe nenhuma linha de Entrada ou de Saída.'); return; }
+        const bl = (x, rot) => !x ? '' : rot + ':\n   ' + x.docs + ' lançamentos · ' + x.itens.length + ' parceiros · R$ '
+          + fmt(x.itens.reduce((a,i)=>a+(+i.valor||0),0)) + '\n   CFOPs: ' + (fornCfopResumo(x.itens)||'—') + '\n';
+        if (!await dlgSimNao('Confirme o que foi lido em "' + nomeArq + '"',
+            'Exportação ÚNICA do Questor (coluna Tipo) — entradas e saídas separadas automaticamente, cada uma na sua aba.\n'
+            + 'Período: ' + ((tE&&tE.periodo)||(tS&&tS.periodo)||'não identificado') + '\n\n'
+            + bl(tE,'ENTRADA → arquivo de compra (fornecedores)')
+            + bl(tS,'SAÍDA → arquivo de venda (clientes)')
+            + '\nConfere? Nada entra na análise antes de você confirmar.',
+            'Confirmar e importar', 'Cancelar')) return;
+        if (tE && !await fornAvisoSobreposicao('compra', tE.periodo)) return;
+        for (const par of [['compra',tE],['venda',tS]]){
+          const x = par[1]; if (!x) continue;
+          x.arquivo = nomeArq; x.tipo = par[0]; TRI[par[0]] = x;
+          triDash(par[0]); triIntegrarItem2(par[0]);
+        }
+        toast('Relatório único importado — ' + (tE?tE.itens.length+' fornecedores':'') + (tE&&tS?' e ':'') + (tS?tS.itens.length+' clientes':'')
+          + '. Consultando os enquadramentos na Receita…');
+        if (tE) await triConsultar('compra', true);
+        if (tS) await triConsultar('venda', true);
+        fornTrocarAba(tE ? 'compra' : 'venda');
+        return;
+      }
+      // v7.34.0 (decisão dele, 16/08): o TIPO sai dos CFOPs do conteúdo, nunca do nome do arquivo,
+      // e é sempre confirmado na tela. Um arquivo chamado "NF_entrada" pode conter saídas.
+      const det = triDetectar(t);
+      const cf = fornCfopResumo(t.itens);
+      const tot = t.itens.reduce((a,i)=>a+(+i.valor||0),0);
+      const ok = await dlgSimNao('Confirme o que foi lido em "' + nomeArq + '"',
+        'Tipo detectado pelos CFOPs: ' + (det.tipo==='venda' ? 'ANALÍTICO DE VENDA (clientes)' : 'ANALÍTICO DE COMPRA (fornecedores)')
+        + (det.tipo!==tipo ? '  ⚠️ diferente do botão usado' : '') + '\n'
+        + 'Período: ' + (t.periodo || 'não identificado') + '\n'
+        + 'Lançamentos: ' + t.docs + '  ·  Parceiros: ' + t.itens.length + '  ·  Total: R$ ' + fmt(tot) + '\n'
+        + (cf ? 'CFOPs: ' + cf + '\n' : '')
+        + (det.misto ? '\nO arquivo mistura CFOPs de entrada e de saída — confira antes de confirmar.\n' : '')
+        + '\nConfere? Nada entra na análise antes de você confirmar.',
+        'Confirmar e importar', 'Cancelar');
+      if (!ok) return;
+      tipo = det.tipo; t.tipo = tipo;
+      t.arquivo = nomeArq; TRI[tipo] = t;
+      if (!await fornAvisoSobreposicao(tipo, t.periodo)) return;
+      triDash(tipo);
+      toast(`${t.itens.length} ${tipo==='venda'?'cliente(s)':'fornecedor(es)'} consolidado(s) de ${t.docs} documento(s) — período ${t.periodo||'?'}. Consultando os enquadramentos na Receita…`);
+      triIntegrarItem2(tipo);                              // v7.32.0: roda todo o processo do item 2 (aba no painel 🚚)
+      await triConsultar(tipo, true);                       // v7.31.0: consulta automática a cada nova tabela
+    }
 }
 // v7.32.0: o analítico importado no card da triagem roda TODO o processo do item 2 —
 // vira uma ABA do painel 🚚 "Análise de fornecedores" (compra = fornecedores; venda = clientes PJ,
@@ -1531,7 +1708,7 @@ async function triConsultar(tipo, auto){
     if (i.classe && i.classe!=='nid') continue;
     $id('tri-prog-'+tipo).textContent = `Consultando ${++n} de ${alvos.length}…`;
     const r = await consultarUm(i.cnpj);
-    Object.assign(i, { situacao:r.situacao||'', razao: r.razao_social || i.razao, classe: fornClasse(r) });
+    Object.assign(i, { situacao:r.situacao||'', razao: r.razao_social || i.razao, cnae: r.cnae||'', classe: fornClasse(r) });
     if (n<alvos.length) await new Promise(rs=>setTimeout(rs,350));
   }
   $id('tri-prog-'+tipo).textContent = 'Concluído.';
@@ -1585,7 +1762,7 @@ function triDash(tipo){
     </tbody></table></div><div>
     <b style="font-size:12px">Maiores ${venda?'clientes':'fornecedores'}</b>
     <table class="tbl"><thead><tr><th>${venda?'Cliente':'Fornecedor'}</th><th>Enquadr.</th><th style="text-align:right">Valor</th></tr></thead><tbody>
-    ${T.itens.filter(i=>i.classe!=='proprio').slice(0,10).map(i=>`<tr><td style="white-space:nowrap">${i.razao?esc(i.razao.slice(0,26)):fmtCNPJ(i.cnpj)}</td><td>${(TRI_ROT[i.classe||'nid']||TRI_ROT.nid)[0]}</td><td style="text-align:right">${fmt(i.valor)}</td></tr>`).join('')}
+    ${T.itens.filter(i=>i.classe!=='proprio' && !i.generico).slice(0,10).map(i=>`<tr><td style="white-space:nowrap">${i.razao?esc(i.razao.slice(0,26)):fmtCNPJ(i.cnpj)}</td><td>${(TRI_ROT[i.classe||'nid']||TRI_ROT.nid)[0]}</td><td style="text-align:right">${fmt(i.valor)}</td></tr>`).join('')}
     </tbody></table></div></div>`;
   if (tipo==='compra' && T._salvo) h += `<div class="hint" style="margin-top:6px">Gravada, esta triagem alimenta os campos de compras da aba <b>Reforma</b> (crédito de IBS/CBS) — vale a mais recente entre ela e o "Totais ICMS por Fornecedor".</div>`;
   box.innerHTML = h;                                       // v7.33.0: gravar/lançar moram nas ações do painel (fo-acoes)
@@ -1597,10 +1774,10 @@ async function triSalvar(tipo, auto){
     await garantirEmpresa(T.cnpjEmpresa, T.nomeEmpresa||null, null);
     const S = triStats(T);
     await supa('POST','atp_fornec',{ body:{ cnpj: T.cnpjEmpresa, dados: { periodo: T.periodo, tipo, origem:'Analítico por documento (Questor)', arquivo: T.arquivo||'',
-      itens: T.itens.map(i=>({cnpj:i.cnpj, razao:i.razao, classe:i.classe, valor:i.valor, cfops:i.cfops})),
+      itens: T.itens.map(i=>({cnpj:i.cnpj, razao:i.razao, classe:i.classe, valor:i.valor, cfops:i.cfops, generico:!!i.generico})),
       stats:{ tot:S.tot, pj:S.pj, pf:S.pf, exp:S.exp, proprio:S.proprio } } } });
     T._salvo = new Date().toISOString(); triDash(tipo);
-    toast(`Triagem de ${tipo} gravada ✓ — alimenta o parecer, a Reforma e o Resumo Estatístico de Fornecedores e Clientes.`);
+    toast(`Consulta de ${tipo} gravada ✓ — alimenta o parecer, a Reforma e o Resumo Estatístico.`);
     return true;
   } catch(e){ if(!auto) alert('Erro ao gravar a triagem: '+e.message); return false; }
 }
@@ -1616,7 +1793,7 @@ async function fornSalvar(auto){
     await garantirEmpresa(FO.cnpjEmpresa, FO.nomeEmpresa||null, null);
     const stats = fornStatsCalc(FO.itens);
     await supa('POST','atp_fornec',{ body:{ cnpj: FO.cnpjEmpresa, dados: { periodo: FO.periodo, tipo: FO_TIPO, destino: FO.destino||null, lotes: FO.lotes||[], origem:'Totais ISS por Fornecedor/Cliente',
-      itens: FO.itens.map(i=>({cnpj:i.cnpj, razao:i.razao, classe:i.classe, valor:i.valor, situacao:i.situacao||''})), stats } } });
+      itens: FO.itens.map(i=>({cnpj:i.cnpj, razao:i.razao, classe:i.classe, valor:i.valor, cfops:i.cfops||{}, situacao:i.situacao||''})), stats } } });
     FO._salvo = new Date().toISOString(); fornAcoes();
     toast('Análise salva no histórico da empresa ✓ (botão 📊 em Empresas; aplique na aba Reforma).');
     return true;
@@ -1859,6 +2036,63 @@ async function fornLancarCompras(){           // revenda → Compras, na linha i
   const tot = d.itens.reduce((s,i)=>s+i.valor,0);
   // a baixa de custos (CMV) NÃO é escrita aqui — continua vindo do balancete
   if (await fornRatear('compras', campo, tot, d.periodo, rot)) anAplicado();
+}
+// ═══ v7.34.0: LANÇAMENTO POR CFOP ═══
+// Base global para os CFOPs de significado fixo; o que não estiver mapeado é PERGUNTADO
+// e a resposta fica gravada NA EMPRESA (não vira regra geral do app) — decisão dele, 16/08.
+function foCfopTotais(){
+  const d = FOT[FO_TIPO]; if (!d) return null;
+  const itens = (d.analitico && TRI[FO_TIPO]) ? TRI[FO_TIPO].itens.filter(i=>i.classe!=='proprio') : d.itens;
+  const por = {}; let semCfop = 0;
+  for (const i of itens){
+    const cf = i.cfops || null;
+    if (!cf || !Object.keys(cf).length){ semCfop += (+i.valor||0); continue; }
+    for (const [c,v] of Object.entries(cf)) por[c] = (por[c]||0) + (+v||0);
+  }
+  return { por, semCfop:Math.round(semCfop*100)/100, periodo:d.periodo, cnpjEmpresa:d.cnpjEmpresa, itens };
+}
+async function foLancar(){
+  const base = foCfopTotais(); if (!base) return;
+  const cnpjE = limparCNPJ(base.cnpjEmpresa||'');
+  if (!AN || !AN.cnpj || limparCNPJ(AN.cnpj) !== cnpjE){
+    toast('Abra a análise da empresa ' + (cnpjE?fmtCNPJ(cnpjE):'da consulta') + ' primeiro (módulo Análise Atual).'); return; }
+  if (anTravada()){ toast('Análise FECHADA 🔒 — reabra (🔓) para lançar.'); return; }
+  const mapa = cfopMapLer(cnpjE);
+  const cfops = Object.entries(base.por).sort((a,b)=>b[1]-a[1]);
+  const totGeral = cfops.reduce((a,x)=>a+x[1],0) + base.semCfop || 1;
+  let gravar = false;
+  for (const [c,v] of cfops){
+    if (cfopDestino(c, mapa)) continue;
+    const donos = base.itens.filter(i=>i.cfops && i.cfops[c]).sort((a,b)=>(b.cfops[c]||0)-(a.cfops[c]||0));
+    const exemplos = donos.slice(0,3).map(i=>String(i.razao||fmtCNPJ(i.cnpj)).slice(0,34)).join(' · ');
+    const mono = donos.some(i=>CNAE_MONO.test(i.cnae||''));
+    const r = await dlg('CFOP ' + c + ' — para onde vai?',
+      'Este CFOP ainda não tem destino definido para ' + (cnpjE?fmtCNPJ(cnpjE):'esta empresa') + '.\n\n'
+      + 'Valor: R$ ' + fmt(v) + '  (' + (v/totGeral*100).toFixed(1).replace('.',',') + '% do arquivo) · ' + donos.length + ' parceiro(s)\n'
+      + 'Principais: ' + (exemplos||'—') + '\n\n'
+      + (mono ? 'Há parceiro com CNAE de combustível, bebida, medicamento, autopeça ou cosmético neste CFOP — avalie "Compras monofásicas". O critério legal, porém, é o NCM do produto.\n\n' : '')
+      + 'A resposta fica gravada NESTA empresa e será reaplicada nas próximas importações.',
+      [...CFOP_OPCOES, {rotulo:'Cancelar o lançamento', valor:null}]);
+    if (r === null) return;
+    mapa[c] = r; gravar = true;
+  }
+  if (gravar) cfopMapGravar(cnpjE, mapa);
+  const bal = {};
+  for (const [c,v] of cfops){ const k = cfopDestino(c, mapa); bal[k] = (bal[k]||0) + v; }
+  if (base.semCfop > 0.005) bal['despesas.outras'] = (bal['despesas.outras']||0) + base.semCfop;   // Totais ISS não traz CFOP
+  const linhas = Object.entries(bal).filter(x=>x[1]>0.005).sort((a,b)=>b[1]-a[1]);
+  const lanc = linhas.filter(x=>x[0]!=='fora');
+  if (!lanc.length){ toast('Nada a lançar — todos os CFOPs deste arquivo estão marcados como "não lançar".'); return; }
+  const resumo = linhas.map(x=>'• ' + (CFOP_ROT[x[0]]||x[0]) + ': R$ ' + fmt(x[1])).join('\n');
+  if (!await dlgSimNao('Confirme o lançamento',
+      'Período ' + (base.periodo||'não identificado') + '\n\n' + resumo
+      + '\n\nOs valores são rateados pelos meses do período, com trilha de origem R.', 'Lançar', 'Cancelar')) return;
+  let ok = false;
+  for (const [k,v] of lanc){
+    const pt = k.split('.');
+    if (await fornRatear(pt[0], pt[1], Math.round(v*100)/100, base.periodo, CFOP_ROT[k]||k)) ok = true;
+  }
+  if (ok) anAplicado();
 }
 // v7.29.0: a triagem de compra (analítico por documento) também lança na aba Compras da análise
 async function triLancarCompras(){
@@ -5092,7 +5326,7 @@ async function rlCnpjRender(cnpj){
   const li = (r,v) => (v!=null && v!=='' && v!=='undefined') ? {html:`<tr><td class="rot" style="white-space:nowrap">${r}</td><td colspan="4">${v}</td></tr>`, custo:1} : null;
   const dtBR = v => { if(!v) return ''; const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})/); return m?`${m[3]}/${m[2]}/${m[1]}`:String(v); };
   const B = [];
-  B.push(ppDocCab('Resumo Estatístico de Fornecedores e Clientes', d?d.razao_social:'', cnpj));
+  B.push(ppDocCab('Resumo Estatístico', d?d.razao_social:'', cnpj));
   if (d){
     B.push({ htmlFixo:`<div class="pp-h2" style="font-weight:700;margin:6px 0">1. Identificação da empresa</div>`, custoFixo:2,
       thead:'<tr><th style="width:44mm;text-align:left">Campo</th><th colspan="4" style="text-align:left">Informação</th></tr>',
@@ -5127,21 +5361,39 @@ async function rlCnpjRender(cnpj){
     const barra = ordem.map(c=>`<div style="height:10px;width:${(porC[c].v/tot*100).toFixed(1)}%;background:${ROT[c][1]}"></div>`).join('');
     const leg = ordem.map(c=>`<span style="font-size:8.5pt;margin-right:10px"><span style="display:inline-block;width:8px;height:8px;background:${ROT[c][1]};border-radius:2px"></span> ${ROT[c][0]}: ${porC[c].n} forn. · ${fmtR(porC[c].v)} (${(porC[c].v/tot*100).toFixed(1).replace('.',',')}%)</span>`).join('');
     const pctCred = ((porC.normal?porC.normal.v:0)/tot*100).toFixed(1).replace('.',',');
+    // v7.34.0: o dashboard da tela também vai para o relatório — CFOPs, exportação e B2B×B2C
+    const ehVenda = /clientes|venda/i.test(titulo);
+    const cfops = {}; for (const i of itens) for (const [c,v] of Object.entries(i.cfops||{})) cfops[c]=(cfops[c]||0)+(+v||0);
+    const cfl = Object.entries(cfops).sort((a,b)=>b[1]-a[1]);
+    const expV = cfl.filter(x=>TRI_EXP_CFOPS.test(x[0])).reduce((a,x)=>a+x[1],0);
+    const pjV = itens.filter(i=>i.classe!=='pf'&&i.classe!=='proprio').reduce((a,i)=>a+(+i.valor||0),0);
+    const pcx = v => (v/tot*100).toFixed(1).replace('.',',');
+    const cardsExtra = (ehVenda ? `<div class="pp-card" style="flex:1;min-width:100px"><div class="t">B2B (CNPJ)</div><div class="v">${pcx(pjV)}%</div></div>
+        <div class="pp-card" style="flex:1;min-width:100px"><div class="t">B2C (consumidor)</div><div class="v">${pcx(tot-pjV)}%</div></div>` : '')
+      + (expV>0.005 ? `<div class="pp-card" style="flex:1;min-width:110px"><div class="t">Exportação (imune)</div><div class="v">${pcx(expV)}%</div></div>` : '');
+    const tabCfop = cfl.length ? `<table class="pp-tab" style="margin:6px 0;font-size:8pt"><thead><tr><th style="text-align:left">CFOP</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">%</th><th style="text-align:left">CFOP</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">%</th></tr></thead><tbody>`
+      + (() => { let out=''; for (let k=0;k<cfl.length;k+=2){ const a=cfl[k], b=cfl[k+1];
+          const cel = x => x ? `<td style="text-align:left">${x[0]}${TRI_EXP_CFOPS.test(x[0])?' (exp.)':''}</td><td style="text-align:right">${fmt(x[1])}</td><td style="text-align:right">${pcx(x[1])}%</td>` : '<td></td><td></td><td></td>';
+          out += `<tr>${cel(a)}${cel(b)}</tr>`; } return out; })()
+      + `</tbody></table>` : '';
     const fixo = `<div class="pp-h2" style="font-weight:700;margin:10px 0 6px">${nSec++}. ${titulo}</div>
       <div class="hint" style="margin-bottom:6px">Consulta de ${new Date(r.consultado_em).toLocaleDateString('pt-BR')}${r.dados.periodo?' · período '+esc(r.dados.periodo):''} — enquadramento pelos dados abertos da RFB.</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0">
-        <div class="pp-card" style="flex:1;min-width:80px"><div class="t">Fornecedores</div><div class="v">${itens.length}</div></div>
+        <div class="pp-card" style="flex:1;min-width:80px"><div class="t">${ehVenda?'Clientes':'Fornecedores'}</div><div class="v">${itens.length}</div></div>
         <div class="pp-card" style="flex:2;min-width:140px"><div class="t">Valor no período</div><div class="v">${fmtR(tot)}</div></div>
         <div class="pp-card" style="flex:2;min-width:170px"><div class="t">Regime normal — crédito pleno esperado</div><div class="v">${pctCred}%</div></div>
+        ${cardsExtra}
       </div>
-      <div style="display:flex;border-radius:4px;overflow:hidden;margin:4px 0">${barra}</div><div style="margin-bottom:4px">${leg}</div>`;
-    B.push({ htmlFixo: fixo, custoFixo: 9, estilo:'font-size:8.5pt',
+      <div style="display:flex;border-radius:4px;overflow:hidden;margin:4px 0">${barra}</div><div style="margin-bottom:4px">${leg}</div>
+      ${tabCfop}`;
+    B.push({ htmlFixo: fixo, custoFixo: 9 + Math.ceil(cfl.length/2) + (cfl.length?2:0), estilo:'font-size:8.5pt',
       thead:'<tr><th style="text-align:left">CNPJ</th><th style="text-align:left">Fornecedor</th><th style="text-align:left">Enquadramento</th><th>Valor (R$)</th><th>% do total</th></tr>',
       linhas: [...itens].sort((a,b)=>(+b.valor||0)-(+a.valor||0)).map(i=>{const rr=ROT[i.classe||'nid']||ROT.nid;
         return {html:`<tr><td style="text-align:left;white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td style="text-align:left">${esc(i.razao)}</td><td style="text-align:left">${rr[0]}</td><td>${fmt(i.valor)}</td><td>${(i.valor/tot*100).toFixed(1).replace('.',',')}%</td></tr>`, custo:1};}) });
   };
-  if (F){ tipoBloco(F.revenda,'Fornecedores de revenda (entradas de mercadorias)'); tipoBloco(F.servico,'Fornecedores de serviços e despesas');
-    tipoBloco(F.compra,'Triagem de compra — analítico por documento'); tipoBloco(F.venda,'Triagem de venda — clientes (analítico por documento)'); }   // v7.25.0
+  if (F){ tipoBloco(F.compra,'Fornecedores — relação completa (arquivo de compra)');
+    tipoBloco(F.venda,'Clientes — relação completa (arquivo de venda)');
+    tipoBloco(F.revenda,'Fornecedores — Totais de entrada (ICMS)'); tipoBloco(F.servico,'Fornecedores de serviços e despesas (Totais ISS)'); }   // v7.34.0
   else B.push({ html:'<div class="hint" style="margin-top:8px">Nenhuma análise de fornecedores salva para esta empresa — importe o relatório de fornecedores na Consulta CNPJ (🚚) e grave a consulta.</div>', custo:3 });
   B.push({ html:`<div class="hint" style="margin-top:8px">No IVA dual, o crédito de IBS/CBS do adquirente depende do regime do fornecedor: regime normal gera crédito pleno destacado no documento fiscal; Simples Nacional, crédito limitado ao percentual da faixa do fornecedor (LC 214/2025; Res. CGSN 190/2026, art. 58); MEI e pessoas físicas, em regra, não geram crédito.</div>
     <div class="hint" style="margin-top:6px">Fontes: ${fonte||'dados abertos da RFB indisponíveis'}; análises de fornecedores do escritório (com data indicada por consulta). Documento gerado em ${new Date().toLocaleString('pt-BR')} · Artecon Artes Contábeis.</div>`, custo:5 });
@@ -5324,6 +5576,55 @@ function rlQuadroTribPgdas(){
 }
 function rlChart(id, cfg){ const el=$id(id); if(!el||!window.Chart) return; RL_CHARTS.push(new Chart(el, cfg)); }
 const CORES = { simples:'#1a5276', lp:'#b9770e', lr:'#943126', ok:'#1e8449', cinza:'#7f8c8d' };
+
+// ═══ v7.34.0: página única do parecer — resumo das consultas de compra E de venda,
+// com os dashboards e os 5 maiores de cada lado (cabe em uma folha: ~24 das 26 unidades) ═══
+function parecerPagParceiros(secao, prox){
+  const F = RL.forn; if (!F) return '';
+  const rC = F.compra || F.revenda || F.servico || null, rV = F.venda || null;
+  if (!rC && !rV) return '';
+  const ROT = { normal:['Regime normal','#b9770e'], simples:['Simples Nacional','#1a5276'], mei:['MEI','#1e8449'],
+                pf:['Consumidor final (CPF)','#7f8c8d'], nid:['Não identificado','#95a5a6'] };
+  const prep = r => {
+    if (!r || !r.dados) return null;
+    const itens = (r.dados.itens||[]).filter(i=>i.classe!=='proprio' && !i.generico);
+    const tot = itens.reduce((a,i)=>a+(+i.valor||0),0) || 1;
+    const porC = {}; for (const i of itens){ const c=i.classe||'nid'; porC[c]=porC[c]||{n:0,v:0}; porC[c].n++; porC[c].v+=(+i.valor||0); }
+    const cfops = {}; for (const i of itens) for (const [c,v] of Object.entries(i.cfops||{})) cfops[c]=(cfops[c]||0)+(+v||0);
+    const exp = Object.entries(cfops).filter(x=>TRI_EXP_CFOPS.test(x[0])).reduce((a,x)=>a+x[1],0) || (+((r.dados.stats||{}).exp)||0);
+    const pj = itens.filter(i=>i.classe!=='pf').reduce((a,i)=>a+(+i.valor||0),0);
+    const top = [...itens].sort((a,b)=>(+b.valor||0)-(+a.valor||0)).slice(0,5);
+    return { r, itens, tot, porC, exp, pj, top, periodo:r.dados.periodo||'' };
+  };
+  const C = prep(rC), V = prep(rV);
+  const pcv = (v,t) => (v/t*100).toFixed(1).replace('.',',');
+  const faixa = (P, rot, extra) => !P ? '' : `<div style="margin-top:4px"><b style="font-size:9.5pt">${rot}</b>
+    <span class="hint" style="font-size:8pt">consulta de ${new Date(P.r.consultado_em).toLocaleDateString('pt-BR')}${P.periodo?' · período '+esc(P.periodo):''}</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0">
+      <div class="pp-card" style="flex:1;min-width:78px"><div class="t">${rot.indexOf('Vendas')===0?'Clientes':'Fornecedores'}</div><div class="v">${P.itens.length}</div></div>
+      <div class="pp-card" style="flex:2;min-width:120px"><div class="t">Valor no período</div><div class="v">${fmtR(P.tot)}</div></div>
+      ${extra}
+      ${P.exp>0.005?`<div class="pp-card" style="flex:1;min-width:96px"><div class="t">Exportação (imune)</div><div class="v">${pcv(P.exp,P.tot)}%</div></div>`:''}
+    </div></div>`;
+  const tabela = (P, rot) => !P ? '' : `<div style="margin-top:5px"><b style="font-size:9pt">5 maiores ${rot}</b>
+    <table class="pp-tab" style="margin-top:3px;font-size:8pt"><thead><tr><th style="text-align:left">${rot==='clientes'?'Cliente':'Fornecedor'}</th><th>CNPJ/CPF</th><th style="text-align:left">Enquadramento</th><th style="text-align:right">Valor</th><th style="text-align:right">%</th></tr></thead><tbody>
+    ${P.top.map(i=>`<tr><td style="text-align:left">${esc(String(i.razao||'').slice(0,28))||fmtCNPJ(i.cnpj)}</td><td style="white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td style="text-align:left">${(ROT[i.classe||'nid']||ROT.nid)[0]}</td><td style="text-align:right">${fmt(i.valor)}</td><td style="text-align:right">${pcv(i.valor,P.tot)}%</td></tr>`).join('')}
+    <tr style="font-weight:700"><td style="text-align:left" colspan="3">Concentração dos 5 maiores</td><td style="text-align:right">${fmt(P.top.reduce((a,i)=>a+(+i.valor||0),0))}</td><td style="text-align:right">${pcv(P.top.reduce((a,i)=>a+(+i.valor||0),0),P.tot)}%</td></tr>
+    </tbody></table></div>`;
+  const b2b = V ? +pcv(V.pj, V.tot).replace(',','.') : 0;
+  return `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
+    ${secao(prox(),'Clientes e fornecedores — a decisão do crédito')}
+    <p class="pp-p" style="font-size:9pt;margin-bottom:4px">No IVA dual o crédito de IBS/CBS depende de <b>quem vende</b> para a empresa — aquisições do regime regular geram crédito pleno, do Simples Nacional crédito limitado à faixa do fornecedor (LC 214/2025; Res. CGSN 190/2026, art. 58), de MEI e pessoa física, em regra, nenhum — e a decisão de regime depende de <b>quem compra</b> dela: cliente pessoa jurídica no regime regular tende a exigir o crédito destacado, enquanto o consumidor final não o aproveita. O retrato abaixo vem das consultas do escritório sobre os analíticos do período.</p>
+    ${faixa(C, 'Compras e fornecedores', C&&C.porC.normal?`<div class="pp-card" style="flex:2;min-width:130px"><div class="t">Regime normal — crédito pleno</div><div class="v">${pcv(C.porC.normal.v,C.tot)}%</div></div>`:'')}
+    ${faixa(V, 'Vendas e clientes', V?`<div class="pp-card" style="flex:1;min-width:96px"><div class="t">B2B (CNPJ)</div><div class="v">${pcv(V.pj,V.tot)}%</div></div><div class="pp-card" style="flex:1;min-width:96px"><div class="t">B2C (consumidor)</div><div class="v">${pcv(V.tot-V.pj,V.tot)}%</div></div>`:'')}
+    ${tabela(V, 'clientes')}
+    ${tabela(C, 'fornecedores')}
+    <p class="pp-p" style="font-size:9pt;margin-top:6px">${!V ? 'Sem analítico de venda gravado, a leitura da clientela não pôde ser feita nesta edição do parecer.'
+      : (b2b>=50 ? 'Com a maior parte do faturamento destinada a pessoas jurídicas, a pressão pelo crédito de IBS/CBS tende a ser relevante — os cenários <b>híbrido</b> e <b>regime regular</b> merecem atenção especial, e a permanência integral no Simples pode custar competitividade junto a esses clientes.'
+                 : 'Com a maior parte do faturamento destinada ao consumidor final, a ausência de crédito ao cliente tem impacto comercial reduzido — a permanência integral no Simples tende a preservar a competitividade, e a comparação financeira decide.')}${V&&V.exp>0.005?' As receitas de exportação identificadas são imunes ao IBS/CBS (LC 214, art. 8º) e não pressionam a decisão do crédito.':''}${(V&&V.top.length&&(V.top.reduce((a,i)=>a+(+i.valor||0),0)/V.tot)>=0.6)?' A concentração do faturamento nos maiores clientes é elevada: a decisão que eles tomarem na transição altera diretamente o resultado desta análise.':''}</p>
+    <div class="hint" style="font-size:8pt;margin-top:3px">Enquadramentos consultados nos dados abertos da RFB nas datas indicadas — sujeitos a alteração. O crédito efetivo dependerá do destaque em documento fiscal a partir de 2026/2027.</div>
+  </div></div>`;
+}
 
 // ═══ v7.20.0: página do parecer — resumo estatístico de fornecedores ═══
 function parecerPagFornecedores(secao, prox){
@@ -5624,11 +5925,8 @@ function rlParecer(){
     <div class="pp-final">${TX.recomendacao}</div>
   </div></div>`;
 
-  // ── PÁG (v7.20.0): dashboard de fornecedores — só quando há consulta salva ──
-  h += parecerPagFornecedores(secao, ()=>++NS);
-
-  // ── PÁG (v7.25.0): perfil da clientela — só quando há triagem de venda gravada ──
-  h += parecerPagClientela(secao, ()=>++NS);
+  // ── PÁG (v7.34.0): as duas consultas em UMA página — dashboards + 5 maiores de cada lado ──
+  h += parecerPagParceiros(secao, ()=>++NS);
 
   // ── PÁG: pontos de atenção + prazos + notas + assinatura (v7.18.1: página própria) ──
   h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
@@ -6208,7 +6506,7 @@ function rlRender() {
     $id('rl-cab').style.display = cnpjSel ? 'block' : 'none';
     if (!cnpjSel){ $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Selecione a empresa</h2><p>O relatório traz o cadastro do CNPJ e o resumo estatístico completo de fornecedores, no layout do parecer.</p></div>'; return; }
     const empC = RL.empresa || EMPRESAS.find(e=>e.cnpj===cnpjSel) || {};
-    $id('rl-titulo').textContent = 'Resumo Estatístico de Fornecedores e Clientes';
+    $id('rl-titulo').textContent = 'Resumo Estatístico';
     $id('rl-sub').innerHTML = `<b>${esc(empC.razao_social||'')}</b> · CNPJ ${fmtCNPJ(cnpjSel)} · Artecon Artes Contábeis`;
     rlCnpjRender(cnpjSel);
     return;
