@@ -684,9 +684,15 @@ console.log('\n■ v7.30.1 — Consulta CNPJ no layout v7.26 (card próprio) e s
     });
     let erroFn = '';
     try { await vm.runInContext('supaFn("admin-senha", {})', ctx); } catch(e){ erroFn = e.message; }
+    // v7.33.1: gerar-parecer usa o limite PRÓPRIO (150s de fábrica); encurtado no teste p/ simular
+    const limParecer = vm.runInContext("SUPAFN_T.porFn['gerar-parecer']", ctx);
+    vm.runInContext("SUPAFN_T.porFn['gerar-parecer']=70;", ctx);
+    let erroIA = '';
+    try { await vm.runInContext('supaFn("gerar-parecer", {})', ctx); } catch(e){ erroIA = e.message; }
+    vm.runInContext("SUPAFN_T.porFn['gerar-parecer']=150000;", ctx);
     ctx.fetch = fetchOrig;
     vm.runInContext('SUPAFN_T.fn=12000;', ctx);
-    return { tv27, tc27, tn27, dashC, erroFn };
+    return { tv27, tc27, tn27, dashC, erroFn, limParecer, erroIA };
   })();
 }
 
@@ -1000,6 +1006,9 @@ console.log('\n■ Integridade da interface');
   chk('v7.26.2 · supaFn: função pendurada gera erro LOCALIZADO (nome da função + orientação aos Logs)',
     t27 && /admin-senha/.test(t27.erroFn) && /não respondeu/.test(t27.erroFn) && /Logs/.test(t27.erroFn),
     t27?String(t27.erroFn).slice(0,90):'—');
+  chk('v7.33.1 · gerar-parecer tem limite PRÓPRIO de 150s (a IA demora) e a mensagem usa o limite certo',
+    t27 && t27.limParecer===150000 && /gerar-parecer/.test(t27.erroIA||'') && /não respondeu/.test(t27.erroIA||''),
+    t27?('lim='+t27.limParecer):'—');
   const og = await Promise.race([RES_ORIG, new Promise(r=>setTimeout(()=>r(null), 8000))]);
   const ogErr = typeof og==='string' ? og : '';
   chk('v7.28.0 · grade: anSet marca D e o ⇉ (repetir janeiro) herda a origem nos 12 meses',
