@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.33.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.33.1</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -646,7 +646,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.33.0</b> <span class="badge ok">atual</span></td><td>17/08/2026</td><td><b>Triagem de venda × compra INCORPORADA ao item 2 — tela única.</b> O card avulso "Triagem de venda × compra — analíticos por documento" <b>deixou de existir</b>: agora tudo vive no <b>"2. Informe os CNPJs — triagem ou análise de fornecedores"</b>. As abas <b>📄 Analítico de compra</b> e <b>👥 Analítico de venda — clientes</b> ficam permanentemente ao lado das abas de serviço e revenda, e <b>o próprio botão de importar do painel</b> muda conforme a aba ("Importar analítico de FORNECEDORES/CLIENTES"). Importou → <b>consulta automática na Receita</b> (cache de 30 dias, progresso na tela) → o painel 🚚 abre com o <b>dashboard completo do analítico</b> (regimes, B2B×B2C, CFOPs com exportação destacada, maiores parceiros, crédito estimado) <b>mais a relação CNPJ a CNPJ</b> com o enquadramento — e as ações no topo: "💾 Salvar análise no histórico" e, na compra, "➕ Lançar total em Compras" com a pergunta dos serviços tomados (1933/2933 → Despesas › Outras) e trilha de origem R. A aba de clientes segue <b>sem lançamento</b> — informa o parecer, os campos de vendas da Reforma e o Resumo Estatístico. "Limpar tudo" zera as quatro abas. Motor intocado — 🔏 lacre mantém o selo.</td></tr>
+                    <tr><td><b>v7.33.1</b> <span class="badge ok">atual</span></td><td>17/08/2026</td><td><b>Parecer com IA voltou a concluir — tempo-limite por função.</b> O limite de 12 segundos criado na v7.26.2 (para diagnosticar funções travadas) estava sendo aplicado a <b>todas</b> as chamadas — inclusive ao <b>gerar-parecer</b>, que usa a IA e legitimamente leva de 20 a 60 segundos para escrever os textos: gerações que estavam funcionando eram <b>abortadas no meio</b> com a mensagem "não respondeu em 12s". Agora o limite é <b>por função</b>: <b>gerar-parecer 150s</b>, <b>atualizar-classtrib 90s</b>, demais (como admin-senha) seguem em 12s. A mensagem de erro também melhorou: informa o limite usado e orienta que, se a invocação aparece nos Logs, o problema é na execução (ver o erro do log) — e não no deploy.</td></tr>
+                    <tr><td><b>v7.33.0</b></td><td>17/08/2026</td><td><b>Triagem de venda × compra INCORPORADA ao item 2 — tela única.</b> O card avulso "Triagem de venda × compra — analíticos por documento" <b>deixou de existir</b>: agora tudo vive no <b>"2. Informe os CNPJs — triagem ou análise de fornecedores"</b>. As abas <b>📄 Analítico de compra</b> e <b>👥 Analítico de venda — clientes</b> ficam permanentemente ao lado das abas de serviço e revenda, e <b>o próprio botão de importar do painel</b> muda conforme a aba ("Importar analítico de FORNECEDORES/CLIENTES"). Importou → <b>consulta automática na Receita</b> (cache de 30 dias, progresso na tela) → o painel 🚚 abre com o <b>dashboard completo do analítico</b> (regimes, B2B×B2C, CFOPs com exportação destacada, maiores parceiros, crédito estimado) <b>mais a relação CNPJ a CNPJ</b> com o enquadramento — e as ações no topo: "💾 Salvar análise no histórico" e, na compra, "➕ Lançar total em Compras" com a pergunta dos serviços tomados (1933/2933 → Despesas › Outras) e trilha de origem R. A aba de clientes segue <b>sem lançamento</b> — informa o parecer, os campos de vendas da Reforma e o Resumo Estatístico. "Limpar tudo" zera as quatro abas. Motor intocado — 🔏 lacre mantém o selo.</td></tr>
                     <tr><td><b>v7.32.0</b></td><td>17/08/2026</td><td><b>Analíticos integrados ao processo do item 2.</b> Os dois arquivos do card "Triagem de venda × compra" agora rodam <b>todo o processo do "Informe os CNPJs — análise de fornecedores"</b>: ao importar, o analítico vira uma <b>aba do próprio painel 🚚</b> — <b>"📄 Analítico de compra"</b> (fornecedores) e <b>"👥 Analítico de venda — clientes"</b> (clientes PJ) — ao lado das abas de serviço e revenda, com a mesma tela: empresa, período, total conferido, cartões por regime, barra de distribuição, relação completa com o enquadramento de cada CNPJ e o crédito estimado. A <b>consulta na Receita é automática</b> na importação (cache de 30 dias) e atualiza o painel ao concluir; o "Reconsultar" do painel funciona nas abas novas. Os <b>botões do painel valem para os analíticos</b>: "💾 Salvar análise no histórico" (grava a triagem) e, na aba de compra, "➕ Lançar total em Compras da análise" — com a pergunta dos serviços tomados (1933/2933 → Despesas › Outras) e trilha de origem R. A aba de <b>clientes não gera lançamento</b> (decisão de 16/08): informa o parecer, os campos de vendas da Reforma e o Resumo Estatístico. O card da triagem continua no lugar, com seus dashboards — nada foi removido; "Limpar tudo" agora zera também as duas abas novas. Motor intocado — 🔏 lacre mantém o selo.</td></tr>
                     <tr><td><b>v7.31.0</b></td><td>16/08/2026</td><td><b>Triagem com a esteira completa do item 2</b> (conforme relatório de melhoria aprovado). (1) <b>Consulta automática na Receita</b>: ao importar qualquer analítico, o app consulta os CNPJs sozinho — cache de 30 dias primeiro (instantâneo), Receita nos novos, com progresso na tela; a pergunta de confirmação deixou de existir e o botão "Consultar enquadramentos" virou reexecução manual. (2) <b>Serviços tomados separados</b>: no "➕ Lançar total nas Compras", os CFOPs <b>1933/2933</b> são identificados e o app pergunta se deseja lançá-los <b>em Despesas › Outras</b>, separados das mercadorias — respondendo "não", ficam de fora; as mercadorias seguem para a aba Compras no destino escolhido (tudo com trilha de origem R). (3) O dashboard da compra ganhou o <b>crédito de IBS/CBS estimado no regime pleno</b> (regime normal à alíquota cheia + Simples/MEI pelo art. 58, 1ª faixa), como no painel do item 2. (4) <b>A triagem de venda não lança nada</b> — só informa: preenche automaticamente os campos <b>Vendas para PF / PJ Simples / PJ LR-LP</b> da aba Reforma (respeitando valores já digitados, com nota explicativa da leitura da cadeia), segue alimentando a página da clientela do parecer e o relatório estatístico. (5) O relatório foi renomeado para <b>"Resumo Estatístico de Fornecedores e Clientes"</b>, com os blocos um abaixo do outro: identificação, quadro societário, fornecedores (revenda, serviços), triagem de compra e clientes (triagem de venda). Motor de cálculo intocado — o 🔏 lacre mantém o selo.</td></tr>
                     <tr><td><b>v7.30.1</b></td><td>16/08/2026</td><td><b>Consulta CNPJ de volta ao layout da v7.26.</b> A unificação da v7.27.0 foi <b>desfeita a pedido</b>: o card <b>"Triagem de venda × compra — analíticos por documento"</b> voltou como estava, com os seus dois botões próprios ("Importar analítico de clientes" e "Importar analítico de fornecedores"), e o item 2 ("Informe os CNPJs") voltou a receber apenas os "Totais ISS/ICMS por Fornecedor/Cliente" e listas de CNPJs, como na v7.26.0. <b>Permanece tudo o mais do pacote</b>: trilha de origem por campo (v7.28.0), crédito do art. 58 e triagem de compra alimentando a Reforma e a aba Compras (v7.29.0 — os botões "Gravar triagem" e "➕ Lançar total nas Compras" continuam no dashboard da triagem), CBS 9,11% no biênio (v7.29.1) e o 🔏 Lacre do motor (v7.30.0, selo inalterado — o motor não foi tocado).</td></tr>
@@ -811,22 +812,26 @@ async function garantirToken(forcar=false){
 // assim vier 401 (token caducou no meio do caminho), renova à força e repete UMA vez.
 // v7.26.2: timeout POR ETAPA — quando algo pendura, o erro DIZ onde travou
 // (renovação da sessão × a própria função × bloqueio antes de chegar / CORS).
-const SUPAFN_T = { ren: 10000, fn: 12000 };        // ms — a suíte de testes encurta para simular
+// v7.33.1: o limite de 12s (v7.26.2) matava o gerar-parecer — a IA legitimamente leva 20-60s
+// para escrever os textos. Limite POR FUNÇÃO: generoso para as demoradas, curto para o resto.
+const SUPAFN_T = { ren: 10000, fn: 12000,
+  porFn: { 'gerar-parecer': 150000, 'atualizar-classtrib': 90000 } };   // ms — a suíte encurta p/ simular
 async function supaFn(nome, payload){
   let __tmr;
   const ren = await Promise.race([ garantirToken().finally(()=>clearTimeout(__tmr)),
     new Promise(res => { __tmr = setTimeout(()=>res('__tempo__'), SUPAFN_T.ren); }) ]);
   if (ren === '__tempo__') throw new Error(`a renovação da sessão não respondeu em ${Math.round(SUPAFN_T.ren/1000)}s — verifique a internet e o Supabase (Auth).`);
   if (!ren) throw new Error('Sessão expirada — saia e entre novamente no app.');
+  const limite = (SUPAFN_T.porFn && SUPAFN_T.porFn[nome]) || SUPAFN_T.fn;   // v7.33.1
   const chamar = async () => {
-    const ab = new AbortController(); const tm = setTimeout(()=>ab.abort(), SUPAFN_T.fn);
+    const ab = new AbortController(); const tm = setTimeout(()=>ab.abort(), limite);
     try {
       return await fetch(`${SUPA_URL}/functions/v1/${nome}`, {
         method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPA_KEY, 'Authorization':'Bearer '+APP.token },
         body: JSON.stringify(payload), signal: ab.signal });
     } catch(e){
       if (e && e.name === 'AbortError')
-        throw new Error(`a função ${nome} não respondeu em ${Math.round(SUPAFN_T.fn/1000)}s — confira em Supabase → Edge Functions → ${nome} → Logs se a chamada chegou (sem invocação registrada = problema no deploy/nome).`);
+        throw new Error(`a função ${nome} não respondeu em ${Math.round(limite/1000)}s${limite>30000?' (limite já ampliado por ser uma função demorada)':''} — confira em Supabase → Edge Functions → ${nome} → Logs: se a chamada aparece lá, o problema é na execução (veja o erro no log); sem invocação registrada = problema no deploy/nome.`);
       throw new Error(`a chamada à função ${nome} foi bloqueada antes de chegar ao servidor (rede/CORS/preflight) — confira se a função existe com esse nome EXATO e se "Verify JWT" está DESLIGADO.`);
     } finally { clearTimeout(tm); }
   };
@@ -3208,7 +3213,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.33.0';
+const APP_VERSAO = '7.33.1';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
