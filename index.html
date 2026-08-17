@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.34.3</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.35.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -644,7 +644,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.34.3</b> <span class="badge ok">atual</span></td><td>17/08/2026</td><td><b>Analítico importado pelo campo errado deixou de virar só uma lista de CNPJs.</b> O campo <b>"Ou importar arquivo (CSV/Excel)"</b> do item 2 pertence à <b>triagem simples</b>: ele apenas colhe os CNPJs da planilha e classifica o regime de cada um — por isso, quem largava ali o analítico do Questor via a consulta rodar normalmente, mas <b>sem dashboard, sem os botões de salvar e de lançar</b>, já que nenhuma aba do painel 🚚 havia recebido dados. Agora, quando o arquivo tem as colunas do analítico (Natureza/CFOP · Valor Contábil · CNPJ), o app <b>pergunta</b> antes: importar como analítico (com o painel completo) ou seguir como triagem simples. (2) A importação do analítico passou a <b>avisar quando não há empresa selecionada</b> na barra do topo: a leitura e a consulta funcionam, mas sem empresa dona não há como gravar no histórico nem lançar — o aviso aparece antes, em vez de o botão de salvar falhar depois. (3) O processamento do analítico virou função própria (<b>triProcessarWorkbook</b>), usada tanto pelos botões de arquivo de compra e de venda quanto por esse novo caminho.</td></tr>
+                    <tr><td><b>v7.35.0</b> <span class="badge ok">atual</span></td><td>17/08/2026</td><td><b>🔴 Correção do período de apuração do Lucro Real (mudança deliberada de regra — motor re-selado).</b> Até a v7.34.3 o motor era <b>híbrido</b>: o IRPJ de 15% e a CSLL de 9% saíam <b>mês a mês</b>, só sobre meses com resultado positivo — o mês negativo era simplesmente descartado —, enquanto o <b>adicional de 10% já usava o resultado líquido do trimestre</b>. Dois períodos de apuração dentro do mesmo cálculo, o que não corresponde a nenhuma modalidade legal e <b>superestimava o imposto</b> sempre que havia mês com prejuízo. (1) A Configuração da empresa ganhou o campo <b>Período de apuração do Lucro Real</b>: <b>trimestral</b> (novo padrão), <b>anual</b> (estimativa com balanço de suspensão/redução e ajuste em 31/12) e <b>mensal — legado</b>, que reproduz o cálculo das versões anteriores ao centavo, para quem precisar refazer parecer já entregue. (2) No trimestral, a base é a <b>soma dos três meses, com os negativos incluídos</b>, e o prejuízo remanescente é compensado nos períodos seguintes com a <b>trava de 30%</b> (Lei 9.065/95, art. 15), que vale inclusive entre trimestres do mesmo ano-calendário; o adicional incide sobre a base <b>depois</b> da compensação, no que exceder R$ 60.000 no trimestre (R$ 240.000 no ano, na modalidade anual). (3) <b>Prejuízo fiscal e base negativa de CSLL passaram a ter saldos próprios e independentes</b>, com saldo inicial editável na configuração — em branco por padrão, porque quem <b>migra do Simples não leva prejuízo fiscal</b>, já que não houve apuração de lucro real anterior. O prejuízo apurado dentro da simulação vale só para aquele ano-base e <b>não é transportado</b>. (4) A Análise Atual e a conferência de cálculos ganharam o quadro <b>"Apuração fiscal do Lucro Real"</b>, com resultado do período, limite de 30%, prejuízo compensado, base tributável, IRPJ, adicional, CSLL e <b>saldo remanescente</b> — e o quadro mensal passou a ser rotulado como <b>resultado gerencial</b>, que não é período de apuração; o tributo do período aparece no <b>mês de fechamento</b> (março/junho/setembro/dezembro), mesmo critério que o adicional já adotava. Na modalidade anual, as <b>antecipações mensais</b> por balanço de suspensão/redução são exibidas à parte, como demonstração de caixa. (5) Novo bloco de <b>alertas de dado atípico</b> no verificador da análise: folha, pró-labore, CMV, crédito de ICMS ou receita financeira negativos, lucro do mês maior que a receita e lucro de um mês superior a três vezes a soma dos demais — o caso clássico do <b>balancete de encerramento importado como movimento de dezembro</b>, cujo zeramento das contas de resultado chega com o sinal invertido e produz um lucro impossível, que o Lucro Real então tributa. (6) <b>Lacre re-selado</b>: o selo passou de <b>b394cf9e</b> para <b>fa39eefb</b>. Os <b>totais anuais dos dois casos-gabarito não mudaram</b> (Lucro Real de R$ 1.169.013,17 e R$ 358.284,98), porque nenhum deles tem mês com base negativa — o selo mudou apenas pela realocação do tributo ao mês de fechamento. Simples Nacional, Lucro Presumido e os cenários da Reforma ficaram <b>inalterados</b>, e o modo legado reproduz o selo antigo ao centavo, o que foi conferido número a número.</td></tr>
+                    <tr><td><b>v7.34.3</b></td><td>17/08/2026</td><td><b>Analítico importado pelo campo errado deixou de virar só uma lista de CNPJs.</b> O campo <b>"Ou importar arquivo (CSV/Excel)"</b> do item 2 pertence à <b>triagem simples</b>: ele apenas colhe os CNPJs da planilha e classifica o regime de cada um — por isso, quem largava ali o analítico do Questor via a consulta rodar normalmente, mas <b>sem dashboard, sem os botões de salvar e de lançar</b>, já que nenhuma aba do painel 🚚 havia recebido dados. Agora, quando o arquivo tem as colunas do analítico (Natureza/CFOP · Valor Contábil · CNPJ), o app <b>pergunta</b> antes: importar como analítico (com o painel completo) ou seguir como triagem simples. (2) A importação do analítico passou a <b>avisar quando não há empresa selecionada</b> na barra do topo: a leitura e a consulta funcionam, mas sem empresa dona não há como gravar no histórico nem lançar — o aviso aparece antes, em vez de o botão de salvar falhar depois. (3) O processamento do analítico virou função própria (<b>triProcessarWorkbook</b>), usada tanto pelos botões de arquivo de compra e de venda quanto por esse novo caminho.</td></tr>
                     <tr><td><b>v7.34.2</b></td><td>17/08/2026</td><td><b>Razão social na exportação única e retornos fora do lançamento.</b> (1) A exportação única do Questor passou a sair com a coluna <b>Razão Social</b>, e a leitura já a aproveita: o nome do parceiro aparece na relação, no dashboard e no top 5 <b>antes mesmo da consulta na Receita</b> — que continua sendo quem confirma o enquadramento e atualiza a razão social oficial. No arquivo real os 38 fornecedores e os 19 clientes vieram todos com nome. (2) A <b>base global de CFOPs</b> ganhou os retornos, que não são compra: <b>1503/2503 e 1504/2504</b> (entrada por devolução de mercadoria remetida com fim específico de exportação — decisão dele, 16/08) e <b>1201/2201 e 1202/2202</b> (devolução de venda), todos como <b>não lançar</b>. Lançar esses valores como entrada inflaria as compras e, no caso da devolução de venda, contaria duas vezes o que já vem descontado do faturamento. Como toda regra da base, ficam sobrescrevíveis na camada por empresa.</td></tr>
                     <tr><td><b>v7.34.1</b></td><td>17/08/2026</td><td><b>Exportação única do Questor (coluna Tipo) alimenta as duas abas de uma vez.</b> O novo relatório traz <b>Entrada e Saída na mesma planilha</b>, com uma coluna <b>Tipo</b>. Lido como estava, os dois lados entravam <b>somados no mesmo conjunto</b> e o lado de maior valor decidia o tipo do arquivo — no exemplo real, R$ 76.599,96 de entradas seriam contados como clientes dentro de um total de R$ 671.771,15 classificado como venda. Agora a leitura <b>separa pelo próprio campo Tipo</b>: as entradas vão para <b>📄 arquivo de compra</b> e as saídas para <b>👥 arquivo de venda</b>, em uma única importação, com <b>uma só faixa de confirmação</b> mostrando os dois blocos (lançamentos, parceiros, total e CFOPs de cada lado) antes de qualquer coisa entrar. Em seguida a consulta na Receita roda nos dois conjuntos e cada aba abre com seu dashboard. O aviso de <b>sobreposição</b> passou a valer nos dois sentidos — antes só alertava ao importar Totais tendo analítico; agora também ao importar analítico tendo Totais.</td></tr>
                     <tr><td><b>v7.34.0</b></td><td>17/08/2026</td><td><b>Consulta CNPJ reorganizada: dois arquivos, confirmação obrigatória e lançamento por CFOP.</b> (1) O painel 🚚 passou a ter <b>📄 Arquivo de compra (fornecedor)</b>, <b>👥 Arquivo de venda (cliente)</b> e uma única aba <b>📋 Totais — relatórios de entrada</b>, que reconhece tanto o <b>Totais ISS</b> quanto o <b>Totais ICMS</b> do Questor. (2) <b>Nada entra sem confirmação</b>: ao importar, o app mostra o tipo detectado <b>pelo conteúdo</b> (nunca pelo nome do arquivo), período, quantidade, total e CFOPs, e espera o "Confirmar" — um arquivo chamado "NF_entrada" pode conter saídas, e agora isso aparece antes de qualquer coisa entrar. (3) A <b>natureza do Questor tem 7 dígitos</b> e o CFOP são os 4 primeiros: a leitura foi corrigida nos dois formatos, e o Totais ICMS passou a trazer o CFOP de cada lançamento. (4) <b>Serviço tomado é natureza 8xxx</b> (NFS-e), não 1933/2933 — na Weeedo isso era 28% da compra de janeiro entrando como mercadoria; agora vai para Despesas. (5) O botão de lançar virou <b>📥 Lançar total na análise</b>, com destino <b>por CFOP</b>: base global para o que não muda de empresa (1102/2102 e 1403/2403 → Compras; 8xxx, 1933/2933, 1556, 1653, 1253, 1303, 1353 → Despesas; 1551 ativo e 1910 bonificação → não lança) e, para todo CFOP fora dela, <b>uma pergunta que bloqueia o lançamento</b> — a resposta fica gravada <b>naquela empresa</b>, nunca como regra geral do app, e é reaplicada nas importações seguintes. Quando o CFOP tem parceiro com CNAE de combustível, bebida, medicamento, autopeça ou cosmético, a pergunta avisa para avaliar "Compras monofásicas". (6) Aviso de <b>sobreposição</b>: Totais e analítico retratam as mesmas entradas (o Totais só não traz as NFS-e), e importar os dois da mesma competência duplicaria tudo que não é serviço. (7) <b>CPF 999.999.999-99</b> passou a ser tratado como consumidor final não identificado, fora do ranking. (8) As ações do painel são <b>🔎 Consulta Receita</b>, <b>💾 Salvar análise no histórico da empresa</b> e <b>📥 Lançar total na análise</b>. (9) O relatório passou a se chamar <b>Resumo Estatístico</b> e traz os <b>dashboards</b> (CFOPs, exportação, B2B×B2C) junto das <b>relações completas</b> de clientes e fornecedores. (10) No <b>Parecer</b>, as páginas de fornecedores e de clientela viraram <b>uma só</b>, com o resumo das duas consultas, os dashboards e os <b>5 maiores clientes e 5 maiores fornecedores</b>, com a linha de concentração acumulada. Motor de cálculo intocado — 🔏 lacre mantém o selo.</td></tr>
@@ -2734,21 +2735,19 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     });
   }
 
-  // Adicional de IRPJ (modo: off | mensal | trimestral)
+  // Adicional de IRPJ do PRESUMIDO (modo: off | mensal | trimestral)
+  // v7.35.0: o Lucro Real saiu daqui — passou a ter período de apuração próprio (ver lrApurar).
   const modo = cfg.adicionalIR || 'off';
   if (modo === 'mensal') {
-    for (const M of out.meses) {
-      M.lp.adicional = Math.max(0, (M.lp.baseAdic - 20000))*.10;
-      M.lr.adicional = Math.max(0, (M.lr.baseIRCS - 20000))*.10;
-    }
+    for (const M of out.meses) M.lp.adicional = Math.max(0, (M.lp.baseAdic - 20000))*.10;
   } else if (modo === 'trimestral') {
     for (let t=0; t<4; t++) {
       const ms = out.meses.slice(t*3, t*3+3);
-      const bLP = S(ms.map(x=>x.lp.baseAdic)), bLR = S(ms.map(x=>x.lr.baseIRCS));
+      const bLP = S(ms.map(x=>x.lp.baseAdic));
       ms[2].lp.adicional = bLP>60000 ? (bLP-60000)*.10 : 0;
-      ms[2].lr.adicional = bLR>60000 ? (bLR-60000)*.10 : 0;
     }
   }
+  lrApurar(out, cfg);          // v7.35.0 · apuração do Lucro Real no período escolhido
   for (const M of out.meses) {
     M.lp.total = M.lp.pis+M.lp.cofins+M.lp.csll+M.lp.irpj+M.lp.adicional+M.lp.inssPatr+M.lp.icms+M.lp.ipi+M.lp.iss;   // v7.18.0: sem FGTS
     M.lr.total = M.lr.pis+M.lr.cofins+M.lr.csll+M.lr.irpj+M.lr.adicional+M.lr.inssPatr+M.lr.icms+M.lr.ipi+M.lr.iss;   // v7.18.0: sem FGTS
@@ -2773,6 +2772,90 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
 }
 
 
+
+// ═══════════ v7.35.0 · APURAÇÃO DO LUCRO REAL POR PERÍODO ═══════════
+// Até a v7.34.3 o motor era HÍBRIDO: 15% e 9% saíam mês a mês, só sobre meses positivos (mês
+// negativo era simplesmente descartado), enquanto o adicional de 10% já usava o líquido do
+// TRIMESTRE. Isso não corresponde a nenhuma modalidade legal de apuração e superestimava o
+// imposto sempre que havia mês negativo. Agora o período é explícito:
+//   trimestral — base = soma dos 3 meses (negativos INCLUÍDOS); prejuízo de períodos anteriores
+//                compensado com a trava de 30% (Lei 9.065/95, art. 15), inclusive entre trimestres
+//                do mesmo ano-calendário; adicional sobre o que exceder R$ 60.000 no trimestre.
+//   anual      — base = resultado de 31/12; trava de 30% só para prejuízo de anos ANTERIORES
+//                (os do próprio ano já estão dentro da base); adicional acima de R$ 240.000.
+//                As antecipações mensais por balanço de suspensão/redução ficam em out.lrAntecip,
+//                como demonstração de caixa — não somam ao total do regime.
+//   mensal     — reproduz exatamente o comportamento da v7.34.3, para refazer parecer antigo.
+// Saldos de prejuízo fiscal (IRPJ) e de base negativa (CSLL) são INDEPENDENTES e nunca são
+// transportados entre anos-base: cada ano parte do saldo digitado na configuração da empresa.
+// O tributo do período é lançado no MÊS DE FECHAMENTO (março/junho/setembro/dezembro; dezembro
+// no anual), mesmo critério que o adicional já usava — o mês deixa de ser período de apuração.
+function lrApurar(out, cfg){
+  const ms = out.meses, per = cfg.lrPeriodo || 'trimestral', modo = cfg.adicionalIR || 'off';
+  const Sm = a => a.reduce((x,y)=>x+(+y||0),0);
+  for (const M of ms){ M.lr.irpj = 0; M.lr.csll = 0; M.lr.adicional = 0; }
+
+  if (per === 'mensal'){                                    // legado v7.34.3 — cálculo idêntico
+    for (const M of ms){
+      M.lr.irpj = M.lr.baseIRCS>0 ? M.lr.baseIRCS*.15 : 0;
+      M.lr.csll = M.lr.baseIRCS>0 ? M.lr.baseIRCS*.09 : 0;
+    }
+    if (modo === 'mensal') for (const M of ms) M.lr.adicional = Math.max(0, (M.lr.baseIRCS - 20000))*.10;
+    else if (modo === 'trimestral') for (let t=0; t<4; t++){
+      const b = Sm(ms.slice(t*3, t*3+3).map(x=>x.lr.baseIRCS));
+      ms[t*3+2].lr.adicional = b>60000 ? (b-60000)*.10 : 0;
+    }
+    out.lrApur = { periodo:'mensal', linhas:[], saldoIrpj:0, saldoCsll:0,
+                   prejIni:{ irpj:0, csll:0 }, legado:true };
+    return out.lrApur;
+  }
+
+  const anual = per === 'anual';
+  const blocos = anual ? [[0,12,'Ano — ajuste em 31/12']]
+                       : [[0,3,'1º trimestre'],[3,6,'2º trimestre'],[6,9,'3º trimestre'],[9,12,'4º trimestre']];
+  const limAd = anual ? 240000 : 60000;
+  const ini = { irpj: Math.max(0, +cfg.lrPrejIrpj||0), csll: Math.max(0, +cfg.lrPrejCsll||0) };
+  let sIr = ini.irpj, sCs = ini.csll;
+  const linhas = [];
+  for (const [a, b, rot] of blocos){
+    const base = Sm(ms.slice(a, b).map(x=>x.lr.baseIRCS));
+    const fech = ms[b-1];
+    const L = { rot, mesFech: b-1, base, prejIrpjAnt: sIr, prejCsllAnt: sCs, limite: 0,
+                usadoIrpj: 0, usadoCsll: 0, baseIrpj: 0, baseCsll: 0,
+                irpj: 0, adicional: 0, csll: 0, total: 0, limAd };
+    if (base <= 0){ sIr += -base; sCs += -base; }
+    else {
+      L.limite    = base*.30;
+      L.usadoIrpj = Math.min(L.limite, sIr); L.baseIrpj = base - L.usadoIrpj; sIr -= L.usadoIrpj;
+      L.usadoCsll = Math.min(L.limite, sCs); L.baseCsll = base - L.usadoCsll; sCs -= L.usadoCsll;
+      L.irpj      = L.baseIrpj*.15;
+      // o adicional incide sobre a base APÓS a compensação — nunca antes
+      L.adicional = (modo !== 'off' && L.baseIrpj > limAd) ? (L.baseIrpj - limAd)*.10 : 0;
+      L.csll      = L.baseCsll*.09;
+      fech.lr.irpj = L.irpj; fech.lr.adicional = L.adicional; fech.lr.csll = L.csll;
+    }
+    L.total = L.irpj + L.adicional + L.csll;
+    L.saldoIrpj = sIr; L.saldoCsll = sCs;
+    linhas.push(L);
+  }
+
+  if (anual){                       // antecipações mensais (balanço de suspensão/redução) — caixa
+    let ac = 0, pago = 0; out.lrAntecip = [];
+    for (let i=0; i<12; i++){
+      ac += ms[i].lr.baseIRCS;
+      let dev = 0;
+      if (ac > 0){
+        const ir = ac*.15, cs = ac*.09;
+        const ad = (modo !== 'off' && ac > 20000*(i+1)) ? (ac - 20000*(i+1))*.10 : 0;
+        dev = Math.max(0, ir + ad + cs - pago); pago += dev;
+      }
+      out.lrAntecip.push(dev);
+    }
+  } else out.lrAntecip = null;
+
+  out.lrApur = { periodo: per, linhas, saldoIrpj: sIr, saldoCsll: sCs, prejIni: ini, legado:false };
+  return out.lrApur;
+}
 
 // ═══════════ ESTADO E PARÂMETROS ═══════════
 let PARAMS = { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha: {...FOLHA_PERC_DEFAULT} };
@@ -2812,7 +2895,10 @@ const z12 = () => Array(12).fill(0);
 function anNovo(cnpj, ano) {
   return { cnpj: cnpj||'', ano: ano||new Date().getFullYear(),
     cfg: { iss:0, icmsV:.12, icmsC:.12, ipiV:0, ipiC:0, rbt12Direto:0, rbt12Lanc:z12(), rbt12ExpLanc:z12(), folha12Lanc:z12(),
-           lpBaseServ:.32, lpBaseCom:.08, lpBaseServCsll:0, lpBaseComCsll:.12, folhaPerc:{}, adicionalIR:'trimestral', sublimite:'auto' },
+           lpBaseServ:.32, lpBaseCom:.08, lpBaseServCsll:0, lpBaseComCsll:.12, folhaPerc:{}, adicionalIR:'trimestral', sublimite:'auto',
+           // v7.35.0 · período de apuração do Lucro Real (trimestral | anual | mensal-legado) e
+           // saldos iniciais de prejuízo fiscal e base negativa de CSLL (independentes entre si)
+           lrPeriodo:'trimestral', lrPrejIrpj:0, lrPrejCsll:0 },
     receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','fin','comtransp','a1_exp','a2_exp','a3_exp'].map(k=>[k,z12()])),
     folha: Object.fromEntries(['prolabore','salarios','baseFgts','prov13','provFerias'].map(k=>[k,z12()])),
     folha13: { prolabore13:0, salarios13:0, baseFgts13:0 },
@@ -3158,10 +3244,32 @@ function anAvisoConfig(){
                 && !(AN.cfg.folha12Lanc||[]).some(v=>+v>0);
   if (temServ && semFolha) falta.push('a folha — sem ela o Fator R fica em 0% e os serviços caem no Anexo V, o pior enquadramento');
   else if (semFolha) falta.push('a folha — sem ela o INSS patronal do Lucro Presumido/Real fica em R$ 0 e a comparação favorece indevidamente esses regimes');
-  if (!falta.length){ el.style.display='none'; return; }
+  // ── v7.35.0 · dados atípicos: valores que o motor calcula certo, mas cuja ENTRADA está errada ──
+  // O caso clássico é o balancete de ENCERRAMENTO importado como movimento de dezembro: o zeramento
+  // das contas de resultado chega com sinal invertido, e o mês fica com folha, INSS e crédito de
+  // ICMS negativos e um lucro impossível — que o Lucro Real então tributa.
+  const atip = [];
+  const neg = (sec,k,rot) => { const i = (AN[sec]?.[k]||[]).findIndex(v=>+v<0); if (i>=0) atip.push(`${rot} <b>negativa</b> em ${MESES[i]}`); };
+  neg('folha','salarios','folha de salários'); neg('folha','prolabore','pró-labore');
+  neg('receitas','fin','receita financeira');
+  for (const k of ['baixaSemst','baixaMono','baixaComst','baixaComstMono'])
+    if ((AN.compras?.[k]||[]).some(v=>+v<0)) { atip.push('baixa de estoque (CMV) <b>negativa</b>'); break; }
+  if ((AN.icms?.cred||[]).some(v=>v!=null && +v<0)) atip.push('crédito de ICMS <b>negativo</b>');
+  const _r = AN._res;
+  if (_r){
+    const L = _r.meses.map(x=>x.lr.baseIRCS), soma = L.reduce((a,b)=>a+b,0);
+    L.forEach((v,i)=>{ if (v > (_r.meses[i].receita||0) + 0.005 && v > 0) atip.push(`lucro de ${MESES[i]} <b>maior que a receita</b> do mês`); });
+    L.forEach((v,i)=>{ const outros = soma - v; if (v > 0 && outros > 0 && v > 3*outros) atip.push(`lucro de ${MESES[i]} é <b>mais de 3× a soma dos demais meses</b>`); });
+  }
+  if ((+AN.cfg.lrPrejIrpj||0) > 0 || (+AN.cfg.lrPrejCsll||0) > 0)
+    atip.push('há <b>saldo inicial de prejuízo fiscal</b> informado — confirme que a empresa já apurava lucro real; quem vinha do Simples não leva prejuízo a compensar');
+
+  if (!falta.length && !atip.length){ el.style.display='none'; return; }
   el.style.display = '';
-  el.innerHTML = `<b>Configuração incompleta.</b> Falta ${falta.join(', ').replace(/, ([^,]*)$/, ' e $1')}.
-    Isso altera o cálculo. <a href="#" onclick="go('config');return false">abrir a Configuração da empresa</a>`;
+  el.innerHTML = (falta.length ? `<b>Configuração incompleta.</b> Falta ${falta.join(', ').replace(/, ([^,]*)$/, ' e $1')}.
+    Isso altera o cálculo. <a href="#" onclick="go('config');return false">abrir a Configuração da empresa</a>` : '')
+    + (atip.length ? `${falta.length?'<hr style="border:0;border-top:1px solid #f0d9a8;margin:8px 0">':''}<b>⚠️ Dados atípicos nos lançamentos.</b> ${[...new Set(atip)].join(' · ')}.
+      Confira o balancete antes de usar o resultado: <b>lançamentos de encerramento importados como movimento do mês</b> chegam com o sinal invertido e distorcem o Lucro Real.` : '');
 }
 // percentuais de folha: a empresa herda do app enquanto não tiver ajuste próprio
 function folhaPercDaEmpresa(cfg){
@@ -3198,6 +3306,28 @@ function anRenderConfig() {
     <button class="btn solid" onclick="anAplicarConfig()">Aplicar</button>
   </div>${avisoIss}
   `;
+  // ── v7.35.0 · período de apuração do Lucro Real e saldos de prejuízo ──
+  const _per = c.lrPeriodo || 'trimestral';
+  h += `<div style="margin-top:22px"><b style="font-size:13px">Lucro Real — período de apuração</b>
+    <div class="hint">O IRPJ e a CSLL do Lucro Real são apurados por <b>período</b>, não por mês: o resultado de cada mês
+      compõe o período, e mês negativo abate mês positivo dentro dele. A opção entre trimestral e anual é
+      <b>irretratável para o ano-calendário</b> e se exerce no primeiro recolhimento — em simulação de planejamento,
+      vale calcular os dois e comparar.</div>
+    <div class="toolbar" style="margin-top:8px">
+      <div><label>Período de apuração</label><select id="cf-lrper" onchange="anAplicarConfig(true)">
+        <option value="trimestral" ${_per=='trimestral'?'selected':''}>Trimestral</option>
+        <option value="anual" ${_per=='anual'?'selected':''}>Anual (estimativa + ajuste em 31/12)</option>
+        <option value="mensal" ${_per=='mensal'?'selected':''}>Mensal — legado (até a v7.34.3)</option>
+      </select></div>
+      <div><label>Prejuízo fiscal acumulado (IRPJ)</label>
+        <input style="width:150px" id="cf-lrprejir" value="${+c.lrPrejIrpj||''}" placeholder="0,00" onchange="anAplicarConfig(true)"></div>
+      <div><label>Base negativa acumulada (CSLL)</label>
+        <input style="width:150px" id="cf-lrprejcs" value="${+c.lrPrejCsll||''}" placeholder="0,00" onchange="anAplicarConfig(true)"></div>
+    </div>
+    <div class="hint" style="margin-top:6px">${_per==='mensal'
+      ? '<b style="color:#943126">⚠️ Modo legado.</b> Reproduz o cálculo das versões até a v7.34.3, em que 15% e 9% saíam mês a mês (mês negativo descartado) e só o adicional usava o trimestre. Serve para refazer parecer já entregue — não é modalidade legal de apuração.'
+      : 'Os saldos são <b>independentes</b> (prejuízo do IRPJ e base negativa da CSLL têm controles próprios) e a compensação fica limitada a <b>30%</b> do resultado do período, inclusive entre trimestres do mesmo ano. Deixe em branco quando a empresa <b>vinha do Simples</b>: quem migra do Simples não leva prejuízo fiscal, porque não houve apuração de lucro real anterior. O prejuízo apurado dentro desta simulação vale só para este ano-base e <b>não é transportado</b>.'}</div>
+  </div>`;
   const fp = PARAMS.folha, own = c.folhaPerc || {};
   const campoFP = (k, rot) => `<div><label>${rot} %</label>
     <input style="width:120px" value="${own[k]!=null&&own[k]!==''?(+(own[k]*100).toFixed(4)):''}"
@@ -3225,6 +3355,10 @@ function anAplicarConfig(silencioso) {
     lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, lpBaseServCsll:+($id('cf-bcsll')?.value||0),
     lpBaseComCsll:+($id('cf-bcomcsll')?.value||.12), adicionalIR:$id('cf-adic').value, sublimite:$id('cf-sublim').value,
     rbt12Direto:num($id('cf-rbtd').value) });
+  // v7.35.0 · período de apuração do Lucro Real e saldos de prejuízo (podem não existir em telas antigas)
+  if ($id('cf-lrper'))    AN.cfg.lrPeriodo  = $id('cf-lrper').value;
+  if ($id('cf-lrprejir')) AN.cfg.lrPrejIrpj = Math.max(0, num($id('cf-lrprejir').value));
+  if ($id('cf-lrprejcs')) AN.cfg.lrPrejCsll = Math.max(0, num($id('cf-lrprejcs').value));
   AN_SUJO = true;                       // sem isto a alteração sumia sem aviso ao trocar de módulo
   anRecalcular();
   clearTimeout(window._cfgTimer);
@@ -3353,7 +3487,54 @@ function anRecalcular() {
   h += `<tr style="font-weight:700"><td>TOTAL</td><td class="num">${fmt(T.receita)}</td><td></td><td></td><td class="num">${fmt(T.das)}</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr></tbody></table>`;
   if (fimJanela < 0) h += `<div class="hint" style="margin-top:6px">Nenhum mês com lançamento ainda — importe ou digite os dados para ver o resultado.</div>`;
   else if (fimJanela < 11) h += `<div class="hint" style="margin-top:6px">Análise preenchida até <b>${MESES[fimJanela]}/${AN.ano}</b> — meses posteriores sem lançamento não são exibidos.</div>`;
+  h += lrQuadroApuracao(r);        // v7.35.0
   $id('an-detalhe').innerHTML = h;
+}
+
+// v7.35.0 · quadro da apuração fiscal do Lucro Real — separa o resultado GERENCIAL do mês
+// (que não é período de apuração) do imposto efetivamente apurado no trimestre ou no ano.
+function lrQuadroApuracao(r){
+  const A = r && r.lrApur; if (!A) return '';
+  if (A.legado) return `<div class="hint" style="margin-top:10px;padding:8px 10px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109">
+    <b>Lucro Real em modo legado (mensal).</b> O IRPJ e a CSLL estão saindo mês a mês, com o mês negativo descartado —
+    comportamento das versões até a v7.34.3, mantido apenas para refazer parecer já entregue.
+    Para a apuração correta, escolha <b>trimestral</b> ou <b>anual</b> na Configuração da empresa.</div>`;
+  const T = A.linhas.reduce((o,L)=>({irpj:o.irpj+L.irpj, adic:o.adic+L.adicional, csll:o.csll+L.csll, tot:o.tot+L.total}), {irpj:0,adic:0,csll:0,tot:0});
+  const li = A.linhas.map(L=>`<tr>
+    <td class="rot">${L.rot}</td>
+    <td class="num">${fmt(L.base)}</td>
+    <td class="num">${L.prejIrpjAnt>0.005?fmt(L.prejIrpjAnt):'—'}</td>
+    <td class="num">${L.base>0?fmt(L.limite):'—'}</td>
+    <td class="num">${L.usadoIrpj>0.005?fmt(L.usadoIrpj):'—'}</td>
+    <td class="num">${L.base>0?fmt(L.baseIrpj):'0,00'}</td>
+    <td class="num">${fmt(L.irpj)}</td>
+    <td class="num">${fmt(L.adicional)}</td>
+    <td class="num">${fmt(L.csll)}</td>
+    <td class="num"><b>${fmt(L.total)}</b></td>
+    <td class="num">${L.saldoIrpj>0.005?fmt(L.saldoIrpj):'—'}</td></tr>`).join('');
+  const antec = (A.periodo==='anual' && r.lrAntecip) ? `<div class="hint" style="margin-top:8px">
+    <b>Antecipações mensais</b> (balanço de suspensão/redução, art. 2º da Lei 9.430/96) —
+    demonstração de caixa, já contida no ajuste acima, não soma ao total do regime:<br>
+    ${r.lrAntecip.map((v,i)=>`${MESES[i]} ${fmt(v)}`).join(' · ')}</div>` : '';
+  return `<div style="margin-top:18px"><b style="font-size:13px">Apuração fiscal do Lucro Real — ${A.periodo==='anual'?'anual':'trimestral'}</b>
+    <div class="hint">O quadro acima é <b>resultado gerencial mensal</b> e não é apuração. Aqui está o imposto
+      efetivamente devido: o mês negativo <b>entra</b> na base do período e o prejuízo remanescente é compensado
+      nos períodos seguintes, limitado a <b>30%</b> do resultado (Lei 9.065/95, art. 15). O adicional de 10% incide
+      sobre a base <b>depois</b> da compensação, no que exceder ${A.periodo==='anual'?'R$ 240.000 no ano':'R$ 60.000 no trimestre'}.
+      No detalhe mensal, o tributo do período aparece no <b>mês de fechamento</b>.</div>
+    <div style="overflow-x:auto;margin-top:8px"><table><thead><tr>
+      <th>Período</th><th class="num">Resultado</th><th class="num">Prejuízo anterior</th><th class="num">Limite 30%</th>
+      <th class="num">Compensado</th><th class="num">Base tributável</th><th class="num">IRPJ 15%</th>
+      <th class="num">Adicional</th><th class="num">CSLL 9%</th><th class="num">Total</th><th class="num">Saldo remanescente</th>
+    </tr></thead><tbody>${li}
+    <tr style="font-weight:700;border-top:2px solid var(--primaria,#1a5276)"><td>TOTAL</td>
+      <td class="num">${fmt(A.linhas.reduce((s,L)=>s+L.base,0))}</td><td></td><td></td><td></td><td></td>
+      <td class="num">${fmt(T.irpj)}</td><td class="num">${fmt(T.adic)}</td><td class="num">${fmt(T.csll)}</td>
+      <td class="num">${fmt(T.tot)}</td><td class="num">${A.saldoIrpj>0.005?fmt(A.saldoIrpj):'—'}</td></tr>
+    </tbody></table></div>${antec}
+    ${(A.prejIni.irpj>0.005||A.prejIni.csll>0.005)?`<div class="hint" style="margin-top:6px">Saldo inicial informado na configuração: prejuízo fiscal ${fmt(A.prejIni.irpj)} · base negativa de CSLL ${fmt(A.prejIni.csll)}.</div>`:''}
+    ${A.saldoIrpj>0.005?`<div class="hint" style="margin-top:6px">Prejuízo <b>não compensado</b> ao fim do ano: ${fmt(A.saldoIrpj)} (IRPJ) e ${fmt(A.saldoCsll)} (CSLL). Numa simulação, esse saldo <b>não é transportado</b> para o ano seguinte — se a empresa estiver de fato no lucro real, informe-o na configuração do próximo ano-base.</div>`:''}
+  </div>`;
 }
 
 async function anTrocarEmpresa() {
@@ -3447,7 +3628,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.33.1';
+const APP_VERSAO = '7.35.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -4000,7 +4181,7 @@ function calcCenariosReforma(res, reforma) {
 const LACRE_CASOS = [
   { nome:'Caso 1 — Comércio (Anexo I, 6ª faixa, trava do sublimite)', inp: {"cfg":{"ano":2025,"iss":0,"icmsV":0.12,"icmsC":0.12,"ipiV":0,"ipiC":0,"rbt12Direto":0,"rbt12Lanc":[233957.74,180464.53,228650,204621.46,189091.64,229826.08,212736.02,261640.46,259296.98,376003.65,380401.48,257979.83],"folha12Lanc":[0,0,0,0,0,0,0,0,0,0,0,0],"lpBaseServ":0.32,"lpBaseCom":0.08,"adicionalIR":"trimestral","sublimite":"auto"},"receitas":{"a1_semst":[377050.87,484066.42,376975.8,416574.89,447563.54,453176.74,548964.77,427892.17,0,0,0,0],"a1_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_semret":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retiss":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retissinss":[0,0,0,0,0,0,0,0,0,0,0,0],"a4":[0,0,0,0,0,0,0,0,0,0,0,0],"a5r":[0,0,0,0,0,0,0,0,0,0,0,0],"fin":[0,0,0,0,0,0,0,0,0,0,0,0],"comtransp":[0,0,0,0,0,0,0,0,0,0,0,0]},"folha":{"prolabore":[10251.43,10251.43,10251.43,10251.43,10251.43,10251.43,0,0,0,0,0,0],"salarios":[34988.54,34988.54,34988.54,34988.54,34988.54,34988.54,0,0,0,0,0,0],"baseFgts":[34988.54,34988.54,34988.54,34988.54,34988.54,34988.54,0,0,0,0,0,0],"prov13":[2915.71,2915.71,2915.71,2915.71,2915.71,2915.71,0,0,0,0,0,0],"provFerias":[3887.62,3887.62,3887.62,3887.62,3887.62,3887.62,0,0,0,0,0,0]},"compras":{"semst":[232039.67,155316.58,291099.36,327885.35,248658.21,345140.42,0,0,0,0,0,0],"baixaSemst":[0,0,0,0,0,0,0,0,0,0,0,0],"mono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaMono":[0,0,0,0,0,0,0,0,0,0,0,0],"comst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComst":[0,0,0,0,0,0,0,0,0,0,0,0],"comstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baseIpiCred":[0,0,0,0,0,0,0,0,0,0,0,0]},"despesas":{"adm":[77361.45,90697.16,91478,95598.78,143160.24,109482.63,0,0,0,0,0,0],"vendas":[0,0,0,0,0,0,0,0,0,0,0,0],"fiscais":[0,0,0,0,0,0,0,0,0,0,0,0],"financeiras":[0,0,0,0,0,0,0,0,0,0,0,0],"outras":[0,0,0,0,0,0,0,0,0,0,0,0],"credLR":[0,0,0,0,0,0,0,0,0,0,0,0]},"icms":{"cred":null,"deb":null},"ipi":{"cred":null,"deb":null},"folha13":{"prolabore13":0,"salarios13":0,"baseFgts13":0}} },
   { nome:'Caso 2 — Serviços (Anexo III, Fator R, 13º)',              inp: {"cfg":{"ano":2026,"iss":0.02,"icmsV":0,"icmsC":0,"ipiV":0,"ipiC":0,"rbt12Direto":0,"rbt12Lanc":[4500,0,8500,0,11000,21400,32850,15000,0,0,0,0],"folha12Lanc":[0,0,0,0,0,0,0,0,0,0,0,0],"lpBaseServ":0.32,"lpBaseCom":0.08,"adicionalIR":"trimestral","sublimite":"auto"},"receitas":{"a1_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_semret":[100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000],"a3_retiss":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retissinss":[0,0,0,0,0,0,0,0,0,0,0,0],"a4":[0,0,0,0,0,0,0,0,0,0,0,0],"a5r":[0,0,0,0,0,0,0,0,0,0,0,0],"fin":[0,0,0,0,0,0,0,0,0,0,0,0],"comtransp":[0,0,0,0,0,0,0,0,0,0,0,0]},"folha":{"prolabore":[1518,1518,1518,1518,1518,1518,1518,1518,1518,1518,1518,1518],"salarios":[24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77],"baseFgts":[24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77],"prov13":[2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65],"provFerias":[2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86]},"compras":{"semst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaSemst":[0,0,0,0,0,0,0,0,0,0,0,0],"mono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaMono":[0,0,0,0,0,0,0,0,0,0,0,0],"comst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComst":[0,0,0,0,0,0,0,0,0,0,0,0],"comstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baseIpiCred":[0,0,0,0,0,0,0,0,0,0,0,0]},"despesas":{"adm":[10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89],"vendas":[488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13],"fiscais":[41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76],"financeiras":[14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47],"outras":[0,0,0,0,0,0,0,0,0,0,0,0],"credLR":[0,0,0,0,0,0,0,0,0,0,0,0]},"icms":{"cred":null,"deb":null},"ipi":{"cred":null,"deb":null},"folha13":{"prolabore13":0,"salarios13":24739.77,"baseFgts13":24739.77}} } ];
-const LACRE_HASH = 'b394cf9e';   // selo da v7.30.0 — refeito a cada mudança deliberada de regra (o CI confere)
+const LACRE_HASH = 'fa39eefb';   // selo da v7.35.0 — re-selado na correção do período de apuração do Lucro Real (o CI confere)
 function lacreHash(str){ let h = 0x811c9dc5;
   for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   return h.toString(16).padStart(8,'0'); }
@@ -5499,7 +5680,10 @@ function rlConsolidado(rot, n) {
     ${bTrib.map(([nm,k])=>linha(nm, g(x=>+x.lr[k]||0))).join('')}
     ${linha('Total Real', g(x=>x.lr.total), true)}
   </tbody></table></div>
-  <div class="hint" style="margin-top:6px">Meses com base negativa não geram IRPJ/CSLL no cálculo (crédito informativo no detalhamento de registros).</div></div>`;
+  <div class="hint" style="margin-top:6px">${(RL.res.lrApur && !RL.res.lrApur.legado)
+    ? `Apuração <b>${RL.res.lrApur.periodo==='anual'?'anual':'trimestral'}</b>: a linha "Base IRPJ/CSLL" é o resultado <b>gerencial</b> do mês e não é período de apuração — o mês negativo entra na base do período e o IRPJ/CSLL aparecem no <b>mês de fechamento</b>. O quadro por período vem logo abaixo.`
+    : `<b>Modo legado (mensal)</b>: meses com base negativa não geram IRPJ/CSLL e o prejuízo não é compensado — comportamento das versões até a v7.34.3.`}</div>
+  ${lrQuadroApuracao(RL.res)}</div>`;
 
   // ── 6. REFORMA ──
   if (REF) {
@@ -6371,9 +6555,7 @@ function rlConferencia(){
       CF.lin('PIS', `${fmtR(LR.basePC||0)} × 1,65% + financeiras ${fmtR(_fin)} × 0,65%`, fmtR(LR.pis)),
       CF.lin('COFINS', `${fmtR(LR.basePC||0)} × 7,60% + financeiras ${fmtR(_fin)} × 4,00%`, fmtR(LR.cofins)),
       CF.lin('Lucro do mês (base IRPJ/CSLL)', `receita ${fmtR(M.receita)} + financeiras ${fmtR(_fin)} − custos ${fmtR(M.custos)} − folha ${fmtR(M.folhaTotal)} − despesas ${fmtR(M.despTotal)} − INSS patronal ${fmtR(M.inssPatr)} − PIS/COFINS ${fmtR(LR.pis+LR.cofins)} − ICMS ${fmtR(M.icmsPagar)} − IPI ${fmtR(M.ipiPagar)} − ISS ${fmtR(M.iss)}`, fmtR(LR.baseIRCS)),
-      CF.lin('IRPJ', `${fmtR(Math.max(0,LR.baseIRCS))} × 15% (prejuízo não é compensado entre meses)`, fmtR(LR.irpj)),
-      ...(LR.adicional>0.005?[CF.lin('Adicional de IRPJ', `parcela do lucro acima do limite × 10%`, fmtR(LR.adicional))]:[]),
-      CF.lin('CSLL', `${fmtR(Math.max(0,LR.baseIRCS))} × 9%`, fmtR(LR.csll)),
+      ...lrLinhasConfMes(m, LR),
       CF.lin('ICMS', `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`, fmtR(LR.icms)),
       CF.lin('ISS', `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(LR.iss)),
       CF.lin('INSS patronal', `salários ${fmtR(_sal)} × ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)} + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)}${m===11?' + 13º':''}`, fmtR(LR.inssPatr)),
@@ -6446,6 +6628,34 @@ function rlConfReforma(){
       ${travaTx}${credTx}
       <div class="hint" style="margin-top:6px">A coluna "Por dentro" (permanecer 100% no Simples) usa a mesma fórmula do veredito e do parecer — total do Simples do ano-base com a trava recomposta pela vigência (Res. 190). Valores em moeda constante do ano-base.</div></div>`;
   } catch(e){ console.error('conferência Reforma', e); return ''; }
+}
+// v7.35.0 · linhas de IRPJ/CSLL do Lucro Real na conferência mensal. Nos meses que NÃO fecham o
+// período, o mês só compõe a base — a memória inteira (limite de 30%, compensação, adicional) é
+// exibida no mês de fechamento, que é onde o tributo é apurado.
+function lrLinhasConfMes(m, LR){
+  const A = RL.res && RL.res.lrApur;
+  if (!A || A.legado) return [
+    CF.lin('IRPJ', `${fmtR(Math.max(0,LR.baseIRCS))} × 15% (modo legado: prejuízo não compensado entre meses)`, fmtR(LR.irpj)),
+    ...(LR.adicional>0.005?[CF.lin('Adicional de IRPJ', `parcela do lucro acima do limite × 10%`, fmtR(LR.adicional))]:[]),
+    CF.lin('CSLL', `${fmtR(Math.max(0,LR.baseIRCS))} × 9%`, fmtR(LR.csll)),
+  ];
+  const L = A.linhas.find(x => x.mesFech === m);
+  if (!L) return [ CF.lin('IRPJ/CSLL do mês', `o mês compõe a base do período — a apuração do ${A.periodo==='anual'?'ano':'trimestre'} é fechada em ${MESES_ROT[A.linhas.find(x=>x.mesFech>m)?.mesFech ?? 11]}`, fmtR(0)) ];
+  const base = RL.res.meses.slice(L.mesFech - (A.periodo==='anual'?11:2), L.mesFech+1).map(x=>x.lr.baseIRCS);
+  const out = [ CF.lin(`<b>Apuração do ${L.rot}</b>`, base.map(v=>fmtR(v)).join(' + ').replace(/\+ -/g,'− '), fmtR(L.base)) ];
+  if (L.base <= 0) { out.push(CF.lin('Prejuízo do período', `sem base tributável — o prejuízo vai para o saldo a compensar`, fmtR(L.saldoIrpj))); return out; }
+  if (L.prejIrpjAnt > 0.005){
+    out.push(CF.lin('Limite de compensação', `${fmtR(L.base)} × 30% (Lei 9.065/95, art. 15)`, fmtR(L.limite)));
+    out.push(CF.lin('Prejuízo compensado', `menor entre ${fmtR(L.limite)} e o saldo de ${fmtR(L.prejIrpjAnt)}`, fmtR(L.usadoIrpj)));
+    out.push(CF.lin('Base tributável', `${fmtR(L.base)} − ${fmtR(L.usadoIrpj)}`, fmtR(L.baseIrpj)));
+  }
+  out.push(CF.lin('IRPJ', `${fmtR(L.baseIrpj)} × 15%`, fmtR(L.irpj)));
+  out.push(CF.lin('Adicional de IRPJ', L.adicional>0.005
+    ? `(${fmtR(L.baseIrpj)} − ${fmtR(L.limAd)}) × 10% — sobre a base APÓS a compensação`
+    : `${fmtR(L.baseIrpj)} não excede ${fmtR(L.limAd)} no período`, fmtR(L.adicional)));
+  out.push(CF.lin('CSLL', `${fmtR(L.baseCsll)} × 9%${L.usadoCsll>0.005?` (base negativa compensada: ${fmtR(L.usadoCsll)})`:''}`, fmtR(L.csll)));
+  if (L.saldoIrpj > 0.005) out.push(CF.lin('Saldo de prejuízo', `${fmtR(L.prejIrpjAnt)} − ${fmtR(L.usadoIrpj)}`, fmtR(L.saldoIrpj)));
+  return out;
 }
 function rlConfDivergencias(){
   return `<div class="card" style="border-left:4px solid #b9770e">
