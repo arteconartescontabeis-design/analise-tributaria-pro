@@ -650,12 +650,13 @@ console.log('\n■ v7.26.0 — bloco 0 (dados de entrada) e trava de análises f
 // ═══ 5n. v7.30.1 — card da triagem restaurado (layout v7.26) + supaFn v7.26.2 ═══
 console.log('\n■ v7.30.1 — Consulta CNPJ no layout v7.26 (card próprio) e supaFn localiza timeout');
 {
-  chk('v7.30.1 · card "Triagem de venda × compra" está de volta, com os 2 botões próprios (tri-arq-venda/compra + triArquivo)',
-    html.includes('Triagem de venda × compra — analíticos por documento')
-    && html.includes('id="tri-arq-venda"') && html.includes('id="tri-arq-compra"') && html.includes('function triArquivo'));
-  chk('v7.30.1 · unificação da v7.27.0 desfeita: item 2 sem detecção de analítico (sem triReceber/arqLerAbas/tri-painel-*)',
-    !html.includes('triReceber') && !html.includes('arqLerAbas') && !html.includes('tri-painel-venda')
-    && html.indexOf('id="tri-arq-venda"') > html.indexOf('2. Informe os CNPJs'));
+  chk('v7.33.0 · card avulso EXCLUÍDO (sem <h3> próprio): inputs tri-arq-* e dashboards vivem DENTRO do item 2',
+    !html.includes('Triagem de venda × compra — analíticos por documento</h3>')
+    && html.includes('id="tri-arq-venda"') && html.includes('id="tri-arq-compra"') && html.includes('function triArquivo')
+    && html.indexOf('id="tri-arq-venda"') > html.indexOf('2. Informe os CNPJs')
+    && html.indexOf('id="tri-dash-compra"') > html.indexOf('id="fo-painel"'));
+  chk('v7.33.0 · botão de importar do painel roteia por aba (analítico de FORNECEDORES/CLIENTES via tri-arq-*)',
+    html.includes("'tri-arq-' + tipo") && html.includes("Importar analítico de "));
   var RES_TRI27 = (async () => {
     await RES_TRAVA;                                       // serializa (contexto compartilhado)
     vm.runInContext('EMP_GLOBAL = {cnpj:"24197146000137", razao_social:"WEEEDO"}; TRI={venda:null,compra:null};', ctx);
@@ -872,8 +873,8 @@ console.log('\n■ v7.31.0 — consulta automática, serviços tomados, venda→
 // ═══ 5t. v7.32.0 — analíticos como abas do painel do item 2 ═══
 console.log('\n■ v7.32.0 — analíticos rodam todo o processo do item 2 (abas do painel 🚚)');
 {
-  chk('v7.32.0 · HTML: abas "Analítico de compra" e "Analítico de venda — clientes" existem no item 2 (ocultas até importar)',
-    html.includes('id="fo-aba-compra"') && html.includes('id="fo-aba-venda"')
+  chk('v7.32/33 · abas "Analítico de compra" e "Analítico de venda — clientes" permanentes no item 2 (sem display:none)',
+    html.includes('id="fo-aba-compra" onclick') && html.includes('id="fo-aba-venda" onclick')
     && html.includes("Analítico de compra") && html.includes("Analítico de venda — clientes"));
   var RES_T32 = (async () => {
     await RES_T31;                                         // serializa (FOT/TRI/stubs compartilhados)
@@ -994,8 +995,8 @@ console.log('\n■ Integridade da interface');
     t27&&t27.tv27?`v=${t27.tv27.itens.length} c=${t27.tc27?t27.tc27.itens.length:'—'}`:'timeout');
   chk('v7.30.1 · planilha de lista de CNPJs NÃO é analítico (triParse → null; fluxo do item 2 preservado)',
     t27 && t27.tn27===null);
-  chk('v7.30.1 · v7.29 preservada no card restaurado: dashboard da compra com "➕ Lançar total nas Compras da análise"',
-    t27 && /Lançar total nas Compras/.test(t27.dashC||'') && /alimenta os campos de compras/.test(t27.dashC||''));
+  chk('v7.33.0 · triDash sem botões próprios (gravar/lançar moram no fo-acoes do painel), mantendo o aviso da Reforma',
+    t27 && !/Lançar total/.test(t27.dashC||'') && !/Gravar triagem/.test(t27.dashC||'') && /alimenta os campos de compras/.test(t27.dashC||''));
   chk('v7.26.2 · supaFn: função pendurada gera erro LOCALIZADO (nome da função + orientação aos Logs)',
     t27 && /admin-senha/.test(t27.erroFn) && /não respondeu/.test(t27.erroFn) && /Logs/.test(t27.erroFn),
     t27?String(t27.erroFn).slice(0,90):'—');
