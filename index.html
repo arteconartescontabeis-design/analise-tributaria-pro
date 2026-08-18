@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.36.3</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.38.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -629,13 +629,13 @@ canvas{max-height:340px}
         <div style="display:grid;grid-template-columns:1fr 1fr 200px 140px;gap:14px;align-items:end">
           <div><label>Nome</label><input id="us-nome"></div>
           <div><label>E-mail</label><input id="us-email" type="email"></div>
-          <div><label>Senha inicial</label><input id="us-senha" type="text" placeholder="mín. 6 caracteres"></div>
+          <div><label>Senha inicial</label><input id="us-senha" type="text" placeholder="mín. 8 caracteres"></div>
           <button class="btn solid" onclick="usCriar()">Criar usuário</button>
         </div>
-        <div class="hint" style="margin-top:10px">O usuário entra com e-mail e senha e pode trocá-la depois. A criação usa o cadastro do próprio Supabase deste projeto.</div>
+        <div class="hint" style="margin-top:10px">O usuário entra com e-mail e senha e pode trocá-la depois. Criado como <b>operador</b> — promova a admin na lista abaixo se for o caso.</div>
       </div>
       <div class="card"><h3>Equipe</h3><div style="overflow-x:auto"><table>
-        <thead><tr><th>Nome</th><th>E-mail</th><th>Criado em</th><th>Ações</th></tr></thead>
+        <thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Criado em</th><th>Ações</th></tr></thead>
         <tbody id="us-tbody"></tbody></table></div></div>
     </div>
     <div id="page-versoes" style="display:none">
@@ -644,7 +644,10 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.36.3</b> <span class="badge ok">atual</span></td><td>18/08/2026</td><td><b>Os demais 7 pontos da revisão técnica externa ao parecer da Reforma — e um segundo lugar com o mesmo bug da v7.36.2.</b> (1) <b>Segundo achado da mesma classe do refCenCard</b>: o payload enviado à IA (Edge Function gerar-parecer) também mandava o "por dentro" de 2033 como o valor fixo do ano-base (`D.T.simples`) em vez do valor de 2033 pela fórmula única — corrigido para `cenDentro`; é provavelmente a origem do número 309.333,79 que a IA usou na narrativa. (2) <b>Composição da receita</b> (item 4.1): o retrato comércio×serviços agora mostra a linha de <b>Exportações</b> quando houver, com o fechamento "Receita total = Comércio + Serviços + Exportações" explícito. (3) Nova página <b>"Premissas utilizadas na simulação"</b> (item 4.3, vira a seção 3 — as seguintes foram renumeradas): receita-base e período, composição da receita, crescimento (nenhum — projeção replica a base), Fator R, créditos de IBS/CBS, alíquota de referência 2033, tratamento das exportações, trava da 5ª faixa quando aplicável, metodologia da transição e do split payment. (4) <b>Memória de cálculo do split payment</b> (item 4.4): fórmula, premissa de retenção de 100% do débito e a taxa de 15% a.a. explicadas por extenso. (5) <b>Recomendação final</b> (item 4.5) condicionada explicitamente às premissas, aos dados disponíveis e à regulamentação vigente na data-base — sem linguagem definitiva; a frase gerada pela IA em si depende do prompt da Edge Function <b>gerar-parecer</b>, que não foi enviada nesta rodada. (6) Linha <b>"Fora do Simples"</b> do quadro de 2033 (item 4.6) passa a indicar entre parênteses se é Presumido ou Real. (7) Nota explicando que <b>exportação é subclassificação de B2B/B2C</b>, não uma terceira fatia (item 4.7). (8) <b>Responsável técnico</b> (item 5): novo campo em Parâmetros (nome, qualificação, CRC), usado na assinatura do parecer quando preenchido — com fallback ao texto genérico anterior. (9) Disclosure de uso de <b>IA reforçado</b> (item 6): menciona a revisão do responsável técnico antes da emissão. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.38.0</b> <span class="badge ok">atual</span></td><td>18/08/2026</td><td><b>🔒 C4 (trilha de auditoria) — fecha o trio C1/C2/C4 da segurança, requer setup_v738.sql.</b> (1) <b>Fim das exclusões físicas</b>: excluir empresa, excluir análise (uma ou "tudo") e excluir usuário deixaram de apagar a linha do banco — agora marcam <code>excluido_em</code>/<code>excluido_por</code> (soft-delete). O item some das telas do app normalmente (RLS filtra), mas o dado continua existindo e pode ser recuperado pelo suporte técnico se for engano. (2) <b>Trilha automática</b>: <code>atp_empresas</code> e <code>atp_usuarios</code> ganham <code>atualizado_em</code>/<code>atualizado_por</code> (já existia em <code>atp_analises</code>, faltava nas outras); um trigger no próprio banco preenche sozinho a cada gravação — não depende do código do app lembrar de mandar o campo, então não dá pra esquecer nem falsificar. (3) Mensagens de erro de permissão atualizadas para citar os setups atuais (v737_v2/v738) no lugar do v4, desatualizado desde a v7.16. Motor de cálculo e lacre 5a5562df intocados.</td></tr>
+                    <tr><td><b>v7.37.0</b></td><td>18/08/2026</td><td><b>🔒 C1 (papéis de usuário) e C2 (isolamento por escritório) — segurança, requer setup_v737.sql.</b> (1) <b>Papéis</b>: <code>atp_usuarios</code> ganha a coluna <code>papel</code> (admin × operador); só admin vê e mexe nas abas <b>Usuários</b> e <b>Parâmetros</b> (escondidas do menu para operador, e bloqueadas por RLS mesmo se alguém forçar a URL/console). Lista de usuários ganha coluna de papel com select para promover/rebaixar. (2) <b>Criação de usuário corrigida</b>: o `usCriar` chamava `/auth/v1/signup` direto com a anon key — qualquer pessoa com a URL do app criava uma conta, sem estar logada. Agora passa pela nova Edge Function <b>admin-usuario</b> (mesmo padrão do admin-senha: checa server-side que quem chama é admin antes de criar). (3) <b>Escritórios (fundação multi-tenant)</b>: nova tabela <code>atp_escritorios</code>, com <code>escritorio_id</code> em <code>atp_usuarios</code> e <code>atp_empresas</code>; hoje semeada com um único escritório (Artecon) — todo mundo continua vendo tudo, o isolamento só entra em ação quando um segundo escritório for cadastrado. RLS de <code>atp_analises</code>, <code>atp_analises_hist</code>, <code>atp_fornec</code>, <code>atp_ct_decisao</code> e <code>atp_ct_periodo</code> passa a checar o escritório dono do CNPJ, não mais só "autenticado". <code>atp_classtrib</code>, <code>atp_cnpj_cache</code> e <code>atp_ia_uso</code> permanecem compartilhados (referência/cache, não é dado de cliente). Motor de cálculo e lacre 5a5562df intocados — nada disso mexe em número nenhum.</td></tr>
+                    <tr><td><b>v7.36.4</b></td><td>18/08/2026</td><td><b>Conferência do PDF real do parecer da Weeedo pós-v7.36.3: achei o item 4.7 numa função morta.</b> A nota "B2B + B2C somam 100%, exportação é subclassificação" da v7.36.3 tinha sido escrita em <code>parecerPagClientela</code> — função que não é mais chamada por lugar nenhum desde a v7.34.0 (a página real é montada por <code>parecerPagParceiros</code>). Corrigido no lugar certo, e a mesma nota entrou também no relatório <b>Resumo Estatístico</b> (blocos de venda com exportação), que tinha o mesmo problema. Além disso, adicionada uma explicação para o item 4.2: quando o "por dentro" sai idêntico nos 7 anos da transição (como no caso da Weeedo — o teto do ISS da trava nunca é atingido), o parecer agora diz isso explicitamente, em vez de deixar a tabela plana sem explicação ao lado do texto que diz que ela "pode variar". <b>parecerPagFornecedores e parecerPagClientela seguem como código morto</b> (não removido nesta versão — mantidas por segurança, mas nenhuma delas é chamada). Só relatório; motor e lacre 5a5562df intocados.</td></tr>
+                    <tr><td><b>v7.36.3</b></td><td>18/08/2026</td><td><b>Os demais 7 pontos da revisão técnica externa ao parecer da Reforma — e um segundo lugar com o mesmo bug da v7.36.2.</b> (1) <b>Segundo achado da mesma classe do refCenCard</b>: o payload enviado à IA (Edge Function gerar-parecer) também mandava o "por dentro" de 2033 como o valor fixo do ano-base (`D.T.simples`) em vez do valor de 2033 pela fórmula única — corrigido para `cenDentro`; é provavelmente a origem do número 309.333,79 que a IA usou na narrativa. (2) <b>Composição da receita</b> (item 4.1): o retrato comércio×serviços agora mostra a linha de <b>Exportações</b> quando houver, com o fechamento "Receita total = Comércio + Serviços + Exportações" explícito. (3) Nova página <b>"Premissas utilizadas na simulação"</b> (item 4.3, vira a seção 3 — as seguintes foram renumeradas): receita-base e período, composição da receita, crescimento (nenhum — projeção replica a base), Fator R, créditos de IBS/CBS, alíquota de referência 2033, tratamento das exportações, trava da 5ª faixa quando aplicável, metodologia da transição e do split payment. (4) <b>Memória de cálculo do split payment</b> (item 4.4): fórmula, premissa de retenção de 100% do débito e a taxa de 15% a.a. explicadas por extenso. (5) <b>Recomendação final</b> (item 4.5) condicionada explicitamente às premissas, aos dados disponíveis e à regulamentação vigente na data-base — sem linguagem definitiva; a frase gerada pela IA em si depende do prompt da Edge Function <b>gerar-parecer</b>, que não foi enviada nesta rodada. (6) Linha <b>"Fora do Simples"</b> do quadro de 2033 (item 4.6) passa a indicar entre parênteses se é Presumido ou Real. (7) Nota explicando que <b>exportação é subclassificação de B2B/B2C</b>, não uma terceira fatia (item 4.7). (8) <b>Responsável técnico</b> (item 5): novo campo em Parâmetros (nome, qualificação, CRC), usado na assinatura do parecer quando preenchido — com fallback ao texto genérico anterior. (9) Disclosure de uso de <b>IA reforçado</b> (item 6): menciona a revisão do responsável técnico antes da emissão. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.36.2</b></td><td>18/08/2026</td><td><b>Correção: "Cenários do Simples na transição" (Relatório Reforma) travava o "por dentro" no valor do ano-base.</b> A tabela ano a ano (2026-2033) usava o total fixo do ano-base em vez da fórmula única `cenDentro` (a mesma do parecer e da conferência desde a v7.23.0), então a coluna "Simples por dentro" repetia o mesmo valor nas 8 linhas em vez de refletir a trava recomposta por vigência (teto do ISS decrescente: 5% em 2027-28 → 4,5% em 2029 → ... → 0% em 2033) — e a coluna "Melhor" comparava contra esse valor errado. Corrigido para chamar `cenDentro(T, L)` por ano, como as demais telas. Achado em auditoria externa ao parecer da Weeedo. Só o relatório muda; motor e lacre 5a5562df intocados — a mesma fórmula já estava certa em todos os outros lugares.</td></tr>
                     <tr><td><b>v7.36.1</b></td><td>17/08/2026</td><td><b>Rótulos da conferência — os quatro ajustes de apresentação que faltavam da revisão Weeedo (só exibição; motor e lacre 5a5562df intocados).</b> (1) <b>Período no lugar de "ano-base"</b>: com meses parciais, o cabeçalho da Conferência de cálculos passa a declarar o intervalo realmente lançado (ex.: "período jan–jun/2026 · 6 meses lançados") e avisa que totais e projeções refletem o realizado — a projeção anualizada da receita está no quadro de limite e sublimite. (2) <b>Alíquotas da Reforma classificadas por grau de certeza</b>, ano a ano: 2027–28 = IBS base legal (EC 132/ADCT art. 127) e CBS por estimativa oficial (referência − 0,1 p.p., LC 214 art. 347); 2029–32 = projeção (escada do IBS); 2033 = referência projetada (Res. CGIBS nº 14/2026) — com a nota de que os percentuais são estimativos e as alíquotas definitivas virão do cálculo do TCU homologado pelo Senado. (3) A coluna da Reforma passou a se chamar <b>"Crédito estimado"</b>, com a premissa dita em uma linha: aquisições identificadas na análise, sem incluir despesas gerais nem distinguir o regime do fornecedor, salvo quando a aba Reforma foi alimentada pela análise de fornecedores. (4) O Lucro Real aparece como <b>"Real (simulação)"</b> nos cabeçalhos da tabela mensal e do resumo anual, para que ninguém leia o número como apuração fiscal definitiva.</td></tr>
                     <tr><td><b>v7.36.0</b></td><td>17/08/2026</td><td><b>🔴 Trava da 5ª faixa: a alíquota passa a usar o RBT12 do próprio mês (mudança deliberada de regra — motor re-selado).</b> Quando o RBT12 supera R$ 3,6 milhões e <b>não há impedimento</b>, a 6ª faixa não reparte ICMS/ISS e esses tributos são calculados pela fórmula do <b>art. 21, III, "b", da Resolução CGSN nº 140/2018</b>: {[(RBT12 × alíquota nominal da 5ª faixa) − parcela a deduzir da 5ª faixa] ÷ RBT12} × % de repartição da 5ª faixa. Até a v7.35.0 o motor colocava <b>R$ 3.600.000,00 fixo</b> no lugar do RBT12 — o que congelava a alíquota na efetiva <b>máxima</b> da 5ª faixa (11,875% no Anexo I) e <b>subavaliava a parcela</b>. A Consulta Tributária SEFAZ/SP nº 25.807/2022 trata exatamente da hipótese em que a RBA do ano ainda não superou o sublimite mas o RBT12 sim, e é expressa: o cálculo usa o RBT12, ainda que disso resulte alíquota superior à do teto. O desvio cresce conforme o RBT12 se afasta do sublimite — com RBT12 de R$ 4,8 milhões a diferença chega a 5,1%. No caso-gabarito de comércio a trava subiu de R$ 91.265,03 para <b>R$ 93.426,14</b>. (2) <b>A trava passou a integrar o DAS.</b> Não havendo impedimento, esse ICMS é recolhido <b>na própria guia</b> — é assim que o PGDAS-D o calcula —, e não como parcela somada por fora: a coluna DAS da tabela mensal e da conferência passou a exibir o valor da guia, com marcação nos meses de 6ª faixa, e o confronto automático com o DAS declarado deixa de acusar divergência falsa nesses meses. Quem precisar reproduzir documento já emitido encontra <b>"Fora do DAS — legado"</b> na Configuração da empresa. (3) Nova <b>memória da trava, mês a mês</b>, na Conferência de cálculos: RBT12, faixa, base, alíquota efetiva da 5ª faixa, percentual de repartição, alíquota da trava e valor — o número deixa de ser um total sem demonstração. (4) <b>Limite e sublimite ganharam indicadores próprios e segregados.</b> O RBT12 responde por faixa, alíquota e trava; quem responde por limite e sublimite é a <b>RBA</b> — receita acumulada do ano-calendário —, e o <b>mercado interno e a exportação têm limites independentes</b>, de R$ 4,8 milhões cada (LC 123, art. 3º, § 14) e sublimites de R$ 3,6 milhões cada (Res. CGSN 140/2018, art. 9º, § 1º): somar os dois blocos antecipa uma exclusão que não existe. A conferência ganhou o quadro com RBA realizada, média mensal, projeção de dezembro por bloco, o mês de cada marco e a <b>margem até o limite</b>. (5) Novo <b>alerta de trajetória</b> no veredito da análise e nos pontos de atenção do parecer: mantido o ritmo do período lançado, informa em que mês a RBA cruza o sublimite (e o efeito — ICMS/ISS fora do DAS a partir de 1º/01 do ano seguinte, ou do mês seguinte quando o excesso passa de 20%), se o limite é alcançado e, quando não é, por qual margem escapa. É a informação que faltava para o cliente: a comparação entre regimes pode estar descrevendo um Simples que a empresa não terá no ano seguinte. (6) <b>Política única de arredondamento</b>: o cálculo corre em precisão plena — alíquotas efetivas nunca são arredondadas no meio do caminho — e o arredondamento acontece só no valor exibido, em duas casas; as linhas de <b>total</b> das tabelas mês a mês passaram a somar os valores <b>já arredondados</b> de cada mês, de modo que o total feche com a soma da coluna (as diferenças de um centavo apontadas em auditoria eram exatamente isso). (7) <b>Divergências declaradas atualizadas</b>: saíram os dois itens vencidos pela v7.35.0 (prejuízo não compensado e Lucro Real apenas mensal) e entraram a nova regra da trava, a política de arredondamento e o <b>que ainda não é modelado</b> — o exercício sob <b>impedimento</b>, em que o ICMS/ISS sai do Simples e passa às regras normais do Estado e do Município, e o desdobramento do mês em que a RBA cruza o sublimite. (8) <b>Lacre re-selado</b>: o selo passou de <b>fa39eefb</b> para <b>5a5562df</b>. Lucro Presumido, Lucro Real e os cenários de 2033 <b>não mudaram</b> — a alteração atinge apenas os meses de 6ª faixa e, no cenário híbrido de 2033, a trava é integralmente absorvida pelo IBS e se cancela.</td></tr>
@@ -760,7 +763,7 @@ const SUPA_URL = 'https://kmdrqkiyhdmdtufrogke.supabase.co';
 const SUPA_KEY = 'sb_publishable_4eHrESOoQYRC7bR9rYKGBg_If2lOjnE';
 const TBL = 'atp_empresas';
 
-const APP = { token:null, user:null, page:'dashboard', tokenExp:0 };   // v7.17.1: tokenExp = validade do access_token (ms)
+const APP = { token:null, user:null, page:'dashboard', tokenExp:0, papel:null, escritorioId:null };   // v7.17.1: tokenExp = validade do access_token (ms) · v7.37.0: papel/escritorioId (C1/C2)
 let RESULTADOS = [];       // resultados da consulta corrente
 const $id = id => document.getElementById(id);
 
@@ -867,12 +870,20 @@ function doLogout() {
   location.reload();
 }
 
-function entrar() {
+async function entrar() {
   prCarregar();
   lacreBoot();                                             // v7.30.0: confere o lacre a cada troca de versão
   dlLc116Montar();
   ctOficialCarregar();
   empGlobalRestaurar();
+  // v7.37.0 (C1): papel do usuário logado — decide quem vê Usuários/Parâmetros
+  try {
+    const u = await supa('GET','atp_usuarios',{ params:{ select:'papel,escritorio_id', email:`eq.${APP.user?.email||''}`, limit:'1' } });
+    APP.papel = u?.[0]?.papel || 'operador';
+    APP.escritorioId = u?.[0]?.escritorio_id || null;
+  } catch { APP.papel = 'operador'; APP.escritorioId = null; }   // falha aberta = mais restritivo, não menos
+  const souAdmin = APP.papel === 'admin';
+  ['parametros','usuarios'].forEach(p => { const el = document.querySelector(`.nav-item[data-page="${p}"]`); if (el) el.style.display = souAdmin ? '' : 'none'; });
   $id('auth-screen').style.display = 'none';
   $id('app').style.display = 'block';
   $id('user-email').textContent = APP.user?.email || '';
@@ -883,6 +894,9 @@ function entrar() {
 
 // ── NAVEGAÇÃO ──────────────────────────────────────────────────────────
 function go(page) {
+  if ((page==='usuarios' || page==='parametros') && APP.papel !== 'admin') {
+    toast('Só administradores acessam esta área.'); return;
+  }
   if (APP.page === 'cnpj' && page !== 'cnpj'){
     const pend = ['servico','revenda'].filter(t => FOT[t] && FOT[t].itens.some(i=>i.classe) && !FOT[t]._salvo);
     if (pend.length && !confirm(`Há consulta de fornecedores (${pend.join(' e ')}) que ainda NÃO foi gravada no histórico.\n\n`
@@ -3701,7 +3715,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.36.3';
+const APP_VERSAO = '7.38.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -3880,7 +3894,7 @@ async function empSalvar() {
   const regime = $id('emp-regime').value;
   const atividade_lc = empItemLC($id('emp-atividade')?.value);
   const base = { cnpj, razao_social:$id('emp-razao').value.trim(), simples: regime==='Simples Nacional',
-    regime, uf:uf||null, municipio:municipio||null, obs:$id('emp-obs').value.trim()||null, analise:true };
+    regime, uf:uf||null, municipio:municipio||null, obs:$id('emp-obs').value.trim()||null, analise:true, escritorio_id: APP.escritorioId };
   const salvar = async corpo => { await supa('POST','atp_empresas?on_conflict=cnpj',{ body:[corpo] }); };
   try {
     try { await salvar({ ...base, atividade_lc }); }
@@ -3912,16 +3926,17 @@ async function empConsultarReceita() {
 }
 async function empExcluir(cnpj) {
   const e = EMPRESAS.find(x=>x.cnpj===cnpj);
-  if (!confirm(`Excluir a empresa ${e?.razao_social||fmtCNPJ(cnpj)}?\n\nAs análises e relatórios salvos desta empresa também serão removidos. Esta ação não pode ser desfeita.`)) return;
+  if (!confirm(`Excluir a empresa ${e?.razao_social||fmtCNPJ(cnpj)}?\n\nAs análises e relatórios salvos desta empresa somem das telas do app (o dado em si é preservado — fale com o suporte técnico se precisar recuperar).`)) return;
   try {
-    // apaga verificando quantas linhas realmente saíram (RLS sem política de DELETE falha em silêncio)
+    // v7.38.0 (C4): soft-delete — marca excluido_em em vez de apagar de fato
+    const agora = new Date().toISOString();
     const antes = await supa('GET','atp_analises',{ params:{ select:'ano', cnpj:`eq.${cnpj}` } }).catch(()=>[]);
-    const delAn = await supa('DELETE','atp_analises',{ params:{ cnpj:`eq.${cnpj}` }, returning:true }).catch(()=>null);
-    const delEmp = await supa('DELETE','atp_empresas',{ params:{ cnpj:`eq.${cnpj}` }, returning:true }).catch(()=>null);
+    const delAn = await supa('PATCH','atp_analises',{ params:{ cnpj:`eq.${cnpj}` }, body:{ excluido_em: agora }, returning:true }).catch(()=>null);
+    const delEmp = await supa('PATCH','atp_empresas',{ params:{ cnpj:`eq.${cnpj}` }, body:{ excluido_em: agora }, returning:true }).catch(()=>null);
     const okAn = !antes.length || (Array.isArray(delAn) && delAn.length >= antes.length);
     const okEmp = Array.isArray(delEmp) && delEmp.length > 0;
     if (!okAn || !okEmp) {
-      alert('A exclusão não foi concluída por falta de permissão no banco (RLS sem política de DELETE em '+(!okAn?'atp_analises':'')+(!okAn&&!okEmp?' e ':'')+(!okEmp?'atp_empresas':'')+').\n\nExecute o setup_v4.sql no SQL Editor do Supabase e tente novamente.');
+      alert('A exclusão não foi concluída por falta de permissão no banco em '+(!okAn?'atp_analises':'')+(!okAn&&!okEmp?' e ':'')+(!okEmp?'atp_empresas':'')+'.\n\nExecute o setup_v737_v2.sql e o setup_v738.sql no SQL Editor do Supabase e tente novamente.');
       empCarregar(); return;
     }
     // limpa estados e telas que apontavam para a empresa excluída
@@ -3946,28 +3961,37 @@ function anPreencherEmpresas() {
 }
 
 // ═══════════ USUÁRIOS ═══════════
+// v7.37.0 (C1): criação de usuário passa pela Edge Function admin-usuario —
+// o signup público direto (/auth/v1/signup com a anon key) permitia que
+// QUALQUER pessoa com a URL do app criasse uma conta, logada ou não.
 async function usCriar() {
   const nome = $id('us-nome').value.trim(), email = $id('us-email').value.trim(), senha = $id('us-senha').value;
-  if (!nome || !email || senha.length<6) { toast('Preencha nome, e-mail e senha (mín. 6).'); return; }
+  if (!nome || !email || senha.length<8) { toast('Preencha nome, e-mail e senha (mín. 8).'); return; }
   try {
-    const res = await fetch(`${SUPA_URL}/auth/v1/signup`, { method:'POST',
-      headers:{ 'apikey':SUPA_KEY, 'Content-Type':'application/json' },
-      body: JSON.stringify({ email, password:senha, data:{ nome } }) });
-    const d = await res.json();
-    if (!res.ok) throw new Error(d.error_description||d.msg||'Falha no cadastro');
-    await supa('POST','atp_usuarios?on_conflict=email',{ body:[{ email, nome }] });
+    const r = await supaFn('admin-usuario', { email, senha, nome });
+    const d = await r.json().catch(()=>null);
+    if (!r.ok || !d?.ok) throw new Error((d && d.erro) || ('HTTP '+r.status));
     toast('Usuário criado.'); ['us-nome','us-email','us-senha'].forEach(i=>$id(i).value='');
     usCarregar();
   } catch(e){ toast('Erro: '+e.message); }
 }
 async function usCarregar() {
   try { const rows = await supa('GET','atp_usuarios',{ params:{ select:'*', order:'criado_em.asc' } });
-    $id('us-tbody').innerHTML = rows.length ? rows.map(u=>`<tr><td>${u.nome||'—'}</td><td>${u.email}</td><td>${(u.criado_em||'').slice(0,10)}</td>
+    $id('us-tbody').innerHTML = rows.length ? rows.map(u=>`<tr><td>${u.nome||'—'}</td><td>${u.email}</td>
+      <td>${u.email===APP.user?.email ? (u.papel==='admin'?'Admin':'Operador') : `<select onchange="usTrocarPapel('${u.email}',this.value)"><option value="operador" ${u.papel!=='admin'?'selected':''}>Operador</option><option value="admin" ${u.papel==='admin'?'selected':''}>Admin</option></select>`}</td>
+      <td>${(u.criado_em||'').slice(0,10)}</td>
       <td style="white-space:nowrap"><button class="btn" onclick="usEditar('${u.email}')">Editar</button>
       <button class="btn" onclick="usSenhaMenu('${u.email}')">Redefinir senha</button>
       <button class="btn" style="color:var(--danger)" onclick="usExcluir('${u.email}')">Excluir</button></td></tr>`).join('')
-      : '<tr><td colspan="4" class="hint" style="padding:16px;text-align:center">Nenhum usuário listado ainda.</td></tr>';
-  } catch { $id('us-tbody').innerHTML = '<tr><td colspan="4" class="hint" style="padding:16px">Execute o setup_v2.sql para habilitar a lista.</td></tr>'; }
+      : '<tr><td colspan="5" class="hint" style="padding:16px;text-align:center">Nenhum usuário listado ainda.</td></tr>';
+  } catch { $id('us-tbody').innerHTML = '<tr><td colspan="5" class="hint" style="padding:16px">Execute o setup_v737.sql para habilitar a lista.</td></tr>'; }
+}
+// v7.37.0 (C1): promover/rebaixar — a proteção real é o RLS (só admin grava em atp_usuarios)
+async function usTrocarPapel(email, papel){
+  if (!confirm(`Definir ${email} como ${papel==='admin'?'ADMIN':'operador'}?`)) { usCarregar(); return; }
+  try { await supa('PATCH','atp_usuarios',{ params:{ email:`eq.${email}` }, body:{ papel } });
+    toast('Papel atualizado.'); usCarregar(); }
+  catch(e){ toast('Erro: '+e.message); usCarregar(); }
 }
 async function usEditar(email) {
   const rows = await supa('GET','atp_usuarios',{ params:{ select:'*', email:`eq.${email}`, limit:'1' } }).catch(()=>[]);
@@ -4038,8 +4062,8 @@ async function usSenha(email) {
   } catch(e){ toast('Erro: '+e.message); }
 }
 async function usExcluir(email) {
-  if (!confirm(`Excluir ${email} da lista de usuários do app?\n\nAtenção: isto remove o registro do app; para revogar o LOGIN, exclua a conta também no painel do Supabase (Authentication → Users).`)) return;
-  try { await supa('DELETE','atp_usuarios',{ params:{ email:`eq.${email}` } });
+  if (!confirm(`Excluir ${email} da lista de usuários do app?\n\nAtenção: isto remove o acesso às telas do app (fica registrado quem e quando); para revogar o LOGIN, exclua a conta também no painel do Supabase (Authentication → Users).`)) return;
+  try { await supa('PATCH','atp_usuarios',{ params:{ email:`eq.${email}` }, body:{ excluido_em: new Date().toISOString() } });   // v7.38.0 (C4): soft-delete
     toast('Usuário removido da lista.'); usCarregar(); }
   catch(e){ toast('Erro: '+e.message); }
 }
@@ -4407,7 +4431,7 @@ async function garantirEmpresa(cnpjBruto, nome, regime) {
   if (!EMPRESAS.find(e=>e.cnpj===cnpj)) {
     try {
       await supa('POST','atp_empresas?on_conflict=cnpj',{ body:[{ cnpj, razao_social: nome || ('Empresa '+fmtCNPJ(cnpj)),
-        simples: regime==='Simples Nacional' ? true : null, regime: regime||null, analise:true }] });
+        simples: regime==='Simples Nacional' ? true : null, regime: regime||null, analise:true, escritorio_id: APP.escritorioId }] });
       await empCarregar();
       toast('Empresa cadastrada automaticamente: '+(nome||fmtCNPJ(cnpj)));
     } catch(e) { console.error(e); }
@@ -5478,7 +5502,7 @@ async function anLimparDados() {
   } catch(e){ alert('Não consegui consultar os dados da empresa: '+e.message); return; }
   if (!anos.length && !nFornec) { toast('Esta empresa não tem nada gravado para excluir.'); return; }
   const esc = await dlg(`Limpar dados de ${nome}`,
-    'A exclusão apaga do banco de dados e não tem desfazer.\n\nO que deseja excluir?',
+    'A exclusão some das telas do app (o dado é preservado — fale com o suporte técnico se precisar recuperar).\n\nO que deseja excluir?',
     [...anos.map(a=>({rotulo:`Análise de ${a}`, valor:String(a)})),
      {rotulo:`TUDO — ${anos.length} análise(s) e ${nFornec} consulta(s)`, valor:'tudo', perigo:true},
      {rotulo:'Cancelar', valor:null}]);
@@ -5487,15 +5511,17 @@ async function anLimparDados() {
   const oQue = tudo ? `TODAS as ${anos.length} análise(s) e as ${nFornec} consulta(s) de fornecedores`
                     : `a análise de ${alvoAno}`;
   if (!await dlgSimNao('Confirmar exclusão',
-    `Excluir ${oQue} de ${nome}?\n\nIsto apaga do banco de dados e NÃO tem desfazer.\n\n`
+    `Excluir ${oQue} de ${nome}?\n\nIsto some das telas do app.\n\n`
     + `A empresa continua cadastrada e o histórico de CNPJs consultados é preservado.`,
     'Sim, excluir', 'Não, cancelar')) return;
   try {
+    // v7.38.0 (C4): soft-delete — marca excluido_em em vez de apagar de fato
+    const agora = new Date().toISOString();
     if (tudo){
-      await supa('DELETE','atp_analises',{ params:{ cnpj:'eq.'+cnpj } });
-      await supa('DELETE','atp_fornec',  { params:{ cnpj:'eq.'+cnpj } });
+      await supa('PATCH','atp_analises',{ params:{ cnpj:'eq.'+cnpj }, body:{ excluido_em: agora } });
+      await supa('PATCH','atp_fornec',  { params:{ cnpj:'eq.'+cnpj }, body:{ excluido_em: agora } });
     } else {
-      await supa('DELETE','atp_analises',{ params:{ cnpj:'eq.'+cnpj, ano:'eq.'+alvoAno } });
+      await supa('PATCH','atp_analises',{ params:{ cnpj:'eq.'+cnpj, ano:'eq.'+alvoAno }, body:{ excluido_em: agora } });
     }
   } catch(e){ alert('Erro ao excluir: '+e.message); return; }
   if (tudo || +AN?.ano === +alvoAno){ AN = anNovo(cnpj, AN?.ano || +$id('an-ano').value); AN_SUJO = false; }
@@ -5614,6 +5640,7 @@ async function rlCnpjRender(cnpj){
   }
   const ROT = { mei:['MEI','#1e8449'], simples:['Simples Nacional','#1a5276'], normal:['Regime normal','#b9770e'], nid:['Não identificado','#7f8c8d'], pf:['Pessoa física','#7f8c8d'], proprio:['Movimentação própria','#5d6d7e'] };
   let nSec = (d && (d.qsa||[]).length) ? 3 : (d ? 2 : 1);
+  let temExpVenda = false;   // v7.36.4: sinaliza p/ nota B2B+B2C=100% no fechamento
   const tipoBloco = (r, titulo) => {
     if (!r || !r.dados) return;
     const itens = r.dados.itens||[];
@@ -5633,6 +5660,7 @@ async function rlCnpjRender(cnpj){
     const cardsExtra = (ehVenda ? `<div class="pp-card" style="flex:1;min-width:100px"><div class="t">B2B (CNPJ)</div><div class="v">${pcx(pjV)}%</div></div>
         <div class="pp-card" style="flex:1;min-width:100px"><div class="t">B2C (consumidor)</div><div class="v">${pcx(tot-pjV)}%</div></div>` : '')
       + (expV>0.005 ? `<div class="pp-card" style="flex:1;min-width:110px"><div class="t">Exportação (imune)</div><div class="v">${pcx(expV)}%</div></div>` : '');
+    if (ehVenda && expV>0.005) temExpVenda = true;
     const tabCfop = cfl.length ? `<table class="pp-tab" style="margin:6px 0;font-size:8pt"><thead><tr><th style="text-align:left">CFOP</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">%</th><th style="text-align:left">CFOP</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">%</th></tr></thead><tbody>`
       + (() => { let out=''; for (let k=0;k<cfl.length;k+=2){ const a=cfl[k], b=cfl[k+1];
           const cel = x => x ? `<td style="text-align:left">${x[0]}${TRI_EXP_CFOPS.test(x[0])?' (exp.)':''}</td><td style="text-align:right">${fmt(x[1])}</td><td style="text-align:right">${pcx(x[1])}%</td>` : '<td></td><td></td><td></td>';
@@ -5657,7 +5685,7 @@ async function rlCnpjRender(cnpj){
     tipoBloco(F.venda,'Clientes — relação completa (arquivo de venda)');
     tipoBloco(F.revenda,'Fornecedores — Totais de entrada (ICMS)'); tipoBloco(F.servico,'Fornecedores de serviços e despesas (Totais ISS)'); }   // v7.34.0
   else B.push({ html:'<div class="hint" style="margin-top:8px">Nenhuma análise de fornecedores salva para esta empresa — importe o relatório de fornecedores na Consulta CNPJ (🚚) e grave a consulta.</div>', custo:3 });
-  B.push({ html:`<div class="hint" style="margin-top:8px">No IVA dual, o crédito de IBS/CBS do adquirente depende do regime do fornecedor: regime normal gera crédito pleno destacado no documento fiscal; Simples Nacional, crédito limitado ao percentual da faixa do fornecedor (LC 214/2025; Res. CGSN 190/2026, art. 58); MEI e pessoas físicas, em regra, não geram crédito.</div>
+  B.push({ html:`<div class="hint" style="margin-top:8px">No IVA dual, o crédito de IBS/CBS do adquirente depende do regime do fornecedor: regime normal gera crédito pleno destacado no documento fiscal; Simples Nacional, crédito limitado ao percentual da faixa do fornecedor (LC 214/2025; Res. CGSN 190/2026, art. 58); MEI e pessoas físicas, em regra, não geram crédito.${temExpVenda?' Nos blocos de venda, B2B + B2C somam 100% da receita; a exportação é uma classificação adicional quanto ao destino da operação (contida dentro de B2B e/ou B2C), não uma terceira categoria a ser somada às demais.':''}</div>
     <div class="hint" style="margin-top:6px">Fontes: ${fonte||'dados abertos da RFB indisponíveis'}; análises de fornecedores do escritório (com data indicada por consulta). Documento gerado em ${new Date().toLocaleString('pt-BR')} · Artecon Artes Contábeis.</div>`, custo:5 });
   box.innerHTML = ppDocumento(B);
 }
@@ -5887,7 +5915,7 @@ function parecerPagParceiros(secao, prox){
     <p class="pp-p" style="font-size:9pt;margin-top:6px">${!V ? 'Sem analítico de venda gravado, a leitura da clientela não pôde ser feita nesta edição do parecer.'
       : (b2b>=50 ? 'Com a maior parte do faturamento destinada a pessoas jurídicas, a pressão pelo crédito de IBS/CBS tende a ser relevante — os cenários <b>híbrido</b> e <b>regime regular</b> merecem atenção especial, e a permanência integral no Simples pode custar competitividade junto a esses clientes.'
                  : 'Com a maior parte do faturamento destinada ao consumidor final, a ausência de crédito ao cliente tem impacto comercial reduzido — a permanência integral no Simples tende a preservar a competitividade, e a comparação financeira decide.')}${V&&V.exp>0.005?' As receitas de exportação identificadas são imunes ao IBS/CBS (LC 214, art. 8º) e não pressionam a decisão do crédito.':''}${(V&&V.top.length&&(V.top.reduce((a,i)=>a+(+i.valor||0),0)/V.tot)>=0.6)?' A concentração do faturamento nos maiores clientes é elevada: a decisão que eles tomarem na transição altera diretamente o resultado desta análise.':''}</p>
-    <div class="hint" style="font-size:8pt;margin-top:3px">Enquadramentos consultados nos dados abertos da RFB nas datas indicadas — sujeitos a alteração. O crédito efetivo dependerá do destaque em documento fiscal a partir de 2026/2027.</div>
+    <div class="hint" style="font-size:8pt;margin-top:3px">Enquadramentos consultados nos dados abertos da RFB nas datas indicadas — sujeitos a alteração. O crédito efetivo dependerá do destaque em documento fiscal a partir de 2026/2027.${V&&V.exp>0.005?' B2B + B2C somam 100% da receita de vendas; a exportação é uma classificação adicional quanto ao destino da operação (contida dentro de B2B e/ou B2C, conforme o comprador), não uma terceira categoria a ser somada às demais.':''}</div>
   </div></div>`;
 }
 
@@ -6160,9 +6188,8 @@ function rlParecer(){
         const cand = D.variante!=='acima' ? [['Por dentro',d],['Híbrido',L.hib],['Presumido',L.regLP],['Real',L.regLR]] : [['Presumido',L.regLP],['Real',L.regLR]]; const menor = cand.reduce((a,b)=>b[1]<a[1]?b:a);
         return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td>${D.variante!=='acima'?`<td class="num">${fmt(d)}</td><td class="num">${fmt(L.hib)}</td>`:''}<td class="num">${fmt(L.regLP)}</td><td class="num">${fmt(L.regLR)}</td><td><span class="pp-pill">${menor[0]}</span></td></tr>`; }).join('')}
       </tbody></table>
+      ${D.variante!=='acima' && D.sDentro.length && !D.sDentro.some((v,i,arr)=>i>0 && Math.abs(v-arr[0])>0.5) ? `<div class="hint" style="margin-top:6px">O "por dentro" permanece <b>estável</b> nos ${D.sDentro.length} anos simulados: o teto do ISS da trava da 5ª faixa (Res. CGSN nº 190/2026) decresce a cada vigência, mas a alíquota efetiva de ISS desta empresa fica abaixo do teto em todos os anos — quando isso acontece, a fórmula da trava não é afetada pela vigência e o total não se altera. Empresas com alíquota efetiva de ISS mais próxima do teto veem o "por dentro" variar ano a ano.</div>` : ''}
     </div></div>`;
-
-    // ── PÁG: % da receita (+ cenários 2033 quando couber) ──
     h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
       <div class="pp-chartbox"><div class="pp-ct">Quanto da receita vira imposto · %</div><canvas id="pc-pct" height="130"></canvas>
       <div class="hint" style="margin-top:6px;font-size:8pt;line-height:1.35"><b>Como ler:</b> cada linha divide a carga total do cenário no ano pela receita do período analisado. A carga inclui todos os tributos do cenário (guia do Simples, trava do sublimite, retenções recompostas, IBS/CBS e Imposto Seletivo quando por fora; no Presumido/Real, os tributos federais, ICMS/ISS/IPI e o INSS patronal) e <b>não inclui o FGTS</b>, idêntico em todos os regimes. O "por dentro" pode variar entre os anos porque o teto do ISS da trava da 5ª faixa decresce a cada vigência (Res. CGSN nº 190/2026). Valores em moeda constante do ano-base.</div></div>`;
