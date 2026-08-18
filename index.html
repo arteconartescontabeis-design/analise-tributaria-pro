@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.38.3</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.38.4</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -644,7 +644,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.38.3</b> <span class="badge ok">atual</span></td><td>18/08/2026</td><td><b>Investigação dos dois cortes de texto apontados no PDF real — eram pré-existentes, não da v7.38.1.</b> Achei as duas páginas com conteúdo demais para os 296mm/196mm úteis: "Introdução + Enquadramento + Caminho" (parágrafo + caixa de enquadramento + alertas + linha do tempo + 2 caixas de jornada + parágrafo final — 7 blocos numa página só) e "Plano de ação + Parecer e recomendação" (4 passos + 2 parágrafos + caixa de recomendação). Ambas separadas em duas páginas cada, mesmo padrão que já corrigiu a v7.38.1/7.38.2. Numeração das seções conferida — segue sequencial, sem pular nem repetir número. <b>Ainda precisa ser confirmado no PDF real</b> (reprocessar e conferir se as frases agora terminam completas). Motor e lacre 5a5562df intocados.</td></tr>
+                    <tr><td><b>v7.38.4</b> <span class="badge ok">atual</span></td><td>18/08/2026</td><td><b>Última página cortando, confirmada no PDF real: "O retrato da empresa em números".</b> O hint sob o gráfico "Para onde vai cada real do DAS" cortava no meio da frase ("...a distribuição é" e parava) e o hint de "Consumo: X% do DAS" nem chegava a aparecer — a legenda do gráfico de receita ganhou uma 3ª linha (Exportação, v7.38.1) e isso empurrou o conteúdo além dos 296mm. Separada em duas páginas: receita mensal numa, DAS por tributo (rosca + tabela) na outra. Com essa, as três páginas identificadas como problema (Introdução+Caminho, Retrato, Plano+Parecer) estão todas corrigidas. Motor e lacre 5a5562df intocados.</td></tr>
+                    <tr><td><b>v7.38.3</b></td><td>18/08/2026</td><td><b>Investigação dos dois cortes de texto apontados no PDF real — eram pré-existentes, não da v7.38.1.</b> Achei as duas páginas com conteúdo demais para os 296mm/196mm úteis: "Introdução + Enquadramento + Caminho" (parágrafo + caixa de enquadramento + alertas + linha do tempo + 2 caixas de jornada + parágrafo final — 7 blocos numa página só) e "Plano de ação + Parecer e recomendação" (4 passos + 2 parágrafos + caixa de recomendação). Ambas separadas em duas páginas cada, mesmo padrão que já corrigiu a v7.38.1/7.38.2. Numeração das seções conferida — segue sequencial, sem pular nem repetir número. <b>Ainda precisa ser confirmado no PDF real</b> (reprocessar e conferir se as frases agora terminam completas). Motor e lacre 5a5562df intocados.</td></tr>
                     <tr><td><b>v7.38.2</b></td><td>18/08/2026</td><td><b>Revertida a junção da v7.38.1 — confirmado no PDF real que cortava conteúdo.</b> A tentativa de unir "Premissas" e "O retrato" numa página só estourou os 296mm: o gráfico "Receita mensal por atividade" saiu cortado pela metade e a seção inteira "Para onde vai cada real do DAS" (gráfico de rosca + tabela de tributos) desapareceu do documento, sem aviso nenhum — exatamente o risco do <code>overflow:hidden</code> que eu tinha avisado antes de tentar. Voltou a ser 2 páginas separadas, como era antes da v7.38.1. A 3ª série do gráfico (Exportação) da v7.38.1 continua valendo — isso não tinha problema. Motor e lacre 5a5562df intocados.</td></tr>
                     <tr><td><b>v7.38.1</b></td><td>18/08/2026</td><td><b>Gráfico de receita mensal ganha a barra de Exportação; tentativa de reduzir páginas do parecer (pendente de conferência no PDF real).</b> (1) O gráfico empilhado "Receita mensal por atividade" (seção "O retrato") tinha só Comércio/Indústria e Serviços — a exportação já aparecia no texto abaixo mas não no gráfico. Adicionada a 3ª série. (2) <b>Experimental</b>: a página "Premissas" (seção 3) e "O retrato" (seção 4) foram unidas numa página só, para reduzir a quantidade de páginas do documento. Como cada página tem altura fixa de 296mm (100mm reservados pro timbrado) com overflow oculto na impressão, não é possível confirmar daqui se o conteúdo combinado cabe sem cortar — <b>precisa ser conferido no PDF real</b> gerado pelo Chrome; se cortar algo (frase interrompida, tabela incompleta), a junção será desfeita. Motor e lacre 5a5562df intocados.</td></tr>
                     <tr><td><b>v7.38.0</b></td><td>18/08/2026</td><td><b>🔒 C4 (trilha de auditoria) — fecha o trio C1/C2/C4 da segurança, requer setup_v738.sql.</b> (1) <b>Fim das exclusões físicas</b>: excluir empresa, excluir análise (uma ou "tudo") e excluir usuário deixaram de apagar a linha do banco — agora marcam <code>excluido_em</code>/<code>excluido_por</code> (soft-delete). O item some das telas do app normalmente (RLS filtra), mas o dado continua existindo e pode ser recuperado pelo suporte técnico se for engano. (2) <b>Trilha automática</b>: <code>atp_empresas</code> e <code>atp_usuarios</code> ganham <code>atualizado_em</code>/<code>atualizado_por</code> (já existia em <code>atp_analises</code>, faltava nas outras); um trigger no próprio banco preenche sozinho a cada gravação — não depende do código do app lembrar de mandar o campo, então não dá pra esquecer nem falsificar. (3) Mensagens de erro de permissão atualizadas para citar os setups atuais (v737_v2/v738) no lugar do v4, desatualizado desde a v7.16. Motor de cálculo e lacre 5a5562df intocados.</td></tr>
@@ -3718,7 +3719,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.38.3';
+const APP_VERSAO = '7.38.4';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -6172,16 +6173,20 @@ function rlParecer(){
     <div class="hint" style="margin-top:6px">Este quadro permite a outro profissional reproduzir ou revisar os resultados deste parecer a partir das mesmas premissas.</div>
   </div></div>`;
 
-  // ── PÁG: retrato — receita com×serv + DAS por tributo ──
+  // ── PÁG: retrato — receita com×serv (v7.38.4: separada do DAS por tributo — a combinada estourava e cortava o hint do consumo) ──
   h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
     ${secao(4,'O retrato da empresa em números')}
     <p class="pp-p">${TX.retrato}</p>
     ${temCS?`<div class="pp-chartbox"><div class="pp-ct">Receita mensal por atividade · comércio/indústria × serviços${(D.T.receitaExp||0)>0.005?' × exportação':''}</div><canvas id="pc-recms" height="150"></canvas>
       <div class="hint">Comércio/Indústria: ${fmtR(D.T.recCom)} (${D.T.receita?((D.T.recCom)/D.T.receita*100).toFixed(1):0}%) · Serviços: ${fmtR(D.T.recServ)} (${D.T.receita?((D.T.recServ)/D.T.receita*100).toFixed(1):0}%)${(D.T.receitaExp||0)>0.005?` · Exportações: ${fmtR(D.T.receitaExp)} (${D.T.receita?((D.T.receitaExp)/D.T.receita*100).toFixed(1):0}%)`:''}<br><span style="opacity:.75">Receita total (${fmtR(D.T.receita)}) = Comércio/Indústria + Serviços${(D.T.receitaExp||0)>0.005?' + Exportações':''}.</span></div></div>`:''}
-    ${temDT?`<div class="pp-duo"><div class="pp-chartbox"><div class="pp-ct">Para onde vai cada real do DAS</div><canvas id="pc-das" height="190"></canvas>
+  </div></div>`;
+
+  // ── PÁG: DAS por tributo ──
+  if (temDT) h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
+    <div class="pp-duo"><div class="pp-chartbox"><div class="pp-ct">Para onde vai cada real do DAS</div><canvas id="pc-das" height="190"></canvas>
       <div class="hint" style="margin-top:6px">O DAS é uma guia única que a lei reparte entre até oito tributos (LC 123, Anexos I–V, percentuais por faixa de receita). A fatia de <b>consumo</b> — PIS, COFINS, ICMS, ISS e IPI — é a parcela substituída pela CBS e pelo IBS na Reforma; IRPJ, CSLL e CPP permanecem como são. Em meses com ST, monofásico ou retenções, a distribuição é proporcional estimada.</div></div>
       <div class="pp-chartbox"><div class="pp-ct">Valores por tributo · ano</div><table class="pp-tab">${[['PIS','pis'],['COFINS','cofins'],['IRPJ','irpj'],['CSLL','csll'],['CPP','cpp'],['ICMS','icms'],['ISS','iss'],['IPI','ipi']].filter(([,k])=>(D.dasTrib[k]||0)>0.005).map(([n,k])=>`<tr><td class="rot">${n}</td><td class="num">${fmt(D.dasTrib[k])}</td><td class="num">${(D.dasTrib[k]/((D.T.das||0)+(D.T.sublimite||0))*100).toFixed(1)}%</td></tr>`).join('')}</table>
-      <div class="hint" style="margin-top:6px">Consumo (PIS+COFINS+ICMS+ISS+IPI): <b>${(( (D.dasTrib.pis+D.dasTrib.cofins+D.dasTrib.icms+D.dasTrib.iss+D.dasTrib.ipi) / ((D.T.das||0)+(D.T.sublimite||0)) )*100).toFixed(1)}% do DAS</b> — é a parcela em jogo na Reforma.</div></div></div>`:''}
+      <div class="hint" style="margin-top:6px">Consumo (PIS+COFINS+ICMS+ISS+IPI): <b>${(( (D.dasTrib.pis+D.dasTrib.cofins+D.dasTrib.icms+D.dasTrib.iss+D.dasTrib.ipi) / ((D.T.das||0)+(D.T.sublimite||0)) )*100).toFixed(1)}% do DAS</b> — é a parcela em jogo na Reforma.</div></div></div>
   </div></div>`;
 
   // ── PÁG: evolução (gráfico + tabela) ──
