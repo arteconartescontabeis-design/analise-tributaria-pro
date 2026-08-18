@@ -389,14 +389,15 @@ console.log('\n■ v7.20.0 — dashboard de fornecedores, conferência da Reform
              {cnpj:'22222222000191', razao:'FORN SIMPLES ME', classe:'simples', valor:300000},
              {cnpj:'33333333000191', razao:'FORN MEI', classe:'mei', valor:100000} ] } } };`, ctx);
   try { g.rlParecer(); const out = els['rl-corpo'].innerHTML;
-    chk('parecer · página "Fornecedores e o crédito de IBS/CBS" renderiza com os números',
-      out.includes('Fornecedores e o crédito de IBS/CBS') && out.includes('FORN NORMAL LTDA') && /60,0%/.test(out.replace(/\u00a0/g,' ')),
+    chk('parecer · página única "Clientes e fornecedores — a decisão do crédito" (v7.34.0) com os números da compra',
+      out.includes('Clientes e fornecedores') && out.includes('FORN NORMAL LTDA') && /60,0%/.test(out.replace(/\u00a0/g,' '))
+      && /Regime normal — crédito pleno/.test(out) && /5 maiores fornecedores/.test(out),
       (out.match(/pp-page/g)||[]).length+' páginas');
   } catch(e){ chk('parecer · página de fornecedores', false, e.message); }
   // sem consulta salva, a página NÃO aparece
   vm.runInContext('RL.forn = null', ctx);
   try { g.rlParecer(); const out2 = els['rl-corpo'].innerHTML;
-    chk('parecer · sem consulta de fornecedores, a página não aparece', !out2.includes('Fornecedores e o crédito de IBS/CBS'));
+    chk('parecer · sem consulta de fornecedores, a página não aparece', !out2.includes('Clientes e fornecedores — a decisão do crédito'));
   } catch(e){ chk('parecer · sem fornecedores', false, e.message); }
   // conferência da Reforma ano a ano
   try { const h = vm.runInContext('rlConfReforma()', ctx);
@@ -573,11 +574,11 @@ console.log('\n■ v7.25.0 — triagem de venda/compra (analíticos) e redefini�
       itens: __TV.itens.map(i=>({cnpj:i.cnpj,razao:i.razao,classe:i.classe||'normal',valor:i.valor})) } } };`, ctx);
     g.rlParecer();
     const out = els['rl-corpo'].innerHTML;
-    chk('v7.25.0 · parecer ganha "Perfil da clientela" com B2B×B2C quando há triagem de venda',
-      out.includes('Perfil da clientela') && /90,0%/.test(out));
+    chk('v7.25.0→v7.34.0 · com triagem de venda, a página única traz "Vendas e clientes" com B2B×B2C (90,0%) e os 5 maiores clientes',
+      out.includes('Vendas e clientes') && /B2B \(CNPJ\)/.test(out) && /90,0%/.test(out) && /5 maiores clientes/.test(out));
     vm.runInContext('RL.forn = null', ctx);
     g.rlParecer();
-    chk('v7.25.0 · sem triagem, o parecer não ganha a página', !els['rl-corpo'].innerHTML.includes('Perfil da clientela'));
+    chk('v7.25.0→v7.34.0 · sem triagem, o parecer não ganha a página', !els['rl-corpo'].innerHTML.includes('Clientes e fornecedores — a decisão do crédito'));
   } catch(e){ chk('v7.25.0 · página da clientela', false, e.message); }
   // senha 2 opções: "agora" chama a Edge Function admin-senha via supaFn
   var RES_SENHA2 = (async () => {
@@ -826,9 +827,10 @@ console.log('\n■ v7.31.0 — consulta automática, serviços tomados, venda→
 {
   chk('v7.31.0 · consulta automática ligada no código: triArquivo chama triConsultar(tipo, true) e a pergunta de quantidade saiu',
     html.includes('triConsultar(tipo, true)') && !html.includes('Consultar na Receita?'));
-  chk('v7.31.0 · relatório renomeado para "Resumo Estatístico de Fornecedores e Clientes" (título, cabeçalho e opção)',
-    (html.match(/Resumo Estatístico de Fornecedores e Clientes/g)||[]).length >= 3
-    && html.includes('Resumo estatístico de fornecedores e clientes</option>'));
+  chk('v7.34.0 · relatório renomeado para "Resumo Estatístico" nos 3 pontos (opção, cabeçalho ppDocCab e rl-titulo)',
+    html.includes('<option value="cnpj">Resumo Estatístico</option>')
+    && html.includes("ppDocCab('Resumo Estatístico'")
+    && html.includes("$id('rl-titulo').textContent = 'Resumo Estatístico'"));
   var RES_T31 = (async () => {
     await RES_LACRE;                                       // serializa (contexto compartilhado)
     // (a) consulta SEMPRE DIRETO: 5 CNPJs novos, nenhum dlg, consultarUm 5x, classes preenchidas
@@ -922,6 +924,73 @@ console.log('\n■ v7.32.0 — analíticos rodam todo o processo do item 2 (abas
   })();
 }
 
+// ═══ 5u. v7.36.0 — trava da 5ª faixa com o RBT12 efetivo, DAS da guia e monitor de limites ═══
+console.log('\n■ v7.36.0 — trava (RBT12 efetivo), trava no DAS e limite/sublimite segregados');
+{
+  const jan = v => { const a = z(); a[0] = v; return a; };
+  // T1: limite EXCLUSIVO — RBT12 exatamente em 3.600.000,00 ainda é 5ª faixa, sem trava
+  const t1 = g.calcular(mk({a1_semst:jan(100000)},3600000,{icmsV:.12}), clone(AD), {...FD});
+  chk('T1 · RBT12 = 3.600.000,00 → 5ª faixa, SEM trava', t1.meses[0].faixa===5 && t1.meses[0].subIcms===0 && t1.meses[0].subIss===0,
+    `faixa=${t1.meses[0].faixa} sub=${(t1.meses[0].subIcms+t1.meses[0].subIss).toFixed(2)}`);
+  // T2: um centavo acima → 6ª faixa; alíquota no piso = efetiva máxima da 5ª (continuidade)
+  const t2 = g.calcular(mk({a1_semst:jan(100000)},3600000.01,{icmsV:.12}), clone(AD), {...FD});
+  chk('T2 · RBT12 = 3.600.000,01 → trava ≈ 3.978,13 (efetiva máxima da 5ª: continuidade, sem salto)',
+    t2.meses[0].faixa===6 && Math.abs(t2.meses[0].subIcms-3978.13)<0.02, 'sub='+t2.meses[0].subIcms.toFixed(2));
+  // T3/T4: WEEEDO mai e jun/2026 — os números homologados no parecer (RBT12 efetivo do mês)
+  const t3 = g.calcular(mk({a1_semst:jan(92589.28)},3636122.34,{icmsV:.12}), clone(AD), {...FD});
+  chk('T3 · Weeedo mai/26: RBT12 3.636.122,34 × base 92.589,28 → 3.690,79',
+    Math.abs(t3.meses[0].subIcms-3690.79)<0.01, 'sub='+t3.meses[0].subIcms.toFixed(2));
+  const t4 = g.calcular(mk({a1_semst:jan(163276.92)},3911784.92,{icmsV:.12}), clone(AD), {...FD});
+  chk('T4 · Weeedo jun/26: RBT12 3.911.784,92 × base 163.276,92 → 6.601,08',
+    Math.abs(t4.meses[0].subIcms-6601.08)<0.01, 'sub='+t4.meses[0].subIcms.toFixed(2));
+  // T5: topo da faixa — o modelo antigo (teto fixo) daria 3.978,13; o correto é 4.181,22 (+5,1%)
+  const t5 = g.calcular(mk({a1_semst:jan(100000)},4800000,{icmsV:.12}), clone(AD), {...FD});
+  chk('T5 · RBT12 = 4.800.000 → trava 4.181,22 (o modelo antigo congelava em 3.978,13)',
+    Math.abs(t5.meses[0].subIcms-4181.22)<0.02, 'sub='+t5.meses[0].subIcms.toFixed(2));
+  // T6: Anexo III — o ISS da trava continua no teto de 5% (a correção não move os anexos de serviço)
+  const t6 = g.calcular(mk({a3_semret:jan(100000)},3911784.92), clone(AD), {...FD});
+  chk('T6 · Anexo III: ISS da trava capado em 5% (5.000,00 por 100.000)',
+    Math.abs(t6.meses[0].subIss-5000)<0.01, 'subIss='+t6.meses[0].subIss.toFixed(2));
+  // T8/T9: exportação e receitas com ST ficam FORA da base da trava
+  const t8 = g.calcular(mk({a1_exp:jan(100000)},3700000,{icmsV:.12}), clone(AD), {...FD});
+  chk('T8 · exportação em mês de 6ª faixa: trava = 0 (imune, sublimite próprio)',
+    t8.meses[0].subIcms===0 && t8.meses[0].subIss===0);
+  const t9 = g.calcular(mk({a1_comst:jan(100000)},3700000,{icmsV:.12}), clone(AD), {...FD});
+  chk('T9 · receita com ST em mês de 6ª faixa: trava = 0 (ICMS-ST recolhido antes)',
+    t9.meses[0].subIcms===0 && t9.meses[0].subIss===0);
+  // T11: DAS DA GUIA — a trava integra o dasGuia; com travaNoDas=false, reproduz o legado
+  chk('T11 · dasGuia = das + trava (mês e total) — a guia é o que o PGDAS-D emite',
+    Math.abs(t3.meses[0].dasGuia-(t3.meses[0].das+t3.meses[0].subIcms))<0.005
+      && Math.abs(t3.totais.dasGuia-(t3.totais.das+t3.totais.sublimite))<0.005,
+    'guia='+t3.meses[0].dasGuia.toFixed(2));
+  const t11b = g.calcular(mk({a1_semst:jan(92589.28)},3636122.34,{icmsV:.12,travaNoDas:false}), clone(AD), {...FD});
+  chk('T11b · cfg.travaNoDas=false (legado): dasGuia = das, trava segue somada só no total do Simples',
+    Math.abs(t11b.meses[0].dasGuia-t11b.meses[0].das)<0.005 && t11b.meses[0].subIcms>0);
+  chk('T11c · sem dupla contagem: simples.total = das + trava + retenções (a trava não entra duas vezes)',
+    Math.abs(t3.meses[0].simples.total-(t3.meses[0].das+t3.meses[0].subIcms+t3.meses[0].subIss))<0.005);
+  // T12: monitor de limite/sublimite — mercado interno e exportação NUNCA se somam
+  const t12 = g.calcular(mk({a1_semst:Array(12).fill(0).map((_,i)=>i<6?400000:0),
+                             a1_exp:  Array(12).fill(0).map((_,i)=>i<6?300000:0)},1200000,{icmsV:.12}), clone(AD), {...FD});
+  chk('T12 · subMon: projeção por bloco — interno cruza o sublimite em OUT e NÃO alcança 4,8 mi; somado com exportação alcançaria',
+    t12.subMon && t12.subMon.marco.sublimite===9 && t12.subMon.marco.limite===-1
+      && Math.abs(t12.subMon.projInt[11]-4800000)<1 && Math.abs(t12.subMon.projExp[11]-3600000)<1,
+    t12.subMon?`sub=${t12.subMon.marco.sublimite} lim=${t12.subMon.marco.limite} dezInt=${t12.subMon.projInt[11].toFixed(0)}`:'subMon ausente');
+  chk('T12b · subMon classifica o efeito: a projeção cruza os +20% (4,32 mi) em NOV → ICMS/ISS fora do DAS a partir do mês seguinte',
+    t12.subMon && t12.subMon.impedimento && t12.subMon.impedimento.quando==='mes-seguinte' && t12.subMon.marco.sublimite20===10,
+    t12.subMon&&t12.subMon.impedimento?`quando=${t12.subMon.impedimento.quando} m20=${t12.subMon.marco.sublimite20}`:'—');
+  // T12c: mesmo desenho SEM os +20% — ritmo menor cai no efeito de 1º/01 do ano seguinte
+  const t12c = g.calcular(mk({a1_semst:Array(12).fill(0).map((_,i)=>i<6?330000:0)},1200000,{icmsV:.12}), clone(AD), {...FD});
+  chk('T12c · excesso projetado ≤20% → efeito a partir de 1º/01 do ano seguinte',
+    t12c.subMon && t12c.subMon.impedimento && t12c.subMon.impedimento.quando==='ano-seguinte'
+      && t12c.subMon.marco.sublimite>=0 && t12c.subMon.marco.sublimite20===-1,
+    t12c.subMon&&t12c.subMon.impedimento?`quando=${t12c.subMon.impedimento.quando}`:'—');
+  // T13: política de arredondamento — a soma exibida fecha com os meses arredondados
+  const _r2 = v=>Math.round(v*100)/100;
+  chk('T13 · somaExib: total = Σ meses arredondados (sem diferença de centavo na tabela)',
+    Math.abs(vm.runInContext(`somaExib(${JSON.stringify(t3.meses.map(x=>x.dasGuia))})`, ctx)
+      - t3.meses.reduce((s,x)=>s+_r2(x.dasGuia),0)) < 1e-9);
+}
+
 // ═══ 6. Integridade da interface ═══
 // Todo elemento que o código acessa por $id() precisa existir no HTML.
 // Foi a ausência disso que deixou passar container removido e seletor duplicado.
@@ -962,7 +1031,7 @@ console.log('\n■ Integridade da interface');
     prodHtml&&prodHtml.startsWith('EXC:')?prodHtml:'ok');
   const fornCnpj = await Promise.race([RES_FORNCNPJ, new Promise(r=>setTimeout(()=>r(null), 8000))]);
   chk('v7.22.0 · Resumo de fornecedores no LAYOUT DO PARECER (pp-page timbrada) com identificação e QSA',
-    typeof fornCnpj==='string' && /Resumo Estatístico de Fornecedores/.test(fornCnpj) && /pp-page/.test(fornCnpj) && /EMPRESA TESTE LTDA/.test(fornCnpj) && /FULANO DE TAL/.test(fornCnpj),
+    typeof fornCnpj==='string' && /Resumo Estatístico/.test(fornCnpj) && /pp-page/.test(fornCnpj) && /EMPRESA TESTE LTDA/.test(fornCnpj) && /FULANO DE TAL/.test(fornCnpj),
     fornCnpj&&fornCnpj.startsWith&&fornCnpj.startsWith('EXC:')?fornCnpj:'ok');
   chk('v7.22.0 · relação INTEGRAL de fornecedores (3 nomeados + 57 extras) com % em regime normal',
     typeof fornCnpj==='string' && fornCnpj.includes('FORN NORMAL LTDA') && fornCnpj.includes('FORN SIMPLES ME') && fornCnpj.includes('FORN MEI') && fornCnpj.includes('FORN 56'),
@@ -1082,14 +1151,14 @@ console.log('\n■ Integridade da interface');
     t31 && t31.vpf2===1 && t31.aplic2===false, tErr);
   const t32 = await Promise.race([RES_T32, new Promise(r=>setTimeout(()=>r(null), 8000))]);
   const t32e = typeof t32==='string' ? t32 : '';
-  chk('v7.32.0 · analítico de compra vira ABA do painel 🚚 (painel aberto, aba ativa, título ANALÍTICO, próprio fora, total 50.000)',
+  chk('v7.32.0→v7.34.0 · analítico de compra vira ABA do painel 🚚 (painel aberto, aba ativa, rótulo ARQUIVO DE COMPRA, próprio fora, total 50.000)',
     t32 && t32.dsC && t32.dsC.analitico===true && t32.tipoAtivo==='compra' && t32.painel==='block'
-      && /ANALÍTICO DE COMPRA/.test(t32.emp) && t32.dsC.itens.length===2 && Math.abs(t32.dsC.totalRelatorio-50000)<0.01,
+      && /ARQUIVO DE COMPRA \(FORNECEDOR\)/.test(t32.emp) && t32.dsC.itens.length===2 && Math.abs(t32.dsC.totalRelatorio-50000)<0.01,
     t32e || (t32?`itens=${t32.dsC?t32.dsC.itens.length:'—'} painel=${t32.painel}`:'timeout'));
   chk('v7.32.0 · itens COMPARTILHADOS com a triagem (classe mudada na triagem reflete na aba do item 2)',
     t32 && t32.compartilhado==='mei', t32e);
-  chk('v7.32.0 · ações da aba de compra: salvar via triSalvar + "Lançar em Compras" via triLancarCompras (selo "gravada")',
-    t32 && /triSalvar\('compra'\)/.test(t32.acoesC||'') && /triLancarCompras\(\)/.test(t32.acoesC||'') && /gravada/.test(t32.acoesC||''), t32e);
+  chk('v7.32.0→v7.34.0 · ações da aba de compra: salvar via triSalvar + "📥 Lançar total na análise" via foLancar POR CFOP (selo "gravada")',
+    t32 && /triSalvar\('compra'\)/.test(t32.acoesC||'') && /foLancar\(\)/.test(t32.acoesC||'') && /por CFOP|CFOP/.test(t32.acoesC||'') && /gravada/.test(t32.acoesC||''), t32e);
   chk('v7.32.0 · aba de clientes: só PJ (PF e próprio fora), SEM botão de lançamento, com a nota informativa',
     t32 && t32.dsV && t32.dsVLen===1 && !/Lançar total/.test(t32.acoesV||'') && /não geram lançamento/.test(t32.acoesV||''), t32e);
   chk('v7.32.0 · "Reconsultar" do painel nas abas analíticas roteia para a consulta da triagem (CNPJ nulo consultado)',
