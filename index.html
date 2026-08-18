@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.38.1</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.38.3</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -644,7 +644,9 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.38.1</b> <span class="badge ok">atual</span></td><td>18/08/2026</td><td><b>Gráfico de receita mensal ganha a barra de Exportação; tentativa de reduzir páginas do parecer (pendente de conferência no PDF real).</b> (1) O gráfico empilhado "Receita mensal por atividade" (seção "O retrato") tinha só Comércio/Indústria e Serviços — a exportação já aparecia no texto abaixo mas não no gráfico. Adicionada a 3ª série. (2) <b>Experimental</b>: a página "Premissas" (seção 3) e "O retrato" (seção 4) foram unidas numa página só, para reduzir a quantidade de páginas do documento. Como cada página tem altura fixa de 296mm (100mm reservados pro timbrado) com overflow oculto na impressão, não é possível confirmar daqui se o conteúdo combinado cabe sem cortar — <b>precisa ser conferido no PDF real</b> gerado pelo Chrome; se cortar algo (frase interrompida, tabela incompleta), a junção será desfeita. Motor e lacre 5a5562df intocados.</td></tr>
+                    <tr><td><b>v7.38.3</b> <span class="badge ok">atual</span></td><td>18/08/2026</td><td><b>Investigação dos dois cortes de texto apontados no PDF real — eram pré-existentes, não da v7.38.1.</b> Achei as duas páginas com conteúdo demais para os 296mm/196mm úteis: "Introdução + Enquadramento + Caminho" (parágrafo + caixa de enquadramento + alertas + linha do tempo + 2 caixas de jornada + parágrafo final — 7 blocos numa página só) e "Plano de ação + Parecer e recomendação" (4 passos + 2 parágrafos + caixa de recomendação). Ambas separadas em duas páginas cada, mesmo padrão que já corrigiu a v7.38.1/7.38.2. Numeração das seções conferida — segue sequencial, sem pular nem repetir número. <b>Ainda precisa ser confirmado no PDF real</b> (reprocessar e conferir se as frases agora terminam completas). Motor e lacre 5a5562df intocados.</td></tr>
+                    <tr><td><b>v7.38.2</b></td><td>18/08/2026</td><td><b>Revertida a junção da v7.38.1 — confirmado no PDF real que cortava conteúdo.</b> A tentativa de unir "Premissas" e "O retrato" numa página só estourou os 296mm: o gráfico "Receita mensal por atividade" saiu cortado pela metade e a seção inteira "Para onde vai cada real do DAS" (gráfico de rosca + tabela de tributos) desapareceu do documento, sem aviso nenhum — exatamente o risco do <code>overflow:hidden</code> que eu tinha avisado antes de tentar. Voltou a ser 2 páginas separadas, como era antes da v7.38.1. A 3ª série do gráfico (Exportação) da v7.38.1 continua valendo — isso não tinha problema. Motor e lacre 5a5562df intocados.</td></tr>
+                    <tr><td><b>v7.38.1</b></td><td>18/08/2026</td><td><b>Gráfico de receita mensal ganha a barra de Exportação; tentativa de reduzir páginas do parecer (pendente de conferência no PDF real).</b> (1) O gráfico empilhado "Receita mensal por atividade" (seção "O retrato") tinha só Comércio/Indústria e Serviços — a exportação já aparecia no texto abaixo mas não no gráfico. Adicionada a 3ª série. (2) <b>Experimental</b>: a página "Premissas" (seção 3) e "O retrato" (seção 4) foram unidas numa página só, para reduzir a quantidade de páginas do documento. Como cada página tem altura fixa de 296mm (100mm reservados pro timbrado) com overflow oculto na impressão, não é possível confirmar daqui se o conteúdo combinado cabe sem cortar — <b>precisa ser conferido no PDF real</b> gerado pelo Chrome; se cortar algo (frase interrompida, tabela incompleta), a junção será desfeita. Motor e lacre 5a5562df intocados.</td></tr>
                     <tr><td><b>v7.38.0</b></td><td>18/08/2026</td><td><b>🔒 C4 (trilha de auditoria) — fecha o trio C1/C2/C4 da segurança, requer setup_v738.sql.</b> (1) <b>Fim das exclusões físicas</b>: excluir empresa, excluir análise (uma ou "tudo") e excluir usuário deixaram de apagar a linha do banco — agora marcam <code>excluido_em</code>/<code>excluido_por</code> (soft-delete). O item some das telas do app normalmente (RLS filtra), mas o dado continua existindo e pode ser recuperado pelo suporte técnico se for engano. (2) <b>Trilha automática</b>: <code>atp_empresas</code> e <code>atp_usuarios</code> ganham <code>atualizado_em</code>/<code>atualizado_por</code> (já existia em <code>atp_analises</code>, faltava nas outras); um trigger no próprio banco preenche sozinho a cada gravação — não depende do código do app lembrar de mandar o campo, então não dá pra esquecer nem falsificar. (3) Mensagens de erro de permissão atualizadas para citar os setups atuais (v737_v2/v738) no lugar do v4, desatualizado desde a v7.16. Motor de cálculo e lacre 5a5562df intocados.</td></tr>
                     <tr><td><b>v7.37.0</b></td><td>18/08/2026</td><td><b>🔒 C1 (papéis de usuário) e C2 (isolamento por escritório) — segurança, requer setup_v737.sql.</b> (1) <b>Papéis</b>: <code>atp_usuarios</code> ganha a coluna <code>papel</code> (admin × operador); só admin vê e mexe nas abas <b>Usuários</b> e <b>Parâmetros</b> (escondidas do menu para operador, e bloqueadas por RLS mesmo se alguém forçar a URL/console). Lista de usuários ganha coluna de papel com select para promover/rebaixar. (2) <b>Criação de usuário corrigida</b>: o `usCriar` chamava `/auth/v1/signup` direto com a anon key — qualquer pessoa com a URL do app criava uma conta, sem estar logada. Agora passa pela nova Edge Function <b>admin-usuario</b> (mesmo padrão do admin-senha: checa server-side que quem chama é admin antes de criar). (3) <b>Escritórios (fundação multi-tenant)</b>: nova tabela <code>atp_escritorios</code>, com <code>escritorio_id</code> em <code>atp_usuarios</code> e <code>atp_empresas</code>; hoje semeada com um único escritório (Artecon) — todo mundo continua vendo tudo, o isolamento só entra em ação quando um segundo escritório for cadastrado. RLS de <code>atp_analises</code>, <code>atp_analises_hist</code>, <code>atp_fornec</code>, <code>atp_ct_decisao</code> e <code>atp_ct_periodo</code> passa a checar o escritório dono do CNPJ, não mais só "autenticado". <code>atp_classtrib</code>, <code>atp_cnpj_cache</code> e <code>atp_ia_uso</code> permanecem compartilhados (referência/cache, não é dado de cliente). Motor de cálculo e lacre 5a5562df intocados — nada disso mexe em número nenhum.</td></tr>
                     <tr><td><b>v7.36.4</b></td><td>18/08/2026</td><td><b>Conferência do PDF real do parecer da Weeedo pós-v7.36.3: achei o item 4.7 numa função morta.</b> A nota "B2B + B2C somam 100%, exportação é subclassificação" da v7.36.3 tinha sido escrita em <code>parecerPagClientela</code> — função que não é mais chamada por lugar nenhum desde a v7.34.0 (a página real é montada por <code>parecerPagParceiros</code>). Corrigido no lugar certo, e a mesma nota entrou também no relatório <b>Resumo Estatístico</b> (blocos de venda com exportação), que tinha o mesmo problema. Além disso, adicionada uma explicação para o item 4.2: quando o "por dentro" sai idêntico nos 7 anos da transição (como no caso da Weeedo — o teto do ISS da trava nunca é atingido), o parecer agora diz isso explicitamente, em vez de deixar a tabela plana sem explicação ao lado do texto que diz que ela "pode variar". <b>parecerPagFornecedores e parecerPagClientela seguem como código morto</b> (não removido nesta versão — mantidas por segurança, mas nenhuma delas é chamada). Só relatório; motor e lacre 5a5562df intocados.</td></tr>
@@ -3716,7 +3718,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.38.1';
+const APP_VERSAO = '7.38.3';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -6122,7 +6124,7 @@ function rlParecer(){
       <div class="pp-capa-cnpj">CNPJ ${fmtCNPJ(RL.dados.cnpj)}${RL.empresa?.regime?' · '+RL.empresa.regime:''}</div>
       <div class="pp-capa-data">Ano-base ${anoTx} · ${hoje}</div></div></div>`;
 
-  // ── PÁG: introdução + enquadramento + caminho ──
+  // ── PÁG: introdução + enquadramento (v7.38.3: separada do "caminho" — a combinada estourava e cortava o parágrafo final) ──
   h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
     ${secao(1,'Introdução — o que muda e quando')}
     <p class="pp-p">${TX.intro}</p>
@@ -6131,6 +6133,10 @@ function rlParecer(){
     <div class="pp-timeline">
       ${[['2026','sistema atual · planejamento','#0f7a5a'],['2027','CBS entra · fim de PIS/COFINS','#d99a2b'],['2029–2032','IBS sobe · ICMS/ISS caem','#1a5276'],['2033','modelo pleno','#8c2f39']].map(([a,t,c])=>`<div class="pp-tl-item"><span class="pp-tl-dot" style="background:${c}"></span><b>${a}</b><span>${t}</span></div>`).join('')}
     </div>
+  </div></div>`;
+
+  // ── PÁG: o caminho da sua empresa ──
+  h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
     ${secao(2,'O caminho da sua empresa')}
     <div class="pp-jornada">
       <div class="pp-jbox" style="background:#2b3240"><div class="pp-jet">Hoje · ${anoTx}</div><div class="pp-jbig">${D.regimeHojeNome}</div><div class="pp-jsm">Carga anual de <b>${fmtR(D.hojeAnual)}</b> (${mm(D.hojeAnual)}) sobre receita de ${fmtR(D.T.receita)}.</div></div>
@@ -6164,8 +6170,10 @@ function rlParecer(){
       <tr><td class="rot">Split payment</td><td>Retenção estimada em 100% do débito de IBS/CBS no pagamento; custo financeiro a 15% a.a. (proxy da Selic mínima) sobre um mês de retenção como saldo médio financiado ao longo do ano.</td></tr>
     </tbody></table>
     <div class="hint" style="margin-top:6px">Este quadro permite a outro profissional reproduzir ou revisar os resultados deste parecer a partir das mesmas premissas.</div>
+  </div></div>`;
 
-    <!-- v7.38.1: retrato movido pra cá — tenta caber na mesma página das premissas -->
+  // ── PÁG: retrato — receita com×serv + DAS por tributo ──
+  h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
     ${secao(4,'O retrato da empresa em números')}
     <p class="pp-p">${TX.retrato}</p>
     ${temCS?`<div class="pp-chartbox"><div class="pp-ct">Receita mensal por atividade · comércio/indústria × serviços${(D.T.receitaExp||0)>0.005?' × exportação':''}</div><canvas id="pc-recms" height="150"></canvas>
@@ -6180,14 +6188,14 @@ function rlParecer(){
   let NS = 4;
   if (temREF) {
     h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
-      ${secao(++NS,'Como fica a carga em cada regime, com a Reforma','Carga anual estimada, ano a ano, na transição 2027–2033.')}
-      <div class="pp-chartbox"><canvas id="pc-evo" height="185"></canvas></div>
-      <table class="pp-tab pp-tab-f"><thead><tr><th>Ano</th>${D.variante!=='acima'?'<th class="num">Por dentro</th><th class="num">Híbrido</th>':''}<th class="num">L. Presumido</th><th class="num">L. Real</th><th>Menor</th></tr></thead><tbody>
-      ${D.anos.map((L,i)=>{ const d = D.sDentro[i]!=null ? D.sDentro[i] : D.T.simples;
-        const cand = D.variante!=='acima' ? [['Por dentro',d],['Híbrido',L.hib],['Presumido',L.regLP],['Real',L.regLR]] : [['Presumido',L.regLP],['Real',L.regLR]]; const menor = cand.reduce((a,b)=>b[1]<a[1]?b:a);
-        return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td>${D.variante!=='acima'?`<td class="num">${fmt(d)}</td><td class="num">${fmt(L.hib)}</td>`:''}<td class="num">${fmt(L.regLP)}</td><td class="num">${fmt(L.regLR)}</td><td><span class="pp-pill">${menor[0]}</span></td></tr>`; }).join('')}
-      </tbody></table>
-      ${D.variante!=='acima' && D.sDentro.length && !D.sDentro.some((v,i,arr)=>i>0 && Math.abs(v-arr[0])>0.5) ? `<div class="hint" style="margin-top:6px">O "por dentro" permanece <b>estável</b> nos ${D.sDentro.length} anos simulados: o teto do ISS da trava da 5ª faixa (Res. CGSN nº 190/2026) decresce a cada vigência, mas a alíquota efetiva de ISS desta empresa fica abaixo do teto em todos os anos — quando isso acontece, a fórmula da trava não é afetada pela vigência e o total não se altera. Empresas com alíquota efetiva de ISS mais próxima do teto veem o "por dentro" variar ano a ano.</div>` : ''}
+    ${secao(++NS,'Como fica a carga em cada regime, com a Reforma','Carga anual estimada, ano a ano, na transição 2027–2033.')}
+    <div class="pp-chartbox"><canvas id="pc-evo" height="185"></canvas></div>
+    <table class="pp-tab pp-tab-f"><thead><tr><th>Ano</th>${D.variante!=='acima'?'<th class="num">Por dentro</th><th class="num">Híbrido</th>':''}<th class="num">L. Presumido</th><th class="num">L. Real</th><th>Menor</th></tr></thead><tbody>
+    ${D.anos.map((L,i)=>{ const d = D.sDentro[i]!=null ? D.sDentro[i] : D.T.simples;
+      const cand = D.variante!=='acima' ? [['Por dentro',d],['Híbrido',L.hib],['Presumido',L.regLP],['Real',L.regLR]] : [['Presumido',L.regLP],['Real',L.regLR]]; const menor = cand.reduce((a,b)=>b[1]<a[1]?b:a);
+      return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td>${D.variante!=='acima'?`<td class="num">${fmt(d)}</td><td class="num">${fmt(L.hib)}</td>`:''}<td class="num">${fmt(L.regLP)}</td><td class="num">${fmt(L.regLR)}</td><td><span class="pp-pill">${menor[0]}</span></td></tr>`; }).join('')}
+    </tbody></table>
+    ${D.variante!=='acima' && D.sDentro.length && !D.sDentro.some((v,i,arr)=>i>0 && Math.abs(v-arr[0])>0.5) ? `<div class="hint" style="margin-top:6px">O "por dentro" permanece <b>estável</b> nos ${D.sDentro.length} anos simulados: o teto do ISS da trava da 5ª faixa (Res. CGSN nº 190/2026) decresce a cada vigência, mas a alíquota efetiva de ISS desta empresa fica abaixo do teto em todos os anos — quando isso acontece, a fórmula da trava não é afetada pela vigência e o total não se altera. Empresas com alíquota efetiva de ISS mais próxima do teto veem o "por dentro" variar ano a ano.</div>` : ''}
     </div></div>`;
     h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
       <div class="pp-chartbox"><div class="pp-ct">Quanto da receita vira imposto · %</div><canvas id="pc-pct" height="130"></canvas>
@@ -6233,10 +6241,14 @@ function rlParecer(){
     <p class="pp-p">${TX.split}</p>
   </div></div>`;
 
-  // ── PÁG: plano + parecer ──
+  // ── PÁG: plano de ação (v7.38.3: separada do parecer — a combinada estourava e cortava a caixa de recomendação) ──
   h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
     ${secao(++NS,'Plano de ação sugerido')}
     <div class="pp-plano">${(TX.plano||[]).map((p,i)=>`<div class="pp-passo"><div class="pp-num" style="background:${['#0f7a5a','#d99a2b','#1a5276','#2b3240'][i%4]}">${i+1}</div><div><div class="pp-quando">${p.quando}</div><b>${p.titulo}</b> — ${p.texto}</div></div>`).join('')}</div>
+  </div></div>`;
+
+  // ── PÁG: parecer e recomendação ──
+  h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
     ${secao(++NS,'Parecer e recomendação')}
     <p class="pp-p">${TX.parecer1}</p>
     ${TX.parecer2?`<p class="pp-p">${TX.parecer2}</p>`:''}
