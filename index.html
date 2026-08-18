@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.35.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.36.1</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -644,7 +644,9 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.35.0</b> <span class="badge ok">atual</span></td><td>17/08/2026</td><td><b>🔴 Correção do período de apuração do Lucro Real (mudança deliberada de regra — motor re-selado).</b> Até a v7.34.3 o motor era <b>híbrido</b>: o IRPJ de 15% e a CSLL de 9% saíam <b>mês a mês</b>, só sobre meses com resultado positivo — o mês negativo era simplesmente descartado —, enquanto o <b>adicional de 10% já usava o resultado líquido do trimestre</b>. Dois períodos de apuração dentro do mesmo cálculo, o que não corresponde a nenhuma modalidade legal e <b>superestimava o imposto</b> sempre que havia mês com prejuízo. (1) A Configuração da empresa ganhou o campo <b>Período de apuração do Lucro Real</b>: <b>trimestral</b> (novo padrão), <b>anual</b> (estimativa com balanço de suspensão/redução e ajuste em 31/12) e <b>mensal — legado</b>, que reproduz o cálculo das versões anteriores ao centavo, para quem precisar refazer parecer já entregue. (2) No trimestral, a base é a <b>soma dos três meses, com os negativos incluídos</b>, e o prejuízo remanescente é compensado nos períodos seguintes com a <b>trava de 30%</b> (Lei 9.065/95, art. 15), que vale inclusive entre trimestres do mesmo ano-calendário; o adicional incide sobre a base <b>depois</b> da compensação, no que exceder R$ 60.000 no trimestre (R$ 240.000 no ano, na modalidade anual). (3) <b>Prejuízo fiscal e base negativa de CSLL passaram a ter saldos próprios e independentes</b>, com saldo inicial editável na configuração — em branco por padrão, porque quem <b>migra do Simples não leva prejuízo fiscal</b>, já que não houve apuração de lucro real anterior. O prejuízo apurado dentro da simulação vale só para aquele ano-base e <b>não é transportado</b>. (4) A Análise Atual e a conferência de cálculos ganharam o quadro <b>"Apuração fiscal do Lucro Real"</b>, com resultado do período, limite de 30%, prejuízo compensado, base tributável, IRPJ, adicional, CSLL e <b>saldo remanescente</b> — e o quadro mensal passou a ser rotulado como <b>resultado gerencial</b>, que não é período de apuração; o tributo do período aparece no <b>mês de fechamento</b> (março/junho/setembro/dezembro), mesmo critério que o adicional já adotava. Na modalidade anual, as <b>antecipações mensais</b> por balanço de suspensão/redução são exibidas à parte, como demonstração de caixa. (5) Novo bloco de <b>alertas de dado atípico</b> no verificador da análise: folha, pró-labore, CMV, crédito de ICMS ou receita financeira negativos, lucro do mês maior que a receita e lucro de um mês superior a três vezes a soma dos demais — o caso clássico do <b>balancete de encerramento importado como movimento de dezembro</b>, cujo zeramento das contas de resultado chega com o sinal invertido e produz um lucro impossível, que o Lucro Real então tributa. (6) <b>Lacre re-selado</b>: o selo passou de <b>b394cf9e</b> para <b>fa39eefb</b>. Os <b>totais anuais dos dois casos-gabarito não mudaram</b> (Lucro Real de R$ 1.169.013,17 e R$ 358.284,98), porque nenhum deles tem mês com base negativa — o selo mudou apenas pela realocação do tributo ao mês de fechamento. Simples Nacional, Lucro Presumido e os cenários da Reforma ficaram <b>inalterados</b>, e o modo legado reproduz o selo antigo ao centavo, o que foi conferido número a número.</td></tr>
+                    <tr><td><b>v7.36.1</b> <span class="badge ok">atual</span></td><td>17/08/2026</td><td><b>Rótulos da conferência — os quatro ajustes de apresentação que faltavam da revisão Weeedo (só exibição; motor e lacre 5a5562df intocados).</b> (1) <b>Período no lugar de "ano-base"</b>: com meses parciais, o cabeçalho da Conferência de cálculos passa a declarar o intervalo realmente lançado (ex.: "período jan–jun/2026 · 6 meses lançados") e avisa que totais e projeções refletem o realizado — a projeção anualizada da receita está no quadro de limite e sublimite. (2) <b>Alíquotas da Reforma classificadas por grau de certeza</b>, ano a ano: 2027–28 = IBS base legal (EC 132/ADCT art. 127) e CBS por estimativa oficial (referência − 0,1 p.p., LC 214 art. 347); 2029–32 = projeção (escada do IBS); 2033 = referência projetada (Res. CGIBS nº 14/2026) — com a nota de que os percentuais são estimativos e as alíquotas definitivas virão do cálculo do TCU homologado pelo Senado. (3) A coluna da Reforma passou a se chamar <b>"Crédito estimado"</b>, com a premissa dita em uma linha: aquisições identificadas na análise, sem incluir despesas gerais nem distinguir o regime do fornecedor, salvo quando a aba Reforma foi alimentada pela análise de fornecedores. (4) O Lucro Real aparece como <b>"Real (simulação)"</b> nos cabeçalhos da tabela mensal e do resumo anual, para que ninguém leia o número como apuração fiscal definitiva.</td></tr>
+                    <tr><td><b>v7.36.0</b></td><td>17/08/2026</td><td><b>🔴 Trava da 5ª faixa: a alíquota passa a usar o RBT12 do próprio mês (mudança deliberada de regra — motor re-selado).</b> Quando o RBT12 supera R$ 3,6 milhões e <b>não há impedimento</b>, a 6ª faixa não reparte ICMS/ISS e esses tributos são calculados pela fórmula do <b>art. 21, III, "b", da Resolução CGSN nº 140/2018</b>: {[(RBT12 × alíquota nominal da 5ª faixa) − parcela a deduzir da 5ª faixa] ÷ RBT12} × % de repartição da 5ª faixa. Até a v7.35.0 o motor colocava <b>R$ 3.600.000,00 fixo</b> no lugar do RBT12 — o que congelava a alíquota na efetiva <b>máxima</b> da 5ª faixa (11,875% no Anexo I) e <b>subavaliava a parcela</b>. A Consulta Tributária SEFAZ/SP nº 25.807/2022 trata exatamente da hipótese em que a RBA do ano ainda não superou o sublimite mas o RBT12 sim, e é expressa: o cálculo usa o RBT12, ainda que disso resulte alíquota superior à do teto. O desvio cresce conforme o RBT12 se afasta do sublimite — com RBT12 de R$ 4,8 milhões a diferença chega a 5,1%. No caso-gabarito de comércio a trava subiu de R$ 91.265,03 para <b>R$ 93.426,14</b>. (2) <b>A trava passou a integrar o DAS.</b> Não havendo impedimento, esse ICMS é recolhido <b>na própria guia</b> — é assim que o PGDAS-D o calcula —, e não como parcela somada por fora: a coluna DAS da tabela mensal e da conferência passou a exibir o valor da guia, com marcação nos meses de 6ª faixa, e o confronto automático com o DAS declarado deixa de acusar divergência falsa nesses meses. Quem precisar reproduzir documento já emitido encontra <b>"Fora do DAS — legado"</b> na Configuração da empresa. (3) Nova <b>memória da trava, mês a mês</b>, na Conferência de cálculos: RBT12, faixa, base, alíquota efetiva da 5ª faixa, percentual de repartição, alíquota da trava e valor — o número deixa de ser um total sem demonstração. (4) <b>Limite e sublimite ganharam indicadores próprios e segregados.</b> O RBT12 responde por faixa, alíquota e trava; quem responde por limite e sublimite é a <b>RBA</b> — receita acumulada do ano-calendário —, e o <b>mercado interno e a exportação têm limites independentes</b>, de R$ 4,8 milhões cada (LC 123, art. 3º, § 14) e sublimites de R$ 3,6 milhões cada (Res. CGSN 140/2018, art. 9º, § 1º): somar os dois blocos antecipa uma exclusão que não existe. A conferência ganhou o quadro com RBA realizada, média mensal, projeção de dezembro por bloco, o mês de cada marco e a <b>margem até o limite</b>. (5) Novo <b>alerta de trajetória</b> no veredito da análise e nos pontos de atenção do parecer: mantido o ritmo do período lançado, informa em que mês a RBA cruza o sublimite (e o efeito — ICMS/ISS fora do DAS a partir de 1º/01 do ano seguinte, ou do mês seguinte quando o excesso passa de 20%), se o limite é alcançado e, quando não é, por qual margem escapa. É a informação que faltava para o cliente: a comparação entre regimes pode estar descrevendo um Simples que a empresa não terá no ano seguinte. (6) <b>Política única de arredondamento</b>: o cálculo corre em precisão plena — alíquotas efetivas nunca são arredondadas no meio do caminho — e o arredondamento acontece só no valor exibido, em duas casas; as linhas de <b>total</b> das tabelas mês a mês passaram a somar os valores <b>já arredondados</b> de cada mês, de modo que o total feche com a soma da coluna (as diferenças de um centavo apontadas em auditoria eram exatamente isso). (7) <b>Divergências declaradas atualizadas</b>: saíram os dois itens vencidos pela v7.35.0 (prejuízo não compensado e Lucro Real apenas mensal) e entraram a nova regra da trava, a política de arredondamento e o <b>que ainda não é modelado</b> — o exercício sob <b>impedimento</b>, em que o ICMS/ISS sai do Simples e passa às regras normais do Estado e do Município, e o desdobramento do mês em que a RBA cruza o sublimite. (8) <b>Lacre re-selado</b>: o selo passou de <b>fa39eefb</b> para <b>5a5562df</b>. Lucro Presumido, Lucro Real e os cenários de 2033 <b>não mudaram</b> — a alteração atinge apenas os meses de 6ª faixa e, no cenário híbrido de 2033, a trava é integralmente absorvida pelo IBS e se cancela.</td></tr>
+                    <tr><td><b>v7.35.0</b></td><td>17/08/2026</td><td><b>🔴 Correção do período de apuração do Lucro Real (mudança deliberada de regra — motor re-selado).</b> Até a v7.34.3 o motor era <b>híbrido</b>: o IRPJ de 15% e a CSLL de 9% saíam <b>mês a mês</b>, só sobre meses com resultado positivo — o mês negativo era simplesmente descartado —, enquanto o <b>adicional de 10% já usava o resultado líquido do trimestre</b>. Dois períodos de apuração dentro do mesmo cálculo, o que não corresponde a nenhuma modalidade legal e <b>superestimava o imposto</b> sempre que havia mês com prejuízo. (1) A Configuração da empresa ganhou o campo <b>Período de apuração do Lucro Real</b>: <b>trimestral</b> (novo padrão), <b>anual</b> (estimativa com balanço de suspensão/redução e ajuste em 31/12) e <b>mensal — legado</b>, que reproduz o cálculo das versões anteriores ao centavo, para quem precisar refazer parecer já entregue. (2) No trimestral, a base é a <b>soma dos três meses, com os negativos incluídos</b>, e o prejuízo remanescente é compensado nos períodos seguintes com a <b>trava de 30%</b> (Lei 9.065/95, art. 15), que vale inclusive entre trimestres do mesmo ano-calendário; o adicional incide sobre a base <b>depois</b> da compensação, no que exceder R$ 60.000 no trimestre (R$ 240.000 no ano, na modalidade anual). (3) <b>Prejuízo fiscal e base negativa de CSLL passaram a ter saldos próprios e independentes</b>, com saldo inicial editável na configuração — em branco por padrão, porque quem <b>migra do Simples não leva prejuízo fiscal</b>, já que não houve apuração de lucro real anterior. O prejuízo apurado dentro da simulação vale só para aquele ano-base e <b>não é transportado</b>. (4) A Análise Atual e a conferência de cálculos ganharam o quadro <b>"Apuração fiscal do Lucro Real"</b>, com resultado do período, limite de 30%, prejuízo compensado, base tributável, IRPJ, adicional, CSLL e <b>saldo remanescente</b> — e o quadro mensal passou a ser rotulado como <b>resultado gerencial</b>, que não é período de apuração; o tributo do período aparece no <b>mês de fechamento</b> (março/junho/setembro/dezembro), mesmo critério que o adicional já adotava. Na modalidade anual, as <b>antecipações mensais</b> por balanço de suspensão/redução são exibidas à parte, como demonstração de caixa. (5) Novo bloco de <b>alertas de dado atípico</b> no verificador da análise: folha, pró-labore, CMV, crédito de ICMS ou receita financeira negativos, lucro do mês maior que a receita e lucro de um mês superior a três vezes a soma dos demais — o caso clássico do <b>balancete de encerramento importado como movimento de dezembro</b>, cujo zeramento das contas de resultado chega com o sinal invertido e produz um lucro impossível, que o Lucro Real então tributa. (6) <b>Lacre re-selado</b>: o selo passou de <b>b394cf9e</b> para <b>fa39eefb</b>. Os <b>totais anuais dos dois casos-gabarito não mudaram</b> (Lucro Real de R$ 1.169.013,17 e R$ 358.284,98), porque nenhum deles tem mês com base negativa — o selo mudou apenas pela realocação do tributo ao mês de fechamento. Simples Nacional, Lucro Presumido e os cenários da Reforma ficaram <b>inalterados</b>, e o modo legado reproduz o selo antigo ao centavo, o que foi conferido número a número.</td></tr>
                     <tr><td><b>v7.34.3</b></td><td>17/08/2026</td><td><b>Analítico importado pelo campo errado deixou de virar só uma lista de CNPJs.</b> O campo <b>"Ou importar arquivo (CSV/Excel)"</b> do item 2 pertence à <b>triagem simples</b>: ele apenas colhe os CNPJs da planilha e classifica o regime de cada um — por isso, quem largava ali o analítico do Questor via a consulta rodar normalmente, mas <b>sem dashboard, sem os botões de salvar e de lançar</b>, já que nenhuma aba do painel 🚚 havia recebido dados. Agora, quando o arquivo tem as colunas do analítico (Natureza/CFOP · Valor Contábil · CNPJ), o app <b>pergunta</b> antes: importar como analítico (com o painel completo) ou seguir como triagem simples. (2) A importação do analítico passou a <b>avisar quando não há empresa selecionada</b> na barra do topo: a leitura e a consulta funcionam, mas sem empresa dona não há como gravar no histórico nem lançar — o aviso aparece antes, em vez de o botão de salvar falhar depois. (3) O processamento do analítico virou função própria (<b>triProcessarWorkbook</b>), usada tanto pelos botões de arquivo de compra e de venda quanto por esse novo caminho.</td></tr>
                     <tr><td><b>v7.34.2</b></td><td>17/08/2026</td><td><b>Razão social na exportação única e retornos fora do lançamento.</b> (1) A exportação única do Questor passou a sair com a coluna <b>Razão Social</b>, e a leitura já a aproveita: o nome do parceiro aparece na relação, no dashboard e no top 5 <b>antes mesmo da consulta na Receita</b> — que continua sendo quem confirma o enquadramento e atualiza a razão social oficial. No arquivo real os 38 fornecedores e os 19 clientes vieram todos com nome. (2) A <b>base global de CFOPs</b> ganhou os retornos, que não são compra: <b>1503/2503 e 1504/2504</b> (entrada por devolução de mercadoria remetida com fim específico de exportação — decisão dele, 16/08) e <b>1201/2201 e 1202/2202</b> (devolução de venda), todos como <b>não lançar</b>. Lançar esses valores como entrada inflaria as compras e, no caso da devolução de venda, contaria duas vezes o que já vem descontado do faturamento. Como toda regra da base, ficam sobrescrevíveis na camada por empresa.</td></tr>
                     <tr><td><b>v7.34.1</b></td><td>17/08/2026</td><td><b>Exportação única do Questor (coluna Tipo) alimenta as duas abas de uma vez.</b> O novo relatório traz <b>Entrada e Saída na mesma planilha</b>, com uma coluna <b>Tipo</b>. Lido como estava, os dois lados entravam <b>somados no mesmo conjunto</b> e o lado de maior valor decidia o tipo do arquivo — no exemplo real, R$ 76.599,96 de entradas seriam contados como clientes dentro de um total de R$ 671.771,15 classificado como venda. Agora a leitura <b>separa pelo próprio campo Tipo</b>: as entradas vão para <b>📄 arquivo de compra</b> e as saídas para <b>👥 arquivo de venda</b>, em uma única importação, com <b>uma só faixa de confirmação</b> mostrando os dois blocos (lançamentos, parceiros, total e CFOPs de cada lado) antes de qualquer coisa entrar. Em seguida a consulta na Receita roda nos dois conjuntos e cada aba abre com seu dashboard. O aviso de <b>sobreposição</b> passou a valer nos dois sentidos — antes só alertava ao importar Totais tendo analítico; agora também ao importar analítico tendo Totais.</td></tr>
@@ -2598,7 +2600,12 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     let subIcms = 0, subIss = 0, trv190 = null;
     const subLim = +cfg.sublimiteValor || 3600000;
     if ((cfg.sublimite||'auto') !== 'off' && rbt12 > subLim) {
-      const ef5 = A => (subLim*A.aliq[4] - A.ded[4])/subLim;
+      // v7.36.0 · a fórmula do art. 21, III, "b" da Res. CGSN 140/2018 usa o RBT12 EFETIVO do
+      // período — não o teto do sublimite. Até a v7.35.0 o motor fixava R$ 3,6 mi aqui, o que
+      // congelava a alíquota na efetiva MÁXIMA da 5ª faixa e subavaliava a trava; o desvio cresce
+      // conforme o RBT12 se afasta do sublimite (Consulta SEFAZ/SP nº 25.807/2022 é expressa:
+      // "calculará o ICMS devido com base no RBT12 e não no sublimite de R$ 3.600.000,00").
+      const ef5 = A => (rbt12*A.aliq[4] - A.ded[4])/rbt12;
       const pIcms1 = ef5(A1)*A1.icms[4], pIcms2 = ef5(A2)*A2.icms[4];
       subIcms = (R.a1_semst[m]+R.a1_mono[m]+R.comtransp[m])*pIcms1
               + R.a1_red[m]*pIcms1*(1 - R.a1_red_pct[m])
@@ -2653,7 +2660,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // v7.1 (A2): retenções sofridas são custo tributário do prestador — recompostas no total do Simples.
     // ISS retido pela alíquota efetiva do Simples (LC 123, art. 21, §4º); acima do sublimite, pela trava.
     const _pIssRet = (rbt12 > subLim && (cfg.sublimite||'auto') !== 'off')
-      ? Math.min(((subLim*anexos.III.aliq[4]-anexos.III.ded[4])/subLim)*((anexos.III.iss&&anexos.III.iss[4]!=null)?anexos.III.iss[4]:.335), .05)
+      ? Math.min(((rbt12*anexos.III.aliq[4]-anexos.III.ded[4])/rbt12)*((anexos.III.iss&&anexos.III.iss[4]!=null)?anexos.III.iss[4]:.335), .05)   // v7.36.0: RBT12 efetivo
       : e3*((anexos.III.iss&&anexos.III.iss[fx]!=null)?anexos.III.iss[fx]:0);
     const issRetido = (R.a3_retiss[m] + R.a3_retissinss[m]) * _pIssRet;
     const cppRetida = R.a3_retissinss[m] * e3 * (REPX.III.cpp[fx]||0);
@@ -2724,6 +2731,11 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, ipiPagar, iss, custos, despTotal, icmsDestacadoPC, icmsComprasPC,
       // v7.23.0: ISS retido deixa de ser RECOMPOSTO no total (recolhido na fonte pelo tomador,
       // LC 123, art. 21, §4º — não é desembolso em guia da empresa); campo mantido como informativo.
+      // v7.36.0 · DAS DA GUIA: não havendo impedimento (RBA/RBAA abaixo do sublimite), o ICMS/ISS
+      // da trava é recolhido DENTRO do DAS — é assim que o PGDAS-D o calcula. O campo `das` segue
+      // sendo a parcela sem a trava (insumo da partilha e dos cenários da Reforma, que somam a
+      // trava por vigência); a tela e os relatórios passam a exibir `dasGuia`.
+      dasGuia: das + ((cfg.travaNoDas === false) ? 0 : (subIcms + subIss)),
       simples: { das, fgts, sublimite: subIcms+subIss, issRetido, cppRetida,
         // v7.1 (A1): CPP do Anexo IV é devida FORA do DAS — proxy pela participação da receita a4 no mês
         inssPatrForaDAS: (receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0,
@@ -2759,6 +2771,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     lp: S(out.meses.map(x=>x.lp.total)),
     lr: S(out.meses.map(x=>x.lr.total)),
     das: S(out.meses.map(x=>x.das)),
+    dasGuia: S(out.meses.map(x=>x.dasGuia)),          // v7.36.0 · DAS com a trava dentro (o que vai na guia)
     fgts: S(out.meses.map(x=>x.fgts)),    sublimite: S(out.meses.map(x=>x.simples.sublimite)),
     dasPisCof: S(out.meses.map(x=>x.dasPisCof)),
     dasIcmsIss: S(out.meses.map(x=>x.dasIcmsIss)),
@@ -2768,7 +2781,52 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     comprasRevenda: S(out.meses.map((_,i)=>C.semst[i]+C.mono[i]+C.comst[i]+C.comstMono[i])),
     dasTrib: ['pis','cofins','irpj','csll','cpp','icms','iss','ipi'].reduce((o,t)=>(o[t]=S(out.meses.map(x=>x.dasTrib?x.dasTrib[t]:0)),o),{}),
   };
+  out.subMon = monitorSublimite(out, cfg);   // v7.36.0
   return out;
+}
+
+// ═══ v7.36.0 · MONITOR DE LIMITE E SUBLIMITE ═══
+// Mercado interno e exportação têm limites PRÓPRIOS e independentes — R$ 4,8 mi cada (LC 123,
+// art. 3º, § 14) e sublimite de R$ 3,6 mi cada (Res. CGSN 140/2018, art. 9º, § 1º). As duas
+// receitas NUNCA se somam para esse teste; somá-las antecipa uma exclusão que não existe.
+// Divisão de trabalho entre os indicadores:
+//   RBT12 (12 meses móveis) → faixa, alíquota efetiva e fórmula da trava da 5ª faixa;
+//   RBA   (acumulada do ano-calendário) e RBAA (a do ano anterior) → limite e sublimite.
+// Efeitos (LC 123, art. 20, §§ 1º e 1º-A): excesso do sublimite até 20% tira o ICMS/ISS do DAS a
+// partir de 1º/01 do ano seguinte; acima de 20%, a partir do mês seguinte ao da ocorrência.
+function monitorSublimite(out, cfg){
+  try {
+    const subLim = +cfg.sublimiteValor || 3600000, limite = FAIXAS_LIM[5];
+    const rbaInt = [], rbaExp = []; let aI = 0, aE = 0, ultimo = -1;
+    out.meses.forEach((M,i) => { aI += M.recInt||0; aE += M.recExp||0; rbaInt.push(aI); rbaExp.push(aE);
+      if ((M.recInt||0) + (M.recExp||0) > 0.005) ultimo = i; });
+    if (ultimo < 0) return null;
+    const n = ultimo + 1, mediaInt = rbaInt[ultimo]/n, mediaExp = rbaExp[ultimo]/n;
+    const projInt = [], projExp = [];
+    for (let i=0;i<12;i++){ projInt.push(i<=ultimo ? rbaInt[i] : rbaInt[ultimo] + mediaInt*(i-ultimo));
+                            projExp.push(i<=ultimo ? rbaExp[i] : rbaExp[ultimo] + mediaExp*(i-ultimo)); }
+    const primeiro = (arr, alvo) => { for (let i=0;i<12;i++) if (arr[i] > alvo) return i; return -1; };
+    const marco = {
+      sublimite:  primeiro(projInt, subLim),
+      sublimite20:primeiro(projInt, subLim*1.2),
+      limite:     primeiro(projInt, limite),
+      limite20:   primeiro(projInt, limite*1.2),
+      expSublimite: primeiro(projExp, subLim), expLimite: primeiro(projExp, limite),
+    };
+    // RBAA do mercado interno: as receitas dos 12 meses anteriores lançadas na configuração —
+    // quando a análise cobre o ano-calendário inteiro, é exatamente a receita do ano anterior.
+    const rbaa = (+cfg.rbt12Direto > 0 ? +cfg.rbt12Direto : S(cfg.rbt12Lanc));
+    let impedimento = null;
+    if (rbaa > subLim) impedimento = { quando:'ano-corrente', motivo:'RBAA (ano anterior) acima do sublimite — ICMS/ISS fora do DAS desde 1º/01' };
+    else if (marco.sublimite20 >= 0) impedimento = { quando:'mes-seguinte', mes: marco.sublimite20, projetado: marco.sublimite20 > ultimo,
+      motivo:'RBA ultrapassa o sublimite em mais de 20% — ICMS/ISS fora do DAS a partir do mês seguinte' };
+    else if (marco.sublimite >= 0) impedimento = { quando:'ano-seguinte', mes: marco.sublimite, projetado: marco.sublimite > ultimo,
+      motivo:'RBA ultrapassa o sublimite em até 20% — ICMS/ISS fora do DAS a partir de 1º/01 do ano seguinte' };
+    const margemLimite = limite - projInt[11], margemPct = limite>0 ? margemLimite/limite : 0;
+    return { subLim, limite, ultimo, rbaInt, rbaExp, projInt, projExp, mediaInt, mediaExp, marco, rbaa, impedimento,
+             margemLimite, margemPct, excluiProjetado: marco.limite >= 0,
+             parcial: ultimo < 11 };
+  } catch(e){ return null; }
 }
 
 
@@ -2890,6 +2948,14 @@ const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov'
 const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = v => (v==null||isNaN(v)) ? '—' : v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtR = v => 'R$ ' + fmt(v);
+// v7.36.0 · POLÍTICA DE ARREDONDAMENTO: o cálculo corre em precisão plena (alíquotas efetivas
+// nunca são arredondadas no meio do caminho) e o arredondamento acontece só no valor monetário
+// exibido, em 2 casas. Consequência: a linha de TOTAL de uma tabela mês a mês soma os valores
+// JÁ ARREDONDADOS que o leitor vê — senão o total difere da soma da coluna em um ou dois
+// centavos (foi o que a auditoria da Weeedo apontou). Os totais internos (out.totais) seguem em
+// precisão plena, porque alimentam identidades e os cenários da Reforma.
+const r2 = v => Math.round((+v||0)*100)/100;
+const somaExib = (arr, sel) => (arr||[]).reduce((s,x)=>s + r2(sel?sel(x):x), 0);
 const z12 = () => Array(12).fill(0);
 
 function anNovo(cnpj, ano) {
@@ -3303,6 +3369,7 @@ function anRenderConfig() {
     <div><label>Base IRPJ comércio (LP)</label><select id="cf-bcom" onchange="anAplicarConfig(true)"><option value="0.08" ${c.lpBaseCom==.08?'selected':''}>8%</option><option value="0.16" ${c.lpBaseCom==.16?'selected':''}>16%</option></select></div>
     <div><label>Adicional de IRPJ</label><select id="cf-adic" onchange="anAplicarConfig(true)"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
     <div><label>Sublimite ICMS/ISS (R$ 3,6 mi)</label><select id="cf-sublim" onchange="anAplicarConfig(true)"><option value="auto" ${(c.sublimite||'auto')=='auto'?'selected':''}>Aplicar trava da 5ª faixa</option><option value="off" ${c.sublimite=='off'?'selected':''}>Não aplicar</option></select></div>
+    <div><label>Trava da 5ª faixa na guia <span class="hint">(v7.36.0)</span></label><select id="cf-travadas" onchange="anAplicarConfig(true)"><option value="sim" ${c.travaNoDas===false?'':'selected'}>Dentro do DAS (PGDAS-D)</option><option value="nao" ${c.travaNoDas===false?'selected':''}>Fora do DAS — legado</option></select></div>
     <button class="btn solid" onclick="anAplicarConfig()">Aplicar</button>
   </div>${avisoIss}
   `;
@@ -3354,6 +3421,7 @@ function anAplicarConfig(silencioso) {
   Object.assign(AN.cfg, { iss:g('cf-iss'), icmsV:g('cf-icmsv'), icmsC:g('cf-icmsc'), ipiV:g('cf-ipiv'), ipiC:g('cf-ipic'),
     lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, lpBaseServCsll:+($id('cf-bcsll')?.value||0),
     lpBaseComCsll:+($id('cf-bcomcsll')?.value||.12), adicionalIR:$id('cf-adic').value, sublimite:$id('cf-sublim').value,
+    travaNoDas: ($id('cf-travadas')?.value || 'sim') !== 'nao',   // v7.36.0
     rbt12Direto:num($id('cf-rbtd').value) });
   // v7.35.0 · período de apuração do Lucro Real e saldos de prejuízo (podem não existir em telas antigas)
   if ($id('cf-lrper'))    AN.cfg.lrPeriodo  = $id('cf-lrper').value;
@@ -3475,16 +3543,19 @@ function anRecalcular() {
   } catch(e) { console.error('Cenários da Reforma (análise):', e); }
   $id('an-veredito').innerHTML = `<h3 style="margin-bottom:6px">Melhor regime: ${nomeMenor}</h3>
     ${snAvisoHtml(EL)}
-    <div class="hint">Economia de <b>${fmtR(econ2[1]-econ2[0])}</b>/ano frente à 2ª melhor opção.${T.sublimite>0?`<br>⚠️ RBT12 acima de R$ 3,6 mi em parte do ano: o Simples inclui <b>${fmtR(T.sublimite)}</b> de ICMS/ISS pela trava da 5ª faixa (Res. CGSN 140/2018, art. 24) — a 6ª faixa não embute ICMS/ISS na repartição.`:''} ${AN.receitas.a4.some(v=>v>0)?'<br>⚠️ Há receitas do Anexo IV: o CPP é recolhido por fora do DAS — confira o INSS patronal informado na Folha, pois a planilha-base não o soma automaticamente ao total do Simples.':''}</div>${refHtml}`;
+    <div class="hint">Economia de <b>${fmtR(econ2[1]-econ2[0])}</b>/ano frente à 2ª melhor opção.${T.sublimite>0?`<br>⚠️ RBT12 acima de R$ 3,6 mi em parte do ano: o DAS inclui <b>${fmtR(T.sublimite)}</b> de ICMS/ISS pela trava da 5ª faixa, calculada com o RBT12 do próprio mês (art. 21, III, "b", Res. CGSN 140/2018) — a 6ª faixa não embute ICMS/ISS na repartição.`:''}${(()=>{ const _t = r.subMon ? subMonTexto(r.subMon) : ''; return _t ? `<br>⚠️ <b>Trajetória do ano:</b> ${_t}` : ''; })()} ${AN.receitas.a4.some(v=>v>0)?'<br>⚠️ Há receitas do Anexo IV: o CPP é recolhido por fora do DAS — confira o INSS patronal informado na Folha, pois a planilha-base não o soma automaticamente ao total do Simples.':''}</div>${refHtml}`;
   // detalhe mensal — v7.16.0: meses após o último lançado NÃO exibem projeção (o RBT12
   // rolante segue calculado por dentro, insumo do Fator R e da trava do sublimite)
   const _lanc = anMesesLancados();
   const fimJanela = _lanc && _lanc.length ? Math.max(..._lanc) : -1;
-  let h = `<table><thead><tr><th>Mês</th><th class="num">Receita</th><th class="num">RBT12</th><th>Faixa</th><th class="num">DAS</th><th class="num">Simples</th><th class="num">Presumido</th><th class="num">Real</th></tr></thead><tbody>`;
+  let h = `<table><thead><tr><th>Mês</th><th class="num">Receita</th><th class="num">RBT12</th><th>Faixa</th><th class="num">DAS</th><th class="num">Simples</th><th class="num">Presumido</th><th class="num" title="Simulação — não é apuração fiscal definitiva">Real (simulação)</th></tr></thead><tbody>`;
   r.meses.forEach((M,i)=>{
     if (i > fimJanela) { h += `<tr class="hint"><td>${MESES[i]}</td>${'<td class="num">—</td>'.repeat(2)}<td>—</td>${'<td class="num">—</td>'.repeat(4)}</tr>`; return; }
-    h += `<tr><td>${MESES[i]}</td><td class="num">${fmt(M.receita)}</td><td class="num">${fmt(M.rbt12)}</td><td>${M.faixa}ª</td><td class="num">${fmt(M.das)}</td><td class="num">${fmt(M.simples.total)}</td><td class="num">${fmt(M.lp.total)}</td><td class="num">${fmt(M.lr.total)}</td></tr>`; });
-  h += `<tr style="font-weight:700"><td>TOTAL</td><td class="num">${fmt(T.receita)}</td><td></td><td></td><td class="num">${fmt(T.das)}</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr></tbody></table>`;
+    const _sub = (M.subIcms||0)+(M.subIss||0);
+    h += `<tr><td>${MESES[i]}</td><td class="num">${fmt(M.receita)}</td><td class="num">${fmt(M.rbt12)}</td><td>${M.faixa}ª</td><td class="num"${_sub>0.005?` title="Inclui ${fmtR(_sub)} de ICMS/ISS da trava da 5ª faixa — sem impedimento, essa parcela é recolhida DENTRO do DAS (art. 21, III, 'b', Res. CGSN 140/2018)."`:''}>${fmt(M.dasGuia!=null?M.dasGuia:M.das)}${_sub>0.005?' <span class="hint">*</span>':''}</td><td class="num">${fmt(M.simples.total)}</td><td class="num">${fmt(M.lp.total)}</td><td class="num">${fmt(M.lr.total)}</td></tr>`; });
+  const _vis = r.meses.filter((_,i)=>i<=fimJanela);   // v7.36.0: o TOTAL soma os meses exibidos (já arredondados)
+  h += `<tr style="font-weight:700"><td>TOTAL</td><td class="num">${fmt(somaExib(_vis,x=>x.receita))}</td><td></td><td></td><td class="num">${fmt(somaExib(_vis,x=>x.dasGuia!=null?x.dasGuia:x.das))}</td><td class="num">${fmt(somaExib(_vis,x=>x.simples.total))}</td><td class="num">${fmt(somaExib(_vis,x=>x.lp.total))}</td><td class="num">${fmt(somaExib(_vis,x=>x.lr.total))}</td></tr></tbody></table>`;
+  if (T.sublimite > 0.005) h += `<div class="hint" style="margin-top:6px">* A coluna DAS inclui <b>${fmtR(T.sublimite)}</b> de ICMS/ISS da <b>trava da 5ª faixa</b> nos meses de 6ª faixa — a alíquota sai da fórmula do art. 21, III, "b", da Res. CGSN 140/2018, com o <b>RBT12 do próprio mês</b>. Não havendo impedimento, essa parcela é recolhida na guia; a memória mês a mês está na Conferência de cálculos.</div>`;
   if (fimJanela < 0) h += `<div class="hint" style="margin-top:6px">Nenhum mês com lançamento ainda — importe ou digite os dados para ver o resultado.</div>`;
   else if (fimJanela < 11) h += `<div class="hint" style="margin-top:6px">Análise preenchida até <b>${MESES[fimJanela]}/${AN.ano}</b> — meses posteriores sem lançamento não são exibidos.</div>`;
   h += lrQuadroApuracao(r);        // v7.35.0
@@ -3628,7 +3699,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.35.0';
+const APP_VERSAO = '7.36.1';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -4181,7 +4252,7 @@ function calcCenariosReforma(res, reforma) {
 const LACRE_CASOS = [
   { nome:'Caso 1 — Comércio (Anexo I, 6ª faixa, trava do sublimite)', inp: {"cfg":{"ano":2025,"iss":0,"icmsV":0.12,"icmsC":0.12,"ipiV":0,"ipiC":0,"rbt12Direto":0,"rbt12Lanc":[233957.74,180464.53,228650,204621.46,189091.64,229826.08,212736.02,261640.46,259296.98,376003.65,380401.48,257979.83],"folha12Lanc":[0,0,0,0,0,0,0,0,0,0,0,0],"lpBaseServ":0.32,"lpBaseCom":0.08,"adicionalIR":"trimestral","sublimite":"auto"},"receitas":{"a1_semst":[377050.87,484066.42,376975.8,416574.89,447563.54,453176.74,548964.77,427892.17,0,0,0,0],"a1_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_semret":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retiss":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retissinss":[0,0,0,0,0,0,0,0,0,0,0,0],"a4":[0,0,0,0,0,0,0,0,0,0,0,0],"a5r":[0,0,0,0,0,0,0,0,0,0,0,0],"fin":[0,0,0,0,0,0,0,0,0,0,0,0],"comtransp":[0,0,0,0,0,0,0,0,0,0,0,0]},"folha":{"prolabore":[10251.43,10251.43,10251.43,10251.43,10251.43,10251.43,0,0,0,0,0,0],"salarios":[34988.54,34988.54,34988.54,34988.54,34988.54,34988.54,0,0,0,0,0,0],"baseFgts":[34988.54,34988.54,34988.54,34988.54,34988.54,34988.54,0,0,0,0,0,0],"prov13":[2915.71,2915.71,2915.71,2915.71,2915.71,2915.71,0,0,0,0,0,0],"provFerias":[3887.62,3887.62,3887.62,3887.62,3887.62,3887.62,0,0,0,0,0,0]},"compras":{"semst":[232039.67,155316.58,291099.36,327885.35,248658.21,345140.42,0,0,0,0,0,0],"baixaSemst":[0,0,0,0,0,0,0,0,0,0,0,0],"mono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaMono":[0,0,0,0,0,0,0,0,0,0,0,0],"comst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComst":[0,0,0,0,0,0,0,0,0,0,0,0],"comstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baseIpiCred":[0,0,0,0,0,0,0,0,0,0,0,0]},"despesas":{"adm":[77361.45,90697.16,91478,95598.78,143160.24,109482.63,0,0,0,0,0,0],"vendas":[0,0,0,0,0,0,0,0,0,0,0,0],"fiscais":[0,0,0,0,0,0,0,0,0,0,0,0],"financeiras":[0,0,0,0,0,0,0,0,0,0,0,0],"outras":[0,0,0,0,0,0,0,0,0,0,0,0],"credLR":[0,0,0,0,0,0,0,0,0,0,0,0]},"icms":{"cred":null,"deb":null},"ipi":{"cred":null,"deb":null},"folha13":{"prolabore13":0,"salarios13":0,"baseFgts13":0}} },
   { nome:'Caso 2 — Serviços (Anexo III, Fator R, 13º)',              inp: {"cfg":{"ano":2026,"iss":0.02,"icmsV":0,"icmsC":0,"ipiV":0,"ipiC":0,"rbt12Direto":0,"rbt12Lanc":[4500,0,8500,0,11000,21400,32850,15000,0,0,0,0],"folha12Lanc":[0,0,0,0,0,0,0,0,0,0,0,0],"lpBaseServ":0.32,"lpBaseCom":0.08,"adicionalIR":"trimestral","sublimite":"auto"},"receitas":{"a1_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_semret":[100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000],"a3_retiss":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retissinss":[0,0,0,0,0,0,0,0,0,0,0,0],"a4":[0,0,0,0,0,0,0,0,0,0,0,0],"a5r":[0,0,0,0,0,0,0,0,0,0,0,0],"fin":[0,0,0,0,0,0,0,0,0,0,0,0],"comtransp":[0,0,0,0,0,0,0,0,0,0,0,0]},"folha":{"prolabore":[1518,1518,1518,1518,1518,1518,1518,1518,1518,1518,1518,1518],"salarios":[24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77],"baseFgts":[24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77],"prov13":[2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65],"provFerias":[2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86]},"compras":{"semst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaSemst":[0,0,0,0,0,0,0,0,0,0,0,0],"mono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaMono":[0,0,0,0,0,0,0,0,0,0,0,0],"comst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComst":[0,0,0,0,0,0,0,0,0,0,0,0],"comstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baseIpiCred":[0,0,0,0,0,0,0,0,0,0,0,0]},"despesas":{"adm":[10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89],"vendas":[488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13],"fiscais":[41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76],"financeiras":[14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47],"outras":[0,0,0,0,0,0,0,0,0,0,0,0],"credLR":[0,0,0,0,0,0,0,0,0,0,0,0]},"icms":{"cred":null,"deb":null},"ipi":{"cred":null,"deb":null},"folha13":{"prolabore13":0,"salarios13":24739.77,"baseFgts13":24739.77}} } ];
-const LACRE_HASH = 'fa39eefb';   // selo da v7.35.0 — re-selado na correção do período de apuração do Lucro Real (o CI confere)
+const LACRE_HASH = '5a5562df';   // selo da v7.36.0 — re-selado na correção da trava da 5ª faixa (RBT12 efetivo). Anterior: fa39eefb (v7.35.0)
 function lacreHash(str){ let h = 0x811c9dc5;
   for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   return h.toString(16).padStart(8,'0'); }
@@ -5903,7 +5974,13 @@ function parecerDados(){
   const alertas = [];
   if (acima && cadSimples) alertas.push('Cadastro indica Simples Nacional, mas o RBT12 apurado supera o teto de R$ 4,8 mi — a empresa está sujeita à exclusão do regime; o parecer trata o cenário do regime regular.');
   if (!acima && rbtMax > 4320000) alertas.push('RBT12 em '+fmtR(rbtMax)+' — acima de 90% do teto do Simples (R$ 4,8 mi): monitorar o risco de exclusão.');
-  if (optante && rbtMax > 3600000) alertas.push('RBT12 acima do sublimite de R$ 3,6 mi: ICMS/ISS devidos fora da repartição (trava da 5ª faixa) — já considerado no cálculo.');
+  if (optante && rbtMax > 3600000) alertas.push('RBT12 acima do sublimite de R$ 3,6 mi: ICMS/ISS calculados pela trava da 5ª faixa com o RBT12 do mês (art. 21, III, "b", Res. CGSN 140/2018) e recolhidos dentro do DAS — já considerado no cálculo.');
+  // v7.36.0 · trajetória de limite e sublimite: o dado de maior valor econômico do documento —
+  // a comparação entre regimes descreve um Simples que a empresa pode não ter no ano seguinte.
+  if (optante && RL.res && RL.res.subMon){
+    const _t = subMonTexto(RL.res.subMon);
+    if (_t) alertas.push('Trajetória do ano (mercado interno, projeção pela média realizada): ' + _t.replace(/<[^>]+>/g,''));
+  }
   // v7.23.0: só a análise DO RELATÓRIO (RL.dados) — AN pode ser outra empresa aberta na aba Análise
   if ((RL.dados?.receitas?.a5r||[]).some(v=>+v>0) && frMed>0.25 && frMed<0.31)
     alertas.push('Fator R médio de '+(frMed*100).toFixed(1)+'% — no limiar de 28% que decide entre Anexos III e V: pequenas variações de folha mudam a alíquota.');
@@ -6451,11 +6528,18 @@ function rlConfEntrada(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px"><div>
       <b style="font-size:12px">Configuração vigente</b>
       <table class="gtable" style="font-size:11px"><tbody>${cfgTx}</tbody></table></div><div>
-      <b style="font-size:12px">Parâmetros da Reforma aplicados</b>
+      <b style="font-size:12px">Alíquotas aplicadas na projeção (Reforma)</b>
       <table class="gtable" style="font-size:11px"><tbody>${[2027,2029,2031,2033].map(a=>{
         const q = Object.assign({}, RF_ALIQ_DEFAULT[a]||{}, (PARAMS.reforma||{})[a]||{});
-        return `<tr><td class="rot">${a}</td><td>CBS ${(q.cbs||0).toFixed(2)}% · IBS ${((q.ibse||0)+(q.ibsm||0)).toFixed(2)}%</td></tr>`;}).join('')}
-      <tr><td colspan="2" class="hint">Fonte: Parâmetros › Reforma (Res. CGIBS nº 14/2026)</td></tr></tbody></table></div></div>
+        // v7.36.1 · grau de certeza por ano (achado 05 da auditoria + decisão dele: rótulo POR ANO):
+        // 2027-28: IBS 0,1% é BASE LEGAL (EC 132/ADCT art. 127) e a CBS ancora na referência − 0,1 p.p.
+        // (LC 214, art. 347) — estimativa oficial; 2029-32: escada do IBS = PROJEÇÃO; 2033: referência
+        // conjunta projetada pela Res. CGIBS 14/2026, definitiva só após cálculo do TCU e Senado.
+        const grau = a<=2028 ? 'IBS: base legal · CBS: estimativa oficial'
+                   : a<2033 ? 'projeção (escada do IBS)'
+                   : 'referência projetada (CGIBS 14/2026)';
+        return `<tr><td class="rot">${a}</td><td>CBS ${(q.cbs||0).toFixed(2)}% · IBS ${((q.ibse||0)+(q.ibsm||0)).toFixed(2)}%</td><td class="hint" style="font-size:10px">${grau}</td></tr>`;}).join('')}
+      <tr><td colspan="3" class="hint">Percentuais de natureza <b>estimativa</b>, adotados para fins de simulação (Parâmetros › Reforma). As alíquotas de referência definitivas serão fixadas pelo Senado a partir do cálculo do TCU — atualizar quando publicadas.</td></tr></tbody></table></div></div>
     ${grade('Receitas por bloco (R$/mês)', recLinhas)}
     ${grade('Folha (R$/mês)', [linha('Pró-labore', F.prolabore, 0, 'folha.prolabore'), linha('Salários', F.salarios, 0, 'folha.salarios'), linha('Base FGTS', F.baseFgts, 0, 'folha.baseFgts'), linha('Provisão 13º', F.prov13, 0, 'folha.prov13'), linha('Provisão férias', F.provFerias, 0, 'folha.provFerias')])}
     ${grade('Compras (R$/mês)', [linha('Revenda sem ST', C.semst, 0, 'compras.semst'), linha('Revenda com ST', C.comst, 0, 'compras.comst'), linha('Monofásicas', C.mono, 0, 'compras.mono'), linha('ST + Mono', C.comstMono, 0, 'compras.comstMono'), linha('Baixa estoque s/ ST (CMV)', C.baixaSemst, 0, 'compras.baixaSemst'), linha('Baixa c/ ST', C.baixaComst, 0, 'compras.baixaComst'), linha('Baixa mono', C.baixaMono, 0, 'compras.baixaMono'), linha('Base IPI crédito', C.baseIpiCred, 0, 'compras.baseIpiCred')])}
@@ -6468,10 +6552,17 @@ function rlConferencia(){
   const mSel = +(($id('rl-conf-mes')||{}).value ?? 0);
   const meses = modo === 'mes' ? [mSel] : [...Array(12).keys()];
   const emp = RL.empresa || {};
+  // v7.36.1 · rótulo do período: com meses parciais, "ano-base 2026" induz a leitura de ano cheio —
+  // o documento passa a declarar o intervalo realmente lançado (achado da auditoria Weeedo).
+  const _lancC = R.meses.map((x,i)=>i).filter(i => (+R.meses[i].receita||0) > 0.005);
+  const _perTx = _lancC.length === 0 ? `ano-base ${D.ano} (sem meses lançados)`
+    : _lancC.length === 12 ? `ano-base ${D.ano} (12 meses)`
+    : `<b>período ${MESES_ROT[_lancC[0]].toLowerCase()}–${MESES_ROT[_lancC[_lancC.length-1]].toLowerCase()}/${D.ano}</b> (${_lancC.length} ${_lancC.length===1?'mês lançado':'meses lançados'})`;
   const cab = `<div class="card" style="border-left:4px solid #1a5276">
     <h3 style="margin:0">Conferência de cálculos — memória</h3>
-    <div class="hint">${esc(emp.razao_social||'')} · CNPJ ${fmtCNPJ(D.cnpj)} · ano-base ${D.ano}
+    <div class="hint">${esc(emp.razao_social||'')} · CNPJ ${fmtCNPJ(D.cnpj)} · ${_perTx}
       · gerado em ${new Date().toLocaleString('pt-BR')} · <b>documento interno</b></div>
+    ${_lancC.length>0 && _lancC.length<12 ? `<div class="hint" style="margin-top:4px">Totais e projeções da Reforma refletem o <b>realizado no período</b> — não são valores anuais. A projeção anualizada da receita está no quadro "Limite e sublimite".</div>` : ''}
     <div class="hint" style="margin-top:6px">Configuração vigente: ISS ${CF.pc(+D.cfg.iss||0)} · ICMS vendas ${CF.pc(+D.cfg.icmsV||0)} · ICMS compras ${CF.pc(+D.cfg.icmsC||0)}
       · presunções IRPJ ${CF.pc(+D.cfg.lpBaseCom||0)} (comércio) e ${CF.pc(+D.cfg.lpBaseServ||0)} (serviços)
       · CSLL ${CF.pc(+D.cfg.lpBaseComCsll||.12)} (comércio)
@@ -6585,18 +6676,18 @@ function rlConfAnual(){
   const R = RL.res, D = RL.dados;
   const li = R.meses.map(M => `<tr><td class="rot">${MESES_ROT[M.m]}</td>
     <td class="num">${fmtR(M.receita)}</td><td class="num">${fmtR(M.rbt12)}</td><td class="num">${M.faixa}ª</td>
-    <td class="num">${fmtR(M.das)}</td><td class="num">${fmtR(M.simples.total)}</td>
+    <td class="num">${fmtR(M.dasGuia!=null?M.dasGuia:M.das)}</td><td class="num">${fmtR(M.simples.total)}</td>
     <td class="num">${fmtR(M.lp.total)}</td><td class="num">${fmtR(M.lr.total)}</td></tr>`).join('');
   const T = R.totais;
   return `<div class="card"><h3 style="margin-top:0">Resumo anual</h3>
     <table class="gtable"><thead><tr><th>Mês</th><th class="num">Receita</th><th class="num">RBT12</th><th class="num">Faixa</th>
-      <th class="num">DAS</th><th class="num">Simples (total)</th><th class="num">Presumido</th><th class="num">Real</th></tr></thead>
+      <th class="num">DAS</th><th class="num">Simples (total)</th><th class="num">Presumido</th><th class="num" title="Simulação — não é apuração fiscal definitiva">Real (simulação)</th></tr></thead>
     <tbody>${li}<tr style="font-weight:700;border-top:2px solid #1a5276">
       <td class="rot">Total</td><td class="num">${fmtR(T.receita)}</td><td class="num">—</td><td class="num">—</td>
-      <td class="num">${fmtR(R.meses.reduce((s,x)=>s+x.das,0))}</td><td class="num">${fmtR(T.simples)}</td>
-      <td class="num">${fmtR(T.lp)}</td><td class="num">${fmtR(T.lr)}</td></tr></tbody></table>
-    <div class="hint" style="margin-top:8px">Para ver as fórmulas de um mês, troque o detalhe para "Um mês".</div></div>`
-    + rlConfReforma() + rlConfDivergencias();
+      <td class="num">${fmtR(somaExib(R.meses,x=>x.dasGuia!=null?x.dasGuia:x.das))}</td><td class="num">${fmtR(somaExib(R.meses,x=>x.simples.total))}</td>
+      <td class="num">${fmtR(somaExib(R.meses,x=>x.lp.total))}</td><td class="num">${fmtR(somaExib(R.meses,x=>x.lr.total))}</td></tr></tbody></table>
+    <div class="hint" style="margin-top:8px">A coluna <b>DAS</b> é a guia — inclui o ICMS/ISS da trava da 5ª faixa nos meses de 6ª faixa, quando não há impedimento. Os totais somam os valores <b>já arredondados</b> de cada mês, para fechar com a soma da coluna. Para ver as fórmulas de um mês, troque o detalhe para "Um mês".</div></div>`
+    + rlConfTrava() + rlConfSublimite() + rlConfReforma() + rlConfDivergencias();
 }
 // ═══ v7.20.0: conferência da Reforma ano a ano — fórmulas com valores substituídos ═══
 function rlConfReforma(){
@@ -6622,8 +6713,8 @@ function rlConfReforma(){
       ? '<div class="hint" style="color:#b9770e">⚠️ Créditos de IBS/CBS = ZERO — nenhuma compra informada (aba Reforma e Compras vazias).</div>'
       : (C.proxyCompras ? '<div class="hint">Créditos estimados pelas compras de revenda da análise (proxy) — preencha a aba Reforma para refinar.</div>' : '');
     return `<div class="card"><h3 style="margin-top:0">Reforma Tributária — conferência ano a ano (2026–2033)</h3>
-      <div class="hint">Débito = base tributável (receita INTERNA − reduções por cClassTrib; exportações imunes — LC 214, art. 8º, com créditos mantidos) × alíquotas de referência do ano (Parâmetros › Reforma, Res. CGIBS nº 14/2026). Crédito = aquisições com direito a crédito × mesmas alíquotas. Híbrido = art. 22-A da Res. CGSN 140/2018 (Res. 190/2026): DAS + trava − parcelas de CBS/IBS da partilha da faixa, mais IBS/CBS apurados por fora.</div>
-      <table class="gtable"><thead><tr><th>Ano</th><th class="num">Débito IBS/CBS</th><th class="num">Crédito</th><th class="num">Líquido</th><th class="num">IS</th><th class="num">Por dentro</th><th class="num">DAS ajustado (22-A)</th><th class="num">Cenário híbrido</th><th class="num">Regime regular</th></tr></thead>
+      <div class="hint">Débito = base tributável (receita INTERNA − reduções por cClassTrib; exportações imunes — LC 214, art. 8º, com créditos mantidos) × alíquotas de referência do ano (Parâmetros › Reforma, Res. CGIBS nº 14/2026). Crédito <b>estimado</b> = aquisições identificadas na análise × mesmas alíquotas — não inclui despesas gerais nem distingue o regime do fornecedor, salvo quando a aba Reforma foi alimentada pela análise de fornecedores. Híbrido = art. 22-A da Res. CGSN 140/2018 (Res. 190/2026): DAS + trava − parcelas de CBS/IBS da partilha da faixa, mais IBS/CBS apurados por fora.</div>
+      <table class="gtable"><thead><tr><th>Ano</th><th class="num">Débito IBS/CBS</th><th class="num">Crédito estimado</th><th class="num">Líquido</th><th class="num">IS</th><th class="num">Por dentro</th><th class="num">DAS ajustado (22-A)</th><th class="num">Cenário híbrido</th><th class="num">Regime regular</th></tr></thead>
       <tbody>${linhas}</tbody></table>
       ${travaTx}${credTx}
       <div class="hint" style="margin-top:6px">A coluna "Por dentro" (permanecer 100% no Simples) usa a mesma fórmula do veredito e do parecer — total do Simples do ano-base com a trava recomposta pela vigência (Res. 190). Valores em moeda constante do ano-base.</div></div>`;
@@ -6657,18 +6748,84 @@ function lrLinhasConfMes(m, LR){
   if (L.saldoIrpj > 0.005) out.push(CF.lin('Saldo de prejuízo', `${fmtR(L.prejIrpjAnt)} − ${fmtR(L.usadoIrpj)}`, fmtR(L.saldoIrpj)));
   return out;
 }
+// ═══ v7.36.0 · memória da trava da 5ª faixa, mês a mês ═══
+// Responde ao apontamento da auditoria: o valor somado ao custo do Simples precisa ser
+// reproduzível pelo leitor, linha a linha, com a alíquota e a base à vista.
+function rlConfTrava(){
+  try {
+    const R = RL.res, T = R.totais; if (!T || (T.sublimite||0) <= 0.005) return '';
+    const A5f = (PARAMS.anexos||ANEXOS_DEFAULT);
+    const li = R.meses.filter(M => (M.subIcms||0)+(M.subIss||0) > 0.005).map(M => {
+      const sub = (M.subIcms||0)+(M.subIss||0);
+      const ef5 = (M.rbt12*A5f.I.aliq[4] - A5f.I.ded[4])/M.rbt12;
+      const base = sub > 0 && (M.subIcms||0) > 0 ? M.subIcms/(ef5*A5f.I.icms[4]) : 0;
+      return `<tr><td class="rot">${MESES_ROT[M.m]}</td><td class="num">${fmtR(M.rbt12)}</td>
+        <td class="num">${M.faixa}ª</td><td class="num">${base>0?fmtR(base):'—'}</td>
+        <td class="num">${(ef5*100).toFixed(4).replace('.',',')}%</td>
+        <td class="num">${(A5f.I.icms[4]*100).toFixed(2).replace('.',',')}%</td>
+        <td class="num">${(ef5*A5f.I.icms[4]*100).toFixed(4).replace('.',',')}%</td>
+        <td class="num"><b>${fmtR(sub)}</b></td></tr>`; }).join('');
+    return `<div class="card"><h3 style="margin-top:0">Trava da 5ª faixa — memória do ICMS/ISS</h3>
+      <div class="hint">Nos meses em que o <b>RBT12 supera R$ ${fmt(3600000)}</b>, a 6ª faixa não reparte ICMS/ISS: eles são calculados pela fórmula do
+      <b>art. 21, III, "b", da Res. CGSN nº 140/2018</b> — {[(RBT12 × alíquota nominal da 5ª faixa) − parcela a deduzir da 5ª faixa] ÷ RBT12} × % de repartição da 5ª faixa —
+      com o <b>RBT12 do próprio mês</b>. Não havendo impedimento (RBA e RBAA abaixo do sublimite), a parcela é recolhida <b>dentro do DAS</b>.
+      Ficam de fora a exportação (imune, com sublimite próprio), as receitas com ST e o ISS retido na fonte (deduzido pelo tomador). Colunas de ICMS pelo Anexo I; o ISS de serviços tem teto próprio.</div>
+      <table class="gtable"><thead><tr><th>Mês</th><th class="num">RBT12</th><th class="num">Faixa</th><th class="num">Base (receita interna)</th>
+        <th class="num">Efetiva 5ª faixa</th><th class="num">% ICMS</th><th class="num">Alíquota da trava</th><th class="num">Valor</th></tr></thead>
+      <tbody>${li}<tr style="font-weight:700;border-top:2px solid #1a5276"><td class="rot">Total</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">${fmtR(somaExib(R.meses,x=>(x.subIcms||0)+(x.subIss||0)))}</td></tr></tbody></table></div>`;
+  } catch(e){ console.error('conferência trava', e); return ''; }
+}
+// ═══ v7.36.0 · limite e sublimite: indicadores segregados e trajetória do ano ═══
+function rlConfSublimite(){
+  try {
+    const M = RL.res && RL.res.subMon; if (!M) return '';
+    const rot = i => i>=0 ? MESES_ROT[i] : '—';
+    const alerta = subMonTexto(M);
+    return `<div class="card"><h3 style="margin-top:0">Limite e sublimite — indicadores do ano</h3>
+      <div class="hint">O <b>RBT12</b> (12 meses móveis) determina faixa, alíquota e a fórmula da trava. Quem responde por <b>limite e sublimite</b> é a
+      <b>RBA</b> — receita acumulada do ano-calendário —, e o <b>mercado interno e a exportação têm limites próprios e independentes</b>
+      (LC 123, art. 3º, § 14; Res. CGSN 140/2018, art. 9º, § 1º): as duas receitas nunca se somam para esse teste.</div>
+      <table class="gtable"><thead><tr><th></th><th class="num">Mercado interno</th><th class="num">Exportação</th></tr></thead><tbody>
+        <tr><td class="rot">RBA realizada (até ${rot(M.ultimo)})</td><td class="num">${fmtR(M.rbaInt[M.ultimo])}</td><td class="num">${fmtR(M.rbaExp[M.ultimo])}</td></tr>
+        <tr><td class="rot">Média mensal realizada</td><td class="num">${fmtR(M.mediaInt)}</td><td class="num">${fmtR(M.mediaExp)}</td></tr>
+        <tr><td class="rot">RBA projetada em dezembro${M.parcial?' <span class="hint">(mantido o ritmo)</span>':''}</td><td class="num"><b>${fmtR(M.projInt[11])}</b></td><td class="num">${fmtR(M.projExp[11])}</td></tr>
+        <tr><td class="rot">Sublimite de ${fmtR(M.subLim)} — ultrapassagem</td><td class="num">${rot(M.marco.sublimite)}</td><td class="num">${rot(M.marco.expSublimite)}</td></tr>
+        <tr><td class="rot">Sublimite + 20% (${fmtR(M.subLim*1.2)})</td><td class="num">${rot(M.marco.sublimite20)}</td><td class="num">—</td></tr>
+        <tr><td class="rot">Limite de ${fmtR(M.limite)} — ultrapassagem</td><td class="num">${rot(M.marco.limite)}</td><td class="num">${rot(M.marco.expLimite)}</td></tr>
+        <tr><td class="rot">Margem até o limite (mercado interno)</td><td class="num"${M.margemPct<0.05&&M.margemLimite>0?' style="color:#b9770e"':''}>${M.margemLimite>0?fmtR(M.margemLimite)+' ('+(M.margemPct*100).toFixed(1).replace('.',',')+'%)':'ultrapassado'}</td><td class="num">—</td></tr>
+      </tbody></table>
+      ${alerta ? `<div class="hint" style="margin-top:8px;border-left:3px solid #b9770e;padding-left:8px">${alerta}</div>` : ''}</div>`;
+  } catch(e){ console.error('conferência sublimite', e); return ''; }
+}
+// texto único do alerta de trajetória — usado na tela, na conferência e no parecer
+function subMonTexto(M){
+  if (!M) return '';
+  const mes = i => i>=0 ? MESES_ROT[i] : '';
+  const p = [];
+  if (M.impedimento){
+    const q = M.impedimento.quando;
+    if (q === 'ano-corrente') p.push(`A receita do <b>ano anterior</b> já superou o sublimite: o ICMS/ISS é recolhido <b>fora do DAS</b> durante todo este ano-calendário — cenário que este cálculo ainda não modela (a trava da 5ª faixa pressupõe ausência de impedimento).`);
+    else if (q === 'mes-seguinte') p.push(`A RBA do mercado interno ultrapassa o sublimite em <b>mais de 20%</b> em <b>${mes(M.impedimento.mes)}</b>${M.impedimento.projetado?' (projeção)':''} — o ICMS/ISS sai do DAS <b>a partir do mês seguinte</b>.`);
+    else p.push(`A RBA do mercado interno ultrapassa o sublimite em <b>${mes(M.impedimento.mes)}</b>${M.impedimento.projetado?' (projeção)':''} — o ICMS/ISS sai do DAS <b>a partir de 1º/01 do ano seguinte</b>.`);
+  }
+  if (M.excluiProjetado) p.push(`A projeção também alcança o <b>limite de ${fmtR(M.limite)}</b> do mercado interno em <b>${mes(M.marco.limite)}</b>: há risco de <b>exclusão do regime</b>.`);
+  else if (M.margemLimite > 0 && M.margemPct < 0.10) p.push(`O limite de ${fmtR(M.limite)} não é alcançado pela projeção, mas por margem de apenas <b>${fmtR(M.margemLimite)}</b> (${(M.margemPct*100).toFixed(1).replace('.',',')}%) — basta o ritmo subir um pouco para a exclusão entrar em cena.`);
+  if (M.parcial && p.length) p.push(`<span class="hint">Projeção pela média mensal realizada até ${mes(M.ultimo)}, por bloco de receita — não é previsão de faturamento.</span>`);
+  return p.join(' ');
+}
 function rlConfDivergencias(){
   return `<div class="card" style="border-left:4px solid #b9770e">
     <h3 style="margin-top:0">Divergências e decisões declaradas</h3>
     <div class="hint">O que este cálculo <b>não</b> faz, por decisão consciente. Um papel de trabalho que omite isso induz a erro.</div>
     <ul style="margin:10px 0 0 20px;padding:0;line-height:1.8">
-      <li><b>Prejuízo fiscal não é compensado entre meses no Lucro Real.</b> Base negativa vira zero e o prejuízo se perde; o mês seguinte lucrativo paga integralmente. Superestima o Lucro Real em empresas sazonais.</li>
+      <li><b>Lucro Real com período de apuração próprio</b> (v7.35.0): trimestral, anual ou mensal-legado, escolhido na Configuração da empresa — com compensação de prejuízo limitada a 30% (Lei 9.065/95, art. 15). No <b>modo legado</b>, e só nele, a base negativa do mês vira zero e o prejuízo se perde.</li>
       <li><b>Tema 69 (STF) aplicado por estimativa:</b> desde a v7.18.0 o ICMS <b>destacado</b> das saídas é excluído da base de PIS/COFINS no Presumido e no Real — estimado pelas alíquotas médias da configuração, não nota a nota.</li>
       <li><b>Lei nº 14.592/2023 aplicada por estimativa:</b> desde a v7.18.3 o ICMS das aquisições fica fora do crédito de PIS/COFINS no Lucro Real (compras líquidas do ICMS), estimado pelo % de ICMS de compras da configuração.</li>
       <li><b>Crédito de PIS/COFINS no Lucro Real por aproximação:</b> receita menos compras (líquidas do ICMS) e menos a base extra informada. Não distingue insumo de não insumo; energia, aluguel e depreciação dependem do campo próprio estar preenchido.</li>
       <li><b>Fator R sem o 13º salário</b> e sem a contribuição do Anexo IV.</li>
-      <li><b>Lucro Real apenas mensal</b> — sem apuração trimestral nem estimativa anual com balanço de suspensão.</li>
-      <li><b>Trava do sublimite:</b> o aplicativo soma ao custo do regime o ICMS/ISS da 5ª faixa quando o RBT12 supera R$ 3,6 milhões. A planilha de referência não soma — a diferença é proposital e o aplicativo é o correto.</li>
+      <li><b>Trava da 5ª faixa (v7.36.0):</b> quando o RBT12 supera R$ 3,6 milhões e <b>não há impedimento</b>, o ICMS/ISS é calculado pela fórmula do art. 21, III, "b", da Res. CGSN 140/2018, com o <b>RBT12 do próprio mês</b> — não pelo teto do sublimite, como fazia até a v7.35.0 — e integra o <b>DAS</b>. A planilha de referência não soma essa parcela; a diferença é proposital e o aplicativo é o correto.</li>
+      <li><b>Impedimento não é modelado:</b> ultrapassado o sublimite pela RBA (ou já pela RBAA), o ICMS/ISS passa a ser recolhido <b>fora do Simples</b>, pelas regras normais do Estado e do Município — e o mês em que a RBA cruza o sublimite se parte entre a parcela dentro e a excedente. O aplicativo <b>alerta</b> a trajetória, mas ainda não calcula esse cenário.</li>
+      <li><b>Arredondamento:</b> cálculo em precisão plena (alíquotas efetivas nunca arredondadas no meio do caminho) e arredondamento só no valor exibido, em 2 casas; as linhas de total somam os valores já arredondados de cada mês, para fechar com a soma da coluna.</li>
     </ul></div>`;
 }
 function rlCmpHtml(){
