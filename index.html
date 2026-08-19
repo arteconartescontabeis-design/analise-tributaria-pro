@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.38.4</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.40.5</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -536,6 +536,8 @@ canvas{max-height:340px}
           <option value="cnpj">Resumo Estatístico</option>
           <option value="produtos">Produtos vendidos × Reforma (IBS/CBS)</option>
         </select></div>
+        <div style="width:230px;display:none" id="rl-proj-wrap"><label>Projeção do ano <span class="hint" style="font-weight:400">(neste documento)</span></label>
+          <select id="rl-proj" onchange="rlProjTrocar(this.value)"></select></div>
         <div><label>Periodicidade</label><select id="rl-per" onchange="rlRender()">
           <option value="1">Mensal</option><option value="2">Bimestral</option>
           <option value="3" selected>Trimestral</option><option value="6">Semestral</option>
@@ -644,7 +646,19 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.38.4</b> <span class="badge ok">atual</span></td><td>18/08/2026</td><td><b>Última página cortando, confirmada no PDF real: "O retrato da empresa em números".</b> O hint sob o gráfico "Para onde vai cada real do DAS" cortava no meio da frase ("...a distribuição é" e parava) e o hint de "Consumo: X% do DAS" nem chegava a aparecer — a legenda do gráfico de receita ganhou uma 3ª linha (Exportação, v7.38.1) e isso empurrou o conteúdo além dos 296mm. Separada em duas páginas: receita mensal numa, DAS por tributo (rosca + tabela) na outra. Com essa, as três páginas identificadas como problema (Introdução+Caminho, Retrato, Plano+Parecer) estão todas corrigidas. Motor e lacre 5a5562df intocados.</td></tr>
+                    <tr><td><b>v7.40.5</b> <span class="badge ok">atual</span></td><td>19/08/2026</td><td><b>Papel timbrado: as folhas criadas pelo empacotador passam a clonar a arte das folhas originais, e a régua avisa quando ela não carrega.</b> Até aqui, a folha nova montada pela distribuição compacta recriava o elemento do timbrado do zero — equivalente na intenção, mas abrindo margem para diferença sutil em relação às folhas que sempre imprimiram certo. Agora ela <b>clona</b> o próprio elemento vindo do documento, com os mesmos atributos e o mesmo tratamento de erro. Junto veio um diagnóstico que faltava: quando o arquivo <b>timbrado.jpg</b> não está na mesma pasta do aplicativo — o que acontece com facilidade ao abrir o app numa pasta solta para testar — o app esconde a imagem quebrada <b>em silêncio</b>, e o documento sai com o miolo correto mas sem cabeçalho nem rodapé, o que se confunde com defeito de layout. A régua passa a contar em quantas folhas a arte carregou e a avisar, em destaque, quando estiver faltando. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.40.4</b></td><td>19/08/2026</td><td><b>A régua avisava de "pouca folga" justamente nas folhas que o empacotador tinha preenchido como devia.</b> O aviso foi escrito na v7.39.2, quando a distribuição era manual: ali, uma folha com menos de 12 mm de sobra estava mesmo à beira do corte. No modo compacto o critério se inverte — encher a folha até a reserva de 6 mm é <b>o objetivo</b>, e apontar isso como problema é reclamar do funcionamento correto. Agora o limiar depende do modo: na distribuição compacta só é sinalizada a folha que ficou <b>abaixo da reserva</b>, e quando nenhuma fica, a régua explica que a sobra de poucos milímetros é o resultado esperado. Saiu junto a advertência de que "qualquer texto novo da IA pode cortar": ela vale para a distribuição manual, mas não para a compacta, em que a chegada dos textos da IA <b>redistribui as folhas automaticamente</b>. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.40.3</b></td><td>19/08/2026</td><td><b>O botão de paginação dizia qual modo estava ativo, mas parecia dizer para qual iria mudar.</b> Escrito apenas como "Paginação: compacta", o rótulo é ambíguo — e como a escolha fica gravada no navegador, bastava tê-lo clicado uma vez, para conferir, e o parecer seguia sendo gerado no outro modo sem nada denunciar. O botão passa a mostrar as duas informações de uma vez: o modo <b>ativo</b>, com um visto e destaque, e a <b>ação</b> do clique. Além disso, a régua agora <b>declara em qual modo mediu</b> — sem isso, a lista de folhas não se interpreta: 15 folhas com bastante sobra em cada uma são o resultado normal da distribuição por seção, e seriam sinal de defeito na compacta. Por fim, a medição automática após os gráficos passou a valer <b>nos dois modos</b>, e não apenas no compacto. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.40.2</b></td><td>19/08/2026</td><td><b>O empacotamento das folhas media o documento cedo demais — e por isso estourava.</b> A distribuição compacta criada na v7.40.1 é, no fundo, uma medição: os blocos são empilhados enquanto couberem na folha. Só que ela rodava <b>antes de os gráficos serem desenhados</b>, quando os quadros ainda não tinham altura nenhuma — de modo que cada folha era calculada menor do que realmente é, entrava conteúdo demais e o excedente saía fora da margem na impressão, exatamente o problema que a distribuição pretendia evitar. Era por isso que o botão "uma seção por folha" mostrava o documento correto e o modo compacto não. Agora o empacotamento acontece <b>depois</b> de o Chart.js desenhar, com as alturas reais em mãos, e a régua roda automaticamente na sequência para confirmar o resultado. Foi acrescentada também uma <b>reserva de 6 mm por folha</b>: medir na tela e traçar na impressão não são operações idênticas ao milímetro — fontes, arredondamento de linha e altura de gráfico introduzem diferenças pequenas —, e encher a folha até os 296 mm exatos deixava o documento na fronteira do corte. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.40.1</b></td><td>19/08/2026</td><td><b>A paginação corrida da v7.40.0 foi revertida — e o vão branco no pé das folhas foi resolvido por outro caminho.</b> A tentativa anterior entregava o documento como fluxo único, com o timbrado em <i>position:fixed</i> e as margens vindo de uma regra <i>@page</i>. O PDF real mostrou que não funciona: o navegador pinta o elemento fixo <b>apenas na primeira folha</b>, e o timbrado sumiu de todas as demais; a regra de página nomeada não segurou a capa, que saiu partida em duas; e as margens do <i>@page</i> encolheram a área útil, embaralhando o restante do documento. Tudo isso foi removido. O incômodo de origem, porém, era legítimo: cada seção abria uma folha nova, e sobrava um vão em branco no pé de quase todas. A causa não era o layout de folha fixa — era a <b>distribuição</b>, que vinha sendo feita à mão, uma seção por folha. Agora ela é <b>medida</b>: os blocos são empilhados na folha enquanto couberem e uma folha nova só começa quando o bloco seguinte não cabe mais, com o cuidado de nunca deixar um cabeçalho de seção órfão no pé da página. O texto corre de uma folha para a outra, mas cada folha continua sendo a caixa de 296 mm que já imprimia corretamente, com seu próprio timbrado e com <b>Margens = Nenhuma</b>, como sempre. O botão <b>Paginação</b> alterna entre a distribuição compacta e a antiga. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.40.0</b></td><td>19/08/2026</td><td><b>O parecer passa a ter texto corrido: o navegador é que pagina, e nada mais é cortado.</b> Desde a v7.18.2 cada seção ocupava uma folha própria, de altura fixa em 296 mm e com <b>corte silencioso</b> do que passasse disso — daí as correções de página das v7.38.2, v7.38.3, v7.38.4 e v7.39.3, e daí a régua criada na v7.39.2 para ao menos <i>avisar</i> do corte. O efeito colateral era visual: várias folhas terminavam com um vão em branco no pé, porque a seção seguinte só podia começar na folha de baixo. Agora o documento é um <b>fluxo único</b> e a quebra de folha é feita pelo navegador na impressão: o texto atravessa as páginas, o branco no pé desaparece e <b>o excedente desce em vez de sumir</b>. Cabeçalhos de seção, cartões, gráficos, blocos de alerta e linhas de tabela seguem marcados para não serem partidos ao meio, e o cabeçalho das tabelas se repete quando uma delas atravessa a folha. O timbrado deixou de ser uma imagem por folha e virou um elemento fixo, que o navegador repete em todas as páginas; a capa continua sendo folha inteira sem margem. <b>Atenção na hora de imprimir:</b> neste modo as margens vêm do próprio documento, então a janela de impressão deve sair com <b>Margens = Padrão</b> — a opção "Nenhuma", usada até aqui, zera as margens e faz o texto invadir a arte do timbrado. O botão <b>Paginação</b> na barra do parecer alterna entre o modo corrido e o antigo (uma seção por folha), que segue disponível e inalterado. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.39.5</b></td><td>19/08/2026</td><td><b>A folha seguinte de clientes e fornecedores não repete mais o título da seção.</b> Ao dividir aquela página na v7.39.3, a segunda folha recebeu o cabeçalho da seção outra vez, com a marca "(continuação)" — o que contraria a forma do próprio parecer, em que <b>o texto corre entre as folhas</b> e o cabeçalho aparece <b>uma única vez</b>, na abertura da seção: a folha do "DAS por tributo" continua a seção 4 e a do "quanto da receita vira imposto" continua a seção 6, ambas sem título. A segunda folha passa a abrir direto no bloco de compras e fornecedores, como as demais continuações. Como efeito colateral bem-vindo, a folha ficou cerca de 10 mm mais folgada. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.39.4</b></td><td>19/08/2026</td><td><b>Três acertos na própria régua, a partir do primeiro uso real.</b> (1) <b>Alarme falso da capa</b>: a capa é arte de fundo em folha inteira e não tem miolo a medir, mas entrava na lista de "pouca folga" com 0 mm — como se estivesse no limite do corte. Passa a ser identificada como não medível e sai do alerta. (2) <b>Medida de todas as folhas</b>: além de apontar o problema, a régua agora abre a lista completa, folha por folha, com a altura e a folga de cada uma — é com esse quadro que se decide <b>onde</b> aliviar quando alguma fica no limite, em vez de tentar e imprimir de novo. (3) <b>Medição automática depois da IA</b>: os textos gerados pela inteligência artificial são a única fonte de tamanho imprevisível do documento, e uma geração mais longa é o que pode empurrar uma folha justa para além dos 296 mm — a régua passa a rodar sozinha assim que os textos chegam, avisando na hora. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.39.3</b></td><td>19/08/2026</td><td><b>A folha de clientes e fornecedores cortava 22 mm — medidos pela régua, corrigidos na estrutura.</b> A página <b>"Clientes e fornecedores — a decisão do crédito"</b> era a mais carregada do parecer: parágrafo de abertura, faixa de cartões das compras, faixa de cartões das vendas, tabela dos cinco maiores clientes, tabela dos cinco maiores fornecedores, parágrafo de leitura e nota de rodapé, tudo numa folha só desde a v7.34.0. A régua criada na v7.39.2 mediu <b>318 mm contra os 296 mm da folha A4</b>: 22 mm de conteúdo — na prática, o fim da tabela de fornecedores e a nota sobre a origem dos enquadramentos — desapareciam no PDF sem qualquer aviso. Em vez de espremer fontes e espaçamentos (que resolveria hoje e voltaria a estourar no primeiro cliente com razão social mais longa), o conteúdo passou a ocupar <b>duas folhas, agrupado por tema</b>: na primeira, <b>vendas e clientes</b> — quem compra da empresa e, portanto, quem pressiona pelo crédito destacado —, encerrando com a leitura da clientela; na segunda, <b>compras e fornecedores</b> — quem gera o crédito de IBS/CBS —, com a nota de rodapé. A numeração da seção é a mesma nas duas, e a segunda traz "(continuação)" no título. Quando só um dos analíticos está gravado, o parecer segue em <b>folha única</b>, exatamente como antes. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.39.2</b></td><td>19/08/2026</td><td><b>Régua de página: o estouro de folha deixa de ser descoberto só no PDF.</b> Desde a v7.18.2 cada folha do parecer tem <b>altura fixa de 296 mm com corte silencioso</b> — conteúdo que passa disso simplesmente <b>desaparece</b>, não empurra para a página seguinte. Na tela, porém, a página cresce conforme o conteúdo, então nada denuncia o problema: foi assim que a v7.38.1 perdeu uma seção inteira e que só a impressão revelou os cortes corrigidos nas v7.38.2, v7.38.3 e v7.38.4. O parecer ganhou o botão <b>📏 Conferir páginas</b>, que mede cada folha e informa, ali na tela, quais passam dos 296 mm e por quantos milímetros — corrigindo aritmeticamente as alturas que a impressão impõe aos gráficos, sem alterar o documento nem redesenhar nada. Quando nenhuma estoura, ele ainda aponta as folhas com <b>menos de 12 mm de folga</b>, que são as candidatas a cortar assim que a IA escrever um parágrafo mais longo. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.39.1</b></td><td>19/08/2026</td><td><b>Quatro acertos apontados pelo primeiro parecer real gerado com a projeção da v7.39.0.</b> (1) <b>Rótulo esquecido no split payment</b>: a memória de cálculo já dizia "Volume anual segregado", mas o <b>card</b> acima dela continuava escrito "Capital de giro / por ano deixam de transitar pelo caixa" — o documento se contradizia em dois pontos da mesma página. O card passa a dizer "Volume anual segregado · passam pelo split no ano — não é caixa parado". (2) <b>Percentuais em padrão brasileiro</b>: o parecer misturava "R$ 5.349.551,45" com "34.9%" e "27.91%" na mesma linha, porque os percentuais saíam do <i>toFixed</i> com ponto decimal. Todos os percentuais do documento passam a usar <b>vírgula</b>, como o resto dos números. (3) <b>Trava da 5ª faixa descrita pelo RBT12 que entrou na conta</b>: com ano projetado, o alerta e a premissa da trava consultavam o RBT12 <i>realizado</i>, enquanto o cálculo usa o <i>projetado</i> — uma empresa cujo RBT12 só cruza os R$ 3,6 mi na projeção teria a trava aplicada nos números e negada por escrito nas Premissas. (4) <b>Janela redundante identificada</b>: quando a janela escolhida (2, 3 ou 6 meses) abrange todos os meses lançados, as Premissas passam a registrar que ela equivale à média de todos os meses — sem isso, o documento sugeria uma distinção metodológica que não existe naquele caso. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.39.0</b></td><td>19/08/2026</td><td><b>Parecer de ano incompleto passa a falar do ano, e não do pedaço lançado — com janela de projeção escolhível.</b> Até aqui, uma empresa com 6 de 12 meses lançados recebia um parecer em que Simples, Presumido, Real e todos os cenários da Reforma eram calculados sobre a receita dos meses lançados, mas apresentados como se fossem o ano. O erro <b>não é proporcional</b>: o Simples é progressivo, e projetar 6 meses para 12 na empresa de referência multiplica o DAS por <b>2,68</b> — não por 2. Agora os meses sem lançamento são preenchidos pela <b>média de uma janela dos últimos meses reais</b> (receita, folha e compras na mesma janela) e passam pelo <b>mesmo motor de cálculo</b>: nenhuma regra tributária foi tocada e o <b>lacre 5a5562df permanece</b>. A janela é escolhida em <b>dois níveis</b>: padrão por empresa, na Configuração ("Projeção dos meses não lançados": todos os meses lançados — padrão —, últimos 2 meses, últimos 3 ou últimos 6), e <b>sobreposição por documento</b>, na barra dos Relatórios quando o relatório é o Parecer; o documento sempre <b>registra nas Premissas</b> qual janela foi usada e se ela veio da empresa ou do próprio documento. A escolha importa: a mesma janela alimenta a <b>projeção de limite e sublimite</b>, de modo que ela pode antecipar ou adiar o cruzamento dos R$ 3,6 mi e dos R$ 4,8 mi. Duas proteções foram embutidas: (1) o <b>enquadramento do parecer continua vindo do RBT12 realizado</b> — uma estimativa não transforma sozinha um parecer de optante em parecer de regime regular; quando a projeção cruza o teto, isso vira <b>alerta</b> nos pontos de atenção; (2) os valores da <b>aba Reforma</b> (receita, compras e contrapartes, que são anuais) são escalados na mesma proporção, para não haver parecer com tributos de ano cheio e base de IBS/CBS de meio ano. As seções projetadas trazem o selo <b>"📊 Valores projetados"</b> com quantos meses são reais e quantos estimados, o quadro de Premissas descreve o método, e o payload enviado à IA informa que o ano é projetado — sem isso a narrativa era escrita como se os números fossem realizados. <b>Split payment:</b> "Capital de giro anual" passou a se chamar <b>"Volume anual segregado"</b>, com a ressalva de que não equivale à necessidade simultânea de caixa (da ordem de um mês de retenção). Análises com os 12 meses lançados não sofrem nenhuma alteração.</td></tr>
+                    <tr><td><b>v7.38.4</b></td><td>18/08/2026</td><td><b>Última página cortando, confirmada no PDF real: "O retrato da empresa em números".</b> O hint sob o gráfico "Para onde vai cada real do DAS" cortava no meio da frase ("...a distribuição é" e parava) e o hint de "Consumo: X% do DAS" nem chegava a aparecer — a legenda do gráfico de receita ganhou uma 3ª linha (Exportação, v7.38.1) e isso empurrou o conteúdo além dos 296mm. Separada em duas páginas: receita mensal numa, DAS por tributo (rosca + tabela) na outra. Com essa, as três páginas identificadas como problema (Introdução+Caminho, Retrato, Plano+Parecer) estão todas corrigidas. Motor e lacre 5a5562df intocados.</td></tr>
                     <tr><td><b>v7.38.3</b></td><td>18/08/2026</td><td><b>Investigação dos dois cortes de texto apontados no PDF real — eram pré-existentes, não da v7.38.1.</b> Achei as duas páginas com conteúdo demais para os 296mm/196mm úteis: "Introdução + Enquadramento + Caminho" (parágrafo + caixa de enquadramento + alertas + linha do tempo + 2 caixas de jornada + parágrafo final — 7 blocos numa página só) e "Plano de ação + Parecer e recomendação" (4 passos + 2 parágrafos + caixa de recomendação). Ambas separadas em duas páginas cada, mesmo padrão que já corrigiu a v7.38.1/7.38.2. Numeração das seções conferida — segue sequencial, sem pular nem repetir número. <b>Ainda precisa ser confirmado no PDF real</b> (reprocessar e conferir se as frases agora terminam completas). Motor e lacre 5a5562df intocados.</td></tr>
                     <tr><td><b>v7.38.2</b></td><td>18/08/2026</td><td><b>Revertida a junção da v7.38.1 — confirmado no PDF real que cortava conteúdo.</b> A tentativa de unir "Premissas" e "O retrato" numa página só estourou os 296mm: o gráfico "Receita mensal por atividade" saiu cortado pela metade e a seção inteira "Para onde vai cada real do DAS" (gráfico de rosca + tabela de tributos) desapareceu do documento, sem aviso nenhum — exatamente o risco do <code>overflow:hidden</code> que eu tinha avisado antes de tentar. Voltou a ser 2 páginas separadas, como era antes da v7.38.1. A 3ª série do gráfico (Exportação) da v7.38.1 continua valendo — isso não tinha problema. Motor e lacre 5a5562df intocados.</td></tr>
                     <tr><td><b>v7.38.1</b></td><td>18/08/2026</td><td><b>Gráfico de receita mensal ganha a barra de Exportação; tentativa de reduzir páginas do parecer (pendente de conferência no PDF real).</b> (1) O gráfico empilhado "Receita mensal por atividade" (seção "O retrato") tinha só Comércio/Indústria e Serviços — a exportação já aparecia no texto abaixo mas não no gráfico. Adicionada a 3ª série. (2) <b>Experimental</b>: a página "Premissas" (seção 3) e "O retrato" (seção 4) foram unidas numa página só, para reduzir a quantidade de páginas do documento. Como cada página tem altura fixa de 296mm (100mm reservados pro timbrado) com overflow oculto na impressão, não é possível confirmar daqui se o conteúdo combinado cabe sem cortar — <b>precisa ser conferido no PDF real</b> gerado pelo Chrome; se cortar algo (frase interrompida, tabela incompleta), a junção será desfeita. Motor e lacre 5a5562df intocados.</td></tr>
@@ -2814,6 +2828,69 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
 //   RBA   (acumulada do ano-calendário) e RBAA (a do ano anterior) → limite e sublimite.
 // Efeitos (LC 123, art. 20, §§ 1º e 1º-A): excesso do sublimite até 20% tira o ICMS/ISS do DAS a
 // partir de 1º/01 do ano seguinte; acima de 20%, a partir do mês seguinte ao da ocorrência.
+// ═══════════ v7.39.0 · PROJEÇÃO DO ANO INCOMPLETO ═══════════
+// Até a v7.38.4 o parecer de um ano incompleto calculava os tributos sobre os meses lançados e
+// apresentava o resultado como se fosse o ano. O erro não é proporcional: o Simples é progressivo,
+// e projetar 6 meses para 12 na WEEEDO multiplica o DAS por 2,68 — não por 2. Quem "dobrasse de
+// cabeça" os números do documento errava ~34% para menos.
+// A projeção preenche os meses que faltam pela MÉDIA de uma janela dos últimos meses lançados e
+// roda o MESMO motor: nenhuma regra tributária é tocada, e por isso o lacre não muda.
+// A janela vale em DOIS níveis (decisão dele, 19/08): padrão gravado na configuração da empresa
+// (cfg.projJanela) e sobreposição por documento na barra de Relatórios (PROJ_JANELA_DOC), sempre
+// registrada nas Premissas do parecer — porque a janela pode mudar o VEREDITO: ela alimenta também
+// o monitorSublimite, e a margem para o teto de R$ 4,8 mi da WEEEDO é de 1,9%.
+const PROJ_JANELAS = { 'todos':'todos os meses lançados', '2':'últimos 2 meses (bimestral)',
+                       '3':'últimos 3 meses (trimestral)', '6':'últimos 6 meses (semestral)' };
+const projJanelaNorm  = v => { const s = String(v==null?'todos':v); return PROJ_JANELAS[s] ? s : 'todos'; };
+const projJanelaLabel = v => PROJ_JANELAS[projJanelaNorm(v)];
+const projJanelaN = (v, nLanc) => { const s = projJanelaNorm(v);
+  return s==='todos' ? nLanc : Math.max(1, Math.min(+s, nLanc)); };
+let PROJ_JANELA_DOC = null;    // sobreposição do documento — vive na sessão, nunca é gravada
+function projJanelaEfetiva(cfg){
+  const emp = projJanelaNorm(cfg && cfg.projJanela);
+  const doc = PROJ_JANELA_DOC == null ? null : projJanelaNorm(PROJ_JANELA_DOC);
+  return (doc && doc !== emp) ? { v:doc, origem:'documento', emp } : { v:emp, origem:'empresa', emp };
+}
+// Receitas de TODOS os anexos (interno + exportação) — mesma definição de "mês lançado" do monitor
+const PROJ_KREC = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red',
+  'a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r',
+  'comtransp','a1_exp','a2_exp','a3_exp'];
+// Devolve uma CÓPIA da análise com os meses futuros preenchidos. Nunca é gravada no banco:
+// serve só de entrada para o motor. Devolve null quando o ano já está completo ou vazio.
+function anProjetarAno(dados, janela){
+  try {
+    if (!dados || !dados.receitas) return null;
+    const recMes = m => PROJ_KREC.reduce((s,k)=> s + arr12(dados.receitas[k])[m], 0);
+    let ultimo = -1; for (let m=0;m<12;m++) if (recMes(m) > 0.005) ultimo = m;
+    if (ultimo < 0 || ultimo >= 11) return null;
+    const nLanc = ultimo + 1, nJan = projJanelaN(janela, nLanc), ini = ultimo - nJan + 1;
+    const d = JSON.parse(JSON.stringify(dados));
+    const media = a => { let s = 0; for (let i=ini;i<=ultimo;i++) s += +a[i]||0; return s/nJan; };
+    // a MESMA janela vale para receita, folha, compras e despesas: projetar receita por 2 meses e
+    // compras por 6 criaria margem artificial e inflaria o lucro projetado.
+    for (const grupo of ['receitas','folha','compras','despesas']){
+      const g = d[grupo]; if (!g) continue;
+      for (const k of Object.keys(g)){
+        if (!Array.isArray(g[k])) continue;
+        const a = arr12(g[k]), pct = /_pct$/.test(k), mv = media(a);
+        for (let m=ultimo+1;m<12;m++) a[m] = pct ? mv : r2(mv);
+        g[k] = a;
+      }
+    }
+    return { dados:d, ultimo, nReais:nLanc, nProj:11-ultimo,
+             janela:projJanelaNorm(janela), janelaN:nJan, iniJanela:ini };
+  } catch(e){ console.error('anProjetarAno', e); return null; }
+}
+// A aba Reforma guarda valores ANUAIS digitados (receita, compras, contrapartes). Sem escalá-los,
+// o parecer projetado ficaria com Simples/LP/LR do ano cheio e base de IBS/CBS de meio ano.
+function rfProjetar(reforma, k){
+  if (!reforma || !(k>0) || Math.abs(k-1) < 1e-9) return reforma;
+  const r = JSON.parse(JSON.stringify(reforma));
+  for (const c of ['receita','compras','baseIS']) if (+r[c] > 0) r[c] = r2(+r[c]*k);
+  if (r.contra) for (const c of Object.keys(r.contra)) if (+r.contra[c] > 0) r.contra[c] = r2(+r.contra[c]*k);
+  return r;
+}
+
 function monitorSublimite(out, cfg){
   try {
     const subLim = +cfg.sublimiteValor || 3600000, limite = FAIXAS_LIM[5];
@@ -2821,7 +2898,11 @@ function monitorSublimite(out, cfg){
     out.meses.forEach((M,i) => { aI += M.recInt||0; aE += M.recExp||0; rbaInt.push(aI); rbaExp.push(aE);
       if ((M.recInt||0) + (M.recExp||0) > 0.005) ultimo = i; });
     if (ultimo < 0) return null;
-    const n = ultimo + 1, mediaInt = rbaInt[ultimo]/n, mediaExp = rbaExp[ultimo]/n;
+    // v7.39.0: a média que projeta os meses futuros usa a JANELA escolhida (todos os meses
+    // lançados, ou os últimos 2/3/6) — a mesma que o parecer usa para projetar o ano.
+    const n = ultimo + 1, jan = projJanelaNorm(cfg.projJanela), nJan = projJanelaN(jan, n);
+    const iniJ = ultimo - nJan + 1, baseI = iniJ > 0 ? rbaInt[iniJ-1] : 0, baseE = iniJ > 0 ? rbaExp[iniJ-1] : 0;
+    const mediaInt = (rbaInt[ultimo]-baseI)/nJan, mediaExp = (rbaExp[ultimo]-baseE)/nJan;
     const projInt = [], projExp = [];
     for (let i=0;i<12;i++){ projInt.push(i<=ultimo ? rbaInt[i] : rbaInt[ultimo] + mediaInt*(i-ultimo));
                             projExp.push(i<=ultimo ? rbaExp[i] : rbaExp[ultimo] + mediaExp*(i-ultimo)); }
@@ -2844,6 +2925,7 @@ function monitorSublimite(out, cfg){
       motivo:'RBA ultrapassa o sublimite em até 20% — ICMS/ISS fora do DAS a partir de 1º/01 do ano seguinte' };
     const margemLimite = limite - projInt[11], margemPct = limite>0 ? margemLimite/limite : 0;
     return { subLim, limite, ultimo, rbaInt, rbaExp, projInt, projExp, mediaInt, mediaExp, marco, rbaa, impedimento,
+             janela: jan, janelaN: nJan,
              margemLimite, margemPct, excluiProjetado: marco.limite >= 0,
              parcial: ultimo < 11 };
   } catch(e){ return null; }
@@ -2968,6 +3050,8 @@ const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov'
 const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = v => (v==null||isNaN(v)) ? '—' : v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtR = v => 'R$ ' + fmt(v);
+// v7.39.1: percentual no padrão do documento — vírgula decimal, como o resto dos números
+const fmtP = (v, d=1) => (v==null||isNaN(v)) ? '—' : (+v).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
 // v7.36.0 · POLÍTICA DE ARREDONDAMENTO: o cálculo corre em precisão plena (alíquotas efetivas
 // nunca são arredondadas no meio do caminho) e o arredondamento acontece só no valor monetário
 // exibido, em 2 casas. Consequência: a linha de TOTAL de uma tabela mês a mês soma os valores
@@ -3390,6 +3474,7 @@ function anRenderConfig() {
     <div><label>Adicional de IRPJ</label><select id="cf-adic" onchange="anAplicarConfig(true)"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
     <div><label>Sublimite ICMS/ISS (R$ 3,6 mi)</label><select id="cf-sublim" onchange="anAplicarConfig(true)"><option value="auto" ${(c.sublimite||'auto')=='auto'?'selected':''}>Aplicar trava da 5ª faixa</option><option value="off" ${c.sublimite=='off'?'selected':''}>Não aplicar</option></select></div>
     <div><label>Trava da 5ª faixa na guia <span class="hint">(v7.36.0)</span></label><select id="cf-travadas" onchange="anAplicarConfig(true)"><option value="sim" ${c.travaNoDas===false?'':'selected'}>Dentro do DAS (PGDAS-D)</option><option value="nao" ${c.travaNoDas===false?'selected':''}>Fora do DAS — legado</option></select></div>
+    <div><label>Projeção dos meses não lançados <span class="hint">(v7.39.0)</span></label><select id="cf-proj" onchange="anAplicarConfig(true)" title="Como o parecer completa o ano quando faltam meses: os meses sem lançamento recebem a média de uma janela dos últimos meses reais. Janela curta acompanha a tendência recente; janela longa resiste a mês atípico. A escolha também alimenta a projeção de limite e sublimite.">${['todos','2','3','6'].map(k=>`<option value="${k}" ${projJanelaNorm(c.projJanela)===k?'selected':''}>Média dos ${projJanelaLabel(k)}</option>`).join('')}</select></div>
     <button class="btn solid" onclick="anAplicarConfig()">Aplicar</button>
   </div>${avisoIss}
   `;
@@ -3442,6 +3527,7 @@ function anAplicarConfig(silencioso) {
     lpBaseServ:+$id('cf-bserv').value, lpBaseCom:+$id('cf-bcom').value, lpBaseServCsll:+($id('cf-bcsll')?.value||0),
     lpBaseComCsll:+($id('cf-bcomcsll')?.value||.12), adicionalIR:$id('cf-adic').value, sublimite:$id('cf-sublim').value,
     travaNoDas: ($id('cf-travadas')?.value || 'sim') !== 'nao',   // v7.36.0
+    projJanela: projJanelaNorm($id('cf-proj')?.value),             // v7.39.0
     rbt12Direto:num($id('cf-rbtd').value) });
   // v7.35.0 · período de apuração do Lucro Real e saldos de prejuízo (podem não existir em telas antigas)
   if ($id('cf-lrper'))    AN.cfg.lrPeriodo  = $id('cf-lrper').value;
@@ -3719,7 +3805,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.38.4';
+const APP_VERSAO = '7.40.5';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -5909,18 +5995,31 @@ function parecerPagParceiros(secao, prox){
     <tr style="font-weight:700"><td style="text-align:left" colspan="3">Concentração dos 5 maiores</td><td style="text-align:right">${fmt(P.top.reduce((a,i)=>a+(+i.valor||0),0))}</td><td style="text-align:right">${pcv(P.top.reduce((a,i)=>a+(+i.valor||0),0),P.tot)}%</td></tr>
     </tbody></table></div>`;
   const b2b = V ? +pcv(V.pj, V.tot).replace(',','.') : 0;
-  return `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
-    ${secao(prox(),'Clientes e fornecedores — a decisão do crédito')}
-    <p class="pp-p" style="font-size:9pt;margin-bottom:4px">No IVA dual o crédito de IBS/CBS depende de <b>quem vende</b> para a empresa — aquisições do regime regular geram crédito pleno, do Simples Nacional crédito limitado à faixa do fornecedor (LC 214/2025; Res. CGSN 190/2026, art. 58), de MEI e pessoa física, em regra, nenhum — e a decisão de regime depende de <b>quem compra</b> dela: cliente pessoa jurídica no regime regular tende a exigir o crédito destacado, enquanto o consumidor final não o aproveita. O retrato abaixo vem das consultas do escritório sobre os analíticos do período.</p>
-    ${faixa(C, 'Compras e fornecedores', C&&C.porC.normal?`<div class="pp-card" style="flex:2;min-width:130px"><div class="t">Regime normal — crédito pleno</div><div class="v">${pcv(C.porC.normal.v,C.tot)}%</div></div>`:'')}
-    ${faixa(V, 'Vendas e clientes', V?`<div class="pp-card" style="flex:1;min-width:96px"><div class="t">B2B (CNPJ)</div><div class="v">${pcv(V.pj,V.tot)}%</div></div><div class="pp-card" style="flex:1;min-width:96px"><div class="t">B2C (consumidor)</div><div class="v">${pcv(V.tot-V.pj,V.tot)}%</div></div>`:'')}
-    ${tabela(V, 'clientes')}
-    ${tabela(C, 'fornecedores')}
-    <p class="pp-p" style="font-size:9pt;margin-top:6px">${!V ? 'Sem analítico de venda gravado, a leitura da clientela não pôde ser feita nesta edição do parecer.'
+  // v7.39.3 · esta era a folha mais carregada do parecer — parágrafo de abertura, duas faixas de
+  // cartões, duas tabelas de cinco linhas, parágrafo de leitura e nota de rodapé. A régua da v7.39.2
+  // mediu 318 mm contra os 296 mm da folha: 22 mm de conteúdo eram cortados em silêncio no PDF.
+  // Quando há compras E vendas, o conteúdo passa a ocupar DUAS folhas, agrupado por tema:
+  // clientes (que decidem a pressão pelo crédito) na primeira, fornecedores (que geram o crédito) na
+  // segunda. Com apenas um dos lados gravado, segue em folha única, como antes.
+  const PG = (miolo) => `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">${miolo}</div></div>`;
+  const NSEC = prox();                       // o número da seção é consumido UMA vez, nas duas folhas
+  const cabec = secao(NSEC,'Clientes e fornecedores — a decisão do crédito');
+  // v7.39.5: a folha seguinte NÃO repete o título. É a convenção do documento — a folha do "DAS por
+  // tributo" continua a seção 4 e a do "quanto da receita vira imposto" continua a 6, ambas sem
+  // cabeçalho: o texto corre entre as folhas, não se reabre a cada uma.
+  const intro = `<p class="pp-p" style="font-size:9pt;margin-bottom:4px">No IVA dual o crédito de IBS/CBS depende de <b>quem vende</b> para a empresa — aquisições do regime regular geram crédito pleno, do Simples Nacional crédito limitado à faixa do fornecedor (LC 214/2025; Res. CGSN 190/2026, art. 58), de MEI e pessoa física, em regra, nenhum — e a decisão de regime depende de <b>quem compra</b> dela: cliente pessoa jurídica no regime regular tende a exigir o crédito destacado, enquanto o consumidor final não o aproveita. O retrato abaixo vem das consultas do escritório sobre os analíticos do período.</p>`;
+  const blocoC = `${faixa(C, 'Compras e fornecedores', C&&C.porC.normal?`<div class="pp-card" style="flex:2;min-width:130px"><div class="t">Regime normal — crédito pleno</div><div class="v">${pcv(C.porC.normal.v,C.tot)}%</div></div>`:'')}
+    ${tabela(C, 'fornecedores')}`;
+  const blocoV = `${faixa(V, 'Vendas e clientes', V?`<div class="pp-card" style="flex:1;min-width:96px"><div class="t">B2B (CNPJ)</div><div class="v">${pcv(V.pj,V.tot)}%</div></div><div class="pp-card" style="flex:1;min-width:96px"><div class="t">B2C (consumidor)</div><div class="v">${pcv(V.tot-V.pj,V.tot)}%</div></div>`:'')}
+    ${tabela(V, 'clientes')}`;
+  const leitura = `<p class="pp-p" style="font-size:9pt;margin-top:6px">${!V ? 'Sem analítico de venda gravado, a leitura da clientela não pôde ser feita nesta edição do parecer.'
       : (b2b>=50 ? 'Com a maior parte do faturamento destinada a pessoas jurídicas, a pressão pelo crédito de IBS/CBS tende a ser relevante — os cenários <b>híbrido</b> e <b>regime regular</b> merecem atenção especial, e a permanência integral no Simples pode custar competitividade junto a esses clientes.'
-                 : 'Com a maior parte do faturamento destinada ao consumidor final, a ausência de crédito ao cliente tem impacto comercial reduzido — a permanência integral no Simples tende a preservar a competitividade, e a comparação financeira decide.')}${V&&V.exp>0.005?' As receitas de exportação identificadas são imunes ao IBS/CBS (LC 214, art. 8º) e não pressionam a decisão do crédito.':''}${(V&&V.top.length&&(V.top.reduce((a,i)=>a+(+i.valor||0),0)/V.tot)>=0.6)?' A concentração do faturamento nos maiores clientes é elevada: a decisão que eles tomarem na transição altera diretamente o resultado desta análise.':''}</p>
-    <div class="hint" style="font-size:8pt;margin-top:3px">Enquadramentos consultados nos dados abertos da RFB nas datas indicadas — sujeitos a alteração. O crédito efetivo dependerá do destaque em documento fiscal a partir de 2026/2027.${V&&V.exp>0.005?' B2B + B2C somam 100% da receita de vendas; a exportação é uma classificação adicional quanto ao destino da operação (contida dentro de B2B e/ou B2C, conforme o comprador), não uma terceira categoria a ser somada às demais.':''}</div>
-  </div></div>`;
+                 : 'Com a maior parte do faturamento destinada ao consumidor final, a ausência de crédito ao cliente tem impacto comercial reduzido — a permanência integral no Simples tende a preservar a competitividade, e a comparação financeira decide.')}${V&&V.exp>0.005?' As receitas de exportação identificadas são imunes ao IBS/CBS (LC 214, art. 8º) e não pressionam a decisão do crédito.':''}${(V&&V.top.length&&(V.top.reduce((a,i)=>a+(+i.valor||0),0)/V.tot)>=0.6)?' A concentração do faturamento nos maiores clientes é elevada: a decisão que eles tomarem na transição altera diretamente o resultado desta análise.':''}</p>`;
+  const rodape = `<div class="hint" style="font-size:8pt;margin-top:3px">Enquadramentos consultados nos dados abertos da RFB nas datas indicadas — sujeitos a alteração. O crédito efetivo dependerá do destaque em documento fiscal a partir de 2026/2027.${V&&V.exp>0.005?' B2B + B2C somam 100% da receita de vendas; a exportação é uma classificação adicional quanto ao destino da operação (contida dentro de B2B e/ou B2C, conforme o comprador), não uma terceira categoria a ser somada às demais.':''}</div>`;
+  // com os dois lados, duas folhas; com um só, uma folha — como era antes da v7.39.3
+  return (C && V)
+    ? PG(cabec + intro + blocoV + leitura) + PG(blocoC + rodape)
+    : PG(cabec + intro + blocoC + blocoV + leitura + rodape);
 }
 
 // ═══ v7.20.0: página do parecer — resumo estatístico de fornecedores ═══
@@ -5998,12 +6097,34 @@ function parecerPagClientela(secao, prox){
 const PARECER_TETO = 4800000;
 
 function parecerDados(){
-  const T = RL.res.totais, Mm = RL.res.meses;
-  let cen = null; try { cen = calcCenariosReforma(RL.res, RL.reforma); } catch(e){ console.error('parecer/cenários', e); }
+  // v7.39.0 · ano incompleto → o parecer passa a falar do ANO, e não do pedaço lançado.
+  // O motor é o mesmo; muda apenas a análise que entra nele (meses futuros pela média da janela).
+  const _cfgP = (RL.dados && RL.dados.cfg) || {};
+  const PJ = projJanelaEfetiva(_cfgP);
+  let PROJ = null, _res = RL.res, _reforma = RL.reforma;
+  try {
+    PROJ = anProjetarAno(RL.dados, PJ.v);
+    if (PROJ) {
+      const _r = calcular(PROJ.dados, PARAMS.anexos, folhaPercDaEmpresa(PROJ.dados.cfg));
+      const intReal = Math.max(0, (RL.res.totais.receita||0) - (RL.res.totais.receitaExp||0));
+      const intProj = Math.max(0, (_r.totais.receita||0)   - (_r.totais.receitaExp||0));
+      PROJ.k = intReal > 0.005 ? intProj/intReal : 1;
+      PROJ.origem = PJ.origem; PROJ.tReal = RL.res.totais;
+      _reforma = rfProjetar(RL.reforma, PROJ.k);
+      _res = _r;
+    }
+  } catch(e){ console.error('parecer/projeção', e); PROJ = null; _res = RL.res; _reforma = RL.reforma; }
+  const T = _res.totais, Mm = _res.meses;
+  const MmReal = (RL.res && RL.res.meses) || Mm;      // veredito e janela lançada vêm do REALIZADO
+  let cen = null; try { cen = calcCenariosReforma(_res, _reforma); } catch(e){ console.error('parecer/cenários', e); }
   const REF = (cen && cen.REF) || [];
   const anos = REF.filter(l=>l.ano>=2027);
   const regime = String(RL.empresa?.regime||'').toLowerCase();
-  const rbtMax = Math.max(0, ...Mm.map(x=>+x.rbt12||0));
+  // O RBT12 que define a variante do documento é o REALIZADO: uma estimativa não pode, sozinha,
+  // transformar um parecer de optante em parecer de regime regular. Quando a projeção cruza o teto,
+  // isso vira ALERTA (abaixo), não mudança de variante.
+  const rbtMax = Math.max(0, ...MmReal.map(x=>+x.rbt12||0));
+  const rbtMaxProj = Math.max(0, ...Mm.map(x=>+x.rbt12||0));
   const acima = rbtMax > PARECER_TETO;
   const cadSimples = /simples|mei/.test(regime);
   const optante = !acima && (cadSimples || (!regime && !!RL.dados._pgdas));
@@ -6012,15 +6133,21 @@ function parecerDados(){
   const regimeHojeNome = variante==='simples' ? 'Simples Nacional' : (/presumido/.test(regime) ? 'Lucro Presumido' : (/real/.test(regime) ? 'Lucro Real' : (T.lp<=T.lr?'Lucro Presumido':'Lucro Real')));
   const L33 = REF.find(l=>l.ano===2033) || null;
   const L32 = REF.find(l=>l.ano===2032) || null;
-  const frMed = (RL.res.fatorRMensal||[]).length ? RL.res.fatorRMensal.reduce((a,b)=>a+b,0)/RL.res.fatorRMensal.length : 0;
+  const frMed = (_res.fatorRMensal||[]).length ? _res.fatorRMensal.reduce((a,b)=>a+b,0)/_res.fatorRMensal.length : 0;
   const alertas = [];
   if (acima && cadSimples) alertas.push('Cadastro indica Simples Nacional, mas o RBT12 apurado supera o teto de R$ 4,8 mi — a empresa está sujeita à exclusão do regime; o parecer trata o cenário do regime regular.');
   if (!acima && rbtMax > 4320000) alertas.push('RBT12 em '+fmtR(rbtMax)+' — acima de 90% do teto do Simples (R$ 4,8 mi): monitorar o risco de exclusão.');
-  if (optante && rbtMax > 3600000) alertas.push('RBT12 acima do sublimite de R$ 3,6 mi: ICMS/ISS calculados pela trava da 5ª faixa com o RBT12 do mês (art. 21, III, "b", Res. CGSN 140/2018) e recolhidos dentro do DAS — já considerado no cálculo.');
+  if (optante && rbtMaxProj > 3600000) alertas.push('RBT12 acima do sublimite de R$ 3,6 mi: ICMS/ISS calculados pela trava da 5ª faixa com o RBT12 do mês (art. 21, III, "b", Res. CGSN 140/2018) e recolhidos dentro do DAS — já considerado no cálculo.');
   // v7.36.0 · trajetória de limite e sublimite: o dado de maior valor econômico do documento —
   // a comparação entre regimes descreve um Simples que a empresa pode não ter no ano seguinte.
-  if (optante && RL.res && RL.res.subMon){
-    const _t = subMonTexto(RL.res.subMon);
+  if (PROJ && !acima && rbtMaxProj > PARECER_TETO)
+    alertas.push('No ritmo dos meses lançados, o RBT12 projetado para dezembro chega a '+fmtR(rbtMaxProj)+' — acima do teto de R$ 4,8 mi. O parecer mantém o enquadramento do período realizado, mas o risco de exclusão é concreto e deve ser monitorado mês a mês.');
+  // v7.39.0: o alerta de trajetória usa a MESMA janela do documento — parecer e monitor não podem
+  // divergir dentro do mesmo PDF.
+  const _subMonEf = (PJ.v === projJanelaNorm(_cfgP.projJanela) || !RL.res)
+    ? (RL.res && RL.res.subMon) : monitorSublimite(RL.res, Object.assign({}, _cfgP, { projJanela: PJ.v }));
+  if (optante && _subMonEf){
+    const _t = subMonTexto(_subMonEf);
     if (_t) alertas.push('Trajetória do ano (mercado interno, projeção pela média realizada): ' + _t.replace(/<[^>]+>/g,''));
   }
   // v7.23.0: só a análise DO RELATÓRIO (RL.dados) — AN pode ser outra empresa aberta na aba Análise
@@ -6029,7 +6156,7 @@ function parecerDados(){
   if ((RL.dados?.receitas?.a4||[]).some(v=>+v>0)) alertas.push('Receitas do Anexo IV: o CPP é recolhido fora do DAS — conferir o INSS patronal informado na Folha.');
   // v7.18.0: janela efetivamente lançada (texto do enquadramento e dos pontos de atenção)
   const MAB = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  const _lanc = Mm.map((x,i)=>i).filter(i => (+Mm[i].receita||0) > 0.005);
+  const _lanc = MmReal.map((x,i)=>i).filter(i => (+MmReal[i].receita||0) > 0.005);
   const janelaTxt = _lanc.length
     ? (_lanc[0]===_lanc[_lanc.length-1] ? MAB[_lanc[0]] : MAB[_lanc[0]]+'–'+MAB[_lanc[_lanc.length-1]])+'/'+(RL.dados.ano||'')
     : 'sem meses lançados';
@@ -6043,8 +6170,13 @@ function parecerDados(){
   const sHoje = anos.map(()=> hojeAnual);
   const split = { fonteMes: L32 ? (L32.deb||0)/12 : 0 };
   split.giroAno = split.fonteMes*12; split.custoAno = split.fonteMes*0.15;
-  return { T, Mm, cen, REF, anos, sAnos, sDentro, sHib, sReg, sLP, sLR, sHoje, variante, regime, regimeHojeNome,
-           rbtMax, acima, optante, hojeAnual, L33, L32, frMed, alertas, split, janelaTxt, janelaMeses,
+  // selo curto reaproveitado nos subtítulos das seções projetadas (sem criar linha nova na página)
+  const seloProj = PROJ ? '📊 Valores projetados para o ano: '+PROJ.nReais+(PROJ.nReais===1?' mês real':' meses reais')
+      +' + '+PROJ.nProj+(PROJ.nProj===1?' mês estimado':' meses estimados')+' pela média dos '
+      +(PROJ.janela==='todos' ? 'meses lançados' : PROJ.janelaN+' últimos meses')+'.' : '';
+  return { T, Mm, MmReal, cen, REF, anos, sAnos, sDentro, sHib, sReg, sLP, sLR, sHoje, variante, regime, regimeHojeNome,
+           rbtMax, rbtMaxProj, acima, optante, hojeAnual, L33, L32, frMed, alertas, split, janelaTxt, janelaMeses,
+           proj: PROJ, projJanela: PJ, seloProj, subMon: _subMonEf, cfgP: _cfgP,
            recCom: Mm.map(x=>x.recCom||0), recServ: Mm.map(x=>x.recServ||0), recExp: Mm.map(x=>x.recExp||0), dasTrib: T.dasTrib||null };
 }
 
@@ -6054,16 +6186,16 @@ function parecerTextosPadrao(D){
   const b = {};
   b.intro = 'A Emenda Constitucional nº 132/2023 e a Lei Complementar nº 214/2025 substituem PIS, COFINS, ICMS, ISS e IPI por um IVA dual — a CBS (federal) e o IBS (estados e municípios) —, com transição gradual de 2027 a 2033, quando o novo sistema estará pleno. Este estudo projeta, ano a ano, o impacto da reforma sobre '+emp+', com estimativas direcionais que não substituem a apuração formal de cada período.';
   if (D.variante==='simples'){
-    b.enquadramento = 'Empresa optante do Simples Nacional (RBT12 de '+fmtR(D.rbtMax)+', dentro do limite legal). Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?' — os valores refletem esse período, não o ano-calendário completo':'')+'. Com a reforma, surge uma decisão nova: manter o IBS/CBS dentro do DAS ("por dentro"), recolhê-lo separadamente ("híbrido") ou sair do regime.';
+    b.enquadramento = 'Empresa optante do Simples Nacional (RBT12 de '+fmtR(D.rbtMax)+', dentro do limite legal). Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?(D.proj?' — os meses seguintes foram projetados pela média dos lançados, de modo que os valores representam o ano-calendário estimado':' — os valores refletem esse período, não o ano-calendário completo'):'')+'. Com a reforma, surge uma decisão nova: manter o IBS/CBS dentro do DAS ("por dentro"), recolhê-lo separadamente ("híbrido") ou sair do regime.';
     b.caminho = 'Permanecendo "por dentro" do DAS, a carga do Simples não é alterada pela reforma. Os caminhos alternativos foram quantificados nos quadros a seguir — a decisão depende sobretudo do perfil da clientela (quem aproveita o crédito de IBS/CBS).';
     b.cenarios = D.L33 ? (function(){ const d33 = D.sDentro.length ? D.sDentro[D.sDentro.length-1] : D.T.simples;
       return 'Em 2033 (modelo pleno): por dentro '+fmtR(d33)+'/ano; híbrido '+fmtR(D.L33.hib)+'/ano; fora do Simples '+fmtR(D.L33.regular)+'/ano ('+D.L33.regNome+'). Como decidir entre eles: o caminho POR DENTRO mantém tudo no DAS — é o de menor burocracia e preserva o caixa (nada é retido na fonte), mas o cliente PJ do regime regular recebe crédito reduzido de IBS/CBS, o que pode pesar no preço quando a clientela é majoritariamente empresarial. O HÍBRIDO (art. 22-A da Res. CGSN 140/2018) desconta do DAS as parcelas de CBS/IBS e recolhe esses tributos por fora, no regime regular: o cliente passa a receber crédito integral — vantagem comercial concreta em vendas B2B —, ao custo de duas apurações, do split payment sobre os recebimentos e de opção semestral nas janelas de setembro e março (art. 40-D). SAIR DO SIMPLES leva ao regime regular pleno ('+D.L33.regNome+' no caso), fazendo sentido quando o crescimento aproxima a empresa do teto ou quando praticamente toda a clientela exige crédito integral. Em resumo: clientela de consumo final favorece o por dentro; clientela PJ relevante pede a comparação entre o ganho comercial do crédito e o custo adicional quantificado acima.'; })() : 'Preencha e salve a aba Reforma para os cenários 2033.';
   } else if (D.variante==='acima'){
-    b.enquadramento = 'Com RBT12 máximo de '+fmtR(D.rbtMax)+', a empresa está acima do limite de R$ 4,8 milhões e não pode optar pelo Simples Nacional. Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?' — os valores refletem esse período, não o ano-calendário completo':'')+'. A análise compara os regimes aplicáveis — Lucro Presumido e Lucro Real — e mede, ano a ano, o que passará a pagar a mais ou a menos com a reforma.';
+    b.enquadramento = 'Com RBT12 máximo de '+fmtR(D.rbtMax)+', a empresa está acima do limite de R$ 4,8 milhões e não pode optar pelo Simples Nacional. Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?(D.proj?' — os meses seguintes foram projetados pela média dos lançados, de modo que os valores representam o ano-calendário estimado':' — os valores refletem esse período, não o ano-calendário completo'):'')+'. A análise compara os regimes aplicáveis — Lucro Presumido e Lucro Real — e mede, ano a ano, o que passará a pagar a mais ou a menos com a reforma.';
     b.caminho = 'O regime de menor carga em cada ano da transição está identificado nos quadros. O aumento decorrente da reforma é estrutural e atinge todo o mercado: o que está ao alcance da empresa é pagar o menor valor possível em cada exercício e preparar o caixa para o split payment.';
     b.cenarios = '';
   } else {
-    b.enquadramento = 'A empresa apura hoje pelo regime regular ('+D.regimeHojeNome+'), com RBT12 de '+fmtR(D.rbtMax)+' — dentro do limite do Simples Nacional. Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?' — os valores refletem esse período, não o ano-calendário completo':'')+'. Além do efeito da reforma no regime atual, este parecer simula a entrada no Simples e os três caminhos que ele oferece na transição.';
+    b.enquadramento = 'A empresa apura hoje pelo regime regular ('+D.regimeHojeNome+'), com RBT12 de '+fmtR(D.rbtMax)+' — dentro do limite do Simples Nacional. Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?(D.proj?' — os meses seguintes foram projetados pela média dos lançados, de modo que os valores representam o ano-calendário estimado':' — os valores refletem esse período, não o ano-calendário completo'):'')+'. Além do efeito da reforma no regime atual, este parecer simula a entrada no Simples e os três caminhos que ele oferece na transição.';
     b.caminho = 'O comparativo responde duas perguntas: quanto a reforma encarece o regime atual, ano a ano; e se a opção pelo Simples reduziria a carga — inclusive nos cenários "por dentro" e híbrido de 2033.';
     b.cenarios = D.L33 ? (function(){ const d33 = D.sDentro.length ? D.sDentro[D.sDentro.length-1] : D.T.simples;
       return 'Em 2033: Simples por dentro '+fmtR(d33)+'/ano; híbrido '+fmtR(D.L33.hib)+'/ano; regime regular '+fmtR(D.L33.regular)+'/ano ('+D.L33.regNome+'). A leitura é a mesma da seção anterior: o por dentro minimiza burocracia e preserva o caixa, mas limita o crédito repassado ao cliente PJ; o híbrido troca custo e split payment por crédito integral ao cliente (opção semestral — art. 40-D); o regime regular pleno se justifica com clientela quase toda PJ ou crescimento além do teto. A opção pelo Simples é formalizada em setembro, com efeitos a partir de janeiro seguinte.'; })() : '';
@@ -6114,9 +6246,11 @@ function rlParecer(){
   let h = `<div class="card pp-tools">
     <div class="toolbar" style="align-items:center">
       <span class="hint">${statusIA}</span><span style="flex:1"></span>
-      <button class="btn" onclick="window.print()" title="Na janela de impressão: Destino = Salvar como PDF · Margens = Nenhuma · ativar Gráficos de segundo plano">🖨️ Imprimir / PDF</button>
+      <button class="btn" onclick="window.print()" title="Na janela de impressão: Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · ativar Gráficos de segundo plano">🖨️ Imprimir / PDF</button>
+      <button class="btn${ppCompactoAtivo()?' solid':''}" onclick="ppCompactoTrocar()" title="${ppCompactoAtivo()?'Ativa: COMPACTA — os blocos são empilhados na folha enquanto couberem, com 6 mm de reserva. Clique para voltar a uma seção por folha.':'Ativa: UMA SEÇÃO POR FOLHA — distribuição fixa, com vão branco no pé de várias folhas. Clique para usar a compacta.'}">${ppCompactoAtivo()?'📄 Compacta ✓ · trocar para 1 seção/folha':'📑 1 seção por folha ✓ · trocar para compacta'}</button>
+      <button class="btn" onclick="ppReguaRender()" title="Mede cada folha do parecer contra os 296 mm do A4 e avisa o que será cortado na impressão">📏 Conferir páginas</button>
       <button class="btn solid" id="pp-ia-btn" onclick="parecerIA()">🤖 Gerar textos com IA</button>
-    </div>${premissaCred?`<div class="hint" style="margin-top:6px;padding:8px 10px;background:#fbf3e2;border-left:3px solid #d99a2b;border-radius:0 6px 6px 0">${premissaCred}</div>`:''}</div>`;
+    </div><div id="pp-regua"></div>${premissaCred?`<div class="hint" style="margin-top:6px;padding:8px 10px;background:#fbf3e2;border-left:3px solid #d99a2b;border-radius:0 6px 6px 0">${premissaCred}</div>`:''}</div>`;
 
   // ── CAPA ──
   h += `<div class="pp-page pp-capa"><img class="pp-bg" src="capa.jpg" onerror="this.style.display='none';this.parentNode.classList.add('pp-semarte')">
@@ -6159,14 +6293,18 @@ function rlParecer(){
   h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
     ${secao(3,'Premissas utilizadas na simulação')}
     <table class="pp-tab"><tbody>
-      <tr><td class="rot">Receita-base</td><td>${fmtR(D.T.receita)} · período efetivamente lançado: ${D.janelaTxt}${D.janelaMeses?' ('+D.janelaMeses+(D.janelaMeses===1?' mês':' meses')+')':''}</td></tr>
-      <tr><td class="rot">Composição da receita</td><td>Comércio/Indústria ${fmtR(D.T.recCom)} (${D.T.receita?((D.T.recCom)/D.T.receita*100).toFixed(1):0}%) · Serviços ${fmtR(D.T.recServ)} (${D.T.receita?((D.T.recServ)/D.T.receita*100).toFixed(1):0}%)${(D.T.receitaExp||0)>0.005?' · Exportações '+fmtR(D.T.receitaExp)+' ('+(D.T.receita?((D.T.receitaExp)/D.T.receita*100).toFixed(1):0)+'%)':''}</td></tr>
-      <tr><td class="rot">Crescimento considerado</td><td>Nenhum — a projeção 2027–2033 replica a receita do período analisado, sem estimar aumento ou redução de faturamento. Refletir crescimento exige reprocessar a análise com premissas adicionais.</td></tr>
-      ${D.frMed>0?`<tr><td class="rot">Fator R médio</td><td>${(D.frMed*100).toFixed(1)}% (folha ÷ receita bruta, 12 meses rolantes)</td></tr>`:''}
+      <tr><td class="rot">Receita-base</td><td>${D.proj
+        ? `<b>${fmtR(D.T.receita)}</b> — ano-calendário projetado. Realizado no período ${D.janelaTxt} (${D.proj.nReais}${D.proj.nReais===1?' mês':' meses'}): ${fmtR(D.proj.tReal.receita)}`
+        : `${fmtR(D.T.receita)} · período efetivamente lançado: ${D.janelaTxt}${D.janelaMeses?' ('+D.janelaMeses+(D.janelaMeses===1?' mês':' meses')+')':''}`}</td></tr>
+      <tr><td class="rot">Composição da receita</td><td>Comércio/Indústria ${fmtR(D.T.recCom)} (${D.T.receita?fmtP((D.T.recCom)/D.T.receita*100, 1):0}%) · Serviços ${fmtR(D.T.recServ)} (${D.T.receita?fmtP((D.T.recServ)/D.T.receita*100, 1):0}%)${(D.T.receitaExp||0)>0.005?' · Exportações '+fmtR(D.T.receitaExp)+' ('+(D.T.receita?fmtP((D.T.receitaExp)/D.T.receita*100, 1):0)+'%)':''}</td></tr>
+      <tr><td class="rot">${D.proj?'Projeção dos meses não lançados':'Crescimento considerado'}</td><td>${D.proj
+        ? `Os ${D.proj.nProj}${D.proj.nProj===1?' mês sem lançamento foi estimado':' meses sem lançamento foram estimados'} pela <b>média ${projJanelaLabel(D.proj.janela)}</b> — receita, folha e compras na mesma janela — e calculados pelo mesmo motor de tributos dos meses reais. Janela definida ${D.proj.origem==='documento'?'neste documento':'na configuração da empresa'}${D.proj.janela!=='todos' && D.proj.janelaN>=D.proj.nReais?' — equivalente, neste caso, à média de todos os meses lançados':''}. Não há premissa de crescimento: a média projeta o ritmo observado, sem estimar aumento ou redução de faturamento.`
+        : 'Nenhum — a projeção 2027–2033 replica a receita do período analisado, sem estimar aumento ou redução de faturamento. Refletir crescimento exige reprocessar a análise com premissas adicionais.'}</td></tr>
+      ${D.frMed>0?`<tr><td class="rot">Fator R médio</td><td>${fmtP(D.frMed*100, 1)}% (folha ÷ receita bruta, 12 meses rolantes)</td></tr>`:''}
       ${premissaCred?`<tr><td class="rot">Créditos de IBS/CBS</td><td>${premissaCred}</td></tr>`:'<tr><td class="rot">Créditos de IBS/CBS</td><td>Estimados pelos fornecedores e compras informados na aba Reforma.</td></tr>'}
-      ${D.L33?`<tr><td class="rot">Alíquota de referência (2033)</td><td>${(D.L33.alq*100).toFixed(2)}% (CBS+IBS, Res. CGIBS nº 14/2026 — estimativa; a definitiva depende do cálculo do TCU homologado pelo Senado)</td></tr>`:''}
+      ${D.L33?`<tr><td class="rot">Alíquota de referência (2033)</td><td>${fmtP(D.L33.alq*100, 2)}% (CBS+IBS, Res. CGIBS nº 14/2026 — estimativa; a definitiva depende do cálculo do TCU homologado pelo Senado)</td></tr>`:''}
       ${(D.T.receitaExp||0)>0.005?`<tr><td class="rot">Tratamento das exportações</td><td>Imunes a IBS/CBS (LC 214/2025, art. 8º); créditos das aquisições vinculadas são mantidos.</td></tr>`:''}
-      ${D.variante==='simples'?`<tr><td class="rot">ICMS/ISS · trava da 5ª faixa</td><td>${D.optante && D.rbtMax>3600000?'Aplicada — RBT12 acima do sublimite de R$ 3,6 mi; ICMS/ISS calculados pela fórmula do art. 21, III, "b", da Res. CGSN nº 140/2018, com o RBT12 efetivo do mês.':'Não aplicável no período analisado — RBT12 dentro do sublimite de R$ 3,6 mi.'}</td></tr>
+      ${D.variante==='simples'?`<tr><td class="rot">ICMS/ISS · trava da 5ª faixa</td><td>${D.optante && D.rbtMaxProj>3600000?'Aplicada — RBT12 acima do sublimite de R$ 3,6 mi; ICMS/ISS calculados pela fórmula do art. 21, III, "b", da Res. CGSN nº 140/2018, com o RBT12 efetivo do mês.':'Não aplicável no período analisado — RBT12 dentro do sublimite de R$ 3,6 mi.'}</td></tr>
       <tr><td class="rot">Metodologia da transição 2027–2033</td><td>Partilha do DAS pelos novos Anexos I–V da Res. CGSN nº 190/2026, por vigência: PIS/COFINS saem já em 2027 (viram CBS); ICMS/ISS decrescem em degraus até zerar em 2033, absorvidos pelo IBS. A trava da 5ª faixa é recomposta a cada vigência, com teto do ISS decrescente.</td></tr>`:''}
       <tr><td class="rot">Split payment</td><td>Retenção estimada em 100% do débito de IBS/CBS no pagamento; custo financeiro a 15% a.a. (proxy da Selic mínima) sobre um mês de retenção como saldo médio financiado ao longo do ano.</td></tr>
     </tbody></table>
@@ -6178,22 +6316,22 @@ function rlParecer(){
     ${secao(4,'O retrato da empresa em números')}
     <p class="pp-p">${TX.retrato}</p>
     ${temCS?`<div class="pp-chartbox"><div class="pp-ct">Receita mensal por atividade · comércio/indústria × serviços${(D.T.receitaExp||0)>0.005?' × exportação':''}</div><canvas id="pc-recms" height="150"></canvas>
-      <div class="hint">Comércio/Indústria: ${fmtR(D.T.recCom)} (${D.T.receita?((D.T.recCom)/D.T.receita*100).toFixed(1):0}%) · Serviços: ${fmtR(D.T.recServ)} (${D.T.receita?((D.T.recServ)/D.T.receita*100).toFixed(1):0}%)${(D.T.receitaExp||0)>0.005?` · Exportações: ${fmtR(D.T.receitaExp)} (${D.T.receita?((D.T.receitaExp)/D.T.receita*100).toFixed(1):0}%)`:''}<br><span style="opacity:.75">Receita total (${fmtR(D.T.receita)}) = Comércio/Indústria + Serviços${(D.T.receitaExp||0)>0.005?' + Exportações':''}.</span></div></div>`:''}
+      <div class="hint">Comércio/Indústria: ${fmtR(D.T.recCom)} (${D.T.receita?fmtP((D.T.recCom)/D.T.receita*100, 1):0}%) · Serviços: ${fmtR(D.T.recServ)} (${D.T.receita?fmtP((D.T.recServ)/D.T.receita*100, 1):0}%)${(D.T.receitaExp||0)>0.005?` · Exportações: ${fmtR(D.T.receitaExp)} (${D.T.receita?fmtP((D.T.receitaExp)/D.T.receita*100, 1):0}%)`:''}<br><span style="opacity:.75">Receita total (${fmtR(D.T.receita)}) = Comércio/Indústria + Serviços${(D.T.receitaExp||0)>0.005?' + Exportações':''}.</span></div></div>`:''}
   </div></div>`;
 
   // ── PÁG: DAS por tributo ──
   if (temDT) h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
     <div class="pp-duo"><div class="pp-chartbox"><div class="pp-ct">Para onde vai cada real do DAS</div><canvas id="pc-das" height="190"></canvas>
       <div class="hint" style="margin-top:6px">O DAS é uma guia única que a lei reparte entre até oito tributos (LC 123, Anexos I–V, percentuais por faixa de receita). A fatia de <b>consumo</b> — PIS, COFINS, ICMS, ISS e IPI — é a parcela substituída pela CBS e pelo IBS na Reforma; IRPJ, CSLL e CPP permanecem como são. Em meses com ST, monofásico ou retenções, a distribuição é proporcional estimada.</div></div>
-      <div class="pp-chartbox"><div class="pp-ct">Valores por tributo · ano</div><table class="pp-tab">${[['PIS','pis'],['COFINS','cofins'],['IRPJ','irpj'],['CSLL','csll'],['CPP','cpp'],['ICMS','icms'],['ISS','iss'],['IPI','ipi']].filter(([,k])=>(D.dasTrib[k]||0)>0.005).map(([n,k])=>`<tr><td class="rot">${n}</td><td class="num">${fmt(D.dasTrib[k])}</td><td class="num">${(D.dasTrib[k]/((D.T.das||0)+(D.T.sublimite||0))*100).toFixed(1)}%</td></tr>`).join('')}</table>
-      <div class="hint" style="margin-top:6px">Consumo (PIS+COFINS+ICMS+ISS+IPI): <b>${(( (D.dasTrib.pis+D.dasTrib.cofins+D.dasTrib.icms+D.dasTrib.iss+D.dasTrib.ipi) / ((D.T.das||0)+(D.T.sublimite||0)) )*100).toFixed(1)}% do DAS</b> — é a parcela em jogo na Reforma.</div></div></div>
+      <div class="pp-chartbox"><div class="pp-ct">Valores por tributo · ano</div><table class="pp-tab">${[['PIS','pis'],['COFINS','cofins'],['IRPJ','irpj'],['CSLL','csll'],['CPP','cpp'],['ICMS','icms'],['ISS','iss'],['IPI','ipi']].filter(([,k])=>(D.dasTrib[k]||0)>0.005).map(([n,k])=>`<tr><td class="rot">${n}</td><td class="num">${fmt(D.dasTrib[k])}</td><td class="num">${fmtP(D.dasTrib[k]/((D.T.das||0)+(D.T.sublimite||0))*100, 1)}%</td></tr>`).join('')}</table>
+      <div class="hint" style="margin-top:6px">Consumo (PIS+COFINS+ICMS+ISS+IPI): <b>${fmtP(( (D.dasTrib.pis+D.dasTrib.cofins+D.dasTrib.icms+D.dasTrib.iss+D.dasTrib.ipi) / ((D.T.das||0)+(D.T.sublimite||0)) )*100, 1)}% do DAS</b> — é a parcela em jogo na Reforma.</div></div></div>
   </div></div>`;
 
   // ── PÁG: evolução (gráfico + tabela) ──
   let NS = 4;
   if (temREF) {
     h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
-    ${secao(++NS,'Como fica a carga em cada regime, com a Reforma','Carga anual estimada, ano a ano, na transição 2027–2033.')}
+    ${secao(++NS,'Como fica a carga em cada regime, com a Reforma','Carga anual estimada, ano a ano, na transição 2027–2033.'+(D.seloProj?' '+D.seloProj:''))}
     <div class="pp-chartbox"><canvas id="pc-evo" height="185"></canvas></div>
     <table class="pp-tab pp-tab-f"><thead><tr><th>Ano</th>${D.variante!=='acima'?'<th class="num">Por dentro</th><th class="num">Híbrido</th>':''}<th class="num">L. Presumido</th><th class="num">L. Real</th><th>Menor</th></tr></thead><tbody>
     ${D.anos.map((L,i)=>{ const d = D.sDentro[i]!=null ? D.sDentro[i] : D.T.simples;
@@ -6206,7 +6344,7 @@ function rlParecer(){
       <div class="pp-chartbox"><div class="pp-ct">Quanto da receita vira imposto · %</div><canvas id="pc-pct" height="130"></canvas>
       <div class="hint" style="margin-top:6px;font-size:8pt;line-height:1.35"><b>Como ler:</b> cada linha divide a carga total do cenário no ano pela receita do período analisado. A carga inclui todos os tributos do cenário (guia do Simples, trava do sublimite, retenções recompostas, IBS/CBS e Imposto Seletivo quando por fora; no Presumido/Real, os tributos federais, ICMS/ISS/IPI e o INSS patronal) e <b>não inclui o FGTS</b>, idêntico em todos os regimes. O "por dentro" pode variar entre os anos porque o teto do ISS da trava da 5ª faixa decresce a cada vigência (Res. CGSN nº 190/2026). Valores em moeda constante do ano-base.</div></div>`;
     if (D.variante!=='acima' && D.L33) {
-      h += `${secao(++NS,'Os três caminhos do Simples em 2033 — economiza ou paga a mais?')}
+      h += `${secao(++NS,'Os três caminhos do Simples em 2033 — economiza ou paga a mais?',D.seloProj||'')}
       <div class="pp-chartbox"><canvas id="pc-cen33" height="150"></canvas></div>
       <table class="pp-tab"><thead><tr><th>Cenário em 2033</th><th class="num">Carga anual</th><th class="num">vs. por dentro</th><th>Quando faz sentido</th></tr></thead><tbody>
         ${(d33 => `<tr><td><span class="pp-pill">Por dentro</span></td><td class="num"><b>${fmt(d33)}</b></td><td class="num">—</td><td>Clientela de consumo final; sem split payment</td></tr>
@@ -6223,7 +6361,7 @@ function rlParecer(){
       ${secao(++NS,'Análise evolutiva — pagará a mais (+) ou a menos (−) que hoje','Diferença anual, no melhor regime de cada ano, contra a carga atual de '+fmtR(D.hojeAnual)+'/ano ('+D.regimeHojeNome+').')}
       <div class="pp-chartbox"><canvas id="pc-delta" height="165"></canvas></div>
       <table class="pp-tab"><thead><tr><th>Ano</th><th class="num">Carga com a reforma</th><th class="num">vs. hoje (ano)</th><th class="num">% da receita</th></tr></thead><tbody>
-      ${D.anos.map(L=>{ const v=L.regular, d=v-D.hojeAnual; return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(v)} <span class="hint">(${L.regNome})</span></td><td class="num" style="color:${d>0?'#8c2f39':'#0f7a5a'}">${d>0?'+':''}${fmt(d)}</td><td class="num">${D.T.receita?(v/D.T.receita*100).toFixed(1)+'%':'—'}</td></tr>`; }).join('')}
+      ${D.anos.map(L=>{ const v=L.regular, d=v-D.hojeAnual; return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(v)} <span class="hint">(${L.regNome})</span></td><td class="num" style="color:${d>0?'#8c2f39':'#0f7a5a'}">${d>0?'+':''}${fmt(d)}</td><td class="num">${D.T.receita?fmtP(v/D.T.receita*100, 1)+'%':'—'}</td></tr>`; }).join('')}
       </tbody></table>
       </div></div>`;
     }
@@ -6237,11 +6375,11 @@ function rlParecer(){
     <div class="pp-split">
       ${D.variante==='simples'?`<div class="pp-card"><div class="t">Por dentro · na fonte</div><div class="v" style="color:#0f7a5a">R$ 0</div><div class="s">IBS/CBS segue no DAS — caixa preservado</div></div>`:''}
       <div class="pp-card"><div class="t">${D.variante==='simples'?'Híbrido/Fora · na fonte':'Recolhido na fonte'}</div><div class="v">${fmtR(D.split.fonteMes)}</div><div class="s">por mês (2032) · retido no pagamento</div></div>
-      <div class="pp-card"><div class="t">Capital de giro</div><div class="v">${fmtR(D.split.giroAno)}</div><div class="s">por ano deixam de transitar pelo caixa</div></div>
+      <div class="pp-card"><div class="t">Volume anual segregado</div><div class="v">${fmtR(D.split.giroAno)}</div><div class="s">passam pelo split no ano · não é caixa parado</div></div>
       <div class="pp-card"><div class="t">Custo financeiro</div><div class="v">${fmtR(D.split.custoAno)}</div><div class="s">por ano · 15% a.a. (mín. Selic)</div></div>
     </div>
     <div class="hint" style="margin-top:6px">
-      <b>Como chegamos nesses números:</b> retenção mensal = débito bruto de IBS/CBS projetado para 2032 (regime ${D.variante==='simples'?'híbrido, pior caso':D.L33?D.L33.regNome:'regular'}) ÷ 12 meses — considera <b>100% do débito</b> retido no pagamento (art. 33 da LC 214/2025, sem descontar eventuais créditos do próprio período) e não desconta o prazo entre retenção e apropriação, ainda não regulamentado. Capital de giro anual = retenção mensal × 12. Custo financeiro anual = retenção mensal × <b>15% a.a.</b> (taxa Selic mínima estimada, aplicada sobre um mês de retenção como proxy do saldo médio financiado ao longo do ano).
+      <b>Como chegamos nesses números:</b> retenção mensal = débito bruto de IBS/CBS projetado para 2032 (regime ${D.variante==='simples'?'híbrido, pior caso':D.L33?D.L33.regNome:'regular'}) ÷ 12 meses — considera <b>100% do débito</b> retido no pagamento (art. 33 da LC 214/2025, sem descontar eventuais créditos do próprio período) e não desconta o prazo entre retenção e apropriação, ainda não regulamentado. Volume anual segregado = retenção mensal × 12 — é o total que passa pelo split ao longo do ano, e <b>não</b> a necessidade simultânea de caixa, que é da ordem de um mês de retenção. Custo financeiro anual = retenção mensal × <b>15% a.a.</b> (taxa Selic mínima estimada, aplicada sobre um mês de retenção como proxy do saldo médio financiado ao longo do ano).
     </div>
     <p class="pp-p">${TX.split}</p>
   </div></div>`;
@@ -6313,7 +6451,7 @@ function rlParecer(){
     rlChart('pc-pct', { type:'line', data:{ labels:D.sAnos, datasets:pctBase.map(([l,s,c])=>({ label:l+' · % receita', data:s.map(v=>D.T.receita?+(v/D.T.receita*100).toFixed(2):0), borderColor:c, borderWidth:2.5, tension:.2, pointRadius:2 })) },
       options:{ responsive:true, plugins:{legend:{position:'bottom'}}, scales:{ y:{ ticks:{ callback:v=>v+'%' } } } } });
     if (D.variante!=='acima' && D.L33) rlChart('pc-cen33', { type:'bar', data:{ labels:['Por dentro','Fora do Simples','Híbrido'], datasets:[{ data:[(D.sDentro.length?D.sDentro[D.sDentro.length-1]:D.T.simples), D.L33.regular, D.L33.hib], backgroundColor:[CORES.verde, CORES.graf, CORES.gold] }] },
-      options:{ responsive:true, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>fmtR(c.raw)+' ('+(D.T.receita?(c.raw/D.T.receita*100).toFixed(1):0)+'% da receita)'}}} } });
+      options:{ responsive:true, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>fmtR(c.raw)+' ('+(D.T.receita?fmtP(c.raw/D.T.receita*100, 1):0)+'% da receita)'}}} } });
     if (D.variante!=='simples') rlChart('pc-delta', { type:'bar', data:{ labels:D.sAnos, datasets:[{ data:D.sReg.map(v=>v-D.hojeAnual), backgroundColor:D.sReg.map(v=>v-D.hojeAnual>0?CORES.vinho:CORES.verde) }] },
       options:{ responsive:true, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>(c.raw>0?'paga a mais ':'paga a menos ')+fmtR(Math.abs(c.raw))+'/ano'}}} } });
     const acum = []; let s = 0;
@@ -6326,6 +6464,15 @@ function rlParecer(){
     rlChart('pc-acum', { type:'bar', data:{ labels:D.sAnos, datasets:[{ data:acum, backgroundColor:CORES.verde }] },
       options:{ responsive:true, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>fmtR(c.raw)+' acumulados'}}} } });
   }
+
+  // v7.40.2 · o empacotamento é MEDIÇÃO, e medir antes de os gráficos existirem foi o erro da
+  // v7.40.1: os canvases ainda não tinham altura, as folhas eram calculadas menores do que são e
+  // o excedente estourava na impressão. Agora ele roda depois que o Chart.js desenha, e a régua
+  // confere o resultado na sequência.
+  setTimeout(() => {
+    try { if (ppCompactoAtivo()) ppEmpacotarDOM($id('rl-corpo')); ppReguaRender(); }
+    catch(e){ console.error('empacotar', e); }
+  }, 350);
 }
 
 // ═══ Notas fiscais do período (ponte com o Classificação RTC) ═══
@@ -6341,7 +6488,7 @@ function rlRfTribHtml(cen){
     const C = calcCenariosReforma(RL.res, RL.reforma);
     const T = RL.res.totais, M = RL.res.meses, rec = T.receita || 0;
     const sLP = k => M.reduce((s,x)=>s+(+x.lp[k]||0),0), sLR = k => M.reduce((s,x)=>s+(+x.lr[k]||0),0);
-    const F = fmt, pctR = v => rec>0 ? (v/rec*100).toFixed(2)+'%' : '—';
+    const F = fmt, pctR = v => rec>0 ? fmtP(v/rec*100, 2)+'%' : '—';
     const linhas = [];   // [rótulo, {ano:valor}]
     const L2033 = C.REF[C.REF.length-1];
     const anos = C.REF.map(l=>l.ano);
@@ -6507,6 +6654,167 @@ async function rlProdRender(cnpj, ano, empNome){
     box.innerHTML = '<div class="card"><div class="hint">Não foi possível carregar as notas do período: ' + esc(e.message||e) + ' — verifique se o setup_ct_v5.sql foi executado.</div></div>';
   }
 }
+
+
+// ═══════════ v7.40.1 · SEÇÕES EMPACOTADAS NA FOLHA ═══════════
+// A v7.40.0 tentou paginação corrida — fluxo único, timbrado em `position:fixed` e margens por
+// @page — e NÃO funcionou na impressão: o Chrome pinta elemento fixo apenas na PRIMEIRA folha, de
+// modo que o timbrado sumiu das demais; a @page nomeada não segurou a capa, que partiu em duas; e
+// as margens do @page reduziram a área útil, embaralhando o resto. Revertido.
+// O incômodo que originou o pedido, porém, é real: cada seção abria uma folha nova e sobrava um vão
+// branco no pé de quase todas. A causa não era o layout de folha fixa — era a distribuição, feita à
+// mão, uma seção por folha.
+// Agora a distribuição é MEDIDA: os blocos são empilhados na folha enquanto couberem, e só quando o
+// próximo não cabe é que uma folha nova começa. O texto passa a correr de uma folha para a outra,
+// mas cada folha continua sendo a caixa de 296 mm que já imprime certo, com seu próprio timbrado e
+// com Margens = Nenhuma, como sempre foi.
+const PP_RESERVA_MM = 6;
+const PP_COMPACTO_KEY = 'atp_pp_compacto';
+function ppCompactoAtivo(){ try { return localStorage.getItem(PP_COMPACTO_KEY) !== 'off'; } catch { return true; } }
+function ppCompactoTrocar(){
+  try { localStorage.setItem(PP_COMPACTO_KEY, ppCompactoAtivo() ? 'off' : 'on'); } catch {}
+  rlRender();
+}
+// Redistribui os blocos já renderizados. Roda sobre o DOM vivo, ANTES de os gráficos serem
+// desenhados: por isso a altura de cada canvas vem da tabela de alturas de impressão (PP_CANVAS_MM),
+// e não da tela.
+function ppEmpacotarDOM(corpo){
+  try {
+    // margem de segurança: a medição na tela e o traçado da impressão não são idênticos ao
+    // milímetro (fontes, arredondamento de linha, altura real dos gráficos). Encher a folha até os
+    // 296 mm exatos deixa o documento na fronteira do corte — daí os 6 mm de reserva.
+    const mm = ppMm2px(), LIM = (PP_FOLHA_MM - PP_RESERVA_MM) * mm;
+    const pgs = Array.from(corpo.querySelectorAll('.pp-page')).filter(p => !p.classList.contains('pp-capa'));
+    if (pgs.length < 2) return 0;
+    const blocos = [];
+    for (const pg of pgs){
+      const mi = pg.querySelector('.pp-miolo'); if (!mi) continue;
+      while (mi.firstChild) blocos.push(mi.removeChild(mi.firstChild));
+    }
+    const ancora = pgs[0];
+    // v7.40.5: o timbrado da folha nova é um CLONE do que veio das folhas originais — atributos,
+    // tratamento de erro e tudo o mais idênticos ao que sempre imprimiu certo. Recriar o elemento
+    // à mão abria margem para diferença sutil entre as folhas antigas e as empacotadas.
+    const modeloBg = ancora.querySelector('.pp-bg');
+    const novaFolha = () => {
+      const pg = document.createElement('div'); pg.className = 'pp-page';
+      let img;
+      if (modeloBg){ img = modeloBg.cloneNode(true); img.style.display = ''; }
+      else { img = document.createElement('img'); img.className = 'pp-bg'; img.src = 'timbrado.jpg';
+             img.onerror = function(){ this.style.display = 'none'; }; }
+      const mi = document.createElement('div'); mi.className = 'pp-miolo';
+      pg.appendChild(img); pg.appendChild(mi);
+      ancora.parentNode.insertBefore(pg, ancora);
+      return mi;
+    };
+    // altura da folha corrigida: troca a altura de tela dos gráficos pela que a impressão impõe
+    const altura = mi => { let a = mi.offsetHeight;
+      mi.querySelectorAll('canvas').forEach(c => { const alvo = PP_CANVAS_MM[c.id];
+        if (alvo) a += (alvo * mm) - c.offsetHeight; });
+      return a; };
+    let mi = novaFolha(), folhas = 1;
+    for (const b of blocos){
+      mi.appendChild(b);
+      if (altura(mi) > LIM && mi.childNodes.length > 1){
+        mi.removeChild(b);
+        // cabeçalho de seção nunca fica órfão no pé da folha: desce junto com o bloco seguinte
+        const ult = mi.lastElementChild;
+        const arrasta = (ult && ult.classList && ult.classList.contains('pp-sec')) ? mi.removeChild(ult) : null;
+        mi = novaFolha(); folhas++;
+        if (arrasta) mi.appendChild(arrasta);
+        mi.appendChild(b);
+      }
+    }
+    for (const pg of pgs) pg.remove();      // as folhas antigas, já vazias, saem
+    return folhas;
+  } catch(e){ console.error('ppEmpacotarDOM', e); return 0; }
+}
+
+// ═══════════ v7.39.2 · RÉGUA DE PÁGINA ═══════════
+// Cada folha do parecer tem altura FIXA de 296 mm com overflow:hidden na impressão: o que passa
+// disso SOME, sem aviso e sem empurrar para a página seguinte. Na tela a página cresce (min-height),
+// então o estouro só aparecia no PDF — foi assim que a v7.38.1 perdeu uma seção inteira e a v7.39.x
+// chegou à página 12 fora de margem. Esta régua mede cada folha ANTES de imprimir.
+// Não altera o documento: só mede e informa.
+const PP_FOLHA_MM = 296;
+// alturas que a impressão IMPÕE aos gráficos (bloco @media print) — na tela eles têm outro tamanho,
+// então a medição corrige a diferença aritmeticamente, sem mexer no CSS nem redesenhar os charts.
+const PP_CANVAS_MM = { 'pc-evo':70, 'pc-pct':36, 'pc-cen33':40, 'pc-recms':55, 'pc-delta':58, 'pc-acum':42, 'pc-das':80 };
+function ppMm2px(){
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;visibility:hidden;height:100mm';
+  document.body.appendChild(probe);
+  const px = probe.offsetHeight / 100;
+  probe.remove();
+  return px || 3.7795;
+}
+function ppMedirPaginas(){
+  const corpo = $id('rl-corpo'); if (!corpo) return [];
+  const mm = ppMm2px(), out = [];
+  const pgs = corpo.querySelectorAll('.pp-page');
+  pgs.forEach((pg, i) => {
+    const miolo = pg.querySelector('.pp-miolo');
+    // a capa é arte de fundo em folha inteira: não tem miolo para medir, e entrava na lista de
+    // "pouca folga" com 0 mm — alarme falso da própria régua, corrigido na v7.39.4
+    if (!miolo) { out.push({ n:i+1, titulo:'Capa', mm:PP_FOLHA_MM, excesso:0, capa:true }); return; }
+    let alt = miolo.offsetHeight;
+    miolo.querySelectorAll('canvas').forEach(c => {
+      const alvo = PP_CANVAS_MM[c.id];
+      if (alvo) alt += (alvo * mm) - c.offsetHeight;      // troca a altura de tela pela de impressão
+    });
+    const sec = miolo.querySelector('.pp-sec');
+    out.push({ n:i+1, titulo: sec ? sec.textContent.trim().slice(0,52) : '(sem título de seção)',
+               mm: alt/mm, excesso: (alt/mm) - PP_FOLHA_MM });
+  });
+  return out;
+}
+// O timbrado é um arquivo ao lado do index. Quando ele falta — típico ao testar numa pasta solta —
+// o app esconde a imagem quebrada em silêncio e as folhas saem sem cabeçalho nem rodapé, o que se
+// confunde facilmente com defeito de layout. A régua passa a dizer isso em voz alta.
+function ppTimbradoStatus(){
+  const corpo = $id('rl-corpo'); if (!corpo) return null;
+  const bgs = Array.from(corpo.querySelectorAll('.pp-page .pp-bg'));
+  if (!bgs.length) return null;
+  const ok = bgs.filter(i => i.complete && i.naturalWidth > 0).length;
+  return { total: bgs.length, ok, faltando: bgs.length - ok };
+}
+function ppReguaRender(){
+  const alvo = $id('pp-regua'); if (!alvo) return;
+
+  const med = ppMedirPaginas();
+  if (!med.length){ alvo.innerHTML = ''; return; }
+  const estouro = med.filter(x => x.excesso > 0);
+  // v7.40.4: o que é "pouca folga" depende do modo. Na distribuição manual, folga curta é risco de
+  // corte. No modo compacto, encher a folha até a reserva de 6 mm é o objetivo — avisar disso seria
+  // reclamar do funcionamento correto. Ali só interessa a folha que ficou ABAIXO da reserva.
+  const compacto = ppCompactoAtivo();
+  const apertado = med.filter(x => !x.capa && x.excesso <= 0 &&
+                                   x.excesso > (compacto ? -PP_RESERVA_MM : -12));
+  // lista completa: é com ela que se decide ONDE aliviar quando uma folha fica no limite
+  const detalhe = `<details style="margin-top:6px"><summary class="hint" style="cursor:pointer">ver a medida de todas as ${med.length} folhas</summary>
+    <div class="hint" style="margin-top:4px;line-height:1.7">${med.map(x => x.capa
+      ? `<b>pág. ${x.n}</b> Capa — folha inteira, sem miolo a medir`
+      : `<b>pág. ${x.n}</b> ${esc(x.titulo)} — ${x.mm.toFixed(0)} mm · ${x.excesso>0?`<b style="color:#8c2f39">+${x.excesso.toFixed(0)} mm além</b>`:`folga de ${(-x.excesso).toFixed(0)} mm`}`
+      ).join('<br>')}</div></details>`;
+  const tb = ppTimbradoStatus();
+  const avisoTb = (tb && tb.faltando)
+    ? `<div class="pp-alerta" style="margin:8px 0 0"><b>⚠️ Papel timbrado ausente em ${tb.faltando} de ${tb.total} folhas.</b> ${tb.ok ? '' : 'Nenhuma folha carregou a arte — '}o arquivo <b>timbrado.jpg</b> precisa estar na mesma pasta do aplicativo. Sem ele o documento imprime com o miolo certo, mas sem cabeçalho nem rodapé.</div>`
+    : '';
+  const linha = x => `<b>pág. ${x.n}</b> ${esc(x.titulo)} — ${x.mm.toFixed(0)} mm`
+      + (x.excesso > 0 ? ` <b style="color:#8c2f39">(+${x.excesso.toFixed(0)} mm além da folha)</b>` : ` (folga de ${(-x.excesso).toFixed(0)} mm)`);
+  if (estouro.length)
+    alvo.innerHTML = `<div class="pp-alerta" style="margin:8px 0 0"><b>⚠️ ${estouro.length} ${estouro.length===1?'página estoura':'páginas estouram'} a folha A4 — o conteúdo excedente será CORTADO no PDF, sem aviso:</b><br>`
+      + estouro.map(linha).join('<br>') + `<br><span class="hint">Medida sobre a folha de ${PP_FOLHA_MM} mm, já com as alturas de gráfico da impressão.</span>${detalhe}</div>` + avisoTb;
+  else
+    alvo.innerHTML = `<div class="hint" style="margin-top:8px;padding:8px 10px;background:#eaf5f0;border-left:3px solid #0f7a5a;border-radius:0 6px 6px 0">✅ ${med.length} páginas medidas <b>no modo ${ppCompactoAtivo()?'compacto':'uma seção por folha'}</b>, nenhuma estoura a folha A4.`
+      + (apertado.length
+          ? ` Com pouca folga: ${apertado.map(x=>'pág. '+x.n+' ('+(-x.excesso).toFixed(0)+' mm)').join(', ')} — ${compacto
+              ? 'abaixo da reserva de '+PP_RESERVA_MM+' mm, convém conferir no PDF.'
+              : 'qualquer texto novo da IA pode cortar.'}`
+          : (compacto ? ` As folhas são preenchidas até ${PP_FOLHA_MM-PP_RESERVA_MM} mm de propósito, guardando ${PP_RESERVA_MM} mm de reserva — sobra de 6 a 10 mm é o resultado esperado, não aperto. Textos novos da IA reorganizam as folhas automaticamente.` : ''))
+      + detalhe + `</div>` + avisoTb;
+}
+
 // ── chamada à Edge Function gerar-parecer (Supabase) ──
 async function parecerIA(){
   const btn = $id('pp-ia-btn'); if (btn){ btn.disabled = true; btn.textContent = '⏳ Gerando…'; }
@@ -6525,6 +6833,11 @@ async function parecerIA(){
         cenarios2033: D.L33 ? { porDentro: (D.sDentro.length ? D.sDentro[D.sDentro.length-1] : D.T.simples), hibrido: D.L33.hib, foraDoSimples: D.L33.regular, regNome: D.L33.regNome } : null,   // v7.36.2: fórmula única (era D.T.simples fixo)
         splitPayment: D.split, fatorRMedio: D.frMed,
         notasPeriodoRTC: rlCtResumoIA(),
+        // v7.39.0: sem isso a IA escreve a narrativa como se os números fossem realizados
+        projecao: D.proj ? { anoProjetado:true, mesesReais:D.proj.nReais, mesesEstimados:D.proj.nProj,
+                             janela:projJanelaLabel(D.proj.janela), periodoRealizado:D.janelaTxt,
+                             receitaRealizada:D.proj.tReal.receita, receitaProjetada:D.T.receita }
+                          : { anoProjetado:false },
       },
       premissas: { reformaFallback: !!(D.cen&&D.cen.usouFallback), creditosProxyCompras: !!(D.cen&&D.cen.proxyCompras), semCreditosIBSCBS: !!(D.cen&&D.cen.semCreditos), moedaConstante: true },
     };
@@ -6541,6 +6854,9 @@ async function parecerIA(){
     RL._ia = { textos: _tx, quando: new Date().toLocaleString('pt-BR') };
     toast('✅ Textos do parecer gerados pela IA.');
     rlRender();
+    // v7.39.4: a IA é a única fonte de texto de tamanho imprevisível no documento — medir logo
+    // depois dela é o instante em que um corte novo apareceria. O setTimeout deixa o layout assentar.
+    setTimeout(() => { try { ppReguaRender(); } catch(e){ console.error('régua/pós-IA', e); } }, 400);
   } catch(e) {
     console.error('parecerIA', e);
     document.querySelectorAll('#rl-corpo .pp-skel').forEach(el=>el.classList.remove('pp-skel'));
@@ -6863,7 +7179,7 @@ function rlConfSublimite(){
       <table class="gtable"><thead><tr><th></th><th class="num">Mercado interno</th><th class="num">Exportação</th></tr></thead><tbody>
         <tr><td class="rot">RBA realizada (até ${rot(M.ultimo)})</td><td class="num">${fmtR(M.rbaInt[M.ultimo])}</td><td class="num">${fmtR(M.rbaExp[M.ultimo])}</td></tr>
         <tr><td class="rot">Média mensal realizada</td><td class="num">${fmtR(M.mediaInt)}</td><td class="num">${fmtR(M.mediaExp)}</td></tr>
-        <tr><td class="rot">RBA projetada em dezembro${M.parcial?' <span class="hint">(mantido o ritmo)</span>':''}</td><td class="num"><b>${fmtR(M.projInt[11])}</b></td><td class="num">${fmtR(M.projExp[11])}</td></tr>
+        <tr><td class="rot">RBA projetada em dezembro${M.parcial?' <span class="hint">(média '+projJanelaLabel(M.janela||'todos')+')</span>':''}</td><td class="num"><b>${fmtR(M.projInt[11])}</b></td><td class="num">${fmtR(M.projExp[11])}</td></tr>
         <tr><td class="rot">Sublimite de ${fmtR(M.subLim)} — ultrapassagem</td><td class="num">${rot(M.marco.sublimite)}</td><td class="num">${rot(M.marco.expSublimite)}</td></tr>
         <tr><td class="rot">Sublimite + 20% (${fmtR(M.subLim*1.2)})</td><td class="num">${rot(M.marco.sublimite20)}</td><td class="num">—</td></tr>
         <tr><td class="rot">Limite de ${fmtR(M.limite)} — ultrapassagem</td><td class="num">${rot(M.marco.limite)}</td><td class="num">${rot(M.marco.expLimite)}</td></tr>
@@ -6923,11 +7239,22 @@ function rlCmpHtml(){
     </tbody></table>
     <div class="hint" style="margin-top:8px">Aumento de carga em vermelho, redução em verde.</div></div>`;
 }
+// v7.39.0 · sobreposição da janela de projeção só para ESTE documento (não grava na empresa)
+function rlProjTrocar(v){ PROJ_JANELA_DOC = (v === '' ? null : v); rlRender(); }
+function rlProjPopular(){
+  const sel = $id('rl-proj'); if (!sel) return;
+  const emp = projJanelaNorm(((RL.dados && RL.dados.cfg) || {}).projJanela);
+  const cur = PROJ_JANELA_DOC == null ? '' : projJanelaNorm(PROJ_JANELA_DOC);
+  sel.innerHTML = '<option value="">Padrão da empresa — ' + projJanelaLabel(emp) + '</option>' +
+    Object.keys(PROJ_JANELAS).map(k => '<option value="' + k + '">Média dos ' + projJanelaLabel(k) + '</option>').join('');
+  sel.value = cur;
+}
 function rlRender() {
   rlLimparCharts();
   const tipo = $id('rl-tipo').value, n = +$id('rl-per').value;
   // parecer e Reforma são documentos formatados: comparação entre anos não entra neles
   const w = $id('rl-ano2-wrap'); if (w) w.style.display = (tipo==='parecer' || tipo==='reforma' || tipo==='conferencia' || tipo==='cnpj' || tipo==='produtos') ? 'none' : '';
+  { const pw = $id('rl-proj-wrap'); if (pw){ pw.style.display = (tipo==='parecer') ? '' : 'none'; if (tipo==='parecer') rlProjPopular(); } }
   const conf = tipo === 'conferencia';
   { const e1 = $id('rl-conf-modo-wrap'); if (e1) e1.style.display = conf ? '' : 'none';
     const sm = $id('rl-conf-mes'), e2 = $id('rl-conf-mes-wrap');
