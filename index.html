@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.40.5</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.41.0</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -646,7 +646,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.40.5</b> <span class="badge ok">atual</span></td><td>19/08/2026</td><td><b>Papel timbrado: as folhas criadas pelo empacotador passam a clonar a arte das folhas originais, e a régua avisa quando ela não carrega.</b> Até aqui, a folha nova montada pela distribuição compacta recriava o elemento do timbrado do zero — equivalente na intenção, mas abrindo margem para diferença sutil em relação às folhas que sempre imprimiram certo. Agora ela <b>clona</b> o próprio elemento vindo do documento, com os mesmos atributos e o mesmo tratamento de erro. Junto veio um diagnóstico que faltava: quando o arquivo <b>timbrado.jpg</b> não está na mesma pasta do aplicativo — o que acontece com facilidade ao abrir o app numa pasta solta para testar — o app esconde a imagem quebrada <b>em silêncio</b>, e o documento sai com o miolo correto mas sem cabeçalho nem rodapé, o que se confunde com defeito de layout. A régua passa a contar em quantas folhas a arte carregou e a avisar, em destaque, quando estiver faltando. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.41.0</b> <span class="badge ok">atual</span></td><td>19/08/2026</td><td><b>Fechada a frente de paginação: a distribuição compacta vira o único modo e os dois botões saem da barra do parecer.</b> Com o PDF real conferido — timbrado em todas as folhas, nenhuma fora de margem —, a rede de segurança deixou de ser necessária. Saiu o botão <b>"Conferir páginas"</b>, que já era redundante: a régua roda sozinha depois que os gráficos são desenhados e depois que a IA escreve, que são os dois momentos em que o documento pode mudar de tamanho; o painel com o resultado continua aparecendo. E saiu o botão de <b>alternância entre modos de paginação</b>, que era mais do que redundante — era risco: a escolha ficava gravada no navegador, de modo que um clique de teste alterava silenciosamente todos os pareceres gerados depois, sem nada denunciar no documento. A distribuição por seção, com uma folha para cada e vão branco no pé, não existe mais. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.40.5</b></td><td>19/08/2026</td><td><b>Papel timbrado: as folhas criadas pelo empacotador passam a clonar a arte das folhas originais, e a régua avisa quando ela não carrega.</b> Até aqui, a folha nova montada pela distribuição compacta recriava o elemento do timbrado do zero — equivalente na intenção, mas abrindo margem para diferença sutil em relação às folhas que sempre imprimiram certo. Agora ela <b>clona</b> o próprio elemento vindo do documento, com os mesmos atributos e o mesmo tratamento de erro. Junto veio um diagnóstico que faltava: quando o arquivo <b>timbrado.jpg</b> não está na mesma pasta do aplicativo — o que acontece com facilidade ao abrir o app numa pasta solta para testar — o app esconde a imagem quebrada <b>em silêncio</b>, e o documento sai com o miolo correto mas sem cabeçalho nem rodapé, o que se confunde com defeito de layout. A régua passa a contar em quantas folhas a arte carregou e a avisar, em destaque, quando estiver faltando. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.4</b></td><td>19/08/2026</td><td><b>A régua avisava de "pouca folga" justamente nas folhas que o empacotador tinha preenchido como devia.</b> O aviso foi escrito na v7.39.2, quando a distribuição era manual: ali, uma folha com menos de 12 mm de sobra estava mesmo à beira do corte. No modo compacto o critério se inverte — encher a folha até a reserva de 6 mm é <b>o objetivo</b>, e apontar isso como problema é reclamar do funcionamento correto. Agora o limiar depende do modo: na distribuição compacta só é sinalizada a folha que ficou <b>abaixo da reserva</b>, e quando nenhuma fica, a régua explica que a sobra de poucos milímetros é o resultado esperado. Saiu junto a advertência de que "qualquer texto novo da IA pode cortar": ela vale para a distribuição manual, mas não para a compacta, em que a chegada dos textos da IA <b>redistribui as folhas automaticamente</b>. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.3</b></td><td>19/08/2026</td><td><b>O botão de paginação dizia qual modo estava ativo, mas parecia dizer para qual iria mudar.</b> Escrito apenas como "Paginação: compacta", o rótulo é ambíguo — e como a escolha fica gravada no navegador, bastava tê-lo clicado uma vez, para conferir, e o parecer seguia sendo gerado no outro modo sem nada denunciar. O botão passa a mostrar as duas informações de uma vez: o modo <b>ativo</b>, com um visto e destaque, e a <b>ação</b> do clique. Além disso, a régua agora <b>declara em qual modo mediu</b> — sem isso, a lista de folhas não se interpreta: 15 folhas com bastante sobra em cada uma são o resultado normal da distribuição por seção, e seriam sinal de defeito na compacta. Por fim, a medição automática após os gráficos passou a valer <b>nos dois modos</b>, e não apenas no compacto. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.2</b></td><td>19/08/2026</td><td><b>O empacotamento das folhas media o documento cedo demais — e por isso estourava.</b> A distribuição compacta criada na v7.40.1 é, no fundo, uma medição: os blocos são empilhados enquanto couberem na folha. Só que ela rodava <b>antes de os gráficos serem desenhados</b>, quando os quadros ainda não tinham altura nenhuma — de modo que cada folha era calculada menor do que realmente é, entrava conteúdo demais e o excedente saía fora da margem na impressão, exatamente o problema que a distribuição pretendia evitar. Era por isso que o botão "uma seção por folha" mostrava o documento correto e o modo compacto não. Agora o empacotamento acontece <b>depois</b> de o Chart.js desenhar, com as alturas reais em mãos, e a régua roda automaticamente na sequência para confirmar o resultado. Foi acrescentada também uma <b>reserva de 6 mm por folha</b>: medir na tela e traçar na impressão não são operações idênticas ao milímetro — fontes, arredondamento de linha e altura de gráfico introduzem diferenças pequenas —, e encher a folha até os 296 mm exatos deixava o documento na fronteira do corte. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
@@ -3805,7 +3806,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.40.5';
+const APP_VERSAO = '7.41.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -6247,8 +6248,6 @@ function rlParecer(){
     <div class="toolbar" style="align-items:center">
       <span class="hint">${statusIA}</span><span style="flex:1"></span>
       <button class="btn" onclick="window.print()" title="Na janela de impressão: Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · ativar Gráficos de segundo plano">🖨️ Imprimir / PDF</button>
-      <button class="btn${ppCompactoAtivo()?' solid':''}" onclick="ppCompactoTrocar()" title="${ppCompactoAtivo()?'Ativa: COMPACTA — os blocos são empilhados na folha enquanto couberem, com 6 mm de reserva. Clique para voltar a uma seção por folha.':'Ativa: UMA SEÇÃO POR FOLHA — distribuição fixa, com vão branco no pé de várias folhas. Clique para usar a compacta.'}">${ppCompactoAtivo()?'📄 Compacta ✓ · trocar para 1 seção/folha':'📑 1 seção por folha ✓ · trocar para compacta'}</button>
-      <button class="btn" onclick="ppReguaRender()" title="Mede cada folha do parecer contra os 296 mm do A4 e avisa o que será cortado na impressão">📏 Conferir páginas</button>
       <button class="btn solid" id="pp-ia-btn" onclick="parecerIA()">🤖 Gerar textos com IA</button>
     </div><div id="pp-regua"></div>${premissaCred?`<div class="hint" style="margin-top:6px;padding:8px 10px;background:#fbf3e2;border-left:3px solid #d99a2b;border-radius:0 6px 6px 0">${premissaCred}</div>`:''}</div>`;
 
@@ -6470,7 +6469,7 @@ function rlParecer(){
   // o excedente estourava na impressão. Agora ele roda depois que o Chart.js desenha, e a régua
   // confere o resultado na sequência.
   setTimeout(() => {
-    try { if (ppCompactoAtivo()) ppEmpacotarDOM($id('rl-corpo')); ppReguaRender(); }
+    try { ppEmpacotarDOM($id('rl-corpo')); ppReguaRender(); }
     catch(e){ console.error('empacotar', e); }
   }, 350);
 }
@@ -6669,12 +6668,6 @@ async function rlProdRender(cnpj, ano, empNome){
 // mas cada folha continua sendo a caixa de 296 mm que já imprime certo, com seu próprio timbrado e
 // com Margens = Nenhuma, como sempre foi.
 const PP_RESERVA_MM = 6;
-const PP_COMPACTO_KEY = 'atp_pp_compacto';
-function ppCompactoAtivo(){ try { return localStorage.getItem(PP_COMPACTO_KEY) !== 'off'; } catch { return true; } }
-function ppCompactoTrocar(){
-  try { localStorage.setItem(PP_COMPACTO_KEY, ppCompactoAtivo() ? 'off' : 'on'); } catch {}
-  rlRender();
-}
 // Redistribui os blocos já renderizados. Roda sobre o DOM vivo, ANTES de os gráficos serem
 // desenhados: por isso a altura de cada canvas vem da tabela de alturas de impressão (PP_CANVAS_MM),
 // e não da tela.
@@ -6784,12 +6777,9 @@ function ppReguaRender(){
   const med = ppMedirPaginas();
   if (!med.length){ alvo.innerHTML = ''; return; }
   const estouro = med.filter(x => x.excesso > 0);
-  // v7.40.4: o que é "pouca folga" depende do modo. Na distribuição manual, folga curta é risco de
-  // corte. No modo compacto, encher a folha até a reserva de 6 mm é o objetivo — avisar disso seria
-  // reclamar do funcionamento correto. Ali só interessa a folha que ficou ABAIXO da reserva.
-  const compacto = ppCompactoAtivo();
-  const apertado = med.filter(x => !x.capa && x.excesso <= 0 &&
-                                   x.excesso > (compacto ? -PP_RESERVA_MM : -12));
+  // Encher a folha até a reserva é o objetivo do empacotador: só interessa a folha que ficou
+  // ABAIXO dela, o que indicaria erro de medida.
+  const apertado = med.filter(x => !x.capa && x.excesso <= 0 && x.excesso > -PP_RESERVA_MM);
   // lista completa: é com ela que se decide ONDE aliviar quando uma folha fica no limite
   const detalhe = `<details style="margin-top:6px"><summary class="hint" style="cursor:pointer">ver a medida de todas as ${med.length} folhas</summary>
     <div class="hint" style="margin-top:4px;line-height:1.7">${med.map(x => x.capa
@@ -6806,12 +6796,10 @@ function ppReguaRender(){
     alvo.innerHTML = `<div class="pp-alerta" style="margin:8px 0 0"><b>⚠️ ${estouro.length} ${estouro.length===1?'página estoura':'páginas estouram'} a folha A4 — o conteúdo excedente será CORTADO no PDF, sem aviso:</b><br>`
       + estouro.map(linha).join('<br>') + `<br><span class="hint">Medida sobre a folha de ${PP_FOLHA_MM} mm, já com as alturas de gráfico da impressão.</span>${detalhe}</div>` + avisoTb;
   else
-    alvo.innerHTML = `<div class="hint" style="margin-top:8px;padding:8px 10px;background:#eaf5f0;border-left:3px solid #0f7a5a;border-radius:0 6px 6px 0">✅ ${med.length} páginas medidas <b>no modo ${ppCompactoAtivo()?'compacto':'uma seção por folha'}</b>, nenhuma estoura a folha A4.`
+    alvo.innerHTML = `<div class="hint" style="margin-top:8px;padding:8px 10px;background:#eaf5f0;border-left:3px solid #0f7a5a;border-radius:0 6px 6px 0">✅ ${med.length} páginas medidas, nenhuma estoura a folha A4.`
       + (apertado.length
-          ? ` Com pouca folga: ${apertado.map(x=>'pág. '+x.n+' ('+(-x.excesso).toFixed(0)+' mm)').join(', ')} — ${compacto
-              ? 'abaixo da reserva de '+PP_RESERVA_MM+' mm, convém conferir no PDF.'
-              : 'qualquer texto novo da IA pode cortar.'}`
-          : (compacto ? ` As folhas são preenchidas até ${PP_FOLHA_MM-PP_RESERVA_MM} mm de propósito, guardando ${PP_RESERVA_MM} mm de reserva — sobra de 6 a 10 mm é o resultado esperado, não aperto. Textos novos da IA reorganizam as folhas automaticamente.` : ''))
+          ? ` Com pouca folga: ${apertado.map(x=>'pág. '+x.n+' ('+(-x.excesso).toFixed(0)+' mm)').join(', ')} — abaixo da reserva de ${PP_RESERVA_MM} mm, convém conferir no PDF.`
+          : ` As folhas são preenchidas até ${PP_FOLHA_MM-PP_RESERVA_MM} mm de propósito, guardando ${PP_RESERVA_MM} mm de reserva — sobra pequena é o resultado esperado, não aperto. Textos novos da IA reorganizam as folhas automaticamente.`)
       + detalhe + `</div>` + avisoTb;
 }
 
