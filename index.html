@@ -249,7 +249,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.41.5</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.41.6</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -293,6 +293,8 @@ canvas{max-height:340px}
              📋 Totais e o "Importar relatório..."); eles seguem no DOM porque fornTrocarAba/fo-btn-imp
              são o roteador do painel 🚚 e o processo de lançamento continua passando por aqui.
              "Consultar na base da Receita" e "🧹 Limpar dados" permanecem visíveis (v7.41.4). -->
+        <!-- v7.41.6: o arquivo do Questor não diz de quem é — o destino fica declarado na tela, sempre visível -->
+        <div id="fo-destino" style="display:none;margin:10px 0 0;padding:8px 10px;border-radius:8px;font-size:13px"></div>
         <div id="fo-abas" style="display:flex;gap:8px;align-items:center;margin:10px 0 0;flex-wrap:wrap">
           <button class="btn" id="fo-aba-compra" style="display:none" onclick="fornTrocarAba('compra')">📄 Arquivo de compra (fornecedor)</button>
           <button class="btn" id="fo-aba-venda" style="display:none" onclick="fornTrocarAba('venda')">👥 Arquivo de venda (cliente)</button>
@@ -647,7 +649,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.41.5</b> <span class="badge ok">atual</span></td><td>20/08/2026</td><td><b>🐞 Correção: o 📊 da aba Empresas não abria nada após a consulta da exportação do Questor — e foi renomeado para "Resumo estatístico de cliente e fornecedor".</b> O botão sempre esteve na lista, mas clicar nele não mostrava coisa alguma quando a consulta mais recente da empresa era a da exportação única do Questor: a gravação dessas consultas usa um formato de estatísticas diferente do formato dos relatórios de Totais, e o resumo assumia o antigo — o erro interrompia a montagem da tela em silêncio, dando a impressão de que o botão havia sumido. Agora o resumo <b>aceita os dois formatos</b>: nos registros da exportação, as estatísticas são refeitas a partir da própria relação gravada (excluindo movimentação própria, consumidor final não identificado e, nas vendas, os CPFs). O resumo também passou a <b>identificar o tipo de cada consulta no seletor do histórico</b> (compra — fornecedores · venda — clientes · revenda · serviço), a rotular corretamente as consultas de <b>venda</b> (cartão e coluna "Clientes" em vez de "Fornecedores") e ganhou o novo nome no título e no botão da lista de Empresas. Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.4</b></td><td>20/08/2026</td><td><b>Ajuste fino do item 2 (pedido registrado):</b> os botões <b>"Consultar na base da Receita"</b> e <b>"🧹 Limpar dados"</b> voltaram à tela — a consulta continua partindo sozinha após a importação, e o botão passa a servir para reexecutar manualmente. Permanecem fora da tela apenas os quatro botões de importação retirados na v7.41.3: <b>📄 Arquivo de compra (fornecedor)</b>, <b>👥 Arquivo de venda (cliente)</b>, <b>📋 Totais — relatórios de entrada</b> e <b>"Importar relatório(s)/Importar relatório de entrada (Totais ISS/ICMS)"</b> — todo o processo por trás deles segue intacto, e a importação continua exclusivamente pelo campo "Importar arquivo (CSV / Excel)". Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.3</b></td><td>20/08/2026</td><td><b>Consulta CNPJ simplificada para a exportação única do Questor + relação por regime de volta ao item 3.</b> Decisão registrada: neste momento o único relatório importado é a <b>exportação única do Questor</b> (Tipo · Data · Natureza/CFOP · Valor Contábil · Razão Social · CNPJ/CPF), validada contra três arquivos reais. O <b>item 2</b> ficou só com <b>"Importar arquivo (CSV / Excel)"</b>: saíram da tela a caixa de colar lista, os botões 📄 compra / 👥 venda / 📋 Totais e o "Importar relatório(s)" — e, como o campo é agora o caminho oficial do analítico, a pergunta "analítico × triagem simples" (v7.34.3) saiu junto: o arquivo com as colunas do Questor entra <b>direto</b> no processo completo. <b>Nenhum processo foi removido:</b> a confirmação do que foi lido antes de entrar, a separação automática Entrada→fornecedores / Saída→clientes, a consulta na Receita, os dashboards do painel 🚚, a gravação no histórico e o <b>lançamento por CFOP</b> continuam exatamente como estavam (os leitores de Totais ISS/ICMS seguem no código, apenas sem botão). Um arquivo que seja só lista de CNPJs segue como triagem simples — agora com <b>consulta automática</b>, já que o botão "Consultar na base da Receita" também saiu da tela. E o <b>item 3</b> voltou a mostrar a <b>relação de empresas por regime</b>: cartões com contagem e percentual de <b>Simples Nacional, MEI e regime normal</b> acima da tabela, alimentados tanto pela lista simples quanto pela exportação do Questor (fornecedores + clientes deduplicados por CNPJ; a coluna Porte informa se o parceiro é fornecedor, cliente ou os dois). Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.2</b></td><td>20/08/2026</td><td><b>🐞 Correção: o parágrafo de Enquadramento misturava três bases de receita numa frase só.</b> No parecer da WEEEDO o texto anunciava a receita total de <b>R$ 5.349.551,45</b>, listava como composição apenas comércio (R$ 1.867.395,02) e serviços (R$ 2.843.851,69) — que somam <b>R$ 4.711.246,74</b>, o mercado interno — e fechava dizendo que faltavam <b>R$ 88.753,26</b> para o teto. Quem somasse não fechava a conta. <b>Nenhum número estava errado:</b> os R$ 88.753,26 são exatamente R$ 4.800.000,00 − R$ 4.711.246,74, e a comparação é a correta, porque o teto do Simples é medido só sobre o mercado interno — a exportação (R$ 638.304,74) tem teto próprio de igual valor (LC 123/2006, art. 3º, §14). O defeito era de <b>procedência</b>: o payload enviado à IA levava a receita total, comércio e serviços como escalares sem rótulo, sem o campo de exportação e sem dizer sobre que base a margem incidia — e a IA relacionou o que estava mais perto. Agora o payload nomeia a base de cada valor (<code>receitaMercadoInterno</code>, <code>receitaExportacao</code>, <code>tetoSimples.baseDeComparacao</code>, <code>rbt12MaxBase</code>) e proíbe a IA de somar, dividir ou apresentar composições por conta própria. Além disso, uma <b>ficha de composição gerada pelo motor</b> passa a fechar a conta logo abaixo do parágrafo, sempre que houver exportação ou RBT12 projetado diferente do realizado — os números do enquadramento deixam de depender do texto da IA. Duas incoerências vizinhas foram corrigidas junto: o RBT12 do enquadramento é o <b>máximo realizado</b> e passa a ser rotulado como tal (era apresentado sem qualificação, ao lado de valores projetados); e o alerta da trava da 5ª faixa afirmava que o ICMS/ISS segue dentro do DAS mesmo quando o monitor de sublimite já apontava <b>impedimento</b> — agora o alerta e a linha de premissas trazem a ressalva, porque a trava pressupõe ausência de impedimento. A frase da margem no monitor também passou a dizer "do mercado interno" e "% do teto". Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.1</b></td><td>20/08/2026</td><td><b>🐞 Correção: excluir dados voltou a funcionar — requer setup_v7411.sql.</b> O soft-delete da v7.38.0 nunca chegou a excluir nada: toda tentativa devolvia <code>403 · 42501 · new row violates row-level security policy</code>. A causa estava na própria política do setup_v737_v2, que é <code>FOR ALL</code> e traz <code>excluido_em IS NULL</code> dentro do <code>USING</code>. Numa política <code>FOR ALL</code> esse <code>USING</code> também vale como política de <b>SELECT</b>, e o PostgreSQL exige que a linha resultante de um UPDATE continue visível por ela — marcar <code>excluido_em</code> torna a linha invisível, então a gravação era recusada. Não era dado corrompido nem erro de permissão: era impossível por construção, nas quatro tabelas (<code>atp_analises</code>, <code>atp_empresas</code>, <code>atp_fornec</code>, <code>atp_usuarios</code>). A exclusão passa agora pelas funções <code>atp_excluir_dados</code>, <code>atp_excluir_empresa</code> e <code>atp_excluir_usuario</code> (<code>SECURITY DEFINER</code>), que conferem o escritório dono do CNPJ — e, no caso de usuários, exigem papel admin e proíbem a auto-exclusão — antes de marcar. As políticas ficam intocadas: a linha excluída continua sumindo das telas sozinha, sem filtro novo em nenhuma consulta. Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.0</b></td><td>19/08/2026</td><td><b>Fechada a frente de paginação: a distribuição compacta vira o único modo e os dois botões saem da barra do parecer.</b> Com o PDF real conferido — timbrado em todas as folhas, nenhuma fora de margem —, a rede de segurança deixou de ser necessária. Saiu o botão <b>"Conferir páginas"</b>, que já era redundante: a régua roda sozinha depois que os gráficos são desenhados e depois que a IA escreve, que são os dois momentos em que o documento pode mudar de tamanho; o painel com o resultado continua aparecendo. E saiu o botão de <b>alternância entre modos de paginação</b>, que era mais do que redundante — era risco: a escolha ficava gravada no navegador, de modo que um clique de teste alterava silenciosamente todos os pareceres gerados depois, sem nada denunciar no documento. A distribuição por seção, com uma folha para cada e vão branco no pé, não existe mais. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.41.6</b> <span class="badge ok">atual</span></td><td>20/08/2026</td><td><b>Consulta CNPJ: a empresa de destino passa a ser declarada, e trocar de empresa passa a trocar a análise.</b> Três mudanças na mesma origem — a exportação do Questor traz apenas as <b>contrapartes</b>, então o arquivo não diz de qual empresa ele é. Como o erro não é detectável pelo conteúdo, o app passa a torná-lo visível. (1) <b>Faixa de destino fixa na tela</b>, acima dos botões: "Importando em [empresa]" — ou aviso em âmbar quando a barra do topo está sem empresa. (2) <b>O diálogo "Confirme o que foi lido" abre pela empresa de destino</b>, antes do período e dos totais, nas duas variantes (exportação única do Questor e analítico simples). (3) <b>Trocar a empresa na barra do topo, estando na Consulta CNPJ, agora recarrega a análise e limpa a tela</b> — antes a página era a única que ignorava a troca, e os analíticos da empresa anterior continuavam ali. Se houver consulta ainda não gravada, o app avisa antes de descartar. Fechada junto uma falha silenciosa: o <code>cnpjEmpresa</code> é carimbado <b>na importação</b>, de modo que importar em uma empresa, trocar a barra e mandar gravar escrevia o histórico no <b>CNPJ antigo</b>, sem aviso; agora a divergência bloqueia a gravação e nomeia as duas empresas. Corrigido também o <code>nomeEmpresa</code> do analítico, que vinha de um campo inexistente (<code>EMP_GLOBAL.razao_social</code>) e gravava sempre vazio. Motor de cálculo e lacre 5a5562df intocados.</td></tr>
+                    <tr><td><b>v7.41.5</b></td><td>20/08/2026</td><td><b>🐞 Correção: o 📊 da aba Empresas não abria nada após a consulta da exportação do Questor — e foi renomeado para "Resumo estatístico de cliente e fornecedor".</b> O botão sempre esteve na lista, mas clicar nele não mostrava coisa alguma quando a consulta mais recente da empresa era a da exportação única do Questor: a gravação dessas consultas usa um formato de estatísticas diferente do formato dos relatórios de Totais, e o resumo assumia o antigo — o erro interrompia a montagem da tela em silêncio, dando a impressão de que o botão havia sumido. Agora o resumo <b>aceita os dois formatos</b>: nos registros da exportação, as estatísticas são refeitas a partir da própria relação gravada (excluindo movimentação própria, consumidor final não identificado e, nas vendas, os CPFs). O resumo também passou a <b>identificar o tipo de cada consulta no seletor do histórico</b> (compra — fornecedores · venda — clientes · revenda · serviço), a rotular corretamente as consultas de <b>venda</b> (cartão e coluna "Clientes" em vez de "Fornecedores") e ganhou o novo nome no título e no botão da lista de Empresas. Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.4</b></td><td>20/08/2026</td><td><b>Ajuste fino do item 2 (pedido registrado):</b> os botões <b>"Consultar na base da Receita"</b> e <b>"🧹 Limpar dados"</b> voltaram à tela — a consulta continua partindo sozinha após a importação, e o botão passa a servir para reexecutar manualmente. Permanecem fora da tela apenas os quatro botões de importação retirados na v7.41.3: <b>📄 Arquivo de compra (fornecedor)</b>, <b>👥 Arquivo de venda (cliente)</b>, <b>📋 Totais — relatórios de entrada</b> e <b>"Importar relatório(s)/Importar relatório de entrada (Totais ISS/ICMS)"</b> — todo o processo por trás deles segue intacto, e a importação continua exclusivamente pelo campo "Importar arquivo (CSV / Excel)". Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.3</b></td><td>20/08/2026</td><td><b>Consulta CNPJ simplificada para a exportação única do Questor + relação por regime de volta ao item 3.</b> Decisão registrada: neste momento o único relatório importado é a <b>exportação única do Questor</b> (Tipo · Data · Natureza/CFOP · Valor Contábil · Razão Social · CNPJ/CPF), validada contra três arquivos reais. O <b>item 2</b> ficou só com <b>"Importar arquivo (CSV / Excel)"</b>: saíram da tela a caixa de colar lista, os botões 📄 compra / 👥 venda / 📋 Totais e o "Importar relatório(s)" — e, como o campo é agora o caminho oficial do analítico, a pergunta "analítico × triagem simples" (v7.34.3) saiu junto: o arquivo com as colunas do Questor entra <b>direto</b> no processo completo. <b>Nenhum processo foi removido:</b> a confirmação do que foi lido antes de entrar, a separação automática Entrada→fornecedores / Saída→clientes, a consulta na Receita, os dashboards do painel 🚚, a gravação no histórico e o <b>lançamento por CFOP</b> continuam exatamente como estavam (os leitores de Totais ISS/ICMS seguem no código, apenas sem botão). Um arquivo que seja só lista de CNPJs segue como triagem simples — agora com <b>consulta automática</b>, já que o botão "Consultar na base da Receita" também saiu da tela. E o <b>item 3</b> voltou a mostrar a <b>relação de empresas por regime</b>: cartões com contagem e percentual de <b>Simples Nacional, MEI e regime normal</b> acima da tabela, alimentados tanto pela lista simples quanto pela exportação do Questor (fornecedores + clientes deduplicados por CNPJ; a coluna Porte informa se o parceiro é fornecedor, cliente ou os dois). Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.2</b></td><td>20/08/2026</td><td><b>🐞 Correção: o parágrafo de Enquadramento misturava três bases de receita numa frase só.</b> No parecer da WEEEDO o texto anunciava a receita total de <b>R$ 5.349.551,45</b>, listava como composição apenas comércio (R$ 1.867.395,02) e serviços (R$ 2.843.851,69) — que somam <b>R$ 4.711.246,74</b>, o mercado interno — e fechava dizendo que faltavam <b>R$ 88.753,26</b> para o teto. Quem somasse não fechava a conta. <b>Nenhum número estava errado:</b> os R$ 88.753,26 são exatamente R$ 4.800.000,00 − R$ 4.711.246,74, e a comparação é a correta, porque o teto do Simples é medido só sobre o mercado interno — a exportação (R$ 638.304,74) tem teto próprio de igual valor (LC 123/2006, art. 3º, §14). O defeito era de <b>procedência</b>: o payload enviado à IA levava a receita total, comércio e serviços como escalares sem rótulo, sem o campo de exportação e sem dizer sobre que base a margem incidia — e a IA relacionou o que estava mais perto. Agora o payload nomeia a base de cada valor (<code>receitaMercadoInterno</code>, <code>receitaExportacao</code>, <code>tetoSimples.baseDeComparacao</code>, <code>rbt12MaxBase</code>) e proíbe a IA de somar, dividir ou apresentar composições por conta própria. Além disso, uma <b>ficha de composição gerada pelo motor</b> passa a fechar a conta logo abaixo do parágrafo, sempre que houver exportação ou RBT12 projetado diferente do realizado — os números do enquadramento deixam de depender do texto da IA. Duas incoerências vizinhas foram corrigidas junto: o RBT12 do enquadramento é o <b>máximo realizado</b> e passa a ser rotulado como tal (era apresentado sem qualificação, ao lado de valores projetados); e o alerta da trava da 5ª faixa afirmava que o ICMS/ISS segue dentro do DAS mesmo quando o monitor de sublimite já apontava <b>impedimento</b> — agora o alerta e a linha de premissas trazem a ressalva, porque a trava pressupõe ausência de impedimento. A frase da margem no monitor também passou a dizer "do mercado interno" e "% do teto". Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.1</b></td><td>20/08/2026</td><td><b>🐞 Correção: excluir dados voltou a funcionar — requer setup_v7411.sql.</b> O soft-delete da v7.38.0 nunca chegou a excluir nada: toda tentativa devolvia <code>403 · 42501 · new row violates row-level security policy</code>. A causa estava na própria política do setup_v737_v2, que é <code>FOR ALL</code> e traz <code>excluido_em IS NULL</code> dentro do <code>USING</code>. Numa política <code>FOR ALL</code> esse <code>USING</code> também vale como política de <b>SELECT</b>, e o PostgreSQL exige que a linha resultante de um UPDATE continue visível por ela — marcar <code>excluido_em</code> torna a linha invisível, então a gravação era recusada. Não era dado corrompido nem erro de permissão: era impossível por construção, nas quatro tabelas (<code>atp_analises</code>, <code>atp_empresas</code>, <code>atp_fornec</code>, <code>atp_usuarios</code>). A exclusão passa agora pelas funções <code>atp_excluir_dados</code>, <code>atp_excluir_empresa</code> e <code>atp_excluir_usuario</code> (<code>SECURITY DEFINER</code>), que conferem o escritório dono do CNPJ — e, no caso de usuários, exigem papel admin e proíbem a auto-exclusão — antes de marcar. As políticas ficam intocadas: a linha excluída continua sumindo das telas sozinha, sem filtro novo em nenhuma consulta. Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.0</b></td><td>19/08/2026</td><td><b>Fechada a frente de paginação: a distribuição compacta vira o único modo e os dois botões saem da barra do parecer.</b> Com o PDF real conferido — timbrado em todas as folhas, nenhuma fora de margem —, a rede de segurança deixou de ser necessária. Saiu o botão <b>"Conferir páginas"</b>, que já era redundante: a régua roda sozinha depois que os gráficos são desenhados e depois que a IA escreve, que são os dois momentos em que o documento pode mudar de tamanho; o painel com o resultado continua aparecendo. E saiu o botão de <b>alternância entre modos de paginação</b>, que era mais do que redundante — era risco: a escolha ficava gravada no navegador, de modo que um clique de teste alterava silenciosamente todos os pareceres gerados depois, sem nada denunciar no documento. A distribuição por seção, com uma folha para cada e vão branco no pé, não existe mais. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.5</b></td><td>19/08/2026</td><td><b>Papel timbrado: as folhas criadas pelo empacotador passam a clonar a arte das folhas originais, e a régua avisa quando ela não carrega.</b> Até aqui, a folha nova montada pela distribuição compacta recriava o elemento do timbrado do zero — equivalente na intenção, mas abrindo margem para diferença sutil em relação às folhas que sempre imprimiram certo. Agora ela <b>clona</b> o próprio elemento vindo do documento, com os mesmos atributos e o mesmo tratamento de erro. Junto veio um diagnóstico que faltava: quando o arquivo <b>timbrado.jpg</b> não está na mesma pasta do aplicativo — o que acontece com facilidade ao abrir o app numa pasta solta para testar — o app esconde a imagem quebrada <b>em silêncio</b>, e o documento sai com o miolo correto mas sem cabeçalho nem rodapé, o que se confunde com defeito de layout. A régua passa a contar em quantas folhas a arte carregou e a avisar, em destaque, quando estiver faltando. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.4</b></td><td>19/08/2026</td><td><b>A régua avisava de "pouca folga" justamente nas folhas que o empacotador tinha preenchido como devia.</b> O aviso foi escrito na v7.39.2, quando a distribuição era manual: ali, uma folha com menos de 12 mm de sobra estava mesmo à beira do corte. No modo compacto o critério se inverte — encher a folha até a reserva de 6 mm é <b>o objetivo</b>, e apontar isso como problema é reclamar do funcionamento correto. Agora o limiar depende do modo: na distribuição compacta só é sinalizada a folha que ficou <b>abaixo da reserva</b>, e quando nenhuma fica, a régua explica que a sobra de poucos milímetros é o resultado esperado. Saiu junto a advertência de que "qualquer texto novo da IA pode cortar": ela vale para a distribuição manual, mas não para a compacta, em que a chegada dos textos da IA <b>redistribui as folhas automaticamente</b>. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.3</b></td><td>19/08/2026</td><td><b>O botão de paginação dizia qual modo estava ativo, mas parecia dizer para qual iria mudar.</b> Escrito apenas como "Paginação: compacta", o rótulo é ambíguo — e como a escolha fica gravada no navegador, bastava tê-lo clicado uma vez, para conferir, e o parecer seguia sendo gerado no outro modo sem nada denunciar. O botão passa a mostrar as duas informações de uma vez: o modo <b>ativo</b>, com um visto e destaque, e a <b>ação</b> do clique. Além disso, a régua agora <b>declara em qual modo mediu</b> — sem isso, a lista de folhas não se interpreta: 15 folhas com bastante sobra em cada uma são o resultado normal da distribuição por seção, e seriam sinal de defeito na compacta. Por fim, a medição automática após os gráficos passou a valer <b>nos dois modos</b>, e não apenas no compacto. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
@@ -929,7 +932,9 @@ function go(page) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page===pageMenu));
   ['dashboard','cnpj','empresas','analise','importar','config','reforma','relatorios','parametros','usuarios','versoes'].forEach(p => $id('page-'+p).style.display = p===page?'block':'none');
   if (page==='dashboard') dashAnalises();
-  if (page==='cnpj') { carregarDashboard(); fornTrocarAba(FO_TIPO); }
+  if (page==='cnpj') { carregarDashboard(); fornTrocarAba(FO_TIPO);
+    empCarregar().then(()=>{ empGlobalAplicar('an-empresa','an-ano');   // v7.41.6: a análise segue a empresa do topo
+      if (EMP_GLOBAL.cnpj && AN?.cnpj !== EMP_GLOBAL.cnpj) anTrocarEmpresa(); }); }
   if (page==='relatorios') { empCarregar().then(()=>{ const sel=$id('rl-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; sel.value=at||''; if (EMP_GLOBAL.cnpj) empGlobalAplicar('rl-empresa','rl-ano'); else if (AN?.cnpj) { sel.value=AN.cnpj; $id('rl-ano').value=AN.ano; } rlCarregar(); }); }
   if (page==='empresas') empCarregar();
   if (page==='analise') { if (!AN) AN = anNovo('', +($id('an-ano').value||new Date().getFullYear()));
@@ -978,6 +983,17 @@ function gSincronizar(page){
 async function gTrocar(){
   const cnpj = $id('g-empresa').value;
   const ano  = +$id('g-ano').value || new Date().getFullYear();
+  // v7.41.6: na Consulta CNPJ, trocar de empresa descarta o que está na tela — avisa antes
+  if (APP.page==='cnpj' && cnpj !== (EMP_GLOBAL.cnpj||'') && fornPendente()){
+    const de = empNomeDe(fornDono()||EMP_GLOBAL.cnpj) || fmtCNPJ(fornDono()||EMP_GLOBAL.cnpj) || 'a empresa anterior';
+    if (!await dlgSimNao('Trocar de empresa?',
+        'A tela tem consulta de ' + de + ' que ainda NÃO foi gravada no histórico.\n\n'
+        + 'Trocar de empresa limpa a tela e descarta o que está aqui.\n\n'
+        + 'Grave antes, se quiser guardar.',
+        'Trocar assim mesmo', 'Cancelar')){
+      $id('g-empresa').value = EMP_GLOBAL.cnpj || ''; return;
+    }
+  }
   empGlobalSet(cnpj, ano);
   for (const id of ['an-empresa','rf-empresa','rl-empresa']){
     const s = $id(id); if (s && [...s.options].some(o=>o.value===cnpj)) s.value = cnpj;
@@ -987,6 +1003,7 @@ async function gTrocar(){
   const p = APP.page;
   if (p==='analise' || p==='importar' || p==='config') await anTrocarEmpresa();
   else if (p==='reforma') rfTrocar();
+  else if (p==='cnpj') await fornTrocarEmpresa();   // v7.41.6
   gSincronizar(p);
 }
 // v7.1: EMPRESA GLOBAL — a empresa (e o ano) selecionados em qualquer módulo valem para todos.
@@ -1275,7 +1292,75 @@ function fornParse(txt){
   }
   return out;
 }
+// ═══ v7.41.6: EMPRESA DE DESTINO — nome, estado pendente e troca de empresa na Consulta CNPJ ═══
+// O arquivo do Questor traz só as CONTRAPARTES: não há como saber de qual empresa ele é.
+// Como não dá para detectar o erro, o app passa a EXIBIR o destino em todo ponto de decisão
+// e a impedir que um analítico importado sob uma empresa seja gravado em outra.
+function empNomeDe(cnpj){
+  const c = limparCNPJ(cnpj||''); if (!c) return '';
+  const e = (typeof EMPRESAS!=='undefined' && EMPRESAS || []).find(x=>limparCNPJ(x.cnpj)===c);
+  if (e && e.razao_social) return e.razao_social;
+  const o = [...($id('an-empresa')?.options||[])].find(o=>o.value===c);
+  return o ? o.textContent.trim() : '';
+}
+function empDestino(){
+  const cnpj = (EMP_GLOBAL && EMP_GLOBAL.cnpj) || '';
+  const nome = empNomeDe(cnpj);
+  return { cnpj, nome, rotulo: cnpj ? (nome ? nome + ' · ' + fmtCNPJ(cnpj) : fmtCNPJ(cnpj)) : '' };
+}
+// Cabeçalho fixo dos diálogos de importação: a primeira coisa que ele lê é ONDE isto vai entrar.
+function empDestinoCabec(){
+  const d = empDestino();
+  return d.cnpj
+    ? '\u25B6 IMPORTANDO EM: ' + d.rotulo + '\n'
+      + '   (a empresa vem da barra do topo — o arquivo do Questor não diz de quem é)\n\n'
+    : '\u26A0 NENHUMA EMPRESA SELECIONADA na barra do topo.\n\n';
+}
+// Analítico/triagem na tela que ainda não foi gravado no histórico
+function fornPendente(){
+  const a = ['servico','revenda'].some(t => FOT[t] && !FOT[t]._salvo);
+  const b = ['compra','venda'].some(t => TRI[t] && !TRI[t]._salvo);
+  return a || b;
+}
+function fornDono(){                                  // de qual empresa é o que está na tela
+  for (const t of ['compra','venda']) if (TRI[t] && TRI[t].cnpjEmpresa) return TRI[t].cnpjEmpresa;
+  for (const t of ['servico','revenda']) if (FOT[t] && FOT[t].cnpjEmpresa) return FOT[t].cnpjEmpresa;
+  return '';
+}
+function fornZerar(){                                 // limpa a tela ao trocar de empresa
+  FOT = { servico:null, revenda:null, compra:null, venda:null };
+  FO = null; TRI = { venda:null, compra:null };
+  for (const t of ['compra','venda']){ const d = $id('tri-dash-'+t); if (d){ d.innerHTML=''; d.style.display='none'; } }
+  const pa = $id('fo-painel'); if (pa) pa.style.display='none';
+  fornTrocarAba('servico');
+}
+// Trocar de empresa na Consulta CNPJ: recarrega a análise e zera o que era da empresa anterior.
+async function fornTrocarEmpresa(){
+  await anTrocarEmpresa();          // AN passa a ser a da empresa/ano selecionados
+  fornZerar();
+  fornDestinoRender();
+  carregarDashboard();
+  const d = empDestino();
+  toast(d.cnpj ? 'Consulta CNPJ agora em ' + (d.nome || fmtCNPJ(d.cnpj)) + ' — a tela foi limpa.'
+               : 'Nenhuma empresa selecionada — a tela foi limpa.');
+}
+function fornDestinoRender(){
+  const el = $id('fo-destino'); if (!el) return;
+  const d = empDestino();
+  if (d.cnpj){
+    el.style.display = 'block';
+    el.style.background = '#eef6ff'; el.style.border = '1px solid #b9d8ff'; el.style.color = '#0b3f7a';
+    el.innerHTML = '\u25B6 Importando em <b>' + esc(d.nome || fmtCNPJ(d.cnpj)) + '</b>'
+      + (d.nome ? ' <span class="hint">· ' + fmtCNPJ(d.cnpj) + '</span>' : '')
+      + ' <span class="hint">— troque na barra do topo se não for esta</span>';
+  } else {
+    el.style.display = 'block';
+    el.style.background = '#fff6e6'; el.style.border = '1px solid #f0cf94'; el.style.color = '#7a4a06';
+    el.innerHTML = '\u26A0 <b>Nenhuma empresa selecionada</b> <span class="hint">— escolha na barra do topo antes de importar</span>';
+  }
+}
 function fornTrocarAba(tipo){
+  fornDestinoRender();                                   // v7.41.6
   if (tipo==='totais') tipo = FOT[FO_TOT_ULT] ? FO_TOT_ULT : (FOT.revenda ? 'revenda' : 'servico');
   FO_TIPO = tipo; FO = FOT[tipo];
   const analitico = (tipo==='compra' || tipo==='venda');
@@ -1628,7 +1713,7 @@ function triParse(rows, tipo, lado){
   const itens = Object.values(por).sort((a,b)=>b.valor-a.valor);
   if (!itens.length) return null;
   return { tipo, itens, de, ate, docs, periodo: de&&ate ? `${de.split('-').reverse().join('/')} a ${ate.split('-').reverse().join('/')}` : '',
-    cnpjEmpresa: (EMP_GLOBAL?.cnpj || AN?.cnpj || ''), nomeEmpresa: (EMP_GLOBAL?.razao_social || ''), _salvo:null };
+    cnpjEmpresa: (EMP_GLOBAL?.cnpj || AN?.cnpj || ''), nomeEmpresa: empNomeDe(EMP_GLOBAL?.cnpj || AN?.cnpj || ''), _salvo:null };
 }
 // v7.34.0: 1/2/3 = entrada (compra) · 5/6/7 = saída (venda) · 8xxx = NFS-e tomada (entrada, Questor) · 9xxx = NFS-e emitida (saída)
 function triDetectar(t){
@@ -1675,7 +1760,8 @@ async function triProcessarWorkbook(wb, nomeArq, tipo){
         const bl = (x, rot) => !x ? '' : rot + ':\n   ' + x.docs + ' lançamentos · ' + x.itens.length + ' parceiros · R$ '
           + fmt(x.itens.reduce((a,i)=>a+(+i.valor||0),0)) + '\n   CFOPs: ' + (fornCfopResumo(x.itens)||'—') + '\n';
         if (!await dlgSimNao('Confirme o que foi lido em "' + nomeArq + '"',
-            'Exportação ÚNICA do Questor (coluna Tipo) — entradas e saídas separadas automaticamente, cada uma na sua aba.\n'
+            empDestinoCabec()
+            + 'Exportação ÚNICA do Questor (coluna Tipo) — entradas e saídas separadas automaticamente, cada uma na sua aba.\n'
             + 'Período: ' + ((tE&&tE.periodo)||(tS&&tS.periodo)||'não identificado') + '\n\n'
             + bl(tE,'ENTRADA → arquivo de compra (fornecedores)')
             + bl(tS,'SAÍDA → arquivo de venda (clientes)')
@@ -1700,7 +1786,8 @@ async function triProcessarWorkbook(wb, nomeArq, tipo){
       const cf = fornCfopResumo(t.itens);
       const tot = t.itens.reduce((a,i)=>a+(+i.valor||0),0);
       const ok = await dlgSimNao('Confirme o que foi lido em "' + nomeArq + '"',
-        'Tipo detectado pelos CFOPs: ' + (det.tipo==='venda' ? 'ANALÍTICO DE VENDA (clientes)' : 'ANALÍTICO DE COMPRA (fornecedores)')
+        empDestinoCabec()
+        + 'Tipo detectado pelos CFOPs: ' + (det.tipo==='venda' ? 'ANALÍTICO DE VENDA (clientes)' : 'ANALÍTICO DE COMPRA (fornecedores)')
         + (det.tipo!==tipo ? '  ⚠️ diferente do botão usado' : '') + '\n'
         + 'Período: ' + (t.periodo || 'não identificado') + '\n'
         + 'Lançamentos: ' + t.docs + '  ·  Parceiros: ' + t.itens.length + '  ·  Total: R$ ' + fmt(tot) + '\n'
@@ -1806,6 +1893,7 @@ function triDash(tipo){
 async function triSalvar(tipo, auto){
   const T = TRI[tipo]; if (!T) return false;
   if (!T.cnpjEmpresa){ if(!auto) alert('Selecione a empresa (barra do topo) antes de gravar — a triagem precisa de um dono.'); return false; }
+  if (!triDonoConfere(T, auto)) return false;   // v7.41.6
   try {
     await garantirEmpresa(T.cnpjEmpresa, T.nomeEmpresa||null, null);
     const S = triStats(T);
@@ -1818,8 +1906,20 @@ async function triSalvar(tipo, auto){
   } catch(e){ if(!auto) alert('Erro ao gravar a triagem: '+e.message); return false; }
 }
 
+// v7.41.6: o cnpjEmpresa é carimbado NA IMPORTAÇÃO. Se a barra do topo mudou depois,
+// gravar escreveria no CNPJ antigo, em silêncio. Aqui a divergência vira bloqueio explícito.
+function triDonoConfere(T, auto){
+  const atual = (EMP_GLOBAL && EMP_GLOBAL.cnpj) || '';
+  if (!atual || !T.cnpjEmpresa || limparCNPJ(atual) === limparCNPJ(T.cnpjEmpresa)) return true;
+  if (!auto) alert('Gravação bloqueada — a empresa mudou depois da importação.\n\n'
+    + 'Este arquivo foi importado em: ' + (empNomeDe(T.cnpjEmpresa) || fmtCNPJ(T.cnpjEmpresa)) + '\n'
+    + 'A barra do topo está em: ' + (empNomeDe(atual) || fmtCNPJ(atual)) + '\n\n'
+    + 'Volte a barra para a empresa da importação e grave, ou importe o arquivo de novo já com a empresa certa selecionada.');
+  return false;
+}
 async function fornSalvar(auto){
   if (!FO || !FO.itens.some(i=>i.classe)) { if (!auto) toast('Consulte os fornecedores antes de salvar.'); return false; }
+  if (FO.cnpjEmpresa && !triDonoConfere(FO, auto)) return false;   // v7.41.6
   if (!FO.cnpjEmpresa){
     alert('A consulta NÃO pôde ser gravada no histórico.\n\n'
       + 'O CNPJ da empresa dona do relatório não foi identificado no cabeçalho do arquivo — sem ele não há onde guardar.\n\n'
@@ -3859,7 +3959,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.41.5';
+const APP_VERSAO = '7.41.6';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
