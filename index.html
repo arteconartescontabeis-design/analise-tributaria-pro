@@ -248,7 +248,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.41.0</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.41.1</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -646,7 +646,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.41.0</b> <span class="badge ok">atual</span></td><td>19/08/2026</td><td><b>Fechada a frente de paginação: a distribuição compacta vira o único modo e os dois botões saem da barra do parecer.</b> Com o PDF real conferido — timbrado em todas as folhas, nenhuma fora de margem —, a rede de segurança deixou de ser necessária. Saiu o botão <b>"Conferir páginas"</b>, que já era redundante: a régua roda sozinha depois que os gráficos são desenhados e depois que a IA escreve, que são os dois momentos em que o documento pode mudar de tamanho; o painel com o resultado continua aparecendo. E saiu o botão de <b>alternância entre modos de paginação</b>, que era mais do que redundante — era risco: a escolha ficava gravada no navegador, de modo que um clique de teste alterava silenciosamente todos os pareceres gerados depois, sem nada denunciar no documento. A distribuição por seção, com uma folha para cada e vão branco no pé, não existe mais. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.41.1</b> <span class="badge ok">atual</span></td><td>20/08/2026</td><td><b>🐞 Correção: excluir dados voltou a funcionar — requer setup_v7411.sql.</b> O soft-delete da v7.38.0 nunca chegou a excluir nada: toda tentativa devolvia <code>403 · 42501 · new row violates row-level security policy</code>. A causa estava na própria política do setup_v737_v2, que é <code>FOR ALL</code> e traz <code>excluido_em IS NULL</code> dentro do <code>USING</code>. Numa política <code>FOR ALL</code> esse <code>USING</code> também vale como política de <b>SELECT</b>, e o PostgreSQL exige que a linha resultante de um UPDATE continue visível por ela — marcar <code>excluido_em</code> torna a linha invisível, então a gravação era recusada. Não era dado corrompido nem erro de permissão: era impossível por construção, nas quatro tabelas (<code>atp_analises</code>, <code>atp_empresas</code>, <code>atp_fornec</code>, <code>atp_usuarios</code>). A exclusão passa agora pelas funções <code>atp_excluir_dados</code>, <code>atp_excluir_empresa</code> e <code>atp_excluir_usuario</code> (<code>SECURITY DEFINER</code>), que conferem o escritório dono do CNPJ — e, no caso de usuários, exigem papel admin e proíbem a auto-exclusão — antes de marcar. As políticas ficam intocadas: a linha excluída continua sumindo das telas sozinha, sem filtro novo em nenhuma consulta. Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.0</b></td><td>19/08/2026</td><td><b>Fechada a frente de paginação: a distribuição compacta vira o único modo e os dois botões saem da barra do parecer.</b> Com o PDF real conferido — timbrado em todas as folhas, nenhuma fora de margem —, a rede de segurança deixou de ser necessária. Saiu o botão <b>"Conferir páginas"</b>, que já era redundante: a régua roda sozinha depois que os gráficos são desenhados e depois que a IA escreve, que são os dois momentos em que o documento pode mudar de tamanho; o painel com o resultado continua aparecendo. E saiu o botão de <b>alternância entre modos de paginação</b>, que era mais do que redundante — era risco: a escolha ficava gravada no navegador, de modo que um clique de teste alterava silenciosamente todos os pareceres gerados depois, sem nada denunciar no documento. A distribuição por seção, com uma folha para cada e vão branco no pé, não existe mais. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.5</b></td><td>19/08/2026</td><td><b>Papel timbrado: as folhas criadas pelo empacotador passam a clonar a arte das folhas originais, e a régua avisa quando ela não carrega.</b> Até aqui, a folha nova montada pela distribuição compacta recriava o elemento do timbrado do zero — equivalente na intenção, mas abrindo margem para diferença sutil em relação às folhas que sempre imprimiram certo. Agora ela <b>clona</b> o próprio elemento vindo do documento, com os mesmos atributos e o mesmo tratamento de erro. Junto veio um diagnóstico que faltava: quando o arquivo <b>timbrado.jpg</b> não está na mesma pasta do aplicativo — o que acontece com facilidade ao abrir o app numa pasta solta para testar — o app esconde a imagem quebrada <b>em silêncio</b>, e o documento sai com o miolo correto mas sem cabeçalho nem rodapé, o que se confunde com defeito de layout. A régua passa a contar em quantas folhas a arte carregou e a avisar, em destaque, quando estiver faltando. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.4</b></td><td>19/08/2026</td><td><b>A régua avisava de "pouca folga" justamente nas folhas que o empacotador tinha preenchido como devia.</b> O aviso foi escrito na v7.39.2, quando a distribuição era manual: ali, uma folha com menos de 12 mm de sobra estava mesmo à beira do corte. No modo compacto o critério se inverte — encher a folha até a reserva de 6 mm é <b>o objetivo</b>, e apontar isso como problema é reclamar do funcionamento correto. Agora o limiar depende do modo: na distribuição compacta só é sinalizada a folha que ficou <b>abaixo da reserva</b>, e quando nenhuma fica, a régua explica que a sobra de poucos milímetros é o resultado esperado. Saiu junto a advertência de que "qualquer texto novo da IA pode cortar": ela vale para a distribuição manual, mas não para a compacta, em que a chegada dos textos da IA <b>redistribui as folhas automaticamente</b>. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.3</b></td><td>19/08/2026</td><td><b>O botão de paginação dizia qual modo estava ativo, mas parecia dizer para qual iria mudar.</b> Escrito apenas como "Paginação: compacta", o rótulo é ambíguo — e como a escolha fica gravada no navegador, bastava tê-lo clicado uma vez, para conferir, e o parecer seguia sendo gerado no outro modo sem nada denunciar. O botão passa a mostrar as duas informações de uma vez: o modo <b>ativo</b>, com um visto e destaque, e a <b>ação</b> do clique. Além disso, a régua agora <b>declara em qual modo mediu</b> — sem isso, a lista de folhas não se interpreta: 15 folhas com bastante sobra em cada uma são o resultado normal da distribuição por seção, e seriam sinal de defeito na compacta. Por fim, a medição automática após os gráficos passou a valer <b>nos dois modos</b>, e não apenas no compacto. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
@@ -788,14 +788,14 @@ const $id = id => document.getElementById(id);
 
 // ── SUPABASE (PostgREST helper, padrão Artecon) ────────────────────────
 async function supa(method, table, opts = {}) {
-  const { body, params, returning=false } = opts;
+  const { body, params, returning=false, semPrefer=false } = opts;   // v7.41.1: RPC não leva Prefer de upsert
   const url = new URL(`${SUPA_URL}/rest/v1/${table}`);
   if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.append(k,v));
   if (APP.token) await garantirToken();                    // v7.17.1: renova o token vencido antes do PostgREST
   const headers = { 'apikey':SUPA_KEY, 'Content-Type':'application/json' };
   if (APP.token) headers['Authorization'] = `Bearer ${APP.token}`;
   if (returning) headers['Prefer'] = 'return=representation,resolution=merge-duplicates';
-  else if (method==='POST') headers['Prefer'] = 'resolution=merge-duplicates';
+  else if (method==='POST' && !semPrefer) headers['Prefer'] = 'resolution=merge-duplicates';
   const res = await fetch(url, { method, headers, body: body?JSON.stringify(body):undefined });
   if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t}`); }
   const txt = await res.text();
@@ -3806,7 +3806,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.41.0';
+const APP_VERSAO = '7.41.1';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -4019,15 +4019,16 @@ async function empExcluir(cnpj) {
   const e = EMPRESAS.find(x=>x.cnpj===cnpj);
   if (!confirm(`Excluir a empresa ${e?.razao_social||fmtCNPJ(cnpj)}?\n\nAs análises e relatórios salvos desta empresa somem das telas do app (o dado em si é preservado — fale com o suporte técnico se precisar recuperar).`)) return;
   try {
-    // v7.38.0 (C4): soft-delete — marca excluido_em em vez de apagar de fato
-    const agora = new Date().toISOString();
-    const antes = await supa('GET','atp_analises',{ params:{ select:'ano', cnpj:`eq.${cnpj}` } }).catch(()=>[]);
-    const delAn = await supa('PATCH','atp_analises',{ params:{ cnpj:`eq.${cnpj}` }, body:{ excluido_em: agora }, returning:true }).catch(()=>null);
-    const delEmp = await supa('PATCH','atp_empresas',{ params:{ cnpj:`eq.${cnpj}` }, body:{ excluido_em: agora }, returning:true }).catch(()=>null);
-    const okAn = !antes.length || (Array.isArray(delAn) && delAn.length >= antes.length);
-    const okEmp = Array.isArray(delEmp) && delEmp.length > 0;
-    if (!okAn || !okEmp) {
-      alert('A exclusão não foi concluída por falta de permissão no banco em '+(!okAn?'atp_analises':'')+(!okAn&&!okEmp?' e ':'')+(!okEmp?'atp_empresas':'')+'.\n\nExecute o setup_v737_v2.sql e o setup_v738.sql no SQL Editor do Supabase e tente novamente.');
+    // v7.41.1: a exclusão passa pela função atp_excluir_empresa (SECURITY DEFINER).
+    // O PATCH direto da v7.38.0 era recusado pela própria RLS — ver setup_v7411.sql.
+    let r;
+    try { r = await supa('POST','rpc/atp_excluir_empresa',{ body:{ p_cnpj: cnpj }, semPrefer:true }); }
+    catch(e){
+      alert('A exclusão não foi concluída: '+e.message+'\n\nSe a mensagem citar "atp_excluir_empresa", execute o setup_v7411.sql no SQL Editor do Supabase.');
+      empCarregar(); return;
+    }
+    if (!r || !r.empresa) {
+      alert('A empresa não foi encontrada para exclusão. Atualize a lista e tente novamente.');
       empCarregar(); return;
     }
     // limpa estados e telas que apontavam para a empresa excluída
@@ -4154,9 +4155,10 @@ async function usSenha(email) {
 }
 async function usExcluir(email) {
   if (!confirm(`Excluir ${email} da lista de usuários do app?\n\nAtenção: isto remove o acesso às telas do app (fica registrado quem e quando); para revogar o LOGIN, exclua a conta também no painel do Supabase (Authentication → Users).`)) return;
-  try { await supa('PATCH','atp_usuarios',{ params:{ email:`eq.${email}` }, body:{ excluido_em: new Date().toISOString() } });   // v7.38.0 (C4): soft-delete
+  try { await supa('POST','rpc/atp_excluir_usuario',{ body:{ p_email: email }, semPrefer:true });   // v7.41.1: RLS recusava o PATCH — ver setup_v7411.sql
     toast('Usuário removido da lista.'); usCarregar(); }
-  catch(e){ toast('Erro: '+e.message); }
+  catch(e){ toast('Erro: '+e.message
+      + (/atp_excluir_usuario/.test(e.message||'') ? ' — execute o setup_v7411.sql no Supabase.' : '')); }
 }
 
 
@@ -5606,15 +5608,12 @@ async function anLimparDados() {
     + `A empresa continua cadastrada e o histórico de CNPJs consultados é preservado.`,
     'Sim, excluir', 'Não, cancelar')) return;
   try {
-    // v7.38.0 (C4): soft-delete — marca excluido_em em vez de apagar de fato
-    const agora = new Date().toISOString();
-    if (tudo){
-      await supa('PATCH','atp_analises',{ params:{ cnpj:'eq.'+cnpj }, body:{ excluido_em: agora } });
-      await supa('PATCH','atp_fornec',  { params:{ cnpj:'eq.'+cnpj }, body:{ excluido_em: agora } });
-    } else {
-      await supa('PATCH','atp_analises',{ params:{ cnpj:'eq.'+cnpj, ano:'eq.'+alvoAno }, body:{ excluido_em: agora } });
-    }
-  } catch(e){ alert('Erro ao excluir: '+e.message); return; }
+    // v7.41.1: a exclusão passa pela função atp_excluir_dados (SECURITY DEFINER).
+    // O PATCH direto da v7.38.0 era recusado pela própria RLS — ver setup_v7411.sql.
+    await supa('POST','rpc/atp_excluir_dados',{
+      body:{ p_cnpj: cnpj, p_ano: tudo ? null : alvoAno, p_fornec: tudo }, semPrefer:true });
+  } catch(e){ alert('Erro ao excluir: '+e.message
+      + (/atp_excluir_dados/.test(e.message||'') ? '\n\nExecute o setup_v7411.sql no SQL Editor do Supabase.' : '')); return; }
   if (tudo || +AN?.ano === +alvoAno){ AN = anNovo(cnpj, AN?.ano || +$id('an-ano').value); AN_SUJO = false; }
   if (tudo){ FOT = { servico:null, revenda:null, compra:null, venda:null }; FO = null; TRI = { venda:null, compra:null }; $id('fo-painel').style.display='none'; }
   anRenderTabs(); anRenderGrid(); anRecalcular();
