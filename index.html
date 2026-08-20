@@ -117,6 +117,7 @@ canvas{max-height:340px}
 .pp-p{font-size:13px;line-height:1.65;text-align:justify;margin:8px 0}
 .pp-enq{background:#fbf3e2;border-left:3px solid #d99a2b;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12.5px;line-height:1.6;margin:10px 0}
 .pp-enq-v{background:#f9ecee;border-left-color:#8c2f39}
+.pp-ficha{background:#f2f5f8;border-left:3px solid #1a5276;border-radius:0 8px 8px 0;padding:8px 12px;font-size:11.5px;line-height:1.55;color:#2c3e50;margin:6px 0 10px}
 .pp-alerta{background:#f9ecee;border-left:3px solid #8c2f39;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;line-height:1.55;margin:10px 0}
 .pp-timeline{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
 .pp-tl-item{flex:1;min-width:130px;background:var(--soft,#f5f6f9);border:1px solid var(--line,#dde1e8);border-radius:8px;padding:9px 10px;font-size:11px;display:flex;flex-direction:column;gap:2px}
@@ -248,7 +249,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.41.1</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.41.5</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -286,15 +287,19 @@ canvas{max-height:340px}
       </div>
       <div class="card">
         <h3>2. Informe os CNPJs — triagem ou análise de fornecedores</h3>
-        <div class="hint" style="margin-bottom:8px">Cole uma lista de CNPJs (triagem simples) <b>ou importe um arquivo</b> — os botões <b>📄 Arquivo de compra</b> e <b>👥 Arquivo de venda</b> importam os analíticos por documento do Questor (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF) e a aba <b>📋 Totais</b> aceita os relatórios de entrada (Totais ISS e Totais ICMS). <b>O tipo é detectado pelo conteúdo e confirmado na tela antes de qualquer coisa entrar</b> — o nome do arquivo não decide nada. Depois vêm a consulta automática na Receita, o dashboard, a gravação e o lançamento por CFOP. Qualquer outro arquivo/lista segue como triagem simples.</div>
+        <div class="hint" style="margin-bottom:8px">Importe a <b>exportação única do Questor</b> (colunas Tipo · Data · Natureza/CFOP · Valor Contábil · Razão Social · CNPJ/CPF): as <b>entradas</b> viram a análise de fornecedores e as <b>saídas</b>, a de clientes — separadas automaticamente pela coluna Tipo e <b>confirmadas na tela antes de qualquer coisa entrar</b>. Depois vêm a consulta automática na Receita, o dashboard, a relação por regime no item 3, a gravação e o lançamento por CFOP. Um arquivo que seja só uma lista de CNPJs segue como triagem simples, com consulta automática.</div>
         <input type="file" id="fo-arq" accept=".csv,.txt,.xls,.xlsx" multiple style="display:none" onchange="fornArquivo(this)">
+        <!-- v7.41.4 (pedido dele): saem da tela SÓ os 4 botões de importação (📄 compra, 👥 venda,
+             📋 Totais e o "Importar relatório..."); eles seguem no DOM porque fornTrocarAba/fo-btn-imp
+             são o roteador do painel 🚚 e o processo de lançamento continua passando por aqui.
+             "Consultar na base da Receita" e "🧹 Limpar dados" permanecem visíveis (v7.41.4). -->
         <div id="fo-abas" style="display:flex;gap:8px;align-items:center;margin:10px 0 0;flex-wrap:wrap">
-          <button class="btn" id="fo-aba-compra" onclick="fornTrocarAba('compra')">📄 Arquivo de compra (fornecedor)</button>
-          <button class="btn" id="fo-aba-venda" onclick="fornTrocarAba('venda')">👥 Arquivo de venda (cliente)</button>
-          <button class="btn" id="fo-aba-totais" onclick="fornTrocarAba('totais')">📋 Totais — relatórios de entrada</button>
+          <button class="btn" id="fo-aba-compra" style="display:none" onclick="fornTrocarAba('compra')">📄 Arquivo de compra (fornecedor)</button>
+          <button class="btn" id="fo-aba-venda" style="display:none" onclick="fornTrocarAba('venda')">👥 Arquivo de venda (cliente)</button>
+          <button class="btn" id="fo-aba-totais" style="display:none" onclick="fornTrocarAba('totais')">📋 Totais — relatórios de entrada</button>
           <input type="file" id="tri-arq-compra" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'compra')">
           <input type="file" id="tri-arq-venda" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'venda')">
-          <button class="btn solid" id="fo-btn-imp" onclick="$id('fo-arq').click()">Importar relatório(s)</button>
+          <button class="btn solid" id="fo-btn-imp" style="display:none" onclick="$id('fo-arq').click()">Importar relatório(s)</button>
           <span class="hint" id="fo-aba-hint"></span>
         </div>
         <div id="fo-painel" style="display:none;margin:10px 0;border:1px solid var(--border,#e3e8ee);border-radius:10px;padding:12px;background:#fbfcfe">
@@ -315,16 +320,13 @@ canvas{max-height:340px}
           <div style="overflow:auto"><table class="tbl"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead><tbody id="fo-body"></tbody></table></div>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn solid" id="fo-salvar" style="display:none" onclick="fornSalvar()">💾 Salvar análise no histórico da empresa</button><button class="btn" id="fo-desp" style="display:none" onclick="fornLancarDespesas()" title="Rateia o total do relatório pelos meses do período em Despesas › Outras, na análise da empresa">➕ Lançar total nas Despesas da análise</button></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 260px;gap:20px">
-          <div>
-            <label>Colar lista (um CNPJ por linha, com ou sem pontuação)</label>
-            <textarea id="cnpj-lista" rows="6" placeholder="00.000.000/0001-00&#10;11111111000111&#10;..."></textarea>
-          </div>
-          <div>
-            <label>Ou importar arquivo (CSV / Excel)</label>
-            <input type="file" id="cnpj-file" accept=".csv,.xlsx,.xls,.xlsm" onchange="importarArquivo(this)">
-            <div class="hint" style="margin-top:10px">O sistema localiza automaticamente a coluna de CNPJs no arquivo. Duplicados e CNPJs com dígito verificador inválido são descartados com aviso.</div>
-          </div>
+        <div>
+          <!-- v7.41.3: a caixa de colar lista saiu da tela; o textarea permanece como buffer
+               interno da triagem simples (arquivo de lista → extrai CNPJs → consulta sozinho). -->
+          <textarea id="cnpj-lista" rows="6" style="display:none"></textarea>
+          <label>Importar arquivo (CSV / Excel)</label>
+          <input type="file" id="cnpj-file" accept=".csv,.xlsx,.xls,.xlsm" onchange="importarArquivo(this)">
+          <div class="hint" style="margin-top:10px">Um único arquivo: a exportação do Questor abre o painel 🚚 completo; uma lista simples de CNPJs vai direto para a consulta na Receita. Duplicados e CNPJs com dígito verificador inválido são descartados com aviso.</div>
         </div>
         <div class="toolbar" style="margin-top:16px;margin-bottom:0">
           <button class="btn solid" id="btn-consultar" onclick="comBotao('btn-consultar','Consultando',()=>iniciarConsulta())">Consultar na base da Receita</button>
@@ -337,14 +339,13 @@ canvas{max-height:340px}
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <h3 style="margin:0">3. Resultado da triagem</h3>
-          <div class="hint" style="flex-basis:100%;margin-top:4px">A triagem apenas <b>classifica o regime</b> dos CNPJs — não traz valores e por isso não lança nada na análise.
-            Para lançar compras ou despesas, importe o relatório <b>Totais ISS por Fornecedor/Cliente</b> (serviços) ou <b>Totais ICMS por Fornecedor/Cliente</b> (entradas de revenda)
-            pelo botão da aba correspondente, no bloco 1 acima.</div>
+          <div class="hint" style="flex-basis:100%;margin-top:4px">Relação das empresas consultadas com o regime de cada uma — <b>Simples Nacional, MEI e regime normal</b>. Alimentada pela exportação do Questor (fornecedores + clientes) ou por uma lista simples de CNPJs; esta relação classifica, não lança valores. Os lançamentos por CFOP continuam no painel 🚚 do item 2.</div>
           <div style="display:flex;gap:10px">
             <button class="btn" onclick="exportarCSV()">Exportar CSV</button>
             <button class="btn solid" onclick="salvarCarteira()" id="btn-salvar" disabled>Salvar na carteira</button>
           </div>
         </div>
+        <div id="regime-cards"></div>
         <div style="overflow-x:auto">
         <table id="tbl-result">
           <thead><tr><th>CNPJ</th><th>Razão Social</th><th>Situação</th><th>Simples</th><th>SIMEI</th><th>Opção desde</th><th>UF/Município</th><th>Porte</th></tr></thead>
@@ -646,7 +647,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.41.1</b> <span class="badge ok">atual</span></td><td>20/08/2026</td><td><b>🐞 Correção: excluir dados voltou a funcionar — requer setup_v7411.sql.</b> O soft-delete da v7.38.0 nunca chegou a excluir nada: toda tentativa devolvia <code>403 · 42501 · new row violates row-level security policy</code>. A causa estava na própria política do setup_v737_v2, que é <code>FOR ALL</code> e traz <code>excluido_em IS NULL</code> dentro do <code>USING</code>. Numa política <code>FOR ALL</code> esse <code>USING</code> também vale como política de <b>SELECT</b>, e o PostgreSQL exige que a linha resultante de um UPDATE continue visível por ela — marcar <code>excluido_em</code> torna a linha invisível, então a gravação era recusada. Não era dado corrompido nem erro de permissão: era impossível por construção, nas quatro tabelas (<code>atp_analises</code>, <code>atp_empresas</code>, <code>atp_fornec</code>, <code>atp_usuarios</code>). A exclusão passa agora pelas funções <code>atp_excluir_dados</code>, <code>atp_excluir_empresa</code> e <code>atp_excluir_usuario</code> (<code>SECURITY DEFINER</code>), que conferem o escritório dono do CNPJ — e, no caso de usuários, exigem papel admin e proíbem a auto-exclusão — antes de marcar. As políticas ficam intocadas: a linha excluída continua sumindo das telas sozinha, sem filtro novo em nenhuma consulta. Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.0</b></td><td>19/08/2026</td><td><b>Fechada a frente de paginação: a distribuição compacta vira o único modo e os dois botões saem da barra do parecer.</b> Com o PDF real conferido — timbrado em todas as folhas, nenhuma fora de margem —, a rede de segurança deixou de ser necessária. Saiu o botão <b>"Conferir páginas"</b>, que já era redundante: a régua roda sozinha depois que os gráficos são desenhados e depois que a IA escreve, que são os dois momentos em que o documento pode mudar de tamanho; o painel com o resultado continua aparecendo. E saiu o botão de <b>alternância entre modos de paginação</b>, que era mais do que redundante — era risco: a escolha ficava gravada no navegador, de modo que um clique de teste alterava silenciosamente todos os pareceres gerados depois, sem nada denunciar no documento. A distribuição por seção, com uma folha para cada e vão branco no pé, não existe mais. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
+                    <tr><td><b>v7.41.5</b> <span class="badge ok">atual</span></td><td>20/08/2026</td><td><b>🐞 Correção: o 📊 da aba Empresas não abria nada após a consulta da exportação do Questor — e foi renomeado para "Resumo estatístico de cliente e fornecedor".</b> O botão sempre esteve na lista, mas clicar nele não mostrava coisa alguma quando a consulta mais recente da empresa era a da exportação única do Questor: a gravação dessas consultas usa um formato de estatísticas diferente do formato dos relatórios de Totais, e o resumo assumia o antigo — o erro interrompia a montagem da tela em silêncio, dando a impressão de que o botão havia sumido. Agora o resumo <b>aceita os dois formatos</b>: nos registros da exportação, as estatísticas são refeitas a partir da própria relação gravada (excluindo movimentação própria, consumidor final não identificado e, nas vendas, os CPFs). O resumo também passou a <b>identificar o tipo de cada consulta no seletor do histórico</b> (compra — fornecedores · venda — clientes · revenda · serviço), a rotular corretamente as consultas de <b>venda</b> (cartão e coluna "Clientes" em vez de "Fornecedores") e ganhou o novo nome no título e no botão da lista de Empresas. Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.4</b></td><td>20/08/2026</td><td><b>Ajuste fino do item 2 (pedido registrado):</b> os botões <b>"Consultar na base da Receita"</b> e <b>"🧹 Limpar dados"</b> voltaram à tela — a consulta continua partindo sozinha após a importação, e o botão passa a servir para reexecutar manualmente. Permanecem fora da tela apenas os quatro botões de importação retirados na v7.41.3: <b>📄 Arquivo de compra (fornecedor)</b>, <b>👥 Arquivo de venda (cliente)</b>, <b>📋 Totais — relatórios de entrada</b> e <b>"Importar relatório(s)/Importar relatório de entrada (Totais ISS/ICMS)"</b> — todo o processo por trás deles segue intacto, e a importação continua exclusivamente pelo campo "Importar arquivo (CSV / Excel)". Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.3</b></td><td>20/08/2026</td><td><b>Consulta CNPJ simplificada para a exportação única do Questor + relação por regime de volta ao item 3.</b> Decisão registrada: neste momento o único relatório importado é a <b>exportação única do Questor</b> (Tipo · Data · Natureza/CFOP · Valor Contábil · Razão Social · CNPJ/CPF), validada contra três arquivos reais. O <b>item 2</b> ficou só com <b>"Importar arquivo (CSV / Excel)"</b>: saíram da tela a caixa de colar lista, os botões 📄 compra / 👥 venda / 📋 Totais e o "Importar relatório(s)" — e, como o campo é agora o caminho oficial do analítico, a pergunta "analítico × triagem simples" (v7.34.3) saiu junto: o arquivo com as colunas do Questor entra <b>direto</b> no processo completo. <b>Nenhum processo foi removido:</b> a confirmação do que foi lido antes de entrar, a separação automática Entrada→fornecedores / Saída→clientes, a consulta na Receita, os dashboards do painel 🚚, a gravação no histórico e o <b>lançamento por CFOP</b> continuam exatamente como estavam (os leitores de Totais ISS/ICMS seguem no código, apenas sem botão). Um arquivo que seja só lista de CNPJs segue como triagem simples — agora com <b>consulta automática</b>, já que o botão "Consultar na base da Receita" também saiu da tela. E o <b>item 3</b> voltou a mostrar a <b>relação de empresas por regime</b>: cartões com contagem e percentual de <b>Simples Nacional, MEI e regime normal</b> acima da tabela, alimentados tanto pela lista simples quanto pela exportação do Questor (fornecedores + clientes deduplicados por CNPJ; a coluna Porte informa se o parceiro é fornecedor, cliente ou os dois). Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.2</b></td><td>20/08/2026</td><td><b>🐞 Correção: o parágrafo de Enquadramento misturava três bases de receita numa frase só.</b> No parecer da WEEEDO o texto anunciava a receita total de <b>R$ 5.349.551,45</b>, listava como composição apenas comércio (R$ 1.867.395,02) e serviços (R$ 2.843.851,69) — que somam <b>R$ 4.711.246,74</b>, o mercado interno — e fechava dizendo que faltavam <b>R$ 88.753,26</b> para o teto. Quem somasse não fechava a conta. <b>Nenhum número estava errado:</b> os R$ 88.753,26 são exatamente R$ 4.800.000,00 − R$ 4.711.246,74, e a comparação é a correta, porque o teto do Simples é medido só sobre o mercado interno — a exportação (R$ 638.304,74) tem teto próprio de igual valor (LC 123/2006, art. 3º, §14). O defeito era de <b>procedência</b>: o payload enviado à IA levava a receita total, comércio e serviços como escalares sem rótulo, sem o campo de exportação e sem dizer sobre que base a margem incidia — e a IA relacionou o que estava mais perto. Agora o payload nomeia a base de cada valor (<code>receitaMercadoInterno</code>, <code>receitaExportacao</code>, <code>tetoSimples.baseDeComparacao</code>, <code>rbt12MaxBase</code>) e proíbe a IA de somar, dividir ou apresentar composições por conta própria. Além disso, uma <b>ficha de composição gerada pelo motor</b> passa a fechar a conta logo abaixo do parágrafo, sempre que houver exportação ou RBT12 projetado diferente do realizado — os números do enquadramento deixam de depender do texto da IA. Duas incoerências vizinhas foram corrigidas junto: o RBT12 do enquadramento é o <b>máximo realizado</b> e passa a ser rotulado como tal (era apresentado sem qualificação, ao lado de valores projetados); e o alerta da trava da 5ª faixa afirmava que o ICMS/ISS segue dentro do DAS mesmo quando o monitor de sublimite já apontava <b>impedimento</b> — agora o alerta e a linha de premissas trazem a ressalva, porque a trava pressupõe ausência de impedimento. A frase da margem no monitor também passou a dizer "do mercado interno" e "% do teto". Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.1</b></td><td>20/08/2026</td><td><b>🐞 Correção: excluir dados voltou a funcionar — requer setup_v7411.sql.</b> O soft-delete da v7.38.0 nunca chegou a excluir nada: toda tentativa devolvia <code>403 · 42501 · new row violates row-level security policy</code>. A causa estava na própria política do setup_v737_v2, que é <code>FOR ALL</code> e traz <code>excluido_em IS NULL</code> dentro do <code>USING</code>. Numa política <code>FOR ALL</code> esse <code>USING</code> também vale como política de <b>SELECT</b>, e o PostgreSQL exige que a linha resultante de um UPDATE continue visível por ela — marcar <code>excluido_em</code> torna a linha invisível, então a gravação era recusada. Não era dado corrompido nem erro de permissão: era impossível por construção, nas quatro tabelas (<code>atp_analises</code>, <code>atp_empresas</code>, <code>atp_fornec</code>, <code>atp_usuarios</code>). A exclusão passa agora pelas funções <code>atp_excluir_dados</code>, <code>atp_excluir_empresa</code> e <code>atp_excluir_usuario</code> (<code>SECURITY DEFINER</code>), que conferem o escritório dono do CNPJ — e, no caso de usuários, exigem papel admin e proíbem a auto-exclusão — antes de marcar. As políticas ficam intocadas: a linha excluída continua sumindo das telas sozinha, sem filtro novo em nenhuma consulta. Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.0</b></td><td>19/08/2026</td><td><b>Fechada a frente de paginação: a distribuição compacta vira o único modo e os dois botões saem da barra do parecer.</b> Com o PDF real conferido — timbrado em todas as folhas, nenhuma fora de margem —, a rede de segurança deixou de ser necessária. Saiu o botão <b>"Conferir páginas"</b>, que já era redundante: a régua roda sozinha depois que os gráficos são desenhados e depois que a IA escreve, que são os dois momentos em que o documento pode mudar de tamanho; o painel com o resultado continua aparecendo. E saiu o botão de <b>alternância entre modos de paginação</b>, que era mais do que redundante — era risco: a escolha ficava gravada no navegador, de modo que um clique de teste alterava silenciosamente todos os pareceres gerados depois, sem nada denunciar no documento. A distribuição por seção, com uma folha para cada e vão branco no pé, não existe mais. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.5</b></td><td>19/08/2026</td><td><b>Papel timbrado: as folhas criadas pelo empacotador passam a clonar a arte das folhas originais, e a régua avisa quando ela não carrega.</b> Até aqui, a folha nova montada pela distribuição compacta recriava o elemento do timbrado do zero — equivalente na intenção, mas abrindo margem para diferença sutil em relação às folhas que sempre imprimiram certo. Agora ela <b>clona</b> o próprio elemento vindo do documento, com os mesmos atributos e o mesmo tratamento de erro. Junto veio um diagnóstico que faltava: quando o arquivo <b>timbrado.jpg</b> não está na mesma pasta do aplicativo — o que acontece com facilidade ao abrir o app numa pasta solta para testar — o app esconde a imagem quebrada <b>em silêncio</b>, e o documento sai com o miolo correto mas sem cabeçalho nem rodapé, o que se confunde com defeito de layout. A régua passa a contar em quantas folhas a arte carregou e a avisar, em destaque, quando estiver faltando. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.4</b></td><td>19/08/2026</td><td><b>A régua avisava de "pouca folga" justamente nas folhas que o empacotador tinha preenchido como devia.</b> O aviso foi escrito na v7.39.2, quando a distribuição era manual: ali, uma folha com menos de 12 mm de sobra estava mesmo à beira do corte. No modo compacto o critério se inverte — encher a folha até a reserva de 6 mm é <b>o objetivo</b>, e apontar isso como problema é reclamar do funcionamento correto. Agora o limiar depende do modo: na distribuição compacta só é sinalizada a folha que ficou <b>abaixo da reserva</b>, e quando nenhuma fica, a régua explica que a sobra de poucos milímetros é o resultado esperado. Saiu junto a advertência de que "qualquer texto novo da IA pode cortar": ela vale para a distribuição manual, mas não para a compacta, em que a chegada dos textos da IA <b>redistribui as folhas automaticamente</b>. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
                     <tr><td><b>v7.40.3</b></td><td>19/08/2026</td><td><b>O botão de paginação dizia qual modo estava ativo, mas parecia dizer para qual iria mudar.</b> Escrito apenas como "Paginação: compacta", o rótulo é ambíguo — e como a escolha fica gravada no navegador, bastava tê-lo clicado uma vez, para conferir, e o parecer seguia sendo gerado no outro modo sem nada denunciar. O botão passa a mostrar as duas informações de uma vez: o modo <b>ativo</b>, com um visto e destaque, e a <b>ação</b> do clique. Além disso, a régua agora <b>declara em qual modo mediu</b> — sem isso, a lista de folhas não se interpreta: 15 folhas com bastante sobra em cada uma são o resultado normal da distribuição por seção, e seriam sinal de defeito na compacta. Por fim, a medição automática após os gráficos passou a valer <b>nos dois modos</b>, e não apenas no compacto. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
@@ -1086,7 +1087,8 @@ function importarArquivo(inp) {
         fornCarregarTexto(t, f0.name); inp.value=''; return;
       }
       $id('cnpj-lista').value = t;
-      toast('CNPJs carregados do arquivo — clique em "Consultar na base da Receita".');
+      toast('CNPJs carregados do arquivo — consultando na base da Receita…');   // v7.41.3: sem botão, a consulta parte sozinha
+      iniciarConsulta();
     };
     rd0.readAsArrayBuffer(f0); inp.value='';
     return;
@@ -1102,22 +1104,17 @@ function importarArquivoTriagemInput(inp) {
       // v7.34.3: este campo é o da TRIAGEM SIMPLES (só colhe CNPJs). Quando o arquivo é um
       // analítico por documento, colher CNPJs desperdiça o arquivo — sem dashboard, sem gravação
       // e sem lançamento. Em vez de fazer isso em silêncio, o app pergunta.
+      // v7.41.3 (decisão dele): a exportação única do Questor é O relatório deste campo — quando as
+      // colunas do analítico estão presentes, vai DIRETO para o processo completo (a pergunta
+      // "analítico × triagem simples" da v7.34.3 saiu junto com os botões). A confirmação do que foi
+      // lido continua obrigatória dentro do triProcessarWorkbook — nada entra sem ela.
       for (const n of wb.SheetNames){
         const cab = (XLSX.utils.sheet_to_json(wb.Sheets[n], {header:1})[0]||[]).map(c=>String(c||'').toLowerCase());
         const ehAnalitico = cab.some(c=>c.includes('natureza')) && cab.some(c=>c.includes('valor')) && cab.some(c=>c.includes('cnpj'));
         if (!ehAnalitico) continue;
-        const r = await dlg('Este arquivo é um analítico por documento',
-          '"' + f.name + '" tem as colunas do analítico do Questor (Natureza/CFOP · Valor Contábil · CNPJ).\n\n'
-          + 'Importado por aqui, ele vira apenas uma lista de CNPJs para a triagem simples: classifica o regime de cada um, '
-          + 'mas NÃO abre o dashboard, não grava a análise no histórico e não permite lançar.\n\n'
-          + 'Importado como analítico, você tem o painel 🚚 completo — dashboard, gravação e lançamento por CFOP.',
-          [{rotulo:'Importar como analítico (recomendado)', valor:'ana', destaque:true},
-           {rotulo:'Seguir como triagem simples', valor:'tri'},
-           {rotulo:'Cancelar', valor:null}]);
         inp.value = '';
-        if (r === null) return;
-        if (r === 'ana'){ await triProcessarWorkbook(wb, f.name, 'compra'); return; }
-        break;
+        await triProcessarWorkbook(wb, f.name, 'compra');
+        return;
       }
       let achados = [];
       wb.SheetNames.forEach(sn => {
@@ -1130,7 +1127,8 @@ function importarArquivoTriagemInput(inp) {
       achados = [...new Set(achados)];
       if (!achados.length) { toast('Nenhum CNPJ válido encontrado no arquivo.'); return; }
       $id('cnpj-lista').value = achados.join('\n');
-      toast(`${achados.length} CNPJs localizados no arquivo.`);
+      toast(`${achados.length} CNPJs localizados no arquivo — consultando na base da Receita…`);
+      iniciarConsulta();                                   // v7.41.3: sem botão, a consulta parte sozinha
     } catch(err) { toast('Erro ao ler o arquivo: '+err.message); }
     inp.value = '';
   };
@@ -1297,9 +1295,7 @@ function fornTrocarAba(tipo){
   $id('fo-aba-hint').innerHTML = outros.length
     ? outros.map(t => `<a href="#" onclick="fornTrocarAba('${t}');return false">${FOT[t].itens.length} em ${FO_ROT_ABA[t]}</a>`).join(' · ') : '';
   if (!FO) { $id('fo-painel').style.display='none';
-    $id('fo-aba-hint').innerHTML = analitico
-      ? 'Nenhum arquivo de ' + (tipo==='venda'?'venda':'compra') + ' importado — use o botão acima (Data · Natureza/CFOP · Valor Contábil · CNPJ/CPF, do Questor). O que foi lido é confirmado na tela antes de entrar; a consulta na Receita é automática.'
-      : 'Nenhum relatório de entrada importado — o leitor reconhece os <b>Totais ISS</b> e os <b>Totais ICMS</b> do Questor e confirma na tela o que detectou.';
+    $id('fo-aba-hint').innerHTML = '';                 // v7.41.4: sem os botões, a orientação vive no hint do item 2
     return; }
   fornMostrarPainel();
 }
@@ -1527,14 +1523,15 @@ function fornStatsCalc(itens){
     pctQ: { simplesMei: q? (simplesMei.q/q*100):0, normal: q? (g.normal.q/q*100):0, nid: q? (g.nid.q/q*100):0 },
     pctV: { simplesMei: v? (simplesMei.v/v*100):0, normal: v? (g.normal.v/v*100):0, nid: v? (g.nid.v/v*100):0 } };
 }
-function fornVisual(s, quando, periodo){
+function fornVisual(s, quando, periodo, rotParceiro){
+  rotParceiro = rotParceiro || 'Fornecedores';           // v7.41.5: a mesma visual serve à venda (Clientes)
   const barra = (a,b,c) => { const t=a+b+c||1; const seg=(v,cor,rot)=> v>0?`<div style="width:${(v/t*100).toFixed(2)}%;background:${cor};min-width:${v/t>0.06?'0':'0'}" title="${rot}"></div>`:'';
     return `<div style="display:flex;height:22px;border-radius:6px;overflow:hidden;border:1px solid var(--border,#dde3ea)">${seg(a,'#0f7a5a','Regime normal')}${seg(b,'#d99a2b','MEI + Simples')}${seg(c,'#c0392b','Não identificados')}</div>`; };
   const card = (rot,val,sub,cor) => `<div style="flex:1;min-width:150px;border:1px solid var(--border,#dde3ea);border-left:4px solid ${cor};border-radius:8px;padding:8px 12px;background:#fff"><div class="hint" style="font-size:10.5px;letter-spacing:.4px;text-transform:uppercase">${rot}</div><div style="font-size:17px;font-weight:700">${val}</div><div class="hint">${sub}</div></div>`;
   return `<div>
     ${quando?`<div class="hint" style="margin-bottom:8px">Consulta de ${quando}${periodo?' · período '+periodo:''}</div>`:''}
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-      ${card('Fornecedores', s.totQ, 'R$ '+fmt(s.totV)+' no período', '#1a5276')}
+      ${card(rotParceiro, s.totQ, 'R$ '+fmt(s.totV)+' no período', '#1a5276')}
       ${card('Geram crédito de IBS/CBS', s.pctV.normal.toFixed(1)+'%', s.grupos.normal.q+' PJ regime normal · R$ '+fmt(s.grupos.normal.v), '#0f7a5a')}
       ${card('MEI + Simples (sem crédito integral)', s.pctV.simplesMei.toFixed(1)+'%', s.simplesMei.q+' fornecedores · R$ '+fmt(s.simplesMei.v), '#d99a2b')}
       ${s.grupos.nid.q?card('Não identificados', s.grupos.nid.q, 'R$ '+fmt(s.grupos.nid.v)+' · fora do crédito — confirme', '#c0392b'):''}
@@ -1751,6 +1748,7 @@ async function triConsultar(tipo, auto){
   }
   $id('tri-prog-'+tipo).textContent = 'Concluído.';
   triDash(tipo);
+  triRelacaoItem3();                                       // v7.41.3: relação por regime no item 3
   await triSalvar(tipo, true);
   if (FOT[tipo] && FOT[tipo].analitico) fornTrocarAba(FO_TIPO);   // v7.32.0: painel do item 2 reflete a consulta
 }
@@ -2165,19 +2163,29 @@ async function triLancarCompras(){
 async function fornResumo(cnpj){
   const rs = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+cnpj, order:'consultado_em.desc', select:'*' } }) || [];
   const alvo = $id('emp-forn-resumo');
-  if (!rs.length){ alvo.innerHTML = '<div class="card" style="margin-top:12px"><span class="hint">Nenhuma análise de fornecedores salva para esta empresa — importe o relatório na Consulta CNPJ (🚚).</span></div>'; return; }
+  if (!rs.length){ alvo.innerHTML = '<div class="card" style="margin-top:12px"><span class="hint">Nenhuma consulta salva para esta empresa — importe o arquivo na Consulta CNPJ (🚚).</span></div>'; return; }
+  // v7.41.5 · o resumo NÃO abria quando a consulta mais recente era da exportação única do Questor:
+  // triSalvar grava stats {tot,pj,pf,exp,proprio}, e este render assumia o formato do fornStatsCalc
+  // ({totQ, pctV.normal, grupos…}) — s.pctV.normal.toFixed lançava TypeError e NADA aparecia na tela.
+  // Agora o formato antigo é usado quando existe e, nos registros da triagem, os stats são refeitos
+  // dos próprios itens (fora: movimentação própria, consumidor genérico e, na venda, CPF).
+  const TIPO_ROT5 = { revenda:'📦 revenda', servico:'🧾 serviço', compra:'📄 compra — fornecedores', venda:'👥 venda — clientes' };
   const render = ix => {
-    const c = rs[ix], s = c.dados.stats, dt = new Date(c.consultado_em).toLocaleString('pt-BR');
-    const tipoRot = (c.dados.tipo === 'revenda' ? '📦 revenda' : '🧾 serviço') + (c.dados.tipo ? '' : ' (presumido)');
+    const c = rs[ix], dt = new Date(c.consultado_em).toLocaleString('pt-BR');
+    const t = c.dados.tipo || 'servico';
+    const venda5 = t === 'venda';
+    const itensVis = (c.dados.itens||[]).filter(i => i.classe!=='proprio' && !i.generico && (!venda5 || i.classe!=='pf'));
+    const s = (c.dados.stats && typeof c.dados.stats.totQ === 'number') ? c.dados.stats : fornStatsCalc(itensVis);
+    const tipoRot = (TIPO_ROT5[t] || esc(t)) + (c.dados.tipo ? '' : ' (presumido)');
     alvo.innerHTML = `<div class="card" style="margin-top:12px"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-      <h3 style="margin:0">📊 Resumo estatístico de fornecedores — ${fmtCNPJ(cnpj)}</h3>
+      <h3 style="margin:0">📊 Resumo estatístico de cliente e fornecedor — ${fmtCNPJ(cnpj)}</h3>
       <span class="badge info">${tipoRot}</span>
-      <select onchange="window._FORN_RENDER(+this.value)">${rs.map((r,i)=>`<option value="${i}" ${i===ix?'selected':''}>${new Date(r.consultado_em).toLocaleString('pt-BR')}${r.dados.periodo?' · '+r.dados.periodo:''}</option>`).join('')}</select>
+      <select onchange="window._FORN_RENDER(+this.value)">${rs.map((r,i)=>`<option value="${i}" ${i===ix?'selected':''}>${new Date(r.consultado_em).toLocaleString('pt-BR')} · ${(TIPO_ROT5[(r.dados&&r.dados.tipo)||'servico']||'').replace(/^\S+\s/,'')}${r.dados.periodo?' · '+r.dados.periodo:''}</option>`).join('')}</select>
       <span class="hint">${rs.length} consulta(s) no histórico</span>
       <button class="btn" onclick="$id('emp-forn-resumo').innerHTML=''">Fechar</button></div>
-      <div style="margin:10px 0">${fornVisual(s, dt, c.dados.periodo)}</div>
-      <div style="overflow:auto;max-height:420px"><table class="tbl"><thead><tr><th>CNPJ</th><th>Fornecedor</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead>
-      <tbody>${c.dados.itens.map(i=>{const rr=FO_ROTULO[i.classe]||['—','']; return `<tr><td style="white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td>${esc(i.razao)}</td><td><span class="badge ${rr[1]}">${rr[0]}</span></td><td style="text-align:right">${fmt(i.valor)}</td></tr>`;}).join('')}</tbody></table></div></div>`;
+      <div style="margin:10px 0">${fornVisual(s, dt, c.dados.periodo, venda5 ? 'Clientes' : 'Fornecedores')}</div>
+      <div style="overflow:auto;max-height:420px"><table class="tbl"><thead><tr><th>CNPJ</th><th>${venda5?'Cliente':'Fornecedor'}</th><th>Enquadramento</th><th style="text-align:right">Valor (R$)</th></tr></thead>
+      <tbody>${itensVis.map(i=>{const rr=FO_ROTULO[i.classe]||['—','']; return `<tr><td style="white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td>${esc(i.razao)}</td><td><span class="badge ${rr[1]}">${rr[0]}</span></td><td style="text-align:right">${fmt(i.valor)}</td></tr>`;}).join('')}</tbody></table></div></div>`;
   };
   window._FORN_RENDER = render;
   render(0);
@@ -2300,7 +2308,52 @@ async function iniciarConsulta() {
   btn.disabled = false;
 }
 
+// ═══ v7.41.3 · o item 3 volta a mostrar a RELAÇÃO POR REGIME (Simples · MEI · Normal) ═══
+// Cartões com contagem e % acima da tabela — some quando não há resultados. A régua vale para os
+// dois caminhos: lista simples (iniciarConsulta) e exportação do Questor (triRelacaoItem3).
+function regimeCards(){
+  const box = $id('regime-cards'); if (!box) return;
+  const ok = RESULTADOS.filter(r=>!r.erro);
+  if (!ok.length){ box.innerHTML=''; return; }
+  const mei = ok.filter(r=>r.simei).length;
+  const simples = ok.filter(r=>r.simples && !r.simei).length;
+  const normal = ok.length - mei - simples;
+  const pc = v => (v/ok.length*100).toFixed(0)+'%';
+  const st = (n,l,c) => `<div class="stat" style="border-left:3px solid ${c}"><div class="n" style="font-size:17px">${n}</div><div class="l">${l}</div></div>`;
+  box.innerHTML = `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+    ${st(ok.length,'empresas consultadas','#5d6d7e')}
+    ${st(simples+' · '+pc(simples),'Simples Nacional','#1a5276')}
+    ${st(mei+' · '+pc(mei),'MEI (SIMEI)','#1e8449')}
+    ${st(normal+' · '+pc(normal),'Regime normal','#b9770e')}
+  </div>`;
+}
+// A exportação do Questor alimenta o item 3 com os parceiros consultados (compra + venda,
+// deduplicados por CNPJ; CPF, consumidor final e movimentação própria ficam fora).
+function triRelacaoItem3(){
+  const por = {};
+  for (const t of ['compra','venda']){
+    const T = TRI[t]; if (!T) continue;
+    for (const i of T.itens){
+      if (i.classe==='pf' || i.classe==='proprio' || i.generico) continue;
+      if (!por[i.cnpj]) por[i.cnpj] = { cnpj:i.cnpj, razao_social:i.razao||'', situacao:i.situacao||'',
+        simples: i.classe==='simples' || i.classe==='mei', simei: i.classe==='mei',
+        nid: !i.classe || i.classe==='nid', origem:{} };
+      por[i.cnpj].origem[t] = true;
+      if (i.situacao) por[i.cnpj].situacao = i.situacao;
+    }
+  }
+  const rs = Object.values(por);
+  if (!rs.length) return;
+  RESULTADOS = rs.map(r => ({ cnpj:r.cnpj, razao_social:r.razao_social, situacao:r.situacao,
+    simples:r.simples, simei:r.simei, data_opcao_simples:'', uf:'', municipio:'',
+    porte: (r.origem.compra&&r.origem.venda)?'fornecedor + cliente':(r.origem.compra?'fornecedor':'cliente'),
+    erro: r.nid ? 'Não identificado — reconsulte no painel 🚚' : null, consultado_em:new Date().toISOString() }));
+  RESULTADOS.sort((a,b)=>(a.razao_social||'').localeCompare(b.razao_social||''));
+  renderResultados();
+  $id('btn-salvar').disabled = RESULTADOS.filter(r=>!r.erro).length===0;
+}
 function renderResultados() {
+  regimeCards();
   const tb = $id('tbl-result-body');
   if (!RESULTADOS.length) { tb.innerHTML = '<tr><td colspan="8" class="hint" style="text-align:center;padding:24px">Nenhuma consulta realizada.</td></tr>'; return; }
   tb.innerHTML = RESULTADOS.map(r => {
@@ -2320,7 +2373,7 @@ function renderResultados() {
 }
 
 function limparConsulta() {
-  $id('cnpj-lista').value=''; RESULTADOS=[]; renderResultados();
+  $id('cnpj-lista').value=''; RESULTADOS=[]; renderResultados();   // renderResultados já apaga os cartões de regime
   $id('prog-wrap').style.display='none'; $id('prog-txt').textContent='';
   $id('btn-salvar').disabled = true;
 }
@@ -3806,7 +3859,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.41.1';
+const APP_VERSAO = '7.41.5';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -3956,7 +4009,7 @@ function empRender() {
     <td style="white-space:nowrap"><button class="btn" onclick="empEditar('${e.cnpj}')">Editar</button>
     <button class="btn" onclick="empAnalisar('${e.cnpj}')">Analisar</button>
     <button class="btn" title="Configuração da empresa (alíquotas, presunções, RBT12)" onclick="empConfig('${e.cnpj}')">⚙️</button>
-    <button class="btn" title="Resumo estatístico de fornecedores" onclick="fornResumo('${e.cnpj}')">📊</button>
+    <button class="btn" title="Resumo estatístico de cliente e fornecedor" onclick="fornResumo('${e.cnpj}')">📊</button>
     <button class="btn" style="color:var(--danger)" onclick="empExcluir('${e.cnpj}')">Excluir</button></td></tr>`).join('')
   : '<tr><td colspan="6" class="hint" style="text-align:center;padding:20px">Nenhuma empresa. Cadastre manualmente ou use a Consulta CNPJ.</td></tr>';
 }
@@ -6134,18 +6187,25 @@ function parecerDados(){
   const L33 = REF.find(l=>l.ano===2033) || null;
   const L32 = REF.find(l=>l.ano===2032) || null;
   const frMed = (_res.fatorRMensal||[]).length ? _res.fatorRMensal.reduce((a,b)=>a+b,0)/_res.fatorRMensal.length : 0;
+  // v7.41.2: o monitor sobe para antes dos alertas — o alerta da trava precisa saber se há impedimento.
+  const _subMonEf = (PJ.v === projJanelaNorm(_cfgP.projJanela) || !RL.res)
+    ? (RL.res && RL.res.subMon) : monitorSublimite(RL.res, Object.assign({}, _cfgP, { projJanela: PJ.v }));
   const alertas = [];
   if (acima && cadSimples) alertas.push('Cadastro indica Simples Nacional, mas o RBT12 apurado supera o teto de R$ 4,8 mi — a empresa está sujeita à exclusão do regime; o parecer trata o cenário do regime regular.');
   if (!acima && rbtMax > 4320000) alertas.push('RBT12 em '+fmtR(rbtMax)+' — acima de 90% do teto do Simples (R$ 4,8 mi): monitorar o risco de exclusão.');
-  if (optante && rbtMaxProj > 3600000) alertas.push('RBT12 acima do sublimite de R$ 3,6 mi: ICMS/ISS calculados pela trava da 5ª faixa com o RBT12 do mês (art. 21, III, "b", Res. CGSN 140/2018) e recolhidos dentro do DAS — já considerado no cálculo.');
+  // v7.41.2 · a trava da 5ª faixa PRESSUPÕE ausência de impedimento (ver "Divergências e decisões
+  // declaradas"). Enquanto o monitor apontava impedimento, este alerta afirmava que o ICMS/ISS segue
+  // dentro do DAS — o documento se contradizia dentro da mesma lista de alertas.
+  if (optante && rbtMaxProj > 3600000) alertas.push(
+    (_subMonEf && _subMonEf.impedimento)
+      ? 'RBT12 acima do sublimite de R$ 3,6 mi. ' + _subMonEf.impedimento.motivo + '. Este cálculo ainda aplica a trava da 5ª faixa DENTRO do DAS (art. 21, III, "b", Res. CGSN 140/2018), que pressupõe ausência de impedimento — o ICMS/ISS apurado deve ser lido com essa ressalva.'
+      : 'RBT12 acima do sublimite de R$ 3,6 mi: ICMS/ISS calculados pela trava da 5ª faixa com o RBT12 do mês (art. 21, III, "b", Res. CGSN 140/2018) e recolhidos dentro do DAS — já considerado no cálculo.');
   // v7.36.0 · trajetória de limite e sublimite: o dado de maior valor econômico do documento —
   // a comparação entre regimes descreve um Simples que a empresa pode não ter no ano seguinte.
   if (PROJ && !acima && rbtMaxProj > PARECER_TETO)
     alertas.push('No ritmo dos meses lançados, o RBT12 projetado para dezembro chega a '+fmtR(rbtMaxProj)+' — acima do teto de R$ 4,8 mi. O parecer mantém o enquadramento do período realizado, mas o risco de exclusão é concreto e deve ser monitorado mês a mês.');
   // v7.39.0: o alerta de trajetória usa a MESMA janela do documento — parecer e monitor não podem
-  // divergir dentro do mesmo PDF.
-  const _subMonEf = (PJ.v === projJanelaNorm(_cfgP.projJanela) || !RL.res)
-    ? (RL.res && RL.res.subMon) : monitorSublimite(RL.res, Object.assign({}, _cfgP, { projJanela: PJ.v }));
+  // divergir dentro do mesmo PDF. (v7.41.2: _subMonEf agora é calculado acima.)
   if (optante && _subMonEf){
     const _t = subMonTexto(_subMonEf);
     if (_t) alertas.push('Trajetória do ano (mercado interno, projeção pela média realizada): ' + _t.replace(/<[^>]+>/g,''));
@@ -6180,22 +6240,56 @@ function parecerDados(){
            recCom: Mm.map(x=>x.recCom||0), recServ: Mm.map(x=>x.recServ||0), recExp: Mm.map(x=>x.recExp||0), dasTrib: T.dasTrib||null };
 }
 
+// ═══ v7.41.2 · FICHA DE COMPOSIÇÃO — o que a IA não pode errar sai do código ═══
+// O parágrafo de Enquadramento é escrito pela IA. Na WEEEDO ele anunciou a receita TOTAL
+// (5.349.551,45), listou como composição apenas comércio + serviços (que somam o MERCADO INTERNO,
+// 4.711.246,74) e fechou com a margem para o teto — que é medida sobre o interno. Três bases numa
+// frase só: a soma não fechava para quem lia. A IA não inventou nenhum número; ela recebeu escalares
+// sem rótulo e relacionou o que estava mais perto. A correção é dupla: o payload passa a rotular a
+// base de cada valor (ver parecerIA) e esta ficha, gerada pelo motor, fecha a conta no documento
+// independentemente do que a IA escrever. Só aparece quando o parágrafo sozinho não é reconciliável:
+// há exportação (teto próprio, LC 123/2006, art. 3º, §14) ou o RBT12 projetado difere do realizado.
+function ppEnqFicha(D){
+  if (!D || !D.T) return '';
+  const exp = +D.T.receitaExp || 0;
+  const margem = (D.subMon && typeof D.subMon.margemLimite === 'number')
+    ? D.subMon.margemLimite : (PARECER_TETO - Math.max(0, (+D.T.receita||0) - exp));
+  const p = [];
+  // A ficha NÃO imprime um subtotal do mercado interno: seria um quarto número obrigado a fechar
+  // com os três exibidos, e o arredondamento por linha (ver "Divergências e decisões declaradas")
+  // o deixaria a centavos de distância. O mercado interno é NOMEADO — "comércio + serviços" —, não
+  // recalculado. Assim a margem continua sendo, ao centavo, a mesma do monitor de sublimite.
+  if (exp > 0.005){
+    p.push(`<b>Composição da receita de ${fmtR(D.T.receita)}:</b> comércio/indústria ${fmtR(D.T.recCom)} + `
+      + `serviços ${fmtR(D.T.recServ)} + exportação ${fmtR(exp)}. `
+      + `O teto de ${fmtR(PARECER_TETO)} do Simples é medido <b>só sobre o mercado interno</b> `
+      + `(comércio + serviços) — a exportação tem teto próprio de igual valor (LC 123/2006, art. 3º, §14).`
+      + (margem > 0 ? ` Margem do mercado interno para o teto: <b>${fmtR(margem)}</b> `
+        + `(${(margem/PARECER_TETO*100).toFixed(1).replace('.',',')}% do teto).` : ''));
+  }
+  if (D.proj && D.rbtMaxProj > D.rbtMax + 0.005){
+    p.push(`<b>RBT12:</b> máximo realizado em ${D.janelaTxt}, ${fmtR(D.rbtMax)}; projetado para dezembro, `
+      + `${fmtR(D.rbtMaxProj)}. O enquadramento deste parecer segue o <b>realizado</b>.`);
+  }
+  return p.length ? `<div class="pp-ficha">${p.join(' ')}</div>` : '';
+}
+
 // Textos-padrão (fallback sem IA) — a IA reescreve estes blocos com os mesmos fatos
 function parecerTextosPadrao(D){
   const emp = esc(RL.empresa?.razao_social) || 'a empresa';
   const b = {};
   b.intro = 'A Emenda Constitucional nº 132/2023 e a Lei Complementar nº 214/2025 substituem PIS, COFINS, ICMS, ISS e IPI por um IVA dual — a CBS (federal) e o IBS (estados e municípios) —, com transição gradual de 2027 a 2033, quando o novo sistema estará pleno. Este estudo projeta, ano a ano, o impacto da reforma sobre '+emp+', com estimativas direcionais que não substituem a apuração formal de cada período.';
   if (D.variante==='simples'){
-    b.enquadramento = 'Empresa optante do Simples Nacional (RBT12 de '+fmtR(D.rbtMax)+', dentro do limite legal). Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?(D.proj?' — os meses seguintes foram projetados pela média dos lançados, de modo que os valores representam o ano-calendário estimado':' — os valores refletem esse período, não o ano-calendário completo'):'')+'. Com a reforma, surge uma decisão nova: manter o IBS/CBS dentro do DAS ("por dentro"), recolhê-lo separadamente ("híbrido") ou sair do regime.';
+    b.enquadramento = 'Empresa optante do Simples Nacional (RBT12 máximo realizado de '+fmtR(D.rbtMax)+', dentro do limite legal). Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?(D.proj?' — os meses seguintes foram projetados pela média dos lançados, de modo que os valores representam o ano-calendário estimado':' — os valores refletem esse período, não o ano-calendário completo'):'')+'. Com a reforma, surge uma decisão nova: manter o IBS/CBS dentro do DAS ("por dentro"), recolhê-lo separadamente ("híbrido") ou sair do regime.';
     b.caminho = 'Permanecendo "por dentro" do DAS, a carga do Simples não é alterada pela reforma. Os caminhos alternativos foram quantificados nos quadros a seguir — a decisão depende sobretudo do perfil da clientela (quem aproveita o crédito de IBS/CBS).';
     b.cenarios = D.L33 ? (function(){ const d33 = D.sDentro.length ? D.sDentro[D.sDentro.length-1] : D.T.simples;
       return 'Em 2033 (modelo pleno): por dentro '+fmtR(d33)+'/ano; híbrido '+fmtR(D.L33.hib)+'/ano; fora do Simples '+fmtR(D.L33.regular)+'/ano ('+D.L33.regNome+'). Como decidir entre eles: o caminho POR DENTRO mantém tudo no DAS — é o de menor burocracia e preserva o caixa (nada é retido na fonte), mas o cliente PJ do regime regular recebe crédito reduzido de IBS/CBS, o que pode pesar no preço quando a clientela é majoritariamente empresarial. O HÍBRIDO (art. 22-A da Res. CGSN 140/2018) desconta do DAS as parcelas de CBS/IBS e recolhe esses tributos por fora, no regime regular: o cliente passa a receber crédito integral — vantagem comercial concreta em vendas B2B —, ao custo de duas apurações, do split payment sobre os recebimentos e de opção semestral nas janelas de setembro e março (art. 40-D). SAIR DO SIMPLES leva ao regime regular pleno ('+D.L33.regNome+' no caso), fazendo sentido quando o crescimento aproxima a empresa do teto ou quando praticamente toda a clientela exige crédito integral. Em resumo: clientela de consumo final favorece o por dentro; clientela PJ relevante pede a comparação entre o ganho comercial do crédito e o custo adicional quantificado acima.'; })() : 'Preencha e salve a aba Reforma para os cenários 2033.';
   } else if (D.variante==='acima'){
-    b.enquadramento = 'Com RBT12 máximo de '+fmtR(D.rbtMax)+', a empresa está acima do limite de R$ 4,8 milhões e não pode optar pelo Simples Nacional. Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?(D.proj?' — os meses seguintes foram projetados pela média dos lançados, de modo que os valores representam o ano-calendário estimado':' — os valores refletem esse período, não o ano-calendário completo'):'')+'. A análise compara os regimes aplicáveis — Lucro Presumido e Lucro Real — e mede, ano a ano, o que passará a pagar a mais ou a menos com a reforma.';
+    b.enquadramento = 'Com RBT12 máximo realizado de '+fmtR(D.rbtMax)+', a empresa está acima do limite de R$ 4,8 milhões e não pode optar pelo Simples Nacional. Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?(D.proj?' — os meses seguintes foram projetados pela média dos lançados, de modo que os valores representam o ano-calendário estimado':' — os valores refletem esse período, não o ano-calendário completo'):'')+'. A análise compara os regimes aplicáveis — Lucro Presumido e Lucro Real — e mede, ano a ano, o que passará a pagar a mais ou a menos com a reforma.';
     b.caminho = 'O regime de menor carga em cada ano da transição está identificado nos quadros. O aumento decorrente da reforma é estrutural e atinge todo o mercado: o que está ao alcance da empresa é pagar o menor valor possível em cada exercício e preparar o caixa para o split payment.';
     b.cenarios = '';
   } else {
-    b.enquadramento = 'A empresa apura hoje pelo regime regular ('+D.regimeHojeNome+'), com RBT12 de '+fmtR(D.rbtMax)+' — dentro do limite do Simples Nacional. Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?(D.proj?' — os meses seguintes foram projetados pela média dos lançados, de modo que os valores representam o ano-calendário estimado':' — os valores refletem esse período, não o ano-calendário completo'):'')+'. Além do efeito da reforma no regime atual, este parecer simula a entrada no Simples e os três caminhos que ele oferece na transição.';
+    b.enquadramento = 'A empresa apura hoje pelo regime regular ('+D.regimeHojeNome+'), com RBT12 máximo realizado de '+fmtR(D.rbtMax)+' — dentro do limite do Simples Nacional. Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?(D.proj?' — os meses seguintes foram projetados pela média dos lançados, de modo que os valores representam o ano-calendário estimado':' — os valores refletem esse período, não o ano-calendário completo'):'')+'. Além do efeito da reforma no regime atual, este parecer simula a entrada no Simples e os três caminhos que ele oferece na transição.';
     b.caminho = 'O comparativo responde duas perguntas: quanto a reforma encarece o regime atual, ano a ano; e se a opção pelo Simples reduziria a carga — inclusive nos cenários "por dentro" e híbrido de 2033.';
     b.cenarios = D.L33 ? (function(){ const d33 = D.sDentro.length ? D.sDentro[D.sDentro.length-1] : D.T.simples;
       return 'Em 2033: Simples por dentro '+fmtR(d33)+'/ano; híbrido '+fmtR(D.L33.hib)+'/ano; regime regular '+fmtR(D.L33.regular)+'/ano ('+D.L33.regNome+'). A leitura é a mesma da seção anterior: o por dentro minimiza burocracia e preserva o caixa, mas limita o crédito repassado ao cliente PJ; o híbrido troca custo e split payment por crédito integral ao cliente (opção semestral — art. 40-D); o regime regular pleno se justifica com clientela quase toda PJ ou crescimento além do teto. A opção pelo Simples é formalizada em setembro, com efeitos a partir de janeiro seguinte.'; })() : '';
@@ -6262,6 +6356,7 @@ function rlParecer(){
     ${secao(1,'Introdução — o que muda e quando')}
     <p class="pp-p">${TX.intro}</p>
     <div class="pp-enq ${D.variante==='acima'?'pp-enq-v':''}"><b>Enquadramento:</b> ${TX.enquadramento}</div>
+    ${ppEnqFicha(D)}
     ${alertasHtml}
     <div class="pp-timeline">
       ${[['2026','sistema atual · planejamento','#0f7a5a'],['2027','CBS entra · fim de PIS/COFINS','#d99a2b'],['2029–2032','IBS sobe · ICMS/ISS caem','#1a5276'],['2033','modelo pleno','#8c2f39']].map(([a,t,c])=>`<div class="pp-tl-item"><span class="pp-tl-dot" style="background:${c}"></span><b>${a}</b><span>${t}</span></div>`).join('')}
@@ -6302,7 +6397,7 @@ function rlParecer(){
       ${premissaCred?`<tr><td class="rot">Créditos de IBS/CBS</td><td>${premissaCred}</td></tr>`:'<tr><td class="rot">Créditos de IBS/CBS</td><td>Estimados pelos fornecedores e compras informados na aba Reforma.</td></tr>'}
       ${D.L33?`<tr><td class="rot">Alíquota de referência (2033)</td><td>${fmtP(D.L33.alq*100, 2)}% (CBS+IBS, Res. CGIBS nº 14/2026 — estimativa; a definitiva depende do cálculo do TCU homologado pelo Senado)</td></tr>`:''}
       ${(D.T.receitaExp||0)>0.005?`<tr><td class="rot">Tratamento das exportações</td><td>Imunes a IBS/CBS (LC 214/2025, art. 8º); créditos das aquisições vinculadas são mantidos.</td></tr>`:''}
-      ${D.variante==='simples'?`<tr><td class="rot">ICMS/ISS · trava da 5ª faixa</td><td>${D.optante && D.rbtMaxProj>3600000?'Aplicada — RBT12 acima do sublimite de R$ 3,6 mi; ICMS/ISS calculados pela fórmula do art. 21, III, "b", da Res. CGSN nº 140/2018, com o RBT12 efetivo do mês.':'Não aplicável no período analisado — RBT12 dentro do sublimite de R$ 3,6 mi.'}</td></tr>
+      ${D.variante==='simples'?`<tr><td class="rot">ICMS/ISS · trava da 5ª faixa</td><td>${D.optante && D.rbtMaxProj>3600000?'Aplicada — RBT12 acima do sublimite de R$ 3,6 mi; ICMS/ISS calculados pela fórmula do art. 21, III, "b", da Res. CGSN nº 140/2018, com o RBT12 efetivo do mês.'+(D.subMon && D.subMon.impedimento?' <b>Ressalva (v7.41.2):</b> o monitor de sublimite aponta impedimento — '+esc(D.subMon.impedimento.motivo)+'. A trava pressupõe ausência de impedimento, cenário que este cálculo ainda não modela.':''):'Não aplicável no período analisado — RBT12 dentro do sublimite de R$ 3,6 mi.'}</td></tr>
       <tr><td class="rot">Metodologia da transição 2027–2033</td><td>Partilha do DAS pelos novos Anexos I–V da Res. CGSN nº 190/2026, por vigência: PIS/COFINS saem já em 2027 (viram CBS); ICMS/ISS decrescem em degraus até zerar em 2033, absorvidos pelo IBS. A trava da 5ª faixa é recomposta a cada vigência, com teto do ISS decrescente.</td></tr>`:''}
       <tr><td class="rot">Split payment</td><td>Retenção estimada em 100% do débito de IBS/CBS no pagamento; custo financeiro a 15% a.a. (proxy da Selic mínima) sobre um mês de retenção como saldo médio financiado ao longo do ano.</td></tr>
     </tbody></table>
@@ -6808,12 +6903,34 @@ async function parecerIA(){
   document.querySelectorAll('#rl-corpo .pp-p, #rl-corpo .pp-enq, #rl-corpo .pp-final, #rl-corpo .pp-passo').forEach(el=>el.classList.add('pp-skel'));
   try {
     const D = parecerDados();
+    // v7.41.2: bases nomeadas — a IA não deve inferir a que base cada número se refere.
+    const _exp = +D.T.receitaExp || 0;
+    const _interno = Math.max(0, (+D.T.receita||0) - _exp);
+    const _margemInt = (D.subMon && typeof D.subMon.margemLimite === 'number')
+      ? D.subMon.margemLimite : (PARECER_TETO - _interno);
     const payload = {
       empresa: { nome: RL.empresa?.razao_social||'', cnpj: RL.dados.cnpj||'', regime: RL.empresa?.regime||'', ano: RL.dados.ano },
       variante: D.variante, regimeHoje: D.regimeHojeNome, alertas: D.alertas,
       numeros: {
         receitaAnual: D.T.receita, receitaComercio: D.T.recCom, receitaServicos: D.T.recServ,
-        rbt12Max: D.rbtMax, teto: PARECER_TETO,
+        // v7.41.2 · receitaAnual INCLUI a exportação; comércio + serviços somam apenas o MERCADO
+        // INTERNO. Sem estes campos a IA apresentava os dois primeiros como composição do total.
+        receitaExportacao: _exp,
+        receitaMercadoInterno: _interno,
+        composicaoDaReceitaAnual: 'receitaAnual = receitaComercio + receitaServicos + receitaExportacao; receitaMercadoInterno = receitaComercio + receitaServicos',
+        tetoSimples: {
+          valor: PARECER_TETO,
+          baseDeComparacao: 'receita do MERCADO INTERNO — a exportação não entra nesta conta, pois tem teto próprio de igual valor',
+          baseValor: _interno,
+          margem: _margemInt,
+          margemPctDoTeto: PARECER_TETO ? _margemInt/PARECER_TETO : 0,
+          fundamento: 'LC 123/2006, art. 3º, §14',
+        },
+        rbt12Max: D.rbtMax,
+        rbt12MaxBase: 'maior RBT12 entre os meses REALIZADOS (' + D.janelaTxt + ') — não é projeção para dezembro',
+        rbt12MaxProjetado: D.rbtMaxProj,
+        rbt12MaxProjetadoBase: 'maior RBT12 do ano com os meses futuros estimados; o enquadramento do parecer segue o realizado',
+        teto: PARECER_TETO,
         cargaHojeAnual: D.hojeAnual, simplesAnual: D.T.simples, lpAnual: D.T.lp, lrAnual: D.T.lr,
         dasPorTributo: D.dasTrib,
         transicao: D.anos.map(L=>({ ano:L.ano, hibrido:L.hib, regularMelhor:L.regular, regularNome:L.regNome, lp:L.regLP, lr:L.regLR })),
@@ -6826,6 +6943,13 @@ async function parecerIA(){
                              receitaRealizada:D.proj.tReal.receita, receitaProjetada:D.T.receita }
                           : { anoProjetado:false },
       },
+      // v7.41.2: a IA descreve os números que recebe, com os rótulos que recebe — não os relaciona.
+      regrasDeTexto: [
+        'Nunca some, subtraia, divida ou calcule percentuais entre os números recebidos.',
+        'Nunca apresente dois valores como composição de um terceiro sem que composicaoDaReceitaAnual autorize.',
+        'Ao citar uma margem ou distância para um limite, nomear sempre a base (campo baseDeComparacao).',
+        'Ao citar o RBT12, dizer se é realizado ou projetado, conforme os campos rbt12MaxBase e rbt12MaxProjetadoBase.',
+      ],
       premissas: { reformaFallback: !!(D.cen&&D.cen.usouFallback), creditosProxyCompras: !!(D.cen&&D.cen.proxyCompras), semCreditosIBSCBS: !!(D.cen&&D.cen.semCreditos), moedaConstante: true },
     };
     const r = await supaFn('gerar-parecer', payload);      // v7.17.1: token renovado antes da chamada (e repetição única em 401)
@@ -7187,7 +7311,7 @@ function subMonTexto(M){
     else p.push(`A RBA do mercado interno ultrapassa o sublimite em <b>${mes(M.impedimento.mes)}</b>${M.impedimento.projetado?' (projeção)':''} — o ICMS/ISS sai do DAS <b>a partir de 1º/01 do ano seguinte</b>.`);
   }
   if (M.excluiProjetado) p.push(`A projeção também alcança o <b>limite de ${fmtR(M.limite)}</b> do mercado interno em <b>${mes(M.marco.limite)}</b>: há risco de <b>exclusão do regime</b>.`);
-  else if (M.margemLimite > 0 && M.margemPct < 0.10) p.push(`O limite de ${fmtR(M.limite)} não é alcançado pela projeção, mas por margem de apenas <b>${fmtR(M.margemLimite)}</b> (${(M.margemPct*100).toFixed(1).replace('.',',')}%) — basta o ritmo subir um pouco para a exclusão entrar em cena.`);
+  else if (M.margemLimite > 0 && M.margemPct < 0.10) p.push(`O limite de ${fmtR(M.limite)} <b>do mercado interno</b> não é alcançado pela projeção, mas por margem de apenas <b>${fmtR(M.margemLimite)}</b> (${(M.margemPct*100).toFixed(1).replace('.',',')}% do teto) — basta o ritmo subir um pouco para a exclusão entrar em cena.`);
   if (M.parcial && p.length) p.push(`<span class="hint">Projeção pela média mensal realizada até ${mes(M.ultimo)}, por bloco de receita — não é previsão de faturamento.</span>`);
   return p.join(' ');
 }
