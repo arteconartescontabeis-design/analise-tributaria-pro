@@ -10,6 +10,11 @@
 //   5. Regressão dos gabaritos (tests/fixtures/caso1.json e caso2.json)
 //   5d. Res. CGSN nº 190/2026 — partilha por vigência, art. 22-A e travas (v7.17.0)
 //   5e. v7.18.0 — Tema 69 (LP sem dupla exclusão do mono; LR com exclusão) e FGTS fora dos totais
+//   5u. v7.39.0 — projeção do ano (janelas, não-mutação, progressividade do RBT12)
+//   5v. v7.41.6 — empresa de destino declarada na Consulta de CNPJ e trava de dono na gravação
+//   5w. v7.41.7 — ano de referência do parecer, premissa do crédito e memória da projeção
+//  NÃO cobertos aqui: os blocos de PAGINAÇÃO do parecer (T40–T46), que exigem jsdom — vivem nos
+//  arquivos testes_T40_T46_paginacao.js e rodam à parte enquanto a dependência não entra no CI.
 //  Sai com código ≠ 0 em qualquer falha — o CI bloqueia o push quebrado.
 // ═══════════════════════════════════════════════════════════════════════════
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -194,7 +199,11 @@ console.log('\n■ Reforma: padrão vigente e registro antigo');
 {
   // análise salva com a tabela ANTIGA (8,8 / 16 / 2) não pode congelar o cálculo
   const antiga = { 2033:{ cbs:8.8, ibse:16, ibsm:2, is:0, remIcmsIss:0, remPisCof:0 } };
-  const inp = JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures','caso1.json'),'utf8')).inp;
+  // sem fixtures a suíte inteira morria aqui (as demais seções já pulavam com aviso)
+  const _fx1 = path.join(__dirname,'fixtures','caso1.json');
+  const inp = fs.existsSync(_fx1) ? JSON.parse(fs.readFileSync(_fx1,'utf8')).inp : null;
+  if (!inp) console.log('  (fixtures/caso1.json ausente — bloco das alíquotas pulado)');
+  if (inp) {
   const usada = vm.runInContext(`(()=>{ const res = calcular(${JSON.stringify(inp)}, PARAMS.anexos, folhaPercDaEmpresa(${JSON.stringify(inp)}.cfg));
     const r = calcCenariosReforma(res, { receita:100000, aliq:${JSON.stringify(antiga)} });
     return r.rfx.aliq[2033]; })()`, ctx);
@@ -204,6 +213,7 @@ console.log('\n■ Reforma: padrão vigente e registro antigo');
     `usada CBS ${usada.cbs}% × padrão ${padrao.cbs}%`);
 
   // registro gravado por versão anterior (sem benefRec/benefCred/contra) não pode quebrar a tela
+  }
   const norm = vm.runInContext(`rfNormalizar({ receita: 50000 }, '123', 2026)`, ctx);
   chk('registro antigo da Reforma é completado (rfNormalizar)',
     norm && norm.benefRec && norm.benefCred && norm.contra && norm.aliq
@@ -881,9 +891,15 @@ console.log('\n■ v7.31.0 — consulta automática, serviços tomados, venda→
 // ═══ 5t. v7.32.0 — analíticos como abas do painel do item 2 ═══
 console.log('\n■ v7.32.0 — analíticos rodam todo o processo do item 2 (abas do painel 🚚)');
 {
-  chk('v7.32/33 · abas "Analítico de compra" e "Analítico de venda — clientes" permanentes no item 2 (sem display:none)',
-    html.includes('id="fo-aba-compra" onclick') && html.includes('id="fo-aba-venda" onclick')
-    && html.includes("Analítico de compra") && html.includes("Analítico de venda — clientes"));
+  // v7.41.3 (decisão dele): os 4 botões de importação SAÍRAM da tela — a importação passa a ser só
+  // pelo campo "Importar arquivo (CSV/Excel)". Eles seguem no DOM porque fornTrocarAba/fo-btn-imp são
+  // o roteador do painel 🚚. O teste antigo exigia justamente o contrário e foi reescrito.
+  chk('v7.41.3 · abas de compra/venda seguem no DOM como roteador do painel 🚚, mas ocultas na tela',
+    html.includes('id="fo-aba-compra"') && html.includes('id="fo-aba-venda"')
+    && /id="fo-aba-compra"[^>]*style="display:none"/.test(html)
+    && /id="fo-aba-venda"[^>]*style="display:none"/.test(html));
+  chk('v7.41.3 · a importação da Consulta CNPJ passa pelo campo único de arquivo',
+    /Importar arquivo \(CSV \/ Excel\)|Importar arquivo \(CSV\/Excel\)/.test(html));
   var RES_T32 = (async () => {
     await RES_T31;                                         // serializa (FOT/TRI/stubs compartilhados)
     vm.runInContext(`EMP_GLOBAL = {cnpj:'24197146000137', razao_social:'WEEEDO'};
@@ -1163,6 +1179,137 @@ console.log('\n■ Integridade da interface');
     t32 && t32.dsV && t32.dsVLen===1 && !/Lançar total/.test(t32.acoesV||'') && /não geram lançamento/.test(t32.acoesV||''), t32e);
   chk('v7.32.0 · "Reconsultar" do painel nas abas analíticas roteia para a consulta da triagem (CNPJ nulo consultado)',
     t32 && t32.nCons2===1 && t32.classeNova==='simples', t32e || (t32?`cons=${t32.nCons2}`:'—'));
+
+  // ═══ 5u. v7.39.0 — projeção do ano (o parecer fala do ANO, não do pedaço lançado) ═══
+  console.log('\n■ v7.39.0 — projeção dos meses não lançados');
+  {
+    const jn = (j,n) => vm.runInContext(`projJanelaN(${JSON.stringify(j)}, ${n})`, ctx);
+    chk('janela "todos" usa os meses lançados; 2/3/6 usam a janela móvel',
+      jn('todos',6)===6 && jn('3',6)===3 && jn('2',6)===2 && jn('6',6)===6);
+    chk('janela maior que o lançado se limita ao que existe', jn('6',3)===3);
+    chk('valor inválido cai no padrão', vm.runInContext("projJanelaNorm('xpto')", ctx)==='todos');
+
+    // 6 meses de 100.000 + 6 vazios → projeção completa o ano com a média
+    // rbt12Lanc = 0 de propósito: assim o RBT12 cresce com a própria receita do ano e a projeção
+    // atravessa faixas — é justamente onde a regra de três erraria.
+    const base = mk({ a1_semst: [300000,300000,300000,300000,300000,300000,0,0,0,0,0,0] }, 0);
+    const P = vm.runInContext(`anProjetarAno(${JSON.stringify(base)}, 'todos')`, ctx);
+    chk('projeta os 6 meses que faltam pela média dos 6 lançados',
+      P && P.nReais===6 && P.nProj===6 && Math.abs(P.dados.receitas.a1_semst[11]-300000)<0.01,
+      P?`reais=${P.nReais} proj=${P.nProj} dez=${P.dados.receitas.a1_semst[11]}`:'null');
+    chk('a análise original NÃO é mutada', Math.abs(base.receitas.a1_semst[11])<0.01);
+
+    const cheio = vm.runInContext(`(()=>{ const d = ${JSON.stringify(base)};
+      for (let m=0;m<12;m++) d.receitas.a1_semst[m] = 100000; return anProjetarAno(d,'todos'); })()`, ctx);
+    chk('ano com 12 meses lançados não gera projeção (não-regressão)', cheio===null);
+
+    // progressividade: o motor precisa rodar sobre o ano projetado — regra de três erraria
+    const prog = vm.runInContext(`(()=>{
+      const d6 = ${JSON.stringify(base)};
+      const r6 = calcular(d6, PARAMS.anexos, folhaPercDaEmpresa(d6.cfg));
+      const P = anProjetarAno(d6,'todos');
+      const r12 = calcular(P.dados, PARAMS.anexos, folhaPercDaEmpresa(P.dados.cfg));
+      return { rec: r12.totais.receita/r6.totais.receita, das: r12.totais.simples/r6.totais.simples }; })()`, ctx);
+    chk('receita dobra mas o Simples MAIS que dobra (progressividade do RBT12)',
+      prog && Math.abs(prog.rec-2)<0.01 && prog.das > 2.0,
+      prog?`receita ${prog.rec.toFixed(2)}× · Simples ${prog.das.toFixed(2)}×`:'—');
+  }
+
+  // ═══ 5v. v7.41.6 — empresa de destino na Consulta de CNPJ ═══
+  console.log('\n■ v7.41.6 — empresa de destino declarada na importação');
+  {
+    vm.runInContext(`EMPRESAS = [{cnpj:'24197146000137',razao_social:'WEEEDO LTDA'},{cnpj:'00718661000157',razao_social:'OUTRA SA'}]`, ctx);
+    chk('nome da empresa vem do cadastro, com ou sem pontuação',
+      vm.runInContext("empNomeDe('24197146000137')", ctx)==='WEEEDO LTDA'
+      && vm.runInContext("empNomeDe('24.197.146/0001-37')", ctx)==='WEEEDO LTDA');
+
+    vm.runInContext("EMP_GLOBAL = {cnpj:'24197146000137', ano:2026}", ctx);
+    const cab = vm.runInContext('empDestinoCabec()', ctx);
+    chk('o diálogo de importação abre nomeando a empresa de destino',
+      /WEEEDO LTDA/.test(cab) && /24\.197\.146\/0001-37/.test(cab) && /não diz de quem/.test(cab));
+    vm.runInContext("EMP_GLOBAL = {cnpj:'', ano:null}", ctx);
+    chk('sem empresa selecionada, o diálogo avisa em vez de seguir calado',
+      /NENHUMA EMPRESA SELECIONADA/.test(vm.runInContext('empDestinoCabec()', ctx)));
+
+    // o cnpjEmpresa é carimbado na IMPORTAÇÃO: gravar depois de trocar escreveria no CNPJ antigo
+    vm.runInContext("EMP_GLOBAL = {cnpj:'00718661000157', ano:2026}", ctx);
+    chk('gravar analítico em empresa diferente da importada é BLOQUEADO',
+      vm.runInContext("triDonoConfere({cnpjEmpresa:'24197146000137'}, true)", ctx)===false);
+    chk('mesma empresa (mesmo com formatação diferente) grava normalmente',
+      vm.runInContext("triDonoConfere({cnpjEmpresa:'00.718.661/0001-57'}, true)", ctx)===true);
+
+    vm.runInContext("FOT = {servico:null,revenda:null,compra:null,venda:null}; TRI = {compra:null,venda:null}", ctx);
+    chk('tela vazia não acusa pendência', vm.runInContext('fornPendente()', ctx)===false);
+    vm.runInContext("TRI.compra = {cnpjEmpresa:'24197146000137', _salvo:null}", ctx);
+    chk('analítico não gravado acusa pendência e identifica o dono',
+      vm.runInContext('fornPendente()', ctx)===true && vm.runInContext('fornDono()', ctx)==='24197146000137');
+    vm.runInContext("FOT = {servico:null,revenda:null,compra:null,venda:null}; TRI = {compra:null,venda:null}", ctx);
+
+    chk('trocar a empresa na página cnpj recarrega a análise e limpa a tela',
+      /else if \(p==='cnpj'\) await fornTrocarEmpresa\(\)/.test(html)
+      && /async function fornTrocarEmpresa\(\)\{[\s\S]{0,120}await anTrocarEmpresa\(\)/.test(html)
+      && /fornZerar\(\);/.test(html));
+    chk('faixa de destino fica fixa na tela da Consulta de CNPJ', html.includes('id="fo-destino"'));
+  }
+
+  // ═══ 5w. v7.41.7 — ano de referência, premissa do crédito e memória da projeção ═══
+  console.log('\n■ v7.41.7 — ano de referência do parecer e premissa do crédito');
+  {
+    vm.runInContext('PAR_ANO_REF_DOC = null', ctx);
+    chk('padrão do ano de referência é 2027 (primeiro ano da transição)',
+      vm.runInContext('parAnoRefEfetivo({}).v', ctx)===2027);
+    chk('configuração da empresa vence o padrão',
+      vm.runInContext('parAnoRefEfetivo({anoRefParecer:2033}).v', ctx)===2033);
+    vm.runInContext('PAR_ANO_REF_DOC = 2031', ctx);
+    chk('escolha do documento vence a da empresa',
+      vm.runInContext('parAnoRefEfetivo({anoRefParecer:2033}).v', ctx)===2031
+      && vm.runInContext('parAnoRefEfetivo({}).origem', ctx)==='documento');
+    vm.runInContext('PAR_ANO_REF_DOC = null', ctx);
+    chk('ano fora da lista é rejeitado e cai no padrão',
+      vm.runInContext('parAnoRefNorm(2050)', ctx)===2027 && vm.runInContext("parAnoRefNorm('abc')", ctx)===2027);
+    chk('"modelo pleno" só é dito de 2033',
+      vm.runInContext('parAnoRefRotulo(2033)', ctx)==='modelo pleno'
+      && vm.runInContext('parAnoRefRotulo(2027)', ctx)==='transição');
+
+    chk('o parecer não fixa mais 2033: cenário e "por dentro" seguem o ano escolhido',
+      /REF\.find\(l=>l\.ano===anoRef\)/.test(html) && /anos\.findIndex\(l=>l\.ano===anoRef\)/.test(html)
+      && !/D\.sDentro\[D\.sDentro\.length-1\]/.test(html));
+    chk('o ano escolhido é IMPRESSO no documento (título, quadro, jornada e alíquota)',
+      /três caminhos do Simples em '\+D\.anoRef/.test(html) && /Cenário em \$\{D\.anoRef\}/.test(html)
+      && /pp-jet">\$\{D\.anoRef\}/.test(html) && /Alíquota de referência \(\$\{D\.anoRef\}\)/.test(html));
+    chk('payload da IA leva anoReferencia e mantém a chave antiga da Edge Function',
+      /anoReferencia: D\.anoRef/.test(html) && /cenarios2033:/.test(html));
+
+    // premissa do crédito: ausência de DADO não é ausência de DIREITO
+    vm.runInContext('RL.forn = null', ctx);
+    const semNada = vm.runInContext("premissaCreditoIBS({anoRef:2027, cen:{semCreditos:true, rfx:{contra:{}}}})", ctx);
+    chk('sem compras informadas, a premissa não afirma inexistência de direito a crédito',
+      /não por inexistência de direito/.test(semNada) && /art\. 58/.test(semNada));
+    const comSM = vm.runInContext("premissaCreditoIBS({anoRef:2027, cen:{semCreditos:false, rfx:{contra:{compras_simples:100000}}}})", ctx);
+    chk('com compras do Simples/MEI, declara o crédito simplificado e o quantifica (0,62% em 2027)',
+      /crédito simplificado/.test(comSM) && /R\$ 620,00/.test(comSM) && !/sem crédito/i.test(comSM));
+    const manual = vm.runInContext("premissaCreditoIBS({anoRef:2033, cen:{semCreditos:false, rfx:{contra:{compras_simples:100000}, credSimplesPct:27.91}}})", ctx);
+    chk('percentual manual (fornecedor no regime regular) prevalece sobre o art. 58',
+      /percentual informado/.test(manual) && /R\$ 27\.910,00/.test(manual));
+
+    vm.runInContext(`RL.forn = { compra: { consultado_em:'2026-08-01T12:00:00Z', dados:{ itens:[
+      {classe:'mei', valor:50000}, {classe:'simples', valor:30000},
+      {classe:'normal', valor:20000}, {classe:'proprio', valor:9999} ] } } }`, ctx);
+    const fx = vm.runInContext('fornComprasSimplesMEI()', ctx);
+    chk('a consulta de fornecedores soma MEI+Simples e exclui movimentação própria',
+      fx && Math.abs(fx.soma-80000)<0.01 && Math.abs(fx.mei-50000)<0.01 && Math.abs(fx.tot-100000)<0.01,
+      fx?`soma=${fx.soma} mei=${fx.mei}`:'null');
+    const alerta = vm.runInContext("premissaCreditoIBS({anoRef:2027, cen:{semCreditos:true, rfx:{contra:{}}}})", ctx);
+    chk('havendo fornecedores MEI/Simples conhecidos, a premissa quantifica e manda aplicar na Reforma',
+      /R\$ 80\.000,00/.test(alerta) && /MEI R\$ 50\.000,00/.test(alerta) && /Aplique a consulta na aba Reforma/.test(alerta));
+    vm.runInContext('RL.forn = null', ctx);
+
+    chk('memória de cálculo da projeção entra na conferência (modo anual e modo mês)',
+      /rlConfSublimite\(\) \+ rlConfProjecao\(\)/.test(html) && /return h \+ rlConfProjecao\(\)/.test(html));
+    chk('sem análise carregada, a memória da projeção não quebra a tela',
+      vm.runInContext("(()=>{ const s = RL.dados; RL.dados = null; const r = rlConfProjecao(); RL.dados = s; return r; })()", ctx)==='');
+  }
+
   console.log('\n══════════════════════════════════');
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
   process.exit(FALHAS.length ? 1 : 0);
