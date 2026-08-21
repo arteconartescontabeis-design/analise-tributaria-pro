@@ -1310,6 +1310,27 @@ console.log('\n■ Integridade da interface');
       vm.runInContext("(()=>{ const s = RL.dados; RL.dados = null; const r = rlConfProjecao(); RL.dados = s; return r; })()", ctx)==='');
   }
 
+
+  // ═══ 5x. v7.41.8 — a folha da TELA tem de ter a largura do PAPEL ═══
+  // Esta é a regressão mais cara da história do parecer: o empacotador mede na tela, e enquanto a
+  // .pp-page não tinha largura fixa (ocupava o .main, ~313mm) o texto quebrava em ~1,6× menos
+  // linhas do que no papel (174mm úteis). A altura impressa era subestimada e o conteúdo saía
+  // CORTADO pelo overflow:hidden, sem aviso. Voltou três vezes tratando sintoma. Guarda aqui.
+  console.log('\n■ v7.41.8 — medição do parecer só vale com a folha na largura do papel');
+  {
+    const cssTela = (html.match(/\.pp-page\{[^}]*\}/) || [''])[0];
+    chk('v7.41.8 · .pp-page tem largura fixa de 210mm também NA TELA (sem isso a medição mente)',
+      /width:210mm/.test(cssTela) && /box-sizing:border-box/.test(cssTela),
+      cssTela ? cssTela.slice(0, 90) + '…' : 'regra .pp-page não encontrada');
+    chk('v7.41.8 · a impressão segue forçando 210mm (a regra antiga continua)',
+      /\.pp-page\{[^}]*width:210mm/.test(html.slice(html.indexOf('@media print'))));
+    const reserva = vm.runInContext('typeof PP_RESERVA_MM !== "undefined" ? PP_RESERVA_MM : 0', ctx);
+    chk('v7.41.8 · reserva de folha em pelo menos 10mm', reserva >= 10, 'reserva = ' + reserva + 'mm');
+    chk('v7.41.8 · a régua vigia a própria premissa (ppLarguraFolha) e avisa quando a largura foge',
+      /function ppLarguraFolha\(/.test(html) && /Medição não confiável/.test(html));
+    chk('v7.41.8 · o empacotador continua rodando DEPOIS dos gráficos (lição da v7.40.2)',
+      html.indexOf('ppEmpacotarDOM($id(\'rl-corpo\'))') > html.indexOf("rlChart('pc-acum'"));
+  }
   console.log('\n══════════════════════════════════');
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
   process.exit(FALHAS.length ? 1 : 0);
