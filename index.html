@@ -209,6 +209,16 @@ canvas{max-height:340px}
 @media print{ .rep12{display:none!important} }
 
 </style>
+<style>
+/* v7.43.2 · faixa única de estado da projeção, sob o seletor de relatórios. Fundo neutro nos dois
+   casos: só a expressão "Valores projetados" carrega o âmbar, que é a mesma marca do selo impresso
+   dentro do documento. A faixa é navegação; quem prova no papel é o selo. */
+.rl-status{margin-top:10px;padding:9px 12px;border-radius:8px;background:#f4f6f7;font-size:12.5px;line-height:1.5;color:#566573}
+.rl-status .proj{font-weight:700;color:#b9770e}
+.rl-status .ok{font-weight:700;color:#1a5276}
+#rl-conf-anos label{font-weight:400;display:inline-flex;align-items:center;gap:4px;margin:0 10px 0 0;white-space:nowrap;font-size:12.5px}
+#rl-conf-anos input{width:auto;margin:0}
+</style>
 </head>
 <body>
 
@@ -255,7 +265,7 @@ canvas{max-height:340px}
     </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
-      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.41.8</span></div>
+      <div class="page-title"><h1>Dashboard</h1><span class="crumb">Empresas em análise</span><span class="badge ok" style="margin-left:auto;font-size:13px" id="badge-versao">Análise Tributária Pro v7.43.2</span></div>
       <div class="grid c4">
         <div class="stat"><div class="n" id="da-emp">–</div><div class="l">Empresas em análise</div></div>
         <div class="stat"><div class="n" id="da-anal">–</div><div class="l">Análises salvas</div></div>
@@ -536,14 +546,18 @@ canvas{max-height:340px}
           <div style="width:130px" id="rl-ano2-wrap"><label>Comparar com <span class="hint" style="font-weight:400">(opcional)</span></label>
             <input type="number" id="rl-ano2" placeholder="—" onchange="rlCarregar()"></div>
         <div><label>Relatório</label><select id="rl-tipo" onchange="rlRender()">
-          <option value="regimes">Comparativo de regimes</option>
-          <option value="consolidado">Consolidado analítico (4 regimes)</option>
-          <option value="registros">Detalhamento dos registros</option>
-          <option value="reforma">Reforma Tributária</option>
-          <option value="parecer">Parecer Reforma Tributária — com IA</option>
-          <option value="conferencia">Conferência de cálculos — memória (interno)</option>
-          <option value="cnpj">Resumo Estatístico</option>
-          <option value="produtos">Produtos vendidos × Reforma (IBS/CBS)</option>
+          <optgroup label="Projetam o ano quando faltam meses">
+            <option value="parecer">Parecer Reforma Tributária — com IA</option>
+            <option value="conferencia">Conferência de cálculos — memória (interno)</option>
+          </optgroup>
+          <optgroup label="Somente realizado (meses lançados)">
+            <option value="regimes">Comparativo de regimes</option>
+            <option value="consolidado">Consolidado analítico (4 regimes)</option>
+            <option value="registros">Detalhamento dos registros</option>
+            <option value="reforma">Reforma Tributária</option>
+            <option value="cnpj">Resumo Estatístico</option>
+            <option value="produtos">Produtos vendidos × Reforma (IBS/CBS)</option>
+          </optgroup>
         </select></div>
         <div style="width:230px;display:none" id="rl-proj-wrap"><label>Projeção do ano <span class="hint" style="font-weight:400">(neste documento)</span></label>
           <select id="rl-proj" onchange="rlProjTrocar(this.value)"></select></div>
@@ -555,7 +569,10 @@ canvas{max-height:340px}
           <option value="12">Anual</option>
         </select></div>
         <div style="align-self:flex-end"><button class="btn solid" onclick="window.print()" title="Na janela de impressão: Destino = Salvar como PDF · Margens = Nenhuma · ativar Gráficos de segundo plano">🖨️ Imprimir / PDF</button></div>
-      </div></div>
+      </div>
+      <div style="display:none;margin-top:8px" id="rl-conf-anos-wrap"><label>Anos no demonstrativo da Reforma <span class="hint" style="font-weight:400">(memória de cálculo ano a ano)</span></label>
+        <div id="rl-conf-anos" style="display:flex;gap:2px;flex-wrap:wrap;align-items:center;padding:4px 0"></div></div>
+      <div id="rl-status-proj" class="rl-status" style="display:none"></div></div>
       <div id="rl-cab" style="display:none" class="card"><h2 id="rl-titulo" style="font-family:var(--display);color:var(--primary)"></h2><div class="hint" id="rl-sub"></div></div>
       <div id="rl-corpo"><div class="card placeholder"><h2>Selecione a empresa</h2><p>O relatório usa a análise salva (ou a análise aberta na aba Análise Atual).</p></div></div>
     </div>
@@ -657,7 +674,12 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.41.8</b> <span class="badge ok">atual</span></td><td>20/08/2026</td><td><b>🐞 A CAUSA RAIZ dos cortes de página que voltavam — a folha da tela era 49% mais larga que a folha impressa.</b> O empacotador mede as folhas na tela para decidir onde quebrar. Só que a <code>.pp-page</code> não tinha largura fixa na tela: ocupava o <code>.main</code> (max-width 1250px ≈ <b>313 mm</b>), enquanto a impressão a força a <b>210 mm</b>. Descontadas as margens, a faixa de texto era de <b>277 mm na tela contra 174 mm no papel</b> — 63%. Cada parágrafo e cada célula de tabela quebrava em <b>cerca de 1,6× mais linhas no papel</b> do que na tela, e o empacotador subestimava a altura impressa por uma margem proporcional ao texto da folha. Como o erro cresce com o conteúdo, os 6 mm de reserva o absorviam enquanto as folhas tinham sobra e ele reaparecia a cada seção que crescia: foi o que aconteceu com a folha das Premissas, engordada pela ficha do enquadramento (v7.41.2) e pelo texto do crédito do MEI (v7.41.7), até cortar o parágrafo do Retrato no meio. As correções anteriores trataram sintomas — esta trata a premissa. <b>Agora a pré-visualização tem a largura do papel</b> (<code>width:210mm</code>): o que se mede é o que se imprime. A reserva subiu de <b>6 para 10 mm</b>, barata porque as folhas aprovadas tinham de 14 a 114 mm de sobra. E a régua ganhou um <b>vigia da própria premissa</b>: ela confere a largura real da folha e, se algum CSS futuro voltar a soltá-la, avisa em destaque que a medição não é confiável — em vez de deixar o corte reaparecer calado no PDF. Motor de cálculo e lacre 5a5562df intocados.</td></tr>
+                    <tr><td><b>v7.43.2</b> <span class="badge ok">atual</span></td><td>21/08/2026</td><td><b>A Conferência de cálculos ganha a MEMÓRIA ano a ano da Reforma (2026–2033), seletor de anos, e passa a provar que PIS/COFINS não entram a partir de 2027.</b> <b>(1) Memória de cálculo por ano projetado.</b> O quadro da Reforma trazia uma linha por ano com débito, crédito e líquido — o <i>resultado</i>, nunca o <i>cálculo</i>. Agora cada ano abre a sua própria memória: alíquotas do ano com a procedência de cada uma (lei, estimativa ou projeção), base tributável com as reduções por cClassTrib item a item, crédito separado por origem (PJ do regime regular à alíquota cheia × optante do Simples pelo art. 58), líquido, IS, e os três cenários — por dentro, híbrido do art. 22-A e regime regular — com a fórmula e os valores substituídos. <b>(2) Seleção de anos.</b> Oito memórias completas fazem um documento longo; a barra do relatório ganhou caixas por ano, com "todos" e "nenhum", e o documento passa a declarar quais anos foram selecionados — para que ninguém leia um recorte pensando ser o conjunto. <b>(3) PIS e COFINS a partir de 2027 — conferido e demonstrado.</b> A verificação pedida deu <b>negativo</b>: o motor já zera o remanescente de PIS/COFINS de 2027 em diante, e o comparativo do regime regular nunca somou essas contribuições nesses anos. O que faltava era <b>prova no documento</b>. Duas providências: cada memória anual imprime a linha de PIS e a de COFINS <b>zeradas, com o percentual à vista</b>, em vez de omiti-las — ausência de linha não pode ser confundida com esquecimento; e um <b>vigia</b> confere os percentuais de 2027 a 2033 e denuncia em vermelho se algum voltar a ser maior que zero, porque esses percentuais são <b>editáveis</b> em Parâmetros › Reforma e um ajuste feito ali reintroduziria tributo extinto. O IPI recebeu a mesma linha zerada, com a ressalva de que a redução a zero não alcança a industrialização na Zona Franca de Manaus — hipótese não modelada. <b>(4) Correção de base, com efeito em número.</b> O quadro da Reforma partia dos totais do <b>realizado</b>, enquanto todo o resto do documento — desde a v7.42.4 — trabalha com o ano <b>projetado</b>. Num ano com seis meses lançados, a transição inteira até 2033 era montada sobre meio ano de receita, e nada na página dizia isso. Agora a Reforma usa a mesma base do documento e a <b>declara no cabeçalho do quadro</b>. É a única alteração desta versão que muda valores; motor e lacre <code>5a5562df</code> seguem intocados, e os casos-gabarito não têm projeção, por isso o selo não se move. <b>(5) Relatórios agrupados por projeção.</b> O seletor passou a separar os documentos que <b>projetam o ano quando faltam meses</b> dos que mostram <b>somente o realizado</b>, e uma faixa sob o seletor informa o estado da análise aberta — quantos meses estão apurados, quantos foram estimados e por qual janela — ou declara que o ano está fechado. A observação ficou no grupo e na faixa, e <b>não no nome do relatório</b>: projeção é estado da análise, não atributo do documento, e um rótulo fixo mentiria justamente no ano fechado. <b>(6) O badge da versão parou de mentir</b> — estava escrito à mão no HTML, congelado na v7.42.3, e agora é gerado a partir do APP_VERSAO.</td></tr>
+                    <tr><td><b>v7.43.1</b></td><td>21/08/2026</td><td><b>O período coberto passa a ser o da importação, e não o do último mês com receita.</b> Importar o PGDAS-D de janeiro a junho declara <b>seis meses de apuração</b>, mesmo que só três tenham tido faturamento — os outros três foram apurados e deram zero, o que é <b>informação</b>, não ausência dela. Até aqui o motor parava no último mês com receita: com faturamento em janeiro, fevereiro e abril, a janela virava de quatro meses e a média dividia por quatro, projetando oito meses. Agora a janela vai até <b>junho</b> e o denominador é <b>seis</b> — a soma de janeiro, fevereiro e abril dividida por seis é replicada de julho a dezembro. Projeta-se o ritmo real da empresa, e não o dos meses bons. A cobertura vem da <b>trilha de origem</b> da v7.28.0, que marca todos os meses do lote importado, inclusive os zerados; contam apenas marcas de importação — PGDAS-D, Relatório de Faturamento, Demonstrativo do Simples, XML de notas e planilha modelo. Mês digitado à mão na grade não declara período, porque digitar zero não é o mesmo que apurar zero. A <b>projeção de limite e sublimite</b> passa a usar o mesmo período, para que o parecer e o alerta de ultrapassagem nunca falem de anos diferentes. A memória de cálculo ganhou uma linha nomeando os <b>meses apurados sem receita</b> e explicando por que eles entram no denominador. Motor e lacre <code>5a5562df</code> intocados: a cobertura decide o que entra na projeção, montada antes do cálculo — nenhuma regra de apuração muda.</td></tr>
+                    <tr><td><b>v7.43.0</b></td><td>21/08/2026</td><td><b>INSS, IRPJ e CSLL detalhados nos dois regimes, abertura de IBS e CBS por ente, e botão de cancelar nas importações longas.</b> <b>(1) INSS patronal — e um erro que estava impresso.</b> A memória anual exibia o percentual sobre salários <b>fixo em 28,96%</b>, escrito direto no código, enquanto o motor calculava com os parâmetros reais — cujo padrão de fábrica soma <b>28,596%</b> (CPP 20% + RAT/FAP 5,80% + Terceiros 2,796%). O mesmo cálculo aparecia com dois percentuais diferentes conforme o quadro que se abrisse. Agora os dois leem <code>folhaPercDaEmpresa</code>, que dá precedência aos percentuais próprios da empresa sobre os globais, e a linha se abre em duas: a base de <b>salários</b> com os três componentes discriminados, e a base de <b>pró-labore</b> a 20%, sem RAT e sem Terceiros, como manda o art. 22, III, da Lei 8.212/91 para o contribuinte individual. Quando não há salários lançados, o quadro diz isso — e diz que RAT e Terceiros, nesse caso, não afetam nada. <b>(2) IRPJ e CSLL.</b> Nos dois regimes a base passa a aparecer antes do tributo, com a alíquota ao lado. No Presumido, a base de presunção separada por comércio e serviços, e a presunção própria de CSLL quando difere. No Real, a <b>formação da base linha a linha</b> — receita, financeiras, custos, folha, despesas, INSS patronal, PIS/COFINS, ICMS, IPI e ISS —, deixando visível que os tributos são despesa dedutível e por isso entram antes do lucro. O adicional de 10% passa a declarar o limite do período e, quando não incide, informa a base do período e que ela ficou abaixo do limite. <b>(3) Abertura de IBS e CBS.</b> A conferência da Reforma trazia o líquido <b>combinado</b>. Entra um quadro que separa <b>CBS federal</b>, <b>IBS estadual</b> e <b>IBS municipal</b> ano a ano, com base tributável, alíquota de cada um e o rateio do líquido — três entes com competências e obrigações distintas, que somados numa linha só escondem onde a empresa recolhe. Acompanha a leitura da escada da transição, do ano-teste de 2026 até 2033. <b>(4) Cancelar importação.</b> A leitura de XML e a consulta de CNPJ na base da Receita ganham faixa de progresso com botão de cancelar. O cancelamento é <b>cooperativo</b>: para no limite de uma nota ou de um CNPJ, nunca no meio do processamento de um arquivo, e <b>preserva o que já foi lido</b> — quem cancelou em 400 de 900 revisa essas 400 em vez de recomeçar. A tela de revisão avisa, em âmbar, que o lote está incompleto. Motor e lacre <code>5a5562df</code> intocados.</td></tr>
+                    <tr><td><b>v7.42.5</b></td><td>21/08/2026</td><td><b>Critério da média da projeção: média simples da janela, com os meses parados no denominador.</b> A média que preenche os meses não lançados divide pelo <b>número de meses da janela</b>, e não pelo número de meses que tiveram movimento — se a janela vai de janeiro a junho, soma-se e divide-se por <b>seis</b>, ainda que algum desses meses tenha ficado sem faturamento. A razão é que um mês parado <b>faz parte do desempenho real</b> da empresa: projetar o resto do ano só pelos meses bons produziria um ano melhor do que aquele que a empresa vem entregando, e a projeção existe justamente para antecipar limite, sublimite e faixa com honestidade. O mesmo denominador vale para a projeção de <b>limite e sublimite</b>, para que o parecer e o monitor nunca projetem anos diferentes. A memória de cálculo passa a informar, sem efeito no resultado, <b>quantos meses da janela tiveram movimento</b> em cada grupo — receita, folha, compras e despesas — para que o leitor enxergue quando a média está sendo diluída. Motor e lacre <code>5a5562df</code> intocados.</td></tr>
+                    <tr><td><b>v7.42.4</b></td><td>21/08/2026</td><td><b>Os meses não lançados passam a ser calculados na conferência, e a média da projeção ignora os meses parados.</b> <b>(1) O problema.</b> A conferência imprimia maio a dezembro <b>zerados</b> enquanto o parecer, no mesmo pacote, falava do ano inteiro com esses meses estimados — o leitor via o mesmo mês com R$ 0,00 na página mensal e com valor cheio no quadro da projeção, sem saber qual valia. E o efeito ia além da aparência: com os meses futuros zerados, o <b>RBT12 despencava</b> ao longo do ano, porque os meses vazios iam saindo da janela de doze; o <b>Fator R deixava de ser calculável</b> sem receita; e o motor <b>trocava de anexo sozinho</b>, de modo que o mesmo contribuinte aparecia no Anexo III em fevereiro e no Anexo I em maio, com alíquota diferente. <b>(2) A correção.</b> A conferência mensal e o resumo anual passam a rodar o mesmo motor sobre a análise projetada; cada mês estimado é <b>marcado em âmbar</b>, com aviso próprio, e o cabeçalho declara quais meses são estimados e por qual janela. Os totais do realizado continuam existindo, separados, no quadro "Projeção do ano — memória de cálculo". <b>Motor e lacre <code>5a5562df</code> intocados</b>: a projeção monta a análise <b>antes</b> de <code>calcular</code>, não altera nenhuma regra de cálculo, e análises com os doze meses lançados seguem com resultado idêntico.</td></tr>
+                    <tr><td><b>v7.42.3</b></td><td>21/08/2026</td><td><b>🧾 A importação do balancete passa a mapear o crédito do Lucro Real conta a conta, item a item do art. 3º. Lacre <code>5a5562df</code> íntegro.</b> Na v7.42.2 o crédito de despesa virou configurável, mas continuava caindo num <b>balde único</b> — "Despesa c/ crédito no Lucro Real" — que não dizia de onde o crédito tinha vindo. Como a lista do art. 3º das Leis 10.637/2002 e 10.833/2003 é <b>taxativa</b>, a decisão de creditar é conta a conta, e a memória tem de mostrar qual item sustenta cada centavo. <b>Agora existem nove rubricas nomeadas</b>, cada uma com a sua base legal: insumos (II), energia elétrica e térmica (III/IX), aluguéis de PJ (IV), arrendamento mercantil (V), depreciação (VI), amortização de benfeitorias (VII), devoluções de vendas (VIII), frete e armazenagem na venda (IX) e vale-transporte/refeição/uniforme (X). O balde antigo permanece como <b>"outros créditos informados manualmente"</b>, para não quebrar nenhuma análise já salva. <b>A importação do balancete abriu de 15 para 25 destinos</b>, com os rótulos separando visualmente o que credita (<b>✓ CRÉDITO LR</b>, com o inciso ao lado) do que não credita (<b>SEM crédito</b>) — porque marcar errado aqui é crédito indevido, não um detalhe de organização. O classificador automático passou a <b>sugerir</b> a rubrica pela descrição da conta: energia elétrica, aluguel, leasing, depreciação, frete sobre vendas, vale-transporte e devolução de vendas caem na rubrica certa; IPTU, honorários e a despesa administrativa comum continuam <b>sem crédito</b>. É sugestão — a prévia da importação permite trocar conta por conta antes de aplicar, que é exatamente o ajuste um a um. As rubricas também aparecem na <b>grade de lançamento</b> da análise, sob um cabeçalho com a base legal, e nos <b>dados de entrada</b> da conferência. E a memória anual do Lucro Real deixou de mostrar uma linha genérica: agora traz <b>uma linha por rubrica</b>, com o inciso, somando à base de crédito. Nada muda em análises existentes — todas as rubricas novas nascem zeradas. Suíte: <b>217 verificações</b>.</td></tr><tr><td><b>v7.42.2</b></td><td>21/08/2026</td><td><b>💰 Saldo credor de PIS/COFINS deixa de ser jogado fora, e a despesa passa a poder creditar. As duas correções mexem no motor — mas o lacre <code>5a5562df</code> seguiu íntegro, porque nenhum dos dois casos-gabarito aciona as regras novas.</b> <b>(1) O saldo credor agora é transportado.</b> Quando os créditos de PIS/COFINS superavam as receitas do mês, o excedente era <b>descartado</b> por um <code>Math.max(0, …)</code>. Na apuração real ele se acumula (art. 3º, § 4º, das Leis 10.637/2002 e 10.833/2003). O efeito era grande e silencioso: numa empresa sazonal que compra o estoque em janeiro e fevereiro e vende de março a junho, o motor descartava R$ 560.000,00 de base credora e cobrava PIS/COFINS integral sobre ela nos meses de venda — <b>R$ 51.800,00 de tributo que não existiria</b>. Agora o saldo é levado adiante mês a mês, o quadro mostra quanto entrou e quanto sobrou, e o que restar em 31/12 é declarado como base credora a transportar para o ano seguinte, não aproveitada no cálculo. <b>(2) Crédito de PIS/COFINS sobre despesas — configurável, não presumido.</b> Antes só compras de mercadoria e o campo manual creditavam. Creditar todas as despesas seria trocar um erro por outro maior: a lista do art. 3º daquelas leis é <b>taxativa</b> (energia elétrica, aluguéis de PJ, arrendamento, fretes na venda e alguns insumos creditam; folha, tributos e a maior parte da despesa administrativa não), e o aplicativo não tem como conhecer a composição de cada rubrica. A solução foi um <b>percentual de creditabilidade por categoria de despesa</b>, declarado pelo usuário. O <b>padrão é zero</b>, o que preserva exatamente o resultado de todas as análises já existentes — quem não configurar nada não vê número mudar. Configurado, o valor entra na base de crédito e aparece em linha própria na memória anual, com os percentuais adotados escritos ao lado. <b>(3) Não implementado, por decisão técnica:</b> variar o percentual do art. 58 conforme o anexo e a faixa do fornecedor. Não é possível saber o RBT12 de quem vende, e chutar a faixa produziria número pior que a premissa conservadora atual — que segue declarada em todos os relatórios. Suíte: <b>207 verificações</b>, incluindo o cenário sazonal completo e a prova de que o padrão zero não altera cálculo algum.</td></tr><tr><td><b>v7.42.1</b></td><td>21/08/2026</td><td><b>📐 Os três pontos levantados sobre memória de cálculo, crédito do art. 58 e coerência entre relatórios — resolvidos sem alterar um único número. Lacre <code>5a5562df</code> intocado.</b> <b>(1) Memória anual de Lucro Presumido e Lucro Real, parcela a parcela.</b> O Comparativo trazia só o <i>resultado</i> de cada tributo no ano. Agora traz o <i>cálculo</i>: receita bruta, exclusões, ICMS destacado do Tema 69, base de presunção com o percentual por atividade, IRPJ, adicional, CSLL, ISS, ICMS, INSS patronal e o encadeamento até o total. <b>O Lucro Real ganhou débito e crédito separados.</b> O motor sempre apurou PIS/COFINS por <i>base líquida × alíquota</i> — as compras já entravam deduzidas da base, e por isso a parcela de crédito não existia como grandeza visível. As linhas novas reapresentam a mesma conta como <code>base_bruta × alíq − base_crédito × alíq</code>, que é algebricamente idêntica: nenhum valor mudou, e a suíte prova a identidade. A base de crédito é discriminada por origem (compras, ICMS das compras, créditos manuais). <b>Duas limitações do Lucro Real passaram a ser declaradas em vez de silenciosas:</b> só compras de mercadoria e o campo manual geram crédito — energia, aluguel, fretes e serviços tomados não creditam automaticamente; e quando os créditos superam as receitas no mês, o excedente é <b>descartado</b> em vez de transportado, o que superestima o Lucro Real em empresa sazonal. O quadro conta quantos meses isso ocorreu. <b>(2) Premissa do art. 58 declarada onde importa.</b> O crédito sobre compras de optantes do Simples já era calculado (0,62% em 2027-28, subindo a 1,98% em 2033), mas a premissa não aparecia na <b>Conferência de cálculos</b> — justamente o documento de auditoria. Agora aparece, com os percentuais por ano, a base do crédito e a informação de que se adota a <b>1ª faixa do Anexo I</b> por não se conhecer o RBT12 do fornecedor, contrastada com o que um fornecedor de serviços na 5ª faixa daria (10,31% em 2033). <b>(2b) A premissa de sinal contrário, que ninguém tinha visto.</b> Com a aba Reforma vazia, o app trata as compras de revenda como aquisições de PJ do regime regular — <b>crédito integral à alíquota cheia</b>, 27,91% em 2033, contra os 1,98% do fornecedor do Simples. Ou seja: <b>deixar a aba vazia produzia um cenário mais favorável do que preenchê-la com a verdade</b>. O aviso agora diz isso com todas as letras e quantifica a diferença. <b>(3) Fórmula única de soma entre relatórios.</b> Conviviam duas: <code>somaExib</code> somava os valores já arredondados de cada mês (conferência) e <code>res.totais</code> somava sem arredondar (comparativo e consolidado). Mesmo dado, números diferentes — divergência medida de <b>R$ 0,01 a R$ 0,05</b>. Agora todo relatório soma pela mesma regra (<code>totExib</code>), <code>agrupar</code> foi alinhado, e a regra é impressa em nota. As colunas de <b>cenário</b> da Reforma seguem em precisão plena, porque encadeiam oito anos e arredondar a cada passo acumularia desvio — e essa diferença de método passou a ser <b>declarada no próprio quadro</b>, em vez de deduzida por quem lê. Suíte: <b>200 verificações</b>.</td></tr><tr><td><b>v7.42.0</b></td><td>21/08/2026</td><td><b>🔍 A memória de conferência passou por auditoria externa cega e voltou com seis correções — todas de exibição e agregação, motor e lacre <code>5a5562df</code> intocados.</b> <b>(1) O rótulo do anexo mentia.</b> A conferência mensal imprimia <i>"Alíquota efetiva (Anexo I) · 4,0000%"</i> e, na linha seguinte, aplicava <b>6,0000%</b> do Anexo III. A alíquota certa sempre foi usada no cálculo; o que estava errado era o rótulo, fixo em Anexo I. Agora sai uma linha <b>por anexo efetivamente usado no mês</b>, com a fórmula do anexo certo. <b>(2) O fator R era invisível.</b> O motor o calcula desde a v7.17.0, mas ele não aparecia em lugar nenhum do documento — e no caso auditado ficava em <b>22,9%</b>, abaixo dos 28%, sem que o leitor tivesse como saber. Agora o fator R é impresso sempre que houver receita de serviço, com o limite de 28%, o anexo resultante e, quando fica abaixo do limite em receita de Anexo III, o aviso para conferir o enquadramento pelo art. 18, § 5º-B, da LC 123. Ausência do bloco não pode mais ser confundida com "não verificado". <b>(3) Cada linha do "realizado" somava um número diferente de meses.</b> Receita e Simples paravam no último mês lançado; o Lucro Presumido arrastava o INSS de meses seguintes com folha lançada; o Lucro Real ainda somava o IRPJ/CSLL de trimestre que fecha <i>depois</i> do período. Daí saíam razões de <b>2,90×</b> e <b>3,07×</b> onde o correto era 3,00× — e o documento não dava pista do porquê. Agora todas as linhas somam o mesmo intervalo, o cabeçalho declara qual é ("Realizado (Jan–Abr · 4m)") e o que ficou de fora é <b>mostrado em destaque</b> em vez de entrar calado. <b>(4) Truncar não bastava para o Lucro Real.</b> Quando o período termina no meio de um trimestre, o realizado ficaria sem carga que o projetado tem. O fechamento do trimestre em aberto passa a ser <b>estimado</b> com os meses já decorridos dele, declarado como estimativa no próprio quadro. <b>(5) O parágrafo da progressividade contradizia a tabela.</b> Era texto fixo afirmando que "dobrar a receita mais que dobra o DAS" logo abaixo de uma tabela que mostrava razão 3,00× — porque a empresa não saía da 1ª faixa. Agora o parágrafo é <b>gerado a partir dos números</b>: quando a alíquota efetiva não muda no intervalo, é isso que ele diz. <b>(6) O documento não dizia com que motor foi feito.</b> O único "v7.18.0" que aparecia era procedência de uma regra, não versão. O cabeçalho passa a trazer app, lacre e o estado de integridade — e avisa em vermelho se o lacre estiver violado. Rede de teste reforçada no mesmo passo: os gabaritos saíram de <b>65 para 754 verificações</b> (fixtures ricos de caso1 e caso2 rebaselinados só nas séries afetadas pelas v7.35.0 e v7.36.0, com os totais anuais preservados) e o caso2, que vinha sendo <b>pulado em silêncio</b>, voltou a rodar. Suíte: <b>186 verificações</b>.</td></tr><tr><td><b>v7.41.8</b></td><td>20/08/2026</td><td><b>🐞 A CAUSA RAIZ dos cortes de página que voltavam — a folha da tela era 49% mais larga que a folha impressa.</b> O empacotador mede as folhas na tela para decidir onde quebrar. Só que a <code>.pp-page</code> não tinha largura fixa na tela: ocupava o <code>.main</code> (max-width 1250px ≈ <b>313 mm</b>), enquanto a impressão a força a <b>210 mm</b>. Descontadas as margens, a faixa de texto era de <b>277 mm na tela contra 174 mm no papel</b> — 63%. Cada parágrafo e cada célula de tabela quebrava em <b>cerca de 1,6× mais linhas no papel</b> do que na tela, e o empacotador subestimava a altura impressa por uma margem proporcional ao texto da folha. Como o erro cresce com o conteúdo, os 6 mm de reserva o absorviam enquanto as folhas tinham sobra e ele reaparecia a cada seção que crescia: foi o que aconteceu com a folha das Premissas, engordada pela ficha do enquadramento (v7.41.2) e pelo texto do crédito do MEI (v7.41.7), até cortar o parágrafo do Retrato no meio. As correções anteriores trataram sintomas — esta trata a premissa. <b>Agora a pré-visualização tem a largura do papel</b> (<code>width:210mm</code>): o que se mede é o que se imprime. A reserva subiu de <b>6 para 10 mm</b>, barata porque as folhas aprovadas tinham de 14 a 114 mm de sobra. E a régua ganhou um <b>vigia da própria premissa</b>: ela confere a largura real da folha e, se algum CSS futuro voltar a soltá-la, avisa em destaque que a medição não é confiável — em vez de deixar o corte reaparecer calado no PDF. Motor de cálculo e lacre 5a5562df intocados.</td></tr>
                     <tr><td><b>v7.41.7</b></td><td>20/08/2026</td><td><b>Ano de referência do parecer, memória de cálculo da projeção e a premissa do crédito de IBS/CBS corrigida.</b> <b>(1) Ano de referência.</b> Os cenários comparativos do parecer — por dentro × híbrido × fora do Simples — eram sempre os de <b>2033</b>. A transição começa em <b>2027</b>, e a pergunta prática do cliente costuma ser o que muda no ano seguinte, não daqui a sete anos. O ano passa a ser escolhível, com o mesmo desenho já adotado na janela de projeção: <b>padrão por empresa</b> (Configuração) mais <b>sobreposição por documento</b> (barra de Relatórios, só no parecer, sem gravar nada). O <b>padrão passa a ser 2027</b> — quem quiser o modelo pleno seleciona 2033. O ano escolhido é <b>impresso</b> no título da seção, no cabeçalho do quadro, na caixa da jornada e na linha da alíquota de referência, e vai no payload da IA como <code>anoReferencia</code>: em nenhum ponto ele é estado invisível. <b>(2) Memória de cálculo da projeção.</b> A conferência media o realizado, enquanto o parecer fala do ano inteiro com os meses futuros estimados — não havia como conferir de onde saíam os valores do parecer. O novo quadro <b>"Projeção do ano — memória de cálculo"</b> refaz a mesma projeção e mostra a janela adotada e sua origem, quais meses entram na média, a receita média replicada, a regra aplicada, o fator de escala da aba Reforma, a tabela mês a mês (realizado × projetado, com receita, folha, compras, despesas e DAS) e o confronto dos totais realizado × projetado com a razão de cada um. <b>(3) Premissa do crédito.</b> O item 3 dizia "cenários calculados SEM créditos de IBS/CBS" sempre que a aba Reforma estava vazia — afirmação enganosa, porque compra de fornecedor do <b>Simples/MEI gera crédito simplificado</b> (art. 58, §§4º-6º, da Res. CGSN nº 190/2026) e o que faltava era o <b>dado</b>, não o direito. A premissa passa a distinguir as duas coisas: com compras do Simples/MEI informadas, ela declara o crédito e o quantifica no ano de referência; sem compras informadas, ela diz que nenhum crédito foi computado <b>por ausência de dado</b> e — se a Consulta de CNPJ já identificou fornecedores MEI/Simples — informa o valor encontrado e pede que a consulta seja aplicada na aba Reforma. Motor de cálculo e lacre 5a5562df intocados (<code>calcular</code>, <code>cenDentro</code>, <code>credSimplesArt58</code>, <code>monitorSublimite</code> e <code>anProjetarAno</code> conferidos byte a byte).</td></tr>
                     <tr><td><b>v7.41.6</b></td><td>20/08/2026</td><td><b>Consulta CNPJ: a empresa de destino passa a ser declarada, e trocar de empresa passa a trocar a análise.</b> Três mudanças na mesma origem — a exportação do Questor traz apenas as <b>contrapartes</b>, então o arquivo não diz de qual empresa ele é. Como o erro não é detectável pelo conteúdo, o app passa a torná-lo visível. (1) <b>Faixa de destino fixa na tela</b>, acima dos botões: "Importando em [empresa]" — ou aviso em âmbar quando a barra do topo está sem empresa. (2) <b>O diálogo "Confirme o que foi lido" abre pela empresa de destino</b>, antes do período e dos totais, nas duas variantes (exportação única do Questor e analítico simples). (3) <b>Trocar a empresa na barra do topo, estando na Consulta CNPJ, agora recarrega a análise e limpa a tela</b> — antes a página era a única que ignorava a troca, e os analíticos da empresa anterior continuavam ali. Se houver consulta ainda não gravada, o app avisa antes de descartar. Fechada junto uma falha silenciosa: o <code>cnpjEmpresa</code> é carimbado <b>na importação</b>, de modo que importar em uma empresa, trocar a barra e mandar gravar escrevia o histórico no <b>CNPJ antigo</b>, sem aviso; agora a divergência bloqueia a gravação e nomeia as duas empresas. Corrigido também o <code>nomeEmpresa</code> do analítico, que vinha de um campo inexistente (<code>EMP_GLOBAL.razao_social</code>) e gravava sempre vazio. Motor de cálculo e lacre 5a5562df intocados.</td></tr>
                     <tr><td><b>v7.41.5</b></td><td>20/08/2026</td><td><b>🐞 Correção: o 📊 da aba Empresas não abria nada após a consulta da exportação do Questor — e foi renomeado para "Resumo estatístico de cliente e fornecedor".</b> O botão sempre esteve na lista, mas clicar nele não mostrava coisa alguma quando a consulta mais recente da empresa era a da exportação única do Questor: a gravação dessas consultas usa um formato de estatísticas diferente do formato dos relatórios de Totais, e o resumo assumia o antigo — o erro interrompia a montagem da tela em silêncio, dando a impressão de que o botão havia sumido. Agora o resumo <b>aceita os dois formatos</b>: nos registros da exportação, as estatísticas são refeitas a partir da própria relação gravada (excluindo movimentação própria, consumidor final não identificado e, nas vendas, os CPFs). O resumo também passou a <b>identificar o tipo de cada consulta no seletor do histórico</b> (compra — fornecedores · venda — clientes · revenda · serviço), a rotular corretamente as consultas de <b>venda</b> (cartão e coluna "Clientes" em vez de "Fornecedores") e ganhou o novo nome no título e no botão da lista de Empresas. Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.4</b></td><td>20/08/2026</td><td><b>Ajuste fino do item 2 (pedido registrado):</b> os botões <b>"Consultar na base da Receita"</b> e <b>"🧹 Limpar dados"</b> voltaram à tela — a consulta continua partindo sozinha após a importação, e o botão passa a servir para reexecutar manualmente. Permanecem fora da tela apenas os quatro botões de importação retirados na v7.41.3: <b>📄 Arquivo de compra (fornecedor)</b>, <b>👥 Arquivo de venda (cliente)</b>, <b>📋 Totais — relatórios de entrada</b> e <b>"Importar relatório(s)/Importar relatório de entrada (Totais ISS/ICMS)"</b> — todo o processo por trás deles segue intacto, e a importação continua exclusivamente pelo campo "Importar arquivo (CSV / Excel)". Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.3</b></td><td>20/08/2026</td><td><b>Consulta CNPJ simplificada para a exportação única do Questor + relação por regime de volta ao item 3.</b> Decisão registrada: neste momento o único relatório importado é a <b>exportação única do Questor</b> (Tipo · Data · Natureza/CFOP · Valor Contábil · Razão Social · CNPJ/CPF), validada contra três arquivos reais. O <b>item 2</b> ficou só com <b>"Importar arquivo (CSV / Excel)"</b>: saíram da tela a caixa de colar lista, os botões 📄 compra / 👥 venda / 📋 Totais e o "Importar relatório(s)" — e, como o campo é agora o caminho oficial do analítico, a pergunta "analítico × triagem simples" (v7.34.3) saiu junto: o arquivo com as colunas do Questor entra <b>direto</b> no processo completo. <b>Nenhum processo foi removido:</b> a confirmação do que foi lido antes de entrar, a separação automática Entrada→fornecedores / Saída→clientes, a consulta na Receita, os dashboards do painel 🚚, a gravação no histórico e o <b>lançamento por CFOP</b> continuam exatamente como estavam (os leitores de Totais ISS/ICMS seguem no código, apenas sem botão). Um arquivo que seja só lista de CNPJs segue como triagem simples — agora com <b>consulta automática</b>, já que o botão "Consultar na base da Receita" também saiu da tela. E o <b>item 3</b> voltou a mostrar a <b>relação de empresas por regime</b>: cartões com contagem e percentual de <b>Simples Nacional, MEI e regime normal</b> acima da tabela, alimentados tanto pela lista simples quanto pela exportação do Questor (fornecedores + clientes deduplicados por CNPJ; a coluna Porte informa se o parceiro é fornecedor, cliente ou os dois). Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.2</b></td><td>20/08/2026</td><td><b>🐞 Correção: o parágrafo de Enquadramento misturava três bases de receita numa frase só.</b> No parecer da WEEEDO o texto anunciava a receita total de <b>R$ 5.349.551,45</b>, listava como composição apenas comércio (R$ 1.867.395,02) e serviços (R$ 2.843.851,69) — que somam <b>R$ 4.711.246,74</b>, o mercado interno — e fechava dizendo que faltavam <b>R$ 88.753,26</b> para o teto. Quem somasse não fechava a conta. <b>Nenhum número estava errado:</b> os R$ 88.753,26 são exatamente R$ 4.800.000,00 − R$ 4.711.246,74, e a comparação é a correta, porque o teto do Simples é medido só sobre o mercado interno — a exportação (R$ 638.304,74) tem teto próprio de igual valor (LC 123/2006, art. 3º, §14). O defeito era de <b>procedência</b>: o payload enviado à IA levava a receita total, comércio e serviços como escalares sem rótulo, sem o campo de exportação e sem dizer sobre que base a margem incidia — e a IA relacionou o que estava mais perto. Agora o payload nomeia a base de cada valor (<code>receitaMercadoInterno</code>, <code>receitaExportacao</code>, <code>tetoSimples.baseDeComparacao</code>, <code>rbt12MaxBase</code>) e proíbe a IA de somar, dividir ou apresentar composições por conta própria. Além disso, uma <b>ficha de composição gerada pelo motor</b> passa a fechar a conta logo abaixo do parágrafo, sempre que houver exportação ou RBT12 projetado diferente do realizado — os números do enquadramento deixam de depender do texto da IA. Duas incoerências vizinhas foram corrigidas junto: o RBT12 do enquadramento é o <b>máximo realizado</b> e passa a ser rotulado como tal (era apresentado sem qualificação, ao lado de valores projetados); e o alerta da trava da 5ª faixa afirmava que o ICMS/ISS segue dentro do DAS mesmo quando o monitor de sublimite já apontava <b>impedimento</b> — agora o alerta e a linha de premissas trazem a ressalva, porque a trava pressupõe ausência de impedimento. A frase da margem no monitor também passou a dizer "do mercado interno" e "% do teto". Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.1</b></td><td>20/08/2026</td><td><b>🐞 Correção: excluir dados voltou a funcionar — requer setup_v7411.sql.</b> O soft-delete da v7.38.0 nunca chegou a excluir nada: toda tentativa devolvia <code>403 · 42501 · new row violates row-level security policy</code>. A causa estava na própria política do setup_v737_v2, que é <code>FOR ALL</code> e traz <code>excluido_em IS NULL</code> dentro do <code>USING</code>. Numa política <code>FOR ALL</code> esse <code>USING</code> também vale como política de <b>SELECT</b>, e o PostgreSQL exige que a linha resultante de um UPDATE continue visível por ela — marcar <code>excluido_em</code> torna a linha invisível, então a gravação era recusada. Não era dado corrompido nem erro de permissão: era impossível por construção, nas quatro tabelas (<code>atp_analises</code>, <code>atp_empresas</code>, <code>atp_fornec</code>, <code>atp_usuarios</code>). A exclusão passa agora pelas funções <code>atp_excluir_dados</code>, <code>atp_excluir_empresa</code> e <code>atp_excluir_usuario</code> (<code>SECURITY DEFINER</code>), que conferem o escritório dono do CNPJ — e, no caso de usuários, exigem papel admin e proíbem a auto-exclusão — antes de marcar. As políticas ficam intocadas: a linha excluída continua sumindo das telas sozinha, sem filtro novo em nenhuma consulta. Motor de cálculo e lacre 5a5562df intocados.</td></tr>\n                    <tr><td><b>v7.41.0</b></td><td>19/08/2026</td><td><b>Fechada a frente de paginação: a distribuição compacta vira o único modo e os dois botões saem da barra do parecer.</b> Com o PDF real conferido — timbrado em todas as folhas, nenhuma fora de margem —, a rede de segurança deixou de ser necessária. Saiu o botão <b>"Conferir páginas"</b>, que já era redundante: a régua roda sozinha depois que os gráficos são desenhados e depois que a IA escreve, que são os dois momentos em que o documento pode mudar de tamanho; o painel com o resultado continua aparecendo. E saiu o botão de <b>alternância entre modos de paginação</b>, que era mais do que redundante — era risco: a escolha ficava gravada no navegador, de modo que um clique de teste alterava silenciosamente todos os pareceres gerados depois, sem nada denunciar no documento. A distribuição por seção, com uma folha para cada e vão branco no pé, não existe mais. Nenhuma mudança no motor de cálculo nem no lacre 5a5562df.</td></tr>
@@ -905,6 +927,9 @@ function doLogout() {
 
 async function entrar() {
   prCarregar();
+  // v7.43.2 · o badge estava escrito à mão no HTML e ficou parado na v7.42.3 por três entregas.
+  // Agora ele sai do APP_VERSAO — não há mais como a tela mentir sobre a versão em uso.
+  { const _bv = $id('badge-versao'); if (_bv) _bv.textContent = 'Análise Tributária Pro v' + APP_VERSAO; }
   lacreBoot();                                             // v7.30.0: confere o lacre a cada troca de versão
   dlLc116Montar();
   ctOficialCarregar();
@@ -1835,15 +1860,28 @@ async function triConsultar(tipo, auto){
   if (!alvos.length){ if (!auto) toast('Nada a consultar.'); return; }
   // v7.31.0 (decisão dele): consulta SEMPRE DIRETO — cache de 30 dias primeiro, Receita nos novos,
   // progresso na tela. O botão "Consultar enquadramentos" segue como reexecução manual.
-  let n=0;
+  // v7.43.0 · a consulta espera 350 ms entre CNPJs para não sobrecarregar a base da Receita, então
+  // 400 fornecedores levam mais de dois minutos. Mesmo cancelamento cooperativo da leitura de XML:
+  // para no limite de um CNPJ e PRESERVA o que já foi consultado — os classificados não se perdem.
+  let n=0, _cancelado=false;
+  IMP_CANCELAR = false;
+  impProgresso(0, alvos.length, 'Consultando CNPJ');
   for (const i of T.itens){
     if (i.classe && i.classe!=='nid') continue;
-    $id('tri-prog-'+tipo).textContent = `Consultando ${++n} de ${alvos.length}…`;
+    if (IMP_CANCELAR) { _cancelado = true; break; }
+    n++;
+    $id('tri-prog-'+tipo).textContent = `Consultando ${n} de ${alvos.length}…`;
+    impProgresso(n, alvos.length, 'Consultando CNPJ');
     const r = await consultarUm(i.cnpj);
     Object.assign(i, { situacao:r.situacao||'', razao: r.razao_social || i.razao, cnae: r.cnae||'', classe: fornClasse(r) });
     if (n<alvos.length) await new Promise(rs=>setTimeout(rs,350));
   }
-  $id('tri-prog-'+tipo).textContent = 'Concluído.';
+  impFecharProgresso();
+  const _falta = alvos.length - n;
+  $id('tri-prog-'+tipo).textContent = _cancelado
+    ? `Cancelado — ${n} de ${alvos.length} consultados; ${_falta} seguem não identificados.`
+    : 'Concluído.';
+  if (_cancelado) toast(`Consulta cancelada em ${n} de ${alvos.length}. Os já consultados foram mantidos — clique em "Consultar enquadramentos" para continuar de onde parou.`);
   triDash(tipo);
   triRelacaoItem3();                                       // v7.41.3: relação por regime no item 3
   await triSalvar(tipo, true);
@@ -2686,6 +2724,25 @@ const FOLHA_PERC_DEFAULT = { patronalProLabore:.20, patronalSalarios:.20, rat:.0
 const faixaDe = r => { for (let i=0;i<6;i++) if (r <= FAIXAS_LIM[i]) return i; return 5; };
 const S = a => (a||[]).reduce((x,y)=>x+(+y||0),0);
 const arr12 = a => Array.from({length:12},(_,i)=>+((a||[])[i])||0);
+// ── v7.42.3 · RUBRICAS DE DESPESA E DE CRÉDITO DO LUCRO REAL ──────────────────────────────
+// A lista do art. 3º das Leis 10.637/2002 e 10.833/2003 é TAXATIVA. Em vez de um balde único
+// ("despesa com crédito no LR"), cada item creditável tem rubrica própria: o balancete é mapeado
+// conta a conta e a memória mostra de onde veio cada centavo de crédito.
+const DESP_KEYS = ['adm','vendas','fiscais','financeiras','outras'];
+const CRED_LR = [
+  ['credInsumos',     'Insumos aplicados na produção/serviço',            'art. 3º, II'],
+  ['credEnergia',     'Energia elétrica e térmica',                       'art. 3º, III / IX'],
+  ['credAlugueisPJ',  'Aluguéis de prédios, máquinas e equipamentos (PJ)','art. 3º, IV'],
+  ['credArrendamento','Contraprestação de arrendamento mercantil (PJ)',   'art. 3º, V'],
+  ['credDepreciacao', 'Depreciação de bens do ativo imobilizado',         'art. 3º, VI'],
+  ['credBenfeitorias','Amortização de benfeitorias em imóvel de terceiro','art. 3º, VII'],
+  ['credFretesVenda', 'Frete e armazenagem na operação de venda',         'art. 3º, IX'],
+  ['credValeTransp',  'Vale-transporte, refeição e uniforme (limpeza/conservação/manutenção)', 'art. 3º, X'],
+  ['credDevolucoes',  'Devoluções de vendas tributadas',                  'art. 3º, VIII'],
+  ['credLR',          'Outros créditos informados manualmente',           'lançamento direto'],
+];
+const CRED_LR_KEYS = CRED_LR.map(x=>x[0]);
+const CRED_LR_ROT = Object.fromEntries(CRED_LR.map(([k,r,b])=>[k,{rot:r,base:b}]));
 
 // entrada: cfg {ano, iss, icmsV, icmsC, ipiV, ipiC, rbt12Direto, rbt12Lanc[12], folha12Lanc[12], lpBaseServ, lpBaseCom, adicionalIR:'off'|'mensal'|'trimestral'}
 // receitas {a1_semst, a1_red, a1_red_pct, a1_mono, a1_mono_pct, a1_comst, a1_comst_mono, a2_semst, a2_red, a2_red_pct, a2_mono, a2_comst, a2_comst_mono, a3_semret, a3_retiss, a3_retissinss, a4, a5r, fin, comtransp}  (todas [12])
@@ -2705,8 +2762,26 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   for (const k of [...K,...KEXP,'a1_red_pct','a1_mono_pct','a2_red_pct','fin']) R[k] = arr12(inp.receitas[k]);
   const F = {}; for (const k of ['prolabore','salarios','baseFgts','prov13','provFerias']) F[k] = arr12(inp.folha[k]);
   const C = {}; for (const k of ['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred']) C[k] = arr12(inp.compras[k]);
-  const D = {}; for (const k of ['adm','vendas','fiscais','financeiras','outras','credLR']) D[k] = arr12(inp.despesas[k]);
+  // v7.42.3: as rubricas de crédito do art. 3º das Leis 10.637/2002 e 10.833/2003 passam a ter
+  // linha PRÓPRIA, para que a origem de cada crédito apareça na memória em vez de virar um balde.
+  // `credLR` continua existindo (compatibilidade com análises antigas) como "outros créditos".
+  const D = {}; for (const k of [...DESP_KEYS, ...CRED_LR_KEYS]) D[k] = arr12(inp.despesas[k]);
   const F13 = { prolabore13:+(inp.folha13?.prolabore13)||0, salarios13:+(inp.folha13?.salarios13)||0, baseFgts13:+(inp.folha13?.baseFgts13)||0 };
+  // ── v7.42.2 · CRÉDITO DE PIS/COFINS SOBRE DESPESAS NO LUCRO REAL ────────────────────────────
+  // Até a v7.42.1 só compras de mercadoria e o campo manual `credLR` geravam crédito. Mas a lista
+  // do art. 3º das Leis 10.637/2002 e 10.833/2003 é TAXATIVA: energia elétrica, aluguéis de PJ,
+  // arrendamento, fretes na operação de venda e alguns insumos creditam; folha, tributos e a maior
+  // parte da despesa administrativa NÃO. O aplicativo não tem como saber a composição de cada
+  // rubrica — creditar tudo trocaria um erro por outro maior (crédito indevido).
+  // Solução: percentual de creditabilidade POR CATEGORIA, declarado pelo usuário. PADRÃO ZERO,
+  // que preserva exatamente o resultado anterior — quem não configurar nada não vê número mudar.
+  const CRPC = Object.assign({adm:0,vendas:0,fiscais:0,financeiras:0,outras:0}, cfg.credLRpct||{});
+  const credDespMes = m => D.adm[m]*(+CRPC.adm||0) + D.vendas[m]*(+CRPC.vendas||0)
+    + D.fiscais[m]*(+CRPC.fiscais||0) + D.financeiras[m]*(+CRPC.financeiras||0) + D.outras[m]*(+CRPC.outras||0);
+  // ── v7.42.2 · SALDO CREDOR TRANSPORTADO ────────────────────────────────────────────────────
+  // Antes: `Math.max(0, …)` DESCARTAVA o excedente quando os créditos superavam as receitas do mês.
+  // Na apuração real o saldo credor se acumula (art. 3º, § 4º, das mesmas leis). Agora transporta.
+  let saldoCredorPC = 0;
 
   const REPX = repEfetiva(anexos);   // v7.1: repartição efetiva acompanha os parâmetros editados
   const rbt12Cfg = S(cfg.rbt12Lanc), folha12Cfg = S(cfg.folha12Lanc);
@@ -2882,7 +2957,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const serv = R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]+R.a5r[m];
     const com  = R.a1_semst[m]+R.a1_red[m]+R.a1_mono[m]+R.a1_comst[m]+R.a1_comst_mono[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m]+R.a2_comst[m]+R.a2_comst_mono[m]+R.comtransp[m];
     const custos = C.baixaSemst[m]+C.baixaMono[m]+C.baixaComst[m]+C.baixaComstMono[m];
-    const despTotal = D.adm[m]+D.vendas[m]+D.fiscais[m]+D.financeiras[m]+D.outras[m]+D.credLR[m];
+    const despTotal = DESP_KEYS.reduce((s,k)=>s+D[k][m],0) + CRED_LR_KEYS.reduce((s,k)=>s+D[k][m],0);
+    const credItensMes = CRED_LR_KEYS.reduce((s,k)=>s+D[k][m],0);   // v7.42.3: base de crédito nomeada
     // v7.23.0: nas receitas com retenção (a3_retiss / a3_retissinss) o ISS é retido pelo tomador
     // também no Presumido/Real — sai da guia própria, mantendo a comparação entre regimes simétrica.
     const issRetLPLR = (R.a3_retiss[m]+R.a3_retissinss[m])*cfg.iss;
@@ -2916,9 +2992,13 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const basePisCofLR = R.a1_semst[m]+R.a1_red[m]+R.a1_comst[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_comst[m]
       + R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]
       + (fatorR<.28 ? R.a5r[m] : 0) + (fatorR>=.28 ? R.a5r[m] : 0)
-      + R.comtransp[m] - (C.semst[m]+C.comst[m] - icmsComprasPC) - D.credLR[m];
+      + R.comtransp[m] - (C.semst[m]+C.comst[m] - icmsComprasPC) - credItensMes - credDespMes(m);
     // v7.18.0 · Tema 69 também no não cumulativo (decisão de 13/08): mesmo ICMS destacado excluído da base
-    const _baseLRliq = Math.max(0, basePisCofLR - icmsDestacadoPC);
+    // v7.42.2: desconta o saldo credor que sobrou dos meses anteriores; o que sobrar agora vai adiante.
+    const _saldoAnt = saldoCredorPC;
+    const _liq0 = basePisCofLR - icmsDestacadoPC - _saldoAnt;
+    const _baseLRliq = Math.max(0, _liq0);
+    saldoCredorPC = Math.max(0, -_liq0);
     const lr_pis = _baseLRliq*.0165 + R.fin[m]*.0065;
     const lr_cof = _baseLRliq*.076  + R.fin[m]*.04;
     const baseIRCS = receita + R.fin[m] - custos - folhaTotal - despTotal - inssPatr - lr_pis - lr_cof - icmsPagar - ipiPagar - iss;
@@ -2941,7 +3021,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
             baseAdic: base32+base8, basePC:_baseLPliq, basePCbruta:basePisCofLP },
       lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
-            baseIRCS, basePC:_baseLRliq, basePCbruta:basePisCofLR, credCsll: baseIRCS<0 ? baseIRCS*.09 : 0, credIrpj: baseIRCS<0 ? baseIRCS*.15 : 0 },
+            baseIRCS, basePC:_baseLRliq, basePCbruta:basePisCofLR, credCsll: baseIRCS<0 ? baseIRCS*.09 : 0, credIrpj: baseIRCS<0 ? baseIRCS*.15 : 0,
+            credDesp: credDespMes(m), saldoCredorAnt: _saldoAnt, saldoCredorFim: saldoCredorPC,
+            credItens: Object.fromEntries(CRED_LR_KEYS.map(k=>[k, D[k][m]])) },
     });
   }
 
@@ -2979,6 +3061,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     comprasRevenda: S(out.meses.map((_,i)=>C.semst[i]+C.mono[i]+C.comst[i]+C.comstMono[i])),
     dasTrib: ['pis','cofins','irpj','csll','cpp','icms','iss','ipi'].reduce((o,t)=>(o[t]=S(out.meses.map(x=>x.dasTrib?x.dasTrib[t]:0)),o),{}),
   };
+  // v7.43.1 · o monitor de sublimite tem de projetar pelo MESMO período da projeção do parecer,
+  // senão o parecer fala de um ano e o alerta de ultrapassagem fala de outro.
+  try { out.ultCoberto = ultimoMesCoberto(inp); } catch(e){ out.ultCoberto = null; }
   out.subMon = monitorSublimite(out, cfg);   // v7.36.0
   return out;
 }
@@ -3035,29 +3120,71 @@ function projJanelaEfetiva(cfg){
 const PROJ_KREC = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red',
   'a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r',
   'comtransp','a1_exp','a2_exp','a3_exp'];
+// v7.43.1 · O PERÍODO COBERTO NÃO É "ATÉ O ÚLTIMO MÊS COM RECEITA". Importar o PGDAS-D de
+// janeiro a junho declara SEIS meses de apuração, mesmo que só três tenham tido faturamento —
+// os outros três foram apurados e deram zero, o que é informação, não ausência de informação.
+// Antes, o motor parava no último mês com receita: com receita em jan, fev e abr, a janela virava
+// 4 meses e o denominador da média era 4. Agora a janela vai até JUNHO e o denominador é 6, então
+// (jan+fev+abr) ÷ 6 replicado em jul-dez — que é o ritmo real da empresa, e não o dos meses bons.
+// A cobertura vem da trilha de origem da v7.28.0, que marca TODOS os meses do lote importado,
+// inclusive os zerados. Só marcas de IMPORTAÇÃO contam; mês digitado à mão não declara período.
+const ORIG_IMPORTACAO = ['P','F','M','X','L'];   // PGDAS-D · Faturamento · Demonstrativo · XML · planilha modelo
+function ultimoMesCoberto(dados){
+  let ult = -1;
+  const rec = m => PROJ_KREC.reduce((s,k)=> s + arr12((dados.receitas||{})[k])[m], 0);
+  for (let m=0;m<12;m++) if (rec(m) > 0.005) ult = m;
+  const O = (dados && dados.origem) || {};
+  for (const path of Object.keys(O)){
+    if (!/^receitas\./.test(path)) continue;
+    const a = O[path]; if (!Array.isArray(a)) continue;
+    for (let m=0;m<12;m++) if (a[m] && ORIG_IMPORTACAO.indexOf(a[m]) >= 0 && m > ult) ult = m;
+  }
+  return ult;
+}
+// Meses dentro do período coberto que ficaram SEM receita — entram no denominador e precisam
+// aparecer na memória de cálculo, senão o leitor não entende por que a média divide por 6.
+function mesesCobertosSemReceita(dados, ini, fim){
+  const rec = m => PROJ_KREC.reduce((s,k)=> s + arr12((dados.receitas||{})[k])[m], 0);
+  const out = [];
+  for (let m=Math.max(0,ini); m<=fim; m++) if (rec(m) <= 0.005) out.push(m);
+  return out;
+}
 // Devolve uma CÓPIA da análise com os meses futuros preenchidos. Nunca é gravada no banco:
 // serve só de entrada para o motor. Devolve null quando o ano já está completo ou vazio.
 function anProjetarAno(dados, janela){
   try {
     if (!dados || !dados.receitas) return null;
     const recMes = m => PROJ_KREC.reduce((s,k)=> s + arr12(dados.receitas[k])[m], 0);
-    let ultimo = -1; for (let m=0;m<12;m++) if (recMes(m) > 0.005) ultimo = m;
+    const ultimo = ultimoMesCoberto(dados);           // v7.43.1: receita OU importação
     if (ultimo < 0 || ultimo >= 11) return null;
     const nLanc = ultimo + 1, nJan = projJanelaN(janela, nLanc), ini = ultimo - nJan + 1;
     const d = JSON.parse(JSON.stringify(dados));
+    // v7.42.5 · MÉDIA SIMPLES DA JANELA — decisão do usuário. O denominador é o NÚMERO DE MESES
+    // da janela, e não o número de meses com movimento: se a janela vai de janeiro a junho, soma-se
+    // e divide-se por 6, ainda que algum desses meses tenha ficado parado. Um mês sem faturamento
+    // faz parte do desempenho real da empresa e deve puxar a média para baixo; projetar só pelos
+    // meses bons produziria um ano melhor do que o que a empresa vem entregando.
     const media = a => { let s = 0; for (let i=ini;i<=ultimo;i++) s += +a[i]||0; return s/nJan; };
+    // nMov é apenas INFORMATIVO — aparece na memória de cálculo para o leitor saber quantos meses
+    // da janela tiveram movimento em cada grupo. Não entra em nenhuma divisão.
+    const contaMov = a => { let n = 0; for (let i=ini;i<=ultimo;i++) if (Math.abs(+a[i]||0) > 0.005) n++; return n; };
     // a MESMA janela vale para receita, folha, compras e despesas: projetar receita por 2 meses e
     // compras por 6 criaria margem artificial e inflaria o lucro projetado.
+    const nMov = {};
     for (const grupo of ['receitas','folha','compras','despesas']){
       const g = d[grupo]; if (!g) continue;
+      let maxN = 0;
       for (const k of Object.keys(g)){
         if (!Array.isArray(g[k])) continue;
         const a = arr12(g[k]), pct = /_pct$/.test(k), mv = media(a);
+        if (!pct){ const n = contaMov(a); if (n > maxN) maxN = n; }
         for (let m=ultimo+1;m<12;m++) a[m] = pct ? mv : r2(mv);
         g[k] = a;
       }
+      nMov[grupo] = maxN;
     }
-    return { dados:d, ultimo, nReais:nLanc, nProj:11-ultimo,
+    return { dados:d, ultimo, nReais:nLanc, nProj:11-ultimo, nMov,
+             semReceita: mesesCobertosSemReceita(dados, ini, ultimo),
              janela:projJanelaNorm(janela), janelaN:nJan, iniJanela:ini };
   } catch(e){ console.error('anProjetarAno', e); return null; }
 }
@@ -3077,12 +3204,21 @@ function monitorSublimite(out, cfg){
     const rbaInt = [], rbaExp = []; let aI = 0, aE = 0, ultimo = -1;
     out.meses.forEach((M,i) => { aI += M.recInt||0; aE += M.recExp||0; rbaInt.push(aI); rbaExp.push(aE);
       if ((M.recInt||0) + (M.recExp||0) > 0.005) ultimo = i; });
+    if (out.ultCoberto != null && out.ultCoberto > ultimo) ultimo = out.ultCoberto;   // v7.43.1
     if (ultimo < 0) return null;
     // v7.39.0: a média que projeta os meses futuros usa a JANELA escolhida (todos os meses
     // lançados, ou os últimos 2/3/6) — a mesma que o parecer usa para projetar o ano.
     const n = ultimo + 1, jan = projJanelaNorm(cfg.projJanela), nJan = projJanelaN(jan, n);
     const iniJ = ultimo - nJan + 1, baseI = iniJ > 0 ? rbaInt[iniJ-1] : 0, baseE = iniJ > 0 ? rbaExp[iniJ-1] : 0;
+    // v7.42.5 · mesmo critério da projeção do parecer: média SIMPLES da janela, dividindo pelo
+    // número de meses e não pelos meses com movimento. Manter os dois quadros no mesmo denominador
+    // é o que impede o parecer projetar um ano e o monitor de sublimite projetar outro.
     const mediaInt = (rbaInt[ultimo]-baseI)/nJan, mediaExp = (rbaExp[ultimo]-baseE)/nJan;
+    let nMovInt = 0, nMovExp = 0;
+    for (let i=iniJ;i<=ultimo;i++){
+      if ((out.meses[i].recInt||0) > 0.005) nMovInt++;
+      if ((out.meses[i].recExp||0) > 0.005) nMovExp++;
+    }
     const projInt = [], projExp = [];
     for (let i=0;i<12;i++){ projInt.push(i<=ultimo ? rbaInt[i] : rbaInt[ultimo] + mediaInt*(i-ultimo));
                             projExp.push(i<=ultimo ? rbaExp[i] : rbaExp[ultimo] + mediaExp*(i-ultimo)); }
@@ -3105,7 +3241,7 @@ function monitorSublimite(out, cfg){
       motivo:'RBA ultrapassa o sublimite em até 20% — ICMS/ISS fora do DAS a partir de 1º/01 do ano seguinte' };
     const margemLimite = limite - projInt[11], margemPct = limite>0 ? margemLimite/limite : 0;
     return { subLim, limite, ultimo, rbaInt, rbaExp, projInt, projExp, mediaInt, mediaExp, marco, rbaa, impedimento,
-             janela: jan, janelaN: nJan,
+             janela: jan, janelaN: nJan, nMovInt, nMovExp,
              margemLimite, margemPct, excluiProjetado: marco.limite >= 0,
              parcial: ultimo < 11 };
   } catch(e){ return null; }
@@ -3240,6 +3376,14 @@ const fmtP = (v, d=1) => (v==null||isNaN(v)) ? '—' : (+v).toLocaleString('pt-B
 // precisão plena, porque alimentam identidades e os cenários da Reforma.
 const r2 = v => Math.round((+v||0)*100)/100;
 const somaExib = (arr, sel) => (arr||[]).reduce((s,x)=>s + r2(sel?sel(x):x), 0);
+// v7.42.1 (Ponto 3) · FÓRMULA ÚNICA DE EXIBIÇÃO. Conviviam duas somas: somaExib (valores já
+// arredondados de cada mês, usada na conferência para fechar com a coluna impressa) e res.totais
+// (soma sem arredondar, usada no comparativo e no consolidado). Mesmo dado, números diferentes
+// em relatórios diferentes — medido: R$ 0,01 a R$ 0,05. Agora TODO relatório soma por aqui.
+const NOTA_SOMA = 'Os totais somam os valores <b>já arredondados</b> de cada mês, para fechar com as colunas exibidas.';
+function totExib(res){ const M=(res&&res.meses)||[]; return {
+  receita: somaExib(M,x=>x.receita), das: somaExib(M,x=>x.das),
+  simples: somaExib(M,x=>x.simples.total), lp: somaExib(M,x=>x.lp.total), lr: somaExib(M,x=>x.lr.total) }; }
 const z12 = () => Array(12).fill(0);
 
 function anNovo(cnpj, ano) {
@@ -3255,7 +3399,7 @@ function anNovo(cnpj, ano) {
     compras: Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred'].map(k=>[k,z12()])),
     icms: { cred:Array(12).fill(null), deb:Array(12).fill(null) },
     ipi:  { cred:Array(12).fill(null), deb:Array(12).fill(null) },
-    despesas: Object.fromEntries(['adm','vendas','fiscais','financeiras','outras','credLR'].map(k=>[k,z12()])),
+    despesas: Object.fromEntries([...DESP_KEYS, ...CRED_LR_KEYS].map(k=>[k,z12()])),
     origem: {} };                                          // v7.28.0: trilha de origem por campo×mês
 }
 
@@ -3302,7 +3446,9 @@ const AN_SECOES = [
   { id:'despesas', nome:'📉 Despesas', linhas:[
     ['Despesas mensais'],
     ['despesas.adm','Administrativas'], ['despesas.vendas','Com vendas'], ['despesas.fiscais','Fiscais e tributárias'],
-    ['despesas.financeiras','Financeiras'], ['despesas.outras','Outras'], ['despesas.credLR','Com crédito no Lucro Real'],
+    ['despesas.financeiras','Financeiras'], ['despesas.outras','Outras'],
+    ['Com crédito de PIS/COFINS no Lucro Real — art. 3º das Leis 10.637/2002 e 10.833/2003'],
+    ...CRED_LR.map(([k,rot])=>['despesas.'+k, rot]),
   ]},
 ];
 let AN_TAB = 'rbt12';
@@ -3987,7 +4133,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.41.8';
+const APP_VERSAO = '7.43.2';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -5008,7 +5154,9 @@ const BAL_DESTINOS = [['ignorar','— Ignorar —'],
   ['receitas.fin','Receita financeira'],
   ['folha.prolabore','Folha — Pró-labore'],['folha.salarios','Folha — Salários/férias/13º (proventos)'],['folha.fgtsValor','Folha — FGTS (valor → converte p/ base)'],['folha.prov13','Folha — Provisão 13º'],['folha.provFerias','Folha — Provisão férias'],
   ['compras.semst','Compras revenda sem ST'],['compras.comst','Compras revenda com ST'],['compras.baixaSemst','Baixa de custos (CMV)'],
-  ['despesas.adm','Despesa administrativa'],['despesas.vendas','Despesa com vendas'],['despesas.fiscais','Despesa fiscal/tributária'],['despesas.financeiras','Despesa financeira'],['despesas.outras','Outras despesas'],['despesas.credLR','Despesa c/ crédito no Lucro Real']];
+  ['despesas.adm','Despesa administrativa — SEM crédito'],['despesas.vendas','Despesa com vendas — SEM crédito'],['despesas.fiscais','Despesa fiscal/tributária — SEM crédito'],['despesas.financeiras','Despesa financeira — SEM crédito'],['despesas.outras','Outras despesas — SEM crédito'],
+  // v7.42.3: um destino por item do art. 3º, para mapear o balancete conta a conta
+  ...CRED_LR.map(([k,rot,base])=>['despesas.'+k, '✓ CRÉDITO LR — '+rot+' ('+base+')'])];
 let BAL = null;
 
 function balDestino(cls, desc) {
@@ -5024,6 +5172,16 @@ function balDestino(cls, desc) {
   if (d.includes('compras de matérias') || d.includes('materias-primas')) return 'compras.semst';
   if (d.includes('estoque') || d.includes('devoluções de compras')) return 'compras.baixaSemst';
   if (cls.startsWith('5.1')) return 'compras.baixaSemst';
+  // ── v7.42.3: sugestão de crédito no Lucro Real, item a item do art. 3º. É SUGESTÃO:
+  //    a prévia da importação permite trocar conta por conta antes de aplicar.
+  if (d.includes('energia el') || d.includes('energia t') || (d.includes('luz') && !d.includes('aluz'))) return 'despesas.credEnergia';
+  if (d.includes('aluguel') || d.includes('aluguéis') || d.includes('alugueis') || d.includes('locaç')) return 'despesas.credAlugueisPJ';
+  if (d.includes('arrendamento') || d.includes('leasing')) return 'despesas.credArrendamento';
+  if (d.includes('deprecia')) return 'despesas.credDepreciacao';
+  if (d.includes('amortiza') && d.includes('benfeitor')) return 'despesas.credBenfeitorias';
+  if (d.includes('frete') || d.includes('armazenagem') || d.includes('carreto')) return 'despesas.credFretesVenda';
+  if (d.includes('vale transporte') || d.includes('vale-transporte') || d.includes('vale refei') || d.includes('vale-refei') || d.includes('uniforme')) return 'despesas.credValeTransp';
+  if (d.includes('devoluç') && d.includes('venda')) return 'despesas.credDevolucoes';
   if (d.includes('juros') || d.includes('bancár') || d.includes('encargos financeiros') || d.includes('cartão') || d.includes('descontos concedidos') || d.includes('multas')) return 'despesas.financeiras';
   if (d.includes('iptu') || d.includes('ipva') || d.includes('iof') || d.includes('irrf') || d.includes('tributos') || d.includes('impostos e taxas')) return 'despesas.fiscais';
   if (cls.startsWith('5.7.01')) return 'despesas.vendas';
@@ -5363,14 +5521,46 @@ function xmlParseNota(t, arquivo) {
   return null;
 }
 
+// v7.43.0 · CANCELAR IMPORTAÇÃO. Com centenas de notas a leitura leva minutos e, até aqui, a única
+// saída era fechar a aba — perdendo a análise não salva junto. Agora há uma faixa de progresso com
+// botão de cancelar. O cancelamento é COOPERATIVO: o laço confere a bandeira a cada nota, então
+// para no limite de uma nota, nunca no meio do parse de um arquivo. As notas já lidas são
+// oferecidas para revisão em vez de descartadas — quem importou 400 de 900 não recomeça do zero.
+let IMP_CANCELAR = false;
+function impCancelar(){ IMP_CANCELAR = true; const b = $id('imp-cancelar'); if (b){ b.disabled = true; b.textContent = 'cancelando…'; } }
+function impProgresso(feito, total, rot){
+  let bx = $id('imp-prog');
+  if (!bx){
+    bx = document.createElement('div');
+    bx.id = 'imp-prog';
+    bx.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:22px;z-index:9999;'
+      + 'background:#0f2b4c;color:#fff;padding:11px 16px;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.28);'
+      + 'font-size:13px;display:flex;align-items:center;gap:14px;min-width:330px';
+    document.body.appendChild(bx);
+  }
+  const pct = total ? Math.round(feito/total*100) : 0;
+  bx.innerHTML = `<div style="flex:1">
+      <div style="margin-bottom:5px">${rot||'Importando'} <b>${feito}</b> de <b>${total}</b> · ${pct}%</div>
+      <div style="height:5px;background:rgba(255,255,255,.22);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:#c8901f;transition:width .12s"></div></div>
+    </div>
+    <button id="imp-cancelar" onclick="impCancelar()" style="background:#8f2a2a;color:#fff;border:0;
+      padding:6px 13px;border-radius:5px;cursor:pointer;font-size:12px;white-space:nowrap">Cancelar</button>`;
+}
+function impFecharProgresso(){ const b = $id('imp-prog'); if (b) b.remove(); }
+
 async function xmlLer(input) {
   if (!input.files.length) return;
   const notas = [], erros = [];
   const _tot = input.files.length; let _i = 0;
-  toast(`Lendo ${_tot} XML(s)…`);
+  IMP_CANCELAR = false;
+  impProgresso(0, _tot, 'Lendo XML');
+  let _cancelado = false;
   for (const f of input.files) {
+    if (IMP_CANCELAR) { _cancelado = true; break; }
     _i++;
-    if (_i % 5 === 0 || _i === _tot) { toast(`Lendo nota ${_i} de ${_tot}…`); await new Promise(r=>setTimeout(r,0)); }
+    // cede o fio a cada nota para a faixa repintar e o clique em Cancelar ser processado
+    if (_i % 3 === 0 || _i === _tot) { impProgresso(_i, _tot, 'Lendo XML'); await new Promise(r=>setTimeout(r,0)); }
     try {
       // v7.3: respeitar o encoding declarado no XML (Palhoça emite ISO-8859-1)
       const _buf = await f.arrayBuffer();
@@ -5388,10 +5578,13 @@ async function xmlLer(input) {
       else erros.push(f.name+' (formato não reconhecido — é XML de NFS-e ou NF-e?)');
     } catch(e) { console.error(e); erros.push(f.name+' ('+e.message+')'); }
   }
+  impFecharProgresso();
+  if (_cancelado && !notas.length) { toast('Importação cancelada — nenhuma nota foi lida.'); return; }
   if (!notas.length) { toast('Nenhum XML válido. '+(erros.join('; ')||'')); return; }
   if (erros.length) toast(erros.length+' arquivo(s) ignorado(s): '+erros.join('; '));
   notas.sort((a,b)=> (a.data||'') < (b.data||'') ? -1 : 1);
-  XN = { notas };
+  XN = { notas, cancelado: _cancelado, lidas: notas.length, total: _tot };
+  if (_cancelado) toast(`Importação cancelada em ${notas.length} de ${_tot}. As notas já lidas estão abaixo — revise e aplique, ou descarte.`);
   xmlReview();
 }
 
@@ -5413,7 +5606,11 @@ function xmlReview() {
     return `<select onchange="XN.notas[${i}].ct=this.value;XN.notas[${i}].ctManual=true;XN.notas[${i}].ctFonte='manual';xmlReview()" style="min-width:250px">` +
       ops.map(c=>{ const [ri,rc,nm]=ctInfo(c); return `<option value="${c}" ${c===n.ct?'selected':''}>${c} · red. ${ri}%${ri!==rc?'/'+rc+'%':''} · ${nm}</option>`; }).join('') + '</select>' +
       `<div class="hint" style="font-size:10.5px;margin-top:2px;color:${fonteBadge[1]}">◉ ${fonteBadge[0]}</div>`; };
-  let h = `<div class="hint" style="margin-bottom:8px"><b>${N.length} nota(s)</b> lida(s). Confira a classificação (item LC 116 → cClassTrib) e as inclusões — canceladas já vêm desmarcadas.</div>
+  let h = (XN.cancelado ? `<div class="hint" style="margin-bottom:8px;padding:9px 12px;background:#fdf8ee;border-left:4px solid #b9770e">
+      <b>Importação cancelada.</b> Foram lidas <b>${XN.lidas}</b> das <b>${XN.total}</b> notas selecionadas.
+      O que está abaixo é apenas essa parte — aplicar agora lança um período <b>incompleto</b>.
+      Se a intenção era importar tudo, descarte e refaça a importação.</div>` : '')
+    + `<div class="hint" style="margin-bottom:8px"><b>${N.length} nota(s)</b> lida(s). Confira a classificação (item LC 116 → cClassTrib) e as inclusões — canceladas já vêm desmarcadas.</div>
   <div style="overflow-x:auto"><table class="gtable"><thead><tr><th></th><th>Nota</th><th>Data</th><th class="num">Valor</th><th>Classificação p/ Reforma</th><th>Tomador</th></tr></thead><tbody>`;
   N.forEach((n,i)=>{
     const [ri,rc] = ctInfo(n.ct||'');
@@ -5963,7 +6160,7 @@ async function rlCnpjRender(cnpj){
 
 // ═══════════ v6: RELATÓRIO CONSOLIDADO ANALÍTICO ═══════════
 function rlConsolidado(rot, n) {
-  const R = RL.res, M = R.meses, T = R.totais;
+  const R = RL.res, M = R.meses, T = Object.assign({}, R.totais, totExib(R));   // v7.42.1: fórmula única
   const g = f => agrupar(M.map(f), n);
   const cab = `<tr><th></th>${rot.map(r=>`<th class="num">${r}</th>`).join('')}<th class="num">Ano</th></tr>`;
   const linha = (nome, arr, forte) => `<tr${forte?' style="font-weight:700"':''}><td class="rot">${nome}</td>${arr.map(v=>`<td class="num">${fmt(v)}</td>`).join('')}<td class="num"><b>${fmt(arr.reduce((a,b)=>a+(+b||0),0))}</b></td></tr>`;
@@ -6083,7 +6280,9 @@ let RL_CHARTS = [];
 const PER_ROTULOS = { 1:['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
   2:['1º Bim','2º Bim','3º Bim','4º Bim','5º Bim','6º Bim'], 3:['1º Trim','2º Trim','3º Trim','4º Trim'],
   6:['1º Sem','2º Sem'], 12:['Ano'] };
-const agrupar = (arr, n) => { const out=[]; for(let i=0;i<12;i+=n) out.push(arr.slice(i,i+n).reduce((a,b)=>a+(+b||0),0)); return out; };
+// v7.42.1 (Ponto 3): agrupa somando os valores JÁ ARREDONDADOS de cada mês — mesma regra do
+// somaExib. Antes, a coluna de período somava sem arredondar e divergia do total do relatório.
+const agrupar = (arr, n) => { const out=[]; for(let i=0;i<12;i+=n) out.push(arr.slice(i,i+n).reduce((a,b)=>a+r2(b),0)); return out; };
 
 async function rlCarregar() {
   const cnpj = $id('rl-empresa').value, ano = +$id('rl-ano').value;
@@ -7256,18 +7455,41 @@ function rlConfEntrada(){
     ${grade('Receitas por bloco (R$/mês)', recLinhas)}
     ${grade('Folha (R$/mês)', [linha('Pró-labore', F.prolabore, 0, 'folha.prolabore'), linha('Salários', F.salarios, 0, 'folha.salarios'), linha('Base FGTS', F.baseFgts, 0, 'folha.baseFgts'), linha('Provisão 13º', F.prov13, 0, 'folha.prov13'), linha('Provisão férias', F.provFerias, 0, 'folha.provFerias')])}
     ${grade('Compras (R$/mês)', [linha('Revenda sem ST', C.semst, 0, 'compras.semst'), linha('Revenda com ST', C.comst, 0, 'compras.comst'), linha('Monofásicas', C.mono, 0, 'compras.mono'), linha('ST + Mono', C.comstMono, 0, 'compras.comstMono'), linha('Baixa estoque s/ ST (CMV)', C.baixaSemst, 0, 'compras.baixaSemst'), linha('Baixa c/ ST', C.baixaComst, 0, 'compras.baixaComst'), linha('Baixa mono', C.baixaMono, 0, 'compras.baixaMono'), linha('Base IPI crédito', C.baseIpiCred, 0, 'compras.baseIpiCred')])}
-    ${grade('Despesas (R$/mês)', [linha('Administrativas', DE.adm, 0, 'despesas.adm'), linha('Vendas', DE.vendas, 0, 'despesas.vendas'), linha('Fiscais', DE.fiscais, 0, 'despesas.fiscais'), linha('Financeiras', DE.financeiras, 0, 'despesas.financeiras'), linha('Outras', DE.outras, 0, 'despesas.outras'), linha('Com crédito PIS/COFINS (LR)', DE.credLR, 0, 'despesas.credLR')])}
+    ${grade('Despesas (R$/mês)', [linha('Administrativas', DE.adm, 0, 'despesas.adm'), linha('Vendas', DE.vendas, 0, 'despesas.vendas'), linha('Fiscais', DE.fiscais, 0, 'despesas.fiscais'), linha('Financeiras', DE.financeiras, 0, 'despesas.financeiras'), linha('Outras', DE.outras, 0, 'despesas.outras'), ...CRED_LR.map(([k,rot])=>linha(rot, DE[k], 0, 'despesas.'+k))])}
   </div>`;
 }
+// v7.42.4 · A conferência mostrava os meses NÃO LANÇADOS zerados, enquanto o parecer — no mesmo
+// pacote — falava do ano inteiro com esses meses estimados. O leitor via maio com receita R$ 0,00
+// na página do mês e maio com R$ 16.987,62 no quadro da projeção, sem saber qual valia. Pior: com
+// os meses futuros zerados, o RBT12 DESPENCA ao longo do ano (os meses vazios vão saindo da janela
+// de 12) e o Fator R deixa de ser calculável, o que fazia o motor trocar de anexo sozinho — o mesmo
+// contribuinte aparecia no Anexo III em fevereiro e no Anexo I em maio.
+// Agora a conferência roda o MESMO motor sobre a análise projetada e marca cada mês pela origem.
+// Os totais do realizado continuam existindo e são exibidos lado a lado, sem se misturar.
+function rlConfProj(){
+  const D = RL.dados; if (!D) return null;
+  let P = null; try { P = anProjetarAno(D, projJanelaEfetiva(D.cfg||{}).v); } catch(e){ P = null; }
+  if (!P) return null;
+  let R2 = null; try { R2 = calcular(P.dados, PARAMS.anexos, folhaPercDaEmpresa(P.dados.cfg)); } catch(e){ R2 = null; }
+  return R2 ? { P, R2 } : null;
+}
+const CONF_AVISO_PROJ = 'Mês <b>estimado</b>: receita, folha, compras e despesas são a média dos meses '
+  + 'com movimento da janela adotada. Não é apuração — serve para o ano fechar e para o RBT12, o '
+  + 'Fator R e a faixa evoluírem como evoluiriam de fato.';
 function rlConferencia(){
-  const R = RL.res, D = RL.dados, A = PARAMS.anexos;
+  const D = RL.dados, A = PARAMS.anexos;
   const modo = ($id('rl-conf-modo')||{}).value || 'mes';
   const mSel = +(($id('rl-conf-mes')||{}).value ?? 0);
   const meses = modo === 'mes' ? [mSel] : [...Array(12).keys()];
+  const _PR = rlConfProj();
+  const R = _PR ? _PR.R2 : RL.res;                 // meses projetados entram calculados
+  const _ultReal = _PR ? _PR.P.ultimo : 11;        // depois deste índice, mês estimado
+  const ehProj = m => m > _ultReal;
   const emp = RL.empresa || {};
   // v7.36.1 · rótulo do período: com meses parciais, "ano-base 2026" induz a leitura de ano cheio —
   // o documento passa a declarar o intervalo realmente lançado (achado da auditoria Weeedo).
-  const _lancC = R.meses.map((x,i)=>i).filter(i => (+R.meses[i].receita||0) > 0.005);
+  const _lancC = (RL.res ? RL.res.meses : R.meses).map((x,i)=>i)
+    .filter(i => (+(RL.res ? RL.res.meses : R.meses)[i].receita||0) > 0.005);
   const _perTx = _lancC.length === 0 ? `ano-base ${D.ano} (sem meses lançados)`
     : _lancC.length === 12 ? `ano-base ${D.ano} (12 meses)`
     : `<b>período ${MESES_ROT[_lancC[0]].toLowerCase()}–${MESES_ROT[_lancC[_lancC.length-1]].toLowerCase()}/${D.ano}</b> (${_lancC.length} ${_lancC.length===1?'mês lançado':'meses lançados'})`;
@@ -7275,7 +7497,8 @@ function rlConferencia(){
     <h3 style="margin:0">Conferência de cálculos — memória</h3>
     <div class="hint">${esc(emp.razao_social||'')} · CNPJ ${fmtCNPJ(D.cnpj)} · ${_perTx}
       · gerado em ${new Date().toLocaleString('pt-BR')} · <b>documento interno</b></div>
-    ${_lancC.length>0 && _lancC.length<12 ? `<div class="hint" style="margin-top:4px">Totais e projeções da Reforma refletem o <b>realizado no período</b> — não são valores anuais. A projeção anualizada da receita está no quadro "Limite e sublimite".</div>` : ''}
+    ${_lancC.length>0 && _lancC.length<12 ? `<div class="hint" style="margin-top:4px;padding:8px 10px;background:#fbf3e2;border-left:3px solid #b9770e">
+      <b>Este documento fecha o ano.</b> Os meses ${_PR ? MESES_ROT[_PR.P.ultimo+1].toLowerCase()+'–'+MESES_ROT[11].toLowerCase() : ''} são <b>estimados</b> pela média dos meses com movimento${_PR?' ('+(_PR.P.janela==='todos'?'todos os meses lançados':'últimos '+_PR.P.janelaN+' meses')+')':''} e aparecem marcados em âmbar. Os totais do <b>realizado</b> seguem no quadro "Projeção do ano — memória de cálculo", separados dos projetados.</div>` : ''}
     <div class="hint" style="margin-top:6px">Configuração vigente: ISS ${CF.pc(+D.cfg.iss||0)} · ICMS vendas ${CF.pc(+D.cfg.icmsV||0)} · ICMS compras ${CF.pc(+D.cfg.icmsC||0)}
       · presunções IRPJ ${CF.pc(+D.cfg.lpBaseCom||0)} (comércio) e ${CF.pc(+D.cfg.lpBaseServ||0)} (serviços)
       · CSLL ${CF.pc(+D.cfg.lpBaseComCsll||.12)} (comércio)
@@ -7284,7 +7507,10 @@ function rlConferencia(){
         D._pgdas ? 'receitas com PGDAS-D importado' : null,
         (D.folha?.salarios||[]).some(v=>+v>0) ? 'folha lançada' : null,
         (D.compras?.semst||[]).some(v=>+v>0) ? 'compras lançadas' : null
-      ].filter(Boolean).join(' · ') || 'lançamento manual'}</div></div>`;
+      ].filter(Boolean).join(' · ') || 'lançamento manual'}</div>
+    <div class="hint" style="margin-top:6px">Motor: <b>app v${APP_VERSAO}</b> · lacre <code>${LACRE_HASH}</code>${
+      (typeof LACRE_ST!=='undefined' && LACRE_ST && LACRE_ST.ok===false) ? ' <b style="color:#b3261e">— VIOLADO, os números abaixo não são confiáveis</b>' : ' (íntegro)'
+    } · alíquotas de referência da Reforma: Res. CGIBS nº 14/2026</div></div>`;
 
   if (modo === 'anual') return cab + rlConfEntrada() + rlConfAnual();      // (rlConfAnual inclui Reforma e divergências)
 
@@ -7298,9 +7524,32 @@ function rlConferencia(){
     if (M.recExp) L.push(CF.lin('Receita de exportação','linhas a1_exp + a2_exp + a3_exp', fmtR(M.recExp)));
     L.push(CF.lin('RBT12 (mercado interno)','12 meses anteriores lançados + meses já decorridos do ano', fmtR(M.rbt12)));
     L.push(CF.lin('Faixa', `RBT12 ${fmtR(M.rbt12)} → faixa da tabela`, M.faixa + 'ª'));
-    L.push(CF.lin('Alíquota efetiva (Anexo I)',
-      `(${fmtR(M.rbt12)} × ${CF.pc(AN1.aliq[fx])} − ${fmtR(AN1.ded[fx])}) ÷ ${fmtR(M.rbt12)}`, CF.pc(efGeral)));
     const blocos = Object.keys(M.efb).filter(k => (D.receitas[k]||[])[m] > 0);
+    // ── v7.42.0 (ATP-705/706): o rótulo e a alíquota vêm do anexo REALMENTE usado no mês.
+    //    Até a v7.41.8 esta linha dizia "Anexo I" e imprimia a alíquota do Anexo I mesmo quando
+    //    o DAS saía do Anexo III — o elo que produz o número simplesmente não aparecia.
+    const _axDeK = k => /_exp$/.test(k) ? null
+      : k.startsWith('a1') ? 'I' : k.startsWith('a2') ? 'II'
+      : k === 'a4' ? 'IV' : k === 'a5r' ? ((M.fatorR||0) >= .28 ? 'III' : 'V') : 'III';
+    const _axUsados = [...new Set(blocos.map(_axDeK).filter(Boolean))];
+    // ── v7.42.0 (ATP-704): fator R deixa de ser invisível. Aparece SEMPRE que houver receita de
+    //    serviço, inclusive quando não é aplicável — ausência do bloco não pode ser confundida
+    //    com "não verificado".
+    const _temServ = _axUsados.some(a => a === 'III' || a === 'V') || blocos.includes('a5r');
+    if (_temServ){
+      const _fr = M.fatorR || 0, _frOk = _fr >= .28;
+      const _porLei = blocos.includes('a3_semret') || blocos.includes('a3_retiss') || blocos.includes('a3_retissinss');
+      L.push(CF.lin('Fator R (folha 12m ÷ RBT12)',
+        `${CF.pc(_fr)} ${_frOk?'≥':'<'} 28% · folha dos 12 meses (pró-labore + salários + encargos + FGTS) sobre a RBT12`
+        + (_porLei && !_frOk ? ' — <b>as receitas do Anexo III deste mês não dependem do fator R</b> (art. 18, § 5º-B, da LC 123): confira o enquadramento da atividade' : ''),
+        _frOk ? 'Anexo III' : (_porLei ? 'Anexo III por lei' : 'Anexo V')));
+    }
+    for (const ax of (_axUsados.length ? _axUsados : ['I'])){
+      const AX = A[ax]; if (!AX) continue;
+      const efA = M.rbt12 > 0 ? (M.rbt12*AX.aliq[fx] - AX.ded[fx])/M.rbt12 : 0;
+      L.push(CF.lin(`Alíquota efetiva (Anexo ${ax})`,
+        `(${fmtR(M.rbt12)} × ${CF.pc(AX.aliq[fx])} − ${fmtR(AX.ded[fx])}) ÷ ${fmtR(M.rbt12)}`, CF.pc(efA)));
+    }
     for (const k of blocos)
       L.push(CF.lin(k, `${fmtR(D.receitas[k][m])} × ${CF.pc(M.efb[k])}`, fmtR(D.receitas[k][m]*M.efb[k])));
     L.push(CF.lin('<b>DAS do mês</b>','soma dos blocos acima', fmtR(M.das)));
@@ -7376,18 +7625,23 @@ function rlConferencia(){
         ${Math.abs(pct)>2 ? ' — <b>acima do limite de 2%, confira Fator R, anexo das receitas e duplicidade de importação</b>' : ' — dentro do limite de 2%'}</div>`;
     }
 
-    h += `<div class="card"><h3 style="margin-top:0">${MESES_ROT[m]}/${D.ano}</h3>`
+    h += `<div class="card"${ehProj(m)?' style="border-left:4px solid #b9770e;background:#fffdf7"':''}>
+         <h3 style="margin-top:0">${MESES_ROT[m]}/${D.ano}${ehProj(m)?' <span class="badge" style="background:#fbf3e2;color:#7a4f08">estimado</span>':''}</h3>`
+       + (ehProj(m) ? `<div class="hint" style="margin-bottom:8px">${CONF_AVISO_PROJ}</div>` : '')
        + CF.tab('Simples Nacional', L)
        + (E.length ? CF.tab('Exportação — apuração separada', E) : '')
        + CF.tab('Lucro Presumido', LPl)
        + CF.tab('Lucro Real', LRl)
        + conf + '</div>';
   }
-  return h + rlConfProjecao() + rlConfReforma() + rlConfDivergencias();
+  return h + rlConfProjecao() + rlConfReforma(R) + rlConfDivergencias();
 }
 function rlConfAnual(){
-  const R = RL.res, D = RL.dados;
-  const li = R.meses.map(M => `<tr><td class="rot">${MESES_ROT[M.m]}</td>
+  const D = RL.dados;
+  const _PR = rlConfProj();
+  const R = _PR ? _PR.R2 : RL.res;
+  const _ult = _PR ? _PR.P.ultimo : 11;
+  const li = R.meses.map(M => `<tr${M.m>_ult?' style="background:#fbf3e2"':''}><td class="rot">${MESES_ROT[M.m]}${M.m>_ult?' <span class="badge" style="background:#fff;color:#7a4f08">est.</span>':''}</td>
     <td class="num">${fmtR(M.receita)}</td><td class="num">${fmtR(M.rbt12)}</td><td class="num">${M.faixa}ª</td>
     <td class="num">${fmtR(M.dasGuia!=null?M.dasGuia:M.das)}</td><td class="num">${fmtR(M.simples.total)}</td>
     <td class="num">${fmtR(M.lp.total)}</td><td class="num">${fmtR(M.lr.total)}</td></tr>`).join('');
@@ -7400,7 +7654,7 @@ function rlConfAnual(){
       <td class="num">${fmtR(somaExib(R.meses,x=>x.dasGuia!=null?x.dasGuia:x.das))}</td><td class="num">${fmtR(somaExib(R.meses,x=>x.simples.total))}</td>
       <td class="num">${fmtR(somaExib(R.meses,x=>x.lp.total))}</td><td class="num">${fmtR(somaExib(R.meses,x=>x.lr.total))}</td></tr></tbody></table>
     <div class="hint" style="margin-top:8px">A coluna <b>DAS</b> é a guia — inclui o ICMS/ISS da trava da 5ª faixa nos meses de 6ª faixa, quando não há impedimento. Os totais somam os valores <b>já arredondados</b> de cada mês, para fechar com a soma da coluna. Para ver as fórmulas de um mês, troque o detalhe para "Um mês".</div></div>`
-    + rlConfTrava() + rlConfSublimite() + rlConfProjecao() + rlConfReforma() + rlConfDivergencias();
+    + rlConfTrava() + rlConfSublimite() + rlConfProjecao() + rlConfReforma(R) + rlConfDivergencias();
 }
 // ═══ v7.41.7 · MEMÓRIA DE CÁLCULO DA PROJEÇÃO ═══
 // O parecer fala do ANO (meses futuros estimados pela média da janela), enquanto a conferência
@@ -7437,11 +7691,41 @@ function rlConfProjecao(){
     const iR = Math.max(0,(Treal.receita||0)-(Treal.receitaExp||0)), iP = Math.max(0,(Tproj.receita||0)-(Tproj.receitaExp||0));
     return iR > 0.005 ? iP/iR : 1; })() : 1;
 
+  // ── v7.42.0 (ATP-701): até a v7.41.8 cada linha do "realizado" somava um número diferente de
+  //    meses. Receita e Simples paravam no último mês lançado; o Lucro Presumido arrastava o INSS
+  //    de meses seguintes com folha lançada e o Lucro Real ainda somava o IRPJ/CSLL de trimestre
+  //    que só fecha DEPOIS do período. As razões saíam distorcidas e ninguém via por quê.
+  const _sel  = { receita:x=>x.receita, simples:x=>x.simples.total, lp:x=>x.lp.total, lr:x=>x.lr.total };
+  const _ate  = f => ((RL.res&&RL.res.meses)||[]).reduce((s,x,i)=> i<=P.ultimo ? s + r2(f(x)) : s, 0);
+  const _apos = f => ((RL.res&&RL.res.meses)||[]).reduce((s,x,i)=> i> P.ultimo ? s + r2(f(x)) : s, 0);
+  const _fora = { receita:_apos(_sel.receita), simples:_apos(_sel.simples), lp:_apos(_sel.lp), lr:_apos(_sel.lr) };
+  const _temFora = Object.values(_fora).some(v => v > 0.005);
+  const _perRot = `${MESES_ROT[0]}–${MESES_ROT[P.ultimo]}`;
+  // ── v7.42.0 (ATP-701): truncar sozinho não basta. No Lucro Real o IRPJ/CSLL só é lançado no mês
+  //    que FECHA o trimestre; se o período termina no meio de um, o realizado fica sem a carga de
+  //    meses já decorridos e a razão contra o projetado (que fecha 4 trimestres) sobe artificialmente.
+  //    Estimamos o fechamento com os meses do trimestre que estão DENTRO do período, e dizemos que é estimativa.
+  const _triIni = Math.floor(P.ultimo/3)*3, _triFechado = (P.ultimo % 3) === 2;
+  const _lrAberto = (function(){
+    if (_triFechado) return 0;
+    const ms = (RL.res && RL.res.meses) || []; let base = 0;
+    for (let i=_triIni; i<=P.ultimo; i++) base += +((ms[i] && ms[i].lr && ms[i].lr.baseIRCS) || 0);
+    if (base <= 0.005) return 0;
+    const nm = P.ultimo - _triIni + 1;
+    return r2(base*.15 + base*.09 + Math.max(0, base - 20000*nm)*.10);
+  })();
+
   return `<div class="card" style="border-left:4px solid #d99a2b"><h3 style="margin-top:0">Projeção do ano — memória de cálculo</h3>
     <div class="hint">Reproduz a projeção que o <b>parecer</b> usa, para conferência. Meses em âmbar são estimados; os demais são os lançados.</div>
     <table class="gtable" style="margin-top:8px"><tbody>
       <tr><td class="rot">Janela adotada</td><td>Média dos <b>${projJanelaLabel(P.janela)}</b> — ${P.janelaN} ${P.janelaN===1?'mês':'meses'} (${MESES_ROT[P.iniJanela]}–${MESES_ROT[P.ultimo]}), definida ${PJ.origem==='documento'?'neste documento':'na configuração da empresa'}</td></tr>
-      <tr><td class="rot">Meses reais × projetados</td><td>${P.nReais} ${P.nReais===1?'lançado':'lançados'} · <b>${P.nProj}</b> ${P.nProj===1?'projetado':'projetados'} (${MESES_ROT[P.ultimo+1]}–${MESES_ROT[11]})</td></tr>
+      <tr><td class="rot">Meses reais × projetados</td><td>${P.nReais} ${P.nReais===1?'apurado':'apurados'} · <b>${P.nProj}</b> ${P.nProj===1?'projetado':'projetado'} (${MESES_ROT[P.ultimo+1]}–${MESES_ROT[11]})</td></tr>
+      ${(P.semReceita&&P.semReceita.length)?`<tr><td class="rot">Meses apurados sem receita</td><td>
+        <b>${P.semReceita.map(m=>MESES_ROT[m]).join(' · ')}</b> — apurados e com faturamento zero.
+        <span class="hint">Entram no denominador da média: o período coberto vai até ${MESES_ROT[P.ultimo]} porque a
+        importação declarou ${P.ultimo+1} ${P.ultimo===0?'mês':'meses'} de apuração, e não porque a receita
+        parou em ${MESES_ROT[P.ultimo]}. Um mês apurado com zero é informação — dividir só pelos meses com
+        faturamento projetaria o ritmo dos meses bons, não o da empresa.</span></td></tr>`:''}
       <tr><td class="rot">Receita média da janela</td><td>${fmtR(mediaRec)} <span class="hint">= soma da receita dos ${P.janelaN} ${P.janelaN===1?'mês':'meses'} da janela ÷ ${P.janelaN} — é o valor replicado em cada mês projetado</span></td></tr>
       <tr><td class="rot">Regra aplicada</td><td>A <b>mesma janela</b> vale para receita, folha, compras e despesas. Percentuais (campos <code>_pct</code>) recebem a média sem arredondar; valores em reais são arredondados a 2 casas. Nenhuma premissa de crescimento é adicionada.</td></tr>
       ${Treal&&Tproj?`<tr><td class="rot">Fator de escala da aba Reforma</td><td>${(k).toFixed(4).replace('.',',')}× <span class="hint">= receita interna projetada ${fmtR(Math.max(0,(Tproj.receita||0)-(Tproj.receitaExp||0)))} ÷ realizada ${fmtR(Math.max(0,(Treal.receita||0)-(Treal.receitaExp||0)))} — aplicado aos valores ANUAIS digitados na aba Reforma (receita, compras, contrapartes)</span></td></tr>`:''}
@@ -7454,43 +7738,264 @@ function rlConfProjecao(){
       ${Treal?`<tr><td class="rot">Realizado no período</td><td>—</td><td class="num">${fmtR(Treal.receita)}</td><td class="num">—</td><td class="num">—</td><td class="num">—</td>
         <td class="num">${fmtR(somaExib(RL.res.meses,x=>x.dasGuia!=null?x.dasGuia:x.das))}</td></tr>`:''}
     </tbody></table>
-    ${Treal&&Tproj?`<table class="gtable" style="margin-top:10px"><thead><tr><th>Totais do ano</th><th class="num">Realizado (${P.nReais}m)</th><th class="num">Projetado (12m)</th><th class="num">Razão</th></tr></thead><tbody>
+    ${Treal&&Tproj?`<table class="gtable" style="margin-top:10px"><thead><tr><th>Totais do ano</th><th class="num">Realizado (${_perRot} · ${P.ultimo+1}m)</th><th class="num">Projetado (12m)</th><th class="num">Razão</th></tr></thead><tbody>
       ${[['Receita','receita'],['Simples (total)','simples'],['Lucro Presumido','lp'],['Lucro Real (simulação)','lr']].map(([rot,ch])=>{
-        const a = +Treal[ch]||0, b = +Tproj[ch]||0;
+        const a = _ate(_sel[ch]) + (ch==='lr' ? _lrAberto : 0), b = somaExib(R2.meses, _sel[ch]);
         return `<tr><td class="rot">${rot}</td><td class="num">${fmtR(a)}</td><td class="num">${fmtR(b)}</td><td class="num">${a>0.005?(b/a).toFixed(2).replace('.',',')+'×':'—'}</td></tr>`; }).join('')}
     </tbody></table>
-    <div class="hint" style="margin-top:6px">A razão do <b>tributo</b> não acompanha a razão da <b>receita</b>: o Simples é progressivo (a alíquota efetiva sobe com o RBT12), de modo que dobrar a receita mais que dobra o DAS. É por isso que a projeção precisa passar pelo motor, e não por uma regra de três.</div>`:''}
+    <div class="hint" style="margin-top:6px">Todas as linhas somam <b>o mesmo intervalo de meses</b> (${_perRot}) e os valores <b>já arredondados</b> de cada mês, para fechar com as colunas acima.${
+      _lrAberto>0.005 ? ` O período termina no meio do ${Math.floor(P.ultimo/3)+1}º trimestre: o Lucro Real inclui <b>${fmtR(_lrAberto)} de IRPJ/CSLL estimados</b> para os meses já decorridos dele — sem isso o realizado ficaria sem carga que o projetado tem, e a razão subiria sozinha.` : ''}</div>
+    ${_temFora?`<div class="hint" style="margin-top:6px">⚠️ <b>Fora do período</b> — meses posteriores a ${MESES_ROT[P.ultimo]} que já produzem tributo (folha ou despesas lançadas, ou trimestre que fecha depois): Simples ${fmtR(_fora.simples)} · Lucro Presumido ${fmtR(_fora.lp)} · Lucro Real ${fmtR(_fora.lr)}. Não entram na coluna do realizado — se entrassem, o denominador seria de ${P.ultimo+1} meses e o numerador de mais, e as razões mentiriam.</div>`:''}
+    ${(()=>{ const rr = _ate(_sel.receita), rb = somaExib(R2.meses,_sel.receita);
+      const kr = rr > 0.005 ? rb/rr : 0;
+      const rz = ['simples','lp','lr'].map(ch=>{ const a=_ate(_sel[ch]) + (ch==='lr'?_lrAberto:0); return a>0.005 ? somaExib(R2.meses,_sel[ch])/a : 0; }).filter(x=>x>0);
+      const desvia = kr>0 && rz.some(x => Math.abs(x-kr) > 0.005*kr);
+      return `<div class="hint" style="margin-top:6px">${ desvia
+        ? 'A razão do <b>tributo</b> não acompanha a razão da <b>receita</b>: dentro do intervalo projetado alguma faixa, limite ou adicional muda de patamar. É por isso que a projeção passa pelo motor, e não por uma regra de três.'
+        : 'Neste caso a razão do <b>tributo</b> acompanha a da <b>receita</b> (' + kr.toFixed(2).replace('.',',') + '×): a alíquota efetiva <b>não</b> muda no intervalo projetado — a RBT12 permanece na mesma faixa e nenhum adicional é acionado. Quem confirma isso é o motor; a coincidência com a regra de três é resultado, não premissa.' }</div>`; })()}`:''}
   </div>`;
 }
 // ═══ v7.20.0: conferência da Reforma ano a ano — fórmulas com valores substituídos ═══
-function rlConfReforma(){
+
+// ═══ v7.43.2 · faixa de estado da projeção (uma só, sob o seletor de relatórios) ═══
+// Projeção NÃO é atributo do relatório — é estado da análise. Por isso a observação não entra no
+// NOME do documento (mentiria no ano fechado, e o nome vira título do PDF): entra no grupo do
+// seletor, que a diz uma vez, e nesta faixa, que lê o estado real da análise aberta.
+const RL_PROJETAM = ['parecer','conferencia'];
+function rlStatusProj(tipo){
+  const el = $id('rl-status-proj'); if (!el) return;
+  if (!RL_PROJETAM.includes(tipo) || !RL.dados){ el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = '';
+  let P = null; try { P = anProjetarAno(RL.dados, projJanelaEfetiva(RL.dados.cfg||{}).v); } catch(e){ P = null; }
+  if (!P){
+    el.innerHTML = '<span class="ok">Sem projeção</span> · os 12 meses de ' + (RL.dados.ano||'')
+      + ' estão apurados — todos os valores do documento são realizados.';
+    return;
+  }
+  const nProj = 11 - P.ultimo;
+  el.innerHTML = '<span class="proj">Valores projetados</span> · '
+    + MESES_ROT[0].toLowerCase() + '–' + MESES_ROT[P.ultimo].toLowerCase() + ' apurados ('
+    + (P.ultimo+1) + (P.ultimo===0?' mês':' meses') + '), '
+    + MESES_ROT[P.ultimo+1].toLowerCase() + '–' + MESES_ROT[11].toLowerCase() + ' estimados ('
+    + nProj + (nProj===1?' mês':' meses') + ') pela '
+    + (P.janela==='todos' ? 'média de todos os meses apurados' : 'média dos últimos ' + P.janelaN + ' meses')
+    + '. O selo âmbar dentro do documento marca cada mês estimado.';
+}
+// ═══ v7.43.2 · seleção de anos do demonstrativo da Reforma ═══
+function rlConfAnosPopular(){
+  const box = $id('rl-conf-anos'); if (!box || box.dataset.pronto) return;
+  box.innerHTML = RF_ANOS.map(a =>
+      '<label><input type="checkbox" value="' + a + '" checked onchange="rlRender()"> ' + a + '</label>').join('')
+    + '<button class="btn" style="padding:2px 10px;font-size:11px;margin-left:6px" onclick="rlConfAnosTodos(true)">todos</button>'
+    + '<button class="btn" style="padding:2px 10px;font-size:11px;margin-left:4px" onclick="rlConfAnosTodos(false)">nenhum</button>';
+  box.dataset.pronto = '1';
+}
+function rlConfAnosTodos(v){
+  const box = $id('rl-conf-anos'); if (!box) return;
+  box.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = v); rlRender();
+}
+function rlConfAnosSel(){
+  const box = $id('rl-conf-anos'); if (!box || !box.dataset.pronto) return RF_ANOS.slice();
+  return [...box.querySelectorAll('input[type=checkbox]')].filter(c => c.checked).map(c => +c.value);
+}
+// ═══ v7.43.2 · vigia de PIS/COFINS (e IPI) nos anos de 2027 em diante ═══
+// PIS e COFINS são EXTINTOS em 2027, substituídos pela CBS (EC 132/2023; LC 214/2025). O motor já
+// zera o remanescente pelos Parâmetros — mas esses percentuais são EDITÁVEIS na tela, e devolver
+// qualquer valor > 0 a 2027+ faria o comparativo somar tributo que não existe mais. O documento
+// passa a conferir e a declarar o resultado, em vez de deixar a ausência subentendida.
+function rlConfRefGuarda(C){
+  const maus = RF_ANOS.filter(a => a >= 2027 && (+(((C.rfx.aliq||{})[a]||{}).remPisCof) || 0) > 0);
+  if (maus.length) return '<div class="hint" style="margin-top:10px;padding:9px 11px;background:#fdedec;border-left:4px solid #c0392b">'
+    + '<b>⚠️ CONFERÊNCIA REPROVADA — PIS/COFINS remanescentes maiores que zero em ' + maus.join(', ') + '.</b> '
+    + 'Essas contribuições são extintas em 2027 e substituídas pela CBS; manter percentual remanescente '
+    + 'nesses anos faz o cenário do <b>regime regular</b> somar tributo que não existirá, superestimando a carga '
+    + 'e viciando a comparação com o Simples. O percentual foi alterado em <b>Parâmetros › Reforma</b> — '
+    + 'devolva-o a 0,00% de 2027 a 2033 antes de usar este documento.</div>';
+  return '<div class="hint" style="margin-top:10px;padding:9px 11px;background:#eafaf1;border-left:4px solid #117a65">'
+    + '<b>✓ Conferido: PIS e COFINS não entram de 2027 em diante.</b> O percentual remanescente está em '
+    + '<b>0,00% de 2027 a 2033</b>, e a memória de cada ano <b>imprime as duas linhas zeradas</b> em vez de omiti-las — '
+    + 'linha ausente poderia ser lida como esquecimento. O <b>IPI</b> segue o mesmo caminho: entra apenas até 2026 e '
+    + 'depois fica em zero. Ressalva declarada: a redução do IPI a zero <b>não alcança</b> a industrialização na '
+    + '<b>Zona Franca de Manaus</b>, hipótese que o aplicativo não modela. Como os percentuais são editáveis em '
+    + 'Parâmetros › Reforma, esta conferência é refeita a cada geração do documento.</div>';
+}
+// ═══ v7.43.2 · MEMÓRIA DE CÁLCULO da Reforma, ano a ano ═══
+// O quadro anterior mostrava o RESULTADO de cada ano. Este mostra o CÁLCULO: alíquota por alíquota,
+// parcela por parcela, com os valores já substituídos — o mesmo padrão do resto da conferência.
+function rlConfRefMemAno(C, L, R){
+  const rfx = C.rfx, T = R.totais, meses = R.meses;
+  const A = (rfx.aliq || {})[L.ano] || {};
+  const cbsA = +A.cbs || 0, ibseA = +A.ibse || 0, ibsmA = +A.ibsm || 0;
+  const rPC = +A.remPisCof || 0, rII = +A.remIcmsIss || 0;
+  const alqPc = cbsA + ibseA + ibsmA, alq = alqPc / 100;
+  const pcs = v => v.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '%';
+  // procedência da alíquota do ano (v7.36.1 · grau de certeza declarado)
+  const proc = L.ano <= 2026 ? 'ano-teste fixado em lei — CBS 0,9% e IBS 0,1% (LC 214/2025; ADCT art. 127), com recolhimento compensado'
+    : L.ano <= 2028 ? 'IBS de 0,1% fixado em lei (ADCT art. 127); CBS por estimativa oficial — referência menos 0,1 p.p. (LC 214, art. 347)'
+    : L.ano <= 2032 ? 'projeção — escada do IBS subindo em degraus de 10% ao ano, ICMS/ISS caindo na mesma medida'
+    : 'referência projetada pela metodologia da Res. CGIBS nº 14/2026; a definitiva virá do cálculo do TCU homologado pelo Senado';
+  // ── débito
+  const recBenef = RF_REDUCOES.reduce((s,[k]) => s + (rfx.benefRec?.[k]||0), 0);
+  const baseCheia = Math.max(0, (rfx.receita||0) - recBenef);
+  const ldeb = [ CF.lin('Receita interna tributável', 'receita do ano ' + fmtR(T.receita) + ' − exportação ' + fmtR(T.receitaExp||0) + ' (imune, LC 214 art. 8º)', fmtR(rfx.receita||0)) ];
+  for (const [k, rot, red] of RF_REDUCOES){ const v = +(rfx.benefRec?.[k]||0); if (v > 0.005)
+    ldeb.push(CF.lin(rot + ' (cClassTrib)', fmtR(v) + ' × ' + pcs(alqPc) + ' × (1 − ' + (red*100).toFixed(0) + '%)', fmtR(v*alq*(1-red)))); }
+  ldeb.push(CF.lin('Base à alíquota cheia', fmtR(rfx.receita||0) + ' − ' + fmtR(recBenef) + ' (parcelas reduzidas acima)', fmtR(baseCheia)));
+  ldeb.push(CF.lin('<b>Débito de IBS/CBS</b>', fmtR(baseCheia) + ' × ' + pcs(alqPc) + (recBenef>0.005 ? ' + parcelas reduzidas' : ''), fmtR(L.deb)));
+  // ── crédito
+  const cLR = +(rfx.contra?.compras_lrlp||0), cSN = +(rfx.contra?.compras_simples||0);
+  const pct58 = (rfx.credSimplesPct||0) > 0 ? (rfx.credSimplesPct/100) : credSimplesArt58(L.ano);
+  const lcre = [];
+  if (cLR > 0.005) lcre.push(CF.lin('Compras de PJ do regime regular', fmtR(cLR) + ' × ' + pcs(alqPc) + ' — crédito integral, alíquota cheia' + (C.proxyCompras ? ' <b>(proxy: aba Reforma vazia)</b>' : ''), fmtR(cLR*alq)));
+  if (cSN > 0.005) lcre.push(CF.lin('Compras de optante do Simples', fmtR(cSN) + ' × ' + (pct58*100).toFixed(2).replace('.',',') + '% — art. 58, §§ 4º a 6º, Res. CGSN 190/2026' + ((rfx.credSimplesPct||0)>0 ? ' (% manual)' : ' (1ª faixa do Anexo I)'), fmtR(cSN*pct58)));
+  for (const [k, rot, red] of RF_REDUCOES){ const v = +(rfx.benefCred?.[k]||0); if (v > 0.005)
+    lcre.push(CF.lin('Crédito com ' + rot.toLowerCase(), fmtR(v) + ' × ' + pcs(alqPc) + ' × (1 − ' + (red*100).toFixed(0) + '%)', fmtR(v*alq*(1-red)))); }
+  if (!lcre.length) lcre.push(CF.lin('Crédito de IBS/CBS', 'nenhuma aquisição informada — aba Reforma e Compras vazias', fmtR(0)));
+  lcre.push(CF.lin('<b>Crédito estimado</b>', 'soma das parcelas acima', fmtR(L.cred)));
+  lcre.push(CF.lin('<b>IBS/CBS líquido</b>', L.anoTeste ? 'ano-teste: apurado e <b>compensado</b> com PIS/COFINS — nada a recolher' : 'débito ' + fmtR(L.deb) + ' − crédito ' + fmtR(L.cred), fmtR(L.liquido)));
+  if ((L.is||0) > 0.005 || (+A.is||0) > 0) lcre.push(CF.lin('Imposto Seletivo', fmtR(rfx.baseIS||0) + ' × ' + pcs(+A.is||0) + ' — não gera crédito', fmtR(L.is||0)));
+  // ── sistema antigo: o ponto da conferência de PIS/COFINS
+  const sLP = k => meses.reduce((s,x) => s + (+x.lp[k]||0), 0), sLR = k => meses.reduce((s,x) => s + (+x.lr[k]||0), 0);
+  const lp = {pis:sLP('pis'), cof:sLP('cofins'), icms:sLP('icms'), ipi:sLP('ipi'), iss:sLP('iss')};
+  const lr = {pis:sLR('pis'), cof:sLR('cofins'), icms:sLR('icms'), ipi:sLR('ipi'), iss:sLR('iss')};
+  const lpResto = T.lp - lp.pis - lp.cof - lp.icms - lp.ipi - lp.iss;
+  const lrResto = T.lr - lr.pis - lr.cof - lr.icms - lr.ipi - lr.iss;
+  const remIpi = L.ano <= 2026 ? 1 : 0;
+  const zero = (t, pct) => pct <= 0 ? ' <b style="color:#117a65">— ' + t + ' não entra em ' + L.ano + '</b>' : '';
+  const linhasAntigo = [
+    ['IRPJ + CSLL + INSS patronal', 'não são tributos de consumo — seguem integrais nos dois regimes', lpResto, lrResto, ''],
+    ['PIS', 'base do ano × ' + pcs(rPC*100) + ' remanescente', lp.pis*rPC, lr.pis*rPC, zero('PIS', rPC)],
+    ['COFINS', 'base do ano × ' + pcs(rPC*100) + ' remanescente', lp.cof*rPC, lr.cof*rPC, zero('COFINS', rPC)],
+    ['ICMS', fmtR(lp.icms) + ' / ' + fmtR(lr.icms) + ' × ' + pcs(rII*100) + ' remanescente', lp.icms*rII, lr.icms*rII, zero('ICMS', rII)],
+    ['ISS', fmtR(lp.iss) + ' / ' + fmtR(lr.iss) + ' × ' + pcs(rII*100) + ' remanescente', lp.iss*rII, lr.iss*rII, zero('ISS', rII)],
+    ['IPI', remIpi ? 'integral até 2026' : 'alíquotas reduzidas a zero a partir de 2027 (exceto ZFM, não modelada)', lp.ipi*remIpi, lr.ipi*remIpi, zero('IPI', remIpi)],
+    ['IBS/CBS líquido + IS', 'apurados acima, iguais nos dois regimes', L.liquido + (L.is||0), L.liquido + (L.is||0), ''],
+  ].map(([rot, f, a, b, nota]) =>
+    '<tr><td class="rot" style="white-space:nowrap">' + rot + '</td>'
+    + '<td style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#566573">' + f + nota + '</td>'
+    + '<td class="num">' + fmtR(a) + '</td><td class="num">' + fmtR(b) + '</td></tr>').join('');
+  const tabAntigo = '<div style="margin:14px 0 6px;font-weight:700;color:#1a5276;font-size:13px">3. Cenário do regime regular — o que ainda se paga do sistema antigo</div>'
+    + '<table class="gtable"><thead><tr><th>Parcela</th><th>Fórmula</th><th class="num">Lucro Presumido</th><th class="num">Lucro Real (simulação)</th></tr></thead>'
+    + '<tbody>' + linhasAntigo
+    + '<tr style="font-weight:700;border-top:2px solid #1a5276"><td class="rot">Total do regime regular</td><td></td>'
+    + '<td class="num">' + fmtR(L.regLP) + '</td><td class="num">' + fmtR(L.regLR) + '</td></tr></tbody></table>'
+    + '<div class="hint">O cenário adotado no quadro-resumo é o <b>menor</b> dos dois: <b>' + (L.regNome||'') + '</b>, ' + fmtR(L.regular) + '.</div>';
+  // ── cenários do Simples
+  const P = L.p190;
+  const lcen = [ CF.lin('Por dentro (permanece 100% no Simples)', 'total do Simples do ano ' + fmtR(T.simples||0) + (P ? ' + trava recomposta pela vigência ' + fmtR(P.trava - (T.sublimite||0)) : ''), fmtR(cenDentro(T, L))) ];
+  if (P){
+    lcen.push(CF.lin('DAS + trava do ano', 'DAS ' + fmtR(T.das||0) + ' + trava da 5ª faixa recomposta ' + fmtR(P.trava), fmtR(P.dasMaisTrava)));
+    lcen.push(CF.lin('(−) CBS na partilha do DAS', 'parcela de CBS dos Anexos da Res. CGSN 190/2026', '− ' + fmtR(P.cbs)));
+    lcen.push(CF.lin('(−) IBS na partilha do DAS', 'parcela de IBS dos Anexos — ICMS/ISS migrando a ' + pcs((1-P.rem)*100), '− ' + fmtR(P.ibs)));
+    lcen.push(CF.lin('<b>DAS ajustado (art. 22-A)</b>', 'o que resta na guia depois de retiradas as parcelas de CBS e IBS', fmtR(L.dasHib)));
+    lcen.push(CF.lin('<b>Cenário híbrido</b>', 'DAS ajustado + CPP retida ' + fmtR(T.cppRetida||0) + ' + CPP fora do DAS ' + fmtR(T.cppForaDAS||0) + ' + IBS/CBS por fora ' + fmtR(L.liquido + (L.is||0)), fmtR(L.hib)));
+  } else {
+    lcen.push(CF.lin('Cenário híbrido', L.ano <= 2026 ? 'até 2026 tudo permanece dentro do DAS — o art. 22-A ainda não se aplica' : '—', fmtR(L.hib)));
+  }
+  return '<div style="border:1px solid #d5dbdb;border-left:4px solid #1a5276;border-radius:8px;padding:10px 14px;margin:14px 0;page-break-inside:avoid">'
+    + '<div style="font-weight:700;color:#1a5276;font-size:15px">' + L.ano + (L.anoTeste ? ' <span class="hint" style="font-weight:400">— ano-teste</span>' : '') + '</div>'
+    + '<div class="hint" style="margin:2px 0 4px">CBS ' + pcs(cbsA) + ' · IBS estadual ' + pcs(ibseA) + ' · IBS municipal ' + pcs(ibsmA)
+    + ' · <b>combinada ' + pcs(alqPc) + '</b> · ICMS/ISS remanescentes ' + pcs(rII*100) + ' · PIS/COFINS remanescentes ' + pcs(rPC*100)
+    + '<br>Procedência da alíquota: ' + proc + '</div>'
+    + CF.tab('1. Débito de IBS/CBS', ldeb) + CF.tab('2. Crédito e apuração', lcre) + tabAntigo
+    + CF.tab('4. Cenários do optante do Simples', lcen) + '</div>';
+}
+function rlConfReforma(Rdoc){
   try {
-    const C = calcCenariosReforma(RL.res, RL.reforma);
+    const R = Rdoc || RL.res;                                   // v7.43.2: mesma base do resto do documento
+    const C = calcCenariosReforma(R, RL.reforma);
     if (!C || !C.REF || !C.REF.length) return '';
-    const REF = C.REF;
+    const REF_ALL = C.REF;
+    const anosSel = rlConfAnosSel();
+    const REF = REF_ALL.filter(L => anosSel.includes(L.ano));
+    if (!REF.length) return `<div class="card"><h3 style="margin-top:0">Reforma Tributária — conferência ano a ano</h3>
+      <div class="hint" style="padding:9px 11px;background:#fbf3e2;border-left:4px solid #b9770e"><b>Nenhum ano selecionado.</b>
+      Marque ao menos um ano na barra do relatório (\"Anos no demonstrativo da Reforma\") para que o quadro e as memórias sejam gerados.</div></div>`;
+    const _proj = (typeof rlConfProj === 'function') ? rlConfProj() : null;
+    const _baseTx = _proj
+      ? `<b>Base deste quadro: o ano PROJETADO</b> — ${MESES_ROT[0].toLowerCase()}–${MESES_ROT[_proj.P.ultimo].toLowerCase()} apurados e ${MESES_ROT[_proj.P.ultimo+1].toLowerCase()}–${MESES_ROT[11].toLowerCase()} estimados, a mesma base do restante desta conferência. Até a v7.43.1 este quadro partia do <b>realizado</b>, de modo que a transição inteira até 2033 era montada sobre um ano incompleto.`
+      : `<b>Base deste quadro: o realizado</b> — os 12 meses do ano-base estão apurados, não há projeção.`;
     const linhas = REF.map(L=>{
       const p = L.p190||{};
       const notaTeste = L.anoTeste ? ' <span class="hint">(ano-teste: IBS 0,1% sem recolhimento efetivo)</span>' : '';
       return `<tr><td class="rot">${L.ano}${notaTeste}</td>
         <td class="num">${fmtR(L.deb)}</td><td class="num">${fmtR(L.cred)}</td><td class="num">${fmtR(L.liquido)}</td>
         <td class="num">${(+L.is||0)>0.005?fmtR(L.is):'—'}</td>
-        <td class="num">${fmtR(cenDentro(RL.res.totais, L))}</td>
+        <td class="num">${fmtR(cenDentro(R.totais, L))}</td>
         <td class="num">${fmtR(L.dasHib!=null?L.dasHib:0)}</td><td class="num"><b>${fmtR(L.hib)}</b></td>
         <td class="num">${fmtR(L.regular)} <span class="hint">(${L.regNome||''})</span></td></tr>`;
     }).join('');
-    const L33 = REF[REF.length-1], p33 = L33.p190||{};
+    const L33 = REF_ALL[REF_ALL.length-1], p33 = L33.p190||{};
     const travaTx = p33.trava!=null
       ? CF.lin('Trava do sublimite recomposta (2033)', 'ICMS/ISS da 5ª faixa migram integralmente ao IBS na vigência final (Res. 190/2026): ICMS×remanescente + IBS×(1−remanescente), teto do ISS decrescente até zerar', fmtR(p33.trava))
       : '';
     const credTx = C.semCreditos
       ? '<div class="hint" style="color:#b9770e">⚠️ Créditos de IBS/CBS = ZERO — nenhuma compra informada (aba Reforma e Compras vazias).</div>'
-      : (C.proxyCompras ? '<div class="hint">Créditos estimados pelas compras de revenda da análise (proxy) — preencha a aba Reforma para refinar.</div>' : '');
-    return `<div class="card"><h3 style="margin-top:0">Reforma Tributária — conferência ano a ano (2026–2033)</h3>
+      : (C.proxyCompras ? `<div class="hint" style="color:#b9770e">⚠️ <b>Premissa de crédito não conservadora.</b> A aba Reforma não foi preenchida, então as compras de revenda da análise foram tratadas como aquisições de <b>PJ do regime regular</b> — crédito integral à alíquota cheia (${(REF_ALL[REF_ALL.length-1].alq*100).toFixed(2).replace('.',',')}% em 2033). Fornecedor optante do Simples daria apenas <b>${(credSimplesArt58(2033)*100).toFixed(2).replace('.',',')}%</b> pelo art. 58, cerca de ${Math.round(REF_ALL[REF_ALL.length-1].alq/Math.max(1e-9,credSimplesArt58(2033)))}× menos. <b>Deixar a aba vazia produz um cenário mais favorável do que preenchê-la</b> — separe Simples/MEI do regime regular antes de decidir.</div>` : '');
+    return `<div class="card"><h3 style="margin-top:0">Reforma Tributária — conferência ano a ano (${REF[0].ano}–${REF[REF.length-1].ano})</h3>
+      <div class="hint" style="padding:8px 10px;background:#f4f6f7;border-left:3px solid #1a5276;margin-bottom:6px">${_baseTx}${
+        REF.length < REF_ALL.length ? ` <b>Recorte:</b> dos oito anos da transição, este documento exibe apenas ${REF.map(L=>L.ano).join(', ')} — seleção feita na barra do relatório.` : ''}</div>
       <div class="hint">Débito = base tributável (receita INTERNA − reduções por cClassTrib; exportações imunes — LC 214, art. 8º, com créditos mantidos) × alíquotas de referência do ano (Parâmetros › Reforma, Res. CGIBS nº 14/2026). Crédito <b>estimado</b> = aquisições identificadas na análise × mesmas alíquotas — não inclui despesas gerais nem distingue o regime do fornecedor, salvo quando a aba Reforma foi alimentada pela análise de fornecedores. Híbrido = art. 22-A da Res. CGSN 140/2018 (Res. 190/2026): DAS + trava − parcelas de CBS/IBS da partilha da faixa, mais IBS/CBS apurados por fora.</div>
       <table class="gtable"><thead><tr><th>Ano</th><th class="num">Débito IBS/CBS</th><th class="num">Crédito estimado</th><th class="num">Líquido</th><th class="num">IS</th><th class="num">Por dentro</th><th class="num">DAS ajustado (22-A)</th><th class="num">Cenário híbrido</th><th class="num">Regime regular</th></tr></thead>
       <tbody>${linhas}</tbody></table>
       ${travaTx}${credTx}
-      <div class="hint" style="margin-top:6px">A coluna "Por dentro" (permanecer 100% no Simples) usa a mesma fórmula do veredito e do parecer — total do Simples do ano-base com a trava recomposta pela vigência (Res. 190). Valores em moeda constante do ano-base.</div></div>`;
+      ${(()=>{   // v7.43.0 · abertura de IBS e CBS. A tabela acima traz o líquido COMBINADO; aqui cada
+                 // tributo aparece com sua base, sua alíquota e seu destino — CBS é federal, IBS se
+                 // reparte entre estado e município. São três entes com competências distintas e
+                 // obrigações acessórias próprias: somá-los numa linha só esconde a informação que
+                 // decide onde a empresa recolhe e para quem reclama.
+        const rows = REF.map(L=>{
+          const A = (C.rfx.aliq||{})[L.ano] || {};
+          const cbsA = +A.cbs||0, ibseA = +A.ibse||0, ibsmA = +A.ibsm||0, tot = cbsA+ibseA+ibsmA;
+          const part = v => tot>0 ? L.liquido*(v/tot) : 0;
+          const baseDeb = L.alq>0 ? L.deb/L.alq : 0;
+          return `<tr><td class="rot">${L.ano}</td>
+            <td class="num">${fmtR(baseDeb)}</td>
+            <td class="num">${cbsA.toLocaleString('pt-BR',{minimumFractionDigits:2})}%</td><td class="num">${fmtR(part(cbsA))}</td>
+            <td class="num">${ibseA.toLocaleString('pt-BR',{minimumFractionDigits:2})}%</td><td class="num">${fmtR(part(ibseA))}</td>
+            <td class="num">${ibsmA.toLocaleString('pt-BR',{minimumFractionDigits:2})}%</td><td class="num">${fmtR(part(ibsmA))}</td>
+            <td class="num"><b>${(tot).toLocaleString('pt-BR',{minimumFractionDigits:2})}%</b></td>
+            <td class="num"><b>${fmtR(L.liquido)}</b></td></tr>`;
+        }).join('');
+        return `<div style="margin-top:14px;padding-top:10px;border-top:1px solid #dfe4ea">
+        <h3 style="margin:0 0 4px">Abertura de IBS e CBS — por tributo e por ente</h3>
+        <div class="hint">A coluna "Líquido" do quadro acima é a <b>soma</b> de três tributos com destinatários diferentes.
+          A <b>CBS</b> é federal (substitui PIS e COFINS). O <b>IBS</b> é dividido entre a parcela <b>estadual</b> (no lugar do ICMS)
+          e a <b>municipal</b> (no lugar do ISS), na proporção fixada pelos Parâmetros. O rateio abaixo aplica a
+          participação de cada alíquota sobre o líquido do ano — o crédito, quando existe, é distribuído na mesma proporção,
+          porque a LC 214 não segrega o crédito por ente.</div>
+        <table class="gtable" style="margin-top:8px"><thead><tr>
+          <th>Ano</th><th class="num">Base tributável</th>
+          <th class="num">CBS %</th><th class="num">CBS</th>
+          <th class="num">IBS est. %</th><th class="num">IBS estadual</th>
+          <th class="num">IBS mun. %</th><th class="num">IBS municipal</th>
+          <th class="num">Combinada</th><th class="num">Líquido</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+        <div class="hint" style="margin-top:6px">
+          <b>Como ler a escada.</b> Em <b>2026</b> vigora o ano-teste: CBS 0,9% e IBS 0,1%, com o recolhimento
+          compensado — a coluna existe para dimensionar, não para pagar. Em <b>2027 e 2028</b> a CBS entra quase cheia
+          (9,11% = referência menos 0,1 p.p., LC 214 art. 347) enquanto o IBS segue nos 0,1% de teste; é o ano em que
+          <b>PIS e COFINS desaparecem e ICMS e ISS continuam</b>. De <b>2029 a 2032</b> o IBS sobe em degraus de 10%
+          ao ano e ICMS/ISS caem na mesma medida. Em <b>2033</b> o IBS chega a 18,70% e os tributos antigos zeram.
+          <br><b>Base tributável</b> = receita interna menos as reduções por cClassTrib; a exportação é imune
+          (LC 214, art. 8º) mas <b>mantém o crédito</b> das aquisições.
+          ${C.semCreditos ? '<br><b>Nesta análise o crédito é zero</b>, então líquido e débito coincidem — o rateio por ente é o do débito.' : ''}
+        </div></div>`; })()}
+      ${(()=>{ const cs = +(C.rfx?.contra?.compras_simples||0); if (!(cs>0.005) && !C.proxyCompras) return '';
+        const man = +(C.rfx?.credSimplesPct||0);
+        return `<div class="hint" style="margin-top:6px"><b>Crédito sobre compras de optantes do Simples (art. 58, §§ 4º a 6º, da Res. CGSN nº 190/2026)</b> — ${
+          man>0 ? `percentual <b>manual</b> de ${man.toLocaleString('pt-BR')}%, informado na aba Reforma (substitui o automático).`
+          : `percentual automático, adotada a <b>1ª faixa do Anexo I</b> por não se conhecer o RBT12 do fornecedor: ${
+              [2027,2029,2031,2033].map(a=>a+' '+(credSimplesArt58(a)*100).toFixed(2).replace('.',',')+'%').join(' · ')} do valor da compra. É a premissa <b>mais conservadora</b> da tabela: um fornecedor de serviços na 5ª faixa daria ${
+              (()=>{ const r=(repTribAno(2033)||{}).III||{}, al=((PARAMS.anexos||ANEXOS_DEFAULT).III?.aliq?.[4])||0;
+                     return (al*(((r.cbs||[])[4]||0)+(((r.ibs||[])[4])||0))*100).toFixed(2).replace('.',','); })()}% em 2033. Base do crédito: ${fmtR(cs)} (campo \'Compras de PJ Simples/SIMEI\' da aba Reforma) — <b>despesas e serviços tomados não entram automaticamente</b>.`}</div>`; })()}
+      <div class="hint" style="margin-top:6px">A coluna "Por dentro" (permanecer 100% no Simples) usa a mesma fórmula do veredito e do parecer — total do Simples do ano-base com a trava recomposta pela vigência (Res. 190). Valores em moeda constante do ano-base.</div>
+      ${rlConfRefGuarda(C)}
+      <div style="margin-top:16px;padding-top:10px;border-top:2px solid #1a5276">
+        <h3 style="margin:0 0 2px">Memória de cálculo — ano a ano</h3>
+        <div class="hint">O quadro acima traz o <b>resultado</b> de cada ano. Abaixo vem o <b>cálculo</b>: alíquota por alíquota, parcela por parcela, com os valores já substituídos — de modo que cada número da tabela possa ser reproduzido a olho, sem sair do documento. As linhas de <b>PIS, COFINS e IPI aparecem mesmo quando valem zero</b>, com o percentual remanescente à vista: em papel de trabalho, omitir a parcela extinta e não pagá-la produzem a mesma página, e só uma delas é verificável.</div>
+        ${REF.map(L => rlConfRefMemAno(C, L, R)).join('')}
+      </div></div>`;
   } catch(e){ console.error('conferência Reforma', e); return ''; }
 }
 // v7.35.0 · linhas de IRPJ/CSLL do Lucro Real na conferência mensal. Nos meses que NÃO fecham o
@@ -7653,6 +8158,8 @@ function rlRender() {
     const sm = $id('rl-conf-mes'), e2 = $id('rl-conf-mes-wrap');
     if (conf && sm && !sm.options.length) sm.innerHTML = MESES_ROT.map((r,i)=>`<option value="${i}">${r}</option>`).join('');
     if (e2) e2.style.display = (conf && ($id('rl-conf-modo')||{}).value === 'mes') ? '' : 'none'; }
+  { const aw = $id('rl-conf-anos-wrap'); if (aw){ aw.style.display = conf ? '' : 'none'; if (conf) rlConfAnosPopular(); } }
+  rlStatusProj(tipo);                                      // v7.43.2: faixa única de estado da projeção
   if (tipo==='produtos'){                                 // v7.21.0: relação Classificação RTC — não depende de análise salva
     const cnpjSel = $id('rl-empresa').value, anoSel = +$id('rl-ano').value;
     $id('rl-cab').style.display = cnpjSel ? 'block' : 'none';
@@ -7685,7 +8192,7 @@ function rlRender() {
 }
 
 function rlRegimes(rot, n) {
-  const M = RL.res.meses, T = RL.res.totais;
+  const M = RL.res.meses, T = Object.assign({}, RL.res.totais, totExib(RL.res));   // v7.42.1: fórmula única
   const g = f => agrupar(M.map(f), n);
   const sim = g(x=>x.simples.total), lp = g(x=>x.lp.total), lr = g(x=>x.lr.total), recA = g(x=>x.receita);
   const dasDecl = RL.dados._pgdas ? agrupar(RL.dados._pgdas.das, n) : null;
@@ -7754,6 +8261,131 @@ function rlRegimes(rot, n) {
   h += `<tr style="font-weight:700"><td>TOTAL</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr></tbody></table></div>
   <div class="hint" style="margin-top:8px">Simples: DAS${RL.dados.receitas?.a4?.some(v=>v>0)?' — atenção: receitas do Anexo IV têm CPP fora do DAS':''}. Lucro Presumido e Lucro Real incluem o INSS patronal sobre a folha. <b>FGTS não considerado</b> — encargo idêntico em todos os regimes e não alterado pela Reforma Tributária. Valores simulados pelo motor validado contra a planilha de planejamento.</div></div>`;
 
+  // ── v7.42.1 (Ponto 1) · MEMÓRIA ANUAL DE LP E LR, PARCELA A PARCELA ──────────────────────
+  // O quadro acima dá o RESULTADO de cada tributo. Este dá o CÁLCULO: base, exclusões, presunção,
+  // alíquota e encadeamento até o total — no nível anual, que é o do relatório.
+  // No Lucro Real o motor apura por BASE LÍQUIDA × ALÍQUOTA (base já deduzida das compras).
+  // Aqui a mesma conta é reapresentada como DÉBITO − CRÉDITO, que é algebricamente idêntica:
+  //   base_líquida × alíq = (base_bruta × alíq) − (base_crédito × alíq)
+  // Nenhum número muda; o que muda é dar visibilidade à parcela de crédito, que não existia.
+  {
+    const D = RL.dados, cfg = D.cfg||{}, a12 = k => (k||[]);
+    const sM = f => somaExib(M, f);
+    const sArr = arr => (arr||[]).reduce((s,v)=>s+r2(v),0);
+    const P = { pis:sM(x=>x.lp.pis), cofins:sM(x=>x.lp.cofins), csll:sM(x=>x.lp.csll), irpj:sM(x=>x.lp.irpj),
+                adic:sM(x=>x.lp.adicional), inss:sM(x=>x.lp.inssPatr), iss:sM(x=>x.lp.iss), icms:sM(x=>x.lp.icms),
+                ipi:sM(x=>x.lp.ipi), basePCb:sM(x=>x.lp.basePCbruta), basePC:sM(x=>x.lp.basePC), baseAdic:sM(x=>x.lp.baseAdic) };
+    const LRt = { pis:sM(x=>x.lr.pis), cofins:sM(x=>x.lr.cofins), csll:sM(x=>x.lr.csll), irpj:sM(x=>x.lr.irpj),
+                adic:sM(x=>x.lr.adicional), inss:sM(x=>x.lr.inssPatr), iss:sM(x=>x.lr.iss), icms:sM(x=>x.lr.icms),
+                ipi:sM(x=>x.lr.ipi), basePCb:sM(x=>x.lr.basePCbruta), basePC:sM(x=>x.lr.basePC), baseIRCS:sM(x=>x.lr.baseIRCS) };
+    const recTot = sM(x=>x.receita), recExp = sM(x=>x.recExp||0), recCom = sM(x=>x.recCom||0), recServ = sM(x=>x.recServ||0);
+    const icmsDest = sM(x=>x.icmsDestacadoPC||0), icmsCompPC = sM(x=>x.icmsComprasPC||0);
+    const compras = sArr(D.compras?.semst) + sArr(D.compras?.comst);
+    const credIt = CRED_LR.map(([k,rot,base])=>({k,rot,base,v:sM(x=>(x.lr.credItens&&x.lr.credItens[k])||0)})).filter(x=>x.v>0.005);
+    const credLR = credIt.reduce((a,x)=>a+x.v,0);             // v7.42.3: soma das rubricas nomeadas
+    const credDesp = sM(x=>x.lr.credDesp||0);                 // v7.42.2: despesas com creditabilidade eleita
+    const baseCred = compras - icmsCompPC + credLR + credDesp;
+    const baseDeb  = LRt.basePCb + baseCred;                  // receitas tributadas, antes do crédito
+    const saldoFim = (M[11] && M[11].lr && M[11].lr.saldoCredorFim) || 0;
+    const clamp = M.filter(x => (x.lr.saldoCredorFim||0) > 0.005);
+    const CRPCcfg = Object.assign({adm:0,vendas:0,fiscais:0,financeiras:0,outras:0}, cfg.credLRpct||{});
+    // v7.43.0 · o percentual do INSS patronal era IMPRESSO FIXO como 28,96% nesta memória, enquanto
+    // o motor usava os parâmetros reais (padrão de fábrica: 20 + 5,80 + 2,796 = 28,596%). O quadro
+    // anual e a conferência mensal exibiam percentuais diferentes para o MESMO cálculo. Agora os dois
+    // leem folhaPercDaEmpresa, que dá precedência aos percentuais próprios da empresa sobre os globais.
+    const _FP = folhaPercDaEmpresa(cfg);
+    const _pctSal = _FP.patronalSalarios + _FP.rat + _FP.terceiros;
+    const _salAno = sArr(D.folha?.salarios), _proAno = sArr(D.folha?.prolabore);
+    const _sal13 = +((D.folha13||{}).salarios13)||0, _pro13 = +((D.folha13||{}).prolabore13)||0;
+    const _temSal = _salAno > 0.005 || _sal13 > 0.005;
+    const _custosAno = sM(x=>x.custos||0), _despAno = sM(x=>x.despTotal||0), _folhaAno = sM(x=>x.folhaTotal||0);
+    const _finAno = sArr(D.receitas?.fin);
+    const _limAdic = (cfg.adicionalIR||'trimestral')==='anual' ? 240000 : 60000;
+    const _perAdic = (cfg.adicionalIR||'trimestral')==='anual' ? 'no ano' : 'por trimestre';
+    const rotCR = Object.entries(CRPCcfg).filter(([,v])=>+v>0).map(([k,v])=>k+' '+pcx(+v)).join(' · ');
+    const ln0 = (rot, form, val, forte) => `<tr${forte?' style="font-weight:700"':''}><td>${rot}</td><td class="hint" style="font-family:ui-monospace,monospace;font-size:12px">${form}</td><td class="num">${val==null?'':fmt(val)}</td></tr>`;
+    const pc = v => (v*100).toFixed(4).replace('.',',')+'%';
+    const pcx = v => (v*100).toFixed(2).replace('.',',')+'%';
+    const ln = ln0;
+    h += `<div class="card" style="margin-top:14px"><h3>Memória anual — Lucro Presumido (parcela a parcela)</h3>
+    <div style="overflow-x:auto"><table><thead><tr><th style="width:230px">Parcela</th><th>Cálculo com os valores substituídos</th><th class="num">Ano</th></tr></thead><tbody>
+    ${ln('Receita bruta do ano','soma das receitas lançadas', recTot)}
+    ${recExp>0.005?ln('(−) Exportação','imune a PIS/COFINS; incluída na presunção de IRPJ/CSLL', recExp):''}
+    ${ln('Base PIS/COFINS (bruta)','receita − revenda monofásica − exportação', P.basePCb)}
+    ${ln('(−) ICMS destacado — Tema 69','STF, RE 574.706', icmsDest)}
+    ${ln('Base PIS/COFINS (final)', fmt(P.basePCb)+' − '+fmt(icmsDest), P.basePC, true)}
+    ${ln('PIS', fmt(P.basePC)+' × 0,65%', P.pis)}
+    ${ln('COFINS', fmt(P.basePC)+' × 3,00%', P.cofins)}
+    ${ln('<b>Base de presunção — IRPJ e CSLL</b>', 'comércio '+fmt(recCom)+' × '+pc(+cfg.lpBaseCom||0)+' + serviços '+fmt(recServ)+' × '+pc(+cfg.lpBaseServ||0), P.baseAdic, true)}
+    ${ln('&nbsp;&nbsp;↳ IRPJ', fmt(P.baseAdic)+' × 15%', P.irpj)}
+    ${ln('&nbsp;&nbsp;↳ Adicional de IRPJ', 'parcela da base que excede R$ '+fmt(_limAdic)+' '+_perAdic+' × 10%'
+        + (P.adic<=0.005 ? ' — base '+_perAdic+' abaixo do limite, sem adicional' : ''), P.adic)}
+    ${ln('&nbsp;&nbsp;↳ CSLL', fmt(P.baseAdic)+' × 9%'
+        + (Math.abs((+cfg.lpBaseComCsll||.12)-(+cfg.lpBaseCom||0))>1e-9 ? ' — presunção própria de CSLL no comércio: '+pc(+cfg.lpBaseComCsll||.12) : ''), P.csll)}
+    ${P.iss>0.005?ln('ISS','serviços sem retenção × '+pc(+cfg.iss||0), P.iss):''}
+    ${P.icms>0.005?ln('ICMS','débito − crédito do ano', P.icms):''}
+    ${P.ipi>0.005?ln('IPI','débito − crédito do ano', P.ipi):''}
+    ${ln('<b>INSS patronal — CPP</b>', 'contribuição da empresa; a do segurado é retida do próprio salário e não entra no custo do regime', P.inss, true)}
+    ${_temSal?ln('&nbsp;&nbsp;↳ sobre salários', 'base '+fmt(_salAno+_sal13)+(_sal13>0.005?' (inclui 13º '+fmt(_sal13)+')':'')
+        +' × '+pcx(_pctSal)+'  =  CPP '+pcx(_FP.patronalSalarios)+' + RAT/FAP '+pcx(_FP.rat)+' + Terceiros '+pcx(_FP.terceiros),
+        (_salAno+_sal13)*_pctSal):''}
+    ${ln('&nbsp;&nbsp;↳ sobre pró-labore', 'base '+fmt(_proAno+_pro13)+(_pro13>0.005?' (inclui 13º '+fmt(_pro13)+')':'')
+        +' × '+pcx(_FP.patronalProLabore)+' — contribuinte individual: sem RAT e sem Terceiros (art. 22, III, da Lei 8.212/91)',
+        (_proAno+_pro13)*_FP.patronalProLabore)}
+    ${!_temSal?ln('&nbsp;&nbsp;↳ observação','não há salários lançados — todo o INSS patronal vem do pró-labore, e os percentuais de RAT e Terceiros não afetam este cálculo', null):''}
+    ${ln('<b>TOTAL — Lucro Presumido</b>','soma das parcelas acima (FGTS não considerado)', T.lp, true)}
+    </tbody></table></div><div class="hint" style="margin-top:6px">${NOTA_SOMA}</div></div>
+
+    <div class="card" style="margin-top:14px"><h3>Memória anual — Lucro Real (parcela a parcela)</h3>
+    <div style="overflow-x:auto"><table><thead><tr><th style="width:230px">Parcela</th><th>Cálculo com os valores substituídos</th><th class="num">Ano</th></tr></thead><tbody>
+    ${ln('Receitas tributadas','base do débito, antes dos créditos', baseDeb)}
+    ${ln('(−) ICMS destacado — Tema 69','também no não cumulativo (STF, RE 574.706)', icmsDest)}
+    ${ln('<b>Base de DÉBITO</b>', fmt(baseDeb)+' − '+fmt(icmsDest), baseDeb-icmsDest, true)}
+    ${ln('Compras (revenda + com ST)','aquisições que geram crédito', compras)}
+    ${ln('(−) ICMS das compras', 'compras × '+pc(+cfg.icmsC||0), icmsCompPC)}
+    ${credIt.map(x=>ln('(+) '+x.rot, x.base+' — rubrica própria, mapeada na importação do balancete', x.v)).join('')}
+    ${credDesp>0.005?ln('(+) Despesas com crédito eleito', 'percentuais de creditabilidade configurados: '+(rotCR||'—'), credDesp):''}
+    ${ln('<b>Base de CRÉDITO</b>', fmt(compras)+' − '+fmt(icmsCompPC)+(credLR>0.005?' + '+fmt(credLR)+' (rubricas do art. 3º)':'')+(credDesp>0.005?' + '+fmt(credDesp):''), baseCred, true)}
+    ${ln('PIS — débito', fmt(baseDeb-icmsDest)+' × 1,65%', (baseDeb-icmsDest)*.0165)}
+    ${ln('PIS — crédito', fmt(baseCred)+' × 1,65%', -baseCred*.0165)}
+    ${ln('<b>PIS devido</b>','débito − crédito', LRt.pis, true)}
+    ${ln('COFINS — débito', fmt(baseDeb-icmsDest)+' × 7,60%', (baseDeb-icmsDest)*.076)}
+    ${ln('COFINS — crédito', fmt(baseCred)+' × 7,60%', -baseCred*.076)}
+    ${ln('<b>COFINS devida</b>','débito − crédito', LRt.cofins, true)}
+    ${ln('<b>Lucro real — formação da base de IRPJ/CSLL</b>','os tributos são despesa dedutível e por isso entram ANTES do lucro', null, true)}
+    ${ln('&nbsp;&nbsp;Receita bruta', 'receitas lançadas no período', recTot)}
+    ${_finAno>0.005?ln('&nbsp;&nbsp;(+) Receitas financeiras','entram na base do lucro', _finAno):''}
+    ${ln('&nbsp;&nbsp;(−) Custos', 'compras de mercadoria (CMV)', -_custosAno)}
+    ${ln('&nbsp;&nbsp;(−) Folha total', 'pró-labore + salários + FGTS + provisão de 13º + provisão de férias', -_folhaAno)}
+    ${ln('&nbsp;&nbsp;(−) Despesas', 'soma das rubricas de despesa lançadas', -_despAno)}
+    ${ln('&nbsp;&nbsp;(−) INSS patronal', 'a CPP é despesa dedutível', -LRt.inss)}
+    ${ln('&nbsp;&nbsp;(−) PIS e COFINS', fmt(LRt.pis)+' + '+fmt(LRt.cofins)+' — apurados acima', -(LRt.pis+LRt.cofins))}
+    ${LRt.icms>0.005?ln('&nbsp;&nbsp;(−) ICMS','débito − crédito', -LRt.icms):''}
+    ${LRt.ipi>0.005?ln('&nbsp;&nbsp;(−) IPI','débito − crédito', -LRt.ipi):''}
+    ${LRt.iss>0.005?ln('&nbsp;&nbsp;(−) ISS', 'serviços sem retenção × '+pc(+cfg.iss||0), -LRt.iss):''}
+    ${ln('<b>= Lucro real (base IRPJ/CSLL)</b>','soma algébrica das linhas acima', LRt.baseIRCS, true)}
+    ${ln('&nbsp;&nbsp;↳ IRPJ', fmt(LRt.baseIRCS)+' × 15%', LRt.irpj)}
+    ${ln('&nbsp;&nbsp;↳ Adicional de IRPJ','parcela da base que excede R$ '+fmt(_limAdic)+' '+_perAdic+' × 10%'
+        + (LRt.adic<=0.005 ? ' — base '+_perAdic+' de '+fmt(LRt.baseIRCS/((cfg.adicionalIR||'trimestral')==='anual'?1:4))+', abaixo do limite' : ''), LRt.adic)}
+    ${ln('&nbsp;&nbsp;↳ CSLL', fmt(LRt.baseIRCS)+' × 9%', LRt.csll)}
+    ${ln('&nbsp;&nbsp;↳ Período de apuração', (cfg.adicionalIR||'trimestral')==='anual'
+        ? 'ANUAL — base de 31/12; prejuízo de anos anteriores compensa até 30% (Lei 9.065/95, art. 15)'
+        : 'TRIMESTRAL — cada trimestre fecha sozinho; prejuízo compensa até 30% da base do trimestre seguinte', null)}
+    ${LRt.iss>0.005?ln('ISS','serviços sem retenção × '+pc(+cfg.iss||0), LRt.iss):''}
+    ${LRt.icms>0.005?ln('ICMS','débito − crédito do ano', LRt.icms):''}
+    ${LRt.ipi>0.005?ln('IPI','débito − crédito do ano', LRt.ipi):''}
+    ${ln('<b>INSS patronal — CPP</b>', 'mesma base e mesmos percentuais do Lucro Presumido', LRt.inss, true)}
+    ${_temSal?ln('&nbsp;&nbsp;↳ sobre salários', 'base '+fmt(_salAno+_sal13)+' × '+pcx(_pctSal)
+        +'  =  CPP '+pcx(_FP.patronalSalarios)+' + RAT/FAP '+pcx(_FP.rat)+' + Terceiros '+pcx(_FP.terceiros),
+        (_salAno+_sal13)*_pctSal):''}
+    ${ln('&nbsp;&nbsp;↳ sobre pró-labore', 'base '+fmt(_proAno+_pro13)+' × '+pcx(_FP.patronalProLabore)
+        +' — contribuinte individual, sem RAT e sem Terceiros', (_proAno+_pro13)*_FP.patronalProLabore)}
+    ${ln('<b>TOTAL — Lucro Real</b>','soma das parcelas acima (FGTS não considerado)', T.lr, true)}
+    </tbody></table></div>
+    <div class="hint" style="margin-top:6px">${NOTA_SOMA} O motor apura por <b>base líquida × alíquota</b>; as linhas de débito e crédito acima são a mesma conta reapresentada — <code>base_líquida × alíq = base_bruta × alíq − base_crédito × alíq</code>.</div>
+    <div class="hint" style="margin-top:6px"><b>Premissas declaradas do Lucro Real:</b> (1) geram crédito de PIS/COFINS as <b>compras de mercadoria</b>, o campo manual de créditos e a parcela das despesas com <b>creditabilidade configurada</b> ${rotCR? `(<b>${rotCR}</b>)` : '(nenhuma configurada — a lista do art. 3º das Leis 10.637/2002 e 10.833/2003 é <b>taxativa</b>, e o aplicativo não presume a composição de cada rubrica: informe o percentual por categoria na Configuração da empresa)'}; (2) o <b>saldo credor é transportado</b> de um mês para o outro (art. 3º, § 4º). ${clamp.length? `Em <b>${clamp.length} ${clamp.length===1?'mês':'meses'}</b> os créditos superaram as receitas e o excedente foi levado adiante${saldoFim>0.005? `; restam <b>${fmt(saldoFim)}</b> de base credora em 31/12, que se transportam para o ano seguinte e <b>não</b> estão aproveitados neste cálculo` : ', integralmente absorvido dentro do ano'}.` : 'Em nenhum mês os créditos superaram as receitas.'}</div></div>`;
+  }
+
   // v7.16.0 (Ponto 3): tributo a tributo da Reforma, ano a ano, por cenário
   if (REF) h += `<div class="card"><h3>Detalhamento tributo a tributo (ano) — Reforma Tributária</h3>
     <div class="toolbar" style="margin:8px 0 4px"><label style="margin:0">Cenário
@@ -7790,7 +8422,8 @@ function rlRegimes(rot, n) {
   <div class="card" style="margin-top:14px"><h3>Cenário fora do Simples, ano a ano</h3><div style="overflow-x:auto"><table>
     <thead><tr><th>Ano</th><th class="num">Base Presumido</th><th class="num">Base Real</th><th class="num">Melhor regime regular</th><th>Regime</th></tr></thead><tbody>
     ${REF.map(L=>`<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(L.regLP)}</td><td class="num">${fmt(L.regLR)}</td><td class="num">${fmt(L.regular)}</td><td>${L.regNome}</td></tr>`).join('')}
-    </tbody></table></div><div class="hint" style="margin-top:6px">Cada coluna = tributos não-consumo do regime + remanescentes de PIS/COFINS/ICMS/ISS do ano + IBS/CBS líquido + IS.</div></div>
+    </tbody></table></div><div class="hint" style="margin-top:6px">Cada coluna = tributos não-consumo do regime + remanescentes de PIS/COFINS/ICMS/ISS do ano + IBS/CBS líquido + IS.</div>
+    <div class="hint" style="margin-top:6px"><b>Diferença de método declarada:</b> as colunas de cenário acima somam em <b>precisão plena</b>, não os valores arredondados de cada mês — porque o resultado encadeia por oito anos e arredondar a cada passo acumularia desvio. Por isso a coluna de ${RL.dados.ano+1} pode divergir do total do mesmo regime nos quadros anuais em <b>alguns centavos</b>. Os quadros anuais são para conferir; as colunas de cenário, para comparar.</div></div>
 
   <div class="rl-grid" style="margin-top:14px"><div class="card"><h3>Débito × crédito de IBS/CBS por ano</h3><canvas id="ch-ref-dc"></canvas></div>
   <div class="card"><h3>Transição 2026–2033 — carga anual por cenário</h3><canvas id="ch-ref-comp"></canvas></div></div>
@@ -7849,7 +8482,8 @@ function rlRegistros(rot, n) {
     linhaT('Compras com ST', D.compras.comst), linhaT('Baixa de custos (CMV)', D.compras.baixaSemst),
     linhaT('Baixas — mono/ST', D.compras.baixaMono.map((v,i)=>v+D.compras.baixaComst[i]+D.compras.baixaComstMono[i])), linhaT('Base crédito IPI', D.compras.baseIpiCred) ]);
   h += bloco('Despesas', [ linhaT('Administrativas', D.despesas.adm), linhaT('Com vendas', D.despesas.vendas), linhaT('Fiscais e tributárias', D.despesas.fiscais),
-    linhaT('Financeiras', D.despesas.financeiras), linhaT('Outras', D.despesas.outras), linhaT('Com crédito no Lucro Real', D.despesas.credLR) ]);
+    linhaT('Financeiras', D.despesas.financeiras), linhaT('Outras', D.despesas.outras),
+    ...CRED_LR.map(([k,rot,base])=>linhaT(rot+' ('+base+')', D.despesas[k])) ]);
   h += bloco('Impostos apurados', [ linhaT('ICMS a pagar', M.map(x=>x.icmsPagar)), linhaT('IPI a pagar', M.map(x=>x.ipiPagar)), linhaT('ISS', M.map(x=>x.iss)), linhaT('DAS', M.map(x=>x.das)) ]);
   h += `<div class="card"><h3>Receita × carga por período</h3><canvas id="ch-det"></canvas></div>`;
   $id('rl-corpo').innerHTML = h || '<div class="card placeholder"><h2>Sem registros</h2></div>';
