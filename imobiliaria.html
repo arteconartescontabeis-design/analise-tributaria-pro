@@ -426,11 +426,16 @@ async function entrar(){
   $id('user-email').textContent = (APP.user && APP.user.email) || '';
   // o mesmo contexto que a aba usa dentro do app completo
   try {
-    const u = await supa('GET','atp_usuarios',{ params:{ select:'papel,escritorio_id',
+    // `id` entra aqui de propósito: o módulo grava em colunas de tipos
+    // DIFERENTES — criado_por é uuid (o id do Auth) e raj_escolhido_por é
+    // bigint com FK para atp_usuarios(id). Sem trazer o id da tabela, o UUID
+    // do Auth ia parar no campo bigint e o banco recusava com 22P02.
+    const u = await supa('GET','atp_usuarios',{ params:{ select:'id,papel,escritorio_id',
       email: 'eq.' + ((APP.user && APP.user.email) || ''), limit:'1' } });
     APP.papel = (u && u[0] && u[0].papel) || 'operador';
     APP.escritorioId = (u && u[0] && u[0].escritorio_id) || null;
-  } catch(e) { APP.papel = 'operador'; APP.escritorioId = null; }
+    APP.usuarioId = (u && u[0] && u[0].id != null) ? u[0].id : null;
+  } catch(e) { APP.papel = 'operador'; APP.escritorioId = null; APP.usuarioId = null; }
   try { imobEntrar(); } catch(e){ console.warn('[imob]', e); }
   modInfoPintar();
 }
