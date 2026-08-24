@@ -1331,6 +1331,22 @@ console.log('\n■ Integridade da interface');
     chk('v7.41.8 · o empacotador continua rodando DEPOIS dos gráficos (lição da v7.40.2)',
       html.indexOf('ppEmpacotarDOM($id(\'rl-corpo\'))') > html.indexOf("rlChart('pc-acum'"));
   }
+
+  // ═══ 5x · v7.44.0 — a Configuração nunca mais abre em branco ═══
+  console.log('\n■ v7.44.0 — guarda do AN na tela de Configuração');
+  {
+    const iGuarda = html.indexOf("if (page==='importar' || page==='config') { if (!AN) AN = anNovo(");
+    const iRender = html.indexOf("if (page==='config') anRenderConfig();");
+    chk('v7.44.0 · no go(), a guarda do AN nulo vem ANTES do anRenderConfig (era depois — Configuração em branco)',
+      iGuarda > -1 && iRender > -1 && iGuarda < iRender);
+    chk('v7.44.0 · o próprio anRenderConfig cria a análise se ela faltar (guarda defensiva na entrada)',
+      /function anRenderConfig\(\) \{\s*\n\s*if \(!AN\) AN = anNovo\(/.test(html));
+    chk('v7.44.0 · anTrocarEmpresa redesenha a Configuração após a carga do banco (3 saídas cobertas)',
+      (html.match(/if \(APP\.page==='config'\) anRenderConfig\(\);/g) || []).length >= 3);
+    const okBadge = /const APP_VERSAO = '7\.44\.0';/.test(html);
+    chk('v7.44.0 · versão e changelog registrados (badge sai do APP_VERSAO desde a v7.43.2)',
+      okBadge && html.includes('<b>v7.44.0</b>') && html.includes('setup_v7440.sql') && html.includes('setup_v7450.sql'));
+  }
   console.log('\n══════════════════════════════════');
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
   process.exit(FALHAS.length ? 1 : 0);
