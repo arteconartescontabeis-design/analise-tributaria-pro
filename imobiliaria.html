@@ -352,6 +352,19 @@ function toast(msg) {
   setTimeout(()=>t.classList.remove('show'), 3200);
 }
 
+/* ── PONTE PARA OS MÓDULOS ──────────────────────────────────────────────
+   O `const APP` acima NÃO cria window.APP: const de topo de script vive no
+   escopo de script, não no objeto global. No bundle embutido isso não
+   importava, porque núcleo e módulo dividiam o mesmo bloco <script> e o nome
+   resolvia por escopo léxico. Aqui são ARQUIVOS separados, e o módulo lê
+   `window.APP.escritorioId` para saber de qual escritório é a gravação.
+   Sem esta linha, o escritório fica nulo e TODO botão de banco responde
+   "Sem sessão" — sem que nada esteja errado no banco.                     */
+window.APP = APP;
+window.supa = supa;
+window.supaFn = supaFn;
+window.toast = toast;
+
 async function doLogout(){
   try { await fetch(SUPA_URL + '/auth/v1/logout', { method:'POST',
     headers:{ apikey:SUPA_KEY, authorization:'Bearer ' + (APP.token||'') } }); } catch(e){}
