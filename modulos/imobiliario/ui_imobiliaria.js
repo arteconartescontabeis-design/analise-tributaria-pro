@@ -718,7 +718,17 @@ function imobInventario(){
     // contexto de banco vem do app: escritório, empresa e usuário logados
     try {
       IMOB_CTX_DB.escritorio_id = (window.APP && APP.escritorioId) || null;
-      IMOB_CTX_DB.usuario_id    = (window.APP && APP.user && APP.user.id) || null;
+
+      // CORRIGIDO EM 24/08 — o mesmo erro uuid × bigint, agora no front.
+      // As colunas têm tipos DIFERENTES de propósito:
+      //   criado_por         uuid   -> o id do Auth do Supabase
+      //   raj_escolhido_por  bigint -> FK para atp_usuarios(id)
+      // Esta linha punha o UUID do Auth em usuario_id, e o UUID ia parar no
+      // campo bigint: 22P02, "invalid input syntax for type bigint".
+      // usuario_id é o da SUA tabela; usuario_uuid é o do Auth.
+      IMOB_CTX_DB.usuario_uuid  = (window.APP && APP.user && APP.user.id) || null;
+      IMOB_CTX_DB.usuario_id    = (window.APP && APP.usuarioId != null)
+                                    ? APP.usuarioId : null;
       IMOB_CTX_DB.empresa_id    = (window.EMP_GLOBAL && EMP_GLOBAL.id) || null;
       if (window.RF_ALIQ_DEFAULT && typeof RF_ALIQ_DEFAULT.ibs === 'number') {
         CTX.aliquotas.ibs = RF_ALIQ_DEFAULT.ibs;
