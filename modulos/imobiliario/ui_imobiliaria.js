@@ -117,16 +117,46 @@ function escolher(i){
   $('just').style.display = '';
 }
 function gravarEscolha(){
+  // CORRIGIDO EM 24/08 — DEFEITO GRAVE DE ROTULAGEM.
+  // Esta função só DESENHAVA a tela: o selo dizia "opção exercida" e o texto
+  // dizia que a escolha "será gravada", em futuro, porque quando foi escrita o
+  // botão era uma prévia. Nada ia ao banco. O usuário fechava a tela achando
+  // que a opção do art. 375 — que é DEFINITIVA e vence em 31/12/2026 — estava
+  // registrada. Botão que diz "Gravar" tem de gravar, ou dizer que não gravou.
+  var alvo = $('just-ok');
   var j = txt('just-txt');
-  if (!j) { $('just-ok').innerHTML = '<div class="aviso">A escolha do art. 375 exige justificativa gravada.</div>'; return; }
+  if (!j) { alvo.innerHTML = '<div class="aviso">A escolha do art. 375 exige justificativa gravada.</div>'; return; }
+  if (RAJ_ESCOLHA === null || !RAJ || !RAJ.opcoes) {
+    alvo.innerHTML = '<div class="aviso">Escolha uma das op&ccedil;&otilde;es antes de gravar.</div>'; return;
+  }
   var o = RAJ.opcoes[RAJ_ESCOLHA];
-  $('just-ok').innerHTML = '<div class="card" style="margin-top:14px;border-color:var(--primary)">' +
-    '<span class="badge b-ok">op&ccedil;&atilde;o exercida</span> <b>' + o.rotulo + '</b> &mdash; ' + money(o.valor) +
-    '<div class="mini" style="margin-top:6px">Justificativa: ' + j + '</div>' +
-    '<div class="mini">Constitui&ccedil;&atilde;o: ' + RAJ.data_constituicao + ' · saldo inicial do redutor: ' + money(o.valor) + '</div>' +
-    '<div class="aviso" style="margin-top:10px">No app, esta escolha ser&aacute; gravada em <code>atp_imob_imoveis</code> e a trigger ' +
-    '<code>atp_imob_trava_opcao_raj</code> impedir&aacute; troca posterior sem retifica&ccedil;&atilde;o formal.</div></div>';
-  $('v-raj').value = o.valor;
+  var sem = imobSemBanco(); if (sem) { alvo.innerHTML = sem; return; }
+
+  // A escolha é um PATCH sobre um imóvel que já existe. Sem ele, dizer que
+  // gravou seria mentir de novo — então nomeia o que falta.
+  if (!IMOB_IMOVEL_ID) {
+    alvo.innerHTML = '<div class="aviso"><b>Im&oacute;vel ainda n&atilde;o gravado.</b> A escolha do ' +
+      'art. 375 se prende a um im&oacute;vel: clique em <b>Salvar im&oacute;vel no banco</b> primeiro ' +
+      'e depois grave a escolha. <b>Nada foi gravado agora.</b></div>';
+    return;
+  }
+
+  alvo.innerHTML = '<div class="info">Gravando a escolha&hellip;</div>';
+  imobDB.exercerOpcao258(IMOB_IMOVEL_ID, o.chave, j, imobCtxDB({ saldo_inicial: o.valor }))
+    .then(function(){
+      $('v-raj').value = o.valor;
+      alvo.innerHTML = '<div class="card" style="margin-top:14px;border-color:var(--primary)">' +
+        '<span class="badge b-ok">op&ccedil;&atilde;o exercida e GRAVADA</span> <b>' + o.rotulo + '</b> &mdash; ' + money(o.valor) +
+        '<div class="mini" style="margin-top:6px">Justificativa: ' + j + '</div>' +
+        '<div class="mini">Constitui&ccedil;&atilde;o: ' + RAJ.data_constituicao + ' · saldo inicial do redutor: ' + money(o.valor) + '</div>' +
+        '<div class="mini">Im&oacute;vel <code>' + IMOB_IMOVEL_ID + '</code> em <code>atp_imob_imoveis</code>.</div>' +
+        '<div class="aviso" style="margin-top:10px">A trigger <code>atp_imob_trava_opcao_raj</code> ' +
+        'passa a impedir troca desta op&ccedil;&atilde;o sem retifica&ccedil;&atilde;o formal.</div></div>';
+    })
+    .catch(function(e){
+      alvo.innerHTML = imobAvisoDB('<b>N&atilde;o gravado</b> &mdash; ' + (e.erro || e.message || e) +
+        ' <code>' + (e.codigo || '') + '</code>');
+    });
 }
 
 /* ---------- venda ---------- */
@@ -349,9 +379,14 @@ function imobAvisoDB(msg, tipo){
 }
 function imobSemBanco(){
   if (IMOB_CTX_DB.escritorio_id) return null;
-  return imobAvisoDB('Sem sess&atilde;o do Análise Tributário Pro: a grava&ccedil;&atilde;o usa a mesma camada '
-    + '<code>supa()</code> do app e o isolamento por escrit&oacute;rio. Nesta pr&eacute;via fora do aplicativo '
-    + 'os bot&otilde;es de banco ficam inertes de prop&oacute;sito &mdash; nenhuma requisi&ccedil;&atilde;o &eacute; montada às cegas.');
+  // Texto atualizado em 24/08: o anterior dizia "nesta prévia fora do
+  // aplicativo", herança de quando o módulo era demonstração. Agora ele É o
+  // aplicativo, e cair aqui significa sessão sem escritório — que é problema
+  // a resolver, não comportamento esperado.
+  return imobAvisoDB('<b>Sem escrit&oacute;rio na sess&atilde;o.</b> A grava&ccedil;&atilde;o usa o isolamento por '
+    + 'escrit&oacute;rio (RLS), e sem ele nenhuma requisi&ccedil;&atilde;o &eacute; montada &agrave;s cegas. '
+    + 'Saia e entre novamente; se persistir, confira se o seu usu&aacute;rio tem <code>escritorio_id</code> '
+    + 'em <code>atp_usuarios</code>. <b>Nada foi gravado.</b>');
 }
 
 function imobSalvarImovel(){
@@ -383,7 +418,15 @@ function imobFinalizar(){
   var chave = 'imob-' + Date.now() + '-' + Math.random().toString(16).slice(2, 8);
   imobDB.finalizarCalculo(e, res, CTX, imobCtxDB({
       request_id: chave, imovel_id: IMOB_IMOVEL_ID,
-      engine_build_id: (window.APP_VERSAO || 'previa') }))
+      // O engine_build_id é campo FORENSE: é ele que permite, ao reprocessar
+      // uma análise antiga, saber se a divergência veio de defeito ou de o
+      // motor ter mudado. No índice separado não existe window.APP_VERSAO, e
+      // todo cálculo sairia carimbado 'previa' — inutilizando a comparação.
+      // Cai para a versão declarada pelo próprio módulo.
+      engine_build_id: (window.APP_VERSAO
+        || (window.ModulosInfo && window.ModulosInfo.imobiliario
+            && ('imob-' + window.ModulosInfo.imobiliario.versao))
+        || 'previa') }))
     .then(function(r){
       alvo.insertAdjacentHTML('afterbegin', imobAvisoDB('C&aacute;lculo finalizado e gravado. '
         + 'Hash <code>' + r.hash_snapshot + '</code> · confian&ccedil;a <b>' + r.nivel_confianca + '</b>. '
