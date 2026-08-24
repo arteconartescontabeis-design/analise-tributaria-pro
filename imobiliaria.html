@@ -212,6 +212,9 @@ canvas{max-height:340px}
      Corrigir algo nela é corrigir em dois lugares: é o preço da separação.
      ══════════════════════════════════════════════════════════════════════ -->
 
+<!-- exigido pela função toast() copiada do Tributário; o CSS .toast já veio no estilo -->
+<div class="toast" id="toast"></div>
+
 <div id="auth-screen" style="display:none;align-items:center;justify-content:center;height:100vh">
   <div class="card" style="width:340px">
     <h2>Análise Imobiliária Pro</h2>
@@ -258,6 +261,14 @@ const SUPAFN_T = { ren: 10000, fn: 12000,
 const APP = { token:null, user:null, page:'dashboard', tokenExp:0, papel:null, escritorioId:null };
 
 const $id = id => document.getElementById(id);
+
+function sessaoGuardar(data){
+  APP.token = data.access_token; APP.user = data.user || APP.user;
+  APP.tokenExp = data.expires_at ? data.expires_at*1000                     // unix s → ms
+               : Date.now() + ((+data.expires_in || 3600) * 1000);
+  localStorage.setItem('atp_token', data.access_token);
+  localStorage.setItem('atp_refresh', data.refresh_token);
+}
 
 async function supa(method, table, opts = {}) {
   const { body, params, returning=false, semPrefer=false } = opts;   // v7.41.1: RPC não leva Prefer de upsert
