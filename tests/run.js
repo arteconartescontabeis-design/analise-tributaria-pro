@@ -1352,7 +1352,72 @@ console.log('\n■ Integridade da interface');
     chk('v7.44.0 · versão e changelog registrados (badge sai do APP_VERSAO desde a v7.43.2)',
       okBadge && html.includes('<b>v7.44.0</b>') && html.includes('setup_v7440.sql') && html.includes('setup_v7450.sql'));
   }
-  console.log('\n══════════════════════════════════');
+
+  // ═══ 5y. v7.42.5 · v7.43.0 · v7.43.1 — projeção pela importação, média da janela,
+  //        INSS pelo cadastro da empresa e exclusão por RPC ═══
+  console.log('\n■ v7.42.5/v7.43.0/v7.43.1 — período coberto, média da janela e ciclo de exclusão');
+  {
+    const proj = (d, j) => vm.runInContext('anProjetarAno', ctx)(d, j);
+    const ultCob = d => vm.runInContext('ultimoMesCoberto', ctx)(d);
+
+    // (a) v7.43.1 — o período coberto vem da IMPORTAÇÃO, não do último mês com receita.
+    // Caso real do usuário: PGDAS-D de jan a jun, receita só em jan, fev e abr.
+    const base = () => { const d = mk({ a1_semst: z() }, 0); d.receitas.a1_semst = z(); return d; };
+    const dImp = base();
+    dImp.receitas.a1_semst[0] = 10000; dImp.receitas.a1_semst[1] = 20000; dImp.receitas.a1_semst[3] = 30000;
+    dImp.origem = { 'receitas.a1_semst': ['P','P','P','P','P','P',null,null,null,null,null,null] };
+    chk('v7.43.1 · o período coberto vai até o último mês IMPORTADO (jun), não até o último com receita (abr)',
+      ultCob(dImp) === 5, `último coberto = m${ultCob(dImp)+1}`);
+
+    const rImp = proj(dImp, 'todos');
+    const mediaImp = rImp && rImp.dados.receitas.a1_semst[6];
+    chk('v7.42.5 · a média divide pelo nº de meses da JANELA (60.000 ÷ 6 = 10.000), não pelos meses com movimento',
+      rImp && Math.abs(mediaImp - 10000) < 0.01, `projetado = ${mediaImp}`);
+    chk('v7.42.5 · os meses parados do período coberto são nomeados na memória (mar, mai, jun)',
+      rImp && rImp.semReceita.join(',') === '2,4,5', rImp ? 'semReceita=' + rImp.semReceita.join(',') : 'sem projeção');
+    chk('v7.43.1 · ano projetado = média × 12 (60.000 ÷ 6 × 12 = 120.000)',
+      rImp && Math.abs(rImp.dados.receitas.a1_semst.reduce((s, x) => s + x, 0) - 120000) < 0.02);
+
+    // (b) v7.43.1 — digitar na grade NÃO estende o período. Digitar zero não é apurar zero.
+    const dDig = base();
+    dDig.receitas.a1_semst[0] = 10000; dDig.receitas.a1_semst[1] = 20000; dDig.receitas.a1_semst[3] = 30000;
+    dDig.origem = { 'receitas.a1_semst': ['D','D','D','D','D','D', null, null, null, null, null, null] };
+    chk('v7.43.1 · origem "D" (digitado) não estende o período coberto — para em abr',
+      ultCob(dDig) === 3, `último coberto = m${ultCob(dDig)+1}`);
+
+    // (c) não-regressão: 12 meses cobertos não geram projeção alguma
+    const dCheio = base(); for (let m = 0; m < 12; m++) dCheio.receitas.a1_semst[m] = 10000;
+    chk('v7.43.1 · ano completo não produz projeção (não-regressão)', proj(dCheio, 'todos') === null);
+
+    // (d) v7.43.0 — o INSS patronal sai do cadastro da empresa, não de percentual escrito à mão.
+    // O bug era um pc(0.2896) literal na memória anual enquanto o motor usava 28,596% de fábrica.
+    const fpe = vm.runInContext('folhaPercDaEmpresa', ctx);
+    const padrao = fpe({}), somaPadrao = (padrao.patronalSalarios + padrao.rat + padrao.terceiros) * 100;
+    chk('v7.43.0 · percentual de fábrica é 28,596% (20 + 5,80 + 2,796) — o 28,96% do relatório era literal',
+      Math.abs(somaPadrao - 28.596) < 0.001, somaPadrao.toFixed(3) + '%');
+    const proprio = fpe({ folhaPerc: { rat: 0.02 } });
+    chk('v7.43.0 · percentual configurado na empresa vence o de fábrica',
+      Math.abs(proprio.rat - 0.02) < 1e-9 && Math.abs(proprio.patronalSalarios - padrao.patronalSalarios) < 1e-9);
+    chk('v7.43.0 · a memória anual lê folhaPercDaEmpresa e não traz mais o percentual literal',
+      !/pc\(0\.2896\)/.test(html) && /folhaPercDaEmpresa/.test(html));
+
+    // (e) v7.43.0 — cancelamento cooperativo da importação
+    chk('v7.43.0 · a barra de progresso tem botão de cancelar e bandeira cooperativa',
+      /let IMP_CANCELAR = false;/.test(html) && /function impCancelar\(\)/.test(html)
+      && /id="imp-cancelar"/.test(html));
+    chk('v7.43.0 · o cancelamento é conferido dentro dos laços de importação (nota a nota / CNPJ a CNPJ)',
+      (html.match(/IMP_CANCELAR/g) || []).length >= 5);
+
+    // (f) ciclo de vida — a exclusão foi para RPC SECURITY DEFINER na v7.41.1 e as três
+    // continuam lá. Um PATCH de volta reintroduz o 42501 corrigido pelos setups v7440/v7450.
+    for (const rpc of ['atp_excluir_dados', 'atp_excluir_empresa', 'atp_excluir_usuario'])
+      chk(`ciclo de vida · a exclusão passa por rpc/${rpc} (nunca PATCH — RLS recusa)`,
+        new RegExp("supa\\('POST','rpc/" + rpc + "'").test(html));
+    chk('ciclo de vida · a chamada de RPC vai com semPrefer (Prefer de upsert quebra a função)',
+      (html.match(/semPrefer:\s*true/g) || []).length >= 3);
+    chk('ciclo de vida · supa() só manda Prefer de merge-duplicates quando NÃO é RPC',
+      /method==='POST' && !semPrefer\) headers\['Prefer'\] = 'resolution=merge-duplicates'/.test(html));
+  }
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
   process.exit(FALHAS.length ? 1 : 0);
 })();
