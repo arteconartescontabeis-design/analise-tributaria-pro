@@ -673,7 +673,9 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.44.1</b> <span class="badge ok">atual</span></td><td>25/08/2026</td><td><b>🧹 Limpeza de código morto encontrada pela varredura estática — nenhuma mudança de comportamento, motor e lacre <code>5a5562df</code> intocados.</b> Uma varredura conferiu, um a um, se todo elemento acessado por <code>$id()</code> existe no HTML e se toda função chamada por handler inline está definida: <b>176 handlers, zero chamadas órfãs, zero <code>$id()</code> sem elemento</b>. No caminho inverso apareceram cinco resíduos — elementos que existiam no HTML e que <i>nenhum código jamais alcançava</i>. <b>(1) O botão “Lançar total nas Despesas da análise”</b> nascia oculto e nada no aplicativo o exibia, o que deixava a função <code>fornLancarDespesas</code> inalcançável desde a reorganização do painel. Ela somava todos os serviços do Totais ISS e rateava o total em Despesas › Outras de uma vez. O <code>foLancar()</code> já faz esse lançamento — valor sem CFOP, que é o caso do Totais ISS, vai para Despesas › Outras — mas passando pelo <b>mapa de CFOPs por empresa</b>. As duas foram removidas em vez de religadas: manter dois caminhos para o mesmo lançamento, com regras diferentes, produziria resultados divergentes no mesmo arquivo, e bastaria alguém religar o botão para a divergência aparecer sem aviso. <b>(2) A div <code>rf-forn-nota</code></b>, na aba Reforma, estava vazia e nenhum código escrevia nela — a nota do art. 58 é montada em outro ponto. <b>(3) Dois campos de arquivo</b> (<code>tri-arq-compra</code> e <code>tri-arq-venda</code>) também apareceram como resíduo — e foram <b>MANTIDOS</b>. A suíte barrou a remoção: eles estão sob o teste da v7.33.0, escrito para travar a decisão de layout de que os inputs vivem <i>dentro</i> do item 2. Reescrever um guard aprovado para acomodar uma limpeza esvaziaria a própria suíte, e o ganho seriam duas linhas de HTML inerte. <b>Falsos positivos que NÃO foram tocados:</b> os painéis <code>tri-dash-*</code>, <code>tri-prog-*</code> e as abas <code>fo-aba-*</code> parecem órfãos numa busca por texto, mas são acessados por id montado em tempo de execução (<code>$id('tri-dash-'+t)</code>) — estão vivos e em uso. A suíte subiu para <b>210 verificações</b>, com um bloco novo que testa a AUSÊNCIA do que saiu e a PRESENÇA obrigatória do que só parecia órfão.</td></tr>
+                    <tr><td><b>v7.46.0</b> <span class="badge ok">atual</span></td><td>25/08/2026</td><td><b>🧭 TODOS OS RELATÓRIOS FECHAM COM O MESMO CÁLCULO — nasce a BASE ÚNICA da Reforma (<code>rlBaseReforma</code>).</b> A divergência relatada entre o Parecer com IA (correto) e a Conferência de cálculos estava na <b>projeção pela metade</b>: com o ano incompleto, o parecer projeta a análise <b>e</b> a aba Reforma juntas (receita, compras e créditos × fator k = receita interna projetada ÷ realizada), mas a conferência projetava só a análise e entregava a aba Reforma <b>crua</b> ao motor — com a aba preenchida (e o app preenche a receita sozinho), débito e crédito saíam do período lançado enquanto o parecer escalava para o ano cheio. Com 6 meses lançados, a conferência mostrava metade do crédito do parecer. Havia ainda uma terceira base: o relatório "Reforma" partia do <b>realizado puro</b>. Agora a projeção mora numa função só, <code>rlBaseReforma()</code> — análise e aba projetadas JUNTAS, ano completo devolve o realizado intacto (k = 1) — e <b>parecer, conferência (quadro Reforma + memórias ano a ano) e relatório Reforma leem exclusivamente dela</b>: divergir ficou estruturalmente impossível, e a suíte ganhou a prova de identidade. O parecer <b>não mudou um centavo</b> (era a referência); a memória da conferência passou a <b>declarar o fator k</b> na abertura do quadro; a aba Reforma da tela permanece sobre o realizado (é o editor), com nota dizendo onde a projeção acontece; e a conferência contra o <b>DAS declarado continua no realizado</b> — ali se confere guia paga, projetar seria erro. Motor intocado: <b>lacre <code>e1a25234</code> conferido inalterado</b> — a correção é nos chamadores, não no cálculo.</td></tr>
+                    <tr><td><b>v7.45.0</b></td><td>25/08/2026</td><td><b>🔁 RECOMEÇO SOBRE A v7.44.1 — os 6 itens da especificação, de uma vez, num pacote só.</b> <b>(1) Limpar dados preserva a configuração.</b> A limpeza zera receitas, compras, despesas, folha e importações, mas a configuração da empresa (ISS, ICMS, presunções, período do LR, folha própria, ano de referência) permanece e é regravada. <b>(2) O ISS da CONFIGURAÇÃO sai da base do IBS/CBS de 2027 em diante</b> (LC 214, art. 12, §2º, V): dedução ÚNICA = ISS anual apurado com a alíquota configurada × percentual remanescente do ano (100% em 2027-28, degraus até 60% em 2032, zero em 2033 — ISS extinto). Vale igual na aba Reforma, nos cenários híbrido/Presumido/Real, na conferência e no parecer, com a coluna nova <b>"(−) ISS fora da base"</b> na aba e a linha correspondente na memória. Com o % ISS zerado na configuração não há o que deduzir — a aba passa a avisar em vermelho. <b>(3) Botão Cancelar nas importações de grande volume</b> (Importar Dados): PGDAS-D, Demonstrativo, folha e balancete ganham a faixa "N de M" com cancelamento cooperativo que preserva o já lido (o balancete passou a ler em sequência para ter onde parar); o Faturamento, PDF único, ganha barra por página e ali cancelar aborta. <b>(4) O PGDAS manda na classificação:</b> o rótulo declarado — como o da WENDEL: "…tributados pelo <b>Anexo III</b>, <b>sem retenção</b>/substituição tributária de ISS…" — passa a ser lido pelo <b>anexo escrito</b> e pela <b>negação da retenção</b>. Antes, "SEM retenção…ISS" casava com o padrão de retenção e virava COM retenção (a3_retiss), e "NÃO sujeitos ao fator r" podia cair no Anexo V. Rótulo não reconhecido agora fica <b>sem bloco</b>: o select da revisão aparece em vermelho e o Aplicar <b>bloqueia</b> listando as pendências — acabou o fallback calado para o Anexo I. <b>(5) Crédito de IBS/CBS ÚNICO:</b> híbrido, Presumido e Real usam exatamente a base de crédito da aba Reforma (função compartilhada <code>rfContraEfetivo</code> — com o proxy A5 das compras de revenda quando a aba está vazia), tornando impossível a aba mostrar um crédito e o parecer outro. <b>(6) Relatórios = sistema:</b> o relatório "Reforma" de Relatórios abandonou a fórmula paralela e lê o mesmo <code>calcCenariosReforma</code> de tudo; a memória de cálculo da conferência ganhou a linha "(−) ISS que não integra a base" e o débito fecha como (base − dedução) × alíquota. Lacre re-selado: <code>5a5562df → e1a25234</code> — a dedução do ISS move os cenários 2027–2032 dos casos-gabarito; <b>2033 permanece idêntico ao centavo</b> (dedução zero com o ISS extinto) e DAS, LP, LR e Simples do realizado idem, prova de que só a Reforma mudou.</td></tr>
+                    <tr><td><b>v7.44.1</b></td><td>25/08/2026</td><td><b>🧹 Limpeza de código morto encontrada pela varredura estática — nenhuma mudança de comportamento, motor e lacre <code>5a5562df</code> intocados.</b> Uma varredura conferiu, um a um, se todo elemento acessado por <code>$id()</code> existe no HTML e se toda função chamada por handler inline está definida: <b>176 handlers, zero chamadas órfãs, zero <code>$id()</code> sem elemento</b>. No caminho inverso apareceram cinco resíduos — elementos que existiam no HTML e que <i>nenhum código jamais alcançava</i>. <b>(1) O botão “Lançar total nas Despesas da análise”</b> nascia oculto e nada no aplicativo o exibia, o que deixava a função <code>fornLancarDespesas</code> inalcançável desde a reorganização do painel. Ela somava todos os serviços do Totais ISS e rateava o total em Despesas › Outras de uma vez. O <code>foLancar()</code> já faz esse lançamento — valor sem CFOP, que é o caso do Totais ISS, vai para Despesas › Outras — mas passando pelo <b>mapa de CFOPs por empresa</b>. As duas foram removidas em vez de religadas: manter dois caminhos para o mesmo lançamento, com regras diferentes, produziria resultados divergentes no mesmo arquivo, e bastaria alguém religar o botão para a divergência aparecer sem aviso. <b>(2) A div <code>rf-forn-nota</code></b>, na aba Reforma, estava vazia e nenhum código escrevia nela — a nota do art. 58 é montada em outro ponto. <b>(3) Dois campos de arquivo</b> (<code>tri-arq-compra</code> e <code>tri-arq-venda</code>) também apareceram como resíduo — e foram <b>MANTIDOS</b>. A suíte barrou a remoção: eles estão sob o teste da v7.33.0, escrito para travar a decisão de layout de que os inputs vivem <i>dentro</i> do item 2. Reescrever um guard aprovado para acomodar uma limpeza esvaziaria a própria suíte, e o ganho seriam duas linhas de HTML inerte. <b>Falsos positivos que NÃO foram tocados:</b> os painéis <code>tri-dash-*</code>, <code>tri-prog-*</code> e as abas <code>fo-aba-*</code> parecem órfãos numa busca por texto, mas são acessados por id montado em tempo de execução (<code>$id('tri-dash-'+t)</code>) — estão vivos e em uso. A suíte subiu para <b>210 verificações</b>, com um bloco novo que testa a AUSÊNCIA do que saiu e a PRESENÇA obrigatória do que só parecia órfão.</td></tr>
                     <tr><td><b>v7.44.0</b></td><td>24/08/2026</td><td><b>A Configuração da empresa não abre mais em branco, e o banco deixou de ter becos sem saída depois de exclusões.</b> <b>(1) Tela de Configuração.</b> Entrar em Empresas &rarr; Configuração com uma empresa sem análise carregada estourava um erro de análise nula no meio da montagem e o card ficava vazio — a guarda existia no <code>go()</code>, mas rodava <i>depois</i> do render. Três providências: a guarda passou a vir antes; o próprio <code>anRenderConfig</code> cria a análise se ela faltar (a lição nº 1 do projeto, aplicada a mais um funil); e a carga assíncrona do banco agora redesenha também o painel de Configuração — antes ele podia seguir exibindo padrões de fábrica sobre uma empresa com configuração salva, e um Salvar nesse estado gravaria os padrões por cima. <b>(2) Banco — fim do 403/42501 depois de excluir (setup_v7440.sql e setup_v7450.sql, aplicados em produção em 24/08).</b> Excluir uma análise tornava a empresa/ano ingravável para sempre: a política única FOR ALL escondia a linha excluída do SELECT, e o upsert do PostgREST confere as políticas — <i>inclusive a de SELECT</i> — contra a linha em conflito. A correção foi em camadas, cada uma provada em PostgreSQL 16 local reproduzindo o erro real de produção: políticas separadas por comando em <code>atp_analises</code>, <code>atp_empresas</code> e <code>atp_fornec</code> (o filtro de excluído fica só no SELECT, com a subconsulta escalar que evita reavaliar a função por linha); gravar por cima de análise excluída move o resto para a lixeira <code>atp_analises_lixeira</code>, preservando quem excluiu e quando; recadastrar uma empresa excluída e readmitir o e-mail de um usuário excluído deixam de dar erro — o resto tem a chave renomeada (sufixo <code>#exc</code> + id) em vez de apagado, porque as tabelas do Imobiliário apontam FK para ele. Ataques entre escritórios foram testados e rejeitados; as políticas de <code>atp_usuarios</code>, já corretas, não foram tocadas. Motor e lacre <code>5a5562df</code> intocados.</td></tr>
                     <tr><td><b>v7.43.2</b></td><td>21/08/2026</td><td><b>A Conferência de cálculos ganha a MEMÓRIA ano a ano da Reforma (2026–2033), seletor de anos, e passa a provar que PIS/COFINS não entram a partir de 2027.</b> <b>(1) Memória de cálculo por ano projetado.</b> O quadro da Reforma trazia uma linha por ano com débito, crédito e líquido — o <i>resultado</i>, nunca o <i>cálculo</i>. Agora cada ano abre a sua própria memória: alíquotas do ano com a procedência de cada uma (lei, estimativa ou projeção), base tributável com as reduções por cClassTrib item a item, crédito separado por origem (PJ do regime regular à alíquota cheia × optante do Simples pelo art. 58), líquido, IS, e os três cenários — por dentro, híbrido do art. 22-A e regime regular — com a fórmula e os valores substituídos. <b>(2) Seleção de anos.</b> Oito memórias completas fazem um documento longo; a barra do relatório ganhou caixas por ano, com "todos" e "nenhum", e o documento passa a declarar quais anos foram selecionados — para que ninguém leia um recorte pensando ser o conjunto. <b>(3) PIS e COFINS a partir de 2027 — conferido e demonstrado.</b> A verificação pedida deu <b>negativo</b>: o motor já zera o remanescente de PIS/COFINS de 2027 em diante, e o comparativo do regime regular nunca somou essas contribuições nesses anos. O que faltava era <b>prova no documento</b>. Duas providências: cada memória anual imprime a linha de PIS e a de COFINS <b>zeradas, com o percentual à vista</b>, em vez de omiti-las — ausência de linha não pode ser confundida com esquecimento; e um <b>vigia</b> confere os percentuais de 2027 a 2033 e denuncia em vermelho se algum voltar a ser maior que zero, porque esses percentuais são <b>editáveis</b> em Parâmetros › Reforma e um ajuste feito ali reintroduziria tributo extinto. O IPI recebeu a mesma linha zerada, com a ressalva de que a redução a zero não alcança a industrialização na Zona Franca de Manaus — hipótese não modelada. <b>(4) Correção de base, com efeito em número.</b> O quadro da Reforma partia dos totais do <b>realizado</b>, enquanto todo o resto do documento — desde a v7.42.4 — trabalha com o ano <b>projetado</b>. Num ano com seis meses lançados, a transição inteira até 2033 era montada sobre meio ano de receita, e nada na página dizia isso. Agora a Reforma usa a mesma base do documento e a <b>declara no cabeçalho do quadro</b>. É a única alteração desta versão que muda valores; motor e lacre <code>5a5562df</code> seguem intocados, e os casos-gabarito não têm projeção, por isso o selo não se move. <b>(5) Relatórios agrupados por projeção.</b> O seletor passou a separar os documentos que <b>projetam o ano quando faltam meses</b> dos que mostram <b>somente o realizado</b>, e uma faixa sob o seletor informa o estado da análise aberta — quantos meses estão apurados, quantos foram estimados e por qual janela — ou declara que o ano está fechado. A observação ficou no grupo e na faixa, e <b>não no nome do relatório</b>: projeção é estado da análise, não atributo do documento, e um rótulo fixo mentiria justamente no ano fechado. <b>(6) O badge da versão parou de mentir</b> — estava escrito à mão no HTML, congelado na v7.42.3, e agora é gerado a partir do APP_VERSAO.</td></tr>
                     <tr><td><b>v7.43.1</b></td><td>21/08/2026</td><td><b>O período coberto passa a ser o da importação, e não o do último mês com receita.</b> Importar o PGDAS-D de janeiro a junho declara <b>seis meses de apuração</b>, mesmo que só três tenham tido faturamento — os outros três foram apurados e deram zero, o que é <b>informação</b>, não ausência dela. Até aqui o motor parava no último mês com receita: com faturamento em janeiro, fevereiro e abril, a janela virava de quatro meses e a média dividia por quatro, projetando oito meses. Agora a janela vai até <b>junho</b> e o denominador é <b>seis</b> — a soma de janeiro, fevereiro e abril dividida por seis é replicada de julho a dezembro. Projeta-se o ritmo real da empresa, e não o dos meses bons. A cobertura vem da <b>trilha de origem</b> da v7.28.0, que marca todos os meses do lote importado, inclusive os zerados; contam apenas marcas de importação — PGDAS-D, Relatório de Faturamento, Demonstrativo do Simples, XML de notas e planilha modelo. Mês digitado à mão na grade não declara período, porque digitar zero não é o mesmo que apurar zero. A <b>projeção de limite e sublimite</b> passa a usar o mesmo período, para que o parecer e o alerta de ultrapassagem nunca falem de anos diferentes. A memória de cálculo ganhou uma linha nomeando os <b>meses apurados sem receita</b> e explicando por que eles entram no denominador. Motor e lacre <code>5a5562df</code> intocados: a cobertura decide o que entra na projeção, montada antes do cálculo — nenhuma regra de apuração muda.</td></tr>
@@ -2091,17 +2093,22 @@ async function folhaLerRelacao(input){
   if (!arqs.length) return;
   if (!AN) { toast('Abra uma análise antes de importar a folha.'); return; }
   if (!window.pdfjsLib) { toast('Biblioteca PDF não carregou — verifique a internet.'); return; }
-  toast(`Lendo ${arqs.length} arquivo(s) de folha...`);
   const rels = [], erros = [];
+  IMP_CANCELAR = false; let _flN = 0, _flCanc = false; const _flTot = arqs.length;   // v7.45.0 (item 3)
+  impProgresso(0, _flTot, 'Lendo folha');
   for (const f of arqs){
+    if (IMP_CANCELAR) { _flCanc = true; break; }
     try {
       const achados = folhaParseRelacao((await pdfLinhas(f)).join('\n'));
       if (!achados.length) { erros.push(`${f.name}: não encontrei nenhum período de apuração.`); continue; }
       achados.forEach(r => r.arq = f.name);
       rels.push(...achados);
     } catch(e){ erros.push(`${f.name}: ${e.message}`); }
+    _flN++; impProgresso(_flN, _flTot, 'Lendo folha'); await new Promise(r=>setTimeout(r,0));
   }
-  if (!rels.length) { alert('Nada foi importado.\n\n' + erros.join('\n')); return; }
+  impFecharProgresso();
+  if (_flCanc) toast(`Importação cancelada: ${_flN} de ${_flTot} arquivo(s) lido(s) — o que foi lido segue para a revisão.`);
+  if (!rels.length) { alert(_flCanc ? 'Importação cancelada antes de qualquer relatório válido.' : 'Nada foi importado.\n\n' + erros.join('\n')); return; }
   const anoAn = +AN.ano || +($id('an-ano')||{}).value || new Date().getFullYear();
   const doAno = rels.filter(r => r.ano === anoAn), fora = rels.filter(r => r.ano !== anoAn);
   if (!doAno.length) { alert(`Os relatórios são de ${[...new Set(rels.map(r=>r.ano))].join(', ')}, mas a análise aberta é de ${anoAn}.`); return; }
@@ -4135,7 +4142,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.44.1';
+const APP_VERSAO = '7.46.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -4601,20 +4608,35 @@ function rfCargaAtual() {
   return { regime, consumo: pis+cof+icms+ipi+iss, pis, cof, icms, ipi, iss };
 }
 
+// v7.45.0 (item 5): a base de crédito é UMA SÓ — a mesma da aba Reforma — para híbrido, LP e LR.
+// Sem compras informadas na aba, vale o proxy A5 (v7.1): compras de revenda da análise como
+// aquisições de PJ do regime regular. Aba e cenários chamam ESTA função; divergir ficou impossível.
+function rfContraEfetivo(rf, T){
+  const contra = Object.assign({}, rf?.contra||{});
+  let proxy = false;
+  if (!((contra.compras_lrlp||0) > 0) && !((contra.compras_simples||0) > 0) && (T?.comprasRevenda||0) > 0){
+    contra.compras_lrlp = T.comprasRevenda; proxy = true;
+  }
+  return { contra, proxy };
+}
+
 // Débito/crédito de IBS/CBS por ano a partir dos dados da aba Reforma (compartilhado com o Relatório)
-function rfLinhaBase(rf, a) {
+// v7.45.0 (item 2): dedBase = ISS da CONFIGURAÇÃO da empresa (o mesmo que o motor apura com a
+// alíquota configurada), excluído da base do IBS/CBS de 2027 em diante — LC 214, art. 12, §2º, V.
+function rfLinhaBase(rf, a, dedBase) {
   const q = Object.assign({}, RF_ALIQ_DEFAULT[a], (PARAMS.reforma||{})[a]||{});   // v7.16.3: padrão vigente
   const alq = (q.cbs + q.ibse + q.ibsm)/100;
   const recBenef = RF_REDUCOES.reduce((s,[k])=>s+(rf.benefRec?.[k]||0),0);
   const credBenefTot = RF_REDUCOES.reduce((s,[k])=>s+(rf.benefCred?.[k]||0),0);
-  let deb = Math.max(0, (rf.receita||0) - recBenef)*alq;
+  const ded = Math.min(Math.max(0, +dedBase||0), Math.max(0, (rf.receita||0) - recBenef));
+  let deb = Math.max(0, (rf.receita||0) - recBenef - ded)*alq;
   for (const [k,,red] of RF_REDUCOES) deb += (rf.benefRec?.[k]||0)*alq*(1-red);
   let cred = Math.max(0, (rf.contra?.compras_lrlp||0) - credBenefTot)*alq;
   for (const [k,,red] of RF_REDUCOES) cred += (rf.benefCred?.[k]||0)*alq*(1-red);
   // v7.29.0: % manual preenchido prevalece (override); zerado = automático pelo art. 58 (1ª faixa)
   cred += (rf.contra?.compras_simples||0) * ((rf.credSimplesPct||0) > 0 ? (rf.credSimplesPct/100) : credSimplesArt58(a));
   const anoTeste = (a <= 2026);
-  return { q, alq, deb, cred, anoTeste,
+  return { q, alq, deb, cred, anoTeste, ded,
     liquido: anoTeste ? 0 : Math.max(0, deb - cred),
     is: anoTeste ? 0 : (rf.baseIS||0)*(q.is/100) };
 }
@@ -4630,11 +4652,9 @@ function calcCenariosReforma(res, reforma) {
   const rfx = Object.assign({ benefRec:{}, benefCred:{}, contra:{}, receita:0, baseIS:0, credSimplesPct:0 }, reforma||{});
   // v7.1 (A5): sem compras informadas na aba Reforma, usa as compras de revenda da própria análise
   // como proxy de aquisições de PJ do regime regular — evita cenários híbrido/fora sem NENHUM crédito.
-  let proxyCompras = false;
-  if (!((rfx.contra?.compras_lrlp||0) > 0) && !((rfx.contra?.compras_simples||0) > 0) && (T.comprasRevenda||0) > 0) {
-    rfx.contra = Object.assign({}, rfx.contra, { compras_lrlp: T.comprasRevenda });
-    proxyCompras = true;
-  }
+  const _ce = rfContraEfetivo(rfx, T);   // v7.45.0 (item 5): mesma base de crédito da aba
+  rfx.contra = _ce.contra;
+  const proxyCompras = _ce.proxy;
   // v7.16.3: as alíquotas vêm SEMPRE dos Parâmetros do aplicativo (ou do padrão de fábrica),
   // nunca da cópia gravada na análise — atualizar Parâmetros reflete em tudo que já existe.
   const aliqApp = PARAMS.reforma || RF_ALIQ_DEFAULT;
@@ -4682,7 +4702,12 @@ function calcCenariosReforma(res, reforma) {
              trava: icmsIssTrava + ibsTrava, dasMaisTrava: (T.das||0) + icmsIssTrava + ibsTrava };
   };
   const REF = RF_ANOS.map(a=>{
-    const L = rfLinhaBase(rfx, a), q = L.q;
+    // v7.45.0 (item 2): o ISS da CONFIGURAÇÃO sai da base do IBS/CBS de 2027 em diante, pelo
+    // percentual remanescente do ano (2027-28 100% · 2029-32 em degraus · 2033 zero, ISS extinto).
+    // lpIss = ISS anual apurado com a alíquota configurada — dedução ÚNICA, a mesma da aba.
+    const _q0 = Object.assign({}, RF_ALIQ_DEFAULT[a], (PARAMS.reforma||{})[a]||{});
+    const dedIss = a >= 2027 ? lpIss * (+_q0.remIcmsIss||0) : 0;
+    const L = rfLinhaBase(rfx, a, dedIss), q = L.q;
     const rPC = +q.remPisCof||0, rII = +q.remIcmsIss||0;
     const P = p190(a);
     // v7.17.0 · art. 22-A (Res. 190): híbrido = DAS (com a trava do ano) − parcelas de CBS/IBS da partilha.
@@ -4693,7 +4718,7 @@ function calcCenariosReforma(res, reforma) {
     const regLP = lpResto + (lpIcms+lpIss)*rII + (lpPis+lpCof)*rPC + (a<=2026?lpIpi:0) + L.liquido + L.is;
     const regLR = lrResto + (lrIcms+lrIss)*rII + (lrPis+lrCof)*rPC + (a<=2026?lrIpi:0) + L.liquido + L.is;
     const regular = Math.min(regLP, regLR);
-    return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, anoTeste:L.anoTeste, dasHib, hib, regular, regLP, regLR, p190:P, regNome: regular===regLP?'Presumido':'Real' };
+    return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, anoTeste:L.anoTeste, ded:L.ded, dasHib, hib, regular, regLP, regLR, p190:P, regNome: regular===regLP?'Presumido':'Real' };
   });
   const semCreditos = REF.every(l=>l.cred<=0.005);
   return { rfx, REF, usouFallback: !reforma, proxyCompras, semCreditos };
@@ -4708,7 +4733,7 @@ function calcCenariosReforma(res, reforma) {
 const LACRE_CASOS = [
   { nome:'Caso 1 — Comércio (Anexo I, 6ª faixa, trava do sublimite)', inp: {"cfg":{"ano":2025,"iss":0,"icmsV":0.12,"icmsC":0.12,"ipiV":0,"ipiC":0,"rbt12Direto":0,"rbt12Lanc":[233957.74,180464.53,228650,204621.46,189091.64,229826.08,212736.02,261640.46,259296.98,376003.65,380401.48,257979.83],"folha12Lanc":[0,0,0,0,0,0,0,0,0,0,0,0],"lpBaseServ":0.32,"lpBaseCom":0.08,"adicionalIR":"trimestral","sublimite":"auto"},"receitas":{"a1_semst":[377050.87,484066.42,376975.8,416574.89,447563.54,453176.74,548964.77,427892.17,0,0,0,0],"a1_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_semret":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retiss":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retissinss":[0,0,0,0,0,0,0,0,0,0,0,0],"a4":[0,0,0,0,0,0,0,0,0,0,0,0],"a5r":[0,0,0,0,0,0,0,0,0,0,0,0],"fin":[0,0,0,0,0,0,0,0,0,0,0,0],"comtransp":[0,0,0,0,0,0,0,0,0,0,0,0]},"folha":{"prolabore":[10251.43,10251.43,10251.43,10251.43,10251.43,10251.43,0,0,0,0,0,0],"salarios":[34988.54,34988.54,34988.54,34988.54,34988.54,34988.54,0,0,0,0,0,0],"baseFgts":[34988.54,34988.54,34988.54,34988.54,34988.54,34988.54,0,0,0,0,0,0],"prov13":[2915.71,2915.71,2915.71,2915.71,2915.71,2915.71,0,0,0,0,0,0],"provFerias":[3887.62,3887.62,3887.62,3887.62,3887.62,3887.62,0,0,0,0,0,0]},"compras":{"semst":[232039.67,155316.58,291099.36,327885.35,248658.21,345140.42,0,0,0,0,0,0],"baixaSemst":[0,0,0,0,0,0,0,0,0,0,0,0],"mono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaMono":[0,0,0,0,0,0,0,0,0,0,0,0],"comst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComst":[0,0,0,0,0,0,0,0,0,0,0,0],"comstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baseIpiCred":[0,0,0,0,0,0,0,0,0,0,0,0]},"despesas":{"adm":[77361.45,90697.16,91478,95598.78,143160.24,109482.63,0,0,0,0,0,0],"vendas":[0,0,0,0,0,0,0,0,0,0,0,0],"fiscais":[0,0,0,0,0,0,0,0,0,0,0,0],"financeiras":[0,0,0,0,0,0,0,0,0,0,0,0],"outras":[0,0,0,0,0,0,0,0,0,0,0,0],"credLR":[0,0,0,0,0,0,0,0,0,0,0,0]},"icms":{"cred":null,"deb":null},"ipi":{"cred":null,"deb":null},"folha13":{"prolabore13":0,"salarios13":0,"baseFgts13":0}} },
   { nome:'Caso 2 — Serviços (Anexo III, Fator R, 13º)',              inp: {"cfg":{"ano":2026,"iss":0.02,"icmsV":0,"icmsC":0,"ipiV":0,"ipiC":0,"rbt12Direto":0,"rbt12Lanc":[4500,0,8500,0,11000,21400,32850,15000,0,0,0,0],"folha12Lanc":[0,0,0,0,0,0,0,0,0,0,0,0],"lpBaseServ":0.32,"lpBaseCom":0.08,"adicionalIR":"trimestral","sublimite":"auto"},"receitas":{"a1_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_mono_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a1_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_semst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_red_pct":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst":[0,0,0,0,0,0,0,0,0,0,0,0],"a2_comst_mono":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_semret":[100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000],"a3_retiss":[0,0,0,0,0,0,0,0,0,0,0,0],"a3_retissinss":[0,0,0,0,0,0,0,0,0,0,0,0],"a4":[0,0,0,0,0,0,0,0,0,0,0,0],"a5r":[0,0,0,0,0,0,0,0,0,0,0,0],"fin":[0,0,0,0,0,0,0,0,0,0,0,0],"comtransp":[0,0,0,0,0,0,0,0,0,0,0,0]},"folha":{"prolabore":[1518,1518,1518,1518,1518,1518,1518,1518,1518,1518,1518,1518],"salarios":[24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77],"baseFgts":[24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77,24739.77],"prov13":[2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65,2061.65],"provFerias":[2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86,2748.86]},"compras":{"semst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaSemst":[0,0,0,0,0,0,0,0,0,0,0,0],"mono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaMono":[0,0,0,0,0,0,0,0,0,0,0,0],"comst":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComst":[0,0,0,0,0,0,0,0,0,0,0,0],"comstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baixaComstMono":[0,0,0,0,0,0,0,0,0,0,0,0],"baseIpiCred":[0,0,0,0,0,0,0,0,0,0,0,0]},"despesas":{"adm":[10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89,10015.89],"vendas":[488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13,488.13],"fiscais":[41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76,41.76],"financeiras":[14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47,14.47],"outras":[0,0,0,0,0,0,0,0,0,0,0,0],"credLR":[0,0,0,0,0,0,0,0,0,0,0,0]},"icms":{"cred":null,"deb":null},"ipi":{"cred":null,"deb":null},"folha13":{"prolabore13":0,"salarios13":24739.77,"baseFgts13":24739.77}} } ];
-const LACRE_HASH = '5a5562df';   // selo da v7.36.0 — re-selado na correção da trava da 5ª faixa (RBT12 efetivo). Anterior: fa39eefb (v7.35.0)
+const LACRE_HASH = 'e1a25234';   // selo da v7.36.0 — re-selado na correção da trava da 5ª faixa (RBT12 efetivo). Anterior: fa39eefb (v7.35.0)
 function lacreHash(str){ let h = 0x811c9dc5;
   for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   return h.toString(16).padStart(8,'0'); }
@@ -4769,16 +4794,23 @@ function rfCalcular() {
   RF.compras = (RF.contra.compras_lrlp||0) + (RF.contra.compras_simples||0);
   $id('rf-compras').value = RF.compras ? fmt(RF.compras) : '';
   const atual = rfCargaAtual();
+  // v7.45.0 (itens 2 e 5): a aba usa a MESMA base de crédito e a MESMA dedução de ISS dos cenários
+  const _T = AN?._res?.totais || null;
+  const _ce = rfContraEfetivo(RF, _T);
+  const RFX = Object.assign({}, RF, { contra: _ce.contra });
+  const _issCfgAno = AN?._res ? (AN._res.meses||[]).reduce((sm,M)=>sm+(+((M.lp||{}).iss)||0),0) : 0;
   const linhas = [];
   for (const a of RF_ANOS) {
-    const { q, alq, deb, cred, liquido, is: is_ } = rfLinhaBase(RF, a);
+    const _qA = Object.assign({}, RF_ALIQ_DEFAULT[a], (PARAMS.reforma||{})[a]||{});
+    const _ded = a >= 2027 ? _issCfgAno * (+_qA.remIcmsIss||0) : 0;
+    const { q, alq, deb, cred, liquido, is: is_, ded } = rfLinhaBase(RFX, a, _ded);
     // remanescentes do sistema atual
     let rem = 0, remDet = '';
     if (atual && atual.consumo!=null) {
       rem = (atual.icms + atual.iss)*q.remIcmsIss + (atual.pis + atual.cof)*q.remPisCof + (a<=2026 ? atual.ipi : 0);
       remDet = 'ICMS/ISS×'+(q.remIcmsIss*100).toFixed(0)+'%';
     }
-    linhas.push({ ano:a, alq, deb, cred, liquido, is:is_, rem, total: liquido + is_ + rem });
+    linhas.push({ ano:a, alq, deb, cred, liquido, is:is_, rem, ded, total: liquido + is_ + rem });
   }
   RF._res = { linhas, atual };
   // resumo
@@ -4795,12 +4827,15 @@ function rfCalcular() {
   }
   $id('rf-resumo').innerHTML = cards.join('');
   // tabela
-  let h = '<table><thead><tr><th>Ano</th><th class="num">Alíq. IBS+CBS</th><th class="num">Débito</th><th class="num">Crédito</th><th class="num">IBS/CBS líquido</th><th class="num">IS</th><th class="num">Tributos atuais remanesc.</th><th class="num">Total consumo</th></tr></thead><tbody>';
-  for (const L of linhas) h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(L.deb)}</td><td class="num">${fmt(L.cred)}</td><td class="num">${fmt(L.liquido)}</td><td class="num">${fmt(L.is)}</td><td class="num">${fmt(L.rem)}</td><td class="num">${fmt(L.total)}</td></tr>`;
+  let h = '<table><thead><tr><th>Ano</th><th class="num">Alíq. IBS+CBS</th><th class="num" title="ISS da configuração excluído da base do IBS/CBS — LC 214, art. 12, §2º, V">(−) ISS fora da base</th><th class="num">Débito</th><th class="num">Crédito</th><th class="num">IBS/CBS líquido</th><th class="num">IS</th><th class="num">Tributos atuais remanesc.</th><th class="num">Total consumo</th></tr></thead><tbody>';
+  for (const L of linhas) h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${(L.ded||0)>0.005?'−'+fmt(L.ded):'—'}</td><td class="num">${fmt(L.deb)}</td><td class="num">${fmt(L.cred)}</td><td class="num">${fmt(L.liquido)}</td><td class="num">${fmt(L.is)}</td><td class="num">${fmt(L.rem)}</td><td class="num">${fmt(L.total)}</td></tr>`;
   $id('rf-tabela').innerHTML = h + '</tbody></table>';
   // notas técnicas
   const notas = [];
-  notas.push('Débitos e créditos "por fora": alíquotas aplicadas sobre os valores informados, com reduções da EC 132/LC 214 nas parcelas indicadas. O IS não gera crédito.');
+  notas.push('Débitos e créditos "por fora": alíquotas aplicadas sobre os valores informados, com reduções da EC 132/LC 214 nas parcelas indicadas. O IS não gera crédito. <b>Base do IBS/CBS sem o ISS da configuração</b> (LC 214, art. 12, §2º, V), pelo percentual remanescente de cada ano — 2033 sem dedução, ISS extinto.');
+  notas.push('Esta aba trabalha sobre o <b>realizado</b> (é a ferramenta de edição). No parecer, na conferência e no relatório Reforma, com ano incompleto, receita, compras e créditos entram <b>projetados para o ano cheio</b> pelo fator da janela — é lá que os documentos fecham entre si, ao centavo.');
+  if (_ce.proxy) notas.push('<b>Crédito automático:</b> sem compras informadas na aba, as compras de revenda da análise entram como aquisições de PJ do regime regular — a MESMA regra e o MESMO valor dos cenários híbrido/Presumido/Real do parecer.');
+  if (_issCfgAno <= 0.005) notas.push('<b style="color:var(--danger)">⚠️ % ISS da configuração está zerado</b> — sem ISS configurado não há o que deduzir da base do IBS/CBS. Informe a alíquota do município em Configuração da empresa.');
   notas.push('<b>Transição (auditada):</b> os tributos que saem são descontados ano a ano pelos percentuais remanescentes — PIS/COFINS deixam de existir em 2027 (substituídos pela CBS plena); ICMS e ISS caem 10% ao ano de 2029 a 2032 e zeram em 2033 (substituídos pelo IBS); o IPI permanece apenas até 2026 (depois, zerado exceto ZFM). Os novos (CBS/IBS/IS) entram pelas alíquotas da tabela acima. Em 2026 (ano-teste), a CBS de 0,9% e o IBS de 0,1% são compensáveis com o PIS/COFINS devidos. Em <b>2027-2028</b>, a CBS é cobrada com <b>redução de 0,1 p.p.</b> (LC 214, art. 347), compensando o IBS de 0,05%+0,05% — a combinada fica em 9,21%, igual à referência. <b>Dentro do Simples</b>, a partilha do DAS na transição segue os novos Anexos I–V da <b>Res. CGSN nº 190/2026</b> (CBS na partilha já em 2027; ICMS/ISS→IBS em degraus; híbrido pelo art. 22-A).');
   if ((RF.contra.vendas_lrlp||0) > 0) notas.push('Vendas a PJ do Lucro Real/Presumido: o IBS/CBS destacado gera crédito integral ao cliente — tende a ser neutro na cadeia.');
   if ((RF.contra.vendas_pf||0) > 0 || (RF.contra.vendas_simples||0) > 0) notas.push('Vendas a PF e a optantes do Simples: o imposto é custo final do comprador — atenção ao impacto no preço.');
@@ -4877,23 +4912,35 @@ const brNum = s => parseFloat(String(s).replace(/\./g,'').replace(',','.')) || 0
 
 function pgdasExportacao(atividade){ return /para o exterior/.test(String(atividade).toLowerCase()) && !/exceto para o exterior/.test(String(atividade).toLowerCase()); }
 function pgdasBloco(atividade) {
-  const a = atividade.toLowerCase();
-  if (pgdasExportacao(a)) return a.includes('serviço') || a.includes('locação') ? 'a3_exp'
-                               : a.includes('industrializadas pelo contribuinte') ? 'a2_exp' : 'a1_exp';
-  const st = a.includes('com substituição') || (a.includes('substituição tributária') && !a.includes('sem substituição'));
-  const mono = a.includes('monofásica') && !a.includes('sem substituição tributária/tributação monofásica');
-  let pfx = null;
-  if (a.includes('industrializadas pelo contribuinte')) pfx = 'a2';
-  else if (a.includes('revenda de mercadorias')) pfx = 'a1';
-  else if (a.includes('comunicação') || a.includes('transporte intermunicipal') || a.includes('transporte interestadual')) return 'comtransp';
-  else if (a.includes('anexo iv') || a.includes('construção') || a.includes('vigilância') || a.includes('limpeza') || a.includes('obras')) return 'a4';
-  else if (a.includes('fator r') || a.includes('anexo v')) return 'a5r';
-  else if (a.includes('serviço') || a.includes('locação')) {
-    const retIss  = /reten[çc][ãa]o.{0,30}iss|iss.{0,20}retid/.test(a);
-    const retInss = a.includes('inss') && a.includes('reten');
-    return retIss && retInss ? 'a3_retissinss' : retIss ? 'a3_retiss' : 'a3_semret';
+  // v7.45.0 (item 4): o rótulo DECLARADO manda. (1) O anexo escrito no rótulo ("tributados pelo
+  // Anexo III") tem prioridade sobre palavra-chave. (2) A retenção lê a NEGAÇÃO na frente:
+  // "SEM retenção/substituição tributária de ISS" caía no padrão retenção…iss e virava a3_retiss
+  // (COM retenção) — era o defeito visto na declaração da WENDEL. (3) "NÃO sujeitos ao fator r"
+  // não cai mais no Anexo V pela substring "fator r". (4) Rótulo não reconhecido devolve NULL:
+  // a revisão destaca em vermelho e o Aplicar bloqueia — nada entra calado no Anexo I.
+  const bruto = atividade.toLowerCase();
+  const a = bruto.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\u201c\u201d\u2018\u2019"']/g,'');
+  const temAnexo = (a.match(/anexo\s+(iv|iii|ii|i|v)\b/)||[])[1] || null;
+  const ehServ = a.includes('servico') || a.includes('locacao') || temAnexo==='iii' || temAnexo==='iv' || temAnexo==='v';
+  if (pgdasExportacao(bruto)) return ehServ ? 'a3_exp'
+                               : (a.includes('industrializadas pelo contribuinte') || temAnexo==='ii') ? 'a2_exp' : 'a1_exp';
+  const frRet = /reten[c]ao\/substituicao|retencao ou substituicao/.test(a);
+  const st = (a.includes('com substituicao') || (a.includes('substituicao tributaria') && !a.includes('sem substituicao') && !frRet));
+  const mono = a.includes('monofasica') && !a.includes('sem substituicao tributaria/tributacao monofasica');
+  if (ehServ) {
+    if (a.includes('comunicacao') || a.includes('transporte intermunicipal') || a.includes('transporte interestadual')) return 'comtransp';
+    if (temAnexo==='iv' || (!temAnexo && (a.includes('construcao') || a.includes('vigilancia') || a.includes('limpeza') || a.includes('obras')))) return 'a4';
+    if (temAnexo==='v' || (!temAnexo && /sujeitos?\s+ao\s+fator\s*r/.test(a) && !/nao\s+sujeitos?\s+ao\s+fator/.test(a))) return 'a5r';
+    const semRet = /sem\s+reten[c]ao/.test(a);
+    const comRet = !semRet && (/com\s+reten[c]ao/.test(a) || /reten[c]ao.{0,40}iss|iss.{0,20}retid/.test(a));
+    const retInss = comRet && a.includes('inss');
+    return comRet && retInss ? 'a3_retissinss' : comRet ? 'a3_retiss' : 'a3_semret';
   }
-  if (!pfx) return 'a1_semst';
+  let pfx = null;
+  if (a.includes('industrializadas pelo contribuinte') || temAnexo==='ii') pfx = 'a2';
+  else if (a.includes('revenda de mercadorias') || temAnexo==='i') pfx = 'a1';
+  else if (a.includes('comunicacao') || a.includes('transporte intermunicipal') || a.includes('transporte interestadual')) return 'comtransp';
+  if (!pfx) return null;
   if (st && mono) return pfx+'_comst_mono';
   if (st) return pfx+'_comst';
   if (mono) return pfx+'_mono';
@@ -4906,7 +4953,12 @@ async function pgdasLer(input) {
   toast(`Lendo ${input.files.length} PDF(s)...`);
   const meses = {};   // pa 'MM/AAAA' -> { receita, atividades:[{texto, valor, bloco}], das, tributos, rbt12ant }
   let cnpjPdf = null, nomePdf = null; const erros = [];
+  // v7.45.0 (item 3): importação cancelável — mesma faixa do xmlLer/triConsultar (v7.43.0);
+  // cooperativo: para entre um PDF e outro e PRESERVA o que já foi lido.
+  IMP_CANCELAR = false; let _pgN = 0, _pgCanc = false; const _pgTot = input.files.length;
+  impProgresso(0, _pgTot, 'Lendo PGDAS-D');
   for (const f of input.files) {
+    if (IMP_CANCELAR) { _pgCanc = true; break; }
     try {
       const buf = await f.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({data:buf}).promise;
@@ -4955,8 +5007,11 @@ async function pgdasLer(input) {
       const rbtExpAnt = {}; for (const mm of expSec.matchAll(/(\d{2})\/(\d{4})\s+([\d.]+,\d{2})/g)) rbtExpAnt[`${mm[1]}/${mm[2]}`] = brNum(mm[3]);
       meses[chave] = { receita: rpa, rba, das, atividades: atividades.map(a=>({...a, bloco: pgdasBloco(a.texto)})), tributos: trib, rbtAnt, rbtExpAnt };
     } catch(e) { console.error(e); erros.push(f.name+' ('+e.message+')'); }
+    _pgN++; impProgresso(_pgN, _pgTot, 'Lendo PGDAS-D'); await new Promise(r=>setTimeout(r,0));
   }
-  if (!Object.keys(meses).length) { toast('Nenhum PGDAS válido encontrado. Arquivos com problema: '+(erros.join(', ')||'—')); return; }
+  impFecharProgresso();
+  if (_pgCanc) toast(`Importação cancelada: ${_pgN} de ${_pgTot} PDF(s) lido(s) — o que foi lido segue para a conferência abaixo.`);
+  if (!Object.keys(meses).length) { toast(_pgCanc ? 'Importação cancelada antes de qualquer PGDAS válido.' : 'Nenhum PGDAS válido encontrado. Arquivos com problema: '+(erros.join(', ')||'—')); return; }
   if (erros.length) toast(erros.length+' arquivo(s) ignorado(s): '+erros.join(', '));
   PG_DADOS = { cnpj: cnpjPdf, nome: nomePdf, meses };
   pgdasReview();
@@ -4975,8 +5030,9 @@ function pgComServPA(M){
 function pgdasReview() {
   const chaves = Object.keys(PG_DADOS.meses).sort((a,b)=>a.split('/').reverse().join('')<b.split('/').reverse().join('')?-1:1);
   const anoImp = +chaves[0].split('/')[1];
-  const sel = (pa,i,b) => `<select onchange="PG_DADOS.meses['${pa}'].atividades[${i}].bloco=this.value;pgdasReview()" style="min-width:190px">` +
-    (PG_BLOCOS.some(([k])=>k===b)?'':`<option value="${esc(b)}" selected>${esc(b)}</option>`) +
+  const sel = (pa,i,b) => `<select onchange="PG_DADOS.meses['${pa}'].atividades[${i}].bloco=this.value||null;pgdasReview()" style="min-width:190px${b?'':';border:2px solid var(--danger)'}">` +
+    (b==null ? `<option value="" selected>⚠️ NÃO RECONHECIDA — escolha o bloco</option>`
+             : (PG_BLOCOS.some(([k])=>k===b)?'':`<option value="${esc(b)}" selected>${esc(b)}</option>`)) +
     PG_BLOCOS.map(([k,r])=>`<option value="${k}" ${k===b?'selected':''}>${r}</option>`).join('') + '</select>';
   let h = `<div class="hint" style="margin-bottom:8px"><b>${PG_DADOS.nome||''}</b> — CNPJ ${PG_DADOS.cnpj||'?'} · ${chaves.length} mês(es) do ano <b>${anoImp}</b>. Confira o enquadramento de cada atividade e aplique.</div>
   <table class="gtable"><thead><tr><th>PA</th><th class="num">Receita (RPA)</th><th class="num">Comércio/Ind.</th><th class="num">Serviços</th><th>Atividade → bloco do Simples</th><th class="num">DAS declarado</th></tr></thead><tbody>`;
@@ -5008,6 +5064,18 @@ function pgdasReview() {
 }
 
 async function pgdasAplicar() {
+  // v7.45.0 (item 4): atividade sem bloco reconhecido BLOQUEIA a aplicação
+  {
+    const pend = [];
+    for (const [pa, M] of Object.entries(PG_DADOS.meses))
+      for (const at of (M.atividades||[])) if (!at.bloco) pend.push(`${pa}: "${(at.texto||'').slice(0,80)}…"`);
+    if (pend.length) {
+      alert('IMPORTAÇÃO BLOQUEADA — ' + pend.length + ' atividade(s) com rótulo NÃO RECONHECIDO.\n\n'
+        + pend.slice(0,6).join('\n') + (pend.length>6 ? '\n…' : '')
+        + '\n\nEscolha o bloco de cada uma na revisão (selects em vermelho) e aplique de novo.');
+      return;
+    }
+  }
   if (!anPodeSobrescrever(['receitas'], 'O PGDAS-D')) return;
   await garantirEmpresa(PG_DADOS.cnpj, PG_DADOS.nome, 'Simples Nacional');
   if (!AN) AN = anNovo('', +$id('an-ano').value);
@@ -5109,10 +5177,14 @@ async function fatLer(input) {
   try {
     const pdf = await pdfjsLib.getDocument({data: await f.arrayBuffer()}).promise;
     let txt = '';
+    IMP_CANCELAR = false; impProgresso(0, pdf.numPages, 'Lendo faturamento');   // v7.45.0 (item 3): PDF único — cancelar ABORTA
     for (let p=1; p<=pdf.numPages; p++) {
+      if (IMP_CANCELAR) { impFecharProgresso(); toast('Importação do faturamento cancelada — nada foi aplicado.'); return; }
       const tc = await (await pdf.getPage(p)).getTextContent();
       txt += tc.items.map(i=>i.str).join(' ') + '\n';
+      impProgresso(p, pdf.numPages, 'Lendo faturamento');
     }
+    impFecharProgresso();
     const cnpj = (txt.match(/CNPJ:\s*([\d.\/\-]+)/)||[])[1];
     const nomeF = (txt.match(/\d{3,4}\s+(.+?)\s*-\s*Matriz/)||txt.match(/\d{3,4}\s*-?\s*(.+?)\s+CNPJ/)||[])[1];
     const ano = +((txt.match(/Período:\s*\d{2}\/\d{2}\/(\d{4})/)||[])[1]) || null;
@@ -5134,7 +5206,7 @@ async function fatLer(input) {
       <button class="btn solid" onclick="fatAplicar()">✅ Aplicar à análise</button>
     </div>`;
     $id('imp-fat-review').innerHTML = h;
-  } catch(e) { console.error(e); toast('Erro ao ler o PDF: '+e.message); }
+  } catch(e) { impFecharProgresso(); console.error(e); toast('Erro ao ler o PDF: '+e.message); }
 }
 
 async function fatAplicar() {
@@ -5253,9 +5325,10 @@ function balMontar(lotes) {
     mesIni: Math.min(...lotes.map(l=>l.mesIni)), mesFim: Math.max(...lotes.map(l=>l.mesFim)), lotes };
   balReview();
 }
-function balLer(input) {
+async function balLer(input) {
   const fs = [...input.files]; if (!fs.length) return;
-  const leituras = fs.map(f => new Promise(res => {
+  // v7.45.0 (item 3): leitura SEQUENCIAL cancelável — o Promise.all paralelo não tinha onde parar
+  const lerUm = f => new Promise(res => {
     const rd = new FileReader();
     rd.onload = e => {
       try {
@@ -5276,10 +5349,19 @@ function balLer(input) {
     };
     rd.onerror = () => res([]);
     rd.readAsArrayBuffer(f);
-  }));
-  Promise.all(leituras).then(tudo => {
+  });
+  IMP_CANCELAR = false; let _blCanc = false; const tudo = [];
+  impProgresso(0, fs.length, 'Lendo balancete');
+  for (let i=0; i<fs.length; i++){
+    if (IMP_CANCELAR) { _blCanc = true; break; }
+    tudo.push(await lerUm(fs[i]));
+    impProgresso(i+1, fs.length, 'Lendo balancete'); await new Promise(r=>setTimeout(r,0));
+  }
+  impFecharProgresso();
+  if (_blCanc) toast(`Importação cancelada: ${tudo.length} de ${fs.length} arquivo(s) lido(s) — o que foi lido segue para a revisão.`);
+  {
     const lotes = tudo.flat();
-    if (!lotes.length) { toast('Nenhuma aba de balancete reconhecida (coluna "Classificação Conta").'); return; }
+    if (!lotes.length) { toast(_blCanc ? 'Importação cancelada antes de qualquer balancete válido.' : 'Nenhuma aba de balancete reconhecida (coluna "Classificação Conta").'); return; }
     const cnpjs = [...new Set(lotes.map(l=>l.cnpj||l.nome))];
     if (cnpjs.length > 1) {
       BAL_ABAS = lotes;
@@ -5289,7 +5371,7 @@ function balLer(input) {
       return;
     }
     balMontar(lotes);
-  });
+  }
 }
 const balPeriodoTxt = l => l.mesIni===l.mesFim ? MESES[l.mesIni] : MESES[l.mesIni]+'–'+MESES[l.mesFim];
 function balReview() {
@@ -5718,9 +5800,11 @@ function demParse(txt, arquivo) {
 async function demLer(input) {
   if (!input.files.length) return;
   if (!window.pdfjsLib) { toast('Biblioteca PDF não carregou — verifique a internet.'); return; }
-  toast(`Lendo ${input.files.length} PDF(s)...`);
   const arquivos = [], erros = [];
+  IMP_CANCELAR = false; let _dmN = 0, _dmCanc = false; const _dmTot = input.files.length;   // v7.45.0 (item 3)
+  impProgresso(0, _dmTot, 'Lendo Demonstrativo');
   for (const f of input.files) {
+    if (IMP_CANCELAR) { _dmCanc = true; break; }
     try {
       const pdf = await pdfjsLib.getDocument({data: await f.arrayBuffer()}).promise;
       let txt = '';
@@ -5731,8 +5815,11 @@ async function demLer(input) {
       else if (d.erro) erros.push(d.erro);
       else arquivos.push(d);
     } catch(e) { console.error(e); erros.push(f.name+' ('+e.message+')'); }
+    _dmN++; impProgresso(_dmN, _dmTot, 'Lendo Demonstrativo'); await new Promise(r=>setTimeout(r,0));
   }
-  if (!arquivos.length) { toast('Nenhum demonstrativo válido. '+(erros.join('; ')||'')); return; }
+  impFecharProgresso();
+  if (_dmCanc) toast(`Importação cancelada: ${_dmN} de ${_dmTot} PDF(s) lido(s) — o que foi lido segue para a conferência.`);
+  if (!arquivos.length) { toast(_dmCanc ? 'Importação cancelada antes de qualquer demonstrativo válido.' : 'Nenhum demonstrativo válido. '+(erros.join('; ')||'')); return; }
   if (erros.length) toast(erros.length+' arquivo(s) ignorado(s): '+erros.join('; '));
   // mescla: receitas/folhas por competência MM/AAAA (arquivos mais recentes prevalecem)
   arquivos.sort((a,b)=>a.pa.split('/').reverse().join('') < b.pa.split('/').reverse().join('') ? -1 : 1);
@@ -5994,10 +6081,17 @@ async function anLimparDados() {
       body:{ p_cnpj: cnpj, p_ano: tudo ? null : alvoAno, p_fornec: tudo }, semPrefer:true });
   } catch(e){ alert('Erro ao excluir: '+e.message
       + (/atp_excluir_dados/.test(e.message||'') ? '\n\nExecute o setup_v7411.sql no SQL Editor do Supabase.' : '')); return; }
-  if (tudo || +AN?.ano === +alvoAno){ AN = anNovo(cnpj, AN?.ano || +$id('an-ano').value); AN_SUJO = false; }
+  // v7.45.0 (item 1): a limpeza zera os DADOS (receitas, compras, despesas, folha, importações)
+  // mas PRESERVA a CONFIGURAÇÃO da empresa, regravando-a. Antes recriava em branco e a config sumia.
+  if (tudo || +AN?.ano === +alvoAno){
+    const _cfgPreserv = AN && AN.cfg ? JSON.parse(JSON.stringify(AN.cfg)) : null;
+    AN = anNovo(cnpj, AN?.ano || +$id('an-ano').value);
+    if (_cfgPreserv) { AN.cfg = _cfgPreserv; AN_SUJO = true; setTimeout(()=>{ if (AN && AN.cnpj) anSalvar(); }, 300); }
+    else AN_SUJO = false;
+  }
   if (tudo){ FOT = { servico:null, revenda:null, compra:null, venda:null }; FO = null; TRI = { venda:null, compra:null }; $id('fo-painel').style.display='none'; }
-  anRenderTabs(); anRenderGrid(); anRecalcular();
-  toast(`Excluído: ${oQue}.`);
+  anRenderTabs(); anRenderConfig(); anRenderGrid(); anRecalcular();
+  toast(`Excluído: ${oQue}. A configuração da empresa foi preservada.`);
 }
 
 // ═══════════ v6: CONSULTA INDIVIDUAL DE CNPJ ═══════════
@@ -6534,24 +6628,34 @@ function premissaCreditoIBS(D){
   return '';
 }
 
-function parecerDados(){
-  // v7.39.0 · ano incompleto → o parecer passa a falar do ANO, e não do pedaço lançado.
-  // O motor é o mesmo; muda apenas a análise que entra nele (meses futuros pela média da janela).
-  const _cfgP = (RL.dados && RL.dados.cfg) || {};
-  const PJ = projJanelaEfetiva(_cfgP);
-  let PROJ = null, _res = RL.res, _reforma = RL.reforma;
+// ═══ v7.46.0 · BASE ÚNICA DA REFORMA PARA OS DOCUMENTOS ═══
+// Projeta a análise E a aba Reforma JUNTAS (rfProjetar × k), exatamente como o parecer fazia
+// sozinho. Parecer, conferência e relatório "Reforma" leem DAQUI — divergir ficou impossível.
+// Ano completo (ou vazio): devolve o realizado puro, k = 1, e nenhum documento se move.
+function rlBaseReforma(){
+  const vazio = { res: RL.res, reforma: RL.reforma, proj: null, k: 1 };
+  if (!RL.dados || !RL.res) return vazio;
+  const PJ = projJanelaEfetiva((RL.dados.cfg)||{});
+  let P = null; try { P = anProjetarAno(RL.dados, PJ.v); } catch(e){ P = null; }
+  if (!P) return vazio;
   try {
-    PROJ = anProjetarAno(RL.dados, PJ.v);
-    if (PROJ) {
-      const _r = calcular(PROJ.dados, PARAMS.anexos, folhaPercDaEmpresa(PROJ.dados.cfg));
-      const intReal = Math.max(0, (RL.res.totais.receita||0) - (RL.res.totais.receitaExp||0));
-      const intProj = Math.max(0, (_r.totais.receita||0)   - (_r.totais.receitaExp||0));
-      PROJ.k = intReal > 0.005 ? intProj/intReal : 1;
-      PROJ.origem = PJ.origem; PROJ.tReal = RL.res.totais;
-      _reforma = rfProjetar(RL.reforma, PROJ.k);
-      _res = _r;
-    }
-  } catch(e){ console.error('parecer/projeção', e); PROJ = null; _res = RL.res; _reforma = RL.reforma; }
+    const r = calcular(P.dados, PARAMS.anexos, folhaPercDaEmpresa(P.dados.cfg));
+    const intReal = Math.max(0, (RL.res.totais.receita||0) - (RL.res.totais.receitaExp||0));
+    const intProj = Math.max(0, (r.totais.receita||0) - (r.totais.receitaExp||0));
+    const k = intReal > 0.005 ? intProj/intReal : 1;
+    P.k = k; P.origem = PJ.origem; P.tReal = RL.res.totais;
+    return { res: r, reforma: rfProjetar(RL.reforma, k), proj: P, k };
+  } catch(e){ console.error('rlBaseReforma', e); return vazio; }
+}
+
+function parecerDados(){
+  // v7.39.0 · ano incompleto → o parecer fala do ANO, não do pedaço lançado.
+  // v7.46.0 · a projeção saiu daqui para a rlBaseReforma() — os MESMOS números de antes,
+  // agora compartilhados com a conferência e com o relatório Reforma.
+  const _cfgP = (RL.dados && RL.dados.cfg) || {};   // usados adiante (ano de referência,
+  const PJ = projJanelaEfetiva(_cfgP);              //  janela do monitor de sublimite)
+  const _B = rlBaseReforma();
+  let PROJ = _B.proj, _res = _B.res, _reforma = _B.reforma;
   const T = _res.totais, Mm = _res.meses;
   const MmReal = (RL.res && RL.res.meses) || Mm;      // veredito e janela lançada vêm do REALIZADO
   let cen = null; try { cen = calcCenariosReforma(_res, _reforma); } catch(e){ console.error('parecer/cenários', e); }
@@ -7843,7 +7947,9 @@ function rlConfRefMemAno(C, L, R){
   for (const [k, rot, red] of RF_REDUCOES){ const v = +(rfx.benefRec?.[k]||0); if (v > 0.005)
     ldeb.push(CF.lin(rot + ' (cClassTrib)', fmtR(v) + ' × ' + pcs(alqPc) + ' × (1 − ' + (red*100).toFixed(0) + '%)', fmtR(v*alq*(1-red)))); }
   ldeb.push(CF.lin('Base à alíquota cheia', fmtR(rfx.receita||0) + ' − ' + fmtR(recBenef) + ' (parcelas reduzidas acima)', fmtR(baseCheia)));
-  ldeb.push(CF.lin('<b>Débito de IBS/CBS</b>', fmtR(baseCheia) + ' × ' + pcs(alqPc) + (recBenef>0.005 ? ' + parcelas reduzidas' : ''), fmtR(L.deb)));
+  // v7.45.0 (itens 2 e 6): a dedução do ISS da configuração aparece na memória, e a fórmula fecha
+  ldeb.push(CF.lin('(−) ISS que não integra a base', L.ano >= 2033 ? 'ISS extinto em ' + L.ano + ' — nada a deduzir' : (L.ano <= 2026 ? 'ano-teste — dedução a partir de 2027' : 'ISS da configuração × ' + pcs((+(rfx.aliq?.[L.ano]?.remIcmsIss ?? A.remIcmsIss ?? 0))*100) + ' remanescente — LC 214, art. 12, §2º, V'), '− ' + fmtR(L.ded||0)));
+  ldeb.push(CF.lin('<b>Débito de IBS/CBS</b>', '(' + fmtR(baseCheia) + ' − ' + fmtR(L.ded||0) + ') × ' + pcs(alqPc) + (recBenef>0.005 ? ' + parcelas reduzidas' : ''), fmtR(L.deb)));
   // ── crédito
   const cLR = +(rfx.contra?.compras_lrlp||0), cSN = +(rfx.contra?.compras_simples||0);
   const pct58 = (rfx.credSimplesPct||0) > 0 ? (rfx.credSimplesPct/100) : credSimplesArt58(L.ano);
@@ -7904,8 +8010,12 @@ function rlConfRefMemAno(C, L, R){
 }
 function rlConfReforma(Rdoc){
   try {
-    const R = Rdoc || RL.res;                                   // v7.43.2: mesma base do resto do documento
-    const C = calcCenariosReforma(R, RL.reforma);
+    // v7.46.0: BASE ÚNICA — análise E aba Reforma projetadas JUNTAS, a mesma do parecer.
+    // Antes o res entrava projetado mas a aba entrava CRUA (sem o × k): com a aba preenchida,
+    // débito e crédito saíam do período lançado enquanto o parecer escalava para o ano cheio.
+    const _B = rlBaseReforma();
+    const R = _B.res;
+    const C = calcCenariosReforma(R, _B.reforma);
     if (!C || !C.REF || !C.REF.length) return '';
     const REF_ALL = C.REF;
     const anosSel = rlConfAnosSel();
@@ -7915,7 +8025,7 @@ function rlConfReforma(Rdoc){
       Marque ao menos um ano na barra do relatório (\"Anos no demonstrativo da Reforma\") para que o quadro e as memórias sejam gerados.</div></div>`;
     const _proj = (typeof rlConfProj === 'function') ? rlConfProj() : null;
     const _baseTx = _proj
-      ? `<b>Base deste quadro: o ano PROJETADO</b> — ${MESES_ROT[0].toLowerCase()}–${MESES_ROT[_proj.P.ultimo].toLowerCase()} apurados e ${MESES_ROT[_proj.P.ultimo+1].toLowerCase()}–${MESES_ROT[11].toLowerCase()} estimados, a mesma base do restante desta conferência. Até a v7.43.1 este quadro partia do <b>realizado</b>, de modo que a transição inteira até 2033 era montada sobre um ano incompleto.`
+      ? `<b>Base deste quadro: o ano PROJETADO</b> — ${MESES_ROT[0].toLowerCase()}–${MESES_ROT[_proj.P.ultimo].toLowerCase()} apurados e ${MESES_ROT[_proj.P.ultimo+1].toLowerCase()}–${MESES_ROT[11].toLowerCase()} estimados, a mesma base do restante desta conferência. <b>A aba Reforma (receita, compras e créditos) entra PROJETADA pelo fator k = ${(_B.k||1).toLocaleString('pt-BR',{minimumFractionDigits:4})}</b> (receita interna projetada ÷ realizada) — exatamente a base do parecer, para os dois documentos fecharem ao centavo. Até a v7.43.1 este quadro partia do <b>realizado</b>; até a v7.45.0, a aba Reforma entrava crua.`
       : `<b>Base deste quadro: o realizado</b> — os 12 meses do ano-base estão apurados, não há projeção.`;
     const linhas = REF.map(L=>{
       const p = L.p190||{};
@@ -8523,20 +8633,20 @@ function rlReforma() {
   const credBenefTot = reds.reduce((s,[k])=>s+(+rf.benefCred?.[k]||0),0);
   const recCheia = Math.max(0, (+rf.receita||0) - recBenef);
   const compCheia = Math.max(0, (+rf.contra?.compras_lrlp||0) - credBenefTot);
-  const atualCons = (()=>{ const M = RL.res.meses; const emp = RL.empresa; const regime = emp?.regime||'Lucro Presumido';
+  const atualCons = (()=>{ const M = (rlBaseReforma().res||RL.res).meses;   // v7.46.0: carga atual na MESMA base projetada const emp = RL.empresa; const regime = emp?.regime||'Lucro Presumido';
     if (regime==='Simples Nacional'||regime==='MEI') return { das: M.reduce((s,x)=>s+x.das,0), consumo:null, regime };
     const isLR = regime==='Lucro Real';
     return { regime, pis:M.reduce((s,x)=>s+(isLR?x.lr.pis:x.lp.pis),0), cof:M.reduce((s,x)=>s+(isLR?x.lr.cofins:x.lp.cofins),0),
       icms:M.reduce((s,x)=>s+x.icmsPagar,0), ipi:M.reduce((s,x)=>s+x.ipiPagar,0), iss:M.reduce((s,x)=>s+x.iss,0),
       get consumo(){ return this.pis+this.cof+this.icms+this.ipi+this.iss; } }; })();
-  const linhas = anos.map(a=>{ const q = rf.aliq[a]||{cbs:0,is:0,ibse:0,ibsm:0,remIcmsIss:0,remPisCof:0};
-    const alq = (+q.cbs + +q.ibse + +q.ibsm)/100;
-    let deb = recCheia*alq; for (const [k,r] of reds) deb += (+rf.benefRec?.[k]||0)*alq*(1-r);
-    let cred = compCheia*alq; for (const [k,r] of reds) cred += (+rf.benefCred?.[k]||0)*alq*(1-r);
-    cred += (+rf.contra?.compras_simples||0) * ((+rf.credSimplesPct||0) > 0 ? (+rf.credSimplesPct/100) : credSimplesArt58(a));   // v7.29.0: art. 58 automático
-    const liq = Math.max(0, deb-cred), is_ = (+rf.baseIS||0)*(+q.is/100);
-    let rem = 0; if (atualCons.consumo!=null) rem = (atualCons.icms+atualCons.iss)*(+q.remIcmsIss||0) + (atualCons.pis+atualCons.cof)*(+q.remPisCof||0) + (a<=2026?atualCons.ipi:0);
-    return { ano:a, alq, deb, cred, liq, is:is_, rem, total: liq+is_+rem }; });
+  // v7.45.0 (item 6) · FIM DA FÓRMULA PARALELA: este relatório recalculava débito e crédito por
+  // conta própria (sem a dedução do ISS e sem o crédito automático) e podia divergir da aba, da
+  // conferência e do parecer. Agora TODOS leem o MESMO calcCenariosReforma.
+  const _B2 = rlBaseReforma();                 // v7.46.0: a MESMA base projetada do parecer
+  const _C = calcCenariosReforma(_B2.res, _B2.reforma);
+  const linhas = _C.REF.map(L=>{ const q = rf.aliq[L.ano]||{remIcmsIss:0,remPisCof:0};
+    let rem = 0; if (atualCons.consumo!=null) rem = (atualCons.icms+atualCons.iss)*(+q.remIcmsIss||0) + (atualCons.pis+atualCons.cof)*(+q.remPisCof||0) + (L.ano<=2026?atualCons.ipi:0);
+    return { ano:L.ano, alq:L.alq, deb:L.deb, cred:L.cred, liq:L.liquido, is:L.is||0, rem, total: L.liquido+(L.is||0)+rem }; });
   const l33 = linhas.at(-1);
   let h = `<div class="grid c4">
     <div class="stat"><div class="n" style="font-size:19px">${fmtR(linhas[0].total)}</div><div class="l">2026 — ano-teste</div></div>
