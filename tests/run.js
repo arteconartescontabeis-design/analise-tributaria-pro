@@ -26,6 +26,7 @@ const js = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(x => x[1]).jo
 // ── sandbox DOM mínimo ──
 const mkEl = () => { const el = { innerHTML:'', textContent:'', _v:'', style:{}, classList:{add(){},remove(){},toggle(){}},
   selectedOptions:[{text:'Mensal'}], addEventListener(){}, appendChild(){}, setAttribute(){}, getContext:()=>({}),
+  remove(){}, removeAttribute(){}, removeChild(){}, insertAdjacentHTML(){}, focus(){}, click(){}, closest:()=>null,
   options:[], checked:true, files:[], dataset:{}, querySelector:()=>mkEl(), querySelectorAll:()=>[] };
   Object.defineProperty(el,'value',{ get(){return el._v;}, set(v){el._v=String(v);} }); return el; };
 const els = {};
@@ -1016,7 +1017,11 @@ console.log('\n■ Integridade da interface');
                     .filter(id => !id.includes('${')));            // ids montados em runtime
   const declarados = new Set([
     ...[...html.matchAll(/id="([^"]+)"/g)].map(m=>m[1]),
-    ...[...html.matchAll(/id='([^']+)'/g)].map(m=>m[1])
+    ...[...html.matchAll(/id='([^']+)'/g)].map(m=>m[1]),
+    // criados em runtime: bx.id = 'imp-prog' (createElement + id). Sem isto o varredor
+    // acusa órfão o que na verdade nasce em JS — foi o caso da barra de progresso da v7.43.0.
+    ...[...html.matchAll(/\.id\s*=\s*'([\w-]+)'/g)].map(m=>m[1]),
+    ...[...html.matchAll(/\.id\s*=\s*"([\w-]+)"/g)].map(m=>m[1])
   ]);
   const orfaos = [...usados].filter(id => !declarados.has(id)).sort();
   chk(`todo $id() tem elemento correspondente (${usados.size} referências)`, orfaos.length===0,
