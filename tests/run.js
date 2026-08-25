@@ -1348,9 +1348,33 @@ console.log('\n■ Integridade da interface');
       /function anRenderConfig\(\) \{\s*\n\s*if \(!AN\) AN = anNovo\(/.test(html));
     chk('v7.44.0 · anTrocarEmpresa redesenha a Configuração após a carga do banco (3 saídas cobertas)',
       (html.match(/if \(APP\.page==='config'\) anRenderConfig\(\);/g) || []).length >= 3);
-    const okBadge = /const APP_VERSAO = '7\.44\.0';/.test(html);
     chk('v7.44.0 · versão e changelog registrados (badge sai do APP_VERSAO desde a v7.43.2)',
-      okBadge && html.includes('<b>v7.44.0</b>') && html.includes('setup_v7440.sql') && html.includes('setup_v7450.sql'));
+      html.includes('<b>v7.44.0</b>') && html.includes('setup_v7440.sql') && html.includes('setup_v7450.sql'));
+  }
+
+  // ═══ 5z. v7.44.1 — limpeza dos resíduos achados pela varredura estática ═══
+  // Cada um destes elementos existia no HTML sem nenhum código que o alcançasse.
+  // O teste é de AUSÊNCIA: se voltarem, é regressão.
+  console.log('\n■ v7.44.1 — resíduos removidos (e os que NÃO podem sumir)');
+  {
+    chk('v7.44.1 · fornLancarDespesas removida (o lançamento é do foLancar, por CFOP)',
+      !/function fornLancarDespesas/.test(html) && !/fornLancarDespesas\(\)/.test(html));
+    chk('v7.44.1 · o botão fo-desp, que nunca era exibido, saiu do HTML',
+      !/id="fo-desp"/.test(html));
+    chk('v7.44.1 · a div vazia rf-forn-nota saiu (a nota do art. 58 é montada em outro ponto)',
+      !/id="rf-forn-nota"/.test(html) && /art\. 58/.test(html));
+    // Guarda contra excesso de zelo. Estes PARECEM órfãos numa busca por texto literal,
+    // mas NÃO são: tri-dash-* e tri-prog-* são acessados por id montado em runtime
+    // ($id('tri-dash-'+t)); fo-aba-* idem; e tri-arq-compra/venda estão sob o teste
+    // deliberado da v7.33.0, que exige a presença deles DENTRO do item 2 — foram
+    // avaliados na v7.44.1 e MANTIDOS por essa razão. Apagar qualquer um é regressão.
+    for (const id of ['tri-dash-compra','tri-dash-venda','tri-prog-compra','tri-prog-venda',
+                      'fo-aba-compra','fo-aba-venda','fo-aba-totais','fo-abas',
+                      'tri-arq-compra','tri-arq-venda'])
+      chk(`v7.44.1 · ${id} PERMANECE (não é resíduo — runtime ou guard da v7.33.0)`,
+        new RegExp('id="' + id + '"').test(html));
+    chk('v7.44.1 · versão e changelog registrados',
+      /const APP_VERSAO = '7\.44\.1';/.test(html) && html.includes('<b>v7.44.1</b>'));
   }
 
   // ═══ 5y. v7.42.5 · v7.43.0 · v7.43.1 — projeção pela importação, média da janela,
