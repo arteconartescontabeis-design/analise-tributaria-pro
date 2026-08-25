@@ -1373,8 +1373,108 @@ console.log('\n■ Integridade da interface');
                       'tri-arq-compra','tri-arq-venda'])
       chk(`v7.44.1 · ${id} PERMANECE (não é resíduo — runtime ou guard da v7.33.0)`,
         new RegExp('id="' + id + '"').test(html));
-    chk('v7.44.1 · versão e changelog registrados',
-      /const APP_VERSAO = '7\.44\.1';/.test(html) && html.includes('<b>v7.44.1</b>'));
+    chk('v7.44.1 · changelog registrado', html.includes('<b>v7.44.1</b>'));
+
+    // ═══ v7.45.0 — os 6 itens da especificação do recomeço ═══
+    // (1) limpar preserva config
+    chk('v7.45.0 · item 1 — limpar dados PRESERVA a configuração (regrava cfg)',
+      /_cfgPreserv/.test(html) && /AN\.cfg = _cfgPreserv/.test(html) && /PRESERVA a CONFIGURA/.test(html));
+    // (2) dedução do ISS da configuração — prova funcional
+    {
+      const anNovo=vm.runInContext('anNovo',ctx), calcular=vm.runInContext('calcular',ctx),
+            calcCen=vm.runInContext('calcCenariosReforma',ctx), P=vm.runInContext('PARAMS',ctx);
+      const inp=anNovo('55339991000123',2026);
+      for(let m=0;m<12;m++) inp.receitas.a3_semret[m]=10000;
+      inp.cfg.iss=.05;                                  // ISS 5% na CONFIGURAÇÃO
+      const res=calcular(inp,P.anexos,P.folha), C=calcCen(res,null);
+      const issAno=res.meses.reduce((s,M)=>s+(+M.lp.iss||0),0);
+      const L27=C.REF.find(l=>l.ano===2027), L26=C.REF.find(l=>l.ano===2026), L33=C.REF.find(l=>l.ano===2033);
+      chk('v7.45.0 · item 2 — ISS da configuração apurado (120.000 × 5% = 6.000/ano)',
+        Math.abs(issAno-6000)<0.01);
+      chk('v7.45.0 · item 2 — 2027: dedução = ISS da config × 100% remanescente, e o débito cai',
+        Math.abs((L27.ded||0)-6000)<0.01 && Math.abs(L27.deb - (120000-6000)*L27.alq)<0.01);
+      chk('v7.45.0 · item 2 — 2026 sem dedução (a regra vale de 2027 em diante)',
+        Math.abs(L26.ded||0)<0.01);
+      chk('v7.45.0 · item 2 — 2033: ISS extinto, dedução ZERO e débito volta ao cheio',
+        Math.abs(L33.ded||0)<0.01 && Math.abs(L33.deb - 120000*L33.alq)<0.01);
+      // (5) crédito único aba = cenários
+      const rfCE=vm.runInContext('rfContraEfetivo',ctx);
+      const ce=rfCE({contra:{}}, res.totais);
+      chk('v7.45.0 · item 5 — rfContraEfetivo é a base de crédito ÚNICA (proxy A5 compartilhado)',
+        typeof rfCE==='function' && ce && typeof ce.proxy==='boolean');
+      chk('v7.45.0 · item 5 — a aba usa a mesma função (RFX = RF com contra efetivo)',
+        /const _ce = rfContraEfetivo\(RF, _T\)/.test(html) && /rfLinhaBase\(RFX, a, _ded\)/.test(html));
+    }
+    // (3) cancelamento nos importadores
+    for (const fn of ['pgdasLer','demLer','folhaLerRelacao','fatLer','balLer']){
+      const i = html.indexOf('function ' + fn + '(');
+      chk(`v7.45.0 · item 3 — ${fn} tem faixa de progresso com Cancelar`,
+        i > 0 && /IMP_CANCELAR/.test(html.slice(i, i + 2600)) && /impProgresso\(/.test(html.slice(i, i + 2600)));
+    }
+    chk('v7.45.0 · item 3 — xmlLer e triConsultar seguem cobertos (v7.43.0 não regrediu)',
+      (html.match(/IMP_CANCELAR/g) || []).length >= 16);
+    // (4) o rótulo REAL da declaração da WENDEL classifica certo
+    {
+      const pb=vm.runInContext('pgdasBloco',ctx);
+      const rotWendel='Prestação de Serviços, exceto para o exterior - Não sujeitos ao fator “r” e tributados pelo Anexo III, sem retenção/substituição tributária de ISS, com ISS devido a outro(s) Município(s)';
+      chk('v7.45.0 · item 4 — rótulo da WENDEL: Anexo III SEM retenção → a3_semret (era a3_retiss)',
+        pb(rotWendel)==='a3_semret');
+      chk('v7.45.0 · item 4 — "NÃO sujeitos ao fator r" não cai no Anexo V',
+        pb(rotWendel)!=='a5r');
+      chk('v7.45.0 · item 4 — COM retenção continua indo para a3_retiss',
+        pb('Prestação de serviços, exceto para o exterior - Com retenção/substituição tributária de ISS')==='a3_retiss');
+      chk('v7.45.0 · item 4 — revenda interna sem ST segue em a1_semst',
+        pb('Revenda de mercadorias, exceto para o exterior - Sem substituição tributária/tributação monofásica/antecipação com encerramento de tributação (o substituto tributário do ICMS deve utilizar essa opção)')==='a1_semst');
+      chk('v7.45.0 · item 4 — rótulo desconhecido devolve null e o Aplicar BLOQUEIA',
+        pb('Atividade inventada que não existe')===null && /IMPORTAÇÃO BLOQUEADA/.test(html));
+    }
+    // (6) relatórios = sistema
+    chk('v7.45.0 · item 6 — relatório Reforma lê calcCenariosReforma (fim da fórmula paralela)',
+      /FIM DA FÓRMULA PARALELA/.test(html) && !/let deb = recCheia\*alq/.test(html));
+    chk('v7.45.0 · item 6 — memória imprime "(−) ISS que não integra a base" e fecha (base − ded) × alíquota',
+      /ISS que não integra a base/.test(html));
+    chk('v7.45.0 · changelog registrado', html.includes('<b>v7.45.0</b>'));
+
+    // ═══ v7.46.0 — BASE ÚNICA da Reforma: parecer = conferência = relatório, ao centavo ═══
+    {
+      const anNovo=vm.runInContext('anNovo',ctx), calcular=vm.runInContext('calcular',ctx),
+            calcCen=vm.runInContext('calcCenariosReforma',ctx), P=vm.runInContext('PARAMS',ctx),
+            rlBase=vm.runInContext('rlBaseReforma',ctx), RLg=vm.runInContext('RL',ctx);
+      const _bk = { dados:RLg.dados, res:RLg.res, reforma:RLg.reforma };
+      // ano PARCIAL: 6 meses de 10.000 → projeção dobra (k = 2)
+      const inp=anNovo('11222333000181',2026);
+      for(let m=0;m<6;m++) inp.receitas.a3_semret[m]=10000;
+      inp.cfg.iss=.04; inp.cfg.projJanela='todos';
+      const res=calcular(inp,P.anexos,P.folha);
+      RLg.dados=inp; RLg.res=res;
+      RLg.reforma={ receita:60000, baseIS:0, credSimplesPct:0, benefRec:{}, benefCred:{}, contra:{ compras_lrlp:12000 } };
+      const B=rlBase();
+      chk('v7.46.0 · rlBaseReforma projeta a ANÁLISE (6 meses de 10.000 → ano de 120.000, k = 2)',
+        B.proj && Math.abs(B.k-2)<0.001 && Math.abs(B.res.totais.receita-120000)<0.01);
+      chk('v7.46.0 · rlBaseReforma projeta a ABA REFORMA JUNTO (receita 60.000→120.000, crédito 12.000→24.000)',
+        Math.abs((+B.reforma.receita)-120000)<0.01 && Math.abs((+B.reforma.contra.compras_lrlp)-24000)<0.01);
+      const C1=calcCen(B.res,B.reforma), C0=calcCen(res,RLg.reforma);
+      const c27=C1.REF.find(l=>l.ano===2027), s27=C0.REF.find(l=>l.ano===2027);
+      chk('v7.46.0 · a divergência que existia é REAL e mensurável (aba crua daria metade do crédito)',
+        Math.abs(c27.cred - 2*s27.cred) < 0.02 && c27.deb > s27.deb);
+      // ano COMPLETO: 12 meses → realizado puro, nada se move
+      const inp2=anNovo('11222333000181',2026);
+      for(let m=0;m<12;m++) inp2.receitas.a3_semret[m]=10000;
+      const res2=calcular(inp2,P.anexos,P.folha);
+      RLg.dados=inp2; RLg.res=res2;
+      const B2=rlBase();
+      chk('v7.46.0 · ano COMPLETO: base única devolve o realizado puro (k = 1, sem projeção)',
+        !B2.proj && Math.abs(B2.k-1)<1e-9 && B2.res===res2 && B2.reforma===RLg.reforma);
+      RLg.dados=_bk.dados; RLg.res=_bk.res; RLg.reforma=_bk.reforma;   // restaura o estado da suíte
+    }
+    chk('v7.46.0 · parecer, conferência e relatório Reforma leem a BASE ÚNICA (3 consumidores)',
+      (html.match(/rlBaseReforma\(\)/g)||[]).length >= 4 && /const _B = rlBaseReforma\(\)/.test(html) && /calcCenariosReforma\(_B2\.res, _B2\.reforma\)/.test(html) && /calcCenariosReforma\(R, _B\.reforma\)/.test(html));
+    chk('v7.46.0 · a memória da conferência DECLARA o fator k na abertura do quadro',
+      /entra PROJETADA pelo fator k =/.test(html));
+    chk('v7.46.0 · a conferência contra o DAS declarado segue no REALIZADO (decisão 5.3)',
+      !/rlConfDivergencias[\s\S]{0,400}rlBaseReforma/.test(html));
+    chk('v7.46.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.46\.0';/.test(html) && html.includes('<b>v7.46.0</b>') && html.includes('<b>v7.45.0</b>'));
   }
 
   // ═══ 5y. v7.42.5 · v7.43.0 · v7.43.1 — projeção pela importação, média da janela,
