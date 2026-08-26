@@ -1473,8 +1473,125 @@ console.log('\n■ Integridade da interface');
       /entra PROJETADA pelo fator k =/.test(html));
     chk('v7.46.0 · a conferência contra o DAS declarado segue no REALIZADO (decisão 5.3)',
       !/rlConfDivergencias[\s\S]{0,400}rlBaseReforma/.test(html));
-    chk('v7.46.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.46\.0';/.test(html) && html.includes('<b>v7.46.0</b>') && html.includes('<b>v7.45.0</b>'));
+    chk('v7.47.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.47\.1';/.test(html) && html.includes('<b>v7.47.1</b>') && html.includes('<b>v7.46.0</b>'));
+
+    // ═══ v7.47.1 — o crédito das compras chega ao parecer e à memória de cálculo ═══
+    // (A) o relatório Reforma quebrava com ReferenceError; (B) a aba e a análise eram duas cópias
+    // e o que a tela mostrava não ia ao banco; (C) parecer e memória passam a INFORMAR o crédito.
+    // NÃO há alteração de layout em relatório nenhum — a v7.47.0 tinha, e foi revertida.
+    console.log('\n■ v7.47.1 — crédito das compras no parecer e na memória');
+    {
+      // A1 · as declarações que o comentário da v7.46.0 engoliu estão FORA dele
+      chk('v7.47.1 · A — emp/regime declarados em linha própria dentro do rlReforma',
+        !/\/\/ v7\.46\.0: carga atual na MESMA base projetada const emp/.test(html)
+        && /const emp = RL\.empresa; const regime = emp\?\.regime\|\|'Lucro Presumido';/.test(html));
+
+      // A2 · guarda GERAL do padrão que causou o defeito: comentário que engole declaração
+      {
+        const suspeitas = [];
+        js.split('\n').forEach((ln,i) => {
+          const m = ln.match(/\/\/[^'"`]*?\b(const|let|var)\s+[A-Za-z_$][\w$]*\s*=/);
+          if (m && !/https?:/.test(ln)) suspeitas.push((i+1)+': '+ln.trim().slice(0,90));
+        });
+        chk('v7.47.1 · A — nenhuma linha tem // seguido de declaração (o padrão do defeito)',
+          suspeitas.length===0, suspeitas.length ? suspeitas.join(' | ') : '');
+      }
+
+      // A3 · o relatório Reforma RENDERIZA — e continua sendo o da v7.46.0, sem enfeite novo
+      {
+        const anNovo=vm.runInContext('anNovo',ctx), calcular=vm.runInContext('calcular',ctx),
+              P=vm.runInContext('PARAMS',ctx), RLg=vm.runInContext('RL',ctx),
+              rlRef=vm.runInContext('rlReforma',ctx), aliq=vm.runInContext('RF_ALIQ_DEFAULT',ctx);
+        const _bk = { dados:RLg.dados, res:RLg.res, reforma:RLg.reforma, empresa:RLg.empresa };
+        const inp=anNovo('11222333000181',2026);
+        for(let m=0;m<12;m++) inp.receitas.a3_semret[m]=10000;
+        inp.cfg.iss=.04;
+        RLg.dados=inp; RLg.res=calcular(inp,P.anexos,P.folha);
+        RLg.empresa={ cnpj:'11222333000181', razao_social:'TESTE', regime:'Simples Nacional' };
+        RLg.reforma={ receita:120000, baseIS:0, credSimplesPct:0, benefRec:{}, benefCred:{},
+                      contra:{ compras_lrlp:50000, compras_simples:0 }, aliq:JSON.parse(JSON.stringify(aliq)) };
+        let erro=null; try { rlRef(); } catch(e){ erro=e; }
+        const corpo = ctx.document.getElementById('rl-corpo').innerHTML || '';
+        chk('v7.47.1 · A — rlReforma() renderiza sem exceção (era ReferenceError: regime)',
+          !erro, erro ? String(erro.message) : '');
+        chk('v7.47.1 · A — o corpo é o quadro da v7.46.0, com Débito e Crédito',
+          /Quadro da transição/.test(corpo) && /<th class="num">Crédito<\/th>/.test(corpo)
+          && /Cenários do Simples na transição/.test(corpo));
+        const cred27 = 50000*((aliq[2027].cbs+aliq[2027].ibse+aliq[2027].ibsm)/100);
+        const alvo = cred27.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+        chk('v7.47.1 · A — o crédito das compras aparece no quadro (2027 = '+alvo+')', corpo.includes(alvo));
+        RLg.dados=_bk.dados; RLg.res=_bk.res; RLg.reforma=_bk.reforma; RLg.empresa=_bk.empresa;
+      }
+
+      // A4 · NENHUMA alteração de layout sobreviveu da v7.47.0
+      chk('v7.47.1 · A — as alterações de relatório da v7.47.0 foram revertidas',
+        !/rlBaseRfTexto/.test(html) && !/rlCredAvisoCurto/.test(html)
+        && /refCenCard\(window\.__refCen, RL\.res\.totais\)/.test(html));
+
+      // B · a aba e a análise deixam de ser duas cópias
+      {
+        const rfNovo=vm.runInContext('rfNovo',ctx), anNovo=vm.runInContext('anNovo',ctx);
+        const _rf=vm.runInContext('RF',ctx), _an=vm.runInContext('AN',ctx), _mc=vm.runInContext('RF_MARCO',ctx);
+        ctx.__rf = rfNovo('11222333000181',2026); ctx.__an = anNovo('11222333000181',2026);
+        vm.runInContext('RF = __rf; AN = __an; RF_MARCO = rfMarco(RF);',ctx);
+        chk('v7.47.1 · B — recém-carregada, a aba não acusa pendência',
+          vm.runInContext('rfPendente()',ctx)===false);
+        vm.runInContext("RF.contra.compras_lrlp = 50000; rfCalcular();",ctx);
+        chk('v7.47.1 · B — o que a aba mostra passa a viver dentro de AN.reforma (espelho)',
+          vm.runInContext('(AN.reforma&&AN.reforma.contra&&AN.reforma.contra.compras_lrlp)||0',ctx)===50000);
+        chk('v7.47.1 · B — alteração não gravada acusa pendência e a faixa âmbar aparece',
+          vm.runInContext('rfPendente()',ctx)===true
+          && /Alterações da Reforma ainda não gravadas/.test(ctx.document.getElementById('rf-avisos').innerHTML||''));
+        chk('v7.47.1 · B — o espelho é limpo (sem _res/_forn/_vend no que vai ao banco)',
+          vm.runInContext("JSON.stringify(rfLimpo(RF)).indexOf('_res')<0 && JSON.stringify(rfLimpo(RF)).indexOf('_forn')<0",ctx));
+        vm.runInContext('RF_MARCO = rfMarco(RF); rfCalcular();',ctx);
+        chk('v7.47.1 · B — depois de gravar, a pendência sai e a faixa some',
+          vm.runInContext('rfPendente()',ctx)===false
+          && !/Alterações da Reforma ainda não gravadas/.test(ctx.document.getElementById('rf-avisos').innerHTML||''));
+        chk('v7.47.1 · B — anSalvar grava {...AN}: é o espelho que impede a reversão',
+          /dados:\{\.\.\.AN, _res:undefined, _verEm:undefined\}/.test(html)
+          && /AN\.reforma = rfLimpo\(RF\)/.test(html));
+        chk('v7.47.1 · B — a nota das análises de fornecedores voltou à tela (inalcançável desde a v7.44.1)',
+          /_av\.innerHTML = [\s\S]{0,900}fornNotaHtml\(\)/.test(html) && /id="rf-avisos"/.test(html));
+        ctx.__rfBk=_rf; ctx.__anBk=_an;
+        vm.runInContext('RF = __rfBk; AN = __anBk; RF_MARCO = '+JSON.stringify(_mc)+';',ctx);
+      }
+
+      // C · o crédito das compras é INFORMADO no parecer e na memória de cálculo
+      {
+        const anNovo=vm.runInContext('anNovo',ctx), calcular=vm.runInContext('calcular',ctx),
+              calcCen=vm.runInContext('calcCenariosReforma',ctx), P=vm.runInContext('PARAMS',ctx),
+              ppCred=vm.runInContext('ppCredCompras',ctx), mem=vm.runInContext('rlConfRefMemAno',ctx),
+              aliq=vm.runInContext('RF_ALIQ_DEFAULT',ctx), cr58=vm.runInContext('credSimplesArt58',ctx);
+        const inp=anNovo('11222333000181',2026);
+        for(let m=0;m<12;m++) inp.receitas.a3_semret[m]=10000;
+        inp.cfg.iss=.04;
+        const res=calcular(inp,P.anexos,P.folha);
+        const rf={ receita:120000, baseIS:0, credSimplesPct:0, benefRec:{}, benefCred:{},
+                   contra:{ compras_lrlp:50000, compras_simples:20000 }, aliq:JSON.parse(JSON.stringify(aliq)) };
+        const C=calcCen(res,rf), L27=C.REF.find(l=>l.ano===2027);
+        const alqPc=(aliq[2027].cbs+aliq[2027].ibse+aliq[2027].ibsm);
+        const credLR=50000*alqPc/100, credSN=20000*cr58(2027);
+        chk('v7.47.1 · C — o crédito bate com as duas classes (regular '+alqPc.toFixed(2)+'% + Simples art. 58)',
+          Math.abs(L27.cred-(credLR+credSN))<0.02);
+        const txt = ppCred({ cen:C, L33:L27, anoRef:2027 });
+        const vLR = credLR.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+        const vSN = credSN.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+        chk('v7.47.1 · C — PARECER informa o crédito das compras por classe de fornecedor',
+          /Crédito de IBS\/CBS sobre as compras/.test(txt) && txt.includes(vLR) && txt.includes(vSN)
+          && /art\. 58/.test(txt), txt ? '' : 'bloco vazio');
+        chk('v7.47.1 · C — o bloco do crédito está montado na página dos caminhos do parecer',
+          /\$\{ppCredCompras\(D\)\}/.test(html));
+        chk('v7.47.1 · C — sem compras informadas o parecer DIZ que não há crédito (não fica calado)',
+          /nenhuma compra informada/.test(ppCred({ cen:calcCen(res,{receita:120000,baseIS:0,credSimplesPct:0,benefRec:{},benefCred:{},contra:{},aliq:aliq}),
+            L33:calcCen(res,{receita:120000,baseIS:0,credSimplesPct:0,benefRec:{},benefCred:{},contra:{},aliq:aliq}).REF.find(l=>l.ano===2027), anoRef:2027 })));
+        const m27 = mem(C, L27, res);
+        chk('v7.47.1 · C — MEMÓRIA abre o crédito com a base das compras (70.000,00, por classe)',
+          /Compras que geram crédito \(base do ano\)/.test(m27) && m27.includes('70.000,00')
+          && /regime regular/.test(m27) && /Simples\/MEI/.test(m27));
+      }
+    }
   }
 
   // ═══ 5y. v7.42.5 · v7.43.0 · v7.43.1 — projeção pela importação, média da janela,
