@@ -524,6 +524,7 @@ canvas{max-height:340px}
           <div><label>% crédito s/ compras do Simples <span class="hint" style="display:block">0 = automático (art. 58, 1ª faixa)</span></label><input id="rf-credsimples" style="width:120px" value="0" onchange="rfCalcular()"></div>
         </div>
       </div>
+      <div id="rf-avisos"></div>
       <div class="grid c4" id="rf-resumo" style="margin-bottom:18px"></div>
       <div class="card"><h3>Transição 2026–2033 — carga sobre o consumo</h3><div id="rf-tabela" style="overflow-x:auto"></div>
         <div class="hint" id="rf-notas" style="margin-top:10px"></div></div>
@@ -673,7 +674,9 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.46.0</b> <span class="badge ok">atual</span></td><td>25/08/2026</td><td><b>🧭 TODOS OS RELATÓRIOS FECHAM COM O MESMO CÁLCULO — nasce a BASE ÚNICA da Reforma (<code>rlBaseReforma</code>).</b> A divergência relatada entre o Parecer com IA (correto) e a Conferência de cálculos estava na <b>projeção pela metade</b>: com o ano incompleto, o parecer projeta a análise <b>e</b> a aba Reforma juntas (receita, compras e créditos × fator k = receita interna projetada ÷ realizada), mas a conferência projetava só a análise e entregava a aba Reforma <b>crua</b> ao motor — com a aba preenchida (e o app preenche a receita sozinho), débito e crédito saíam do período lançado enquanto o parecer escalava para o ano cheio. Com 6 meses lançados, a conferência mostrava metade do crédito do parecer. Havia ainda uma terceira base: o relatório "Reforma" partia do <b>realizado puro</b>. Agora a projeção mora numa função só, <code>rlBaseReforma()</code> — análise e aba projetadas JUNTAS, ano completo devolve o realizado intacto (k = 1) — e <b>parecer, conferência (quadro Reforma + memórias ano a ano) e relatório Reforma leem exclusivamente dela</b>: divergir ficou estruturalmente impossível, e a suíte ganhou a prova de identidade. O parecer <b>não mudou um centavo</b> (era a referência); a memória da conferência passou a <b>declarar o fator k</b> na abertura do quadro; a aba Reforma da tela permanece sobre o realizado (é o editor), com nota dizendo onde a projeção acontece; e a conferência contra o <b>DAS declarado continua no realizado</b> — ali se confere guia paga, projetar seria erro. Motor intocado: <b>lacre <code>e1a25234</code> conferido inalterado</b> — a correção é nos chamadores, não no cálculo.</td></tr>
+                    <tr><td><b>v7.47.1</b> <span class="badge ok">atual</span></td><td>26/08/2026</td><td><b>🔁 As alterações de LAYOUT dos relatórios feitas na v7.47.0 foram REVERTIDAS a pedido — os relatórios voltam a ser exatamente os da v7.46.0.</b> Saíram a declaração de base no Comparativo de Regimes e no Consolidado, o aviso de crédito por proxy nesses dois e no relatório Reforma, e a troca de base do card de cenários. <b>Nenhum relatório muda de forma ou de número por iniciativa do sistema.</b> Permanecem apenas as duas correções que fazem o crédito existir: <b>(1)</b> o relatório "Reforma Tributária — Transição 2026–2033" voltou a renderizar — um comentário da v7.46.0 tinha engolido, na mesma linha, as duas declarações que vinham depois dele (<code>const emp = RL.empresa; const regime = …</code>), <code>regime</code> deixou de existir e a função quebrava com <code>ReferenceError</code> na PRIMEIRA instrução, deixando o cabeçalho novo sobre o corpo do relatório anterior, sem erro visível; é restauração do comportamento da v7.45.0, não mudança de layout. <b>(2)</b> A aba Reforma e a análise deixaram de ser duas cópias: <code>RF</code> (o que a aba mostra) e <code>AN.reforma</code> viviam separados e <code>AN.reforma</code> só era lido, nunca atribuído — o auto-preenchimento pelas análises de fornecedores descontava o crédito na tela e <b>não ia ao banco</b>, e os relatórios leem o banco; pior, salvar a análise ou importar qualquer coisa (grava sozinho desde a v7.5.7) regravava o bloco ANTIGO por cima do que a aba já tinha salvado. Agora a aba espelha em <code>AN.reforma</code> a cada recálculo, uma <b>faixa âmbar</b> avisa enquanto houver alteração não gravada, e a nota das análises de fornecedores voltou à tela (tinha ficado inalcançável na limpeza da v7.44.1). <b>Novo, conforme pedido:</b> o <b>Parecer</b> passa a informar, na seção dos caminhos do Simples, o <b>crédito existente sobre as compras</b> — valor adquirido de PJ do regime regular × alíquota cheia e de optantes do Simples/MEI × percentual do art. 58, com o crédito total do ano de referência e o líquido resultante; e a <b>memória de cálculo</b> abre o bloco de crédito com a <b>base das compras que geram crédito</b>, separada por classe de fornecedor, antes das parcelas. Motor intocado: <b>lacre <code>e1a25234</code> conferido inalterado</b>.</td></tr>
+                    <tr><td><b>v7.47.0</b></td><td>26/08/2026</td><td><b>Versão SUBSTITUÍDA pela v7.47.1 no mesmo dia.</b> Trazia, além das duas correções acima, alterações de apresentação nos relatórios Comparativo de Regimes, Consolidado e Reforma (declaração da base do realizado e aviso de crédito por proxy). Essas alterações <b>não haviam sido solicitadas</b> e foram revertidas na v7.47.1 — se esta versão chegou a ser publicada, suba a v7.47.1 por cima.</td></tr>
+                    <tr><td><b>v7.46.0</b></td><td>25/08/2026</td><td><b>🧭 TODOS OS RELATÓRIOS FECHAM COM O MESMO CÁLCULO — nasce a BASE ÚNICA da Reforma (<code>rlBaseReforma</code>).</b> A divergência relatada entre o Parecer com IA (correto) e a Conferência de cálculos estava na <b>projeção pela metade</b>: com o ano incompleto, o parecer projeta a análise <b>e</b> a aba Reforma juntas (receita, compras e créditos × fator k = receita interna projetada ÷ realizada), mas a conferência projetava só a análise e entregava a aba Reforma <b>crua</b> ao motor — com a aba preenchida (e o app preenche a receita sozinho), débito e crédito saíam do período lançado enquanto o parecer escalava para o ano cheio. Com 6 meses lançados, a conferência mostrava metade do crédito do parecer. Havia ainda uma terceira base: o relatório "Reforma" partia do <b>realizado puro</b>. Agora a projeção mora numa função só, <code>rlBaseReforma()</code> — análise e aba projetadas JUNTAS, ano completo devolve o realizado intacto (k = 1) — e <b>parecer, conferência (quadro Reforma + memórias ano a ano) e relatório Reforma leem exclusivamente dela</b>: divergir ficou estruturalmente impossível, e a suíte ganhou a prova de identidade. O parecer <b>não mudou um centavo</b> (era a referência); a memória da conferência passou a <b>declarar o fator k</b> na abertura do quadro; a aba Reforma da tela permanece sobre o realizado (é o editor), com nota dizendo onde a projeção acontece; e a conferência contra o <b>DAS declarado continua no realizado</b> — ali se confere guia paga, projetar seria erro. Motor intocado: <b>lacre <code>e1a25234</code> conferido inalterado</b> — a correção é nos chamadores, não no cálculo.</td></tr>
                     <tr><td><b>v7.45.0</b></td><td>25/08/2026</td><td><b>🔁 RECOMEÇO SOBRE A v7.44.1 — os 6 itens da especificação, de uma vez, num pacote só.</b> <b>(1) Limpar dados preserva a configuração.</b> A limpeza zera receitas, compras, despesas, folha e importações, mas a configuração da empresa (ISS, ICMS, presunções, período do LR, folha própria, ano de referência) permanece e é regravada. <b>(2) O ISS da CONFIGURAÇÃO sai da base do IBS/CBS de 2027 em diante</b> (LC 214, art. 12, §2º, V): dedução ÚNICA = ISS anual apurado com a alíquota configurada × percentual remanescente do ano (100% em 2027-28, degraus até 60% em 2032, zero em 2033 — ISS extinto). Vale igual na aba Reforma, nos cenários híbrido/Presumido/Real, na conferência e no parecer, com a coluna nova <b>"(−) ISS fora da base"</b> na aba e a linha correspondente na memória. Com o % ISS zerado na configuração não há o que deduzir — a aba passa a avisar em vermelho. <b>(3) Botão Cancelar nas importações de grande volume</b> (Importar Dados): PGDAS-D, Demonstrativo, folha e balancete ganham a faixa "N de M" com cancelamento cooperativo que preserva o já lido (o balancete passou a ler em sequência para ter onde parar); o Faturamento, PDF único, ganha barra por página e ali cancelar aborta. <b>(4) O PGDAS manda na classificação:</b> o rótulo declarado — como o da WENDEL: "…tributados pelo <b>Anexo III</b>, <b>sem retenção</b>/substituição tributária de ISS…" — passa a ser lido pelo <b>anexo escrito</b> e pela <b>negação da retenção</b>. Antes, "SEM retenção…ISS" casava com o padrão de retenção e virava COM retenção (a3_retiss), e "NÃO sujeitos ao fator r" podia cair no Anexo V. Rótulo não reconhecido agora fica <b>sem bloco</b>: o select da revisão aparece em vermelho e o Aplicar <b>bloqueia</b> listando as pendências — acabou o fallback calado para o Anexo I. <b>(5) Crédito de IBS/CBS ÚNICO:</b> híbrido, Presumido e Real usam exatamente a base de crédito da aba Reforma (função compartilhada <code>rfContraEfetivo</code> — com o proxy A5 das compras de revenda quando a aba está vazia), tornando impossível a aba mostrar um crédito e o parecer outro. <b>(6) Relatórios = sistema:</b> o relatório "Reforma" de Relatórios abandonou a fórmula paralela e lê o mesmo <code>calcCenariosReforma</code> de tudo; a memória de cálculo da conferência ganhou a linha "(−) ISS que não integra a base" e o débito fecha como (base − dedução) × alíquota. Lacre re-selado: <code>5a5562df → e1a25234</code> — a dedução do ISS move os cenários 2027–2032 dos casos-gabarito; <b>2033 permanece idêntico ao centavo</b> (dedução zero com o ISS extinto) e DAS, LP, LR e Simples do realizado idem, prova de que só a Reforma mudou.</td></tr>
                     <tr><td><b>v7.44.1</b></td><td>25/08/2026</td><td><b>🧹 Limpeza de código morto encontrada pela varredura estática — nenhuma mudança de comportamento, motor e lacre <code>5a5562df</code> intocados.</b> Uma varredura conferiu, um a um, se todo elemento acessado por <code>$id()</code> existe no HTML e se toda função chamada por handler inline está definida: <b>176 handlers, zero chamadas órfãs, zero <code>$id()</code> sem elemento</b>. No caminho inverso apareceram cinco resíduos — elementos que existiam no HTML e que <i>nenhum código jamais alcançava</i>. <b>(1) O botão “Lançar total nas Despesas da análise”</b> nascia oculto e nada no aplicativo o exibia, o que deixava a função <code>fornLancarDespesas</code> inalcançável desde a reorganização do painel. Ela somava todos os serviços do Totais ISS e rateava o total em Despesas › Outras de uma vez. O <code>foLancar()</code> já faz esse lançamento — valor sem CFOP, que é o caso do Totais ISS, vai para Despesas › Outras — mas passando pelo <b>mapa de CFOPs por empresa</b>. As duas foram removidas em vez de religadas: manter dois caminhos para o mesmo lançamento, com regras diferentes, produziria resultados divergentes no mesmo arquivo, e bastaria alguém religar o botão para a divergência aparecer sem aviso. <b>(2) A div <code>rf-forn-nota</code></b>, na aba Reforma, estava vazia e nenhum código escrevia nela — a nota do art. 58 é montada em outro ponto. <b>(3) Dois campos de arquivo</b> (<code>tri-arq-compra</code> e <code>tri-arq-venda</code>) também apareceram como resíduo — e foram <b>MANTIDOS</b>. A suíte barrou a remoção: eles estão sob o teste da v7.33.0, escrito para travar a decisão de layout de que os inputs vivem <i>dentro</i> do item 2. Reescrever um guard aprovado para acomodar uma limpeza esvaziaria a própria suíte, e o ganho seriam duas linhas de HTML inerte. <b>Falsos positivos que NÃO foram tocados:</b> os painéis <code>tri-dash-*</code>, <code>tri-prog-*</code> e as abas <code>fo-aba-*</code> parecem órfãos numa busca por texto, mas são acessados por id montado em tempo de execução (<code>$id('tri-dash-'+t)</code>) — estão vivos e em uso. A suíte subiu para <b>210 verificações</b>, com um bloco novo que testa a AUSÊNCIA do que saiu e a PRESENÇA obrigatória do que só parecia órfão.</td></tr>
                     <tr><td><b>v7.44.0</b></td><td>24/08/2026</td><td><b>A Configuração da empresa não abre mais em branco, e o banco deixou de ter becos sem saída depois de exclusões.</b> <b>(1) Tela de Configuração.</b> Entrar em Empresas &rarr; Configuração com uma empresa sem análise carregada estourava um erro de análise nula no meio da montagem e o card ficava vazio — a guarda existia no <code>go()</code>, mas rodava <i>depois</i> do render. Três providências: a guarda passou a vir antes; o próprio <code>anRenderConfig</code> cria a análise se ela faltar (a lição nº 1 do projeto, aplicada a mais um funil); e a carga assíncrona do banco agora redesenha também o painel de Configuração — antes ele podia seguir exibindo padrões de fábrica sobre uma empresa com configuração salva, e um Salvar nesse estado gravaria os padrões por cima. <b>(2) Banco — fim do 403/42501 depois de excluir (setup_v7440.sql e setup_v7450.sql, aplicados em produção em 24/08).</b> Excluir uma análise tornava a empresa/ano ingravável para sempre: a política única FOR ALL escondia a linha excluída do SELECT, e o upsert do PostgREST confere as políticas — <i>inclusive a de SELECT</i> — contra a linha em conflito. A correção foi em camadas, cada uma provada em PostgreSQL 16 local reproduzindo o erro real de produção: políticas separadas por comando em <code>atp_analises</code>, <code>atp_empresas</code> e <code>atp_fornec</code> (o filtro de excluído fica só no SELECT, com a subconsulta escalar que evita reavaliar a função por linha); gravar por cima de análise excluída move o resto para a lixeira <code>atp_analises_lixeira</code>, preservando quem excluiu e quando; recadastrar uma empresa excluída e readmitir o e-mail de um usuário excluído deixam de dar erro — o resto tem a chave renomeada (sufixo <code>#exc</code> + id) em vez de apagado, porque as tabelas do Imobiliário apontam FK para ele. Ataques entre escritórios foram testados e rejeitados; as políticas de <code>atp_usuarios</code>, já corretas, não foram tocadas. Motor e lacre <code>5a5562df</code> intocados.</td></tr>
@@ -4142,7 +4145,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.46.0';
+const APP_VERSAO = '7.47.1';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -4787,12 +4790,32 @@ function lacreRender(){
   </div>`;
 }
 
+// ═══ v7.47.1 · A ABA REFORMA E A ANÁLISE DEIXAM DE SER DUAS CÓPIAS ═══
+// Até a v7.46.0, RF (o que a aba mostra) e AN.reforma (o bloco dentro da análise) viviam separados:
+// AN.reforma só era LIDO, nunca atribuído. Duas consequências, ambas silenciosas:
+//  (1) o auto-preenchimento pelas análises de fornecedores aparecia na tela, descontava o crédito na
+//      tabela e NÃO ia ao banco — e os relatórios leem o banco (rlCarregar → dados.reforma);
+//  (2) salvar a análise, ou importar qualquer coisa (grava sozinho desde a v7.5.7), regravava o
+//      bloco ANTIGO por cima do que a aba já tinha salvado.
+let RF_MARCO = '';   // retrato do bloco de Reforma como está GRAVADO no banco
+function rfLimpo(rf){ return { ...rf, _res:undefined, _forn:undefined, _vend:undefined,
+  _benefFonte:undefined, _benefDet:undefined, _benefOpcoes:undefined }; }
+function rfMarco(rf){ try { return JSON.stringify(rfLimpo(rf)); } catch(e){ return ''; } }
+function rfPendente(){ return !!RF && !!RF.cnpj && rfMarco(RF) !== RF_MARCO; }
+
 function rfCalcular() {
   if (!RF) return;
   RF.receita = num($id('rf-receita').value);
   RF.baseIS = num($id('rf-baseis').value); RF.credSimplesPct = num($id('rf-credsimples').value);
   RF.compras = (RF.contra.compras_lrlp||0) + (RF.contra.compras_simples||0);
   $id('rf-compras').value = RF.compras ? fmt(RF.compras) : '';
+  // v7.47.1: o que a tela mostra passa a viver dentro da análise na hora — assim anSalvar e
+  // anSalvarAuto gravam o bloco ATUAL, e não mais o que veio do banco na abertura da aba.
+  if (AN && AN.cnpj === RF.cnpj && +AN.ano === +RF.ano) AN.reforma = rfLimpo(RF);
+  const _av = $id('rf-avisos');
+  if (_av) _av.innerHTML = (rfPendente()
+    ? `<div class="hint" style="padding:10px 12px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109;margin-top:12px">⚠️ <b>Alterações da Reforma ainda não gravadas.</b> O parecer e a memória de cálculo leem o que está <b>salvo no banco</b>. Enquanto esta faixa estiver aqui, o crédito e a receita acima existem só nesta tela: clique em <b>💾 Salvar</b>.</div>`
+    : '') + fornNotaHtml();
   const atual = rfCargaAtual();
   // v7.45.0 (itens 2 e 5): a aba usa a MESMA base de crédito e a MESMA dedução de ISS dos cenários
   const _T = AN?._res?.totais || null;
@@ -4857,6 +4880,9 @@ async function rfTrocar() {
     else RF = rfNovo(cnpj, ano);
   } catch(e) { console.error('rfTrocar:', e); RF = rfNovo(cnpj, ano); }
   RF.cnpj = cnpj; RF.ano = ano;
+  RF_MARCO = rfMarco(RF);   // v7.47.1: retrato do que veio do BANCO. Tudo o que vier depois —
+                            // receita da análise, auto-preenchimento dos fornecedores, digitação —
+                            // é pendência até o 💾 Salvar, e a aba passa a dizer isso.
   if (!RF.receita && AN?._res) RF.receita = AN._res.totais.receita;
   await fornAutoAplicar();
   await rfBenefAuto();
@@ -4864,13 +4890,16 @@ async function rfTrocar() {
 }
 async function rfSalvar() {
   if (!RF || !RF.cnpj) { toast('Selecione uma empresa.'); return; }
-  const rfLimpo = {...RF, _res:undefined, _benefFonte:undefined, _benefDet:undefined, _benefOpcoes:undefined};
-  const dados = (AN && AN.cnpj===RF.cnpj) ? {...AN, _res:undefined, reforma:rfLimpo} : { ...(anNovo(RF.cnpj, RF.ano)), reforma:rfLimpo };
+  const rfGrava = rfLimpo(RF);   // v7.47.1: mesma limpeza usada pelo espelho em AN.reforma
+  const dados = (AN && AN.cnpj===RF.cnpj) ? {...AN, _res:undefined, reforma:rfGrava} : { ...(anNovo(RF.cnpj, RF.ano)), reforma:rfGrava };
   const T = AN?._res?.totais || {};
   try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body:[{ cnpj:RF.cnpj, ano:RF.ano, dados,
     resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr, reforma2033: RF._res?.linhas?.at(-1)?.total,
       snElegivel: (AN._sn?.estado || 'elegivel') !== 'inelegivel' },
     atualizado_em:new Date().toISOString() }] });
+    RF_MARCO = rfMarco(RF);                    // v7.47.1: gravado — a faixa de pendência sai
+    if (AN && AN.cnpj===RF.cnpj) AN.reforma = rfGrava;
+    rfCalcular();
     toast('Análise da Reforma salva.'); } catch(e){ toast('Erro: '+e.message); }
 }
 async function rfSalvarAliq() {
@@ -6589,6 +6618,22 @@ function fornComprasSimplesMEI(){
   }
   return (mei+simp) > 0.005 ? { mei, simples: simp, soma: mei+simp, tot, quando } : null;
 }
+// ═══ v7.47.1 · o PARECER passa a INFORMAR, na parte de IBS/CBS, o crédito existente sobre as
+// compras: quanto foi adquirido de cada classe de fornecedor, o percentual aplicado a cada uma e
+// quanto isso vira de crédito no ano de referência. É informação — nenhum cálculo muda.
+function ppCredCompras(D){
+  if (!D || !D.cen || !D.L33) return '';
+  const rfx = D.cen.rfx || {}, a = D.anoRef || 2027, L = D.L33;
+  const cl = +(rfx.contra?.compras_lrlp || 0), cs = +(rfx.contra?.compras_simples || 0);
+  const pctM = +(rfx.credSimplesPct || 0), p58 = pctM > 0 ? pctM/100 : credSimplesArt58(a);
+  const alq = L.alq || 0;
+  if (cl <= 0.005 && cs <= 0.005)
+    return `<div class="hint" style="margin-top:8px;padding:8px 10px;border-left:3px solid #b9770e;background:#fef6e7;color:#7e5109"><b>Crédito de IBS/CBS sobre as compras — ${a}:</b> nenhuma compra informada na aba Reforma. Os cenários acima foram calculados <b>sem crédito</b>, o que <b>superestima</b> a carga do híbrido e do regime regular.</div>`;
+  const partes = [];
+  if (cl > 0.005) partes.push(`compras de PJ do <b>regime regular</b> ${fmtR(cl)} × ${fmtP(alq*100,2)}% = <b>${fmtR(cl*alq)}</b>`);
+  if (cs > 0.005) partes.push(`compras de <b>optantes do Simples/MEI</b> ${fmtR(cs)} × ${fmtP(p58*100,2)}%${pctM > 0 ? ' (percentual informado na aba)' : ' (art. 58, §§ 4º a 6º, Res. CGSN nº 190/2026 — 1ª faixa do Anexo I)'} = <b>${fmtR(cs*p58)}</b>`);
+  return `<div class="hint" style="margin-top:8px;padding:8px 10px;border-left:3px solid #1a5276;background:#f4f6f7"><b>Crédito de IBS/CBS sobre as compras — ${a}:</b> ${partes.join(' · ')}. Crédito total de <b>${fmtR(L.cred)}</b>, já deduzido do débito de ${fmtR(L.deb)} — IBS/CBS líquido de <b>${fmtR(L.liquido)}</b> nos cenários híbrido e fora do Simples.${D.cen.proxyCompras ? ' <b>⚠️ Crédito por proxy</b>: a aba Reforma está sem compras informadas e entraram as compras de revenda da análise como aquisições do regime regular.' : ''}</div>`;
+}
 function premissaCreditoIBS(D){
   if (!D || !D.cen) return '';
   const a = D.anoRef || 2027;
@@ -6942,6 +6987,7 @@ function rlParecer(){
         <tr><td><span class="pp-pill" style="background:#2b3240">Fora do Simples</span> <span class="hint">(${D.L33.regNome})</span></td><td class="num">${fmt(D.L33.regular)}</td><td class="num" style="color:${D.L33.regular>d33?'#8c2f39':'#0f7a5a'}">${D.L33.regular>d33?'+':''}${fmt(D.L33.regular-d33)}</td><td>Crescimento além do teto ou clientela quase toda PJ</td></tr>
         <tr><td><span class="pp-pill" style="background:#d99a2b">Híbrido</span></td><td class="num">${fmt(D.L33.hib)}</td><td class="num" style="color:${D.L33.hib>d33?'#8c2f39':'#0f7a5a'}">${D.L33.hib>d33?'+':''}${fmt(D.L33.hib-d33)}</td><td>Clientes PJ exigem crédito integral de IBS/CBS</td></tr>`)(D.dRef)}
       </tbody></table>
+      ${ppCredCompras(D)}
 `;
     }
     h += `</div></div>`;
@@ -7954,6 +8000,15 @@ function rlConfRefMemAno(C, L, R){
   const cLR = +(rfx.contra?.compras_lrlp||0), cSN = +(rfx.contra?.compras_simples||0);
   const pct58 = (rfx.credSimplesPct||0) > 0 ? (rfx.credSimplesPct/100) : credSimplesArt58(L.ano);
   const lcre = [];
+  // v7.47.1 · a memória abre DECLARANDO o crédito existente sobre as compras: a base total que
+  // gera crédito no ano, antes de abrir as parcelas por classe de fornecedor.
+  const baseCred = cLR + cSN;
+  lcre.push(CF.lin('Compras que geram crédito (base do ano)',
+    baseCred > 0.005
+      ? fmtR(cLR) + ' de PJ do regime regular + ' + fmtR(cSN) + ' de optantes do Simples/MEI'
+        + (C.proxyCompras ? ' <b>(proxy: aba Reforma sem compras informadas — entraram as compras de revenda da análise)</b>' : ' — informados na aba Reforma')
+      : 'nenhuma compra informada na aba Reforma — sem base de crédito no ano',
+    fmtR(baseCred)));
   if (cLR > 0.005) lcre.push(CF.lin('Compras de PJ do regime regular', fmtR(cLR) + ' × ' + pcs(alqPc) + ' — crédito integral, alíquota cheia' + (C.proxyCompras ? ' <b>(proxy: aba Reforma vazia)</b>' : ''), fmtR(cLR*alq)));
   if (cSN > 0.005) lcre.push(CF.lin('Compras de optante do Simples', fmtR(cSN) + ' × ' + (pct58*100).toFixed(2).replace('.',',') + '% — art. 58, §§ 4º a 6º, Res. CGSN 190/2026' + ((rfx.credSimplesPct||0)>0 ? ' (% manual)' : ' (1ª faixa do Anexo I)'), fmtR(cSN*pct58)));
   for (const [k, rot, red] of RF_REDUCOES){ const v = +(rfx.benefCred?.[k]||0); if (v > 0.005)
@@ -8633,7 +8688,12 @@ function rlReforma() {
   const credBenefTot = reds.reduce((s,[k])=>s+(+rf.benefCred?.[k]||0),0);
   const recCheia = Math.max(0, (+rf.receita||0) - recBenef);
   const compCheia = Math.max(0, (+rf.contra?.compras_lrlp||0) - credBenefTot);
-  const atualCons = (()=>{ const M = (rlBaseReforma().res||RL.res).meses;   // v7.46.0: carga atual na MESMA base projetada const emp = RL.empresa; const regime = emp?.regime||'Lucro Presumido';
+  const atualCons = (()=>{ const M = (rlBaseReforma().res||RL.res).meses;   // v7.46.0: carga atual na MESMA base projetada
+    // v7.47.1 · as duas linhas abaixo estavam DENTRO do comentario acima, engolidas por um patch da
+    // v7.46.0. Sem elas, `regime` nao existia e o relatorio Reforma quebrava com ReferenceError na
+    // PRIMEIRA instrucao — o cabecalho trocava e o corpo ficava com o relatorio anterior. Nada mais
+    // deste relatorio foi tocado: e restauracao do comportamento da v7.45.0, nao mudanca de layout.
+    const emp = RL.empresa; const regime = emp?.regime||'Lucro Presumido';
     if (regime==='Simples Nacional'||regime==='MEI') return { das: M.reduce((s,x)=>s+x.das,0), consumo:null, regime };
     const isLR = regime==='Lucro Real';
     return { regime, pis:M.reduce((s,x)=>s+(isLR?x.lr.pis:x.lp.pis),0), cof:M.reduce((s,x)=>s+(isLR?x.lr.cofins:x.lp.cofins),0),
