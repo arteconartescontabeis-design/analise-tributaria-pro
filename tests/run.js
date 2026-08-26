@@ -1403,7 +1403,7 @@ console.log('\n■ Integridade da interface');
       chk('v7.45.0 · item 5 — rfContraEfetivo é a base de crédito ÚNICA (proxy A5 compartilhado)',
         typeof rfCE==='function' && ce && typeof ce.proxy==='boolean');
       chk('v7.45.0 · item 5 — a aba usa a mesma função (RFX = RF com contra efetivo)',
-        /const _ce = rfContraEfetivo\(RF, _T\)/.test(html) && /rfLinhaBase\(RFX, a, _ded\)/.test(html));
+        /const _ce = rfContraEfetivo\(RF, _T\)/.test(html) && /rfLinhaBase\(RFX, a, _dedIss \+ _dedIcms\)/.test(html));
     }
     // (3) cancelamento nos importadores
     for (const fn of ['pgdasLer','demLer','folhaLerRelacao','fatLer','balLer']){
@@ -1473,8 +1473,192 @@ console.log('\n■ Integridade da interface');
       /entra PROJETADA pelo fator k =/.test(html));
     chk('v7.46.0 · a conferência contra o DAS declarado segue no REALIZADO (decisão 5.3)',
       !/rlConfDivergencias[\s\S]{0,400}rlBaseReforma/.test(html));
-    chk('v7.47.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.47\.1';/.test(html) && html.includes('<b>v7.47.1</b>') && html.includes('<b>v7.46.0</b>'));
+    chk('v7.48.3 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.48\.3';/.test(html) && html.includes('<b>v7.48.3</b>') && html.includes('<b>v7.48.2</b>'));
+
+    // ═══ v7.48.3 — o 💾 Salvar da Reforma não pode apagar a análise gravada ═══
+    {
+      const _supa = vm.runInContext('supa', ctx), _AN = vm.runInContext('AN', ctx), _RF = vm.runInContext('RF', ctx);
+      let corpo = null;
+      ctx.__capt = b => { corpo = JSON.parse(JSON.stringify(b)); };
+      vm.runInContext(`
+        __BANCO = { dados:null };
+        supa = async (m, rec, o) => {
+          if (m==='GET'  && /atp_analises/.test(rec)) return __BANCO.dados ? [{ dados:__BANCO.dados, resumo:{receita:1} }] : [];
+          if (m==='POST' && /atp_analises/.test(rec)) { __capt(o.body[0]); return []; }
+          return [];
+        };
+        __sal = anNovo('11222333000181',2026); __sal.cfg.iss = 0.05; __sal.receitas.a3_semret[0] = 100000;
+        __BANCO.dados = JSON.parse(JSON.stringify(__sal));
+        AN = anNovo('11222333000181', 2025);          // AN de OUTRO ANO — era o gatilho do apagamento
+        RF = rfNovo('11222333000181', 2026); RF.receita = 100000;
+      `, ctx);
+      await vm.runInContext('rfSalvar()', ctx);
+      chk('v7.48.3 · Salvar da Reforma com AN de outro ano PRESERVA a configuração gravada (ISS 5%)',
+        !!corpo && corpo.ano===2026 && Math.abs((corpo.dados.cfg.iss||0)-0.05)<1e-9,
+        corpo ? 'cfg.iss='+corpo.dados.cfg.iss : 'não gravou');
+      chk('v7.48.3 · e preserva os DADOS do ano (receita de janeiro intacta)',
+        !!corpo && corpo.dados.receitas.a3_semret[0]===100000);
+      chk('v7.48.3 · o bloco reforma do ano é o que foi de fato substituído',
+        !!corpo && +corpo.dados.reforma.receita===100000);
+      // sem linha no banco: aí sim pode criar do zero
+      corpo = null;
+      vm.runInContext("__BANCO.dados = null; RF.receita = 100000;", ctx);   // rfCalcular relê a receita do campo da tela
+      await vm.runInContext('rfSalvar()', ctx);
+      chk('v7.48.3 · ano SEM linha no banco: cria a análise nova (não há o que perder)',
+        !!corpo && corpo.ano===2026 && +corpo.dados.reforma.receita===100000,
+        corpo ? ('ano='+corpo.ano+' rec='+(corpo.dados.reforma||{}).receita) : 'não gravou');
+      // leitura prévia falhando: não grava nada
+      corpo = null;
+      vm.runInContext("supa = async (m, rec, o) => { if (m==='GET') throw new Error('rede'); if (m==='POST') { __capt(o.body[0]); } return []; };", ctx);
+      await vm.runInContext('rfSalvar()', ctx);
+      chk('v7.48.3 · se a leitura prévia falhar, NADA é gravado (não sobrescreve às cegas)', corpo===null);
+      chk('v7.48.3 · a comparação passou a incluir o ANO, não só o CNPJ',
+        /AN\.cnpj === RF\.cnpj && \+AN\.ano === \+RF\.ano/.test(html) && !/\(AN && AN\.cnpj===RF\.cnpj\) \? \{\.\.\.AN, _res:undefined, reforma/.test(html));
+      ctx.__ret = { s:_supa, a:_AN, r:_RF };
+      vm.runInContext('supa = __ret.s; AN = __ret.a; RF = __ret.r;', ctx);
+    }
+    chk('v7.48.2 · o payload da IA leva base do IBS/CBS, crédito das compras e transporte',
+      /baseIbsCbs: D\.L33/.test(html) && /creditoSobreCompras:/.test(html) && /transporte: \(D\.T\.recTransp/.test(html)
+      && /A base do IBS\/CBS NÃO é a receita cheia/.test(html)
+      && /Nunca afirme que não há crédito de IBS\/CBS/.test(html));
+
+    // ═══ v7.48.0 — cancelar importação · ICMS fora da base · transporte ═══
+    console.log('\n■ v7.48.0 — cancelar, ICMS fora da base e transporte');
+    {
+      // ── (1) CANCELAR a importação pendente ──
+      chk('v7.48.0 · 1 — os 5 importadores têm Cancelar ao lado do Aplicar',
+        ['pgdas','fat','bal','dem','xml'].every(q => html.includes("impBtnCancelar('"+q+"')"))
+        && /function impPendenteCancelar/.test(html));
+      {
+        const IP = vm.runInContext('IMP_PENDENTES', ctx);
+        const faltando = Object.values(IP).filter(a => !html.includes('id="'+a.rev+'"') || !html.includes('id="'+a.file+'"'));
+        chk('v7.48.0 · 1 — cada Cancelar aponta para uma revisão e um campo de arquivo que existem',
+          faltando.length===0, faltando.map(a=>a.rev).join(', '));
+        ctx.document.getElementById('imp-pgdas-review').innerHTML = 'pendente';
+        ctx.document.getElementById('imp-pgdas-files')._v = 'x.pdf';
+        vm.runInContext("PG_DADOS = {meses:[1]}; impPendenteCancelar('pgdas');", ctx);
+        chk('v7.48.0 · 1 — cancelar zera o lido, limpa a revisão e libera o campo',
+          vm.runInContext('PG_DADOS', ctx)===null
+          && ctx.document.getElementById('imp-pgdas-review').innerHTML===''
+          && ctx.document.getElementById('imp-pgdas-files').value==='');
+      }
+      chk('v7.48.0 · 1 — o cancelamento DURANTE a leitura (v7.43.0) continua existindo, separado',
+        /IMP_CANCELAR/.test(html) && /function impCancelar/.test(html));
+
+      // ── (2) ICMS fora da base do IBS/CBS ──
+      {
+        const anNovo=vm.runInContext('anNovo',ctx), calcular=vm.runInContext('calcular',ctx),
+              calcCen=vm.runInContext('calcCenariosReforma',ctx), P=vm.runInContext('PARAMS',ctx),
+              aliq=vm.runInContext('RF_ALIQ_DEFAULT',ctx);
+        const inp=anNovo('11222333000181',2026);
+        for(let m=0;m<12;m++) inp.receitas.a1_semst[m]=100000;
+        inp.cfg.icmsV=.18; inp.cfg.icmsC=.12; inp.cfg.iss=0;
+        const res=calcular(inp,P.anexos,P.folha);
+        const icmsDebAno=res.meses.reduce((a,x)=>a+x.icmsDeb,0);
+        chk('v7.48.0 · 2 — ICMS destacado do ano = receita × alíquota de venda (1.200.000 × 18%)',
+          Math.abs(icmsDebAno-216000)<0.01, 'icmsDeb='+icmsDebAno.toFixed(2));
+        const C=calcCen(res,{receita:1200000,baseIS:0,credSimplesPct:0,benefRec:{},benefCred:{},contra:{},aliq});
+        const L27=C.REF.find(l=>l.ano===2027), L26=C.REF.find(l=>l.ano===2026), L33=C.REF.find(l=>l.ano===2033);
+        const rem27=+aliq[2027].remIcmsIss;
+        chk('v7.48.0 · 2 — dedução de 2027 = ICMS destacado × remanescente do ano',
+          Math.abs(L27.dedIcms-icmsDebAno*rem27)<0.02 && Math.abs(L27.dedIss)<0.005);
+        chk('v7.48.0 · 2 — o débito fecha: (base − ISS − ICMS) × alíquota',
+          Math.abs(L27.deb-(1200000-L27.ded)*L27.alq)<0.02);
+        chk('v7.48.0 · 2 — 2026 (ano-teste) sem dedução e 2033 sem dedução (ICMS e ISS extintos)',
+          Math.abs(L26.dedIcms)<0.005 && Math.abs(L33.dedIcms)<0.005);
+        chk('v7.48.0 · 2 — mercadoria com ST fica fora da dedução (não tem destaque próprio)',
+          !/a1_comst\[m\]\+R\.a2_comst\[m\][^;]*\*cfg\.icmsV/.test(html)
+          && /R\.a2_mono\[m\]\)\*cfg\.icmsV \+ R\.comtransp\[m\]\*icmsVTransp/.test(html));
+        chk('v7.48.0 · 2 — a dedução aparece nos três documentos (aba, memória e parecer)',
+          /\(−\) ICMS fora da base/.test(html) && /ICMS que não integra a base/.test(html)
+          && /function ppBaseIbsCbs/.test(html) && /\$\{ppBaseIbsCbs\(D\)\}/.test(html));
+      }
+
+      // ── (3) TRANSPORTE ──
+      {
+        const anNovo=vm.runInContext('anNovo',ctx), calcular=vm.runInContext('calcular',ctx),
+              P=vm.runInContext('PARAMS',ctx), pb=vm.runInContext('pgdasBloco',ctx);
+        chk('v7.48.0 · 3 — o bloco novo existe na análise, na grade e no modelo',
+          /comtransp_st/.test(html) && /Com\. \/ Transporte — com retenção ICMS/.test(html)
+          && /"receitas\.comtransp_st"/.test(html));
+        const base=()=>{ const i=anNovo('11222333000181',2026); i.cfg.icmsV=.12; i.cfg.icmsC=.12; i.cfg.iss=.03; return i; };
+        const iT=base(); for(let m=0;m<12;m++) iT.receitas.comtransp[m]=50000;
+        const iS=base(); for(let m=0;m<12;m++) iS.receitas.comtransp_st[m]=50000;
+        const rT=calcular(iT,P.anexos,P.folha), rS=calcular(iS,P.anexos,P.folha);
+        chk('v7.48.0 · 3 — com retenção o DAS é MENOR (a parcela de ICMS sai da guia)',
+          rS.totais.das < rT.totais.das - 1,
+          'sem ret. '+rT.totais.das.toFixed(2)+' × com ret. '+rS.totais.das.toFixed(2));
+        chk('v7.48.0 · 3 — o bloco com retenção fica FORA da trava do sublimite (subIcms)',
+          !/comtransp_st\[m\]\)\*pIcms1/.test(html) && /R\.comtransp\[m\]\)\*pIcms1/.test(html));
+        const dT=rT.meses.reduce((a,x)=>a+x.icmsDeb,0), dS=rS.meses.reduce((a,x)=>a+x.icmsDeb,0);
+        chk('v7.48.0 · 3 — transporte gera débito de ICMS no LP/LR (600.000 × 12% = 72.000)',
+          Math.abs(dT-72000)<0.01, 'débito='+dT.toFixed(2));
+        chk('v7.48.0 · 3 — o bloco com retenção NÃO gera débito (quem recolhe é o substituto)',
+          Math.abs(dS)<0.005);
+        // crédito sobre compras sem ST
+        const iC=base(); for(let m=0;m<12;m++){ iC.receitas.comtransp[m]=50000; iC.compras.semst[m]=20000; }
+        const rC=calcular(iC,P.anexos,P.folha);
+        const credC=rC.meses.reduce((a,x)=>a+x.icmsCred,0), pagarC=rC.meses.reduce((a,x)=>a+x.icmsPagar,0);
+        chk('v7.48.0 · 3 — crédito das compras sem ST desce do débito (72.000 − 28.800)',
+          Math.abs(credC-28800)<0.01 && Math.abs(pagarC-43200)<0.01);
+        // presunção cargas × passageiros
+        const iP=base(); for(let m=0;m<12;m++) iP.receitas.comtransp[m]=50000; iP.cfg.transpPresuncao='passageiros';
+        const rP=calcular(iP,P.anexos,P.folha);
+        const irC=rT.meses.reduce((a,x)=>a+x.lp.irpj,0), irP=rP.meses.reduce((a,x)=>a+x.lp.irpj,0);
+        chk('v7.48.0 · 3 — passageiros presume 16% no IRPJ (cargas 8%): 600.000 × 8 p.p. × 15%',
+          Math.abs((irP-irC)-600000*0.08*0.15)<0.02, 'Δ IRPJ='+(irP-irC).toFixed(2));
+        const csC=rT.meses.reduce((a,x)=>a+x.lp.csll,0), csP=rP.meses.reduce((a,x)=>a+x.lp.csll,0);
+        chk('v7.48.0 · 3 — a CSLL é 12% nos dois casos (não se move com o seletor)',
+          Math.abs(csP-csC)<0.005);
+        // rótulo do PGDAS
+        chk('v7.48.0 · 3 — PGDAS: transporte COM retenção de ICMS cai no bloco novo',
+          pb('Prestação de serviços de transporte intermunicipal e interestadual - Com substituição tributária de ICMS')==='comtransp_st');
+        chk('v7.48.0 · 3 — PGDAS: a NEGAÇÃO vence a menção (lição da v7.45.0)',
+          pb('Prestação de serviços de transporte intermunicipal e interestadual - Sem substituição tributária de ICMS')==='comtransp'
+          && pb('Prestação de serviços de comunicação - Sem retenção de ICMS')==='comtransp');
+        // regressão: empresa SEM transporte não muda um centavo
+        const iZ=base(); for(let m=0;m<12;m++) iZ.receitas.a3_semret[m]=50000;
+        const rZ=calcular(iZ,P.anexos,P.folha);
+        chk('v7.48.0 · 3 — empresa SEM transporte: ICMS segue zerado (não-regressão)',
+          Math.abs(rZ.meses.reduce((a,x)=>a+x.icmsDeb,0))<0.005);
+      }
+      chk('v7.48.0 · as duas aproximações ficaram DECLARADAS nas divergências da conferência',
+        /Dedução de ICMS\/ISS da base do IBS\/CBS por estimativa/.test(html)
+        && /Crédito presumido do transporte, quando informado/.test(html)
+        && /Alíquota do transporte \(v7\.48\.1\)/.test(html));
+      // ── v7.48.1 · alíquota própria do transporte e crédito presumido (decisões 3.1 e 3.2) ──
+      {
+        const anNovo=vm.runInContext('anNovo',ctx), calcular=vm.runInContext('calcular',ctx),
+              P=vm.runInContext('PARAMS',ctx);
+        const base=()=>{ const i=anNovo('11222333000181',2026); i.cfg.icmsV=.12; i.cfg.icmsC=.12; i.cfg.iss=.03;
+          for(let m=0;m<12;m++) i.receitas.comtransp[m]=50000; return i; };
+        const r0=calcular(base(),P.anexos,P.folha);
+        chk('v7.48.1 · 3.1 — campo em branco mantém a alíquota de vendas (não-regressão da v7.48.0)',
+          Math.abs(r0.meses.reduce((a,x)=>a+x.icmsDeb,0)-72000)<0.01);
+        const iA=base(); iA.cfg.icmsTranspV=.07;
+        const rA=calcular(iA,P.anexos,P.folha);
+        chk('v7.48.1 · 3.1 — alíquota própria vale só para o transporte (600.000 × 7% = 42.000)',
+          Math.abs(rA.meses.reduce((a,x)=>a+x.icmsDeb,0)-42000)<0.01);
+        const iM=base(); iM.cfg.icmsTranspV=.07; for(let m=0;m<12;m++) iM.receitas.a1_semst[m]=10000;
+        const rM=calcular(iM,P.anexos,P.folha);
+        chk('v7.48.1 · 3.1 — empresa mista: mercadoria a 12% e transporte a 7% no mesmo débito',
+          Math.abs(rM.meses.reduce((a,x)=>a+x.icmsDeb,0)-(42000+120000*.12))<0.01);
+        const iC=base(); iC.cfg.transpCredPres=.20; iC.cfg.icmsC=0;
+        const rC=calcular(iC,P.anexos,P.folha);
+        chk('v7.48.1 · 3.2 — crédito presumido = % sobre o débito da prestação (20% de 72.000)',
+          Math.abs(rC.meses.reduce((a,x)=>a+x.icmsCred,0)-14400)<0.01
+          && Math.abs(rC.meses.reduce((a,x)=>a+x.icmsPagar,0)-57600)<0.01);
+        chk('v7.48.1 · 3.2 — zero = não aplica (padrão de fábrica, nada muda)',
+          Math.abs(r0.meses.reduce((a,x)=>a+x.icmsCred,0))<0.005);
+        chk('v7.48.1 · 3.2 — o crédito presumido NÃO mexe na dedução da base do IBS/CBS (é o destacado)',
+          Math.abs(rC.meses.reduce((a,x)=>a+x.icmsDeb,0)-72000)<0.01);
+        chk('v7.48.1 · os dois campos nascem zerados na configuração',
+          /icmsTranspV:0, transpCredPres:0/.test(html));
+      }
+      chk('v7.48.0 · lacre RE-SELADO e registrado no changelog (mudança deliberada de regra)',
+        /const LACRE_HASH = '47f3f10b';/.test(html) && /LACRE RE-SELADO/.test(html) && /e1a25234/.test(html));
+    }
 
     // ═══ v7.47.1 — o crédito das compras chega ao parecer e à memória de cálculo ═══
     // (A) o relatório Reforma quebrava com ReferenceError; (B) a aba e a análise eram duas cópias
