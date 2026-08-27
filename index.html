@@ -674,7 +674,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.49.1</b> <span class="badge ok">atual</span></td><td>27/08/2026</td><td><b>🎯 A causa real de a alíquota não gravar: um campo ausente derrubava a função de gravação inteira.</b> O <code>anAplicarConfig</code> lê campos que moram em <b>duas telas diferentes</b> — a Configuração da empresa e a seção <b>RBT12 da grade da Análise</b>. O <code>cf-rbtd</code> (RBT12 direto) só existe na grade e era lido <b>sem guarda</b>: mexer na Configuração sem ter aberto a seção RBT12 naquela sessão fazia <code>$id(&#39;cf-rbtd&#39;).value</code> estourar com <code>Cannot read properties of null</code>. Como o objeto é montado ANTES do <code>Object.assign</code>, <b>nada era atribuído</b>: o ISS digitado não chegava ao <code>cfg</code>, o <code>AN_SUJO</code> não era marcado, o gravador com atraso não era agendado — e o 💾 Salvar gravava, com sucesso, um <code>cfg</code> que nunca recebeu o que foi digitado. Daí o sintoma exato: dizia que salvou, e o banco continuava com <b>ISS zero em todos os anos</b>. Também explica por que às vezes funcionava: os elementos ficam no DOM depois de renderizados uma vez, então quem tivesse passado pela seção RBT12 na mesma sessão não via o problema. Agora <b>campo ausente mantém o valor que já está no cfg</b> — nunca zera, nunca estoura — e a suíte ganhou uma guarda que <b>cruza todos os campos lidos na gravação com os efetivamente renderizados pelas duas telas</b>, que é a verificação que faltava (a varredura de <code>$id()</code> órfão não enxerga id montado por template). Motor intocado: <b>lacre <code>47f3f10b</code> íntegro</b>.</td></tr>
+                    <tr><td><b>v7.50.0</b> <span class="badge ok">atual</span></td><td>27/08/2026</td><td><b>🧱 Anexo IV com ISS retido — o bloco que faltava, mais a correção da dedução do ISS retido na base do IBS/CBS.</b> <b>Bloco novo "Anexo IV · Serviços com ISS retido":</b> reparte o DAS <b>sem a parcela de ISS</b>, simétrico ao que o Anexo III já fazia. É o anexo com a maior parcela de ISS — <b>44,5% do DAS na 1ª faixa</b>, 40% nas demais, zerando em 2033 pela Res. CGSN 190 — e o setor em que a retenção é a regra: construção, limpeza, conservação e vigilância. Até aqui, lançar essas receitas no bloco único cobrava dentro do DAS um ISS que o tomador já tinha retido. <b>(decisão 2.1) Recomposição por anexo:</b> o ISS retido passa a ser recomposto pela parcela do <b>próprio Anexo IV</b> e não pela do III. Os dois componentes são do anexo — a alíquota efetiva da faixa e o percentual de ISS —, então usar os do III daria outro valor, para mais ou para menos conforme a faixa (LC 123, art. 21, §4º, com o mesmo teto de 5% da trava). <b>(decisão 2.3) Um bloco só:</b> não há variante "ISS e INSS retidos" porque o CPP do Anexo IV já fica fora do DAS; a retenção previdenciária de 11% segue não modelada e está declarada nas divergências <b>(decisão 2.2)</b>. Acompanharam o bloco: ISS do Presumido e do Real descontando as receitas retidas, trava do sublimite <b>sem</b> a parcela retida, base de PIS/COFINS do Lucro Real, CPP do Anexo IV fora do DAS, PGDAS classificando pelo rótulo declarado com a <b>negação vencendo a menção</b>, além de grade, planilha modelo, memória de cálculo e conferência. <b>(decisão 2.4) Correção:</b> o ISS <b>retido</b> pelo tomador também incidiu sobre a operação e está dentro do preço, então passa a sair da base do IBS/CBS pelo mesmo art. 12, §2º, V. A dedução criada na v7.48.0 usava só o ISS da guia, que exclui as receitas com retenção: empresa com ISS retido deduzia <b>menos</b> que uma idêntica sem retenção — assimetria minha, agora corrigida. <b>Efeito:</b> quem tem ISS retido vê os cenários de 2027 a 2032 <b>caírem</b>; análises fechadas vão acusar divergência de → para, que é o comportamento correto. <b>Lacre <code>47f3f10b</code> conferido ÍNTEGRO e os 754 gabaritos passaram sem rebaseline</b> — nenhuma análise sem Anexo IV retido e sem ISS retido se move um centavo.</td></tr>
+                    <tr><td><b>v7.49.1</b></td><td>27/08/2026</td><td><b>🎯 A causa real de a alíquota não gravar: um campo ausente derrubava a função de gravação inteira.</b> O <code>anAplicarConfig</code> lê campos que moram em <b>duas telas diferentes</b> — a Configuração da empresa e a seção <b>RBT12 da grade da Análise</b>. O <code>cf-rbtd</code> (RBT12 direto) só existe na grade e era lido <b>sem guarda</b>: mexer na Configuração sem ter aberto a seção RBT12 naquela sessão fazia <code>$id(&#39;cf-rbtd&#39;).value</code> estourar com <code>Cannot read properties of null</code>. Como o objeto é montado ANTES do <code>Object.assign</code>, <b>nada era atribuído</b>: o ISS digitado não chegava ao <code>cfg</code>, o <code>AN_SUJO</code> não era marcado, o gravador com atraso não era agendado — e o 💾 Salvar gravava, com sucesso, um <code>cfg</code> que nunca recebeu o que foi digitado. Daí o sintoma exato: dizia que salvou, e o banco continuava com <b>ISS zero em todos os anos</b>. Também explica por que às vezes funcionava: os elementos ficam no DOM depois de renderizados uma vez, então quem tivesse passado pela seção RBT12 na mesma sessão não via o problema. Agora <b>campo ausente mantém o valor que já está no cfg</b> — nunca zera, nunca estoura — e a suíte ganhou uma guarda que <b>cruza todos os campos lidos na gravação com os efetivamente renderizados pelas duas telas</b>, que é a verificação que faltava (a varredura de <code>$id()</code> órfão não enxerga id montado por template). Motor intocado: <b>lacre <code>47f3f10b</code> íntegro</b>.</td></tr>
                     <tr><td><b>v7.49.0</b></td><td>26/08/2026</td><td><b>⚙️ A alíquota da Configuração da empresa não ficava gravada — e agora vale para os anos seguintes.</b> <b>A causa:</b> ao abrir a Configuração, o <code>go()</code> conferia se a análise carregada era da empresa da tela, mas <b>nunca conferia o ANO</b> (o ramo da Análise já comparava os dois desde a v7.41.6). Mesma empresa em ano diferente não recarregava: a tela exibia e editava a configuração de OUTRO ano e o <b>💾 Salvar configuração gravava na linha desse outro ano</b> — o toast dizia "Análise salva" com razão, só que na linha errada. Na volta, o ano da tela continuava sem nada. Agora a conferência compara <b>empresa e ano</b>. <b>Rede de segurança:</b> o <code>anSalvar</code> passou a recusar a gravação quando a análise carregada não é a que está na barra do topo, dizendo <b>onde</b> ia gravar em vez de gravar no escuro — é a terceira vez que perdemos configuração por AN apontando para uma linha e a tela mostrando outra, então a trava agora é geral. O gravador com atraso da Configuração também ficou preso à empresa e ao ano do momento do clique: trocar antes de o atraso vencer não grava mais na linha nova. <b>Herança de alíquotas:</b> ano sem linha no banco nascia com a configuração de FÁBRICA (ISS zero, ICMS 12/12) e tudo era redigitado na virada. Agora o ano novo <b>herda do ano mais recente da mesma empresa</b> — alíquotas de ISS, ICMS (inclusive transporte e crédito presumido), IPI, presunções de IRPJ e CSLL, presunção do transporte, percentuais de folha, adicional, sublimite, trava da 5ª faixa, período do Lucro Real, janela de projeção e ano de referência do parecer — e a tela declara <b>de qual ano veio</b>, até o primeiro Salvar. Não se herda o que é apuração do ano: RBT12, folha dos 12 meses e saldos de prejuízo. Alterar um ano específico segue manual e <b>não volta para trás</b>: parecer já emitido não muda sozinho. Motor intocado: <b>lacre <code>47f3f10b</code> íntegro</b>.</td></tr>
                     <tr><td><b>v7.48.3</b></td><td>26/08/2026</td><td><b>🛟 O 💾 Salvar da aba Reforma podia gravar uma análise EM BRANCO por cima da que existe — era assim que a alíquota de ISS sumia depois de gravar, sair e voltar.</b> A montagem do que ia ao banco comparava <b>só o CNPJ</b>: <code>(AN && AN.cnpj===RF.cnpj) ? {...AN, reforma} : {...anNovo(...), reforma}</code>. Quando a comparação falhava — <code>AN</code> nula, de <b>outro ano</b> (o ano nunca foi comparado) ou recriada em branco pelo guard da v7.44.0 —, o ramo de fallback montava uma análise <b>zerada, com a configuração de fábrica</b> (ISS 0, ICMS 12/12) e a gravava por cima da linha do ano. A faixa de pendência da v7.47.1 passou a pedir esse clique com frequência, o que transformou uma mina dormente em caminho comum. Agora a comparação inclui o <b>ano</b> e, quando <code>AN</code> não corresponde, o app <b>lê a linha gravada antes</b> e troca apenas o bloco <code>reforma</code> dentro dela, preservando configuração, receitas, folha, compras e despesas; só cria análise nova quando <b>não existe linha</b> para aquele ano, caso em que não há o que perder. Se a leitura prévia falhar, <b>nada é gravado</b> e o app avisa — antes seguia em frente e sobrescrevia. O <code>resumo</code> do ano também deixou de ser recalculado a partir de uma análise que não é a daquele ano, e o <code>AN._sn</code> lido sem guarda (que estourava com <code>AN</code> nula) foi protegido. Motor e cálculo intocados: <b>lacre <code>47f3f10b</code> íntegro</b>.</td></tr>
                     <tr><td><b>v7.48.2</b></td><td>26/08/2026</td><td><b>🤖 O parecer com IA passa a conhecer o que mudou nas v7.48.x.</b> O payload enviado à Edge Function ganhou <b><code>baseIbsCbs</code></b> (ISS e ICMS que saem da base no ano de referência, com o fundamento e o critério), <b><code>creditoSobreCompras</code></b> (compras por classe de fornecedor, percentual do art. 58 e crédito do ano, dizendo se veio da aba, do proxy ou de lugar nenhum) e <b><code>transporte</code></b> (receita de transporte/comunicação do ano, para a IA não tratar serviço como isento de ICMS). Duas <b>regras de texto</b> novas acompanham: a base do IBS/CBS não é a receita cheia — proibido descrever o débito como receita × alíquota — e é proibido afirmar que não há crédito quando o crédito do ano é maior que zero. O motor ganhou o total nomeado <code>recTransp</code> só para alimentar isso. <b>Requer o deploy da Edge Function v7.5</b> (entregue junto): sem ele o app funciona igual, mas o texto da IA continua sem saber da dedução do ICMS. Motor intocado no cálculo: <b>lacre <code>47f3f10b</code> íntegro</b>.</td></tr>
@@ -2016,12 +2017,12 @@ const MODELO_LINHAS = [
  ['receitas.a1_semst','Anexo I · Revenda sem ST'],['receitas.a1_red','Anexo I · Revenda com redução de ICMS'],['receitas.a1_red_pct','Anexo I · % da redução (0 a 100)'],['receitas.a1_mono','Anexo I · Monofásico sem ST'],['receitas.a1_comst','Anexo I · Revenda com ST'],['receitas.a1_comst_mono','Anexo I · Com ST e monofásico'],
  ['receitas.a2_semst','Anexo II · Indústria sem ST'],['receitas.a2_red','Anexo II · Com redução de ICMS'],['receitas.a2_red_pct','Anexo II · % da redução (0 a 100)'],['receitas.a2_mono','Anexo II · Monofásico'],['receitas.a2_comst','Anexo II · Com ST'],['receitas.a2_comst_mono','Anexo II · Com ST e monofásico'],
  ['receitas.a3_semret','Anexo III · Serviços sem retenção'],['receitas.a3_retiss','Anexo III · Serviços com ISS retido'],['receitas.a3_retissinss','Anexo III · Serviços com ISS e INSS retidos'],
- ['receitas.a4','Anexo IV · Serviços'],['receitas.a5r','Anexo V/III · Serviços sujeitos ao Fator R'],['receitas.comtransp','Comunicação e transporte (ICMS)'],['receitas.comtransp_st','Comunicação e transporte — com retenção de ICMS'],['receitas.fin','Receitas financeiras'],
+ ['receitas.a4','Anexo IV · Serviços'],['receitas.a4_retiss','Anexo IV · Serviços com ISS retido'],['receitas.a5r','Anexo V/III · Serviços sujeitos ao Fator R'],['receitas.comtransp','Comunicação e transporte (ICMS)'],['receitas.comtransp_st','Comunicação e transporte — com retenção de ICMS'],['receitas.fin','Receitas financeiras'],
  ['folha.prolabore','Folha · Pró-labore'],['folha.salarios','Folha · Salários e proventos'],['folha.baseFgts','Folha · Base do FGTS'],['folha.prov13','Folha · Provisão de 13º'],['folha.provFerias','Folha · Provisão de férias'],
  ['compras.semst','Compras · Revenda sem ST'],['compras.mono','Compras · Monofásico'],['compras.comst','Compras · Com ST'],['compras.comstMono','Compras · Com ST e monofásico'],['compras.baseIpiCred','Compras · Base de crédito de IPI'],
  ['despesas.adm','Despesas administrativas'],['despesas.vendas','Despesas de vendas'],['despesas.fiscais','Despesas fiscais'],['despesas.financeiras','Despesas financeiras'],['despesas.outras','Outras despesas'],['despesas.credLR','Base extra de crédito PIS/COFINS (LR)']];
 const MESES_ROT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const MODELO_TPL_PATHS = ["cfg.iss", "cfg.icmsV", "cfg.icmsC", "cfg.ipiV", "cfg.ipiC", "cfg.rbt12Lanc", "cfg.folha12Lanc", "receitas.a1_semst", "receitas.a1_red", "receitas.a1_red_pct", "receitas.a1_mono", "receitas.a1_comst", "receitas.a1_comst_mono", "receitas.a2_semst", "receitas.a2_red", "receitas.a2_red_pct", "receitas.a2_mono", "receitas.a2_comst", "receitas.a2_comst_mono", "receitas.a3_semret", "receitas.a3_retiss", "receitas.a3_retissinss", "receitas.a4", "receitas.a5r", "receitas.comtransp", "receitas.comtransp_st", "receitas.fin", "folha.prolabore", "folha.salarios", "folha.baseFgts", "folha.prov13", "folha.provFerias", "compras.semst", "compras.mono", "compras.comst", "compras.comstMono", "compras.baseIpiCred", "despesas.adm", "despesas.vendas", "despesas.fiscais", "despesas.financeiras", "despesas.outras", "despesas.credLR"];
+const MODELO_TPL_PATHS = ["cfg.iss", "cfg.icmsV", "cfg.icmsC", "cfg.ipiV", "cfg.ipiC", "cfg.rbt12Lanc", "cfg.folha12Lanc", "receitas.a1_semst", "receitas.a1_red", "receitas.a1_red_pct", "receitas.a1_mono", "receitas.a1_comst", "receitas.a1_comst_mono", "receitas.a2_semst", "receitas.a2_red", "receitas.a2_red_pct", "receitas.a2_mono", "receitas.a2_comst", "receitas.a2_comst_mono", "receitas.a3_semret", "receitas.a3_retiss", "receitas.a3_retissinss", "receitas.a4", "receitas.a4_retiss", "receitas.a5r", "receitas.comtransp", "receitas.comtransp_st", "receitas.fin", "folha.prolabore", "folha.salarios", "folha.baseFgts", "folha.prov13", "folha.provFerias", "compras.semst", "compras.mono", "compras.comst", "compras.comstMono", "compras.baseIpiCred", "despesas.adm", "despesas.vendas", "despesas.fiscais", "despesas.financeiras", "despesas.outras", "despesas.credLR"];
 const MODELO_B64 = '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';
 // baixa o modelo formatado embutido; se ele sair de sincronia com MODELO_LINHAS, cai no gerador simples
 function anModeloBaixar(){
@@ -2737,7 +2738,7 @@ function repEfetiva(anexos){
   return out;
 }
 const REC_COM_KEYS = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_mono','a2_comst','a2_comst_mono'];
-const REC_SERV_KEYS = ['a3_semret','a3_retiss','a3_retissinss','a4','a5r','comtransp','comtransp_st'];
+const REC_SERV_KEYS = ['a3_semret','a3_retiss','a3_retissinss','a4','a4_retiss','a5r','comtransp','comtransp_st'];
 
 const FOLHA_PERC_DEFAULT = { patronalProLabore:.20, patronalSalarios:.20, rat:.058, terceiros:.02796, fgts:.08 };
 
@@ -2776,7 +2777,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   anexos = _anx;
   fp = Object.assign({}, FOLHA_PERC_DEFAULT, fp||{});
   const cfg = inp.cfg, R = {}, out = { meses: [] };
-  const K = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','comtransp','comtransp_st'];
+  const K = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a4_retiss','a5r','comtransp','comtransp_st'];
   // exportação: LC 123 art. 3º §14 (limite próprio) e art. 18 §14 (sem PIS, COFINS, IPI, ICMS e ISS)
   const KEXP = ['a1_exp','a2_exp','a3_exp'];
   for (const k of [...K,...KEXP,'a1_red_pct','a1_mono_pct','a2_red_pct','fin']) R[k] = arr12(inp.receitas[k]);
@@ -2849,6 +2850,12 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       a3_retiss: A3.iss[fx]>0 ? e3*(1-A3.iss[fx]) : e3,
       a3_retissinss: (()=>{ const adj = A3.iss[fx]+A3.cpp[fx]; return adj>0 ? e3*(1-adj) : e3; })(),
       a4: e4,
+      // v7.50.0 · Anexo IV com ISS RETIDO pelo tomador: a parcela de ISS sai do DAS, simétrico ao
+      // a3_retiss. É o anexo com a MAIOR parcela de ISS (44,5% na 1ª faixa, 40% nas demais, zerando
+      // em 2033 pela Res. CGSN 190) e o setor em que a retenção é a regra — construção, limpeza,
+      // conservação e vigilância. Não há variante "ISS e INSS retidos": o CPP do Anexo IV já fica
+      // fora do DAS, então a retenção previdenciária não muda a guia (decisão 2.2).
+      a4_retiss: A4.iss[fx]>0 ? e4*(1-A4.iss[fx]) : e4,
       a5r: fatorR < .28 ? e5 : e3,
       comtransp: (A3.iss[fx]>0 ? e3*(1-A3.iss[fx]) : e3) + e1*A1.icms[fx],
       // v7.48.0 · transporte/comunicação com ICMS RETIDO por substituição: quem recolhe o ICMS é o
@@ -2865,7 +2872,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // v7.17.0: DAS por anexo do mês — insumo da partilha por vigência (Res. CGSN 190/2026)
     const dasAx = {I:0,II:0,III:0,IV:0,V:0};
     { const _axDe = k => k.startsWith('a1')&&k!=='a1_exp' ? 'I' : k.startsWith('a2')&&k!=='a2_exp' ? 'II'
-        : k==='a4' ? 'IV' : k==='a5r' ? (fatorR>=.28?'III':'V') : 'III';
+        : (k==='a4'||k==='a4_retiss') ? 'IV' : k==='a5r' ? (fatorR>=.28?'III':'V') : 'III';
       for (const k of K)    dasAx[_axDe(k)] += R[k][m]*efb[k];
       dasAx.I += R.a1_exp[m]*efb.a1_exp; dasAx.II += R.a2_exp[m]*efb.a2_exp; dasAx.III += R.a3_exp[m]*efb.a3_exp; }
     const recInt = totalRec(m), recExp = totalExp(m);
@@ -2880,7 +2887,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         (R.a1_semst[m]+R.a1_red[m]+R.a1_comst[m])*e1*A1.piscof[fx]
       + (R.a2_semst[m]+R.a2_red[m]+R.a2_comst[m])*e2*A2.piscof[fx]
       + (R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.comtransp[m]+R.comtransp_st[m])*e3*A3.piscof[fx]
-      + R.a4[m]*e4*A4.piscof[fx]
+      + (R.a4[m]+R.a4_retiss[m])*e4*A4.piscof[fx]
       + R.a5r[m]*e35*A3sh.piscof[fx];
     let dasIcmsIss =
         R.a1_semst[m]*e1*A1.icms[fx] + R.a1_red[m]*e1*A1.icms[fx]*(1-R.a1_red_pct[m]) + R.a1_mono[m]*e1*A1.icms[fx]*(1-R.a1_mono_pct[m])
@@ -2911,6 +2918,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       const pIss3 = capIss(ef5(A3)*A3.iss[4]);
       const pIss4 = capIss(ef5(A4)*((A4.iss&&A4.iss[4]!=null)?A4.iss[4]:.40));   // parte ISS 5ª fx do Anexo IV (parâmetro)
       const pIss5 = capIss(ef5(A5)*((A5.iss&&A5.iss[4]!=null)?A5.iss[4]:.235));  // parte ISS 5ª fx do Anexo V (parâmetro)
+      // o a4_retiss fica FORA da trava, como o a3_retiss: o ISS foi retido pelo tomador (v7.50.0)
       subIss = R.a3_semret[m]*pIss3 + R.a4[m]*pIss4
              + R.a5r[m]*(fatorR >= .28 ? pIss3 : pIss5);
       // receitas com ST e com retenção de ISS ficam de fora (ICMS-ST recolhido antes; ISS retido pelo tomador)
@@ -2934,7 +2942,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       const _bases = [ ['I', REC_COM_KEYS.slice(0,5).reduce((s,k)=>s+R[k][m],0), e1],
         ['II', REC_COM_KEYS.slice(5).reduce((s,k)=>s+R[k][m],0), e2],
         ['III', R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.comtransp[m]+R.comtransp_st[m], e3],
-        ['IV', R.a4[m], e4],
+        ['IV', R.a4[m]+R.a4_retiss[m], e4],
         [fatorR>=.28?'III':'V', R.a5r[m], e35] ];
       for (const [ax, base, e] of _bases) { const rp = REPX[ax]; if (!rp || !base) continue;
         for (const t of Object.keys(dt)) if (rp[t]) dt[t] += base*e*rp[t][fx]; }
@@ -2959,7 +2967,14 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const _pIssRet = (rbt12 > subLim && (cfg.sublimite||'auto') !== 'off')
       ? Math.min(((rbt12*anexos.III.aliq[4]-anexos.III.ded[4])/rbt12)*((anexos.III.iss&&anexos.III.iss[4]!=null)?anexos.III.iss[4]:.335), .05)   // v7.36.0: RBT12 efetivo
       : e3*((anexos.III.iss&&anexos.III.iss[fx]!=null)?anexos.III.iss[fx]:0);
-    const issRetido = (R.a3_retiss[m] + R.a3_retissinss[m]) * _pIssRet;
+    // v7.50.0 (decisão 2.1) · a recomposição do ISS retido passa a usar a parcela do PRÓPRIO anexo.
+    // Até aqui só o Anexo III tinha retenção, então a parcela do III servia para tudo; a do Anexo IV
+    // tem alíquota efetiva e percentual de ISS próprios, então a do III daria outro valor.
+    // LC 123, art. 21, §4º — o teto de 5% da trava vale igual.
+    const _pIssRet4 = (rbt12 > subLim && (cfg.sublimite||'auto') !== 'off')
+      ? Math.min(((rbt12*anexos.IV.aliq[4]-anexos.IV.ded[4])/rbt12)*((anexos.IV.iss&&anexos.IV.iss[4]!=null)?anexos.IV.iss[4]:.40), .05)
+      : e4*((anexos.IV.iss&&anexos.IV.iss[fx]!=null)?anexos.IV.iss[fx]:0);
+    const issRetido = (R.a3_retiss[m] + R.a3_retissinss[m]) * _pIssRet + R.a4_retiss[m] * _pIssRet4;
     const cppRetida = R.a3_retissinss[m] * e3 * (REPX.III.cpp[fx]||0);
 
     // Folha (dezembro agrega 13º: FGTS e patronal por fora do total da folha)
@@ -2990,15 +3005,15 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const ipiDeb = inp.ipi?.deb?.[m] != null ? +inp.ipi.deb[m] : ipiDebBase*cfg.ipiV;
     const ipiPagar = ipiDeb - ipiCred;
 
-    const serv = R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]+R.a5r[m];
+    const serv = R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]+R.a4_retiss[m]+R.a5r[m];
     const com  = R.a1_semst[m]+R.a1_red[m]+R.a1_mono[m]+R.a1_comst[m]+R.a1_comst_mono[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m]+R.a2_comst[m]+R.a2_comst_mono[m]+R.comtransp[m]+R.comtransp_st[m];
     const custos = C.baixaSemst[m]+C.baixaMono[m]+C.baixaComst[m]+C.baixaComstMono[m];
     const despTotal = DESP_KEYS.reduce((s,k)=>s+D[k][m],0) + CRED_LR_KEYS.reduce((s,k)=>s+D[k][m],0);
     const credItensMes = CRED_LR_KEYS.reduce((s,k)=>s+D[k][m],0);   // v7.42.3: base de crédito nomeada
     // v7.23.0: nas receitas com retenção (a3_retiss / a3_retissinss) o ISS é retido pelo tomador
     // também no Presumido/Real — sai da guia própria, mantendo a comparação entre regimes simétrica.
-    const issRetLPLR = (R.a3_retiss[m]+R.a3_retissinss[m])*cfg.iss;
-    const iss = (serv - R.a3_retiss[m] - R.a3_retissinss[m])*cfg.iss;
+    const issRetLPLR = (R.a3_retiss[m]+R.a3_retissinss[m]+R.a4_retiss[m])*cfg.iss;
+    const iss = (serv - R.a3_retiss[m] - R.a3_retissinss[m] - R.a4_retiss[m])*cfg.iss;
 
     // ── LUCRO PRESUMIDO ──
     // v7.1 (A3): revenda monofásica tem alíquota zero de PIS/COFINS também no cumulativo —
@@ -3030,7 +3045,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // o mesmo usado no crédito de ICMS; a conferência de cálculos expõe a parcela).
     const icmsComprasPC = (C.semst[m]+C.comst[m])*cfg.icmsC;
     const basePisCofLR = R.a1_semst[m]+R.a1_red[m]+R.a1_comst[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_comst[m]
-      + R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]
+      + R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]+R.a4_retiss[m]
       + (fatorR<.28 ? R.a5r[m] : 0) + (fatorR>=.28 ? R.a5r[m] : 0)
       + R.comtransp[m] + R.comtransp_st[m] - (C.semst[m]+C.comst[m] - icmsComprasPC) - credItensMes - credDespMes(m);
     // v7.18.0 · Tema 69 também no não cumulativo (decisão de 13/08): mesmo ICMS destacado excluído da base
@@ -3046,7 +3061,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
 
     out.meses.push({ m, rbt12, rbt12Exp, recInt, recExp, dasExp, faixaExp: fxE+1, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasAx, trv190, dasTrib: dt, recCom, recServ, recTransp,
-      fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, credPresTransp, icmsVTransp, ipiPagar, iss, custos, despTotal, icmsDestacadoPC, icmsComprasPC,
+      fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, credPresTransp, icmsVTransp, issRetLPLR, ipiPagar, iss, custos, despTotal, icmsDestacadoPC, icmsComprasPC,
       // v7.23.0: ISS retido deixa de ser RECOMPOSTO no total (recolhido na fonte pelo tomador,
       // LC 123, art. 21, §4º — não é desembolso em guia da empresa); campo mantido como informativo.
       // v7.36.0 · DAS DA GUIA: não havendo impedimento (RBA/RBAA abaixo do sublimite), o ICMS/ISS
@@ -3056,8 +3071,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       dasGuia: das + ((cfg.travaNoDas === false) ? 0 : (subIcms + subIss)),
       simples: { das, fgts, sublimite: subIcms+subIss, issRetido, cppRetida,
         // v7.1 (A1): CPP do Anexo IV é devida FORA do DAS — proxy pela participação da receita a4 no mês
-        inssPatrForaDAS: (receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0,
-        total: das + subIcms + subIss + cppRetida + ((receita>0 && R.a4[m]>0) ? inssPatr*(R.a4[m]/receita) : 0) },   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
+        inssPatrForaDAS: (receita>0 && (R.a4[m]+R.a4_retiss[m])>0) ? inssPatr*((R.a4[m]+R.a4_retiss[m])/receita) : 0,
+        total: das + subIcms + subIss + cppRetida + ((receita>0 && (R.a4[m]+R.a4_retiss[m])>0) ? inssPatr*((R.a4[m]+R.a4_retiss[m])/receita) : 0) },   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
             baseAdic: base32+base8, basePC:_baseLPliq, basePCbruta:basePisCofLP },
       lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
@@ -3158,7 +3173,7 @@ function projJanelaEfetiva(cfg){
 }
 // Receitas de TODOS os anexos (interno + exportação) — mesma definição de "mês lançado" do monitor
 const PROJ_KREC = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red',
-  'a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r',
+  'a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a4_retiss','a5r',
   'comtransp','comtransp_st','a1_exp','a2_exp','a3_exp'];
 // v7.43.1 · O PERÍODO COBERTO NÃO É "ATÉ O ÚLTIMO MÊS COM RECEITA". Importar o PGDAS-D de
 // janeiro a junho declara SEIS meses de apuração, mesmo que só três tenham tido faturamento —
@@ -3433,7 +3448,7 @@ function anNovo(cnpj, ano) {
            // v7.35.0 · período de apuração do Lucro Real (trimestral | anual | mensal-legado) e
            // saldos iniciais de prejuízo fiscal e base negativa de CSLL (independentes entre si)
            lrPeriodo:'trimestral', lrPrejIrpj:0, lrPrejCsll:0 },
-    receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a5r','fin','comtransp','comtransp_st','a1_exp','a2_exp','a3_exp'].map(k=>[k,z12()])),
+    receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a4_retiss','a5r','fin','comtransp','comtransp_st','a1_exp','a2_exp','a3_exp'].map(k=>[k,z12()])),
     folha: Object.fromEntries(['prolabore','salarios','baseFgts','prov13','provFerias'].map(k=>[k,z12()])),
     folha13: { prolabore13:0, salarios13:0, baseFgts13:0 },
     compras: Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred'].map(k=>[k,z12()])),
@@ -3460,7 +3475,7 @@ const AN_SECOES = [
     ['receitas.a2_mono','Sem ST e monofásico'], ['receitas.a2_comst','Com ST'], ['receitas.a2_comst_mono','Com ST e monofásico'],
     ['Serviços Anexo III'],
     ['receitas.a3_semret','Sem retenção'], ['receitas.a3_retiss','Com retenção de ISS'], ['receitas.a3_retissinss','Com retenção ISS e INSS'],
-    ['Serviços Anexo IV'], ['receitas.a4','Serviços (construção, vigilância...)'],
+    ['Serviços Anexo IV'], ['receitas.a4','Serviços (construção, vigilância...)'], ['receitas.a4_retiss','Com retenção de ISS'],
     ['Anexo V ou III — Fator R'], ['receitas.a5r','Receita (o motor aplica o Fator R)'],
     ['Outras'], ['receitas.fin','Receitas financeiras'], ['receitas.comtransp','Comunicação / Transporte interm.'],['receitas.comtransp_st','Com. / Transporte — com retenção ICMS'],
   ]},
@@ -3583,7 +3598,7 @@ function anRenderGrid() {
     try {
       const _s12 = ks => ks.reduce((t,k)=>t + ((AN.receitas[k]||[]).reduce((a,b)=>a+(+b||0),0)), 0);
       const _com = _s12(['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_mono','a2_comst','a2_comst_mono']);
-      const _srv = _s12(['a3_semret','a3_retiss','a3_retissinss','a4','a5r','comtransp','comtransp_st']);
+      const _srv = _s12(['a3_semret','a3_retiss','a3_retissinss','a4','a4_retiss','a5r','comtransp','comtransp_st']);
       const _tot = _com+_srv;
       h += `<div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap">
         <div class="stat"><div class="n" style="font-size:17px">${fmtR(_com)}</div><div class="l">Comércio/Indústria (Anexos I–II)</div><div class="sub">${_tot?(_com/_tot*100).toFixed(1)+'% da receita':'—'}</div></div>
@@ -3653,7 +3668,7 @@ function anVerificar(){
   if (!AN) return out;
   const c = AN.cfg, R = AN.receitas, F = AN.folha, C = AN.compras, D = AN.despesas;
   const soma = o => Object.values(o||{}).reduce((s,a)=>s+(Array.isArray(a)?a.reduce((x,y)=>x+(+y||0),0):0),0);
-  const serv = ['a3_semret','a3_retiss','a3_retissinss','a4','a5r'].reduce((s,k)=>s+(R[k]||[]).reduce((x,y)=>x+(+y||0),0),0);
+  const serv = ['a3_semret','a3_retiss','a3_retissinss','a4','a4_retiss','a5r'].reduce((s,k)=>s+(R[k]||[]).reduce((x,y)=>x+(+y||0),0),0);
   const merc = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_mono','a2_comst','a2_comst_mono']
                  .reduce((s,k)=>s+(R[k]||[]).reduce((x,y)=>x+(+y||0),0),0);
   const receita = serv + merc, folha = soma(F), compras = soma(C), desp = soma(D);
@@ -3673,7 +3688,7 @@ function anVerificar(){
   if (!desp && receita > 0)
     add('distorce','Nenhuma despesa lançada — o Lucro Real considera a receita quase inteira como lucro.','analise:despesas');
 
-  const mesesRec = Array.from({length:12},(_,m)=>['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a3_semret','a3_retiss','a4','a5r','comtransp','comtransp_st']
+  const mesesRec = Array.from({length:12},(_,m)=>['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a3_semret','a3_retiss','a4','a4_retiss','a5r','comtransp','comtransp_st']
       .reduce((s,k)=>s+(+((R[k]||[])[m])||0),0));
   const semRec = mesesRec.filter(v=>!v).length;
   if (semRec && semRec < 12) add('observe',`${semRec} mês(es) sem receita lançada — confira se a empresa esteve inativa.`,'analise:receitas');
@@ -3770,7 +3785,7 @@ function anVerificarMostrar(){ anRecalcular(); verifPainel('an-verif','Verifica�
 function anAvisoConfig(){
   const el = $id('an-cfg-aviso'); if (!el || !AN) return;
   const c = AN.cfg, falta = [];
-  const temServ = ['a3_semret','a3_retiss','a3_retissinss','a4','a5r'].some(k => (AN.receitas[k]||[]).some(v=>+v>0));
+  const temServ = ['a3_semret','a3_retiss','a3_retissinss','a4','a4_retiss','a5r'].some(k => (AN.receitas[k]||[]).some(v=>+v>0));
   const temMerc = ['a1_semst','a1_red','a1_mono','a1_comst','a1_comst_mono','a2_semst','a2_mono','a2_comst']
                     .some(k => (AN.receitas[k]||[]).some(v=>+v>0));
   if (temServ && !(+c.iss)) falta.push('a alíquota de ISS');
@@ -3825,7 +3840,7 @@ function anRenderConfig() {
   if (!AN) AN = anNovo(EMP_GLOBAL.cnpj || $id('an-empresa')?.value || '', EMP_GLOBAL.ano || +($id('an-ano')?.value) || new Date().getFullYear());   // v7.44.0: nunca renderizar com análise nula (lição 1 do projeto, agora também aqui)
   const c = AN.cfg;
   if (!(+c.icmsV) && !(+c.icmsC)) { c.icmsV = .12; c.icmsC = .12; setTimeout(anRecalcular, 0); }   // v7.5: 12%/12% como base padrão
-  const _servTot = ['a3_semret','a3_retiss','a3_retissinss','a4','a5r'].reduce((s,k)=>s+((AN.receitas&&AN.receitas[k])||[]).reduce((a,b)=>a+(+b||0),0),0);
+  const _servTot = ['a3_semret','a3_retiss','a3_retissinss','a4','a4_retiss','a5r'].reduce((s,k)=>s+((AN.receitas&&AN.receitas[k])||[]).reduce((a,b)=>a+(+b||0),0),0);
   // v7.49.0: quando o ano nasceu herdando, a tela diz de onde veio — o número não pode aparecer
   // do nada numa tela que decide tributo.
   const avisoHerda = AN._cfgHerdadaDe ? `<div class="hint" style="padding:10px 12px;border-left:4px solid #1a5276;background:#f4f6f7;margin-bottom:12px">📋 <b>Configuração herdada de ${AN._cfgHerdadaDe}</b> — alíquotas, presunções e percentuais de folha vieram do ano mais recente desta empresa. Confira antes de lançar e clique em <b>💾 Salvar configuração</b>; o que for específico deste ano é alterado aqui, sem afetar os anos anteriores.</div>` : '';
@@ -4227,7 +4242,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.49.1';
+const APP_VERSAO = '7.50.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -4764,6 +4779,11 @@ function calcCenariosReforma(res, reforma) {
   const lpPis=sLP('pis'), lpCof=sLP('cofins'), lpIcms=sLP('icms'), lpIpi=sLP('ipi'), lpIss=sLP('iss');
   const lrPis=sLR('pis'), lrCof=sLR('cofins'), lrIcms=sLR('icms'), lrIpi=sLR('ipi'), lrIss=sLR('iss');
   const lpIcmsDeb = meses.reduce((s,x)=>s+(+x.icmsDeb||0),0);   // v7.48.0: ICMS destacado nas saídas
+  // v7.50.0 (decisão 2.4) · o ISS RETIDO pelo tomador também incidiu sobre a operação e está dentro
+  // do preço, então sai da base do IBS/CBS pelo mesmo art. 12, §2º, V. Até aqui a dedução usava só
+  // `lp.iss`, que exclui as receitas com retenção: empresa com ISS retido deduzia MENOS que uma
+  // idêntica sem retenção — assimetria que eu introduzi na v7.48.0 e que se corrige aqui.
+  const lpIssRet = meses.reduce((s,x)=>s+(+x.issRetLPLR||0),0);
   const lpResto = T.lp - lpPis - lpCof - lpIcms - lpIpi - lpIss;
   const lrResto = T.lr - lrPis - lrCof - lrIcms - lrIpi - lrIss;
   // ═══ v7.17.0 · Res. CGSN nº 190/2026: partilha do DAS por vigência ═══
@@ -4802,7 +4822,7 @@ function calcCenariosReforma(res, reforma) {
     // percentual remanescente do ano (2027-28 100% · 2029-32 em degraus · 2033 zero, ISS extinto).
     // lpIss = ISS anual apurado com a alíquota configurada — dedução ÚNICA, a mesma da aba.
     const _q0 = Object.assign({}, RF_ALIQ_DEFAULT[a], (PARAMS.reforma||{})[a]||{});
-    const dedIss = a >= 2027 ? lpIss * (+_q0.remIcmsIss||0) : 0;
+    const dedIss = a >= 2027 ? (lpIss + lpIssRet) * (+_q0.remIcmsIss||0) : 0;   // v7.50.0: inclui o ISS retido
     // v7.48.0 (decisão 2.1) · o ICMS também não integra a base do IBS/CBS — LC 214, art. 12, §2º, V,
     // o MESMO inciso do ISS. Deduz-se o ICMS DESTACADO NAS SAÍDAS (icmsDeb), não o saldo a pagar: o
     // que a lei exclui é o imposto que incide sobre a operação e está no preço, não o resultado da
@@ -4920,7 +4940,7 @@ function rfCalcular() {
   const _T = AN?._res?.totais || null;
   const _ce = rfContraEfetivo(RF, _T);
   const RFX = Object.assign({}, RF, { contra: _ce.contra });
-  const _issCfgAno = AN?._res ? (AN._res.meses||[]).reduce((sm,M)=>sm+(+((M.lp||{}).iss)||0),0) : 0;
+  const _issCfgAno = AN?._res ? (AN._res.meses||[]).reduce((sm,M)=>sm+(+((M.lp||{}).iss)||0)+(+M.issRetLPLR||0),0) : 0;   // v7.50.0: com o ISS retido
   // v7.48.0: o ICMS destacado nas saídas sai da base junto com o ISS — mesma regra dos cenários
   const _icmsDebAno = AN?._res ? (AN._res.meses||[]).reduce((sm,M)=>sm+(+M.icmsDeb||0),0) : 0;
   const linhas = [];
@@ -5054,7 +5074,7 @@ async function garantirEmpresa(cnpjBruto, nome, regime) {
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const PG_BLOCOS = [['a1_semst','Anexo I — Sem ST'],['a1_comst','Anexo I — Com ST'],['a1_mono','Anexo I — Monofásico'],['a1_comst_mono','Anexo I — ST + Mono'],
   ['a2_semst','Anexo II — Sem ST'],['a2_comst','Anexo II — Com ST'],['a2_mono','Anexo II — Monofásico'],['a2_comst_mono','Anexo II — ST + Mono'],
-  ['a3_semret','Anexo III — Sem retenção'],['a3_retiss','Anexo III — Ret. ISS'],['a3_retissinss','Anexo III — Ret. ISS + INSS'],['a4','Anexo IV'],['a5r','Anexo V/III (Fator R)'],['comtransp','Comunicação/Transporte'],['comtransp_st','Com. / Transporte — com retenção ICMS'],
+  ['a3_semret','Anexo III — Sem retenção'],['a3_retiss','Anexo III — Ret. ISS'],['a3_retissinss','Anexo III — Ret. ISS + INSS'],['a4','Anexo IV'],['a4_retiss','Anexo IV — com retenção de ISS'],['a5r','Anexo V/III (Fator R)'],['comtransp','Comunicação/Transporte'],['comtransp_st','Com. / Transporte — com retenção ICMS'],
   ['a1_exp','Exportação — Revenda (Anexo I)'],['a2_exp','Exportação — Indústria (Anexo II)'],['a3_exp','Exportação — Serviços (Anexo III)']];
 let PG_DADOS = null;
 
@@ -5085,7 +5105,14 @@ function pgdasBloco(atividade) {
       const _temT = !_negT && (/com\s+reten[c]ao/.test(a) || /com\s+substituicao/.test(a) || /icms\s+retid/.test(a) || /reten[c]ao.{0,40}icms/.test(a));
       return _temT ? 'comtransp_st' : 'comtransp';
     }
-    if (temAnexo==='iv' || (!temAnexo && (a.includes('construcao') || a.includes('vigilancia') || a.includes('limpeza') || a.includes('obras')))) return 'a4';
+    if (temAnexo==='iv' || (!temAnexo && (a.includes('construcao') || a.includes('vigilancia') || a.includes('limpeza') || a.includes('obras')))) {
+      // v7.50.0 · Anexo IV com ISS retido pelo tomador vai para o bloco próprio. A NEGAÇÃO vence a
+      // menção, como no transporte da v7.48.0 e no achado da v7.45.0 ("SEM retenção…" casava no
+      // regex de retenção e invertia o bloco).
+      const _semRet4 = /sem\s+reten[c]ao/.test(a);
+      const _comRet4 = !_semRet4 && (/com\s+reten[c]ao/.test(a) || /reten[c]ao.{0,40}iss|iss.{0,20}retid/.test(a));
+      return _comRet4 ? 'a4_retiss' : 'a4';
+    }
     if (temAnexo==='v' || (!temAnexo && /sujeitos?\s+ao\s+fator\s*r/.test(a) && !/nao\s+sujeitos?\s+ao\s+fator/.test(a))) return 'a5r';
     const semRet = /sem\s+reten[c]ao/.test(a);
     const comRet = !semRet && (/com\s+reten[c]ao/.test(a) || /reten[c]ao.{0,40}iss|iss.{0,20}retid/.test(a));
@@ -8456,6 +8483,7 @@ function rlConfDivergencias(){
       <li><b>Fator R sem o 13º salário</b> e sem a contribuição do Anexo IV.</li>
       <li><b>Trava da 5ª faixa (v7.36.0):</b> quando o RBT12 supera R$ 3,6 milhões e <b>não há impedimento</b>, o ICMS/ISS é calculado pela fórmula do art. 21, III, "b", da Res. CGSN 140/2018, com o <b>RBT12 do próprio mês</b> — não pelo teto do sublimite, como fazia até a v7.35.0 — e integra o <b>DAS</b>. A planilha de referência não soma essa parcela; a diferença é proposital e o aplicativo é o correto.</li>
       <li><b>Impedimento não é modelado:</b> ultrapassado o sublimite pela RBA (ou já pela RBAA), o ICMS/ISS passa a ser recolhido <b>fora do Simples</b>, pelas regras normais do Estado e do Município — e o mês em que a RBA cruza o sublimite se parte entre a parcela dentro e a excedente. O aplicativo <b>alerta</b> a trajetória, mas ainda não calcula esse cenário.</li>
+      <li><b>Retenção previdenciária de 11% não é modelada (v7.50.0):</b> o CPP do Anexo IV já fica fora do DAS (a empresa recolhe a contribuição por fora), então não existe bloco de "ISS e INSS retidos" para o Anexo IV. A retenção de 11% sobre cessão de mão de obra (Lei 8.212, art. 31) é <b>custo de caixa</b> e não é modelada em nenhum regime — use o campo de INSS patronal da folha se quiser refletir o efeito.</li>
       <li><b>Dedução de ICMS/ISS da base do IBS/CBS por estimativa (v7.48.0):</b> o ISS e o ICMS <b>destacado nas saídas</b> saem da base do IBS/CBS (LC 214/2025, art. 12, §2º, V) pelas <b>alíquotas médias da configuração</b>, não nota a nota — mesma aproximação já usada no Tema 69. Deduz-se o imposto <b>destacado</b>, não o saldo a pagar da conta gráfica; mercadoria com ST fica fora por não ter destaque próprio.</li>
       <li><b>Crédito presumido do transporte, quando informado (v7.48.1):</b> o percentual da Configuração é aplicado sobre o <b>débito da prestação de transporte</b> (base do Convênio ICMS 106/96 e dos regimes estaduais equivalentes). O aplicativo <b>não segrega por atividade os créditos de compra</b>: como o regime substitui o aproveitamento dos créditos vinculados às prestações, empresa <b>exclusivamente</b> de transporte deve zerar o % de ICMS de compras para não somar as duas coisas. Empresa mista deve conferir o resultado pelo override mensal de ICMS.</li>
       <li><b>Alíquota do transporte (v7.48.1):</b> quando informada na Configuração, vale para as prestações de transporte e comunicação; em branco, segue a alíquota de vendas. Uma única alíquota por empresa — quem tiver interestadual e interna convivendo deve usar o override mensal.</li>
@@ -8829,7 +8857,7 @@ function rlRegistros(rot, n) {
       <thead><tr><th></th>${rot.map(r=>`<th class="num">${r}</th>`).join('')}<th class="num">Total</th></tr></thead><tbody>${corpo}</tbody></table></div></div>`; };
   const RLB = { a1_semst:'Anexo I — sem ST', a1_red:'Anexo I — red. ICMS', a1_mono:'Anexo I — monofásico', a1_comst:'Anexo I — com ST', a1_comst_mono:'Anexo I — ST+mono',
     a2_semst:'Anexo II — sem ST', a2_red:'Anexo II — red. ICMS', a2_mono:'Anexo II — monofásico', a2_comst:'Anexo II — com ST', a2_comst_mono:'Anexo II — ST+mono',
-    a3_semret:'Anexo III — sem retenção', a3_retiss:'Anexo III — ret. ISS', a3_retissinss:'Anexo III — ret. ISS+INSS', a4:'Anexo IV', a5r:'Anexo V/III (Fator R)', fin:'Receitas financeiras', comtransp:'Comunicação/Transporte', comtransp_st:'Com./Transporte — com retenção ICMS' };
+    a3_semret:'Anexo III — sem retenção', a3_retiss:'Anexo III — ret. ISS', a3_retissinss:'Anexo III — ret. ISS+INSS', a4:'Anexo IV', a4_retiss:'Anexo IV — ISS retido', a5r:'Anexo V/III (Fator R)', fin:'Receitas financeiras', comtransp:'Comunicação/Transporte', comtransp_st:'Com./Transporte — com retenção ICMS' };
   let h = bloco('Receitas por enquadramento', Object.entries(RLB).map(([k,nm])=>linhaT(nm, D.receitas[k]||[])));
   h += bloco('Folha de pagamento', [ linhaT('Pró-labore', D.folha.prolabore), linhaT('Salários e férias', D.folha.salarios),
     linhaT('Base FGTS', D.folha.baseFgts), linhaT('Provisão 13º', D.folha.prov13), linhaT('Provisão férias', D.folha.provFerias),
