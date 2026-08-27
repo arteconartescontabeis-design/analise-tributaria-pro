@@ -1473,8 +1473,55 @@ console.log('\n■ Integridade da interface');
       /entra PROJETADA pelo fator k =/.test(html));
     chk('v7.46.0 · a conferência contra o DAS declarado segue no REALIZADO (decisão 5.3)',
       !/rlConfDivergencias[\s\S]{0,400}rlBaseReforma/.test(html));
-    chk('v7.49.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.49\.0';/.test(html) && html.includes('<b>v7.49.0</b>') && html.includes('<b>v7.48.3</b>'));
+    chk('v7.49.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.49\.1';/.test(html) && html.includes('<b>v7.49.1</b>') && html.includes('<b>v7.49.0</b>'));
+
+    // ═══ v7.49.1 — campo ausente não pode derrubar a gravação da configuração ═══
+    // A varredura de $id() órfão não enxerga id montado por template (o helper pc() escreve
+    // id="${id}"), então a Configuração ficou sem rede. Esta é a rede: renderiza SÓ o painel da
+    // Configuração — como acontece quando a seção RBT12 da grade nunca foi aberta — e exige que a
+    // gravação atribua o que foi digitado, sem exceção.
+    {
+      const _AN = vm.runInContext('AN', ctx);
+      // DOM limpo: só o painel da Configuração é renderizado
+      for (const k of Object.keys(ctx.__els || {})) {}
+      vm.runInContext("AN = anNovo('11222333000181',2026);", ctx);
+      const idsDaConfig = (() => {
+        vm.runInContext('anRenderConfig();', ctx);
+        const painel = ctx.document.getElementById('an-config-box').innerHTML || '';
+        return new Set([...painel.matchAll(/id="([a-zA-Z0-9_-]+)"/g)].map(m => m[1]));
+      })();
+      const fonte = vm.runInContext('anAplicarConfig.toString()', ctx);
+      const semGuarda = [...fonte.matchAll(/\$id\('([^']+)'\)\.value/g)].map(m => m[1]);
+      const forasteiros = semGuarda.filter(id => !idsDaConfig.has(id));
+      chk('v7.49.1 · nenhum campo é lido sem guarda na gravação da configuração',
+        forasteiros.length === 0, forasteiros.join(', '));
+
+      // prova de comportamento: campo de outra tela ausente, digitação do ISS tem de valer
+      vm.runInContext(`
+        AN = anNovo('11222333000181',2026); AN.cfg.rbt12Direto = 500000; anRenderConfig();
+        __antes = AN.cfg.rbt12Direto;
+      `, ctx);
+      ctx.document.getElementById('cf-iss').value = '3';
+      ctx.document.getElementById('cf-icmsv').value = '17';
+      // no navegador o elemento de OUTRA tela simplesmente não existe; aqui o stub cria tudo sob
+      // demanda, então a ausência precisa ser simulada — é ela que derrubava a função inteira.
+      const _gebi = ctx.document.getElementById;
+      ctx.document.getElementById = id => id === 'cf-rbtd' ? null : _gebi.call(ctx.document, id);
+      let erro = null;
+      try { vm.runInContext('anAplicarConfig(true)', ctx); } catch(e){ erro = e; }
+      ctx.document.getElementById = _gebi;
+      chk('v7.49.1 · gravar a configuração sem a seção RBT12 na tela NÃO estoura',
+        !erro, erro ? String(erro.message) : '');
+      chk('v7.49.1 · o ISS digitado chega ao cfg (era aqui que ele se perdia)',
+        Math.abs(vm.runInContext('AN.cfg.iss', ctx) - 0.03) < 1e-9,
+        'iss=' + vm.runInContext('AN.cfg.iss', ctx));
+      chk('v7.49.1 · e o campo que estava fora da tela é PRESERVADO, não zerado',
+        +vm.runInContext('AN.cfg.rbt12Direto', ctx) === 500000);
+      chk('v7.49.1 · a alteração marca a análise como pendente de gravação',
+        vm.runInContext('AN_SUJO', ctx) === true);
+      ctx.__ret2 = _AN; vm.runInContext('AN = __ret2;', ctx);
+    }
 
     // ═══ v7.49.0 — a Configuração gravava no ANO errado; e as alíquotas passam a ser herdadas ═══
     {
