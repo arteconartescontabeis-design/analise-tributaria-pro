@@ -674,7 +674,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
-                    <tr><td><b>v7.48.3</b> <span class="badge ok">atual</span></td><td>26/08/2026</td><td><b>🛟 O 💾 Salvar da aba Reforma podia gravar uma análise EM BRANCO por cima da que existe — era assim que a alíquota de ISS sumia depois de gravar, sair e voltar.</b> A montagem do que ia ao banco comparava <b>só o CNPJ</b>: <code>(AN && AN.cnpj===RF.cnpj) ? {...AN, reforma} : {...anNovo(...), reforma}</code>. Quando a comparação falhava — <code>AN</code> nula, de <b>outro ano</b> (o ano nunca foi comparado) ou recriada em branco pelo guard da v7.44.0 —, o ramo de fallback montava uma análise <b>zerada, com a configuração de fábrica</b> (ISS 0, ICMS 12/12) e a gravava por cima da linha do ano. A faixa de pendência da v7.47.1 passou a pedir esse clique com frequência, o que transformou uma mina dormente em caminho comum. Agora a comparação inclui o <b>ano</b> e, quando <code>AN</code> não corresponde, o app <b>lê a linha gravada antes</b> e troca apenas o bloco <code>reforma</code> dentro dela, preservando configuração, receitas, folha, compras e despesas; só cria análise nova quando <b>não existe linha</b> para aquele ano, caso em que não há o que perder. Se a leitura prévia falhar, <b>nada é gravado</b> e o app avisa — antes seguia em frente e sobrescrevia. O <code>resumo</code> do ano também deixou de ser recalculado a partir de uma análise que não é a daquele ano, e o <code>AN._sn</code> lido sem guarda (que estourava com <code>AN</code> nula) foi protegido. Motor e cálculo intocados: <b>lacre <code>47f3f10b</code> íntegro</b>.</td></tr>
+                    <tr><td><b>v7.49.0</b> <span class="badge ok">atual</span></td><td>26/08/2026</td><td><b>⚙️ A alíquota da Configuração da empresa não ficava gravada — e agora vale para os anos seguintes.</b> <b>A causa:</b> ao abrir a Configuração, o <code>go()</code> conferia se a análise carregada era da empresa da tela, mas <b>nunca conferia o ANO</b> (o ramo da Análise já comparava os dois desde a v7.41.6). Mesma empresa em ano diferente não recarregava: a tela exibia e editava a configuração de OUTRO ano e o <b>💾 Salvar configuração gravava na linha desse outro ano</b> — o toast dizia "Análise salva" com razão, só que na linha errada. Na volta, o ano da tela continuava sem nada. Agora a conferência compara <b>empresa e ano</b>. <b>Rede de segurança:</b> o <code>anSalvar</code> passou a recusar a gravação quando a análise carregada não é a que está na barra do topo, dizendo <b>onde</b> ia gravar em vez de gravar no escuro — é a terceira vez que perdemos configuração por AN apontando para uma linha e a tela mostrando outra, então a trava agora é geral. O gravador com atraso da Configuração também ficou preso à empresa e ao ano do momento do clique: trocar antes de o atraso vencer não grava mais na linha nova. <b>Herança de alíquotas:</b> ano sem linha no banco nascia com a configuração de FÁBRICA (ISS zero, ICMS 12/12) e tudo era redigitado na virada. Agora o ano novo <b>herda do ano mais recente da mesma empresa</b> — alíquotas de ISS, ICMS (inclusive transporte e crédito presumido), IPI, presunções de IRPJ e CSLL, presunção do transporte, percentuais de folha, adicional, sublimite, trava da 5ª faixa, período do Lucro Real, janela de projeção e ano de referência do parecer — e a tela declara <b>de qual ano veio</b>, até o primeiro Salvar. Não se herda o que é apuração do ano: RBT12, folha dos 12 meses e saldos de prejuízo. Alterar um ano específico segue manual e <b>não volta para trás</b>: parecer já emitido não muda sozinho. Motor intocado: <b>lacre <code>47f3f10b</code> íntegro</b>.</td></tr>
+                    <tr><td><b>v7.48.3</b></td><td>26/08/2026</td><td><b>🛟 O 💾 Salvar da aba Reforma podia gravar uma análise EM BRANCO por cima da que existe — era assim que a alíquota de ISS sumia depois de gravar, sair e voltar.</b> A montagem do que ia ao banco comparava <b>só o CNPJ</b>: <code>(AN && AN.cnpj===RF.cnpj) ? {...AN, reforma} : {...anNovo(...), reforma}</code>. Quando a comparação falhava — <code>AN</code> nula, de <b>outro ano</b> (o ano nunca foi comparado) ou recriada em branco pelo guard da v7.44.0 —, o ramo de fallback montava uma análise <b>zerada, com a configuração de fábrica</b> (ISS 0, ICMS 12/12) e a gravava por cima da linha do ano. A faixa de pendência da v7.47.1 passou a pedir esse clique com frequência, o que transformou uma mina dormente em caminho comum. Agora a comparação inclui o <b>ano</b> e, quando <code>AN</code> não corresponde, o app <b>lê a linha gravada antes</b> e troca apenas o bloco <code>reforma</code> dentro dela, preservando configuração, receitas, folha, compras e despesas; só cria análise nova quando <b>não existe linha</b> para aquele ano, caso em que não há o que perder. Se a leitura prévia falhar, <b>nada é gravado</b> e o app avisa — antes seguia em frente e sobrescrevia. O <code>resumo</code> do ano também deixou de ser recalculado a partir de uma análise que não é a daquele ano, e o <code>AN._sn</code> lido sem guarda (que estourava com <code>AN</code> nula) foi protegido. Motor e cálculo intocados: <b>lacre <code>47f3f10b</code> íntegro</b>.</td></tr>
                     <tr><td><b>v7.48.2</b></td><td>26/08/2026</td><td><b>🤖 O parecer com IA passa a conhecer o que mudou nas v7.48.x.</b> O payload enviado à Edge Function ganhou <b><code>baseIbsCbs</code></b> (ISS e ICMS que saem da base no ano de referência, com o fundamento e o critério), <b><code>creditoSobreCompras</code></b> (compras por classe de fornecedor, percentual do art. 58 e crédito do ano, dizendo se veio da aba, do proxy ou de lugar nenhum) e <b><code>transporte</code></b> (receita de transporte/comunicação do ano, para a IA não tratar serviço como isento de ICMS). Duas <b>regras de texto</b> novas acompanham: a base do IBS/CBS não é a receita cheia — proibido descrever o débito como receita × alíquota — e é proibido afirmar que não há crédito quando o crédito do ano é maior que zero. O motor ganhou o total nomeado <code>recTransp</code> só para alimentar isso. <b>Requer o deploy da Edge Function v7.5</b> (entregue junto): sem ele o app funciona igual, mas o texto da IA continua sem saber da dedução do ICMS. Motor intocado no cálculo: <b>lacre <code>47f3f10b</code> íntegro</b>.</td></tr>
                     <tr><td><b>v7.48.1</b></td><td>26/08/2026</td><td><b>🚚 Fecha a frente do transporte com os dois itens que a v7.48.0 tinha deixado de fora por decisão.</b> <b>Alíquota própria do transporte:</b> campo <b>% ICMS transporte</b> na Configuração da empresa — o interestadual costuma ter alíquota diferente da interna de mercadoria, e agora o débito das prestações usa a alíquota própria; <b>em branco, segue a de vendas</b>, exatamente como na v7.48.0. <b>Crédito presumido do transporte:</b> campo <b>% crédito presumido transp.</b> — aplicado sobre o débito do ICMS da prestação (base do Convênio ICMS 106/96 e dos regimes estaduais equivalentes), em substituição ao aproveitamento dos créditos vinculados; <b>zero = não aplica</b>, o padrão. Como o aplicativo não segrega os créditos de compra por atividade, empresa <b>exclusivamente</b> de transporte deve zerar o % de ICMS de compras para não somar as duas coisas — está declarado nas divergências da conferência, junto com a ressalva de alíquota única por empresa. Os dois campos nascem <b>zerados</b>, então nenhuma análise existente muda de valor e o <b>lacre <code>47f3f10b</code> segue íntegro</b>.</td></tr>
                     <tr><td><b>v7.48.0</b></td><td>26/08/2026</td><td><b>🚚 Três melhorias pedidas: cancelar importação · ICMS fora da base de IBS/CBS · empresas de transporte.</b> <b>(1) Cancelar.</b> Na aba Importar Dados, cada revisão ganhou um <b>✖️ Cancelar</b> ao lado do <b>✅ Aplicar</b>: descarta o que foi lido, limpa a revisão e libera o campo de arquivo. Aplicar é que grava (funil <code>anAplicado → anSalvarAuto</code>), então enquanto a revisão está na tela nada foi ao banco e o cancelamento não precisa desfazer coisa alguma. Vale nos cinco importadores — PGDAS-D, Faturamento, Balancete, Demonstrativo do Simples e XMLs. Não confundir com o cancelamento <i>durante</i> a leitura (v7.43.0/v7.45.0), que interrompe o laço; este descarta o que já foi lido. <b>(2) ICMS fora da base do IBS/CBS.</b> O art. 12, §2º, V da LC 214/2025 exclui da base do IBS/CBS o ICMS, o ISS, o PIS e a COFINS — o app só deduzia o ISS. Agora deduz também o <b>ICMS destacado nas saídas</b>, pelo mesmo percentual remanescente de cada ano, com <b>coluna própria "(−) ICMS fora da base"</b> na aba Reforma, <b>linha própria na memória de cálculo</b> e um bloco novo no <b>Parecer</b> declarando o que sai da base no ano de referência. Deduz-se o ICMS <b>destacado</b>, não o saldo a pagar: o que a lei exclui é o imposto que incide sobre a operação e está no preço, não o resultado da conta gráfica — e é o critério simétrico ao do ISS, que é débito puro. A mercadoria com ST fica de fora por não ter destaque próprio. <b>Efeito:</b> cenários de 2027 a 2032 <b>caem</b> (no caso 1 do lacre, o débito de 2027 sai de 325.321,62 para 286.283,03); 2026 e 2033 não se movem, e DAS, Presumido e Real seguem idênticos ao centavo. <b>(3) Transporte.</b> Bloco novo <b>"Com. / Transporte — com retenção ICMS"</b> ao lado do de Comunicação/Transporte: reparte o DAS <b>sem a parcela de ICMS</b> (quem recolhe é o substituto — mesma simetria do bloco de mercadoria com ST) e fica fora da trava do sublimite, seguindo normalmente no Fator R, no RBT12 e na base da Reforma. E o <b>ICMS de transporte passou a ser calculado no Presumido e no Real</b>: a base do débito só tinha mercadoria, de modo que uma transportadora simulada nesses regimes saía com <b>ICMS zero</b> — o crédito sobre compras sem ST já vinha certo e não mudou. O bloco com retenção não gera débito. Na Configuração da empresa, seletor <b>Presunção do transporte</b>: cargas (IRPJ 8%) × <b>passageiros (IRPJ 16%</b>, Lei 9.249/95, art. 15, §1º, II, "a"); a CSLL é 12% nos dois. Crédito presumido estadual do transporte segue fora do modelo, declarado nas divergências. <b>🔏 LACRE RE-SELADO <code>e1a25234</code> → <code>47f3f10b</code></b> — mudança deliberada de regra, registrada aqui como manda a v7.30.0. Os 754 gabaritos das fixtures passaram <b>sem rebaseline</b>: o realizado não se move.</td></tr>
@@ -993,8 +994,13 @@ function go(page) {
       if ($id('an-empresa').value === alvo) anTrocarEmpresa();
     }); }
   if (page==='importar' || page==='config') { if (!AN) AN = anNovo(EMP_GLOBAL.cnpj||'', EMP_GLOBAL.ano||+$id('an-ano').value);   // v7.44.0: a guarda do AN nulo vem ANTES do render — estava depois, e a Configuração estourava em branco
+    // v7.49.0 · a conferência comparava só o CNPJ. Mesma empresa em ANO diferente não recarregava:
+    // a Configuração exibia e editava o ano ERRADO, e o Salvar gravava na linha desse outro ano —
+    // por isso a alíquota "salvava" e não estava lá na volta. Agora compara empresa E ano, como o
+    // ramo da Análise já fazia desde a v7.41.6.
     empCarregar().then(()=>{ empGlobalAplicar('an-empresa','an-ano');
-      if (EMP_GLOBAL.cnpj && AN?.cnpj !== EMP_GLOBAL.cnpj) anTrocarEmpresa(); }); }
+      const _dif = EMP_GLOBAL.cnpj && (AN?.cnpj !== EMP_GLOBAL.cnpj || (EMP_GLOBAL.ano && +AN?.ano !== +EMP_GLOBAL.ano));
+      if (_dif) anTrocarEmpresa(); }); }
   if (page==='config') anRenderConfig();
   if (page==='parametros') { prRender(); prRenderAliq(); }
   if (page==='reforma') { empCarregar().then(()=>{ const sel=$id('rf-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; sel.value=at||''; if (EMP_GLOBAL.cnpj) empGlobalAplicar('rf-empresa','rf-ano');
@@ -3819,9 +3825,12 @@ function anRenderConfig() {
   const c = AN.cfg;
   if (!(+c.icmsV) && !(+c.icmsC)) { c.icmsV = .12; c.icmsC = .12; setTimeout(anRecalcular, 0); }   // v7.5: 12%/12% como base padrão
   const _servTot = ['a3_semret','a3_retiss','a3_retissinss','a4','a5r'].reduce((s,k)=>s+((AN.receitas&&AN.receitas[k])||[]).reduce((a,b)=>a+(+b||0),0),0);
+  // v7.49.0: quando o ano nasceu herdando, a tela diz de onde veio — o número não pode aparecer
+  // do nada numa tela que decide tributo.
+  const avisoHerda = AN._cfgHerdadaDe ? `<div class="hint" style="padding:10px 12px;border-left:4px solid #1a5276;background:#f4f6f7;margin-bottom:12px">📋 <b>Configuração herdada de ${AN._cfgHerdadaDe}</b> — alíquotas, presunções e percentuais de folha vieram do ano mais recente desta empresa. Confira antes de lançar e clique em <b>💾 Salvar configuração</b>; o que for específico deste ano é alterado aqui, sem afetar os anos anteriores.</div>` : '';
   const avisoIss = (_servTot>0 && !(+c.iss)) ? `<div class="hint" style="color:var(--danger);margin-top:10px">⚠️ Há receitas de serviços lançadas e o <b>% ISS está zerado</b> — o Presumido e o Real sairão sem ISS. Informe a alíquota do município (a importação de XMLs de NFS-e preenche automaticamente).</div>` : '';
   const pc = (id,rot,v) => `<div><label>${rot}</label><input id="${id}" value="${v?String(+(v*100).toFixed(4)).replace('.',','):''}" style="width:110px" onchange="anAplicarConfig(true)"></div>`;
-  let h = `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
+  let h = avisoHerda + `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
     ${pc('cf-iss','% ISS',c.iss)} ${pc('cf-icmsv','% ICMS vendas',c.icmsV)} ${pc('cf-icmsc','% ICMS compras',c.icmsC)} ${pc('cf-icmstr','% ICMS transporte',c.icmsTranspV)} ${pc('cf-credpres','% crédito presumido transp.',c.transpCredPres)}
     ${pc('cf-ipiv','% IPI vendas',c.ipiV)} ${pc('cf-ipic','% IPI compras',c.ipiC)}
     <div><label>Base IRPJ serviços (LP)</label><select id="cf-bserv" onchange="anAplicarConfig(true)"><option value="0.32" ${c.lpBaseServ==.32?'selected':''}>32%</option><option value="0.16" ${c.lpBaseServ==.16?'selected':''}>16%</option><option value="0.08" ${c.lpBaseServ==.08?'selected':''}>8%</option></select></div>
@@ -3902,7 +3911,10 @@ function anAplicarConfig(silencioso) {
   AN_SUJO = true;                       // sem isto a alteração sumia sem aviso ao trocar de módulo
   anRecalcular();
   clearTimeout(window._cfgTimer);
-  window._cfgTimer = setTimeout(()=>{ if (AN && AN.cnpj) anSalvar(); }, 1200);   // grava sozinha, como os importadores
+  // v7.49.0: o alvo é fotografado agora. Se você trocar de empresa ou de ano antes de o atraso
+  // vencer, AN já é outra análise — gravar ali seria escrever a configuração na linha errada.
+  const _alvo = AN.cnpj + '|' + AN.ano;
+  window._cfgTimer = setTimeout(()=>{ if (AN && AN.cnpj && (AN.cnpj + '|' + AN.ano) === _alvo) anSalvar(); }, 1200);
   if (!silencioso) toast('Configuração aplicada e sendo gravada…');
 }
 
@@ -4102,6 +4114,7 @@ async function anTrocarEmpresa() {
   try {
     const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
     AN = anNormalizar(rows.length ? rows[0].dados : null, cnpj, ano);
+    if (!rows.length) await cfgHerdar(AN, cnpj, ano);   // v7.49.0: ano novo nasce com as alíquotas da empresa
     AN.cnpj = cnpj; AN.ano = ano;
     AN._verEm = rows.length ? (rows[0].atualizado_em || null) : null;   // marca da versão lida
     if (rows.length){                                    // v7.26.0: estado da trava vem do banco
@@ -4113,6 +4126,29 @@ async function anTrocarEmpresa() {
   AN_SUJO = false;
   anRenderTabs(); anRenderGrid(); anRecalcular();
   if (APP.page==='config') anRenderConfig();   // v7.44.0: a carga assíncrona redesenha também a Configuração — antes ela podia exibir padrões de fábrica sobre empresa com configuração salva
+}
+// ═══ v7.49.0 · AS ALÍQUOTAS SÃO DA EMPRESA; O ANO SÓ AJUSTA O QUE MUDOU ═══
+// Não existe cadastro central de alíquotas: a configuração vive dentro da análise de cada ano
+// (dados.cfg). Ano sem linha no banco nascia com a configuração de FÁBRICA — ISS zero, ICMS 12/12 —
+// e tudo era redigitado na virada. Agora o ano novo HERDA os parâmetros do ano mais recente da
+// mesma empresa e declara de onde vieram; alterar um ano específico segue sendo manual, e a
+// alteração NÃO volta para trás (parecer já emitido não pode mudar sozinho — trava da v7.26.0).
+const CFG_HERDA = ['iss','icmsV','icmsC','ipiV','ipiC','icmsTranspV','transpCredPres','lpBaseServ',
+  'lpBaseCom','lpBaseServCsll','lpBaseComCsll','transpPresuncao','folhaPerc','adicionalIR','sublimite',
+  'travaNoDas','lrPeriodo','projJanela','anoRefParecer'];
+// NÃO se herda o que é do ano: rbt12Lanc, rbt12ExpLanc, folha12Lanc, rbt12Direto, lrPrejIrpj,
+// lrPrejCsll e snAntAcima — são apuração, não parâmetro.
+async function cfgHerdar(an, cnpj, ano){
+  try {
+    const rows = await supa('GET','atp_analises',{ params:{ select:'ano,dados', cnpj:`eq.${cnpj}`,
+      ano:`lt.${ano}`, order:'ano.desc', limit:'1' } });
+    if (!rows || !rows.length || !rows[0].dados || !rows[0].dados.cfg) return null;
+    const de = rows[0].dados.cfg;
+    for (const k of CFG_HERDA) if (de[k] !== undefined && de[k] !== null)
+      an.cfg[k] = (k === 'folhaPerc') ? JSON.parse(JSON.stringify(de[k])) : de[k];
+    an._cfgHerdadaDe = rows[0].ano;
+    return rows[0].ano;
+  } catch(e){ console.error('cfgHerdar:', e); return null; }
 }
 function anMudou(){ anTrocarEmpresa(); }
 // ═══ v7.12: histórico de versões — as 3 últimas por empresa/ano, com autoria ═══
@@ -4173,7 +4209,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.48.3';
+const APP_VERSAO = '7.49.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -4228,6 +4264,15 @@ function anTravaRender(){
 async function anSalvar() {
   if (anTravada()){ toast('Análise FECHADA 🔒 — reabra (🔓) para editar e gravar.'); return false; }
   if (!AN || !AN.cnpj) { toast('Selecione a empresa no topo (ou importe PGDAS/Faturamento, que o cadastro é automático).'); return false; }
+  // ═══ v7.49.0 · rede de segurança: gravar em empresa/ano diferente do que está na tela ═══
+  // Duas vezes já perdemos configuração assim (o 💾 da Reforma na v7.48.3 e a Configuração agora).
+  // O erro é sempre o mesmo: AN aponta para uma linha e a tela mostra outra. Em vez de gravar no
+  // escuro, o app PARA e diz onde ia gravar — recarregar é um clique, desfazer não é.
+  if (EMP_GLOBAL.cnpj && (AN.cnpj !== EMP_GLOBAL.cnpj || (EMP_GLOBAL.ano && +AN.ano !== +EMP_GLOBAL.ano))) {
+    toast('Nada foi gravado: a tela mostra ' + (empNomeDe(EMP_GLOBAL.cnpj)||EMP_GLOBAL.cnpj) + '/' + EMP_GLOBAL.ano
+      + ' e a análise carregada é ' + (empNomeDe(AN.cnpj)||AN.cnpj) + '/' + AN.ano + '. Selecione a empresa e o ano no topo e tente de novo.');
+    return false;
+  }
   // ninguém deve sobrescrever, sem saber, o trabalho de outra pessoa na mesma empresa/ano
   try {
     const atual = await supa('GET','atp_analises',{ params:{ select:'atualizado_em', cnpj:`eq.${AN.cnpj}`, ano:`eq.${AN.ano}`, limit:'1' } });
@@ -4243,6 +4288,7 @@ async function anSalvar() {
     resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr }, atualizado_em:new Date().toISOString() }];
   try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); AN_SUJO = false; AN._verEm = body[0].atualizado_em;
     await anHistGravar(body[0]);
+    if (AN._cfgHerdadaDe) delete AN._cfgHerdadaDe;   // v7.49.0: gravado — deixa de ser herança
     toast('Análise salva.'); return true; }
   catch(e){ console.error('anSalvar:', e); toast('Erro ao salvar: '+e.message); return false; }
 }
