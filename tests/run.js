@@ -1473,8 +1473,83 @@ console.log('\n■ Integridade da interface');
       /entra PROJETADA pelo fator k =/.test(html));
     chk('v7.46.0 · a conferência contra o DAS declarado segue no REALIZADO (decisão 5.3)',
       !/rlConfDivergencias[\s\S]{0,400}rlBaseReforma/.test(html));
-    chk('v7.49.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.49\.1';/.test(html) && html.includes('<b>v7.49.1</b>') && html.includes('<b>v7.49.0</b>'));
+    chk('v7.50.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.50\.0';/.test(html) && html.includes('<b>v7.50.0</b>') && html.includes('<b>v7.49.1</b>'));
+
+    // ═══ v7.50.0 — Anexo IV com ISS retido (decisões 2.1 a 2.4) ═══
+    {
+      const anNovo=vm.runInContext('anNovo',ctx), calcular=vm.runInContext('calcular',ctx),
+            calcCen=vm.runInContext('calcCenariosReforma',ctx), P=vm.runInContext('PARAMS',ctx),
+            pb=vm.runInContext('pgdasBloco',ctx), aliq=vm.runInContext('RF_ALIQ_DEFAULT',ctx);
+      const base=()=>{ const i=anNovo('11222333000181',2026); i.cfg.iss=.05; return i; };
+      const iSem=base(), iCom=base();
+      for(let m=0;m<12;m++){ iSem.receitas.a4[m]=50000; iCom.receitas.a4_retiss[m]=50000; }
+      const rSem=calcular(iSem,P.anexos,P.folha), rCom=calcular(iCom,P.anexos,P.folha);
+
+      chk('v7.50.0 · o bloco novo existe na análise, na grade e no modelo',
+        /a4_retiss/.test(html) && /Anexo IV · Serviços com ISS retido/.test(html)
+        && /"receitas\.a4_retiss"/.test(html));
+      chk('v7.50.0 · com ISS retido o DAS é MENOR (a parcela de ISS sai da guia)',
+        rCom.totais.das < rSem.totais.das - 1,
+        'sem '+rSem.totais.das.toFixed(2)+' × com '+rCom.totais.das.toFixed(2));
+      // identidade: o que saiu da guia é exatamente o ISS recomposto pela parcela do Anexo IV
+      chk('v7.50.0 · o que sai do DAS é exatamente a parcela de ISS do Anexo IV (identidade mês a mês)',
+        rSem.meses.every((x,i)=>Math.abs((x.das - rCom.meses[i].das) - (rCom.meses[i].simples.issRetido||0))<0.02),
+        'ano: Δ DAS '+(rSem.totais.das-rCom.totais.das).toFixed(2)+' × ISS retido '+(rCom.totais.issRetido||0).toFixed(2));
+      const issG=r=>r.meses.reduce((s,x)=>s+x.lp.iss,0), issR=r=>r.meses.reduce((s,x)=>s+(x.issRetLPLR||0),0);
+      chk('v7.50.0 · no Presumido/Real o ISS sai da guia própria e vira ISS retido (600.000 × 5%)',
+        Math.abs(issG(rSem)-30000)<0.01 && Math.abs(issG(rCom))<0.005 && Math.abs(issR(rCom)-30000)<0.01);
+      chk('v7.50.0 · (2.1) o retido do Anexo IV é recomposto pela parcela do PRÓPRIO anexo',
+        /R\.a4_retiss\[m\] \* _pIssRet4/.test(html) && /anexos\.IV\.iss/.test(html));
+      {
+        // a mesma receita no Anexo III retido recompõe MENOS: a parcela de ISS do III é menor
+        const iIII=base(); for(let m=0;m<12;m++) iIII.receitas.a3_retiss[m]=50000;
+        const rIII=calcular(iIII,P.anexos,P.folha);
+        chk('v7.50.0 · (2.1) o Anexo IV usa o parâmetro do PRÓPRIO anexo (valor difere do que o III daria)',
+          Math.abs((rCom.totais.issRetido||0) - (rIII.totais.issRetido||0)) > 1,
+          'IV '+(rCom.totais.issRetido||0).toFixed(2)+' × III '+(rIII.totais.issRetido||0).toFixed(2));
+      }
+      chk('v7.50.0 · (2.3) não existe bloco de ISS+INSS retidos no Anexo IV',
+        !/a4_retissinss/.test(html));
+      chk('v7.50.0 · (2.2) a retenção previdenciária de 11% ficou declarada nas divergências',
+        /Retenção previdenciária de 11% não é modelada/.test(html));
+      chk('v7.50.0 · a trava do sublimite não conta a receita com ISS retido',
+        /subIss = R\.a3_semret\[m\]\*pIss3 \+ R\.a4\[m\]\*pIss4/.test(html)
+        && !/a4_retiss\[m\]\*pIss4/.test(html));
+
+      // (2.4) o ISS retido sai da base do IBS/CBS
+      {
+        const rf={receita:600000,baseIS:0,credSimplesPct:0,benefRec:{},benefCred:{},contra:{},aliq};
+        const LSem=calcCen(rSem,rf).REF.find(l=>l.ano===2027);
+        const LCom=calcCen(rCom,rf).REF.find(l=>l.ano===2027);
+        chk('v7.50.0 · (2.4) com ISS retido a dedução da base é a MESMA de quem não tem retenção',
+          Math.abs(LCom.dedIss-LSem.dedIss)<0.02 && LCom.dedIss>1,
+          'sem '+LSem.dedIss.toFixed(2)+' × com '+LCom.dedIss.toFixed(2));
+        // a fórmula antiga (só o ISS da guia) daria ZERO no caso com retenção
+        const antigo = rCom.meses.reduce((s,x)=>s+x.lp.iss,0) * (+aliq[2027].remIcmsIss||0);
+        chk('v7.50.0 · (2.4) pela fórmula anterior a dedução seria ZERO — era a assimetria corrigida',
+          Math.abs(antigo)<0.005 && LCom.dedIss>1);
+        chk('v7.50.0 · (2.4) o débito de 2027 cai pela dedução, e fecha com (base − ISS) × alíquota',
+          Math.abs(LCom.deb-(600000-LCom.ded)*LCom.alq)<0.02);
+      }
+      // PGDAS pelo rótulo declarado
+      chk('v7.50.0 · PGDAS: Anexo IV COM retenção de ISS cai no bloco novo',
+        pb('Prestação de serviços tributados pelo Anexo IV da LC 123/2006 - Com retenção de ISS')==='a4_retiss');
+      chk('v7.50.0 · PGDAS: a NEGAÇÃO vence a menção (Anexo IV sem retenção segue no bloco antigo)',
+        pb('Prestação de serviços tributados pelo Anexo IV da LC 123/2006 - Sem retenção de ISS')==='a4'
+        && pb('Prestação de serviços de vigilância, limpeza e conservação')==='a4');
+      // não-regressão
+      {
+        const iZ=base(); for(let m=0;m<12;m++) iZ.receitas.a3_semret[m]=50000;
+        const rZ=calcular(iZ,P.anexos,P.folha);
+        const iZ2=anNovo('11222333000181',2026); iZ2.cfg.iss=.05;
+        for(let m=0;m<12;m++) iZ2.receitas.a3_semret[m]=50000;
+        delete iZ2.receitas.a4_retiss;                     // análise antiga, gravada antes do campo
+        const rZ2=calcular(iZ2,P.anexos,P.folha);
+        chk('v7.50.0 · análise gravada ANTES do campo novo calcula igual (chave ausente = zero)',
+          Math.abs(rZ.totais.das-rZ2.totais.das)<0.005 && Math.abs(rZ.totais.lp-rZ2.totais.lp)<0.005);
+      }
+    }
 
     // ═══ v7.49.1 — campo ausente não pode derrubar a gravação da configuração ═══
     // A varredura de $id() órfão não enxerga id montado por template (o helper pc() escreve
