@@ -1473,8 +1473,74 @@ console.log('\n■ Integridade da interface');
       /entra PROJETADA pelo fator k =/.test(html));
     chk('v7.46.0 · a conferência contra o DAS declarado segue no REALIZADO (decisão 5.3)',
       !/rlConfDivergencias[\s\S]{0,400}rlBaseReforma/.test(html));
-    chk('v7.48.3 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.48\.3';/.test(html) && html.includes('<b>v7.48.3</b>') && html.includes('<b>v7.48.2</b>'));
+    chk('v7.49.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.49\.0';/.test(html) && html.includes('<b>v7.49.0</b>') && html.includes('<b>v7.48.3</b>'));
+
+    // ═══ v7.49.0 — a Configuração gravava no ANO errado; e as alíquotas passam a ser herdadas ═══
+    {
+      chk('v7.49.0 · go(config/importar) compara empresa E ano (era só o CNPJ)',
+        /AN\?\.cnpj !== EMP_GLOBAL\.cnpj \|\| \(EMP_GLOBAL\.ano && \+AN\?\.ano !== \+EMP_GLOBAL\.ano\)/.test(html));
+      chk('v7.49.0 · o gravador com atraso da Configuração fica preso à empresa/ano do clique',
+        /const _alvo = AN\.cnpj \+ '\|' \+ AN\.ano;/.test(html)
+        && /\(AN\.cnpj \+ '\|' \+ AN\.ano\) === _alvo/.test(html));
+
+      const _supa = vm.runInContext('supa', ctx), _AN = vm.runInContext('AN', ctx),
+            _EG = JSON.parse(JSON.stringify(vm.runInContext('EMP_GLOBAL', ctx)));
+      let corpo = null;
+      ctx.__capt = b => { corpo = JSON.parse(JSON.stringify(b)); };
+
+      // (1) rede de segurança do anSalvar: tela e análise em anos diferentes → NÃO grava
+      vm.runInContext(`
+        supa = async (m, rec, o) => { if (m==='POST' && /atp_analises\\?/.test(rec)) { __capt(o.body[0]); } return []; };
+        AN = anNovo('11222333000181', 2025); AN._res = { totais:{} };
+        EMP_GLOBAL.cnpj = '11222333000181'; EMP_GLOBAL.ano = 2026;
+      `, ctx);
+      await vm.runInContext('anSalvar()', ctx);
+      chk('v7.49.0 · anSalvar RECUSA gravar quando a tela mostra outro ano (era aí que a alíquota sumia)',
+        corpo === null, corpo ? ('gravou ano '+corpo.ano) : '');
+      // mesmo ano → grava normalmente
+      corpo = null;
+      vm.runInContext("EMP_GLOBAL.ano = 2025; AN.cfg.iss = 0.03;", ctx);
+      await vm.runInContext('anSalvar()', ctx);
+      chk('v7.49.0 · com empresa e ano batendo, grava normalmente (ISS 3% na linha certa)',
+        !!corpo && corpo.ano===2025 && Math.abs((corpo.dados.cfg.iss||0)-0.03)<1e-9);
+
+      // (2) herança das alíquotas ao abrir um ano sem linha
+      vm.runInContext(`
+        __ANT = anNovo('11222333000181', 2026);
+        __ANT.cfg.iss = 0.03; __ANT.cfg.icmsV = 0.17; __ANT.cfg.icmsTranspV = 0.07;
+        __ANT.cfg.transpPresuncao = 'passageiros'; __ANT.cfg.folhaPerc = { rat: 0.03 };
+        __ANT.cfg.rbt12Direto = 999999; __ANT.cfg.lrPrejIrpj = 12345;
+        supa = async (m, rec, o) => {
+          if (m==='GET' && /atp_analises/.test(rec) && o && o.params && /lt\\./.test(o.params.ano||''))
+            return [{ ano:2026, dados: JSON.parse(JSON.stringify(__ANT)) }];
+          return [];
+        };
+        __NOVA = anNovo('11222333000181', 2027);
+      `, ctx);
+      const de = await vm.runInContext("cfgHerdar(__NOVA,'11222333000181',2027)", ctx);
+      chk('v7.49.0 · ano novo herda as alíquotas do ano mais recente da empresa',
+        de===2026
+        && Math.abs(vm.runInContext('__NOVA.cfg.iss',ctx)-0.03)<1e-9
+        && Math.abs(vm.runInContext('__NOVA.cfg.icmsV',ctx)-0.17)<1e-9
+        && Math.abs(vm.runInContext('__NOVA.cfg.icmsTranspV',ctx)-0.07)<1e-9
+        && vm.runInContext("__NOVA.cfg.transpPresuncao",ctx)==='passageiros');
+      chk('v7.49.0 · herda os percentuais de folha por CÓPIA (não por referência)',
+        Math.abs(vm.runInContext('__NOVA.cfg.folhaPerc.rat',ctx)-0.03)<1e-9
+        && vm.runInContext('__NOVA.cfg.folhaPerc !== __ANT.cfg.folhaPerc',ctx)===true);
+      chk('v7.49.0 · NÃO herda o que é apuração do ano (RBT12 e prejuízos ficam zerados)',
+        +vm.runInContext('__NOVA.cfg.rbt12Direto',ctx)===0 && +vm.runInContext('__NOVA.cfg.lrPrejIrpj',ctx)===0);
+      chk('v7.49.0 · a tela declara de qual ano a configuração veio',
+        vm.runInContext('__NOVA._cfgHerdadaDe',ctx)===2026 && /Configuração herdada de \$\{AN\._cfgHerdadaDe\}/.test(html));
+      vm.runInContext("supa = async () => [];", ctx);   // banco sem nenhum ano anterior
+      chk('v7.49.0 · empresa sem ano anterior: nada é herdado e nada quebra',
+        (await vm.runInContext("cfgHerdar(anNovo('99999999000191',2027),'99999999000191',2027)", ctx))===null);
+      chk('v7.49.0 · a marca de herança sai no primeiro Salvar',
+        /if \(AN\._cfgHerdadaDe\) delete AN\._cfgHerdadaDe;/.test(html));
+
+      ctx.__ret = { s:_supa, a:_AN, g:_EG };
+      vm.runInContext('supa = __ret.s; AN = __ret.a; EMP_GLOBAL.cnpj = __ret.g.cnpj; EMP_GLOBAL.ano = __ret.g.ano;', ctx);
+    }
 
     // ═══ v7.48.3 — o 💾 Salvar da Reforma não pode apagar a análise gravada ═══
     {
