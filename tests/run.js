@@ -602,6 +602,9 @@ console.log('\n■ v7.25.0 — triagem de venda/compra (analíticos) e redefini�
     ctx.fetch = async (url, opt) => { chamadas.push({url:String(url), body:opt&&opt.body});
       return { ok:true, json: async()=>({ ok:true }) }; };
     let msgs = 0;
+    // v7.57.0 (C1): redefinir senha de terceiro passou a exigir papel de admin. O cenário simula
+    // o administrador — é ele quem faz essa operação. A guarda em si tem teste próprio adiante.
+    vm.runInContext("APP.papel = 'admin';", ctx);
     vm.runInContext('toast = ()=>{ this.__msg=(this.__msg||0)+1 }; alert = ()=>{ this.__msg=(this.__msg||0)+1 };', ctx);
     ctx.fetch = async (url, opt) => { chamadas.push({url:String(url), body:opt&&opt.body});
       return { ok:true, status:200, json: async()=>({ ok:true }) }; };
@@ -1644,14 +1647,123 @@ console.log('\n■ Integridade da interface');
       chk('v7.56.13 · e consta das divergências declaradas',
         /Trava de 5% do ISS/.test(vm.runInContext('rlConfDivergencias', ctx)()));
     }
+    // ── M1 · v7.57.0 · segurança C1: guarda de papel nas ações destrutivas ──
+    {
+      const AC = vm.runInContext('ACOES_ADMIN', ctx);
+      const alvos = ['usCriar','usEditar','usExcluir','usTrocarPapel','usSenhaMenu','empExcluir','anLimparDados'];
+      chk('v7.57.0 · as sete ações destrutivas estão declaradas como privativas de admin',
+        alvos.every(f => !!AC[f]), Object.keys(AC).join(' · '));
+      chk('v7.57.0 · e cada uma chama exigirAdmin() na primeira linha',
+        alvos.every(f => new RegExp('function ' + f + '\\([^)]*\\)\\s*\\{\\s*\\n\\s*if \\(!exigirAdmin\\(.' + f + '.\\)\\) return;').test(html)));
+      const ex = vm.runInContext('exigirAdmin', ctx);
+      vm.runInContext("APP.papel = 'operador';", ctx);
+      chk('v7.57.0 · operador é barrado', ex('usExcluir') === false);
+      vm.runInContext("APP.papel = 'admin';", ctx);
+      chk('v7.57.0 · admin passa', ex('usExcluir') === true);
+      vm.runInContext("APP.papel = null;", ctx);
+      chk('v7.57.0 · papel ausente é tratado como operador (falha para o lado restritivo)',
+        ex('empExcluir') === false);
+      vm.runInContext("APP.papel = 'admin';", ctx);
+    }
+    // ── M2 · v7.58.0 · impedimento por ultrapassagem do sublimite ──
+    {
+      const anNovo2 = vm.runInContext('anNovo', ctx), calcular2 = vm.runInContext('calcular', ctx);
+      const AX4 = vm.runInContext('ANEXOS_DEFAULT', ctx), FP4 = vm.runInContext('FOLHA_PERC_DEFAULT', ctx);
+      const c4 = i => calcular2(JSON.parse(JSON.stringify(i)), JSON.parse(JSON.stringify(AX4)), Object.assign({}, FP4));
+      const mkI = mensal => { const i = anNovo2('11222333000181', 2026);
+        i.cfg.iss = .02; i.cfg.icmsV = .12; i.cfg.icmsC = .12; i.cfg.rbt12Lanc = Array(12).fill(300000);
+        for (const k of Object.keys(i.receitas)) i.receitas[k] = Array(12).fill(0);
+        i.receitas.a1_semst = Array(12).fill(mensal); return c4(i); };
+      const alto = mkI(700000);   // 8,4 mi/ano — cruza 3,6 × 1,2 = 4,32 mi
+      const baixo = mkI(200000);  // 2,4 mi/ano — nunca cruza
+      chk('v7.58.0 · M2 · impedimento começa no mês SEGUINTE ao da ultrapassagem de 20%',
+        alto.impedimento && alto.impedimento.desde === 7 && alto.meses[6].impedido === false
+        && alto.meses[7].impedido === true, alto.impedimento && ('desde=' + alto.impedimento.desde));
+      chk('v7.58.0 · M2 · a base é o REALIZADO (decisão 8.20)',
+        alto.impedimento && alto.impedimento.base === 'realizado');
+      chk('v7.58.0 · M2 · no mês impedido a trava do sublimite deixa de existir',
+        (alto.meses[6].subIcms + alto.meses[6].subIss) > 0
+        && (alto.meses[7].subIcms + alto.meses[7].subIss) === 0);
+      chk('v7.58.0 · M2 · ICMS e ISS passam a ser apurados fora, e entram no custo do regime',
+        alto.meses[7].impIcms > 0
+        && Math.abs(alto.meses[7].simples.total - (alto.meses[7].das + alto.meses[7].impIcms + alto.meses[7].impIss + alto.meses[7].simples.cppRetida + alto.meses[7].simples.inssPatrForaDAS)) < 0.02);
+      chk('v7.58.0 · M2 · quem não cruza o sublimite não é afetado em nada',
+        baixo.impedimento === null && baixo.meses.every(M => !M.impedido && M.impIcms === 0));
+      // M3 · escrito e desligado
+      chk('v7.58.0 · M3 · o arredondamento por tributo existe atrás de chave, desligado por padrão',
+        /if \(cfg\.arredondaPorTributo\)/.test(html) && !/^\s*arredondaPorTributo:/m.test(html));
+      const semChave = mkI(200000), comChave = (()=>{ const i = anNovo2('11222333000181', 2026);
+        i.cfg.iss = .02; i.cfg.arredondaPorTributo = true; i.cfg.rbt12Lanc = Array(12).fill(300000);
+        for (const k of Object.keys(i.receitas)) i.receitas[k] = Array(12).fill(0);
+        i.receitas.a1_semst = Array(12).fill(200000); return c4(i); })();
+      chk('v7.58.0 · M3 · com a chave ligada o DAS é a soma das parcelas arredondadas',
+        comChave.meses.every(M => Math.abs(M.das - Object.values(M.dasTrib).reduce((a,b)=>a+Math.round(b*100)/100, 0)) < 0.005)
+        && Math.abs(comChave.meses[0].das - semChave.meses[0].das) < 0.05);
+    }
+    // ── M6 · v7.59.0 · analítico em vários arquivos ──
+    {
+      chk('v7.59.0 · M6 · os dois inputs do analítico aceitam seleção múltipla',
+        (html.match(/id="tri-arq-(compra|venda)"[^>]*multiple/g) || []).length === 2);
+      chk('v7.59.0 · M6 · arquivo único segue pelo caminho antigo, sem diálogo novo',
+        /if \(arqs\.length === 1\)\{/.test(html));
+      // v7.59.1 · um arquivo = um MÊS. Mesclar rateava o total do período entre os meses.
+      const iT = html.indexOf('async function triArquivo(input, tipo){');
+      const bT = html.slice(iT, html.indexOf('\n// v7.34.3: o processamento do analítico', iT));
+      chk('v7.59.1 · M6 · os arquivos são processados EM SEQUÊNCIA, um por competência',
+        /for \(const a of lidos\)\{[\s\S]{0,200}triProcessarWorkbook\(a\.wb/.test(bT));
+      chk('v7.59.1 · M6 · e NÃO são mesclados numa planilha só',
+        !/book_append_sheet/.test(bT) && !/Analítico mesclado/.test(html));
+      chk('v7.59.1 · M6 · a duplicidade passa a ser do ARQUIVO inteiro, não da linha',
+        /assinaturas\.has\(sig\)/.test(bT) && !/triChaveLinha/.test(html));
+      chk('v7.59.1 · M6 · a tela declara competência, linhas e total de cada arquivo antes de importar',
+        /a\.comp \+ ' · ' \+ a\.n \+ ' linha\(s\) · R\$ ' \+ fmt\(a\.total\)/.test(bT)
+        && /não é rateado para os outros/.test(bT));
+    }
+    // ── M4 · v7.60.0 · o motor devolve os insumos do mês ──
+    {
+      const anNovo5 = vm.runInContext('anNovo', ctx), calcular5 = vm.runInContext('calcular', ctx);
+      const AX5 = vm.runInContext('ANEXOS_DEFAULT', ctx), FP5 = vm.runInContext('FOLHA_PERC_DEFAULT', ctx);
+      const i5 = anNovo5('1', 2026); i5.cfg.iss = .03; i5.cfg.rbt12Lanc = Array(12).fill(50000);
+      for (const k of Object.keys(i5.receitas)) i5.receitas[k] = Array(12).fill(0);
+      i5.receitas.a3_semret = Array(12).fill(30000); i5.receitas.fin = Array(12).fill(500);
+      i5.compras.semst = Array(12).fill(1000); i5.folha.prolabore = Array(12).fill(2000);
+      i5.despesas.adm = Array(12).fill(700);
+      const R5 = calcular5(i5, JSON.parse(JSON.stringify(AX5)), Object.assign({}, FP5));
+      const I5 = R5.meses[0].ins;
+      chk('v7.60.0 · M4 · cada mês devolve os insumos usados', !!I5 && Array.isArray(I5.blocos));
+      chk('v7.60.0 · M4 · o ANEXO vem do motor, não é deduzido dos blocos',
+        JSON.stringify(I5.anexos) === JSON.stringify(['III']), JSON.stringify(I5.anexos));
+      chk('v7.60.0 · M4 · a alíquota do insumo é a MESMA que o motor aplicou',
+        Math.abs(I5.blocos[0].efetiva - R5.meses[0].efb.a3_semret) < 1e-12);
+      chk('v7.60.0 · M4 · folha, compras, despesas e financeiras acompanham',
+        I5.folha.prolabore === 2000 && I5.compras.semst === 1000
+        && I5.despesas.adm === 700 && I5.financeiras === 500);
+      chk('v7.60.0 · M4 · insumo é DADO — nada de fórmula ou texto no motor',
+        !/ins: \{[\s\S]{0,900}?(CF\.lin|fmtR\(|`)/.test(html.slice(html.indexOf('ins: {'))));
+      // M5 · onde configurar o crédito de PIS/COFINS
+      const setCR = vm.runInContext('cfgCredLRSet', ctx);
+      vm.runInContext("AN = anNovo('1', 2026);", ctx);
+      setCR('adm', '30');
+      chk('v7.60.0 · M5 · o percentual por grupo é gravado em cfg.credLRpct',
+        Math.abs(vm.runInContext('AN.cfg.credLRpct.adm', ctx) - .30) < 1e-9);
+      setCR('vendas', '250');
+      chk('v7.60.0 · M5 · e é limitado a 100%', vm.runInContext('AN.cfg.credLRpct.vendas', ctx) === 1);
+      setCR('adm', '');
+      chk('v7.60.0 · M5 · campo em branco APAGA a chave (não informado ≠ informado como zero)',
+        !('adm' in vm.runInContext('AN.cfg.credLRpct', ctx)));
+      chk('v7.60.0 · M5 · o quadro existe na Configuração, com o padrão zero declarado',
+        /Crédito de PIS\/COFINS sobre despesas/.test(html) && /é <b>taxativa<\/b>/.test(html));
+    }
     chk('v7.56.5 · aviso de ISS zerado com receita de serviços (risco alto da auditoria)',
       /há ' \+ fmtR\(svc\) \+ ' de receita de serviços e o ISS está em 0%/.test(html));
     // ── v7.56.6 · a memória lê o conjunto PROJETADO, não a análise crua ──
     chk('v7.56.6 · a conferência define Dm = análise que produziu o resultado exibido',
       /const Dm = _PR \? _PR\.P\.dados : D;/.test(html));
-    chk('v7.56.6 · blocos, receita e folha da memória saem de Dm, não de D',
-      /Object\.keys\(M\.efb\)\.filter\(k => \(Dm\.receitas\[k\]\|\|\[\]\)\[m\] > 0\)/.test(html)
-      && /const _sal = \+\(\(Dm\.folha\.salarios/.test(html)
+    // v7.60.0 (M4) · a memória passou a CONSUMIR os insumos do motor; o caminho por Dm virou
+    // apenas o fallback de análise antiga, sem `ins`. As duas coisas devem coexistir.
+    chk('v7.56.6/v7.60.0 · a memória lê M.ins, com Dm como fallback — e nunca a análise crua',
+      /M\.ins \? M\.ins\.blocos\.map/.test(html)
+      && /M\.ins \? M\.ins\.folha\.salarios : \(\+\(\(Dm\.folha\.salarios/.test(html)
       && !/\$\{fmtR\(D\.receitas\[k\]\[m\]\)\}/.test(html));
     chk('v7.56.6 · sem bloco de receita no mês NÃO se inventa Anexo I',
       /for \(const ax of _axUsados\)\{/.test(html) && !/_axUsados\.length \? _axUsados : \['I'\]/.test(html));
@@ -1662,7 +1774,7 @@ console.log('\n■ Integridade da interface');
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
     chk('v7.56.2 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.56\.13';/.test(html) && html.includes('<b>v7.56.13</b>') && html.includes('<b>v7.50.0</b>'));
+      /const APP_VERSAO = '7\.60\.0';/.test(html) && html.includes('<b>v7.60.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
       const corpo = html.slice(html.indexOf('<table id="tbl-versoes"'));
