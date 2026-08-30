@@ -1785,9 +1785,9 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.62.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.62\.0';/.test(html) && html.includes('<b>v7.62.0</b>')
-      && html.includes('<b>v7.61.0</b>') && html.includes('<b>v7.50.0</b>'));
+    chk('v7.63.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.63\.0';/.test(html) && html.includes('<b>v7.63.0</b>')
+      && html.includes('<b>v7.62.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
       const corpo = html.slice(html.indexOf('<table id="tbl-versoes"'));
@@ -2824,6 +2824,132 @@ console.log('\n■ Integridade da interface');
       /Arredondamento do DAS \(v7\.62\.0\)/.test(html)
       && /arredondar <b>tributo a tributo<\/b>/.test(html)
       && /arredondado <b>uma vez, no total do mês<\/b>/.test(html));
+  }
+
+  // ═══ 6a. v7.63.0 · CORREÇÕES DA AUDITORIA (achados A01 a A11) ═══
+  // Cada teste aqui existe porque o defeito EXISTIU e passou por 510 verificações sem ser visto.
+  // Os testes antigos provam que o cálculo certo continua certo; estes alimentam o motor com
+  // dado impossível, que era exatamente o vão por onde os 11 achados entraram.
+  {
+    console.log('\n■ v7.63.0 — correções da auditoria');
+    const z12 = () => Array(12).fill(0);
+    const anNovo3 = vm.runInContext('anNovo', ctx);
+    const baseNova = (rec) => { const i = anNovo3('11222333000181', 2026);
+      for (const k of Object.keys(i.receitas)) i.receitas[k] = z12();
+      i.receitas.a3_semret = Array(12).fill(rec); i.cfg.iss = .02;
+      i.cfg.rbt12Lanc = z12(); i.cfg.inicioAtividade = ''; return i; };
+
+    // ── A01 · RBT12 zero com receita não pode dar DAS zero ──
+    const rA = g.calcular(baseNova(100000), clone(AD), {...FD});
+    chk('A01 · mês com receita e RBT12 zero NÃO apura DAS zero',
+      rA.meses[0].das > 0, 'DAS jan = ' + rA.meses[0].das.toFixed(2));
+    chk('A01 · a presunção é a do 1º mês de atividade (receita × 12)',
+      Math.abs(rA.meses[0].rbt12 - 1200000) < 0.01 && rA.meses[0].rbt12Presumido === true,
+      'RBT12 jan = ' + rA.meses[0].rbt12);
+    chk('A01 · e ela vale para o mês, não para o ano: fevereiro volta ao dado real',
+      rA.meses[1].rbt12Presumido === false && Math.abs(rA.meses[1].rbt12 - 100000) < 0.01);
+    const semRec = baseNova(0);
+    const rA0 = g.calcular(semRec, clone(AD), {...FD});
+    chk('A01 · mês SEM receita não presume nada (a regra não inventa base)',
+      rA0.meses[0].rbt12Presumido === false && rA0.meses[0].das === 0);
+    chk('A01 · a presunção é DECLARADA nas divergências do papel de trabalho',
+      /RBT12 presumida \(v7\.63\.0\)/.test(html) && /art\. 22, § 2º/.test(html));
+
+    // ── A02/A03/A04 · faixa de validação ──
+    const fx2 = vm.runInContext('faixaAplicar', ctx);
+    chk('A02 · alíquota de ISS negativa é corrigida para zero, com aviso',
+      fx2('cfg.iss', -0.05).v === 0 && /negativ/i.test(fx2('cfg.iss', -0.05).aviso || ''));
+    chk('A02 · 1200% (erro de digitação de 12) não passa',
+      fx2('cfg.iss', 12).v === 1 && !!fx2('cfg.iss', 12).aviso);
+    chk('A02 · ISS acima de 5% AVISA mas OBEDECE (sociedade uniprofissional existe)',
+      fx2('cfg.iss', 0.06).v === 0.06 && /incomum/i.test(fx2('cfg.iss', 0.06).aviso || ''));
+    chk('A02 · alíquota normal não gera ruído', fx2('cfg.iss', 0.03).aviso === null);
+    chk('A03 · redução acima de 100% é limitada a 100%', fx2('red_pct', 5).v === 1);
+    chk('A04 · receita negativa é zerada, com a razão dita ao usuário',
+      fx2('receita', -50000).v === 0 && /devolução de venda/i.test(fx2('receita', -50000).aviso || ''));
+    chk('A02/A03/A04 · a validação está no funil único da grade e da Configuração',
+      /faixaDoPath\(path\)/.test(html) && /gFx\('cf-iss'/.test(html));
+
+    // efeito no motor: o que a faixa impede
+    const neg = baseNova(100000); neg.cfg.iss = -0.05;
+    const rNeg = g.calcular(neg, clone(AD), {...FD});
+    chk('A02 · sem a faixa, o ISS negativo chegaria ao Presumido — o motor não muda, a entrada é que passa a barrar',
+      rNeg.meses.reduce((s,M)=>s+M.lp.iss,0) < 0,
+      'prova de que a barreira é na ENTRADA, não no motor (por decisão: o motor não corrige dado)');
+
+    // ── A02/A03/A04 (2ª varredura) · o que vem de ARQUIVO também passa pela faixa ──
+    // A primeira correção cobria só a digitação; os importadores gravavam direto nos arrays.
+    const san = vm.runInContext('anSanear', ctx);
+    const sujo = { receitas:{ a3_semret:[-50000,100000,0,0,0,0,0,0,0,0,0,0],
+                              a1_red_pct:[5,0,0,0,0,0,0,0,0,0,0,0] },
+                   folha:{ salarios:[-2000,0,0,0,0,0,0,0,0,0,0,0] }, compras:{}, despesas:{} };
+    const aj = san(sujo);
+    chk('A02-04 · o saneamento pega valor impossível vindo de arquivo',
+      aj.length === 3 && sujo.receitas.a3_semret[0] === 0
+      && sujo.receitas.a1_red_pct[0] === 1 && sujo.folha.salarios[0] === 0,
+      aj.length + ' ajuste(s)');
+    chk('A02-04 · e NOMEIA cada ajuste (não corrige em silêncio)',
+      aj.every(t => /de \w+:/.test(t) && /→/.test(t)), aj[0] || '');
+    const limpo = { receitas:{ a3_semret:Array(12).fill(100000) }, folha:{}, compras:{}, despesas:{} };
+    chk('A02-04 · análise sadia não sofre ajuste nenhum', san(limpo).length === 0);
+    chk('A02-04 · o saneamento está no FUNIL de toda importação (anAplicado)',
+      /function anAplicado\(\)\{[\s\S]{0,400}anSanear\(AN\)/.test(html));
+    chk('A02-04 · e o verificador acusa o que já estava gravado fora de faixa',
+      /valor\(es\) fora de faixa<\/b>` \+ ` já gravados|valor\(es\) fora de faixa/.test(html));
+
+    // ── A05 · importadores com rede de proteção ──
+    for (const fn of ['pgdasAplicar','balAplicar','fatAplicar','demAplicar','anHistRestaurar'])
+      chk('A05 · ' + fn + ' passa por comBotao (trava o botão e mostra o erro)',
+        html.includes("comBotao(this,'Aplicando',()=>" + fn + "(")
+        || html.includes("comBotao(this,'Restaurando',()=>" + fn + "("),
+        'chamadas diretas restantes: ' + (html.split('onclick="' + fn + '(').length - 1));
+
+    // ── A06 · a trava não fecha com prova muda ──
+    chk('A06 · o snapshot da trava carrega a falha do cálculo dos cenários',
+      /cen2033Erro: cenErro/.test(html) && /catch\(e\)\{ cenErro =/.test(html));
+    chk('A06 · e o catch daquele ponto deixou de ser vazio',
+      !/const L33 = C\.REF\[C\.REF\.length-1\];\s*\n\s*cen = \{ dentro: cenDentro\(T, L33\), hib: L33\.hib, regular: L33\.regular \}; \} catch\(e\)\{\}/.test(html));
+
+    // ── A07 · relatório não omite a Reforma em silêncio ──
+    chk('A07 · há tarja declarando que a Reforma não pôde ser calculada',
+      /A projeção da Reforma não pôde ser calculada/.test(html)
+      && /não consta deste documento/.test(html));
+    chk('A07 · e ela é emitida ANTES do resumo sintético',
+      html.indexOf('let h = tarjaReforma') > 0);
+
+    // ── A08 · bloqueio otimista falha para o lado seguro ──
+    chk('A08 · não conseguindo verificar a versão, o app PERGUNTA antes de gravar',
+      /Não foi possível verificar se esta análise foi gravada por outra pessoa/.test(html));
+
+    // ── A09 · saldo credor de PIS/COFINS declarado na memória ──
+    const cred = JSON.parse(JSON.stringify(JSON.parse(
+      fs.readFileSync(path.join(__dirname,'fixtures','caso2.json'),'utf8')).inp));
+    cred.compras.semst = Array(12).fill(500000);
+    const rC = g.calcular(cred, clone(AD), {...FD});
+    chk('A09 · o motor JÁ estava certo: base tributável zero, nunca negativa',
+      rC.meses[0].lr.basePC === 0 && rC.meses[0].lr.pis === 0 && rC.meses[0].lr.cofins === 0);
+    chk('A09 · e o excesso vira saldo credor transportado ao mês seguinte',
+      rC.meses[0].lr.saldoCredorFim > 0
+      && Math.abs(rC.meses[1].lr.saldoCredorAnt - rC.meses[0].lr.saldoCredorFim) < 0.01,
+      'saldo jan → fev: ' + rC.meses[0].lr.saldoCredorFim.toFixed(2));
+    chk('A09 · o que faltava era a memória DIZER isso',
+      /Saldo credor a transportar/.test(html) && /a base é ZERO/.test(html));
+
+    // ── A10 · silêncio proposital fica marcado ──
+    const vazios = (html.match(/catch\s*\([^)]*\)\s*\{\s*\}/g) || []).length;
+    chk('A10 · os catch propositais foram marcados e os indevidos, corrigidos',
+      vazios <= 9, 'catch vazios sem marca restantes: ' + vazios);
+
+    // ── A11 · guardas de divisão ──
+    chk('A11 · a alíquota da 5ª faixa não divide por zero',
+      /const ef5 = A => rbt12 > 0 \?/.test(html));
+    chk('A11 · os dashboards não exibem NaN% com carteira vazia',
+      !/\/tot\*100\)\.toFixed\(1\)/.test(html) && /\/\(tot\|\|1\)\*100\)\.toFixed\(1\)/.test(html));
+
+    // ── A rede continua de pé ──
+    const lacA = vm.runInContext('lacreRodar()', ctx);
+    chk('auditoria · nenhuma das 11 correções moveu o lacre',
+      lacA && lacA.ok === true && lacA.hash === '47f3f10b', 'hash=' + (lacA && lacA.hash));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
