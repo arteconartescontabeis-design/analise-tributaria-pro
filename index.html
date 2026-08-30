@@ -608,6 +608,16 @@ canvas{max-height:340px}
             <div id="dash-recentes" class="hint" style="max-height:300px;overflow-y:auto">Nenhuma consulta realizada ainda.</div></div>
         </div>
       </div>
+      <div class="card" style="margin-top:18px">
+        <h3 style="margin-top:0">3. Manutenção — alíquota de ISS herdada de NFS-e <span class="hint" style="font-weight:400">— remediação da correção da v7.53.0</span></h3>
+        <div class="hint" style="margin-bottom:10px">Até a v7.53.0 o importador de NFS-e escrevia a alíquota <b>da nota</b> na Configuração da empresa. Em optante do Simples essa alíquota é a parcela de ISS da <b>alíquota efetiva</b>: ela varia a cada competência com o RBT12 e <b>não</b> é a alíquota do município. Onde isso aconteceu, o <b>Lucro Presumido e o Lucro Real</b> foram calculados com um ISS que não existe — e as análises gravadas continuam com o valor herdado, porque a correção da v7.53.0 vale para importações novas, não para o que já está no banco.
+          <br>A varredura abaixo é <b>somente leitura</b>: nenhuma análise é alterada sem que você informe a alíquota do município e confirme, uma a uma.</div>
+        <div class="toolbar" style="margin-bottom:10px">
+          <button class="btn solid" id="btn-issvarrer" onclick="comBotao('btn-issvarrer','Varrendo',issVarrer)">🔎 Varrer análises</button>
+          <span class="hint" id="iss-status" style="flex:1"></span>
+        </div>
+        <div id="iss-resultado"></div>
+      </div>
     </div>
     <div id="page-empresas" style="display:none">
       <div class="page-title"><h1>Empresas</h1><span class="crumb">Somente empresas em análise — cadastro manual</span></div>
@@ -675,6 +685,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.62.0</b></td><td>30/08/2026</td><td><b>⚖️ MELHORIA 3 · O arredondamento por tributo ganha onde ser ligado — por empresa, com o padrão desligado.</b> O PGDAS-D apura tributo a tributo, arredonda cada parcela e soma; o motor arredonda o <b>total</b> do mês uma vez. Nos seis meses do Kleyton a diferença é de <b>4 centavos</b> — R$ 4.288,82 declarados contra R$ 4.288,78 calculados. Não é erro de nenhum dos dois lados: a planilha v15, que é a origem dos casos-gabarito, arredonda o total, e a guia arredonda por tributo. Ligar isto é decidir qual dos dois é a <b>referência</b>, e a decisão foi tomada no lugar certo: <b>por empresa</b>, no seletor <b>Arredondamento do DAS</b> da Configuração, e não como padrão do sistema. A medição que sustentou a escolha: como padrão de fábrica, o lacre iria de <code>47f3f10b</code> para <code>801f0430</code> e <b>4 dos 754 gabaritos</b> estourariam a tolerância — todos no caso 2, todos no mesmo mês, entre 2,00 e 2,14 centavos. Como opção por empresa, <b>nada disso acontece</b>: a chave só existe no <code>cfg</code> de quem a ligar, os casos-gabarito não a têm, e o lacre e os 754 gabaritos passam <b>intactos</b>. Desligar apaga a chave, de modo que a análise volta a ser byte a byte a de antes. O alcance é pequeno por construção: o maior desvio mensal medido foi de <b>1,7 centavo</b>, o Presumido e o Real <b>não se movem</b> (a opção só toca o DAS), e uma guarda no motor recusa a substituição quando a soma por tributo se afasta do total em mais de R$ 0,10. A Configuração avisa o que a escolha significa e o <b>papel de trabalho declara em qual dos dois regimes de arredondamento a empresa está</b> — nos dois sentidos, porque "bate com a guia ao centavo" e "difere da guia em centavos" são afirmações que um documento de conferência tem de fazer explicitamente. <b>Ressalva registrada:</b> a evidência de que o PGDAS-D arredonda por tributo vem de seis meses de <b>uma</b> empresa, no Anexo IV, sem ST, sem monofásico e sem retenção — reproduzir 6/6 exatamente é forte, mas não prova a regra onde há mais parcelas a arredondar. Antes de qualquer mudança de padrão, o teste que vale é um PGDAS de Anexo I com ST ou monofásico.</td></tr>
+                    <tr><td><b>v7.61.0</b></td><td>30/08/2026</td><td><b>🧾 Remediação da alíquota de ISS herdada de NFS-e, e a proteção das três RPC de exclusão sai do papel.</b> <b>(1)</b> A v7.53.0 impediu que a alíquota da nota configurasse a empresa <i>dali em diante</i>. O que já estava gravado continuou gravado: cada análise que importou NFS-e antes daquela versão carrega, na Configuração, a parcela de ISS da <b>alíquota efetiva do Simples</b> — que varia a cada competência com o RBT12 — no lugar da alíquota fixa do município. O Simples não se altera com isso, porque nele o ISS vem da partilha do anexo; quem calcula errado é o <b>Presumido e o Real</b>, e a comparação entre regimes é justamente o que o aplicativo existe para fazer. Entrou em Parâmetros a varredura <b>somente leitura</b> que encontra essas análises pelo indício que não depende de trilha de origem: alíquota de município é fixada em lei e sai <b>redonda</b> (2%, 2,5%, 3%, 5%), enquanto a parcela do Simples sai de uma divisão e chega com quatro casas (3,0674% · 3,1834% · 3,0886% nas notas que originaram a correção). É <b>indício, não veredito</b>: quem tenha alíquota legitimamente quebrada aparece na lista e basta confirmar o valor que já está lá. A correção é <b>uma a uma</b>, com a alíquota do município informada por você, o efeito no Presumido e no Real exibido <b>antes</b> de gravar, e a gravação pelo mesmo caminho do botão 💾 — com registro no histórico da análise. Correção em lote foi deliberadamente <b>não</b> implementada: a alíquota certa varia por município e não está em lugar nenhum do sistema. Análise fechada 🔒 é recusada, não contornada. <b>(2)</b> A pendência que a v7.57.0 deixou aberta — as três RPC <code>SECURITY DEFINER</code> de exclusão passam por cima da RLS e não checavam papel — é fechada pelo <b>setup_v7610_rpc_admin.sql</b>, entregue junto. Ele não reescreve as funções: cada uma é <b>renomeada</b> para <code>_impl</code>, com o corpo intacto byte a byte, e um invólucro de mesmo nome passa a exigir <code>atp_sou_admin()</code> antes de repassar a chamada. A <code>_impl</code> perde o <code>EXECUTE</code> de <code>authenticated</code> e some das rotas do PostgREST, de modo que não há porta dos fundos. O script é <b>idempotente</b>, descobre assinatura e tipo de retorno pelo catálogo, preserva quem já tenha o bloco colado à mão, e traz a reversão escrita. Provado em PostgreSQL real antes da entrega: <b>24 verificações</b>, com os casos negativos junto — operador barrado, admin passando, <code>_impl</code> inalcançável, regra de escritório preservada e corpo idêntico depois de duas execuções. Motor e lacre <code>47f3f10b</code> intocados nas duas.</td></tr>
                     <tr><td><b>v7.60.0</b></td><td>30/08/2026</td><td><b>🧩 MELHORIA 4 · O motor passa a DEVOLVER os insumos do mês, e a memória deixa de remontá-los. Mais a MELHORIA 5 · onde configurar o crédito de PIS/COFINS.</b> <b>(M4)</b> Três defeitos desta frente nasceram do mesmo lugar: a memória reconstituía, na hora de imprimir, valores que o motor já havia decidido — o numerador da RBT12p (v7.56.5), o rótulo do anexo e a folha dos meses projetados (v7.56.6), as compras e as financeiras (v7.56.12). Cada um foi corrigido caso a caso, e voltou por outro caminho. Agora cada mês do resultado traz <code>ins</code>: blocos de receita com a alíquota aplicada, <b>anexos efetivamente usados na partilha</b>, folha, compras, despesas, receita financeira e as alíquotas da configuração. Só <b>dado</b> — nunca fórmula nem texto: a memória continua sendo quem escreve, mas não tem mais de onde buscar outra coisa. O rótulo do anexo é o caso mais claro: ele era <b>deduzido</b> dos blocos com receita e, num mês projetado sem receita lançada, caía num padrão inventado — foi assim que o documento imprimiu "Anexo I · 7,3000%" ao lado de um DAS do Anexo IV. Agora é o anexo que o motor usou. O caminho antigo permanece como <b>fallback</b>, para análise gravada antes desta versão. <b>(M5)</b> O motor lê <code>cfg.credLRpct</code> desde a v7.18.x, mas <b>nunca houve onde preencher</b> — o campo só existia por edição direta do JSON, e desde a v7.51.0 o aplicativo ainda avisava que o crédito estava zerado, reclamando sem oferecer o lugar. É o que mantém o Lucro Real "não conclusivo" nas duas auditorias externas. Entrou o quadro <b>Crédito de PIS/COFINS sobre despesas</b> na Configuração, com um percentual por grupo e a dica do que costuma creditar em cada um. O padrão continua <b>zero</b> de propósito: a lista do art. 3º das Leis 10.637/2002 e 10.833/2003 é <b>taxativa</b>, e presumir creditabilidade geraria crédito que a empresa não tem. Campo em branco apaga a chave, para o objeto distinguir "não informado" de "informado como zero". Motor e lacre <code>47f3f10b</code> intocados nas duas.</td></tr>
                     <tr><td><b>v7.59.1</b></td><td>30/08/2026</td><td><b>🔧 M6 corrigida: mesclar os arquivos estava errado — um arquivo é um MÊS.</b> A v7.59.0 juntava tudo numa planilha só. O lançamento, porém, usa o <b>período do lote</b> para decidir o mês de destino: cinco arquivos mesclados viravam um período de janeiro a maio e o total seria <b>rateado entre os meses</b>, em vez de cada mês receber o seu. Agora os arquivos são processados <b>em sequência</b>, cada um com a sua competência, um lançamento por mês. A tela lista, antes de qualquer coisa entrar, o arquivo, a competência detectada, a contagem de linhas e o total de cada um. A guarda de duplicidade mudou de granularidade junto: passa a comparar a <b>assinatura do arquivo inteiro</b> — só o arquivo repetido na seleção é descartado, e fornecedor que aparece em vários meses continua intocado, que era o ponto que os cinco arquivos do Kleyton mostraram (15 CNPJ/CPF em mais de um mês, quatro deles nos cinco). Arquivo único segue pelo caminho de sempre. Motor e lacre <code>47f3f10b</code> intocados.</td></tr>
                     <tr><td><b>v7.59.0</b></td><td>30/08/2026</td><td><b>📥 MELHORIA 6 · Consulta CNPJ: o analítico passa a aceitar vários arquivos de uma vez.</b> O analítico do Questor sai <b>um arquivo por mês</b>: importar um semestre era abrir a janela seis vezes, e cada leitura <b>substituía</b> a anterior. Agora a seleção múltipla é aceita e os arquivos são mesclados numa planilha só antes de processar, com um resumo por arquivo antes de qualquer coisa entrar. <b>A regra de conflito veio dos arquivos reais, não de suposição.</b> Nos cinco meses do Kleyton há <b>15 CNPJ/CPF que aparecem em mais de um arquivo</b> — quatro deles nos cinco meses. Isso <b>não</b> é duplicidade: é o mesmo fornecedor em competências diferentes, e descartá-lo perderia receita. Duplicidade de verdade é a <b>mesma linha</b> — competência, documento, natureza e valor iguais —, que é o que acontece quando o mesmo arquivo entra duas vezes por engano. Só essa é removida, o CNPJ é normalizado antes da comparação (com ou sem máscara dá a mesma chave), e <b>o total descartado é declarado na tela</b>, com a explicação de que fornecedor repetido entre meses foi mantido. Arquivo único segue pelo caminho de sempre, sem diálogo novo. Motor e lacre <code>47f3f10b</code> intocados.</td></tr>
@@ -4324,6 +4336,9 @@ function anRenderConfig() {
   // v7.49.0: quando o ano nasceu herdando, a tela diz de onde veio — o número não pode aparecer
   // do nada numa tela que decide tributo.
   const avisoHerda = AN._cfgHerdadaDe ? `<div class="hint" style="padding:10px 12px;border-left:4px solid #1a5276;background:#f4f6f7;margin-bottom:12px">📋 <b>Configuração herdada de ${AN._cfgHerdadaDe}</b> — alíquotas, presunções e percentuais de folha vieram do ano mais recente desta empresa. Confira antes de lançar e clique em <b>💾 Salvar configuração</b>; o que for específico deste ano é alterado aqui, sem afetar os anos anteriores.</div>` : '';
+  // v7.62.0 · quem liga o arredondamento por tributo precisa saber o que isso significa:
+  // a referência daquela empresa deixa de ser a planilha de origem e passa a ser a guia.
+  const avisoArred = c.arredondaPorTributo ? `<div class="hint" style="padding:8px 10px;border-left:4px solid #b9770e;background:#fdf3e0;margin-top:10px">⚖️ <b>DAS arredondado por tributo</b> nesta empresa — cada tributo é arredondado e depois somado, como faz o PGDAS-D. A diferença é de <b>centavos por mês</b> e só aparece na conferência contra a guia. Análises fechadas 🔒 desta empresa vão acusar divergência de → para, que é o comportamento correto da trava.</div>` : '';
   const avisoIss = (_servTot>0 && !(+c.iss)) ? `<div class="hint" style="color:var(--danger);margin-top:10px">⚠️ Há receitas de serviços lançadas e o <b>% ISS está zerado</b> — o Presumido e o Real sairão sem ISS. Informe a alíquota do município (a importação de XMLs de NFS-e preenche automaticamente).</div>` : '';
   const pc = (id,rot,v) => `<div><label>${rot}</label><input id="${id}" value="${v?String(+(v*100).toFixed(4)).replace('.',','):''}" style="width:110px" onchange="anAplicarConfig(true)"></div>`;
   let h = avisoHerda + `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
@@ -4340,10 +4355,13 @@ function anRenderConfig() {
     <div><label>Adicional de IRPJ</label><select id="cf-adic" onchange="anAplicarConfig(true)"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
     <div><label>Sublimite ICMS/ISS (R$ 3,6 mi)</label><select id="cf-sublim" onchange="anAplicarConfig(true)"><option value="auto" ${(c.sublimite||'auto')=='auto'?'selected':''}>Aplicar trava da 5ª faixa</option><option value="off" ${c.sublimite=='off'?'selected':''}>Não aplicar</option></select></div>
     <div><label>Trava da 5ª faixa na guia <span class="hint">(v7.36.0)</span></label><select id="cf-travadas" onchange="anAplicarConfig(true)"><option value="sim" ${c.travaNoDas===false?'':'selected'}>Dentro do DAS (PGDAS-D)</option><option value="nao" ${c.travaNoDas===false?'selected':''}>Fora do DAS — legado</option></select></div>
+    <div><label>Arredondamento do DAS <span class="hint">(v7.62.0)</span></label><select id="cf-arredtrib" onchange="anAplicarConfig(true)" title="O PGDAS-D apura tributo a tributo, arredonda cada um e soma. O motor arredonda o total uma vez. A diferença é de centavos, e só aparece na conferência contra a guia.">
+      <option value="nao" ${c.arredondaPorTributo?'':'selected'}>Total do mês (padrão)</option>
+      <option value="sim" ${c.arredondaPorTributo?'selected':''}>Por tributo, como a guia</option></select></div>
     <div><label>Ano de referência do parecer <span class="hint">(v7.41.7)</span></label><select id="cf-anoref" onchange="anAplicarConfig(true)" title="Ano cujos cenários (por dentro × híbrido × fora do Simples) o parecer usa na comparação. 2027 é o primeiro ano da transição — responde 'o que muda no ano que vem'; 2033 é o modelo pleno. A barra de Relatórios permite trocar só no documento aberto.">${PAR_ANOS_REF.map(a=>`<option value="${a}" ${parAnoRefEfetivo(c).v===a?'selected':''}>${a} — ${parAnoRefRotulo(a)}</option>`).join('')}</select></div>
     <div><label>Projeção dos meses não lançados <span class="hint">(v7.39.0)</span></label><select id="cf-proj" onchange="anAplicarConfig(true)" title="Como o parecer completa o ano quando faltam meses: os meses sem lançamento recebem a média de uma janela dos últimos meses reais. Janela curta acompanha a tendência recente; janela longa resiste a mês atípico. A escolha também alimenta a projeção de limite e sublimite.">${['todos','2','3','6'].map(k=>`<option value="${k}" ${projJanelaNorm(c.projJanela)===k?'selected':''}>Média dos ${projJanelaLabel(k)}</option>`).join('')}</select></div>
     <button class="btn solid" onclick="anAplicarConfig()">Aplicar</button>
-  </div>${avisoIss}
+  </div>${avisoIss}${avisoArred}
   `;
   // ── v7.35.0 · período de apuração do Lucro Real e saldos de prejuízo ──
   const _per = c.lrPeriodo || 'trimestral';
@@ -4476,11 +4494,15 @@ function anAplicarConfig(silencioso) {
     icmsTranspV: g('cf-icmstr',_cfg.icmsTranspV),        // v7.48.1 · 0 = usa o % de vendas
     transpCredPres: g('cf-credpres',_cfg.transpCredPres), // v7.48.1 · 0 = não aplica
     travaNoDas: (vRaw('cf-travadas', _cfg.travaNoDas===false?'nao':'sim') || 'sim') !== 'nao',   // v7.36.0
+    // v7.62.0 (M3) · a chave só existe quando LIGADA: análise que nunca a viu segue byte a byte
+    // idêntica, e é isso que mantém o lacre 47f3f10b e os 754 gabaritos fora do alcance da opção.
+    arredondaPorTributo: (vRaw('cf-arredtrib', _cfg.arredondaPorTributo?'sim':'nao') || 'nao') === 'sim',
     projJanela: projJanelaNorm(vRaw('cf-proj',_cfg.projJanela)),          // v7.39.0
     anoRefParecer: parAnoRefNorm(vRaw('cf-anoref',_cfg.anoRefParecer)),   // v7.41.7
     rbt12Direto: vNum('cf-rbtd',_cfg.rbt12Direto),
     inicioAtividade: (vRaw('cf-inicio', _cfg.inicioAtividade||'')||'').trim() });   // v7.52.0
   // v7.35.0 · período de apuração do Lucro Real e saldos de prejuízo (podem não existir em telas antigas)
+  if (AN.cfg.arredondaPorTributo !== true) delete AN.cfg.arredondaPorTributo;   // v7.62.0: ausente ≠ false
   if ($id('cf-lrper'))    AN.cfg.lrPeriodo  = $id('cf-lrper').value;
   if ($id('cf-lrprejir')) AN.cfg.lrPrejIrpj = Math.max(0, num($id('cf-lrprejir').value));
   if ($id('cf-lrprejcs')) AN.cfg.lrPrejCsll = Math.max(0, num($id('cf-lrprejcs').value));
@@ -4789,7 +4811,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.60.0';
+const APP_VERSAO = '7.62.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -4871,6 +4893,119 @@ async function anSalvar() {
     if (AN._cfgHerdadaDe) delete AN._cfgHerdadaDe;   // v7.49.0: gravado — deixa de ser herança
     toast('Análise salva.'); return true; }
   catch(e){ console.error('anSalvar:', e); toast('Erro ao salvar: '+e.message); return false; }
+}
+
+// ═══════════ v7.61.0 · REMEDIAÇÃO DO ISS HERDADO DE NFS-e ═══════════
+// A v7.53.0 impediu que a alíquota da nota configurasse a empresa daí em diante.
+// O que já estava gravado continua gravado — e é o que estas funções encontram.
+//
+// COMO SE RECONHECE O VALOR HERDADO, sem depender de trilha de origem (que só
+// existe a partir da v7.28.0 e não cobre a Configuração): a alíquota de um
+// município é fixada em lei e sai redonda — 2%, 2,5%, 3%, 5%. A parcela de ISS
+// da alíquota efetiva do Simples sai de uma divisão e chega com quatro casas ou
+// mais (3,0674% · 3,1834% · 3,0886% nas notas que originaram a correção).
+// Percentual com mais de 2 casas decimais é, portanto, o indício — e ele é
+// INDÍCIO, não veredito: quem tem alíquota municipal legitimamente quebrada
+// aparece na lista e basta confirmar o valor que já está lá.
+const ISS_CASAS_MUNICIPIO = 2;            // casas decimais do PERCENTUAL
+function issSuspeito(iss){
+  const v = +iss || 0;
+  if (v <= 0) return false;
+  const pc = v * 100;                                    // fração → percentual
+  const esc = Math.pow(10, ISS_CASAS_MUNICIPIO);
+  return Math.abs(pc*esc - Math.round(pc*esc)) > 1e-6;
+}
+let ISS_ACHADOS = [];
+
+async function issVarrer(){
+  if (!exigirAdmin('issVarrer')) return;
+  const st = $id('iss-status'), box = $id('iss-resultado');
+  st.textContent = 'Lendo as análises…'; box.innerHTML = '';
+  let linhas = [];
+  try {
+    // só a configuração viaja: a análise inteira tem ~3,7 KB e não é necessária aqui
+    linhas = await supa('GET','atp_analises',{ params:{
+      select:'cnpj,ano,status,atualizado_em,cfg:dados->cfg', order:'cnpj.asc,ano.asc' } }) || [];
+  } catch(e){
+    try { const cru = await supa('GET','atp_analises',{ params:{ select:'cnpj,ano,status,atualizado_em,dados' } }) || [];
+      linhas = cru.map(r => ({ cnpj:r.cnpj, ano:r.ano, status:r.status,
+        atualizado_em:r.atualizado_em, cfg:(r.dados||{}).cfg||{} }));
+    } catch(e2){ st.textContent = 'Não foi possível ler as análises: ' + e2.message; return; }
+  }
+  ISS_ACHADOS = linhas.filter(r => issSuspeito((r.cfg||{}).iss))
+                      .map(r => ({ ...r, nome: empNomeDe(r.cnpj) || r.cnpj }));
+  st.textContent = `${linhas.length} análise(s) lidas · ${ISS_ACHADOS.length} com indício.`;
+  issRender();
+}
+
+function issRender(){
+  const box = $id('iss-resultado');
+  if (!ISS_ACHADOS.length){
+    box.innerHTML = '<div class="hint" style="background:#eaf7ee;border:1px solid #b7dfc4;border-radius:8px;padding:10px">'
+      + 'Nenhuma análise com alíquota de ISS fora do padrão de município. '
+      + 'Isso não prova que nunca houve importação de NFS-e — significa que, hoje, todo ISS gravado tem cara de alíquota municipal.</div>';
+    return;
+  }
+  const l = ISS_ACHADOS.map((r,i) => {
+    const fechada = String(r.status||'').toLowerCase() === 'fechada';
+    return `<tr>
+      <td>${r.nome}<div class="hint">${r.cnpj}</div></td>
+      <td style="text-align:center">${r.ano}</td>
+      <td style="text-align:right"><b>${((+r.cfg.iss||0)*100).toFixed(4).replace('.',',')}%</b></td>
+      <td style="text-align:center">${fechada ? '🔒 fechada' : '—'}</td>
+      <td style="text-align:right"><input id="iss-novo-${i}" style="width:90px;text-align:right" placeholder="ex.: 3"> %</td>
+      <td style="text-align:center">
+        <button class="btn" onclick="issCorrigir(${i})" ${fechada?'disabled title="Reabra a análise (🔓) para corrigir"':''}>Corrigir</button>
+      </td></tr>`;
+  }).join('');
+  box.innerHTML = `<div style="overflow-x:auto"><table class="gtable">
+      <thead><tr><th>Empresa</th><th>Ano</th><th>ISS gravado</th><th>Estado</th><th>Alíquota do município</th><th></th></tr></thead>
+      <tbody>${l}</tbody></table></div>
+    <div class="hint" style="margin-top:8px">A correção mostra o efeito no Presumido e no Real <b>antes</b> de gravar, grava pelo mesmo caminho do botão 💾 (com registro no histórico da análise) e recalcula. O Simples não se altera: nele o ISS vem da tabela do anexo, não deste campo.</div>`;
+}
+
+async function issCorrigir(i){
+  if (!exigirAdmin('issCorrigir')) return;
+  const r = ISS_ACHADOS[i]; if (!r) return;
+  const bruto = ($id('iss-novo-'+i).value||'').trim().replace(',','.');
+  const pc = parseFloat(bruto);
+  if (!(pc >= 0 && pc <= 100)) { toast('Informe a alíquota do município em porcentagem (ex.: 3 para 3%).'); return; }
+  const novo = pc/100;
+  const linhas = await supa('GET','atp_analises',{ params:{
+    select:'*', cnpj:`eq.${r.cnpj}`, ano:`eq.${r.ano}`, limit:'1' } });
+  if (!linhas || !linhas.length) { toast('Análise não encontrada — recarregue a varredura.'); return; }
+  const reg = linhas[0];
+  if (String(reg.status||'').toLowerCase()==='fechada'){ toast('Análise FECHADA 🔒 — reabra antes de corrigir.'); return; }
+  const dados = anNormalizar(reg.dados, r.cnpj, r.ano);
+  const antes = calcular(dados, PARAMS.anexos, folhaPercDaEmpresa(dados.cfg));
+  const dNovo = JSON.parse(JSON.stringify(dados)); dNovo.cfg.iss = novo;
+  const depois = calcular(dNovo, PARAMS.anexos, folhaPercDaEmpresa(dNovo.cfg));
+  const somaLpIss = R => (R.meses||[]).reduce((a,m)=>a+(+((m.lp||{}).iss)||0),0);
+  const dif = (a,b) => `${fmt(a)} → ${fmt(b)}`;
+  const ok = await dlgSimNao('Corrigir a alíquota de ISS',
+    `${r.nome} · ${r.ano}\n\n`
+    + `ISS na Configuração: ${((+dados.cfg.iss||0)*100).toFixed(4).replace('.',',')}%`
+    + `  →  ${pc.toString().replace('.',',')}%\n\n`
+    + `Efeito no ano (antes → depois)\n`
+    + `  ISS do Lucro Presumido:  ${dif(somaLpIss(antes), somaLpIss(depois))}\n`
+    + `  Total do Lucro Presumido: ${dif(antes.totais.lp, depois.totais.lp)}\n`
+    + `  Total do Lucro Real:      ${dif(antes.totais.lr, depois.totais.lr)}\n`
+    + `  Total do Simples:         ${dif(antes.totais.simples, depois.totais.simples)}\n\n`
+    + `O total do Simples não deve mudar: nele o ISS vem da partilha do anexo, não deste campo. `
+    + `Se mudou, pare e me avise.`,
+    'Corrigir e regravar', 'Cancelar');
+  if (!ok) return;
+  const T = depois.totais;
+  const body = [{ cnpj:r.cnpj, ano:r.ano, dados:{...dNovo, _res:undefined, _verEm:undefined},
+    resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr },
+    atualizado_em:new Date().toISOString() }];
+  try {
+    await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body });
+    await anHistGravar(body[0]);
+    ISS_ACHADOS.splice(i,1); issRender();
+    toast('ISS corrigido e análise regravada.');
+    if (AN && AN.cnpj===r.cnpj && +AN.ano===+r.ano){ AN.cfg.iss = novo; anRecalcular(); }
+  } catch(e){ toast('Erro ao gravar: '+e.message); }
 }
 
 // ═══════════ PARÂMETROS ═══════════
@@ -9515,6 +9650,9 @@ function rlConfDivergencias(){
       <li><b>Limite e sublimite proporcionais (v7.55.0):</b> valem <b>apenas no ano-calendário de início</b> de atividade (LC 123/2006, art. 3º, §§ 2º e 3º), contada a fração de mês como mês inteiro. No ano seguinte o limite volta a ser integral, ainda que a empresa tenha menos de 12 meses de existência.</li>
       <li><b>ISS retido fora da dedução da base do IBS/CBS (v7.54.0):</b> a dedução é o ISS do Lucro Presumido exibido no Consolidado analítico, que exclui as receitas com retenção. A leitura literal do art. 12, §2º, V, da LC 214/2025 admitiria o contrário — o ISS retido também incidiu sobre a operação —, mas a escolha é pela coerência com a decisão da v7.23.0 de que o ISS retido não é custo da empresa. É <b>decisão declarada</b>, não omissão.</li>
       <li><b>Redução de IBS/CBS — ordem das operações (v7.54.0):</b> a exclusão de ICMS e ISS é operação de <b>base</b> e a redução do regime diferenciado é operação de <b>alíquota</b>, então a dedução vem primeiro e é <b>rateada proporcionalmente à base de cada parcela</b>. O rateio por natureza (ISS só sobre serviço, ICMS só sobre mercadoria) seria mais fiel ao fato gerador e <b>não</b> está implementado.</li>
+      <li><b>Arredondamento do DAS (v7.62.0):</b> ${(RL?.dados?.cfg||{}).arredondaPorTributo
+        ? 'esta empresa está configurada para arredondar <b>tributo a tributo</b>, como o PGDAS-D: cada parcela é arredondada e depois somada. É o que faz o DAS calculado reproduzir o declarado ao centavo. A referência desta empresa passa a ser a <b>guia</b>.'
+        : 'o DAS é arredondado <b>uma vez, no total do mês</b>. O PGDAS-D arredonda tributo a tributo, de modo que pode haver diferença de <b>centavos</b> na conferência contra a guia — sem efeito no Presumido, no Real ou nos cenários da Reforma. A opção por tributo fica na Configuração da empresa.'}</li>
       <li><b>Alíquota de ISS da NFS-e não configura a empresa (v7.53.0):</b> nas notas de optante do Simples ela é a parcela de ISS da <b>alíquota efetiva</b>, que varia com o RBT12 a cada competência. O Presumido e o Real precisam da alíquota <b>fixa do município</b>, que não existe nos XML — ela vem do cadastro, e a alíquota da nota entra só como conferência.</li>
       <li><b>Layout de NFS-e sem situação e sem retenção:</b> no layout simplificado <code>&lt;Notas&gt;&lt;xml&gt;</code> não há campo de cancelamento nem de ISS retido — nota cancelada não é detectável e nota com retenção pode cair no bloco errado. O importador <b>declara</b> isso no lote. E o valor chega sem separador decimal: enquanto não houver uma nota com centavos para fixar a regra, o registro carrega a ressalva em vez de o aplicativo decidir por 100×.</li>
       <li><b>Exportação da conferência em Excel (v7.55.0):</b> a pasta compõe em fórmula a <b>aritmética</b> das parcelas; ela <b>não</b> reimplementa regra tributária — isso criaria um segundo motor. As parcelas-folha vão como valor do motor, e a aba Conferência prova a identidade célula a célula. As células guardam precisão plena, enquanto os relatórios do aplicativo somam os valores já arredondados de cada mês (v7.42.1): pode haver diferença de centavos no total anual, e ela é de <b>método</b>, não de cálculo.</li>
