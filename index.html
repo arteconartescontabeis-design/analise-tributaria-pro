@@ -675,6 +675,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.58.0</b></td><td>30/08/2026</td><td><b>⚖️ MELHORIA 2 · Mês da ultrapassagem do sublimite e exercício sob impedimento (decisão 8.20). Mais a MELHORIA 3 escrita e deliberadamente DESLIGADA.</b> <b>(M2)</b> Ultrapassado o sublimite em mais de 20%, a empresa fica impedida de recolher ICMS e ISS dentro do Simples a partir do mês <b>seguinte</b> (LC 123/2006, art. 20, § 1º; Res. CGSN 140/2018, art. 12). O aplicativo apenas <b>alertava</b> a trajetória; agora calcula o cenário. Conforme a decisão 8.20, a varredura corre sobre o <b>realizado</b> — projeção informa, não recolhe. No mês impedido: a alíquota efetiva perde as parcelas de ICMS e ISS do anexo; a <b>trava do sublimite deixa de existir</b>, porque ela é o mecanismo de quem ainda está dentro; e os dois tributos passam a ser apurados <b>fora</b>, pelas alíquotas do Estado e do Município, com o crédito de ICMS das compras — ignorá-lo superestimaria o custo do impedimento. Os dois entram no <b>custo do regime</b>: são devidos do mesmo jeito, só não passam pela guia, e omiti-los faria o Simples parecer mais barato justamente no mês em que deixa de cobrir os dois tributos. Lacre <code>47f3f10b</code> íntegro — os casos-gabarito não cruzam o sublimite no realizado, exatamente como a decisão 8.20 previa. <b>(M3) O arredondamento por tributo está escrito e DESLIGADO</b>, atrás de <code>cfg.arredondaPorTributo</code>. Ligado, os seis meses do Kleyton reproduzem o declarado <b>exatamente</b> — R$ 4.288,82 contra os R$ 4.288,78 de hoje. Desligado porque move o lacre para <code>801f0430</code> e derruba <b>4 dos 754 gabaritos</b>: o caso 2 diverge em <b>2 centavos</b> e a tolerância do bloco é 1,5. Não é erro de nenhum dos dois lados — a planilha v15 arredonda o <b>total</b> e a guia arredonda por <b>tributo</b>. Ligar é decidir que a referência passa a ser a guia, e essa decisão é do usuário.</td></tr>
+                    <tr><td><b>v7.57.0</b></td><td>30/08/2026</td><td><b>🔐 MELHORIA 1 · Segurança C1 — papéis de usuário: esconder o menu não protegia a ação.</b> A v7.37.0 já lia o papel e ocultava Usuários e Parâmetros do operador. Só que menu oculto é <b>conveniência</b>, não controle: as funções seguiam no escopo global e qualquer usuário autenticado podia chamá-las pelo console — <code>usTrocarPapel</code>, <code>usSenhaMenu</code>, <code>usExcluir</code>, <code>usCriar</code>, <code>usEditar</code>, <code>empExcluir</code> e <code>anLimparDados</code>. As sete passam a exigir papel de administrador, com mensagem que diz qual é o papel atual e o que fazer. <b>E fica dito o que essa barreira NÃO é:</b> ela evita o acidente e dá mensagem clara, mas não resiste a quem tem o token e chama a API direto. A barreira que vale vai no banco, no <b>setup_v7570.sql</b> entregue junto: RLS em <code>atp_usuarios</code> (escrita só para admin), as funções <code>atp_meu_papel()</code> e <code>atp_sou_admin()</code> com falha aberta para o lado <b>mais</b> restritivo, e um gatilho que impede a <b>escalada de privilégio</b> — sem ele, a política que deixa o usuário editar o próprio cadastro deixaria o operador se promover a admin, que é o furo clássico desse desenho. As três RPC de exclusão são <code>SECURITY DEFINER</code> e passam por cima da RLS, então a checagem de papel dentro delas é obrigatória: o script traz o bloco a colar, e deliberadamente <b>não</b> as reescreve, para não apagar às cegas a lógica que funciona desde a v7.41.1. Motor e lacre <code>47f3f10b</code> intocados.</td></tr>
                     <tr><td><b>v7.56.13</b></td><td>29/08/2026</td><td><b>⚖️ Achado crítico da auditoria da JV: a trava de 5% do ISS não estava sendo aplicada na repartição do DAS.</b> Quando a alíquota efetiva sobe a ponto de a parcela de ISS passar de <b>5% da receita</b>, a LC 123/2006, art. 18, § 16, limita o ISS a 5% e manda o excedente para os tributos <b>federais</b>, na proporção deles. No Anexo III a participação do ISS na 5ª faixa é 33,5%, então a trava começa em <b>14,92537%</b> de efetiva — e a JV está acima disso em todos os seis meses. A auditoria mediu o efeito: <b>R$ 402,81</b> de ISS a mais no semestre, com a parcela federal subestimada no mesmo montante. <b>O DAS total não muda</b>, e por isso o defeito era invisível na conferência contra o PGDAS-D; o que muda é a repartição — e ela não é decorativa: a <b>trava do sublimite</b> e a <b>recomposição do ISS retido</b> (v7.23.0) leem essa parcela, de modo que o excesso se propagava para números que são pagos. Uma sutileza de implementação que custou uma tentativa: aplicada dentro do laço por anexo, a trava era <b>desfeita</b> pela renormalização que recompõe ICMS e ISS sobre <code>dasIcmsIss</code>; ela precisa vir depois. <b>Lacre <code>47f3f10b</code> conferido ÍNTEGRO</b> — os casos-gabarito não alcançam a 5ª faixa do Anexo III, então nenhum dos 128 números se move. A regra entra nas divergências declaradas.</td></tr>
                     <tr><td><b>v7.56.12</b></td><td>29/08/2026</td><td><b>🔍 Auditoria da JV: a correção da v7.56.6 estava pela metade — a memória dos meses projetados ainda exibia receita financeira e compras em R$ 0,00.</b> A v7.56.6 trocou três leituras da análise crua pela análise projetada (blocos de receita, receita do bloco e folha) e <b>deixou quatro</b>: receitas financeiras, compras sem ST, compras com ST e o crédito de PIS/COFINS informado. Resultado: nos meses estimados o texto imprimia <b>R$ 0,00</b> de receita financeira e de compras, enquanto o motor usava as médias projetadas — R$ 5.437,59/mês de financeiras e R$ 54.771,94/mês de compras, valores que a própria auditoria reconstituiu pela base de IRPJ de julho e pelo ICMS das compras. O cálculo estava certo; a memória contradizia o cálculo, de novo. Desta vez a troca não foi pontual: fiz a <b>varredura de todas as leituras por mês</b> dentro da memória mensal e a suíte ganhou a guarda de que <b>nenhuma delas volta a ler a análise crua</b> — quem incluir uma leitura de <code>D.receitas</code>, <code>D.compras</code>, <code>D.folha</code> ou <code>D.despesas</code> ali dentro quebra o CI. É a terceira reincidência do mesmo padrão nesta frente, e a primeira em que a proteção é estrutural em vez de caso a caso. Motor e lacre <code>47f3f10b</code> intocados.</td></tr>
                     <tr><td><b>v7.56.11</b></td><td>29/08/2026</td><td><b>🔴 O alarme da data inválida NÃO aparecia no Resultado mês a mês — o changelog da v7.56.10 afirmava que sim, e estava errado.</b> Ele existia só na aba RBT12 e no bloco 0 da conferência. Quem fica na Análise Atual via o DAS calculado pela regra errada <b>sem aviso nenhum</b>, que é exatamente o cenário de "o relatório está certo e a tela está errada". Agora ele entra no topo do Resultado mês a mês. <b>E junto vai o espelho do aviso de defasagem.</b> A v7.56.3 passou a avisar, no relatório, quando ele usa a análise gravada e a tela está à frente — mas só do lado do relatório. Do lado da tela não havia nada, então a divergência entre os dois ficava sem explicação visível. O Resultado mês a mês passa a declarar quando está mostrando uma análise diferente da gravada, nomeando os blocos que divergem. Motor e lacre <code>47f3f10b</code> intocados.</td></tr>
@@ -1061,6 +1063,31 @@ function go(page) {
 
 // v7.8: a empresa e o ano passaram a ser escolhidos UMA vez, no topo, e valem para todos os módulos.
 const G_COM_ANO = ['analise','importar','config','reforma'];
+// ═══ v7.57.0 (M1 · segurança C1) · GUARDA DE PAPEL NAS AÇÕES DESTRUTIVAS ══════════════════════
+// A v7.37.0 já lia o papel e escondia os menus de Usuários e Parâmetros do operador. Esconder o
+// menu, porém, não protege a AÇÃO: as funções seguem no escopo global e qualquer usuário
+// autenticado podia chamá-las pelo console — redefinir senha, trocar papel, excluir usuário,
+// excluir empresa, limpar dados. Menu oculto é conveniência; guarda é controle.
+// Esta é a barreira do CLIENTE, e existe para dar mensagem clara e evitar o acidente. A barreira
+// que vale contra intenção é a RLS no banco — ver setup_v7570.sql, entregue junto.
+const ACOES_ADMIN = {
+  usCriar:       'criar usuários',
+  usEditar:      'editar usuários',
+  usExcluir:     'excluir usuários',
+  usTrocarPapel: 'trocar o papel de um usuário',
+  usSenhaMenu:   'redefinir a senha de outro usuário',
+  empExcluir:    'excluir empresas',
+  anLimparDados: 'limpar os dados de uma empresa',
+};
+function exigirAdmin(acao){
+  if (APP.papel === 'admin') return true;
+  const rot = ACOES_ADMIN[acao] || 'esta ação';
+  alert('Permissão insuficiente.\n\nSomente administradores podem ' + rot + '.\n\n'
+      + 'Seu papel neste escritório é "' + (APP.papel || 'operador') + '". '
+      + 'Peça a um administrador, ou solicite a alteração do seu papel em Usuários.');
+  try { console.warn('[C1] ação de admin bloqueada para papel', APP.papel, '→', acao); } catch(e){}
+  return false;
+}
 const G_SEM_BARRA = ['dashboard','parametros','usuarios','versoes','relatorios'];   // Relatórios é gerador: tem controles próprios
 function gCtx(){
   const sel = $id('g-empresa');
@@ -2914,6 +2941,26 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   const _janIni = _iniAbs===null ? 0 : Math.max(0, _iniAbs+12);   // 1ª posição útil do vetor do ano anterior
   const _propAtiv = propAtividade(cfg, inp.ano);   // v7.55.0 · limite/sublimite proporcionais no ano de início
   out.propAtividade = _propAtiv;
+  // ── v7.58.0 (M2 · decisão 8.20) · MÊS DA ULTRAPASSAGEM E EXERCÍCIO SOB IMPEDIMENTO ──────────
+  // LC 123/2006, art. 20, § 1º, e Res. CGSN 140/2018, art. 12: ultrapassado o sublimite em MAIS
+  // de 20%, a empresa fica impedida de recolher ICMS e ISS dentro do Simples a partir do mês
+  // SEGUINTE ao da ultrapassagem; em até 20%, o efeito é só no ano seguinte e este ano não muda.
+  // Decisão 8.20: calcula-se sobre o REALIZADO e alerta-se sobre o projetado — projeção informa,
+  // não recolhe. Por isso a varredura abaixo usa a receita lançada, e nunca a estimada.
+  const _impedDesde = (()=>{
+    if ((cfg.sublimite||'auto') === 'off') return -1;
+    const lim = (+cfg.sublimiteValor || 3600000) * _propAtiv.fator * 1.20;
+    let acc = 0;
+    for (let m = 0; m < 12; m++) {
+      acc += totalRec(m);
+      if (acc > lim) return m + 1;      // impedida a partir do mês SEGUINTE
+    }
+    return -1;
+  })();
+  out.impedimento = _impedDesde >= 0 && _impedDesde <= 11
+    ? { desde: _impedDesde, base: 'realizado',
+        motivo: 'RBA do ano ultrapassou o sublimite em mais de 20% — ICMS e ISS passam a ser recolhidos FORA do Simples a partir do mês seguinte (LC 123, art. 20, §1º)' }
+    : null;
   const totalPrev = [];   // receitas acumuladas dos meses anteriores do ano corrente
   const totalPrevExp = [];
   const folhaPrev = [];   // folha (pró-labore+salários+FGTS) dos meses anteriores — Fator R dinâmico
@@ -2959,7 +3006,16 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const efE = A => rbt12Exp>0 ? (rbt12Exp*A.aliq[fxE] - A.ded[fxE])/rbt12Exp : 0;
     const ef = A => rbt12>0 ? (rbt12*A.aliq[fx] - A.ded[fx])/rbt12 : 0;
     const A1=anexos.I, A2=anexos.II, A3=anexos.III, A4=anexos.IV, A5=anexos.V;
-    const e1=ef(A1), e2=ef(A2), e3=ef(A3), e4=ef(A4), e5=ef(A5);
+    // v7.58.0 (M2) · a partir do mês do impedimento a trava do sublimite deixa de existir: não há
+    // mais ICMS/ISS parcial dentro da guia — eles saem INTEIROS do Simples. A trava é o mecanismo
+    // de quem AINDA está dentro.
+    const _impedido = _impedDesde >= 0 && m >= _impedDesde;
+    // v7.58.0 (M2) · no mês impedido o DAS deixa de conter ICMS e ISS: a alíquota efetiva perde as
+    // duas parcelas do anexo, e os dois tributos passam a ser apurados FORA, pelas alíquotas do
+    // Estado e do Município configuradas na empresa. O restante do Simples segue normal.
+    const _semIcmsIss = A => _impedido ? Math.max(0, 1 - (A.icms?A.icms[fx]:0) - (A.iss?A.iss[fx]:0)) : 1;
+    const e1=ef(A1)*_semIcmsIss(A1), e2=ef(A2)*_semIcmsIss(A2), e3=ef(A3)*_semIcmsIss(A3),
+          e4=ef(A4)*_semIcmsIss(A4), e5=ef(A5)*_semIcmsIss(A5);
 
     const efb = {
       a1_semst: e1,
@@ -2999,7 +3055,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     };
 
     const dasExp = KEXP.reduce((s,k)=>s + R[k][m]*efb[k], 0);
-    const das = K.reduce((s,k)=>s + R[k][m]*efb[k], 0) + dasExp;
+    let das = K.reduce((s,k)=>s + R[k][m]*efb[k], 0) + dasExp;
     // v7.17.0: DAS por anexo do mês — insumo da partilha por vigência (Res. CGSN 190/2026)
     const dasAx = {I:0,II:0,III:0,IV:0,V:0};
     { const _axDe = k => k.startsWith('a1')&&k!=='a1_exp' ? 'I' : k.startsWith('a2')&&k!=='a2_exp' ? 'II'
@@ -3035,7 +3091,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     let subIcms = 0, subIss = 0, trv190 = null;
     // v7.55.0 · no ano de início, o sublimite é proporcional (LC 123, art. 3º, §§ 2º e 3º)
     const subLim = (+cfg.sublimiteValor || 3600000) * _propAtiv.fator;
-    if ((cfg.sublimite||'auto') !== 'off' && rbt12 > subLim) {
+    if (!_impedido && (cfg.sublimite||'auto') !== 'off' && rbt12 > subLim) {
       // v7.36.0 · a fórmula do art. 21, III, "b" da Res. CGSN 140/2018 usa o RBT12 EFETIVO do
       // período — não o teto do sublimite. Até a v7.35.0 o motor fixava R$ 3,6 mi aqui, o que
       // congelava a alíquota na efetiva MÁXIMA da 5ª faixa e subavaliava a trava; o desvio cresce
@@ -3100,6 +3156,11 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       // contaminava a trava do sublimite e a recomposição do ISS retido, que leem esta parcela.
       // Vem DEPOIS da renormalização de propósito: aplicada antes, ela era desfeita pelo rateio
       // que recompõe icms/iss sobre `dasIcmsIss`.
+      // ── v7.58.0 (M3) · ARREDONDAMENTO POR TRIBUTO ───────────────────────────────────────────
+      // O PGDAS-D apura tributo a tributo, arredonda cada um e soma; o motor arredondava o total
+      // uma vez. Daí o desvio de um centavo, sempre para baixo, em 4 dos 6 meses do Kleyton —
+      // R$ 0,04 no semestre. Somando as parcelas arredondadas, os seis meses reproduzem o
+      // declarado EXATAMENTE. O objetivo do aplicativo é reproduzir a guia, e a guia é esta.
       if (_baseIssTeto > 0) {
         const _tetoIss = _baseIssTeto*0.05;
         if (dt.iss > _tetoIss + 1e-9) {
@@ -3111,6 +3172,17 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         }
       }
     }
+    // ── v7.58.0 (M3) · ARREDONDAMENTO POR TRIBUTO — ESCRITO, NÃO LIGADO ─────────────────────
+    // O PGDAS-D apura tributo a tributo, arredonda cada um e soma; o motor arredonda o total uma
+    // vez. Ligar a linha abaixo faz os seis meses do Kleyton reproduzirem o declarado EXATAMENTE
+    // (R$ 4.288,82 contra R$ 4.288,78). Ela está desligada de propósito: move o lacre para
+    // `801f0430` e derruba 4 dos 754 gabaritos — o caso 2 diverge em 2 centavos, e a tolerância
+    // do bloco é 1,5. Não é erro do motor nem da planilha: a planilha v15 arredonda o TOTAL e a
+    // guia arredonda por TRIBUTO. Ligar isto é decidir que a referência passa a ser a guia, e
+    // essa decisão é do usuário, não minha — ver o relatório de apresentação das melhorias.
+    if (cfg.arredondaPorTributo) { const _r2 = v => Math.round((+v||0)*100)/100;
+      const _somaArred = Object.keys(dt).reduce((a,t)=>a + _r2(dt[t]), 0);
+      if (Math.abs(_somaArred - das) < 0.10) das = _r2(_somaArred); }
     const recCom  = REC_COM_KEYS.reduce((s,k)=>s+R[k][m],0);
     const recTransp = R.comtransp[m] + R.comtransp_st[m];   // v7.48.2: receita de transporte/comunicação, nomeada
     const recServ = REC_SERV_KEYS.reduce((s,k)=>s+R[k][m],0);
@@ -3219,7 +3291,16 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const lr_csll = baseIRCS>0 ? baseIRCS*.09 : 0;
     const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
 
+    // v7.58.0 (M2) · ICMS e ISS apurados FORA do Simples no mês impedido. Débito pelas alíquotas
+    // da empresa; o crédito de ICMS das compras entra porque, fora do Simples, a apuração é a
+    // normal de conta gráfica — ignorá-lo superestimaria o custo do impedimento.
+    const impIcms = _impedido
+      ? Math.max(0, (recCom - R.a1_comst[m] - R.a1_comst_mono[m] - R.a2_comst[m] - R.a2_comst_mono[m])*cfg.icmsV
+                    - (C.semst[m] + C.comst[m])*cfg.icmsC) : 0;
+    const impIss = _impedido
+      ? Math.max(0, (recServ - R.a3_retiss[m] - R.a3_retissinss[m] - R.a4_retiss[m])*cfg.iss) : 0;
     out.meses.push({ m, rbt12, rbt12Exp, recInt, recExp,
+      impedido: _impedido, impIcms, impIss,
       // v7.52.0 · rastro da proporcionalização, para a memória imprimir a conta e não só o resultado
       rbt12Prop: _prop, mesAtividade: _iniAbs===null ? null : _nAnt+1, nAntProp: _prop ? _nAnt : null,
       // v7.56.5 · capturado no momento do cálculo, nunca recomposto depois
@@ -3236,7 +3317,11 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       simples: { das, fgts, sublimite: subIcms+subIss, issRetido, cppRetida,
         // v7.1 (A1): CPP do Anexo IV é devida FORA do DAS — proxy pela participação da receita a4 no mês
         inssPatrForaDAS: (receita>0 && (R.a4[m]+R.a4_retiss[m])>0) ? inssPatr*((R.a4[m]+R.a4_retiss[m])/receita) : 0,
-        total: das + subIcms + subIss + cppRetida + ((receita>0 && (R.a4[m]+R.a4_retiss[m])>0) ? inssPatr*((R.a4[m]+R.a4_retiss[m])/receita) : 0) },   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
+        // v7.58.0 (M2) · no mês impedido o ICMS e o ISS apurados FORA entram no custo do regime —
+        // são devidos do mesmo jeito, só não passam pela guia. Omiti-los faria o Simples parecer
+        // mais barato justamente no mês em que ele deixa de cobrir os dois tributos.
+        impIcms, impIss,
+        total: das + subIcms + subIss + cppRetida + impIcms + impIss + ((receita>0 && (R.a4[m]+R.a4_retiss[m])>0) ? inssPatr*((R.a4[m]+R.a4_retiss[m])/receita) : 0) },   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
             baseAdic: base32+base8, basePC:_baseLPliq, basePCbruta:basePisCofLP },
       lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
@@ -4587,7 +4672,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.56.13';
+const APP_VERSAO = '7.58.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -4807,6 +4892,7 @@ async function empConsultarReceita() {
                              : 'Dados preenchidos. Empresa não optante — defina Presumido ou Real.');
 }
 async function empExcluir(cnpj) {
+  if (!exigirAdmin('empExcluir')) return;                       // v7.57.0 (C1)
   const e = EMPRESAS.find(x=>x.cnpj===cnpj);
   if (!confirm(`Excluir a empresa ${e?.razao_social||fmtCNPJ(cnpj)}?\n\nAs análises e relatórios salvos desta empresa somem das telas do app (o dado em si é preservado — fale com o suporte técnico se precisar recuperar).`)) return;
   try {
@@ -4848,6 +4934,7 @@ function anPreencherEmpresas() {
 // o signup público direto (/auth/v1/signup com a anon key) permitia que
 // QUALQUER pessoa com a URL do app criasse uma conta, logada ou não.
 async function usCriar() {
+  if (!exigirAdmin('usCriar')) return;                       // v7.57.0 (C1)
   const nome = $id('us-nome').value.trim(), email = $id('us-email').value.trim(), senha = $id('us-senha').value;
   if (!nome || !email || senha.length<8) { toast('Preencha nome, e-mail e senha (mín. 8).'); return; }
   try {
@@ -4871,12 +4958,14 @@ async function usCarregar() {
 }
 // v7.37.0 (C1): promover/rebaixar — a proteção real é o RLS (só admin grava em atp_usuarios)
 async function usTrocarPapel(email, papel){
+  if (!exigirAdmin('usTrocarPapel')) return;                       // v7.57.0 (C1)
   if (!confirm(`Definir ${email} como ${papel==='admin'?'ADMIN':'operador'}?`)) { usCarregar(); return; }
   try { await supa('PATCH','atp_usuarios',{ params:{ email:`eq.${email}` }, body:{ papel } });
     toast('Papel atualizado.'); usCarregar(); }
   catch(e){ toast('Erro: '+e.message); usCarregar(); }
 }
 async function usEditar(email) {
+  if (!exigirAdmin('usEditar')) return;                       // v7.57.0 (C1)
   const rows = await supa('GET','atp_usuarios',{ params:{ select:'*', email:`eq.${email}`, limit:'1' } }).catch(()=>[]);
   const atual = rows?.[0]?.nome || '';
   const nome = prompt(`Novo nome para ${email}:`, atual);
@@ -4913,6 +5002,7 @@ async function usAlterarMinhaSenha(){
 }
 // v7.25.0: redefinição com 2 opções — e-mail (fluxo atual) ou imediata via Edge Function admin-senha
 async function usSenhaMenu(email){
+  if (!exigirAdmin('usSenhaMenu')) return;                       // v7.57.0 (C1)
   const op = await dlg('Redefinir a senha de '+email,
     'Escolha como redefinir:\n\n• "Enviar por e-mail" manda o link de redefinição para o próprio usuário.\n• "Redefinir agora" grava uma nova senha imediatamente (restrito a administradores — exige a função admin-senha publicada).',
     [ {rotulo:'📧 Enviar por e-mail', valor:'email', destaque:true}, {rotulo:'🔑 Redefinir agora', valor:'agora'}, {rotulo:'Cancelar', valor:null} ]);
@@ -4945,6 +5035,7 @@ async function usSenha(email) {
   } catch(e){ toast('Erro: '+e.message); }
 }
 async function usExcluir(email) {
+  if (!exigirAdmin('usExcluir')) return;                       // v7.57.0 (C1)
   if (!confirm(`Excluir ${email} da lista de usuários do app?\n\nAtenção: isto remove o acesso às telas do app (fica registrado quem e quando); para revogar o LOGIN, exclua a conta também no painel do Supabase (Authentication → Users).`)) return;
   try { await supa('POST','rpc/atp_excluir_usuario',{ body:{ p_email: email }, semPrefer:true });   // v7.41.1: RLS recusava o PATCH — ver setup_v7411.sql
     toast('Usuário removido da lista.'); usCarregar(); }
@@ -6874,6 +6965,7 @@ function rfAutoPreencher() {
 
 // ═══════════ v6: LIMPAR DADOS DA ANÁLISE ═══════════
 async function anLimparDados() {
+  if (!exigirAdmin('anLimparDados')) return;                       // v7.57.0 (C1)
   const cnpj = (AN && AN.cnpj) || $id('an-empresa').value || '';
   if (!cnpj) { alert('Selecione a empresa no topo.\n\nO "Limpar dados" age somente sobre a empresa selecionada.'); return; }
   const nome = ($id('an-empresa').selectedOptions[0]?.textContent || fmtCNPJ(cnpj)).trim();
