@@ -685,6 +685,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.63.0</b></td><td>30/08/2026</td><td><b>🔍 As onze correções da auditoria completa — e a rede de testes passa a incluir o dado impossível.</b> <b>(A01, crítico)</b> Mês com receita lançada e RBT12 igual a zero apurava <b>DAS de R$ 0,00</b>. A alíquota efetiva é indeterminada com RBT12 zero, e a guarda devolvia zero em vez de escolher uma regra: no exemplo medido, R$ 100.000,00 de receita em janeiro produziam guia zerada, e só a partir de fevereiro — quando a receita do próprio ano já formou base — o cálculo se normalizava. Não existe hipótese em que optante do Simples com receita apure zero. Passa a valer a regra do <b>primeiro mês de atividade</b> (Res. CGSN 140/2018, art. 22, § 2º): receita do próprio mês × 12 — a mesma que o aplicativo já usava quando a data de início estava preenchida. É <b>presunção declarada</b>, não dado: o mês é marcado, a Análise avisa nomeando os meses e as divergências do papel de trabalho explicam a regra. <b>(A02, A03, A04)</b> Nenhum campo numérico tinha faixa: −5% de ISS gerava ISS anual <b>negativo</b>; 1200% (erro de digitação de 12) gerava R$ 1,2 milhão sobre receita de R$ 100 mil; redução de 500% e receita negativa geravam <b>DAS negativo</b>. Entrou uma camada única — <code>FAIXAS</code> + <code>faixaAplicar</code> — usada pela grade e pela Configuração, com duas forças deliberadamente distintas: <b>limite</b>, para o que não pode existir, corrigido e avisado; e <b>alerta</b>, para o que é improvável mas possível — ISS acima de 5% avisa e <b>obedece</b>, porque sociedade uniprofissional existe e o aplicativo não conhece a legislação de cada município. <b>(A05)</b> Os cinco importadores eram chamados direto pelo <code>onclick</code>, sem <code>try</code> e fora do <code>comBotao</code>: falha no meio da aplicação não produzia mensagem nenhuma e a tela ficava igual. Agora passam pelo padrão da casa. <b>(A06)</b> O snapshot da trava calculava os cenários num <code>try</code> de <code>catch</code> vazio e fechava a análise com a prova pela metade — justamente o que a trava existe para impedir; a falha agora viaja no snapshot. <b>(A07)</b> Relatório e Excel omitiam a Reforma em silêncio quando o cálculo falhava, e ausência de seção é indistinguível de "não se aplica"; entrou tarja declarando a lacuna. <b>(A08)</b> O bloqueio otimista falhava para o lado <b>permissivo</b>: não conseguindo consultar o servidor, gravava por cima sem perguntar. Agora pergunta. <b>(A09 — achado revisto)</b> A auditoria apontou base de PIS/COFINS negativa no Lucro Real; ao reexaminar, <b>o motor já estava correto</b> — limita a base a zero e transporta o saldo credor ao mês seguinte. O defeito era de <b>exibição</b>: a memória imprimia a conta bruta e um resultado zero que ela não produzia, sem mencionar o saldo. Mesma família do item H da v7.51.0. <b>(A10)</b> Os 27 pontos de silêncio foram classificados: os propositais ficaram <b>marcados como tais</b> no código, os indevidos viraram A06, A07 e A08. <b>(A11)</b> Guardas de divisão na alíquota da 5ª faixa e nos dashboards, que exibiam <code>NaN%</code> com carteira vazia. <b>Motor e lacre <code>47f3f10b</code> intocados nas onze</b> — inclusive no A01, porque os casos-gabarito nunca têm RBT12 zero com receita, e os 754 gabaritos passaram sem rebaseline. <b>A lição que fica na suíte:</b> as 510 verificações provavam que o cálculo certo continua certo, mas nenhuma alimentava o motor com dado impossível — que é por onde os onze entraram. O bloco novo faz exatamente isso.</td></tr>
                     <tr><td><b>v7.62.0</b></td><td>30/08/2026</td><td><b>⚖️ MELHORIA 3 · O arredondamento por tributo ganha onde ser ligado — por empresa, com o padrão desligado.</b> O PGDAS-D apura tributo a tributo, arredonda cada parcela e soma; o motor arredonda o <b>total</b> do mês uma vez. Nos seis meses do Kleyton a diferença é de <b>4 centavos</b> — R$ 4.288,82 declarados contra R$ 4.288,78 calculados. Não é erro de nenhum dos dois lados: a planilha v15, que é a origem dos casos-gabarito, arredonda o total, e a guia arredonda por tributo. Ligar isto é decidir qual dos dois é a <b>referência</b>, e a decisão foi tomada no lugar certo: <b>por empresa</b>, no seletor <b>Arredondamento do DAS</b> da Configuração, e não como padrão do sistema. A medição que sustentou a escolha: como padrão de fábrica, o lacre iria de <code>47f3f10b</code> para <code>801f0430</code> e <b>4 dos 754 gabaritos</b> estourariam a tolerância — todos no caso 2, todos no mesmo mês, entre 2,00 e 2,14 centavos. Como opção por empresa, <b>nada disso acontece</b>: a chave só existe no <code>cfg</code> de quem a ligar, os casos-gabarito não a têm, e o lacre e os 754 gabaritos passam <b>intactos</b>. Desligar apaga a chave, de modo que a análise volta a ser byte a byte a de antes. O alcance é pequeno por construção: o maior desvio mensal medido foi de <b>1,7 centavo</b>, o Presumido e o Real <b>não se movem</b> (a opção só toca o DAS), e uma guarda no motor recusa a substituição quando a soma por tributo se afasta do total em mais de R$ 0,10. A Configuração avisa o que a escolha significa e o <b>papel de trabalho declara em qual dos dois regimes de arredondamento a empresa está</b> — nos dois sentidos, porque "bate com a guia ao centavo" e "difere da guia em centavos" são afirmações que um documento de conferência tem de fazer explicitamente. <b>Ressalva registrada:</b> a evidência de que o PGDAS-D arredonda por tributo vem de seis meses de <b>uma</b> empresa, no Anexo IV, sem ST, sem monofásico e sem retenção — reproduzir 6/6 exatamente é forte, mas não prova a regra onde há mais parcelas a arredondar. Antes de qualquer mudança de padrão, o teste que vale é um PGDAS de Anexo I com ST ou monofásico.</td></tr>
                     <tr><td><b>v7.61.0</b></td><td>30/08/2026</td><td><b>🧾 Remediação da alíquota de ISS herdada de NFS-e, e a proteção das três RPC de exclusão sai do papel.</b> <b>(1)</b> A v7.53.0 impediu que a alíquota da nota configurasse a empresa <i>dali em diante</i>. O que já estava gravado continuou gravado: cada análise que importou NFS-e antes daquela versão carrega, na Configuração, a parcela de ISS da <b>alíquota efetiva do Simples</b> — que varia a cada competência com o RBT12 — no lugar da alíquota fixa do município. O Simples não se altera com isso, porque nele o ISS vem da partilha do anexo; quem calcula errado é o <b>Presumido e o Real</b>, e a comparação entre regimes é justamente o que o aplicativo existe para fazer. Entrou em Parâmetros a varredura <b>somente leitura</b> que encontra essas análises pelo indício que não depende de trilha de origem: alíquota de município é fixada em lei e sai <b>redonda</b> (2%, 2,5%, 3%, 5%), enquanto a parcela do Simples sai de uma divisão e chega com quatro casas (3,0674% · 3,1834% · 3,0886% nas notas que originaram a correção). É <b>indício, não veredito</b>: quem tenha alíquota legitimamente quebrada aparece na lista e basta confirmar o valor que já está lá. A correção é <b>uma a uma</b>, com a alíquota do município informada por você, o efeito no Presumido e no Real exibido <b>antes</b> de gravar, e a gravação pelo mesmo caminho do botão 💾 — com registro no histórico da análise. Correção em lote foi deliberadamente <b>não</b> implementada: a alíquota certa varia por município e não está em lugar nenhum do sistema. Análise fechada 🔒 é recusada, não contornada. <b>(2)</b> A pendência que a v7.57.0 deixou aberta — as três RPC <code>SECURITY DEFINER</code> de exclusão passam por cima da RLS e não checavam papel — é fechada pelo <b>setup_v7610_rpc_admin.sql</b>, entregue junto. Ele não reescreve as funções: cada uma é <b>renomeada</b> para <code>_impl</code>, com o corpo intacto byte a byte, e um invólucro de mesmo nome passa a exigir <code>atp_sou_admin()</code> antes de repassar a chamada. A <code>_impl</code> perde o <code>EXECUTE</code> de <code>authenticated</code> e some das rotas do PostgREST, de modo que não há porta dos fundos. O script é <b>idempotente</b>, descobre assinatura e tipo de retorno pelo catálogo, preserva quem já tenha o bloco colado à mão, e traz a reversão escrita. Provado em PostgreSQL real antes da entrega: <b>24 verificações</b>, com os casos negativos junto — operador barrado, admin passando, <code>_impl</code> inalcançável, regra de escritório preservada e corpo idêntico depois de duas execuções. Motor e lacre <code>47f3f10b</code> intocados nas duas.</td></tr>
                     <tr><td><b>v7.60.0</b></td><td>30/08/2026</td><td><b>🧩 MELHORIA 4 · O motor passa a DEVOLVER os insumos do mês, e a memória deixa de remontá-los. Mais a MELHORIA 5 · onde configurar o crédito de PIS/COFINS.</b> <b>(M4)</b> Três defeitos desta frente nasceram do mesmo lugar: a memória reconstituía, na hora de imprimir, valores que o motor já havia decidido — o numerador da RBT12p (v7.56.5), o rótulo do anexo e a folha dos meses projetados (v7.56.6), as compras e as financeiras (v7.56.12). Cada um foi corrigido caso a caso, e voltou por outro caminho. Agora cada mês do resultado traz <code>ins</code>: blocos de receita com a alíquota aplicada, <b>anexos efetivamente usados na partilha</b>, folha, compras, despesas, receita financeira e as alíquotas da configuração. Só <b>dado</b> — nunca fórmula nem texto: a memória continua sendo quem escreve, mas não tem mais de onde buscar outra coisa. O rótulo do anexo é o caso mais claro: ele era <b>deduzido</b> dos blocos com receita e, num mês projetado sem receita lançada, caía num padrão inventado — foi assim que o documento imprimiu "Anexo I · 7,3000%" ao lado de um DAS do Anexo IV. Agora é o anexo que o motor usou. O caminho antigo permanece como <b>fallback</b>, para análise gravada antes desta versão. <b>(M5)</b> O motor lê <code>cfg.credLRpct</code> desde a v7.18.x, mas <b>nunca houve onde preencher</b> — o campo só existia por edição direta do JSON, e desde a v7.51.0 o aplicativo ainda avisava que o crédito estava zerado, reclamando sem oferecer o lugar. É o que mantém o Lucro Real "não conclusivo" nas duas auditorias externas. Entrou o quadro <b>Crédito de PIS/COFINS sobre despesas</b> na Configuração, com um percentual por grupo e a dica do que costuma creditar em cada um. O padrão continua <b>zero</b> de propósito: a lista do art. 3º das Leis 10.637/2002 e 10.833/2003 é <b>taxativa</b>, e presumir creditabilidade geraria crédito que a empresa não tem. Campo em branco apaga a chave, para o objeto distinguir "não informado" de "informado como zero". Motor e lacre <code>47f3f10b</code> intocados nas duas.</td></tr>
@@ -1100,7 +1101,7 @@ function exigirAdmin(acao){
   alert('Permissão insuficiente.\n\nSomente administradores podem ' + rot + '.\n\n'
       + 'Seu papel neste escritório é "' + (APP.papel || 'operador') + '". '
       + 'Peça a um administrador, ou solicite a alteração do seu papel em Usuários.');
-  try { console.warn('[C1] ação de admin bloqueada para papel', APP.papel, '→', acao); } catch(e){}
+  try { console.warn('[C1] ação de admin bloqueada para papel', APP.papel, '→', acao); } catch(e){/* silêncio proposital (A10): registro de diagnóstico não pode derrubar a barreira */}
   return false;
 }
 const G_SEM_BARRA = ['dashboard','parametros','usuarios','versoes','relatorios'];   // Relatórios é gerador: tem controles próprios
@@ -1322,7 +1323,7 @@ async function cnpjCacheContar(cnpjs){
 async function cnpjCacheGravar(cnpj, d){
   if (!d || d.erro) return;                          // erro não vira cache
   try { await supa('POST','atp_cnpj_cache?on_conflict=cnpj',
-    { body:[{ cnpj, dados:d, consultado_em:new Date().toISOString() }] }); } catch(e){}
+    { body:[{ cnpj, dados:d, consultado_em:new Date().toISOString() }] }); } catch(e){/* silêncio proposital (A10): cache de CNPJ falha ABERTO — a consulta já respondeu ao usuário */}
 }
 async function consultarUm(cnpj){
   const c = await cnpjCacheLer(cnpj);
@@ -3041,14 +3042,24 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // real dos 12 meses, que é exatamente o que o motor sempre fez.
     const _nAnt = _iniAbs===null ? 99 : (m - _iniAbs);
     const _prop = _iniAbs!==null && _nAnt >= 0 && _nAnt < 12;
-    const rbt12 = _prop
+    let rbt12 = _prop
       ? (_nAnt===0 ? totalRec(m)*12 : (S(cfg.rbt12Lanc.slice(_janIni)) + S(totalPrev))/_nAnt*12)
       : (m===0
         ? (cfg.rbt12Direto>0 ? cfg.rbt12Direto : rbt12Cfg)
         : S(cfg.rbt12Lanc.slice(m)) + S(totalPrev));
-    const rbt12Exp = _prop
+    let rbt12Exp = _prop
       ? (_nAnt===0 ? totalExp(m)*12 : (S((cfg.rbt12ExpLanc||z12()).slice(_janIni)) + S(totalPrevExp))/_nAnt*12)
       : (m===0 ? rbt12ExpCfg : S((cfg.rbt12ExpLanc||z12()).slice(m)) + S(totalPrevExp));
+    // ══ v7.63.0 (auditoria A01) · RBT12 ZERO COM RECEITA NÃO PODE PRODUZIR DAS ZERO ══
+    // Com RBT12 igual a zero a alíquota efetiva é indeterminada — (RBT12 × alíquota − PD) ÷ RBT12 —
+    // e a guarda anterior devolvia ZERO, de modo que um mês com receita lançada apurava DAS 0,00 e
+    // seguia somado ao ano. Não existe hipótese em que optante do Simples com receita apure zero.
+    // A regra aplicada é a do PRIMEIRO MÊS DE ATIVIDADE (Res. CGSN 140/2018, art. 22, § 2º):
+    // receita do próprio mês × 12 — a mesma que o aplicativo já usa quando a data de início está
+    // preenchida. É PRESUNÇÃO, não dado: o mês é marcado, a tela avisa e a memória declara.
+    let _rbtPresum = false, _rbtPresumExp = false;
+    if (rbt12 <= 0 && totalRec(m) > 0){ rbt12 = totalRec(m)*12; _rbtPresum = true; }
+    if (rbt12Exp <= 0 && totalExp(m) > 0){ rbt12Exp = totalExp(m)*12; _rbtPresumExp = true; }
     // v7.56.5 · o numerador da memória é CAPTURADO AQUI, junto com o rbt12 que ele produziu.
     // Antes ele era recalculado lá embaixo, no push do mês — depois de `totalPrev.push(recInt)` —
     // e portanto já incluía a receita do mês apurado: em jan/2026 o Kleyton exibia 140.610,46
@@ -3166,7 +3177,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       // congelava a alíquota na efetiva MÁXIMA da 5ª faixa e subavaliava a trava; o desvio cresce
       // conforme o RBT12 se afasta do sublimite (Consulta SEFAZ/SP nº 25.807/2022 é expressa:
       // "calculará o ICMS devido com base no RBT12 e não no sublimite de R$ 3.600.000,00").
-      const ef5 = A => (rbt12*A.aliq[4] - A.ded[4])/rbt12;
+      // v7.63.0 (auditoria A11) · guarda defensiva: a trava só existe na 6ª faixa, onde o RBT12 é
+    // maior que o sublimite, então o denominador nunca é zero aqui. A guarda não muda um centavo
+    // do resultado — existe para que uma mudança futura na chamada não produza NaN em silêncio.
+    const ef5 = A => rbt12 > 0 ? (rbt12*A.aliq[4] - A.ded[4])/rbt12 : 0;
       const pIcms1 = ef5(A1)*A1.icms[4], pIcms2 = ef5(A2)*A2.icms[4];
       subIcms = (R.a1_semst[m]+R.a1_mono[m]+R.comtransp[m])*pIcms1
               + R.a1_red[m]*pIcms1*(1 - R.a1_red_pct[m])
@@ -3377,6 +3391,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       impedido: _impedido, impIcms, impIss,
       // v7.52.0 · rastro da proporcionalização, para a memória imprimir a conta e não só o resultado
       rbt12Prop: _prop, mesAtividade: _iniAbs===null ? null : _nAnt+1, nAntProp: _prop ? _nAnt : null,
+      rbt12Presumido: _rbtPresum, rbt12PresumidoExp: _rbtPresumExp,   // v7.63.0 (A01)
       // ── v7.60.0 (M4) · INSUMOS DO MÊS, DEVOLVIDOS PELO MOTOR ────────────────────────────────
       // Três defeitos desta frente nasceram do mesmo lugar: a memória REMONTAVA, na hora de
       // imprimir, valores que o motor já tinha decidido — o numerador da RBT12p (v7.56.5), o
@@ -3759,8 +3774,44 @@ let PARAMS = { anexos: JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), folha: {...FO
 let AN = null;          // análise corrente
 let AN_SUJO = false;    // v7.5.7: há importação/edição ainda não salva no banco
 // todo importador chama isto depois de mexer na análise: marca pendência e redesenha
+// ══ v7.63.0 (auditoria A02/A03/A04 · 2ª varredura) · A FAIXA TAMBÉM VALE PARA O QUE VEM DE ARQUIVO ══
+// A primeira correção pôs a validação no anSet (digitação) e na Configuração. A segunda varredura
+// mostrou o furo: os importadores gravam DIRETO nos arrays da análise e passavam por baixo dela —
+// um relatório com valor negativo entrava sem que nada dissesse. Como todos eles desembocam em
+// anAplicado(), a varredura fica aqui, num lugar só.
+// O aplicativo CORRIGE o impossível e DIZ o que corrigiu. Não corrige em silêncio: dado alterado
+// sem aviso é pior que dado errado, porque some a chance de conferir na origem.
+function anSanear(d){
+  const ajustes = [];
+  if (!d) return ajustes;
+  const varre = (sec, chave) => {
+    const bloco = d[sec]; if (!bloco) return;
+    for (const k of Object.keys(bloco)){
+      const arr = bloco[k]; if (!Array.isArray(arr)) continue;
+      const ch = /_pct$/.test(k) ? 'red_pct' : chave;
+      for (let m = 0; m < arr.length; m++){
+        if (arr[m] == null) continue;                    // null é "automático", não é valor
+        const r = faixaAplicar(ch, +arr[m] || 0);
+        if (r.aviso && r.v !== (+arr[m] || 0)){
+          ajustes.push(`${sec}.${k} de ${MESES[m]||('mês '+(m+1))}: ${fmt(+arr[m]||0)} → ${fmt(r.v)}`);
+          arr[m] = r.v;
+        }
+      }
+    }
+  };
+  varre('receitas','receita'); varre('compras','compras');
+  varre('folha','folha');      varre('despesas','despesas');
+  return ajustes;
+}
 function anAplicado(){
-  if (anTravada()){ toast('Análise FECHADA 🔒 — a importação não foi gravada. Reabra (🔓) para aplicar.'); return; } AN_SUJO = true; anRenderTabs(); anRenderGrid(); anRecalcular(); anSalvarAuto(); }
+  if (anTravada()){ toast('Análise FECHADA 🔒 — a importação não foi gravada. Reabra (🔓) para aplicar.'); return; }
+  // v7.63.0 · nada entra fora de faixa, venha de onde vier
+  { const aj = anSanear(AN);
+    if (aj.length) alert('O arquivo trazia ' + aj.length + ' valor(es) impossível(is), que foram ajustados:\n\n'
+      + aj.slice(0,10).join('\n') + (aj.length>10 ? `\n… e mais ${aj.length-10}` : '')
+      + '\n\nConfira na origem: valor negativo em receita, folha, compras ou despesas costuma ser '
+      + 'lançamento de estorno ou balancete de encerramento importado como movimento.'); }
+  AN_SUJO = true; anRenderTabs(); anRenderGrid(); anRecalcular(); anSalvarAuto(); }
 // grava sozinho depois de importar; sem empresa definida não há onde gravar, e aí o aviso explica o porquê
 async function anSalvarAuto(){
   if (!AN) return;
@@ -4095,12 +4146,74 @@ const num = s => { s = String(s??'').trim(); if (!s) return 0;
   if (s.includes(',')) s = s.replace(/\./g,'').replace(',','.');   // formato brasileiro 1.234,56
   else if ((s.match(/\./g)||[]).length > 1) s = s.replace(/\./g,''); // 1.546.923 = milhares (sem vírgula)
   const v = parseFloat(s); return isNaN(v)?0:v; };
+// ══ v7.63.0 (auditoria A02/A03/A04) · FAIXA DE VALIDAÇÃO DOS CAMPOS NUMÉRICOS ══
+// A auditoria encontrou o mesmo defeito em três lugares: nenhum campo tinha limite, e valor
+// impossível atravessava o motor e saía como resultado formatado, com aparência de número
+// correto. −5% de ISS gerava ISS anual NEGATIVO; 1200% (erro de digitação de 12) gerava
+// R$ 1,2 milhão sobre receita de R$ 100 mil; redução de 500% e receita negativa geravam DAS
+// negativo. A regra é uma só, aplicada num ponto só.
+//
+// DUAS FORÇAS, deliberadamente distintas:
+//   • LIMITE  — valor que não pode existir (alíquota negativa, redução acima de 100%). Corrigido
+//               para a borda e avisado. Deixar passar produz tributo negativo.
+//   • ALERTA  — valor possível mas improvável (ISS acima de 5%). NÃO é corrigido: sociedade
+//               uniprofissional e regimes municipais específicos existem, e o aplicativo não
+//               conhece a legislação de cada município. Avisa e obedece.
+const FAIXAS = {
+  'cfg.iss':     { min:0, max:1,   alerta:0.05, rot:'ISS',
+                   nota:'a alíquota máxima do ISS é 5% (LC 116/2003, art. 8º-A)' },
+  'cfg.icmsV':   { min:0, max:1,   alerta:0.35, rot:'ICMS sobre vendas' },
+  'cfg.icmsC':   { min:0, max:1,   alerta:0.35, rot:'ICMS sobre compras' },
+  'cfg.icmsTranspV': { min:0, max:1, alerta:0.35, rot:'ICMS do transporte' },
+  'cfg.ipiV':    { min:0, max:1,   alerta:0.35, rot:'IPI sobre vendas' },
+  'cfg.ipiC':    { min:0, max:1,   alerta:0.35, rot:'IPI sobre compras' },
+  'cfg.transpCredPres': { min:0, max:1, alerta:0.30, rot:'crédito presumido do transporte' },
+  'red_pct':     { min:0, max:1,   alerta:1,    rot:'percentual de redução',
+                   nota:'a redução da base não pode passar de 100%' },
+  'receita':     { min:0, max:null, rot:'receita',
+                   nota:'receita negativa não existe; devolução de venda tem tratamento próprio e não reduz a receita declarada' },
+  'compras':     { min:0, max:null, rot:'compras' },
+  'folha':       { min:0, max:null, rot:'folha' },
+  'despesas':    { min:0, max:null, rot:'despesas' }
+};
+// devolve { v, aviso } — nunca lança; quem chama decide se mostra o aviso
+function faixaAplicar(chave, v){
+  const f = FAIXAS[chave]; const n = +v || 0;
+  if (!f) return { v:n, aviso:null };
+  if (f.min != null && n < f.min)
+    return { v:f.min, aviso:`${f.rot}: ${fmtP(n*(f.max===1?100:1),2)}${f.max===1?'%':''} é um valor negativo e foi ajustado para ${f.min}${f.max===1?'%':''}`
+      + (f.nota ? ` — ${f.nota}` : '') };
+  if (f.max != null && n > f.max)
+    return { v:f.max, aviso:`${f.rot}: ${fmtP(n*100,2)}% está acima do máximo possível e foi ajustado para ${f.max*100}%`
+      + (f.nota ? ` — ${f.nota}` : '') };
+  if (f.alerta != null && n > f.alerta)
+    return { v:n, aviso:`${f.rot}: ${fmtP(n*100,2)}% é um valor incomum — confira se não houve erro de digitação`
+      + (f.nota ? `. Observação: ${f.nota}` : '') };
+  return { v:n, aviso:null };
+}
+// qual faixa vale para um caminho da grade (receitas.a1_red_pct[3], folha.salarios[0], …)
+function faixaDoPath(path){
+  if (/_pct$/.test(path)) return 'red_pct';
+  const sec = String(path).split('.')[0];
+  if (sec === 'receitas') return 'receita';
+  if (sec === 'compras')  return 'compras';
+  if (sec === 'folha')    return 'folha';
+  if (sec === 'despesas') return 'despesas';
+  return null;
+}
 function anSet(path, m, val, tipo) {
   AN_SUJO = true;
   const { o,k } = anPath(AN, path);
-  if (tipo==='nul') o[k][m] = String(val).trim()==='' ? null : num(val);
-  else if (tipo==='pct') o[k][m] = num(val)/100;
-  else o[k][m] = num(val);
+  let _bruto = tipo==='pct' ? num(val)/100 : num(val);
+  // v7.63.0 (A02/A03/A04): o valor impossível para aqui, não no meio do cálculo
+  const _fx = faixaDoPath(path);
+  if (_fx && !(tipo==='nul' && String(val).trim()==='')){
+    const r = faixaAplicar(_fx, _bruto);
+    if (r.aviso) toast(r.aviso);
+    _bruto = r.v;
+  }
+  if (tipo==='nul') o[k][m] = String(val).trim()==='' ? null : _bruto;
+  else o[k][m] = _bruto;
   anOrigemMarcar(path, [m], 'D');                          // v7.28.0: trilha de origem
   anRecalcular();
 }
@@ -4262,6 +4375,12 @@ function anAvisoConfig(){
       .reduce((t,k)=>t + (AN.receitas[k]||[]).reduce((x,y)=>x+(+y||0),0), 0);
     if (svc > 0.005 && !(+c.iss > 0))
       falta.push('a <b>alíquota de ISS do município</b> — há ' + fmtR(svc) + ' de receita de serviços e o ISS está em 0%. Se houver ISS devido, o Lucro Presumido e o Lucro Real saem <b>subestimados</b> e a comparação com o Simples fica viciada. Sociedade uniprofissional com ISS fixo também precisa ser declarada aqui'); }
+  // v7.63.0 (auditoria A01) · o mês em que a RBT12 foi PRESUMIDA precisa se anunciar: o número
+  // saiu de uma regra, não de um dado, e antes desta versão ele saía ZERO em silêncio.
+  { const pres = (AN._res?.meses||[]).map((M,i)=>M.rbt12Presumido?MESES[i]:null).filter(Boolean);
+    if (pres.length) falta.push(`o RBT12 de ${pres.join(', ')} — sem ele, o aplicativo <b>presumiu</b> `
+      + `a receita do próprio mês × 12 (regra do 1º mês de atividade, Res. CGSN 140/2018, art. 22, § 2º) `
+      + `para não apurar DAS zero num mês com receita. Lance os 12 meses anteriores, ou informe a data de início`); }
   const nRbt = (AN.cfg.rbt12Lanc||[]).filter(v=>+v>0).length;
   const paCfg = (typeof anMesesAtividade==='function') ? anMesesAtividade(c, 0) : null;
   if (!nRbt && !+c.rbt12Direto) falta.push('o RBT12 dos 12 meses anteriores');
@@ -4276,6 +4395,12 @@ function anAvisoConfig(){
   // das contas de resultado chega com sinal invertido, e o mês fica com folha, INSS e crédito de
   // ICMS negativos e um lucro impossível — que o Lucro Real então tributa.
   const atip = [];
+  // v7.63.0 (A02/A03/A04) · análise gravada ANTES desta versão pode carregar valor fora de faixa;
+  // a validação nova barra o que entra, não desfaz o que já entrou. Aqui ele é acusado.
+  { const fora = anSanear(JSON.parse(JSON.stringify({receitas:AN.receitas, compras:AN.compras,
+      folha:AN.folha, despesas:AN.despesas})));
+    if (fora.length) atip.push(`<b>${fora.length} valor(es) fora de faixa</b> já gravados nesta análise `
+      + `(${fora.slice(0,3).join(' · ')}${fora.length>3?' …':''}) — reimporte ou corrija na grade`); }
   const neg = (sec,k,rot) => { const i = (AN[sec]?.[k]||[]).findIndex(v=>+v<0); if (i>=0) atip.push(`${rot} <b>negativa</b> em ${MESES[i]}`); };
   neg('folha','salarios','folha de salários'); neg('folha','prolabore','pró-labore');
   neg('receitas','fin','receita financeira');
@@ -4465,7 +4590,7 @@ function anSetInicioAtividade(v){
   if (e1) e1.innerHTML = iniPorExtenso(AN.cfg.inicioAtividade);
   if (e2) e2.innerHTML = iniAvisoInvalido(AN.cfg, AN.ano) + anAvisoInicioAtividade(AN.cfg);
   // v7.56.9 · a chamada anterior era para uma função que não existe no aplicativo
-  try { anRecalcular(); } catch(e){}
+  try { anRecalcular(); } catch(e){/* silêncio proposital (A10): recálculo oportunista; o valor é recalculado ao render */}
 }
 function anAplicarConfig(silencioso) {
   if (!AN) return;
@@ -4483,16 +4608,22 @@ function anAplicarConfig(silencioso) {
   const g   = (id, atual) => { const e = el(id); return e ? num(e.value)/100 : (+atual||0); };
   const vNum= (id, atual) => { const e = el(id); return e ? num(e.value) : (+atual||0); };
   const vRaw= (id, atual) => { const e = el(id); return e ? e.value : atual; };
+  // v7.63.0 (A02) · toda alíquota da Configuração passa pela faixa. O aviso é acumulado e
+  // mostrado uma vez, para não disparar um toast por campo quando vários estiverem fora.
+  const _avisosFx = [];
+  const gFx = (id, atual, chave) => { const r = faixaAplicar(chave, g(id, atual));
+    if (r.aviso) _avisosFx.push(r.aviso); return r.v; };
   Object.assign(AN.cfg, {
-    iss:g('cf-iss',_cfg.iss), icmsV:g('cf-icmsv',_cfg.icmsV), icmsC:g('cf-icmsc',_cfg.icmsC),
-    ipiV:g('cf-ipiv',_cfg.ipiV), ipiC:g('cf-ipic',_cfg.ipiC),
+    iss:gFx('cf-iss',_cfg.iss,'cfg.iss'), icmsV:gFx('cf-icmsv',_cfg.icmsV,'cfg.icmsV'),
+    icmsC:gFx('cf-icmsc',_cfg.icmsC,'cfg.icmsC'),
+    ipiV:gFx('cf-ipiv',_cfg.ipiV,'cfg.ipiV'), ipiC:gFx('cf-ipic',_cfg.ipiC,'cfg.ipiC'),
     lpBaseServ:+vRaw('cf-bserv',_cfg.lpBaseServ), lpBaseCom:+vRaw('cf-bcom',_cfg.lpBaseCom),
     lpBaseServCsll:+(vRaw('cf-bcsll',_cfg.lpBaseServCsll)||0),
     lpBaseComCsll:+(vRaw('cf-bcomcsll',_cfg.lpBaseComCsll)||.12),
     adicionalIR:vRaw('cf-adic',_cfg.adicionalIR), sublimite:vRaw('cf-sublim',_cfg.sublimite),
     transpPresuncao: (vRaw('cf-transp',_cfg.transpPresuncao) === 'passageiros' ? 'passageiros' : 'cargas'),   // v7.48.0
-    icmsTranspV: g('cf-icmstr',_cfg.icmsTranspV),        // v7.48.1 · 0 = usa o % de vendas
-    transpCredPres: g('cf-credpres',_cfg.transpCredPres), // v7.48.1 · 0 = não aplica
+    icmsTranspV: gFx('cf-icmstr',_cfg.icmsTranspV,'cfg.icmsTranspV'),   // v7.48.1 · 0 = usa o % de vendas
+    transpCredPres: gFx('cf-credpres',_cfg.transpCredPres,'cfg.transpCredPres'), // v7.48.1 · 0 = não aplica
     travaNoDas: (vRaw('cf-travadas', _cfg.travaNoDas===false?'nao':'sim') || 'sim') !== 'nao',   // v7.36.0
     // v7.62.0 (M3) · a chave só existe quando LIGADA: análise que nunca a viu segue byte a byte
     // idêntica, e é isso que mantém o lacre 47f3f10b e os 754 gabaritos fora do alcance da opção.
@@ -4506,6 +4637,7 @@ function anAplicarConfig(silencioso) {
   if ($id('cf-lrper'))    AN.cfg.lrPeriodo  = $id('cf-lrper').value;
   if ($id('cf-lrprejir')) AN.cfg.lrPrejIrpj = Math.max(0, num($id('cf-lrprejir').value));
   if ($id('cf-lrprejcs')) AN.cfg.lrPrejCsll = Math.max(0, num($id('cf-lrprejcs').value));
+  if (_avisosFx.length) toast(_avisosFx[0] + (_avisosFx.length>1 ? ` (e mais ${_avisosFx.length-1})` : ''));
   AN_SUJO = true;                       // sem isto a alteração sumia sem aviso ao trocar de módulo
   anRecalcular();
   clearTimeout(window._cfgTimer);
@@ -4592,7 +4724,7 @@ function snAvisoHtml(el) {
       <a href="#" onclick="snPerguntarAnterior(true);return false" style="margin-left:6px">informar o ano anterior</a></div></div>`;
 }
 function anRecalcular() {
-  setTimeout(()=>{ try{ anTravaRender(); }catch(e){} }, 0);   // v7.26.0: banner da trava acompanha o recálculo
+  setTimeout(()=>{ try{ anTravaRender(); }catch(e){/* silêncio proposital (A10): banner cosmético */} }, 0);   // v7.26.0: banner da trava acompanha o recálculo
   if (!AN) return;
   let r;
   try { r = calcular(AN, PARAMS.anexos, folhaPercDaEmpresa()); } catch(e) { console.error(e); return; }
@@ -4788,7 +4920,7 @@ async function anHistorico(){
       <td>${t}</td><td>${esc(q)}</td>
       <td class="num">${rm.receita!=null?fmtR(+rm.receita):'—'}</td>
       <td class="num">${rm.simples!=null?fmtR(+rm.simples):'—'}</td>
-      <td><button class="btn" onclick="anHistRestaurar(${r.id})">Restaurar</button></td></tr>`;
+      <td><button class="btn" onclick="comBotao(this,'Restaurando',()=>anHistRestaurar(${r.id}))">Restaurar</button></td></tr>`;
   }).join('');
   window._AN_HIST = rs;
   el.style.display = '';
@@ -4811,16 +4943,21 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.62.0';
+const APP_VERSAO = '7.63.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
-  let cen = null;
+  let cen = null, cenErro = null;
+  // v7.63.0 (auditoria A06) · o catch aqui era VAZIO: falhando o cálculo dos cenários, o snapshot
+  // era gravado com `cen2033: null` e o fechamento seguia. A trava existe para provar que os
+  // números não mudaram — snapshot mudo compromete exatamente a garantia que ela promete.
   try { const C = calcCenariosReforma(AN._res, AN.reforma||null); const L33 = C.REF[C.REF.length-1];
-    cen = { dentro: cenDentro(T, L33), hib: L33.hib, regular: L33.regular }; } catch(e){}
+    cen = { dentro: cenDentro(T, L33), hib: L33.hib, regular: L33.regular }; }
+  catch(e){ cenErro = String(e && e.message || e); console.error('anSnapshotCalc/cenários:', e); }
   return { versao: APP_VERSAO, em: new Date().toISOString(),
     totais: { receita:T.receita||0, receitaExp:T.receitaExp||0, simples:T.simples||0, lp:T.lp||0, lr:T.lr||0, das:T.das||0 },
-    cen2033: cen, dasMeses: (AN?._res?.meses||[]).map(M=>+(M.das||0).toFixed(2)) };
+    cen2033: cen, cen2033Erro: cenErro,          // v7.63.0 (A06): a falha viaja no snapshot
+    dasMeses: (AN?._res?.meses||[]).map(M=>+(M.das||0).toFixed(2)) };
 }
 async function anFecharAbrir(){
   if (!AN || !AN.cnpj){ toast('Selecione a empresa e abra a análise primeiro.'); return; }
@@ -4884,7 +5021,14 @@ async function anSalvar() {
         + `Última gravação: ${new Date(remoto).toLocaleString('pt-BR')}.\n\n`
         + 'Salvar agora substitui o que foi gravado. Continuar?')) return false;
     }
-  } catch(e){ console.error('conferência de versão:', e); }
+  } catch(e){
+    // v7.63.0 (auditoria A08) · falhava PARA O LADO PERMISSIVO: não conseguindo verificar, gravava
+    // por cima sem perguntar — que é exatamente o cenário que este mecanismo existe para evitar.
+    console.error('conferência de versão:', e);
+    if (!confirm('Não foi possível verificar se esta análise foi gravada por outra pessoa depois que você a abriu.\n\n'
+      + 'Motivo: ' + (e.message||e) + '\n\n'
+      + 'Salvar assim mesmo pode substituir o trabalho de outra pessoa. Continuar?')) return false;
+  }
   const T = AN._res?.totais || {};
   const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined, _verEm:undefined},
     resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr }, atualizado_em:new Date().toISOString() }];
@@ -6119,7 +6263,7 @@ function pgdasReview() {
   <div class="toolbar" style="margin:12px 0 0">
     <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="pg-rbt" checked style="width:auto"> Preencher RBT12 da Config com os 12 meses de ${anoImp-1} (do próprio PGDAS)</label>
     <span style="flex:1"></span>
-    ${impBtnCancelar('pgdas')}<button class="btn solid" onclick="pgdasAplicar()">✅ Aplicar à análise</button>
+    ${impBtnCancelar('pgdas')}<button class="btn solid" onclick="comBotao(this,'Aplicando',()=>pgdasAplicar())">✅ Aplicar à análise</button>
   </div>`;
   $id('imp-pgdas-review').innerHTML = h;
 }
@@ -6264,7 +6408,7 @@ async function fatLer(input) {
       <div><label>Anexo / bloco de destino</label><select id="fat-bloco">${PG_BLOCOS.map(([k,r])=>`<option value="${k}">${r}</option>`).join('')}</select></div>
       <div><label>Modo</label><select id="fat-modo"><option value="substituir">Substituir valores do bloco</option><option value="somar">Somar aos valores existentes</option></select></div>
       <span style="flex:1"></span>
-      ${impBtnCancelar('fat')}<button class="btn solid" onclick="fatAplicar()">✅ Aplicar à análise</button>
+      ${impBtnCancelar('fat')}<button class="btn solid" onclick="comBotao(this,'Aplicando',()=>fatAplicar())">✅ Aplicar à análise</button>
     </div>`;
     $id('imp-fat-review').innerHTML = h;
   } catch(e) { impFecharProgresso(); console.error(e); toast('Erro ao ler o PDF: '+e.message); }
@@ -6453,7 +6597,7 @@ function balReview() {
       <option value="ultimo">Lançar tudo no último mês do período de cada balancete</option></select></div>
     <span style="flex:1"></span>
     <button class="btn" onclick="balPrevia()">🔎 Prévia da aplicação</button>
-    ${impBtnCancelar('bal')}<button class="btn solid" onclick="balAplicar()">✅ Aplicar à análise</button>
+    ${impBtnCancelar('bal')}<button class="btn solid" onclick="comBotao(this,'Aplicando',()=>balAplicar())">✅ Aplicar à análise</button>
   </div>
   <div id="bal-previa" style="margin-top:12px"></div>`;
   $id('imp-bal-review').innerHTML = h;
@@ -7028,7 +7172,7 @@ function demReview() {
     <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="dem-rbt" checked style="width:auto"> Preencher Config: receita/folha de ${antAno} (RBT12 e Fator R)</label>
     <label style="display:flex;gap:6px;align-items:center;font-size:13px" title="A folha do demonstrativo já inclui encargos; o motor calcula INSS patronal por % sobre a folha lançada — lançar aqui pode superestimar o INSS do Presumido/Real. Prefira o balancete para a folha do ano corrente."><input type="checkbox" id="dem-fol" style="width:auto"> Aplicar folha de ${ano} em "Salários" ⚠️</label>
     <span style="flex:1"></span>
-    ${impBtnCancelar('dem')}<button class="btn solid" onclick="demAplicar()">✅ Aplicar à análise</button>
+    ${impBtnCancelar('dem')}<button class="btn solid" onclick="comBotao(this,'Aplicando',()=>demAplicar())">✅ Aplicar à análise</button>
   </div>`;
   $id('imp-dem-review').innerHTML = h;
 }
@@ -7379,16 +7523,16 @@ async function rlCnpjRender(cnpj){
     const tot = itens.reduce((a,i)=>a+(+i.valor||0),0) || 1;
     const porC = {}; for (const i of itens){ const c=i.classe||'nid'; porC[c]=porC[c]||{n:0,v:0}; porC[c].n++; porC[c].v+=(+i.valor||0); }
     const ordem = ['normal','simples','mei','nid','pf','proprio'].filter(c=>porC[c]);
-    const barra = ordem.map(c=>`<div style="height:10px;width:${(porC[c].v/tot*100).toFixed(1)}%;background:${ROT[c][1]}"></div>`).join('');
-    const leg = ordem.map(c=>`<span style="font-size:8.5pt;margin-right:10px"><span style="display:inline-block;width:8px;height:8px;background:${ROT[c][1]};border-radius:2px"></span> ${ROT[c][0]}: ${porC[c].n} forn. · ${fmtR(porC[c].v)} (${(porC[c].v/tot*100).toFixed(1).replace('.',',')}%)</span>`).join('');
-    const pctCred = ((porC.normal?porC.normal.v:0)/tot*100).toFixed(1).replace('.',',');
+    const barra = ordem.map(c=>`<div style="height:10px;width:${(porC[c].v/(tot||1)*100).toFixed(1)}%;background:${ROT[c][1]}"></div>`).join('');
+    const leg = ordem.map(c=>`<span style="font-size:8.5pt;margin-right:10px"><span style="display:inline-block;width:8px;height:8px;background:${ROT[c][1]};border-radius:2px"></span> ${ROT[c][0]}: ${porC[c].n} forn. · ${fmtR(porC[c].v)} (${(porC[c].v/(tot||1)*100).toFixed(1).replace('.',',')}%)</span>`).join('');
+    const pctCred = ((porC.normal?porC.normal.v:0)/(tot||1)*100).toFixed(1).replace('.',',');
     // v7.34.0: o dashboard da tela também vai para o relatório — CFOPs, exportação e B2B×B2C
     const ehVenda = /clientes|venda/i.test(titulo);
     const cfops = {}; for (const i of itens) for (const [c,v] of Object.entries(i.cfops||{})) cfops[c]=(cfops[c]||0)+(+v||0);
     const cfl = Object.entries(cfops).sort((a,b)=>b[1]-a[1]);
     const expV = cfl.filter(x=>TRI_EXP_CFOPS.test(x[0])).reduce((a,x)=>a+x[1],0);
     const pjV = itens.filter(i=>i.classe!=='pf'&&i.classe!=='proprio').reduce((a,i)=>a+(+i.valor||0),0);
-    const pcx = v => (v/tot*100).toFixed(1).replace('.',',');
+    const pcx = v => (v/(tot||1)*100).toFixed(1).replace('.',',');
     const cardsExtra = (ehVenda ? `<div class="pp-card" style="flex:1;min-width:100px"><div class="t">B2B (CNPJ)</div><div class="v">${pcx(pjV)}%</div></div>
         <div class="pp-card" style="flex:1;min-width:100px"><div class="t">B2C (consumidor)</div><div class="v">${pcx(tot-pjV)}%</div></div>` : '')
       + (expV>0.005 ? `<div class="pp-card" style="flex:1;min-width:110px"><div class="t">Exportação (imune)</div><div class="v">${pcx(expV)}%</div></div>` : '');
@@ -7411,7 +7555,7 @@ async function rlCnpjRender(cnpj){
     B.push({ htmlFixo: fixo, custoFixo: 9 + Math.ceil(cfl.length/2) + (cfl.length?2:0), estilo:'font-size:8.5pt',
       thead:'<tr><th style="text-align:left">CNPJ</th><th style="text-align:left">Fornecedor</th><th style="text-align:left">Enquadramento</th><th>Valor (R$)</th><th>% do total</th></tr>',
       linhas: [...itens].sort((a,b)=>(+b.valor||0)-(+a.valor||0)).map(i=>{const rr=ROT[i.classe||'nid']||ROT.nid;
-        return {html:`<tr><td style="text-align:left;white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td style="text-align:left">${esc(i.razao)}</td><td style="text-align:left">${rr[0]}</td><td>${fmt(i.valor)}</td><td>${(i.valor/tot*100).toFixed(1).replace('.',',')}%</td></tr>`, custo:1};}) });
+        return {html:`<tr><td style="text-align:left;white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td style="text-align:left">${esc(i.razao)}</td><td style="text-align:left">${rr[0]}</td><td>${fmt(i.valor)}</td><td>${(i.valor/(tot||1)*100).toFixed(1).replace('.',',')}%</td></tr>`, custo:1};}) });
   };
   if (F){ tipoBloco(F.compra,'Fornecedores — relação completa (arquivo de compra)');
     tipoBloco(F.venda,'Clientes — relação completa (arquivo de venda)');
@@ -7428,17 +7572,28 @@ function rlConsolidado(rot, n) {
   const g = f => agrupar(M.map(f), n);
   const cab = `<tr><th></th>${rot.map(r=>`<th class="num">${r}</th>`).join('')}<th class="num">Ano</th></tr>`;
   const linha = (nome, arr, forte) => `<tr${forte?' style="font-weight:700"':''}><td class="rot">${nome}</td>${arr.map(v=>`<td class="num">${fmt(v)}</td>`).join('')}<td class="num"><b>${fmt(arr.reduce((a,b)=>a+(+b||0),0))}</b></td></tr>`;
-  let REF = null, cen = null;
-  try { cen = calcCenariosReforma(R, RL.dados.reforma); REF = cen.REF; } catch(e) { console.error(e); }
+  let REF = null, cen = null, cenErro = null;
+  // v7.63.0 (auditoria A07) · a exceção era engolida e as seções da Reforma simplesmente não
+  // saíam. Ausência de seção é indistinguível de "não se aplica" — num papel de trabalho, isso
+  // é pior que o erro, porque o leitor conclui que foi conferido.
+  try { cen = calcCenariosReforma(R, RL.dados.reforma); REF = cen.REF; }
+  catch(e) { cenErro = String(e && e.message || e); console.error(e); }
+  const tarjaReforma = cenErro
+    ? `<div class="card" style="border-left:4px solid var(--danger,#943126);background:#fdedec">
+        <b>⚠️ A projeção da Reforma não pôde ser calculada</b> e por isso <b>não consta deste documento</b>.
+        Nada foi omitido por não se aplicar — houve falha no cálculo: <code>${esc(cenErro)}</code>.
+        Os números do regime atual (Simples, Presumido e Real) não dependem dessa parte e seguem válidos.
+       </div>` : '';
   const l33 = REF ? REF[REF.length-1] : null;
 
   // ── 1. SINTÉTICO (1 página) ──
+  // v7.63.0 (A07): a tarja vem antes de tudo — quem lê precisa saber da lacuna antes dos números.
   const menor = Math.min(T.simples, T.lp, T.lr);
   const nomeMenor = menor===T.simples?'Simples Nacional':menor===T.lp?'Lucro Presumido':'Lucro Real';
   const rank = [['Simples Nacional (hoje)',T.simples],['Lucro Presumido (hoje)',T.lp],['Lucro Real (hoje)',T.lr]];
   if (l33) rank.push(['Reforma 2033 — Simples híbrido (LC 214)', l33.hib], [`Reforma 2033 — regime regular (${l33.regNome})`, l33.regular]);
   rank.sort((a,b)=>a[1]-b[1]);
-  let h = `<div class="card"><h3>1. Resumo sintético</h3>
+  let h = tarjaReforma + `<div class="card"><h3>1. Resumo sintético</h3>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin:10px 0">
       <div class="stat"><div class="n" style="font-size:19px">${fmtR(T.receita)}</div><div class="l">Receita bruta anual</div></div>
       <div class="stat"><div class="n" style="font-size:19px">${fmtR(menor)}</div><div class="l">Menor carga hoje — ${nomeMenor}</div></div>
@@ -7691,10 +7846,10 @@ function parecerPagFornecedores(secao, prox){
     const tot = itens.reduce((a,i)=>a+(+i.valor||0),0) || 1;
     const porC = {}; for (const i of itens){ const c=i.classe||'nid'; porC[c]=porC[c]||{n:0,v:0}; porC[c].n++; porC[c].v+=(+i.valor||0); }
     const ordem = ['normal','simples','mei','nid','pf'].filter(c=>porC[c]);
-    const barra = ordem.map(c=>`<div style="height:9px;width:${(porC[c].v/tot*100).toFixed(1)}%;background:${ROT[c][1]}"></div>`).join('');
-    const leg = ordem.map(c=>`<span style="font-size:8pt;margin-right:10px"><span style="display:inline-block;width:8px;height:8px;background:${ROT[c][1]};border-radius:2px"></span> ${ROT[c][0]}: ${porC[c].n} forn. · ${fmtR(porC[c].v)} (${(porC[c].v/tot*100).toFixed(1).replace('.',',')}%)</span>`).join('');
+    const barra = ordem.map(c=>`<div style="height:9px;width:${(porC[c].v/(tot||1)*100).toFixed(1)}%;background:${ROT[c][1]}"></div>`).join('');
+    const leg = ordem.map(c=>`<span style="font-size:8pt;margin-right:10px"><span style="display:inline-block;width:8px;height:8px;background:${ROT[c][1]};border-radius:2px"></span> ${ROT[c][0]}: ${porC[c].n} forn. · ${fmtR(porC[c].v)} (${(porC[c].v/(tot||1)*100).toFixed(1).replace('.',',')}%)</span>`).join('');
     const top = [...itens].sort((a,b)=>(+b.valor||0)-(+a.valor||0)).slice(0,8);
-    const pctCred = ((porC.normal?porC.normal.v:0)/tot*100).toFixed(1).replace('.',',');
+    const pctCred = ((porC.normal?porC.normal.v:0)/(tot||1)*100).toFixed(1).replace('.',',');
     return `<div style="margin-bottom:8px"><b style="font-size:10pt">${titulo}</b> <span class="hint" style="font-size:8pt">consulta de ${new Date(r.consultado_em).toLocaleDateString('pt-BR')}${r.dados.periodo?' · período '+esc(r.dados.periodo):''}</span>
     <div style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap">
       <div class="pp-card" style="flex:1;min-width:90px"><div class="t">Fornecedores</div><div class="v">${itens.length}</div></div>
@@ -7703,7 +7858,7 @@ function parecerPagFornecedores(secao, prox){
     </div>
     <div style="display:flex;border-radius:4px;overflow:hidden;margin:4px 0">${barra}</div><div>${leg}</div>
     <table class="pp-tab" style="margin-top:6px;font-size:8pt"><thead><tr><th>Fornecedor</th><th>CNPJ</th><th>Enquadramento</th><th style="text-align:right">Valor</th><th style="text-align:right">% do total</th></tr></thead><tbody>
-    ${top.map(i=>`<tr><td>${esc((i.razao||'').slice(0,44))}</td><td style="white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td>${(ROT[i.classe||'nid']||ROT.nid)[0]}</td><td style="text-align:right">${fmt(i.valor)}</td><td style="text-align:right!important">${(i.valor/tot*100).toFixed(1).replace('.',',')}%</td></tr>`).join('')}
+    ${top.map(i=>`<tr><td>${esc((i.razao||'').slice(0,44))}</td><td style="white-space:nowrap">${fmtCNPJ(i.cnpj)}</td><td>${(ROT[i.classe||'nid']||ROT.nid)[0]}</td><td style="text-align:right">${fmt(i.valor)}</td><td style="text-align:right!important">${(i.valor/(tot||1)*100).toFixed(1).replace('.',',')}%</td></tr>`).join('')}
     </tbody></table>${itens.length>8?`<div class="hint" style="font-size:8pt">Exibidos os 8 maiores de ${itens.length} fornecedores.</div>`:''}</div>`;
   };
   const corpo = bloco(F.revenda,'Fornecedores de revenda (entradas de mercadorias)') + bloco(F.servico,'Fornecedores de serviços e despesas');
@@ -7724,11 +7879,11 @@ function parecerPagClientela(secao, prox){
   const tot = ext.reduce((a,i)=>a+(+i.valor||0),0)||1;
   const pj = ext.filter(i=>i.classe!=='pf').reduce((a,i)=>a+(+i.valor||0),0);
   const st = V.dados.stats||{}; const exp = +st.exp||0;
-  const pc = v => (v/tot*100).toFixed(1).replace('.',',');
+  const pc = v => (v/(tot||1)*100).toFixed(1).replace('.',',');
   const porC = {}; for (const i of ext){ const c=i.classe||'nid'; porC[c]=porC[c]||{n:0,v:0}; porC[c].n++; porC[c].v+=(+i.valor||0); }
   const ROT = { normal:['Regime normal','#b9770e'], simples:['Simples Nacional','#1a5276'], mei:['MEI','#1e8449'], pf:['Consumidor final (CPF)','#7f8c8d'], nid:['Não identificado','#95a5a6'] };
   const ordem = ['normal','simples','mei','pf','nid'].filter(c=>porC[c]);
-  const barra = ordem.map(c=>`<div style="height:10px;width:${(porC[c].v/tot*100).toFixed(1)}%;background:${ROT[c][1]}"></div>`).join('');
+  const barra = ordem.map(c=>`<div style="height:10px;width:${(porC[c].v/(tot||1)*100).toFixed(1)}%;background:${ROT[c][1]}"></div>`).join('');
   const leg = ordem.map(c=>`<span style="font-size:8.5pt;margin-right:10px"><span style="display:inline-block;width:8px;height:8px;background:${ROT[c][1]};border-radius:2px"></span> ${ROT[c][0]}: ${porC[c].n} · ${fmtR(porC[c].v)} (${pc(porC[c].v)}%)</span>`).join('');
   const b2b = pc(pj), b2c = pc(tot-pj);
   return `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
@@ -9106,7 +9261,20 @@ function rlConferencia(){
       // Agora é informativa e diz onde já foi considerada.
       ...((M.icmsComprasPC||0)>0.005?[CF.lin('ICMS das aquisições fora do crédito — Lei 14.592/2023', `compras p/ revenda ${fmtR(_comprasLR)} × ${CF.pc(+D.cfg.icmsC||0)} — <i>já refletido na linha acima</i>, que deduz as compras líquidas do ICMS`, '<i>' + fmtR(M.icmsComprasPC||0) + '</i>')]:[]),
       CF.lin('(−) ICMS destacado — Tema 69', `(revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706)`, fmtR(M.icmsDestacadoPC||0)),
-      CF.lin('Base PIS/COFINS (final)', `${fmtR(LR.basePCbruta||0)} − ${fmtR(M.icmsDestacadoPC||0)}`, fmtR(LR.basePC||0)),
+      // v7.63.0 (auditoria A09) · quando os créditos superam os débitos, a base tributável é ZERO e
+      // o excesso vira saldo credor transportado ao mês seguinte — o motor sempre fez isso, mas a
+      // memória imprimia a conta bruta e um resultado zero que ela não produzia. Quem refizesse na
+      // tela não chegava ao número ao lado. Mesma família do item H da v7.51.0.
+      ...(((LR.saldoCredorAnt||0) > 0.005) ? [CF.lin('(−) Saldo credor do mês anterior',
+        'crédito de PIS/COFINS que excedeu a base e foi transportado', fmtR(LR.saldoCredorAnt||0))] : []),
+      CF.lin('Base PIS/COFINS (final)',
+        ((LR.saldoCredorFim||0) > 0.005)
+          ? `${fmtR(LR.basePCbruta||0)} − ${fmtR(M.icmsDestacadoPC||0)} − saldo anterior ${fmtR(LR.saldoCredorAnt||0)} = <b>negativo</b>, logo a base é ZERO`
+          : `${fmtR(LR.basePCbruta||0)} − ${fmtR(M.icmsDestacadoPC||0)}${(LR.saldoCredorAnt||0)>0.005?` − saldo anterior ${fmtR(LR.saldoCredorAnt||0)}`:''}`,
+        fmtR(LR.basePC||0)),
+      ...(((LR.saldoCredorFim||0) > 0.005) ? [CF.lin('Saldo credor a transportar',
+        'excesso de crédito sobre a base — reduz a base do mês seguinte, não gera tributo negativo',
+        fmtR(LR.saldoCredorFim||0))] : []),
       CF.lin('PIS', `${fmtR(LR.basePC||0)} × 1,65% + financeiras ${fmtR(_fin)} × 0,65%`, fmtR(LR.pis)),
       CF.lin('COFINS', `${fmtR(LR.basePC||0)} × 7,60% + financeiras ${fmtR(_fin)} × 4,00%`, fmtR(LR.cofins)),
       CF.lin('Lucro do mês (base IRPJ/CSLL)', `receita ${fmtR(M.receita)} + financeiras ${fmtR(_fin)} − custos ${fmtR(M.custos)} − folha ${fmtR(M.folhaTotal)} − despesas ${fmtR(M.despTotal)} − INSS patronal ${fmtR(M.inssPatr)} − PIS/COFINS ${fmtR(LR.pis+LR.cofins)} − ICMS ${fmtR(M.icmsPagar)} − IPI ${fmtR(M.ipiPagar)} − ISS ${fmtR(M.iss)}`, fmtR(LR.baseIRCS)),
@@ -9650,6 +9818,9 @@ function rlConfDivergencias(){
       <li><b>Limite e sublimite proporcionais (v7.55.0):</b> valem <b>apenas no ano-calendário de início</b> de atividade (LC 123/2006, art. 3º, §§ 2º e 3º), contada a fração de mês como mês inteiro. No ano seguinte o limite volta a ser integral, ainda que a empresa tenha menos de 12 meses de existência.</li>
       <li><b>ISS retido fora da dedução da base do IBS/CBS (v7.54.0):</b> a dedução é o ISS do Lucro Presumido exibido no Consolidado analítico, que exclui as receitas com retenção. A leitura literal do art. 12, §2º, V, da LC 214/2025 admitiria o contrário — o ISS retido também incidiu sobre a operação —, mas a escolha é pela coerência com a decisão da v7.23.0 de que o ISS retido não é custo da empresa. É <b>decisão declarada</b>, não omissão.</li>
       <li><b>Redução de IBS/CBS — ordem das operações (v7.54.0):</b> a exclusão de ICMS e ISS é operação de <b>base</b> e a redução do regime diferenciado é operação de <b>alíquota</b>, então a dedução vem primeiro e é <b>rateada proporcionalmente à base de cada parcela</b>. O rateio por natureza (ISS só sobre serviço, ICMS só sobre mercadoria) seria mais fiel ao fato gerador e <b>não</b> está implementado.</li>
+      <li><b>RBT12 presumida (v7.63.0):</b> ${(RL?.res?.meses||[]).some(M=>M.rbt12Presumido)
+        ? 'em pelo menos um mês deste ano a RBT12 apurada era <b>zero</b> e havia receita lançada. Como alíquota efetiva com RBT12 zero é indeterminada — e apurar <b>DAS zero</b> com receita não é resultado defensável —, o aplicativo aplicou a regra do <b>primeiro mês de atividade</b> (Res. CGSN 140/2018, art. 22, § 2º): receita do próprio mês × 12. É <b>presunção</b>, não dado: lance os 12 meses anteriores na aba RBT12, ou informe a data de início de atividade, e o número passa a sair do dado real.'
+        : 'não se aplica a esta análise — todos os meses com receita têm RBT12 apurada a partir de dado lançado.'}</li>
       <li><b>Arredondamento do DAS (v7.62.0):</b> ${(RL?.dados?.cfg||{}).arredondaPorTributo
         ? 'esta empresa está configurada para arredondar <b>tributo a tributo</b>, como o PGDAS-D: cada parcela é arredondada e depois somada. É o que faz o DAS calculado reproduzir o declarado ao centavo. A referência desta empresa passa a ser a <b>guia</b>.'
         : 'o DAS é arredondado <b>uma vez, no total do mês</b>. O PGDAS-D arredonda tributo a tributo, de modo que pode haver diferença de <b>centavos</b> na conferência contra a guia — sem efeito no Presumido, no Real ou nos cenários da Reforma. A opção por tributo fica na Configuração da empresa.'}</li>
