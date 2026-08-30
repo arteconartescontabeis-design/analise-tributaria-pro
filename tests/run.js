@@ -290,7 +290,12 @@ console.log('\n■ Res. CGSN nº 190/2026 — partilha por vigência');
   }
   chk('quadro tributo a tributo renderiza nos 3 cenários, com abertura ↳ no "dentro"', okQ && temAb, det);
   // 5d.7 gabaritos de cenário 2033 (caso1): híbrido e fora INALTERADOS; dentro recomposto = trava (comércio → invariante)
-  const fx1 = JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures','caso1.json'),'utf8')).inp;
+  // v7.61.0: sem esta guarda a suíte inteira MORRIA quando a fixture faltava — as demais
+  // seções já pulavam com aviso, e o bloco 5c ganhou a guarda na v7.41.8; este ficou de fora.
+  const _fxA = path.join(__dirname,'fixtures','caso1.json');
+  const fx1 = fs.existsSync(_fxA) ? JSON.parse(fs.readFileSync(_fxA,'utf8')).inp : null;
+  if (!fx1) console.log('  (fixtures/caso1.json ausente — gabaritos de cenário 2033 pulados)');
+  if (fx1) {
   const rG = g.calcular(fx1, clone(AD), {...FD});
   const CG = g.calcCenariosReforma(rG, null);
   const G33 = CG.REF[CG.REF.length-1];
@@ -302,6 +307,7 @@ console.log('\n■ Res. CGSN nº 190/2026 — partilha por vigência');
   chk('gabarito · trava do caso1 (comércio) invariante por vigência: ICMS×rem + IBS×(1−rem)',
     G33.p190 && Math.abs(G33.p190.trava - (rG.totais.sublimite||0)) < 0.02,
     'trava33='+(G33.p190?G33.p190.trava.toFixed(2):'—'));
+  }
 }
 
 // ═══ 5f. v7.18.3 — Lei 14.592/2023 e importadores substituem (não somam) ═══
@@ -1689,9 +1695,15 @@ console.log('\n■ Integridade da interface');
         && Math.abs(alto.meses[7].simples.total - (alto.meses[7].das + alto.meses[7].impIcms + alto.meses[7].impIss + alto.meses[7].simples.cppRetida + alto.meses[7].simples.inssPatrForaDAS)) < 0.02);
       chk('v7.58.0 · M2 · quem não cruza o sublimite não é afetado em nada',
         baixo.impedimento === null && baixo.meses.every(M => !M.impedido && M.impIcms === 0));
-      // M3 · escrito e desligado
-      chk('v7.58.0 · M3 · o arredondamento por tributo existe atrás de chave, desligado por padrão',
-        /if \(cfg\.arredondaPorTributo\)/.test(html) && !/^\s*arredondaPorTributo:/m.test(html));
+      // M3 · v7.58.0 escreveu a regra e a deixou sem UI; a v7.62.0 deu-lhe onde ser ligada,
+      // POR EMPRESA e com o padrão desligado. O teste antigo exigia a ausência de
+      // `arredondaPorTributo:` no arquivo, o que a leitura da Configuração passou a violar
+      // legitimamente — reescrito para o que continua valendo: a regra existe atrás da chave,
+      // e nada no aplicativo a liga sozinho (as ocorrências são a leitura da tela e o
+      // apagamento da chave quando desmarcada, nunca uma atribuição de `true`).
+      chk('v7.62.0 · M3 · a regra existe atrás da chave e nada a liga sozinho',
+        /if \(cfg\.arredondaPorTributo\)/.test(html)
+        && !/arredondaPorTributo\s*[:=]\s*true/.test(html.replace(/i\.cfg\.arredondaPorTributo = true/g,'')));
       const semChave = mkI(200000), comChave = (()=>{ const i = anNovo2('11222333000181', 2026);
         i.cfg.iss = .02; i.cfg.arredondaPorTributo = true; i.cfg.rbt12Lanc = Array(12).fill(300000);
         for (const k of Object.keys(i.receitas)) i.receitas[k] = Array(12).fill(0);
@@ -1773,8 +1785,9 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.56.2 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.60\.0';/.test(html) && html.includes('<b>v7.60.0</b>') && html.includes('<b>v7.50.0</b>'));
+    chk('v7.62.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.62\.0';/.test(html) && html.includes('<b>v7.62.0</b>')
+      && html.includes('<b>v7.61.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
       const corpo = html.slice(html.indexOf('<table id="tbl-versoes"'));
@@ -2690,6 +2703,127 @@ console.log('\n■ Integridade da interface');
     chk('v7.55.0 · Q · as parcelas e os totais são fórmulas vivas, não valores colados',
       !!(wb.Sheets['Simples']['B'+acha('Simples','DAS do mês')]||{}).f
       && !!(wb.Sheets['Simples']['B'+rSN]||{}).f && !!(wb.Sheets['Simples']['N'+rSN]||{}).f);
+  }
+
+  // ═══ 5y. v7.61.0 · REMEDIAÇÃO DO ISS HERDADO DE NFS-e ═══
+  // O que se testa aqui é o CRITÉRIO (quem entra na lista) e as travas da correção.
+  // O que NÃO se testa: a ida ao banco — ela é do PostgREST, não do motor.
+  {
+    console.log('\n■ v7.61.0 — remediação do ISS herdado de NFS-e');
+    const sus = vm.runInContext('issSuspeito', ctx);
+    chk('v7.61.0 · a alíquota do Simples das notas reais é apontada (3,0674% · 3,1834% · 3,0886%)',
+      sus(0.030674) && sus(0.031834) && sus(0.030886));
+    chk('v7.61.0 · alíquota de município NÃO é apontada (2% · 2,5% · 3% · 5% · 3,25%)',
+      !sus(0.02) && !sus(0.025) && !sus(0.03) && !sus(0.05) && !sus(0.0325));
+    chk('v7.61.0 · zero e vazio ficam fora da lista (empresa sem ISS não é achado)',
+      !sus(0) && !sus(null) && !sus(undefined) && !sus(''));
+    chk('v7.61.0 · o critério é a 3ª casa do PERCENTUAL, não da fração',
+      sus(0.030001) && !sus(0.0300), 'limite: 3,0001% entra · 3,0000% não');
+
+    // a varredura é somente leitura: nenhuma escrita no caminho do diagnóstico
+    const fonte = html.slice(html.indexOf('async function issVarrer'),
+                             html.indexOf('function issRender'));
+    chk('v7.61.0 · a varredura só LÊ (nenhum POST/PATCH/DELETE em issVarrer)',
+      !/supa\('(POST|PATCH|DELETE)'/.test(fonte) && /supa\('GET'/.test(fonte));
+    chk('v7.61.0 · a varredura pede só a configuração, não a análise inteira',
+      /select:'cnpj,ano,status,atualizado_em,cfg:dados->cfg'/.test(fonte));
+    chk('v7.61.0 · e tem plano B se o servidor não aceitar o seletor de campo do JSON',
+      /catch\(e\)\{[\s\S]*select:'cnpj,ano,status,atualizado_em,dados'/.test(fonte));
+
+    const corr = html.slice(html.indexOf('async function issCorrigir'),
+                            html.indexOf('// ═══════════ v7.61.0'.replace('v7.61.0','PARÂMETROS')) > 0
+                            ? html.indexOf('// ═══════════ PARÂMETROS ═══════════')
+                            : html.length);
+    chk('v7.61.0 · corrigir exige papel de administrador', /exigirAdmin\('issCorrigir'\)/.test(corr));
+    chk('v7.61.0 · análise FECHADA é recusada, não contornada',
+      /status\|\|''\)\.toLowerCase\(\)==='fechada'/.test(corr) && /reabra/i.test(corr));
+    chk('v7.61.0 · a gravação passa pelo histórico da análise (anHistGravar)',
+      /anHistGravar\(body\[0\]\)/.test(corr));
+    chk('v7.61.0 · o efeito é mostrado ANTES de gravar, e o motor é quem calcula',
+      corr.indexOf('calcular(dNovo') < corr.indexOf('dlgSimNao') &&
+      corr.indexOf('dlgSimNao') < corr.indexOf("supa('POST'"));
+    chk('v7.61.0 · não existe correção em lote (a alíquota certa varia por município)',
+      !/for *\([^)]*ISS_ACHADOS/.test(corr) && !/forEach\([^)]*issCorrigir/.test(html));
+    chk('v7.61.0 · a alíquota informada é validada como percentual de 0 a 100',
+      /pc >= 0 && pc <= 100/.test(corr));
+
+    // PROVA DE MOTOR: trocar cfg.iss move LP e LR e NÃO move o Simples
+    const _fxISS = path.join(__dirname,'fixtures','caso1.json');
+    const fxISS = fs.existsSync(_fxISS) ? JSON.parse(fs.readFileSync(_fxISS,'utf8')).inp : null;
+    if (fxISS) {
+      const base = JSON.parse(JSON.stringify(fxISS));
+      base.cfg.iss = 0.030674;                     // o valor herdado da nota
+      base.receitas.a3_semret = base.receitas.a3_semret.map(()=>50000);   // garante serviço
+      const r1 = g.calcular(base, clone(AD), {...FD});
+      const b2 = JSON.parse(JSON.stringify(base)); b2.cfg.iss = 0.03;     // o do município
+      const r2 = g.calcular(b2, clone(AD), {...FD});
+      chk('v7.61.0 · o ISS herdado realmente distorce o Presumido e o Real',
+        Math.abs(r1.totais.lp - r2.totais.lp) > 0.01 && Math.abs(r1.totais.lr - r2.totais.lr) > 0.01,
+        'ΔLP ' + (r1.totais.lp - r2.totais.lp).toFixed(2) + ' · ΔLR ' + (r1.totais.lr - r2.totais.lr).toFixed(2));
+      chk('v7.61.0 · e NÃO move o Simples (nele o ISS vem da partilha do anexo)',
+        Math.abs(r1.totais.simples - r2.totais.simples) <= 0.005,
+        'Δ ' + (r1.totais.simples - r2.totais.simples).toFixed(4));
+    } else console.log('  (fixtures ausentes — prova de motor do ISS pulada)');
+  }
+
+  // ═══ 5z. v7.62.0 · M3 · ARREDONDAMENTO POR TRIBUTO, LIGÁVEL POR EMPRESA ═══
+  // O que faz esta opção ser segura é ela NÃO existir por padrão. Os testes abaixo
+  // guardam exatamente isso: a chave ausente mantém o motor idêntico, e o lacre e os
+  // 754 gabaritos ficam fora do alcance de quem ligar a opção numa empresa.
+  {
+    console.log('\n■ v7.62.0 — M3 · arredondamento por tributo (opção por empresa)');
+    const _fxM = path.join(__dirname,'fixtures','caso2.json');
+    const fxM = fs.existsSync(_fxM) ? JSON.parse(fs.readFileSync(_fxM,'utf8')) : null;
+
+    chk('v7.62.0 · M3 · o seletor existe na Configuração da empresa',
+      /id="cf-arredtrib"/.test(html) && /Por tributo, como a guia/.test(html));
+    chk('v7.62.0 · M3 · o padrão da tela é o total do mês (opção "nao" pré-selecionada)',
+      /<option value="nao" \$\{c\.arredondaPorTributo\?'':'selected'\}/.test(html));
+    chk('v7.62.0 · M3 · a configuração é lida e gravada pelo funil único',
+      /arredondaPorTributo: \(vRaw\('cf-arredtrib'/.test(html));
+    chk('v7.62.0 · M3 · desligar APAGA a chave (ausente ≠ false)',
+      /if \(AN\.cfg\.arredondaPorTributo !== true\) delete AN\.cfg\.arredondaPorTributo/.test(html));
+
+    // anNovo não pode semear a chave, senão toda análise nova entraria no regime da guia
+    const novo = vm.runInContext("anNovo('00000000000000', 2026)", ctx);
+    chk('v7.62.0 · M3 · análise nova NÃO nasce com a chave',
+      !('arredondaPorTributo' in (novo.cfg||{})));
+    const norm = vm.runInContext("anNormalizar({cfg:{}}, '00000000000000', 2026)", ctx);
+    chk('v7.62.0 · M3 · o normalizador também não a cria em análise antiga',
+      !('arredondaPorTributo' in (norm.cfg||{})));
+
+    if (fxM) {
+      const semK = JSON.parse(JSON.stringify(fxM.inp));
+      const comK = JSON.parse(JSON.stringify(fxM.inp)); comK.cfg.arredondaPorTributo = true;
+      const rSem = g.calcular(semK, clone(AD), {...FD}), rCom = g.calcular(comK, clone(AD), {...FD});
+      chk('v7.62.0 · M3 · LIGADA, a opção muda o DAS (senão não estaria ligada a nada)',
+        Math.abs(rSem.totais.das - rCom.totais.das) > 0.005,
+        'Δ ano R$ ' + (rCom.totais.das - rSem.totais.das).toFixed(4));
+      chk('v7.62.0 · M3 · e o efeito é de CENTAVOS: nenhum mês desvia mais de R$ 0,10',
+        rSem.meses.every((m,i) => Math.abs(m.das - rCom.meses[i].das) <= 0.10),
+        'maior desvio mensal R$ ' + Math.max(...rSem.meses.map((m,i)=>Math.abs(m.das-rCom.meses[i].das))).toFixed(4));
+      chk('v7.62.0 · M3 · o Presumido e o Real NÃO se movem (a opção só toca o DAS)',
+        Math.abs(rSem.totais.lp - rCom.totais.lp) < 0.005 && Math.abs(rSem.totais.lr - rCom.totais.lr) < 0.005);
+      chk('v7.62.0 · M3 · DESLIGADA, o resultado é idêntico ao de antes da opção existir',
+        Math.abs(rSem.totais.das - fxM.gab.das[12]) < 0.015 &&
+        Math.abs(rSem.totais.simples - fxM.gab['simples.total'][12]) < 0.015);
+    } else console.log('  (fixtures/caso2.json ausente — provas de motor do M3 puladas)');
+
+    // A PROVA QUE SUSTENTA A DECISÃO: os casos do lacre não têm a chave, então
+    // ligar a opção numa empresa não move o selo nem os gabaritos.
+    const lac = vm.runInContext('lacreRodar()', ctx);
+    chk('v7.62.0 · M3 · o lacre 47f3f10b segue íntegro com a opção disponível',
+      lac && lac.ok === true && lac.hash === '47f3f10b', 'hash=' + (lac && lac.hash));
+    const casosLimpos = vm.runInContext('LACRE_CASOS', ctx)
+      .every(c => !('arredondaPorTributo' in (c.inp.cfg||{})));
+    chk('v7.62.0 · M3 · e os casos-gabarito seguem SEM a chave — é isso que os protege',
+      casosLimpos);
+
+    // o papel de trabalho tem de declarar em qual regime a empresa está, nos DOIS sentidos
+    chk('v7.62.0 · M3 · as divergências declaradas cobrem os dois estados',
+      /Arredondamento do DAS \(v7\.62\.0\)/.test(html)
+      && /arredondar <b>tributo a tributo<\/b>/.test(html)
+      && /arredondado <b>uma vez, no total do mês<\/b>/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
