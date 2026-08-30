@@ -315,8 +315,8 @@ canvas{max-height:340px}
           <button class="btn" id="fo-aba-compra" style="display:none" onclick="fornTrocarAba('compra')">📄 Arquivo de compra (fornecedor)</button>
           <button class="btn" id="fo-aba-venda" style="display:none" onclick="fornTrocarAba('venda')">👥 Arquivo de venda (cliente)</button>
           <button class="btn" id="fo-aba-totais" style="display:none" onclick="fornTrocarAba('totais')">📋 Totais — relatórios de entrada</button>
-          <input type="file" id="tri-arq-compra" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'compra')">
-          <input type="file" id="tri-arq-venda" accept=".xls,.xlsx" style="display:none" onchange="triArquivo(this,'venda')">
+          <input type="file" id="tri-arq-compra" accept=".xls,.xlsx" multiple style="display:none" onchange="triArquivo(this,'compra')">
+          <input type="file" id="tri-arq-venda" accept=".xls,.xlsx" multiple style="display:none" onchange="triArquivo(this,'venda')">
           <button class="btn solid" id="fo-btn-imp" style="display:none" onclick="$id('fo-arq').click()">Importar relatório(s)</button>
           <span class="hint" id="fo-aba-hint"></span>
         </div>
@@ -675,6 +675,9 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.60.0</b></td><td>30/08/2026</td><td><b>🧩 MELHORIA 4 · O motor passa a DEVOLVER os insumos do mês, e a memória deixa de remontá-los. Mais a MELHORIA 5 · onde configurar o crédito de PIS/COFINS.</b> <b>(M4)</b> Três defeitos desta frente nasceram do mesmo lugar: a memória reconstituía, na hora de imprimir, valores que o motor já havia decidido — o numerador da RBT12p (v7.56.5), o rótulo do anexo e a folha dos meses projetados (v7.56.6), as compras e as financeiras (v7.56.12). Cada um foi corrigido caso a caso, e voltou por outro caminho. Agora cada mês do resultado traz <code>ins</code>: blocos de receita com a alíquota aplicada, <b>anexos efetivamente usados na partilha</b>, folha, compras, despesas, receita financeira e as alíquotas da configuração. Só <b>dado</b> — nunca fórmula nem texto: a memória continua sendo quem escreve, mas não tem mais de onde buscar outra coisa. O rótulo do anexo é o caso mais claro: ele era <b>deduzido</b> dos blocos com receita e, num mês projetado sem receita lançada, caía num padrão inventado — foi assim que o documento imprimiu "Anexo I · 7,3000%" ao lado de um DAS do Anexo IV. Agora é o anexo que o motor usou. O caminho antigo permanece como <b>fallback</b>, para análise gravada antes desta versão. <b>(M5)</b> O motor lê <code>cfg.credLRpct</code> desde a v7.18.x, mas <b>nunca houve onde preencher</b> — o campo só existia por edição direta do JSON, e desde a v7.51.0 o aplicativo ainda avisava que o crédito estava zerado, reclamando sem oferecer o lugar. É o que mantém o Lucro Real "não conclusivo" nas duas auditorias externas. Entrou o quadro <b>Crédito de PIS/COFINS sobre despesas</b> na Configuração, com um percentual por grupo e a dica do que costuma creditar em cada um. O padrão continua <b>zero</b> de propósito: a lista do art. 3º das Leis 10.637/2002 e 10.833/2003 é <b>taxativa</b>, e presumir creditabilidade geraria crédito que a empresa não tem. Campo em branco apaga a chave, para o objeto distinguir "não informado" de "informado como zero". Motor e lacre <code>47f3f10b</code> intocados nas duas.</td></tr>
+                    <tr><td><b>v7.59.1</b></td><td>30/08/2026</td><td><b>🔧 M6 corrigida: mesclar os arquivos estava errado — um arquivo é um MÊS.</b> A v7.59.0 juntava tudo numa planilha só. O lançamento, porém, usa o <b>período do lote</b> para decidir o mês de destino: cinco arquivos mesclados viravam um período de janeiro a maio e o total seria <b>rateado entre os meses</b>, em vez de cada mês receber o seu. Agora os arquivos são processados <b>em sequência</b>, cada um com a sua competência, um lançamento por mês. A tela lista, antes de qualquer coisa entrar, o arquivo, a competência detectada, a contagem de linhas e o total de cada um. A guarda de duplicidade mudou de granularidade junto: passa a comparar a <b>assinatura do arquivo inteiro</b> — só o arquivo repetido na seleção é descartado, e fornecedor que aparece em vários meses continua intocado, que era o ponto que os cinco arquivos do Kleyton mostraram (15 CNPJ/CPF em mais de um mês, quatro deles nos cinco). Arquivo único segue pelo caminho de sempre. Motor e lacre <code>47f3f10b</code> intocados.</td></tr>
+                    <tr><td><b>v7.59.0</b></td><td>30/08/2026</td><td><b>📥 MELHORIA 6 · Consulta CNPJ: o analítico passa a aceitar vários arquivos de uma vez.</b> O analítico do Questor sai <b>um arquivo por mês</b>: importar um semestre era abrir a janela seis vezes, e cada leitura <b>substituía</b> a anterior. Agora a seleção múltipla é aceita e os arquivos são mesclados numa planilha só antes de processar, com um resumo por arquivo antes de qualquer coisa entrar. <b>A regra de conflito veio dos arquivos reais, não de suposição.</b> Nos cinco meses do Kleyton há <b>15 CNPJ/CPF que aparecem em mais de um arquivo</b> — quatro deles nos cinco meses. Isso <b>não</b> é duplicidade: é o mesmo fornecedor em competências diferentes, e descartá-lo perderia receita. Duplicidade de verdade é a <b>mesma linha</b> — competência, documento, natureza e valor iguais —, que é o que acontece quando o mesmo arquivo entra duas vezes por engano. Só essa é removida, o CNPJ é normalizado antes da comparação (com ou sem máscara dá a mesma chave), e <b>o total descartado é declarado na tela</b>, com a explicação de que fornecedor repetido entre meses foi mantido. Arquivo único segue pelo caminho de sempre, sem diálogo novo. Motor e lacre <code>47f3f10b</code> intocados.</td></tr>
                     <tr><td><b>v7.58.0</b></td><td>30/08/2026</td><td><b>⚖️ MELHORIA 2 · Mês da ultrapassagem do sublimite e exercício sob impedimento (decisão 8.20). Mais a MELHORIA 3 escrita e deliberadamente DESLIGADA.</b> <b>(M2)</b> Ultrapassado o sublimite em mais de 20%, a empresa fica impedida de recolher ICMS e ISS dentro do Simples a partir do mês <b>seguinte</b> (LC 123/2006, art. 20, § 1º; Res. CGSN 140/2018, art. 12). O aplicativo apenas <b>alertava</b> a trajetória; agora calcula o cenário. Conforme a decisão 8.20, a varredura corre sobre o <b>realizado</b> — projeção informa, não recolhe. No mês impedido: a alíquota efetiva perde as parcelas de ICMS e ISS do anexo; a <b>trava do sublimite deixa de existir</b>, porque ela é o mecanismo de quem ainda está dentro; e os dois tributos passam a ser apurados <b>fora</b>, pelas alíquotas do Estado e do Município, com o crédito de ICMS das compras — ignorá-lo superestimaria o custo do impedimento. Os dois entram no <b>custo do regime</b>: são devidos do mesmo jeito, só não passam pela guia, e omiti-los faria o Simples parecer mais barato justamente no mês em que deixa de cobrir os dois tributos. Lacre <code>47f3f10b</code> íntegro — os casos-gabarito não cruzam o sublimite no realizado, exatamente como a decisão 8.20 previa. <b>(M3) O arredondamento por tributo está escrito e DESLIGADO</b>, atrás de <code>cfg.arredondaPorTributo</code>. Ligado, os seis meses do Kleyton reproduzem o declarado <b>exatamente</b> — R$ 4.288,82 contra os R$ 4.288,78 de hoje. Desligado porque move o lacre para <code>801f0430</code> e derruba <b>4 dos 754 gabaritos</b>: o caso 2 diverge em <b>2 centavos</b> e a tolerância do bloco é 1,5. Não é erro de nenhum dos dois lados — a planilha v15 arredonda o <b>total</b> e a guia arredonda por <b>tributo</b>. Ligar é decidir que a referência passa a ser a guia, e essa decisão é do usuário.</td></tr>
                     <tr><td><b>v7.57.0</b></td><td>30/08/2026</td><td><b>🔐 MELHORIA 1 · Segurança C1 — papéis de usuário: esconder o menu não protegia a ação.</b> A v7.37.0 já lia o papel e ocultava Usuários e Parâmetros do operador. Só que menu oculto é <b>conveniência</b>, não controle: as funções seguiam no escopo global e qualquer usuário autenticado podia chamá-las pelo console — <code>usTrocarPapel</code>, <code>usSenhaMenu</code>, <code>usExcluir</code>, <code>usCriar</code>, <code>usEditar</code>, <code>empExcluir</code> e <code>anLimparDados</code>. As sete passam a exigir papel de administrador, com mensagem que diz qual é o papel atual e o que fazer. <b>E fica dito o que essa barreira NÃO é:</b> ela evita o acidente e dá mensagem clara, mas não resiste a quem tem o token e chama a API direto. A barreira que vale vai no banco, no <b>setup_v7570.sql</b> entregue junto: RLS em <code>atp_usuarios</code> (escrita só para admin), as funções <code>atp_meu_papel()</code> e <code>atp_sou_admin()</code> com falha aberta para o lado <b>mais</b> restritivo, e um gatilho que impede a <b>escalada de privilégio</b> — sem ele, a política que deixa o usuário editar o próprio cadastro deixaria o operador se promover a admin, que é o furo clássico desse desenho. As três RPC de exclusão são <code>SECURITY DEFINER</code> e passam por cima da RLS, então a checagem de papel dentro delas é obrigatória: o script traz o bloco a colar, e deliberadamente <b>não</b> as reescreve, para não apagar às cegas a lógica que funciona desde a v7.41.1. Motor e lacre <code>47f3f10b</code> intocados.</td></tr>
                     <tr><td><b>v7.56.13</b></td><td>29/08/2026</td><td><b>⚖️ Achado crítico da auditoria da JV: a trava de 5% do ISS não estava sendo aplicada na repartição do DAS.</b> Quando a alíquota efetiva sobe a ponto de a parcela de ISS passar de <b>5% da receita</b>, a LC 123/2006, art. 18, § 16, limita o ISS a 5% e manda o excedente para os tributos <b>federais</b>, na proporção deles. No Anexo III a participação do ISS na 5ª faixa é 33,5%, então a trava começa em <b>14,92537%</b> de efetiva — e a JV está acima disso em todos os seis meses. A auditoria mediu o efeito: <b>R$ 402,81</b> de ISS a mais no semestre, com a parcela federal subestimada no mesmo montante. <b>O DAS total não muda</b>, e por isso o defeito era invisível na conferência contra o PGDAS-D; o que muda é a repartição — e ela não é decorativa: a <b>trava do sublimite</b> e a <b>recomposição do ISS retido</b> (v7.23.0) leem essa parcela, de modo que o excesso se propagava para números que são pagos. Uma sutileza de implementação que custou uma tentativa: aplicada dentro do laço por anexo, a trava era <b>desfeita</b> pela renormalização que recompõe ICMS e ISS sobre <code>dasIcmsIss</code>; ela precisa vir depois. <b>Lacre <code>47f3f10b</code> conferido ÍNTEGRO</b> — os casos-gabarito não alcançam a 5ª faixa do Anexo III, então nenhum dos 128 números se move. A regra entra nas divergências declaradas.</td></tr>
@@ -1853,16 +1856,70 @@ function triDetectar(t){
   const tot = ent + sai || 1;
   return { tipo: sai > ent ? 'venda' : 'compra', misto: Math.min(ent,sai)/tot > 0.05 };
 }
-function triArquivo(input, tipo){
-  const f = input.files[0]; if (!f) return; input.value='';
-  const rd = new FileReader();
-  rd.onload = async e => {
-    try {
-      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-      await triProcessarWorkbook(wb, f.name, tipo);
-    } catch(err){ console.error(err); toast('Erro ao ler '+f.name+': '+err.message); }
-  };
-  rd.readAsArrayBuffer(f);
+// ── v7.59.1 (M6) · ANALÍTICO EM VÁRIOS ARQUIVOS, UM POR COMPETÊNCIA ─────────────────────────
+// O analítico do Questor sai UM ARQUIVO POR MÊS. Importar um semestre era abrir a janela seis
+// vezes, e cada leitura substituía a anterior.
+//
+// A v7.59.0 mesclava tudo numa planilha só — e isso estava ERRADO: o lançamento usa o PERÍODO do
+// lote para decidir o mês de destino, então arquivos mesclados virariam um período de jan a mai e
+// o total seria rateado entre os meses, em vez de cada mês receber o seu. Agora cada arquivo é um
+// lote próprio, processado em sequência, na sua competência.
+//
+// Duplicidade aqui é o ARQUIVO repetido na seleção, comparado pela assinatura do conteúdo inteiro.
+// Nunca por CNPJ: nos cinco arquivos do Kleyton há 15 CNPJ/CPF em mais de um mês — quatro deles
+// nos cinco —, e deduplicar por parceiro apagaria receita legítima.
+async function triArquivo(input, tipo){
+  const arqs = [...(input.files||[])]; input.value='';
+  if (!arqs.length) return;
+  const lerBuf = f => new Promise((ok,err)=>{ const rd = new FileReader();
+    rd.onload = e => ok(new Uint8Array(e.target.result)); rd.onerror = () => err(new Error('leitura falhou')); rd.readAsArrayBuffer(f); });
+  try {
+    if (arqs.length === 1){
+      const wb = XLSX.read(await lerBuf(arqs[0]), {type:'array'});
+      await triProcessarWorkbook(wb, arqs[0].name, tipo);
+      return;
+    }
+    // v7.59.1 (M6, corrigido) · UM ARQUIVO = UM MÊS. A primeira versão mesclava tudo numa
+    // planilha só, e isso estava errado: o lançamento usa o PERÍODO do lote para decidir o mês
+    // de destino, então cinco arquivos mesclados virariam um período de jan a mai e o total seria
+    // rateado entre os meses — em vez de cada mês receber o seu. Agora os arquivos são
+    // processados em SEQUÊNCIA, cada um com a sua competência, um lançamento por mês.
+    const lidos = [];
+    const assinaturas = new Set(); let iguais = 0;
+    for (const f of arqs){
+      const buf = await lerBuf(f);
+      const wb = XLSX.read(buf, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const aoa = XLSX.utils.sheet_to_json(ws, { header:1, raw:false, defval:'' });
+      const corpo = aoa.slice(1).filter(r => r && String(r[0]||'').trim());
+      // assinatura = conteúdo do arquivo. Só descarta o arquivo REPETIDO; fornecedor que aparece
+      // em vários meses não é duplicidade e não entra nesta conta.
+      const sig = corpo.map(r => [String(r[0]||'').trim(), String(r[1]||'').trim(),
+        String(r[4]||'').replace(/\D/g,''), (+String(r[3]||'').replace(',','.')||0).toFixed(2)].join('|')).sort().join('#');
+      if (assinaturas.has(sig)) { iguais++; continue; }
+      assinaturas.add(sig);
+      const datas = corpo.map(r => String(r[0]||'').trim()).filter(Boolean).sort();
+      const comp = datas.length ? (datas[0] === datas[datas.length-1] ? datas[0]
+                     : datas[0] + ' a ' + datas[datas.length-1]) : 'não identificada';
+      lidos.push({ nome:f.name, wb, n:corpo.length, comp,
+                   total: corpo.reduce((a,r)=>a + (+String(r[3]||'').replace(',','.')||0), 0) });
+    }
+    if (!lidos.length){ toast('Nenhuma linha aproveitável nos arquivos selecionados.'); return; }
+    const ok = await dlgSimNao(lidos.length + ' arquivos a importar — um por competência',
+      lidos.map(a => '• ' + a.nome + '\n   ' + a.comp + ' · ' + a.n + ' linha(s) · R$ ' + fmt(a.total)).join('\n')
+      + '\n\nCada arquivo é processado como um lote próprio, na sua competência — o valor de um mês '
+      + 'não é rateado para os outros.'
+      + (iguais ? '\n\n⚠️ ' + iguais + ' arquivo(s) com conteúdo IDÊNTICO a outro da seleção foram descartados.' : '')
+      + '\n\nA confirmação de cada lote aparece em seguida, um a um.',
+      'Importar ' + lidos.length + ' arquivos', 'Cancelar');
+    if (!ok) return;
+    let feitos = 0;
+    for (const a of lidos){
+      try { await triProcessarWorkbook(a.wb, a.nome, tipo); feitos++; }
+      catch(err){ console.error(err); toast('Falhou em ' + a.nome + ': ' + err.message); }
+    }
+    toast(feitos + ' de ' + lidos.length + ' arquivo(s) processado(s).');
+  } catch(err){ console.error(err); toast('Erro ao ler os arquivos: ' + err.message); }
 }
 // v7.34.3: o processamento do analítico saiu de dentro do leitor de arquivo para poder ser
 // chamado também pelo importador da triagem simples, quando o arquivo é, na verdade, um analítico.
@@ -3127,6 +3184,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // PIS×COFINS e ICMS×ISS: os totais ajustados (dasPisCof/dasIcmsIss, já com ST/mono/sublimite) são
     // distribuídos na proporção da repartição cheia — estimativa nos meses com ST/retenção.
     const dt = { pis:0, cofins:0, irpj:0, csll:0, cpp:0, icms:0, iss:0, ipi:0 };
+    // v7.60.0 (M4) · o anexo aplicado no mês é decisão do MOTOR e passa a sair dele. A memória o
+    // deduzia dos blocos com receita e, sem receita no mês projetado, caía num padrão inventado —
+    // foi assim que o documento imprimiu "Anexo I · 7,30%" ao lado de um DAS do Anexo IV.
+    const _axUsadosMes = [];
     {
       const _bases = [ ['I', REC_COM_KEYS.slice(0,5).reduce((s,k)=>s+R[k][m],0), e1],
         ['II', REC_COM_KEYS.slice(5).reduce((s,k)=>s+R[k][m],0), e2],
@@ -3135,6 +3196,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         [fatorR>=.28?'III':'V', R.a5r[m], e35] ];
       let _baseIssTeto = 0;   // v7.56.13 · receita que carrega ISS na partilha, para o teto de 5%
       for (const [ax, base, e] of _bases) { const rp = REPX[ax]; if (!rp || !base) continue;
+        if (!_axUsadosMes.includes(ax)) _axUsadosMes.push(ax);      // v7.60.0 (M4)
         if (rp.iss && rp.iss[fx] > 0) _baseIssTeto += base;
         for (const t of Object.keys(dt)) if (rp[t]) dt[t] += base*e*rp[t][fx]; }
       dt.cpp -= R.a3_retissinss[m]*e3*(REPX.III.cpp[fx]||0);   // CPP retido pelo tomador fica fora do DAS
@@ -3303,6 +3365,24 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       impedido: _impedido, impIcms, impIss,
       // v7.52.0 · rastro da proporcionalização, para a memória imprimir a conta e não só o resultado
       rbt12Prop: _prop, mesAtividade: _iniAbs===null ? null : _nAnt+1, nAntProp: _prop ? _nAnt : null,
+      // ── v7.60.0 (M4) · INSUMOS DO MÊS, DEVOLVIDOS PELO MOTOR ────────────────────────────────
+      // Três defeitos desta frente nasceram do mesmo lugar: a memória REMONTAVA, na hora de
+      // imprimir, valores que o motor já tinha decidido — o numerador da RBT12p (v7.56.5), o
+      // rótulo do anexo e a folha dos meses projetados (v7.56.6), e as compras e financeiras
+      // (v7.56.12). Guarda protege o caso conhecido; o que remove a CLASSE do erro é o motor
+      // entregar os insumos usados, e a memória não ter de onde buscar outra coisa.
+      // Só DADO — nunca fórmula nem texto: a memória continua sendo quem escreve.
+      ins: {
+        blocos: K.filter(k => (R[k][m]||0) > 0).map(k => ({ k, receita: R[k][m], efetiva: efb[k]||0 })),
+        blocosExp: KEXP.filter(k => (R[k][m]||0) > 0).map(k => ({ k, receita: R[k][m], efetiva: efb[k]||0 })),
+        anexos: _axUsadosMes,
+        folha: { salarios: F.salarios[m]||0, prolabore: F.prolabore[m]||0, baseFgts: F.baseFgts[m]||0 },
+        compras: { semst: C.semst[m]||0, comst: C.comst[m]||0, mono: C.mono[m]||0, comstMono: C.comstMono[m]||0 },
+        despesas: { adm: D.adm[m]||0, vendas: D.vendas[m]||0, fiscais: D.fiscais[m]||0,
+                    financeiras: D.financeiras[m]||0, outras: D.outras[m]||0, credLR: (D.credLR||[])[m]||0 },
+        financeiras: R.fin[m]||0,
+        icmsCfg: cfg.icmsV, icmsCompraCfg: cfg.icmsC, issCfg: cfg.iss,
+      },
       // v7.56.5 · capturado no momento do cálculo, nunca recomposto depois
       somaAntProp: _somaAntProp,
       dasExp, faixaExp: fxE+1, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasAx, trv190, dasTrib: dt, recCom, recServ, recTransp,
@@ -4221,6 +4301,15 @@ function folhaPercDaEmpresa(cfg){
   for (const k of Object.keys(out)) if (own[k] != null && own[k] !== '') out[k] = +own[k];
   return out;
 }
+// v7.60.0 (M5) · gravação pontual, no mesmo desenho de cfgFolhaSet: campo em branco APAGA a
+// chave em vez de gravar zero, para o objeto refletir "não informado" e não "informado como 0".
+function cfgCredLRSet(k, v){
+  if (!AN.cfg.credLRpct) AN.cfg.credLRpct = {};
+  const x = String(v).trim();
+  if (x === '') delete AN.cfg.credLRpct[k]; else AN.cfg.credLRpct[k] = Math.min(1, Math.max(0, num(x)/100));
+  AN_SUJO = true;
+  anRecalcular(); anRenderConfig();
+}
 function cfgFolhaSet(k, v){
   if (!AN.cfg.folhaPerc) AN.cfg.folhaPerc = {};
   const x = String(v).trim();
@@ -4291,6 +4380,34 @@ function anRenderConfig() {
       ${campoFP('patronalSalarios','INSS patronal salários')}${campoFP('patronalProLabore','INSS patronal pró-labore')}
       ${campoFP('rat','RAT/FAP')}${campoFP('terceiros','Terceiros')}${campoFP('fgts','FGTS')}
     </div></div>`;
+  // ── v7.60.0 (M5) · CREDITABILIDADE DAS DESPESAS NO LUCRO REAL ─────────────────────────────
+  // O motor lê `cfg.credLRpct` desde a v7.18.x, mas nunca houve onde preencher: o campo só
+  // existia por edição direta do JSON. Desde a v7.51.0 o aplicativo ainda avisa que o crédito
+  // está zerado — reclamava sem oferecer o lugar. É o que mantém o Lucro Real "não conclusivo"
+  // nas duas auditorias externas.
+  // O padrão é ZERO de propósito: a lista do art. 3º das Leis 10.637/2002 e 10.833/2003 é
+  // TAXATIVA, e presumir creditabilidade geraria crédito que a empresa não tem.
+  { const CR = Object.assign({adm:0,vendas:0,fiscais:0,financeiras:0,outras:0}, c.credLRpct||{});
+    const campoCR = (k, rot, dica) => `<div><label title="${esc(dica)}">${rot} %</label>
+      <input style="width:120px" value="${CR[k]?(+(CR[k]*100).toFixed(4)):''}"
+        placeholder="0 (nada credita)" onchange="cfgCredLRSet('${k}', this.value)"></div>`;
+    const algum = Object.values(CR).some(v => +v > 0);
+    h += `<div style="margin-top:22px"><b style="font-size:13px">Crédito de PIS/COFINS sobre despesas — Lucro Real</b>
+      <div class="hint">Percentual de cada grupo que <b>gera crédito</b> na apuração não cumulativa. A lista do
+        art. 3º das Leis 10.637/2002 e 10.833/2003 é <b>taxativa</b> — energia elétrica, aluguéis de pessoa jurídica,
+        arrendamento mercantil, fretes na venda e depreciação creditam; a maior parte das despesas administrativas
+        e das financeiras, não. Por isso o padrão é <b>zero</b>: o aplicativo não presume direito a crédito.
+        ${algum ? '<b>Esta empresa tem percentuais informados.</b>' : 'Hoje nenhum grupo credita — o Lucro Real está no cenário mais caro possível, e o comparativo entre regimes fica desfavorável a ele.'}
+        Informe a fração de cada grupo que corresponde a itens creditáveis; o crédito entra pelas mesmas alíquotas de 1,65% e 7,60%.</div>
+      <div class="toolbar" style="margin-top:8px">
+        ${campoCR('adm','Administrativas','Energia, aluguel de PJ, arrendamento e depreciação costumam estar aqui')}
+        ${campoCR('vendas','Vendas','Fretes na operação de venda creditam; comissões e propaganda, não')}
+        ${campoCR('fiscais','Fiscais','Tributos em geral não geram crédito')}
+        ${campoCR('financeiras','Financeiras','Despesa financeira não gera crédito, salvo hipóteses específicas')}
+        ${campoCR('outras','Outras','Depende do que estiver classificado no grupo')}
+      </div>
+      <div class="hint" style="margin-top:6px">Há também a linha <b>"Base extra de crédito"</b> na grade de Despesas,
+        para lançar mês a mês um valor creditável que não esteja nos grupos acima.</div></div>`; }
   h += `<div style="margin-top:22px"><b style="font-size:13px">Alíquotas da Reforma</b>
     <div class="hint">São definidas na Emenda 132 e na LC 214 e valem para todos os contribuintes, por isso ficam num lugar só, em
       <a href="#" onclick="go('parametros');return false">Parâmetros</a>. Desde a v7.16.3, <b>toda análise usa sempre o padrão vigente</b>:
@@ -4672,7 +4789,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.58.0';
+const APP_VERSAO = '7.60.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -8757,14 +8874,17 @@ function rlConferencia(){
         : '12 meses anteriores lançados + meses já decorridos do ano', fmtR(M.rbt12)));
     }
     L.push(CF.lin('Faixa', `RBT12 ${fmtR(M.rbt12)} → faixa da tabela`, M.faixa + 'ª'));
-    const blocos = Object.keys(M.efb).filter(k => (Dm.receitas[k]||[])[m] > 0);
+    // v7.60.0 (M4) · a lista de blocos vem do MOTOR (M.ins), não é mais deduzida aqui.
+    const blocos = (M.ins ? M.ins.blocos.map(b=>b.k) : Object.keys(M.efb).filter(k => (Dm.receitas[k]||[])[m] > 0));
     // ── v7.42.0 (ATP-705/706): o rótulo e a alíquota vêm do anexo REALMENTE usado no mês.
     //    Até a v7.41.8 esta linha dizia "Anexo I" e imprimia a alíquota do Anexo I mesmo quando
     //    o DAS saía do Anexo III — o elo que produz o número simplesmente não aparecia.
     const _axDeK = k => /_exp$/.test(k) ? null
       : k.startsWith('a1') ? 'I' : k.startsWith('a2') ? 'II'
       : k === 'a4' ? 'IV' : k === 'a5r' ? ((M.fatorR||0) >= .28 ? 'III' : 'V') : 'III';
-    const _axUsados = [...new Set(blocos.map(_axDeK).filter(Boolean))];
+    // v7.60.0 (M4) · o anexo aplicado é o que o MOTOR usou. Deduzi-lo dos blocos foi o que fez o
+    // documento imprimir "Anexo I" nos meses sem receita lançada.
+    const _axUsados = M.ins ? M.ins.anexos.slice() : [...new Set(blocos.map(_axDeK).filter(Boolean))];
     // ── v7.42.0 (ATP-704): fator R deixa de ser invisível. Aparece SEMPRE que houver receita de
     //    serviço, inclusive quando não é aplicável — ausência do bloco não pode ser confundida
     //    com "não verificado".
@@ -8786,7 +8906,9 @@ function rlConferencia(){
         `(${fmtR(M.rbt12)} × ${CF.pc(AX.aliq[fx])} − ${fmtR(AX.ded[fx])}) ÷ ${fmtR(M.rbt12)}`, CF.pc(efA)));
     }
     for (const k of blocos)
-      L.push(CF.lin(k, `${fmtR(Dm.receitas[k][m])} × ${CF.pc(M.efb[k])}`, fmtR(Dm.receitas[k][m]*M.efb[k])));
+      { const _b = M.ins && M.ins.blocos.find(x=>x.k===k);
+        const _rec = _b ? _b.receita : ((Dm.receitas[k]||[])[m]||0), _ef = _b ? _b.efetiva : (M.efb[k]||0);
+        L.push(CF.lin(k, `${fmtR(_rec)} × ${CF.pc(_ef)}`, fmtR(_rec*_ef))); }
     L.push(CF.lin('<b>DAS do mês</b>','soma dos blocos acima', fmtR(M.das)));
     const T = M.dasTrib;
     L.push(CF.lin('Decomposição',
@@ -8815,11 +8937,13 @@ function rlConferencia(){
     const P = M.lp, LR = M.lr;
     // v7.18.1: fórmulas com os valores substituídos, parcela a parcela
     const _monoEx = Math.max(0, M.receita - (M.recExp||0) - (P.basePCbruta!=null?P.basePCbruta:M.receita));
-    const _fin = +((Dm.receitas.fin||[])[m])||0;
-    const _sal = +((Dm.folha.salarios||[])[m])||0, _pro = +((Dm.folha.prolabore||[])[m])||0;
+    const _fin = M.ins ? M.ins.financeiras : (+((Dm.receitas.fin||[])[m])||0);
+    const _sal = M.ins ? M.ins.folha.salarios : (+((Dm.folha.salarios||[])[m])||0);
+    const _pro = M.ins ? M.ins.folha.prolabore : (+((Dm.folha.prolabore||[])[m])||0);
     const _fp = folhaPercDaEmpresa(D.cfg);
-    const _comprasLR = (+((Dm.compras.semst||[])[m])||0) + (+((Dm.compras.comst||[])[m])||0);
-    const _credLRm = +((Dm.despesas.credLR||[])[m])||0;
+    const _comprasLR = M.ins ? (M.ins.compras.semst + M.ins.compras.comst)
+                             : ((+((Dm.compras.semst||[])[m])||0) + (+((Dm.compras.comst||[])[m])||0));
+    const _credLRm = M.ins ? M.ins.despesas.credLR : (+((Dm.despesas.credLR||[])[m])||0);
     const LPl = [
       CF.lin('Base PIS/COFINS (bruta)', `receita ${fmtR(M.receita)} − revenda monofásica ${fmtR(_monoEx)} − exportação ${fmtR(M.recExp||0)}`, fmtR(P.basePCbruta||0)),
       CF.lin('(−) ICMS destacado — Tema 69', `(revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706)`, fmtR(M.icmsDestacadoPC||0)),
