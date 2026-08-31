@@ -694,6 +694,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.75.0</b></td><td>31/08/2026</td><td><b>⛔ Ultrapassado o limite, o Simples deixa de ser opção — e o sublimite passa a ser dito como o que é a partir de 2027.</b> <b>(1) Elegibilidade.</b> Receita interna do ano-base acima de R$ 4,8 milhões significa que a empresa <b>não permanece no regime</b> no exercício seguinte (LC 123/2006, art. 3º, §§ 9º e 10). Os cenários "Simples por dentro" e "híbrido" dos anos projetados passam a ser marcados como <b>INDISPONÍVEIS</b> e <b>saem da escolha do melhor regime</b>: a comparação real fica entre Lucro Presumido e Lucro Real com IBS/CBS por fora. Os valores continuam à vista, como referência do que o regime custaria — omiti-los esconderia informação —, mas nunca mais como opção. O ano-base não é bloqueado: ele é o realizado. <b>(2) Sublimite a partir de 2027.</b> Passar de R$ 3,6 milhões deixa de ser detalhe de guia. Acima dele o ICMS e o ISS já saem do Simples, e na vigência da Reforma permanecer "por dentro" <b>deixa de ser opção plena</b>: a empresa opera no <b>regime híbrido</b> — DAS sem as parcelas de consumo, IBS/CBS por fora, split payment e opção semestral (art. 22-A da Res. CGSN 140/2018 e art. 40-D) — <b>ou migra</b> para o Presumido ou o Real. O quadro de cenários passa a dizer isso, e o papel de trabalho declara qual dos <b>três estados</b> vale para a empresa: dentro do sublimite, entre sublimite e limite, ou acima do limite. <b>(3) Três memórias que não reproduziam o próprio número</b>, apontadas por auditorias sucessivas: a razão da parcela excedente usava a receita <b>total</b> como denominador quando o cálculo usa a <b>interna</b> — a exportação tem limite próprio e não entra nessa razão; o quadro da exportação resumia quatro anexos numa alíquota média que dava R$ 1.190,77 onde o motor apurava R$ 1.985,28, e passa a somar bloco a bloco; e a base de IRPJ do Presumido divergia em R$ 896,01 porque o texto exibia o <b>transporte dentro de serviços a 32%</b> enquanto o cálculo usa a presunção do <b>comércio, 8%</b> (cargas), além de somar a exportação sem mostrá-la. A correção do terceiro caso seguiu o desenho da M4: em vez de a memória <b>remontar</b> a base, o motor passa a <b>devolver os componentes</b> que usou. Remontagem foi a origem de três defeitos desta frente. Lacre <code>2e1139e9</code> íntegro; suíte com <b>644 verificações</b>.</td></tr>
                     <tr><td><b>v7.74.0</b></td><td>31/08/2026</td><td><b>🔒 O lacre passa a enxergar o que aprendeu: entra o CASO 3, e o selo vai de <code>47f3f10b</code> a <code>2e1139e9</code>.</b> <b>A pergunta que originou esta versão:</b> com tantas regras novas, os casos-gabarito não precisariam mudar para não se perder o que foi construído? <b>A resposta tem duas metades.</b> Os casos 1 e 2 <b>não</b> mudam — vêm da planilha de referência, são fonte <b>externa e anterior</b> ao motor, e é essa independência que os torna capazes de provar que o núcleo antigo não regrediu. Alterá-los para acompanhar o motor seria trocar gabarito por espelho. <b>Mas o risco apontado era real, e maior do que parecia:</b> os dois casos usam <b>um único bloco de receita cada</b>, não cruzam limite nem sublimite, e não têm retenção, exportação, transporte, IPI nem bloco de Fator R. Ou seja, <b>nenhuma</b> das regras corrigidas entre a v7.62.0 e a v7.73.0 estava sob o lacre. Ele permaneceu íntegro em todas aquelas versões não porque nada mudou, mas porque <b>não enxergava</b> o que mudava — e eu vinha relatando essa integridade como boa notícia. <b>Entra o Caso 3.</b> Um cenário desenhado para tocar tudo o que as auditorias externas fizeram o motor aprender: cruza o <b>sublimite</b> no 7º mês e o <b>limite</b> no 9º, os dois com o mês partido pelo art. 24; fica <b>impedido</b> nos quatro últimos; exercita o <b>teto de 5% do ISS</b> na 5ª faixa com os três blocos de retenção; usa os <b>cinco anexos</b> ao longo do ano; tem os <b>quatro blocos de exportação</b>; ST, monofásico, redução de ICMS, transporte, IPI apurado e 13º pago; e o <b>Fator R dos dois lados dos 28%</b> — quatro meses no Anexo III, oito no V. O lacre passa de <b>128 para 192 números</b> selados e o hash é re-selado para <code>2e1139e9</code>. <b>Os 754 gabaritos da planilha seguem intactos</b>: o caso 3 não é gabarito, é selo — ele não afirma qual valor é certo, afirma que o valor de hoje não pode mudar sem alguém saber. A suíte ganhou um bloco que <b>guarda a cobertura do próprio caso 3</b>: se alguém o simplificar, o lacre volta a ser cego e a falha aparece na hora, não seis meses depois. Suíte: <b>628 verificações</b>.</td></tr>
                     <tr><td><b>v7.73.0</b></td><td>31/08/2026</td><td><b>📐 Teste 11: o fracionamento do mês que cruza o SUBLIMITE — a outra metade do art. 24 — e a parcela que faltava na memória do híbrido.</b> <b>(1)</b> A v7.72.0 implementou a partição do mês que cruza o <b>limite</b> (art. 24, II) e deixou a do <b>sublimite</b> declarada como pendente. A auditoria do Teste 11 a apontou como o principal item remanescente e mediu a razão do mês em <b>49,4326%</b>. Agora vale a mesma mecânica: no mês em que a receita cruza os R$ 3,6 milhões, o ICMS e o ISS da parcela excedente usam a fórmula com o RBT12 <b>travado no sublimite</b> (Res. CGSN 140/2018, art. 24, I, "b", e § 2º); nos meses seguintes a razão é 1. A razão conferida bate ao quarto decimal com a da auditoria. A correção foi feita no <code>ef5</code> — a função única de onde saem todas as parcelas da trava —, do mesmo modo que a do limite foi feita na alíquota efetiva: os blocos, com seus tratamentos, herdam sem precisar ser reescritos. <b>(2)</b> A memória do cenário híbrido listava quatro parcelas e o total trazia <b>cinco</b>: o ICMS/ISS do período de impedimento entrou no cálculo na v7.69.0 e eu não o declarei ali. A auditoria isolou a diferença exata, de R$ 73.230,79 no cenário dela. A parcela agora aparece na linha, com o valor. <b>Conferidos e sem alteração:</b> a decomposição do DAS <b>inclui</b> o IPI em todos os quatro quadros do aplicativo e fecha com o total, inclusive com exportação — o achado não se reproduz aqui e pode ser leitura do PDF; e a memória da exportação já é bloco a bloco desde a v7.67.0. <b>Um teste caiu e foi reescrito:</b> o da guarda de divisão por zero no <code>ef5</code> verificava o <b>texto</b> da linha, que mudou com a nova fórmula. Passou a verificar o <b>comportamento</b> — RBT12 zero não produz NaN em nenhum total — mais a presença da guarda. Teste que quebra por mudança de redação estava medindo a coisa errada. Lacre <code>47f3f10b</code> íntegro; suíte com <b>616 verificações</b>; verificador independente com a regra do art. 24, I digitada da norma também do lado dele.</td></tr>
                     <tr><td><b>v7.72.0</b></td><td>31/08/2026</td><td><b>📐 Art. 24 · a parcela da receita que excede o limite do Simples deixa de acompanhar a alíquota do RBT12 real.</b> Ultrapassado o limite no ano, a parcela <b>excedente</b> é tributada pelos percentuais efetivos calculados com o <b>RBT12 travado no limite</b> — Res. CGSN 140/2018, art. 24, II, "a" — e o mês em que o limite é cruzado se <b>parte</b> na razão do § 4º: quanto da receita do mês ficou dentro e quanto excedeu. Até aqui o motor aplicava o RBT12 real ao mês inteiro, e a alíquota seguia subindo indefinidamente. Duas auditorias externas independentes mediram o mesmo efeito no mesmo cenário: <b>R$ 31,8 mil</b> de DAS a maior em três meses, com a alíquota do Anexo I chegando a 12,7264% em dezembro contra os 11,1250% do teto. <b>Onde a correção foi feita importa:</b> na própria função da alíquota efetiva, e não em cada bloco. Assim ST, monofásico, retenção e redução seguem removendo exatamente as parcelas que já removiam — agora sobre a alíquota correta — e nenhum tratamento precisou ser reescrito. <b>A memória mostra a partição</b>, porque sem ela o número deixa de ser reproduzível: a alíquota aplicada não é a do RBT12 real nem a do teto, é a mistura das duas, e o documento agora exibe a razão, o valor excedente e a conta. <b>Lacre <code>47f3f10b</code> ÍNTEGRO</b> e 754/754 gabaritos preservados — o rebaseline que eu havia previsto <b>não foi necessário</b>: nenhum caso-gabarito ultrapassa o limite, de modo que a regra nova não os alcança. O confronto com o verificador independente ganhou o caso do art. 24, com a regra <b>digitada da norma</b> daquele lado também: <b>1.364 conferências, 22 casos</b>. <b>Segue sem cálculo, declarado nas divergências:</b> a mesma partição no mês em que a receita cruza o <b>sublimite</b> de ICMS/ISS (art. 24, I, "b"), hoje tratado por mês inteiro — a diferença ali é pequena, mas é a mesma mecânica. Suíte: <b>609 verificações</b>.</td></tr>
@@ -3591,7 +3592,17 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         impIcms, impIss,
         total: das + subIcms + subIss + cppRetida + impIcms + impIss + ((receita>0 && (R.a4[m]+R.a4_retiss[m])>0) ? inssPatr*((R.a4[m]+R.a4_retiss[m])/receita) : 0) },   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
-            baseAdic: base32+base8, basePC:_baseLPliq, basePCbruta:basePisCofLP },
+            baseAdic: base32+base8, basePC:_baseLPliq, basePCbruta:basePisCofLP,
+      // v7.75.0 (parecer do Teste 12, achado 7) · OS COMPONENTES DA BASE PRESUMIDA VIAJAM COM O
+      // RESULTADO. A memória remontava a base a partir de recCom/recServ, que agrupam de outro
+      // modo: o transporte de cargas presume 8% no cálculo e aparecia dentro de "serviços × 32%"
+      // no texto, e a exportação entrava na base sem ser exibida. Três auditorias mediram a
+      // diferença — R$ 896,01 no cenário delas. Remontar é o defeito; devolver os componentes é
+      // a correção, a mesma da M4 (insumos do mês) da v7.60.0.
+      baseComp: { serv: servIR, servPc: cfg.lpBaseServ, com: comIR, comPc: cfg.lpBaseCom,
+                  transp: transpIR, transpModo: String(cfg.transpPresuncao||'cargas'),
+                  fin: R.fin[m], expCom: R.a1_exp[m]+R.a2_exp[m], expServ: R.a3_exp[m]+R.a5r_exp[m],
+                  base32, base8 } },
       lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
             baseIRCS, basePC:_baseLRliq, basePCbruta:basePisCofLR, credCsll: baseIRCS<0 ? baseIRCS*.09 : 0, credIrpj: baseIRCS<0 ? baseIRCS*.15 : 0,
             credDesp: credDespMes(m), saldoCredorAnt: _saldoAnt, saldoCredorFim: saldoCredorPC,
@@ -4995,14 +5006,42 @@ function anRecalcular() {
     const C = calcCenariosReforma(r, AN.reforma);
     const R33 = C.REF[C.REF.length-1];
     const dentro33 = cenDentro(T, R33);   // v7.23.0: fórmula única (veredito = parecer = conferência)
-    const mn33 = Math.min(dentro33, R33.hib, R33.regular);
+    // v7.75.0 · cenário indisponível não concorre: com o limite ultrapassado, a comparação passa
+    // a ser entre as opções que a empresa REALMENTE tem — e o Simples aparece como referência.
+    const _bloq = !!R33.snBloqueado;
+    const mn33 = _bloq ? R33.regular : Math.min(dentro33, R33.hib, R33.regular);
     const st = (rot,v,sub,on) => `<div class="stat ${on?'melhor':''}"><div class="n" style="font-size:17px">${fmtR(v)}</div><div class="l">${rot}</div><div class="sub">${sub}</div></div>`;
     refHtml = `<div style="margin-top:14px;border-top:1px solid var(--borda,#e5e7eb);padding-top:12px"><b style="font-size:13px">Reforma Tributária — ano pleno (2033)</b>
       <div class="grid c3" style="margin-top:8px">
-      ${st('Simples "por dentro"', dentro33, 'tudo no DAS — crédito reduzido ao cliente', mn33===dentro33)}
-      ${st('Simples híbrido (LC 214)', R33.hib, 'DAS sem consumo + IBS/CBS por fora — crédito integral', mn33===R33.hib)}
+      ${st('Simples "por dentro"', dentro33, _bloq ? '⛔ INDISPONÍVEL — referência apenas' : 'tudo no DAS — crédito reduzido ao cliente', !_bloq && mn33===dentro33)}
+      ${st('Simples híbrido (LC 214)', R33.hib, _bloq ? '⛔ INDISPONÍVEL — referência apenas' : 'DAS sem consumo + IBS/CBS por fora — crédito integral', !_bloq && mn33===R33.hib)}
       ${st('Fora do Simples', R33.regular, 'regime regular pleno ('+R33.regNome+' + IBS/CBS)', mn33===R33.regular)}
-      </div><div class="hint" style="margin-top:6px">Quadro ano a ano (2026–2033) na aba <b>Relatórios → Comparativo de Regimes</b>.${C.usouFallback?' Aba Reforma sem dados: usei alíquotas-padrão e a receita INTERNA da análise (exportação imune — LC 214, art. 8º), sem créditos de compras.':''}</div></div>`;
+      </div>
+      ${(() => {
+        // ══ v7.75.0 · SUBLIMITE A PARTIR DE 2027 ═══════════════════════════════════════════
+        // Passado o sublimite de R$ 3,6 milhões, o ICMS e o ISS saem da guia: quem fica no
+        // Simples passa a recolhê-los por fora, e na vigência da Reforma essa mesma receita
+        // é o que separa permanecer "por dentro" de ter de operar no HÍBRIDO — ou sair do
+        // regime. Deixar isso implícito no número era a lacuna: o quadro mostrava três valores
+        // sem dizer que, acima do sublimite, o primeiro deles deixa de ser uma escolha livre.
+        const _sub = 3600000 * ((T.propAtividade && T.propAtividade.fator) || 1);
+        const _recI = Math.max(0, (T.receita||0) - (T.receitaExp||0));
+        if (_bloq || _recI <= _sub) return '';
+        return `<div class="hint" style="margin-top:8px;padding:8px 10px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109">
+          ⚠️ <b>Receita acima do sublimite de ${fmtR(_sub)} — a partir de 2027 isso deixa de ser detalhe de guia.</b>
+          A receita interna do ano-base (${fmtR(_recI)}) supera o sublimite, então o ICMS e o ISS
+          <b>já são recolhidos fora do Simples</b> (LC 123/2006, art. 20, § 1º). Na vigência da Reforma,
+          essa mesma condição significa que permanecer <b>"por dentro" deixa de ser opção plena</b>:
+          a empresa opera no <b>regime híbrido</b> — DAS sem as parcelas de consumo e IBS/CBS apurados por fora,
+          com split payment e opção semestral (art. 22-A da Res. CGSN 140/2018 e art. 40-D) — <b>ou migra</b>
+          para o Lucro Presumido ou Real. Some-se a isso que, acima do sublimite, o crédito de IBS/CBS
+          repassado ao cliente PJ é o do art. 58 da Res. CGSN 190/2026, bem menor que o do regime regular:
+          é aí que a conta costuma virar para quem vende a empresas.</div>`;
+      })()}
+      ${_bloq ? `<div class="hint" style="margin-top:8px;padding:8px 10px;border-left:4px solid var(--danger,#943126);background:#fdedec;color:#7b241c">
+        ⛔ <b>Os dois cenários de Simples estão INDISPONÍVEIS para esta empresa.</b> ${esc(R33.snMotivo||'')}.
+        Os valores permanecem à vista como referência do que o regime custaria, mas <b>não participam da escolha do melhor regime</b>:
+        a comparação real é entre Lucro Presumido e Lucro Real, com o IBS/CBS por fora.</div>` : ''}<div class="hint" style="margin-top:6px">Quadro ano a ano (2026–2033) na aba <b>Relatórios → Comparativo de Regimes</b>.${C.usouFallback?' Aba Reforma sem dados: usei alíquotas-padrão e a receita INTERNA da análise (exportação imune — LC 214, art. 8º), sem créditos de compras.':''}</div></div>`;
   } catch(e) { console.error('Cenários da Reforma (análise):', e); }
   $id('an-veredito').innerHTML = `<h3 style="margin-bottom:6px">Melhor regime: ${nomeMenor}</h3>
     ${snAvisoHtml(EL)}
@@ -5188,7 +5227,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.74.0';
+const APP_VERSAO = '7.75.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -5885,6 +5924,19 @@ function calcCenariosReforma(res, reforma) {
   const dasCheio = (T.das||0) + (T.sublimite||0);
   const _expCorrigida = rfx.expCorrigida;   // v7.68.0 · viaja até quem exibe
   const dasResto = dasCheio - (T.dasPisCof||0) - (T.dasIcmsIss||0);
+  // ══ v7.75.0 · ELEGIBILIDADE PARA OS ANOS PROJETADOS ══════════════════════════════════════
+  // Ultrapassado o limite do Simples no ano-base, a empresa NÃO permanece no regime no exercício
+  // seguinte (LC 123/2006, art. 3º, §§ 9º e 10). Projetar "Simples por dentro" e "híbrido" até
+  // 2033 nesse caso não é conservadorismo: é oferecer como opção um enquadramento que a empresa
+  // não terá — e, pior, deixar que ele vença a comparação de regimes.
+  // Os cenários passam a ser marcados como INDISPONÍVEIS e ficam fora da escolha do melhor
+  // regime; os valores continuam sendo calculados e exibidos, porque servem de referência
+  // histórica do que o Simples custaria — mas rotulados como hipótese, nunca como opção.
+  const _recIntBase = Math.max(0, (T.receita||0) - (T.receitaExp||0));
+  const _limSNbase = 4800000 * ((T.propAtividade && T.propAtividade.fator) || 1);
+  const _excedeuLim = _recIntBase > _limSNbase;
+  const _excesso20 = _recIntBase > _limSNbase * 1.20;
+  const _snIndisponivel = _excedeuLim;
   // v7.69.0 · ICMS e ISS do período de impedimento, apurados fora da guia
   const impForaDAS = meses.reduce((s,x)=>s + (+((x.simples||{}).impIcms)||0)
                                           + (+((x.simples||{}).impIss)||0), 0);
@@ -5974,11 +6026,22 @@ function calcCenariosReforma(res, reforma) {
     const regLP = lpResto + (lpIcms+lpIss)*rII + (lpPis+lpCof)*rPC + (a<=2026?lpIpi:0) + L.liquido + L.is;
     const regLR = lrResto + (lrIcms+lrIss)*rII + (lrPis+lrCof)*rPC + (a<=2026?lrIpi:0) + L.liquido + L.is;
     const regular = Math.min(regLP, regLR);
-    return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, anoTeste:L.anoTeste, ded:L.ded, dedIss, dedIcms, dasHib, hib, regular, regLP, regLR, p190:P, regNome: regular===regLP?'Presumido':'Real' };
+    // v7.75.0 · o ano-base (2026) continua sendo o realizado — o bloqueio vale para os anos
+    // PROJETADOS, que é onde a empresa já não estaria no regime.
+    const _snBloqueado = _snIndisponivel && a > (res.ano || 2026);
+    return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, anoTeste:L.anoTeste, ded:L.ded, dedIss, dedIcms, dasHib, hib, regular, regLP, regLR, p190:P, regNome: regular===regLP?'Presumido':'Real',
+             snBloqueado: _snBloqueado, snMotivo: _snBloqueado
+               ? ('receita interna do ano-base de ' + fmt(_recIntBase) + ' acima do limite de '
+                  + fmt(_limSNbase) + (_excesso20
+                    ? ' em mais de 20% — a exclusão retroage ao próprio ano (LC 123/2006, art. 3º, § 9º)'
+                    : ' — a exclusão produz efeitos a partir de 1º/01 do ano seguinte (art. 3º, § 10)'))
+               : null };
   });
   const semCreditos = REF.every(l=>l.cred<=0.005);
   return { rfx, REF, usouFallback: !reforma, proxyCompras, semCreditos,
-           expCorrigida: _expCorrigida };   // v7.68.0
+           expCorrigida: _expCorrigida,     // v7.68.0
+           snIndisponivel: _snIndisponivel, excesso20: _excesso20,   // v7.75.0
+           limiteBase: _limSNbase, recIntBase: _recIntBase };
 }
 
 
@@ -9500,8 +9563,9 @@ function rlConferencia(){
       L.push(CF.lin('<b>Parcela excedente ao sublimite</b>',
         (M.excSublimite >= 1
           ? `a receita dos meses anteriores já supera o sublimite — <b>toda</b> a receita deste mês é excedente`
-          : `${fmtR(M.rbaAnterior||0)} + ${fmtR(M.receita)} − sublimite = ${fmtR(M.excSublimiteValor||0)}, `
-            + `sobre receita de ${fmtR(M.receita)}`)
+          : `${fmtR(M.rbaAnterior||0)} + ${fmtR(M.recInt)} − sublimite = ${fmtR(M.excSublimiteValor||0)}, `
+            + `sobre a receita <b>do mercado interno</b> de ${fmtR(M.recInt)}`
+            + ((M.recExp||0) > 0.005 ? ` (a exportação de ${fmtR(M.recExp)} tem limite próprio e fica fora desta razão — LC 123/2006, art. 3º, § 14)` : ''))
         + ` — o ICMS e o ISS dessa parcela usam a fórmula com o RBT12 travado no <b>sublimite</b> `
         + `(Res. CGSN 140/2018, art. 24, I, "b", e § 2º)`,
         _pcS(M.excSublimite)));
@@ -9512,8 +9576,9 @@ function rlConferencia(){
         (M.excLimite >= 1
           ? `a receita dos meses anteriores (${fmtR(M.rbaAnterior||0)}) já supera o limite de `
             + `${fmtR(M.limiteSN||0)} — <b>toda</b> a receita deste mês é parcela excedente`
-          : `${fmtR(M.rbaAnterior||0)} + ${fmtR(M.receita)} − limite ${fmtR(M.limiteSN||0)} `
-            + `= ${fmtR(M.excLimiteValor||0)}, sobre receita de ${fmtR(M.receita)}`)
+          : `${fmtR(M.rbaAnterior||0)} + ${fmtR(M.recInt)} − limite ${fmtR(M.limiteSN||0)} `
+            + `= ${fmtR(M.excLimiteValor||0)}, sobre a receita <b>do mercado interno</b> de ${fmtR(M.recInt)}`
+            + ((M.recExp||0) > 0.005 ? ` (a exportação de ${fmtR(M.recExp)} tem limite próprio e fica fora)` : ''))
         + ` — Res. CGSN 140/2018, art. 24, § 4º`,
         _pcT(M.excLimite)));
       L.push(CF.lin('Alíquota da parcela excedente',
@@ -9614,16 +9679,25 @@ function rlConferencia(){
     L.push(CF.lin('<b>Custo total do regime</b>','DAS + trava + retenções + CPP fora do DAS · FGTS não considerado (v7.18.0)', fmtR(S.total)));
 
     const E = [];
+    // ══ v7.75.0 (parecer do Teste 12, achado 6) · O QUADRO RESUMIDO NÃO REPRODUZIA O TOTAL ══
+    // Exibia a alíquota do Anexo I e escrevia "receita × alíquota acima" para um total que soma
+    // QUATRO anexos, cada um com parcelas imunes distintas: dava R$ 1.190,77 onde o motor apurava
+    // R$ 1.985,28, e três auditorias seguidas apontaram. Não existe alíquota média que reproduza
+    // isso — o total só se explica bloco a bloco, e é assim que passa a ser demonstrado.
     if (M.recExp){
-      const fxE = M.faixaExp-1;
-      const efE = M.rbt12Exp>0 ? (M.rbt12Exp*AN1.aliq[fxE]-AN1.ded[fxE])/M.rbt12Exp : 0;
-      E.push(CF.lin('RBT12 do mercado externo','limite próprio de R$ 4,8 mi (LC 123, art. 3º, § 14)', fmtR(M.rbt12Exp)));
-      E.push(CF.lin('Alíquota efetiva externa',
-        `(${fmtR(M.rbt12Exp)} × ${CF.pc(AN1.aliq[fxE])} − ${fmtR(AN1.ded[fxE])}) ÷ ${fmtR(M.rbt12Exp)}`, CF.pc(efE)));
-      E.push(CF.lin('Parcela devida',
-        `${CF.pc(efE)} × (1 − ICMS ${CF.pc(AN1.icms[fxE])} − PIS/COFINS ${CF.pc(AN1.piscof[fxE])}) = só IRPJ, CSLL e CPP`,
-        CF.pc(M.efb.a1_exp||0)));
-      E.push(CF.lin('<b>DAS da exportação</b>', `${fmtR(M.recExp)} × alíquota acima`, fmtR(M.dasExp)));
+      E.push(CF.lin('RBT12 do mercado externo',
+        'limite, faixa e alíquota próprios (LC 123/2006, art. 3º, § 14) — a exportação não usa a faixa do mercado interno',
+        fmtR(M.rbt12Exp)));
+      E.push(CF.lin('Faixa da exportação', `RBT12 externa ${fmtR(M.rbt12Exp)} → faixa da tabela`, M.faixaExp + 'ª'));
+      const _rotE = k => (PG_BLOCOS.find(x=>x[0]===k) || [null,k])[1];
+      for (const b of ((M.ins && M.ins.blocosExp) || []))
+        E.push(CF.lin('↳ ' + _rotE(b.k),
+          `${fmtR(b.receita)} × ${CF.pc(b.efetiva)} — alíquota da faixa externa do anexo do bloco, menos as parcelas imunes`,
+          fmtR(b.receita*b.efetiva)));
+      E.push(CF.lin('<b>DAS da exportação</b>',
+        ((((M.ins && M.ins.blocosExp) || []).length) > 1)
+          ? `soma dos ${((M.ins.blocosExp)||[]).length} blocos acima — não há alíquota única que reproduza este total, porque os blocos são de anexos diferentes`
+          : 'o bloco acima', fmtR(M.dasExp)));
     }
 
     const P = M.lp, LR = M.lr;
@@ -9642,7 +9716,22 @@ function rlConferencia(){
       CF.lin('Base PIS/COFINS (final)', `${fmtR(P.basePCbruta||0)} − ${fmtR(M.icmsDestacadoPC||0)}`, fmtR(P.basePC||0)),
       CF.lin('PIS', `${fmtR(P.basePC||0)} × 0,65%`, fmtR(P.pis)),
       CF.lin('COFINS', `${fmtR(P.basePC||0)} × 3,00%`, fmtR(P.cofins)),
-      CF.lin('Base IRPJ', `comércio ${fmtR(M.recCom||0)} × ${CF.pc(+D.cfg.lpBaseCom||0)} + serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.lpBaseServ||0)} + financeiras ${fmtR(_fin)} (exportação incluída na presunção)`, fmtR(P.baseAdic||0)),
+      CF.lin('Base IRPJ', (() => {
+        // v7.75.0 · o texto passa a usar os componentes que o MOTOR usou, na mesma agregação
+        const _b = P.baseComp;
+        if (!_b) return `comércio ${fmtR(M.recCom||0)} × ${CF.pc(+D.cfg.lpBaseCom||0)} + serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.lpBaseServ||0)} + financeiras ${fmtR(_fin)}`;
+        const _p = [];
+        if (_b.com > 0.005) _p.push(`comércio e indústria ${fmtR(_b.com)} × ${CF.pc(_b.comPc)}`
+          + (_b.expCom > 0.005 ? ` <span class="hint">(inclui exportação de mercadoria ${fmtR(_b.expCom)} — imune aos tributos sobre consumo, mas compõe a presunção)</span>` : ''));
+        if (_b.serv > 0.005) _p.push(`serviços ${fmtR(_b.serv)} × ${CF.pc(_b.servPc)}`
+          + (_b.expServ > 0.005 ? ` <span class="hint">(inclui exportação de serviço ${fmtR(_b.expServ)})</span>` : ''));
+        if (_b.transp > 0.005) _p.push(_b.transpModo === 'passageiros'
+          ? `transporte de <b>passageiros</b> ${fmtR(_b.transp)} × 16% (Lei 9.249/95, art. 15, § 1º, II, "a")`
+          : `transporte de <b>cargas</b> ${fmtR(_b.transp)} × ${CF.pc(_b.comPc)} — presunção do comércio, `
+            + `<b>não</b> a de serviços (premissa: cargas; passageiros presume 16% e é opção na Configuração)`);
+        if (_b.fin > 0.005) _p.push(`receitas financeiras ${fmtR(_b.fin)} <b>integrais</b> (Lei 9.430/96, art. 25, II)`);
+        return _p.join(' + ');
+      })(), fmtR(P.baseAdic||0)),
       CF.lin('IRPJ', `${fmtR(P.baseAdic||0)} × 15%`, fmtR(P.irpj)),
       ...(P.adicional>0.005?[CF.lin('Adicional de IRPJ',
         // v7.51.0 (item G) · a linha do LR já imprimia os valores; esta dizia só a regra.
@@ -10284,6 +10373,26 @@ function rlConfDivergencias(){
       <li><b>Layout de NFS-e sem situação e sem retenção:</b> no layout simplificado <code>&lt;Notas&gt;&lt;xml&gt;</code> não há campo de cancelamento nem de ISS retido — nota cancelada não é detectável e nota com retenção pode cair no bloco errado. O importador <b>declara</b> isso no lote. E o valor chega sem separador decimal: enquanto não houver uma nota com centavos para fixar a regra, o registro carrega a ressalva em vez de o aplicativo decidir por 100×.</li>
       <li><b>Exportação da conferência em Excel (v7.55.0):</b> a pasta compõe em fórmula a <b>aritmética</b> das parcelas; ela <b>não</b> reimplementa regra tributária — isso criaria um segundo motor. As parcelas-folha vão como valor do motor, e a aba Conferência prova a identidade célula a célula. As células guardam precisão plena, enquanto os relatórios do aplicativo somam os valores já arredondados de cada mês (v7.42.1): pode haver diferença de centavos no total anual, e ela é de <b>método</b>, não de cálculo.</li>
       <li><b>Trava da 5ª faixa (v7.36.0):</b> quando o RBT12 supera R$ 3,6 milhões e <b>não há impedimento</b>, o ICMS/ISS é calculado pela fórmula do art. 21, III, "b", da Res. CGSN 140/2018, com o <b>RBT12 do próprio mês</b> — não pelo teto do sublimite, como fazia até a v7.35.0 — e integra o <b>DAS</b>. A planilha de referência não soma essa parcela; a diferença é proposital e o aplicativo é o correto.</li>
+      <li><b>Elegibilidade ao Simples nos anos projetados (v7.75.0):</b> ${(() => {
+        const _T = RL?.res?.totais; if (!_T) return 'não avaliada.';
+        const _recI = Math.max(0, (_T.receita||0) - (_T.receitaExp||0));
+        const _lim = 4800000 * ((_T.propAtividade && _T.propAtividade.fator) || 1);
+        const _sub = 3600000 * ((_T.propAtividade && _T.propAtividade.fator) || 1);
+        if (_recI > _lim)
+          return `a receita interna do ano-base (${fmtR(_recI)}) <b>ultrapassou o limite</b> de ${fmtR(_lim)}`
+            + (_recI > _lim*1.20
+              ? ', em mais de 20% — a exclusão retroage ao próprio ano (LC 123/2006, art. 3º, § 9º)'
+              : ' — a exclusão produz efeitos a partir de 1º/01 do ano seguinte (art. 3º, § 10)')
+            + `. Os cenários de Simples dos anos projetados são exibidos apenas como <b>referência</b> e `
+            + `<b>não participam da escolha do melhor regime</b>: a empresa não terá esse enquadramento.`;
+        if (_recI > _sub)
+          return `a receita interna do ano-base (${fmtR(_recI)}) está <b>acima do sublimite</b> de ${fmtR(_sub)} `
+            + `e abaixo do limite de ${fmtR(_lim)}. O ICMS e o ISS já são recolhidos fora do Simples `
+            + `(LC 123/2006, art. 20, § 1º) e, a partir de <b>2027</b>, permanecer "por dentro" deixa de ser `
+            + `opção plena: a empresa opera no <b>regime híbrido</b> (art. 22-A) ou migra para o Presumido ou Real.`;
+        return `a receita interna do ano-base (${fmtR(_recI)}) está dentro do sublimite de ${fmtR(_sub)}: `
+          + `os três cenários seguem disponíveis e comparáveis.`;
+      })()}</li>
       <li><b>Parcela excedente ao limite do Simples (v7.72.0):</b> ${(RL?.res?.meses||[]).some(M=>(M.excLimite||0)>0)
         ? `neste ano a receita ultrapassou o limite, e a parcela excedente é tributada pelos percentuais efetivos calculados com o <b>RBT12 travado no limite</b> (Res. CGSN 140/2018, art. 24, II, "a"), não pela alíquota do RBT12 real — que continuaria subindo. O mês da ultrapassagem é <b>partido</b> na razão do § 4º e a memória mostra a conta. <b>Até a v7.71.0 o aplicativo aplicava o RBT12 real ao mês inteiro</b>, e duas auditorias externas independentes mediram o efeito no mesmo cenário: R$ 31,8 mil de DAS a maior em três meses.`
         : 'não se aplica: a receita do ano não ultrapassou o limite do Simples. Quando ultrapassar, a parcela excedente passa a ser tributada com o RBT12 travado no limite (Res. CGSN 140/2018, art. 24, II, "a"), com o mês da ultrapassagem partido na razão do § 4º.'} <b>A mesma partição vale para o sublimite</b> desde a v7.73.0: no mês em que a receita cruza os R$ 3,6 milhões, o ICMS e o ISS da parcela excedente usam a fórmula com o RBT12 travado no sublimite (art. 24, I, "b", e § 2º), e a memória mostra a razão do mês.</li>
