@@ -685,6 +685,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.70.0</b></td><td>31/08/2026</td><td><b>📅 Campo novo: receita bruta do ano-calendário anterior (RBAA) — e o impedimento do art. 20, § 1º passa a ser CALCULADO.</b> Receita do ano-calendário anterior acima do sublimite impede o recolhimento de ICMS e ISS na guia <b>desde 1º/01</b> deste ano (LC 123/2006, art. 20, § 1º; Res. CGSN 140/2018, art. 12). O aplicativo detectava a hipótese e apenas <b>alertava</b> — três auditorias externas seguidas apontaram a lacuna. <b>Por que não bastava usar o que já existia:</b> os 12 meses da aba RBT12 são a <b>janela móvel</b> que forma o RBT12 do mês, e não o ano-calendário fechado. A v7.68.0 tentou inferir um do outro e foi revertida no mesmo dia: a inferência eliminava a <b>trava da 5ª faixa</b> justamente em quem cresceu no ano corrente — empresa cujo RBT12 móvel cruza o sublimite sem que o ano anterior tenha cruzado — e derrubou oito testes de regra já validados. Agora existe o dado. O campo fica na aba <b>RBT12</b>, ao lado do RBT12 direto, com a distinção escrita ali mesmo entre janela móvel e ano fechado, e um selo que diz de imediato se o valor informado está acima ou abaixo do sublimite. <b>Três estados, todos declarados:</b> em branco, nada muda e o aplicativo segue apenas alertando — dado ausente não vira estimativa, a mesma linha já adotada na RBT12 presumida e na CPP do Fator R; informado e <b>abaixo</b> do sublimite, o resultado é idêntico ao de antes, e o alerta some porque a dúvida foi respondida; informado e <b>acima</b>, a empresa é tratada como impedida desde janeiro — a trava da 5ª faixa deixa de existir e ICMS e ISS são apurados fora da guia, pelas alíquotas do Estado e do Município, com o crédito das compras, entrando no custo do regime em todos os cenários. O monitor de sublimite passou a usar o valor informado em vez da estimativa, e quem tem os 12 meses lançados acima do sublimite <b>sem</b> a RBAA preenchida recebe aviso nomeando o que falta e o que muda. Lacre <code>47f3f10b</code> íntegro — os casos-gabarito não têm o campo, e é isso que os mantém fora do alcance da regra. Suíte: <b>589 verificações</b>.</td></tr>
+                    <tr><td><b>v7.69.0</b></td><td>31/08/2026</td><td><b>⚖️ Teste 8: o cenário híbrido omitia o ICMS/ISS do período de impedimento, e dois textos do papel de trabalho negavam o que o motor já faz.</b> <b>(1) Erro real de cálculo.</b> O auditor apontou que "por dentro" e "híbrido" divergiam em 2026 — ano em que nada migrou e os dois deveriam ser idênticos. A causa: o ICMS e o ISS apurados <b>fora da guia</b> no período de impedimento (v7.58.0) entravam no cenário "por dentro", porque saem do total do Simples, e o híbrido não os somava. São devidos em <b>qualquer</b> cenário que mantenha a empresa no Simples. Corrigido, a diferença de 2026 vai a zero — no caso reproduzido, exatamente os R$ 56.000,00 que o parecer isolou. <b>(2) O papel de trabalho negava o que o motor faz.</b> As divergências declaradas ainda traziam "<i>Impedimento não é modelado</i>", texto anterior à v7.58.0 — e foi ele que levou três pareceres seguidos a classificarem o ponto como crítico. Um documento que declara não fazer o que faz é tão enganoso quanto o contrário. O texto agora descreve o tratamento real e <b>nomeia as duas hipóteses que seguem sem cálculo, com o motivo</b>: o impedimento pela <b>RBAA</b> (falta o dado — o aplicativo guarda janela móvel, não o ano-calendário anterior) e o desdobramento do mês em que a RBA cruza o sublimite. <b>(3) ISS retido na base do IBS/CBS: parametrizado.</b> O parecer opôs à decisão 8.9 a leitura literal do art. 12, § 2º, V, da LC 214/2025 — o dispositivo fala do tributo <b>incidente na operação</b>, e o ISS retido incide, apenas com recolhimento pelo tomador. As duas leituras são defensáveis; o que não se pode é escolher em silêncio. A opção passa a ser <b>por empresa</b>, com o padrão preservando a decisão 8.9 — nenhuma análise existente muda um centavo — e o papel de trabalho declarando qual leitura está em uso. No cenário do parecer, ligar a opção reduz o débito de 2027 em <b>R$ 1.630,63</b>, o mesmo valor que ele estimou. <b>(4) IPI com linha própria</b> nas memórias mensais do Presumido e do Real: ele compunha o total sem aparecer, e tributo que entra no total sem linha não é auditável. Lacre <code>47f3f10b</code> íntegro; suíte com <b>579 verificações</b>; verificador independente sem divergência.</td></tr>
                     <tr><td><b>v7.68.0</b></td><td>31/08/2026</td><td><b>🌍 A exportação deixa de voltar à base do IBS/CBS pela receita da aba — e o impedimento pelo ano anterior foi TENTADO e REVERTIDO, pelo motivo que fica registrado.</b> <b>(1) Exportação.</b> O motor exclui a exportação desde a v7.24.0, mas a aba Reforma tem receita própria e ela prevalecia <b>sem conferência alguma</b>: análise preenchida com o total devolvia a exportação para dentro da base, em silêncio — efeito apontado por três auditorias seguidas. Agora o motor confere. A correção é <b>estreita de propósito</b>: só age quando o valor informado é, ao centavo, a receita <b>total</b> da análise e existe exportação no período; qualquer outro valor é respeitado, porque a aba existe justamente para os casos em que a base difere do que a análise apurou. A correção não é silenciosa — a aba avisa e o papel de trabalho declara os três números (informado, usado e exportação retirada). <b>(2) Cenários hipotéticos.</b> Ultrapassado o limite do Simples no ano-base, as colunas <b>Por dentro</b> e <b>Cenário híbrido</b> de 2027 em diante passam a trazer ressalva em vermelho: elas pressupõem uma permanência no regime que a empresa não terá (LC 123/2006, art. 3º, §§ 9º e 10), com a distinção do efeito conforme o excesso passe ou não de 20%. São comparação, não projeção. <b>(3) O impedimento pelo ano anterior NÃO foi implementado, e o motivo está no código.</b> A regra é clara: receita do ano-calendário anterior acima do sublimite impede o ICMS/ISS na guia desde 1º/01. Mas o aplicativo <b>não tem esse dado</b> — <code>rbt12Lanc</code> são os 12 meses anteriores em <b>janela móvel</b>, que só coincidem com o ano-calendário anterior em parte dos casos. Inferir a RBAA desse campo foi implementado, testado e <b>revertido</b>: elimina a trava da 5ª faixa exatamente nos cenários em que ela deve existir — empresa cujo RBT12 móvel cruza o sublimite sem que o ano anterior tenha cruzado — e derrubou <b>oito testes de regra já validados</b>. Fazer certo exige campo próprio de RBAA na Configuração, e enquanto ele não existir o aplicativo <b>avisa</b> a hipótese e não a calcula, que é a postura já adotada em outras regras sem dado suficiente. Lacre <code>47f3f10b</code> íntegro; verificador independente em 1.240 conferências sem divergência; suíte com <b>568 verificações</b>.</td></tr>
                     <tr><td><b>v7.67.0</b></td><td>31/08/2026</td><td><b>🔧 Teste 7: a correção do IPI na exportação industrial não tinha funcionado — e o teste que eu escrevi para ela era circular.</b> <b>(1) O erro.</b> A v7.66.0 retirava a parcela de IPI lendo <code>A2.ipi</code>, mas <code>ANEXOS_DEFAULT</code> guarda apenas <code>{aliq, ded, icms, piscof}</code>: a parcela de IPI vive na <b>repartição</b> (<code>REPX</code>), não na tabela de alíquotas. A expressão caía sempre em zero e o IPI continuava dentro do DAS da exportação industrial, exatamente como o auditor externo mediu — R$ 37,28 num único mês. Agora a parcela sai de fato. <b>E o teste que deveria ter pego isso repetia a mesma expressão errada</b>, inclusive o campo inexistente: passava com a correção desligada. Foi reescrito com os percentuais do Anexo II <b>digitados da LC 123/2006</b>, de modo que os dois lados não podem mais errar juntos. É o mesmo vício que os pareceres anteriores apontaram na conferência — desta vez ele estava no meu teste. <b>(2) Texto vencido corrigido.</b> A ressalva da trava da 5ª faixa ainda dizia, com a etiqueta da v7.41.2, que o impedimento é "cenário que este cálculo ainda não modela" — afirmação superada pela v7.58.0, que passou a calcular o impedimento. Um papel de trabalho que declara não fazer o que faz é tão enganoso quanto o contrário. O texto agora descreve o tratamento real: a partir do mês seguinte à ultrapassagem a trava deixa de existir e o ICMS/ISS são apurados fora da guia, entrando no custo do regime. <b>(3) Rótulo contraditório.</b> Com o Fator R abaixo de 28%, o bloco do Fator R vai para o Anexo V enquanto os blocos do § 5º-B seguem no III — e a memória imprimia um resultado só, "Anexo III por lei", que o leitor associa ao mês inteiro. Agora os dois destinos aparecem nomeados com os respectivos blocos. A linha também passou a descrever o FS12 como ele é calculado desde a v7.66.0: pró-labore, salários, FGTS, 13º <b>pago</b> e CPP efetivamente recolhida, sobre a RBT12r <b>conjunta</b>. <b>(4) A exportação passa a ser demonstrada bloco a bloco</b> na memória de cálculo: RBT12 e faixa externas, e para cada bloco a alíquota cheia da faixa, as parcelas imunes retiradas — ICMS e PIS/COFINS no Anexo I, mais o IPI no Anexo II, ISS e PIS/COFINS nos de serviço — e o valor. Antes havia uma única "efetiva externa" para blocos de anexos diferentes: o total conferia, mas não era reproduzível a olho, que é o que um papel de trabalho precisa ser. Lacre <code>47f3f10b</code> íntegro; verificador independente segue em 1.240 conferências sem divergência.</td></tr>
                     <tr><td><b>v7.66.0</b></td><td>31/08/2026</td><td><b>🧪 Teste de estresse (Teste 6) auditado externamente: quatro correções no motor, três delas de regra tributária.</b> O cenário combinou Anexos I a V, ST, monofásico, redução, exportação de comércio, indústria e serviços, ISS retido, transporte, Anexo IV e crédito de IPI — e pressionou o motor onde os casos simples não chegam. <b>(1) A exportação industrial saía com IPI dentro do DAS.</b> O bloco <code>a2_exp</code> removia da alíquota efetiva as parcelas de ICMS e de PIS/COFINS, mas <b>não a de IPI</b>, que existe no Anexo II. A exportação é imune também ao IPI (CF, art. 153, § 3º, III). A auditoria mediu R$ 37,18 num único mês. <b>(2) O IPI incidia sobre REVENDA.</b> A base do débito somava todos os blocos de mercadoria, inclusive os do Anexo I — que é o anexo da revenda. O IPI incide na saída do <b>estabelecimento industrial ou equiparado</b> (CTN, art. 46, II): num cenário com 5% configurados, isso produziu <b>R$ 121.265,00</b> de IPI no ano onde a industrialização responde por R$ 38.010,00. A base passa a ser apenas os blocos do Anexo II; quem for <b>equiparado a industrial</b> na revenda continua informando o débito próprio na aba ICMS·IPI, que prevalece sobre o cálculo automático. <b>(3) O Tema 69 não alcançava o transporte.</b> Transporte e comunicação são fato gerador de ICMS (LC 87/96, art. 2º, II e III) e o imposto está destacado no preço, mas essas receitas ficavam fora da exclusão do RE 574.706 — a base de PIS/COFINS do Presumido e do Real saía superestimada em quem tem transporte. <b>(4) A provisão mensal de 13º saiu do FS12 do Fator R.</b> A v7.65.0 a mantinha como aproximação quando não havia 13º pago informado. O parecer trouxe o caso que derruba essa escolha: <b>27,92% sem a provisão contra 28,07% com ela</b> — a aproximação, sozinha, trocava o Anexo V pelo III. Aproximação que decide enquadramento é pior que ausência declarada. Agora só o 13º <b>pago</b> entra, e havendo provisão lançada sem pagamento informado o aplicativo <b>avisa</b> que o Fator R está subestimado. Registrado junto um detalhe que o teste expôs: como a janela do Fator R olha para trás, o 13º pago em dezembro compõe o FS12 dos meses <b>seguintes</b>, não o do próprio dezembro. <b>Conferidos e sem alteração:</b> o alerta de CMV zerado saiu corretamente no documento (achado 3.11, que o próprio parecer aprova) e a CPP proporcional do Anexo IV foi aprovada no cenário. <b>Permanecem em aberto, declarados:</b> a retenção previdenciária de 11% do bloco com ISS e INSS retidos, as reduções de ICMS que hoje não repercutem nos regimes normais, e a exportação que volta à base do IBS/CBS quando a aba Reforma tem receita própria — esta já com o alerta da v7.65.0. Lacre <code>47f3f10b</code> íntegro: os casos-gabarito não têm IPI configurado, nem transporte, nem 13º lançado.</td></tr>
@@ -3024,17 +3026,21 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   // SEGUINTE ao da ultrapassagem; em até 20%, o efeito é só no ano seguinte e este ano não muda.
   // Decisão 8.20: calcula-se sobre o REALIZADO e alerta-se sobre o projetado — projeção informa,
   // não recolhe. Por isso a varredura abaixo usa a receita lançada, e nunca a estimada.
-  // v7.68.0 (parecer do Teste 7) · O IMPEDIMENTO PELO ANO ANTERIOR NÃO FOI IMPLEMENTADO, E O
-  // MOTIVO ESTÁ AQUI. A regra é clara — receita do ano-calendário anterior acima do sublimite
-  // impede o ICMS/ISS na guia desde 1º/01 (LC 123/2006, art. 20, § 1º) — mas o aplicativo NÃO
-  // TEM esse dado: `cfg.rbt12Lanc` são os 12 meses ANTERIORES em janela móvel, que só coincidem
-  // com o ano-calendário anterior quando a análise começa em janeiro e o usuário lançou assim.
-  // Inferir a RBAA desse campo foi tentado e REVERTIDO: elimina a trava da 5ª faixa exatamente
-  // nos cenários em que ela existe — empresa cujo RBT12 móvel cruza o sublimite sem que o ano
-  // anterior tenha cruzado — e derrubou oito testes de regra já validados. Enquanto não houver
-  // campo próprio de RBAA, o aplicativo AVISA a hipótese (monitorSublimite) e não a calcula.
+  // ══ v7.70.0 · IMPEDIMENTO PELO ANO ANTERIOR, AGORA COM DADO PRÓPRIO ══
+  // A regra: receita bruta do ano-calendário ANTERIOR acima do sublimite impede o recolhimento de
+  // ICMS e ISS na guia desde 1º/01 deste ano (LC 123/2006, art. 20, § 1º; Res. CGSN 140/2018,
+  // art. 12). A v7.68.0 tentou INFERIR essa receita de `rbt12Lanc` e foi revertida: aquele campo
+  // é a janela MÓVEL dos 12 meses anteriores, e inferir um do outro eliminava a trava da 5ª faixa
+  // justamente em quem cresceu no ano corrente, derrubando oito testes de regra válidos.
+  // Agora existe campo próprio — `cfg.rbaa` — e a regra só roda com ele PREENCHIDO. Em branco, o
+  // comportamento é o de antes: o aplicativo alerta a hipótese e não a calcula. Dado ausente não
+  // vira estimativa: essa é a mesma linha adotada na RBT12 presumida e na CPP do Fator R.
+  const _rbaaInf = +cfg.rbaa || 0;
+  const _impedAnoAnt = (cfg.sublimite||'auto') !== 'off' && _rbaaInf > 0
+    && _rbaaInf > (+cfg.sublimiteValor || 3600000) * _propAtiv.fator;
   const _impedDesde = (()=>{
     if ((cfg.sublimite||'auto') === 'off') return -1;
+    if (_impedAnoAnt) return 0;      // impedida desde janeiro, pela receita do ano anterior
     const lim = (+cfg.sublimiteValor || 3600000) * _propAtiv.fator * 1.20;
     let acc = 0;
     for (let m = 0; m < 12; m++) {
@@ -3044,8 +3050,15 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     return -1;
   })();
   out.impedimento = _impedDesde >= 0 && _impedDesde <= 11
-    ? { desde: _impedDesde, base: 'realizado',
-        motivo: 'RBA do ano ultrapassou o sublimite em mais de 20% — ICMS e ISS passam a ser recolhidos FORA do Simples a partir do mês seguinte (LC 123, art. 20, §1º)' }
+    ? (_impedAnoAnt
+      ? { desde: 0, base: 'ano-anterior', rbaa: _rbaaInf,
+          sublimite: (+cfg.sublimiteValor || 3600000) * _propAtiv.fator,
+          motivo: 'a receita bruta do ano-calendário anterior informada na Configuração ('
+            + fmt(_rbaaInf) + ') superou o sublimite de '
+            + fmt((+cfg.sublimiteValor || 3600000) * _propAtiv.fator)
+            + ' — ICMS e ISS são recolhidos FORA do Simples desde 1º/01 deste ano (LC 123/2006, art. 20, § 1º)' }
+      : { desde: _impedDesde, base: 'realizado',
+          motivo: 'RBA do ano ultrapassou o sublimite em mais de 20% — ICMS e ISS passam a ser recolhidos FORA do Simples a partir do mês seguinte (LC 123, art. 20, §1º)' })
     : null;
   const totalPrev = [];   // receitas acumuladas dos meses anteriores do ano corrente
   const totalPrevExp = [];
@@ -3564,6 +3577,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     cppForaDAS: S(out.meses.map(x=>x.simples.inssPatrForaDAS||0)),
     comprasRevenda: S(out.meses.map((_,i)=>C.semst[i]+C.mono[i]+C.comst[i]+C.comstMono[i])),
     dasTrib: ['pis','cofins','irpj','csll','cpp','icms','iss','ipi'].reduce((o,t)=>(o[t]=S(out.meses.map(x=>x.dasTrib?x.dasTrib[t]:0)),o),{}),
+    dedIssRetido: cfg.dedIssRetido === true,   // v7.69.0 · a opção viaja com o resultado
   };
   // v7.43.1 · o monitor de sublimite tem de projetar pelo MESMO período da projeção do parecer,
   // senão o parecer fala de um ano e o alerta de ultrapassagem fala de outro.
@@ -3748,7 +3762,11 @@ function monitorSublimite(out, cfg){
     };
     // RBAA do mercado interno: as receitas dos 12 meses anteriores lançadas na configuração —
     // quando a análise cobre o ano-calendário inteiro, é exatamente a receita do ano anterior.
-    const rbaa = (+cfg.rbt12Direto > 0 ? +cfg.rbt12Direto : S(cfg.rbt12Lanc));
+    // v7.70.0 · com o campo preenchido, o alerta usa o DADO; sem ele, segue a estimativa pelos
+    // 12 meses lançados — que é aproximação e passa a ser declarada como tal.
+    const rbaaInformada = +cfg.rbaa || 0;
+    const rbaa = rbaaInformada > 0 ? rbaaInformada
+      : (+cfg.rbt12Direto > 0 ? +cfg.rbt12Direto : S(cfg.rbt12Lanc));
     let impedimento = null;
     if (rbaa > subLim) impedimento = { quando:'ano-corrente', motivo:'RBAA (ano anterior) acima do sublimite — ICMS/ISS fora do DAS desde 1º/01' };
     else if (marco.sublimite20 >= 0) impedimento = { quando:'mes-seguinte', mes: marco.sublimite20, projetado: marco.sublimite20 > ultimo,
@@ -4153,6 +4171,17 @@ function anRenderGrid() {
   if (!sec) return;
   if (sec.id==='rbt12'){ const c = AN.cfg; $id('an-grid').innerHTML = `<div style="margin-top:18px"><b style="font-size:13px">RBT12 — receita e folha dos 12 meses anteriores</b>
   <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto?fmt(c.rbt12Direto):''}" onchange="anAplicarConfig(true)"></div>
+  <div class="hint" style="margin-top:8px">
+    <b>Receita bruta do ano-calendário anterior (RBAA)</b>:
+    <input style="width:150px;display:inline-block" id="cf-rbaa" value="${c.rbaa?fmt(c.rbaa):''}" onchange="anAplicarConfig(true)" placeholder="opcional">
+    <div style="margin-top:4px">Não é o mesmo que os 12 meses acima. Aqueles são a <b>janela móvel</b> que forma o RBT12; este é o <b>ano-calendário fechado</b> anterior, que decide o impedimento de ICMS/ISS: acima do sublimite, os dois tributos são recolhidos <b>fora do Simples desde 1º/01</b> deste ano (LC 123/2006, art. 20, § 1º). <b>Em branco o aplicativo não calcula esse impedimento</b> — apenas alerta, quando os meses lançados sugerem a hipótese.</div>
+    ${(() => { const _r = +c.rbaa || 0, _sub = (+c.sublimiteValor || 3600000);
+        if (!(_r > 0)) return '';
+        return _r > _sub
+          ? `<div style="margin-top:6px;color:var(--danger,#943126)"><b>⚠️ RBAA acima do sublimite</b> (${fmtR(_r)} > ${fmtR(_sub)}): ICMS e ISS são apurados <b>fora da guia o ano inteiro</b>, e a trava da 5ª faixa não se aplica.</div>`
+          : `<div style="margin-top:6px;color:#1e8449">✓ RBAA dentro do sublimite (${fmtR(_r)} ≤ ${fmtR(_sub)}) — sem impedimento pelo ano anterior.</div>`;
+      })()}
+  </div>
   <div class="hint" style="margin-top:6px">Início de atividade (data de abertura na Receita):
     <input type="month" style="width:150px;display:inline-block" id="cf-inicio" value="${esc(c.inicioAtividade||'')}" onchange="anSetInicioAtividade(this.value)">
     <span id="cf-inicio-ext">${iniPorExtenso(c.inicioAtividade)}</span>
@@ -4489,6 +4518,16 @@ function anAvisoConfig(){
     if (pres.length) falta.push(`o RBT12 de ${pres.join(', ')} — sem ele, o aplicativo <b>presumiu</b> `
       + `a receita do próprio mês × 12 (regra do 1º mês de atividade, Res. CGSN 140/2018, art. 22, § 2º) `
       + `para não apurar DAS zero num mês com receita. Lance os 12 meses anteriores, ou informe a data de início`); }
+  // v7.70.0 · a RBAA decide o impedimento do ano inteiro; sem ela o aplicativo não calcula, e
+  // quem tem indício de ultrapassagem precisa saber que falta esse dado — não descobrir depois.
+  { const _s12 = (AN.cfg.rbt12Lanc||[]).reduce((a,b)=>a+(+b||0),0);
+    const _sub = (+AN.cfg.sublimiteValor || 3600000);
+    if (!(+AN.cfg.rbaa > 0) && _s12 > _sub)
+      falta.push(`a <b>receita bruta do ano-calendário anterior</b> (aba RBT12) — os 12 meses `
+        + `lançados somam ${fmtR(_s12)}, acima do sublimite de ${fmtR(_sub)}. Se o ano-calendário `
+        + `anterior também ficou acima, o ICMS e o ISS são devidos <b>fora do Simples desde 1º/01</b> `
+        + `(LC 123/2006, art. 20, § 1º) e o cálculo muda o ano inteiro. Sem esse dado o aplicativo `
+        + `<b>não</b> aplica o impedimento — os 12 meses acima são janela móvel, não o ano fechado`); }
   const nRbt = (AN.cfg.rbt12Lanc||[]).filter(v=>+v>0).length;
   const paCfg = (typeof anMesesAtividade==='function') ? anMesesAtividade(c, 0) : null;
   if (!nRbt && !+c.rbt12Direto) falta.push('o RBT12 dos 12 meses anteriores');
@@ -4600,6 +4639,9 @@ function anRenderConfig() {
     <div><label>Adicional de IRPJ</label><select id="cf-adic" onchange="anAplicarConfig(true)"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
     <div><label>Sublimite ICMS/ISS (R$ 3,6 mi)</label><select id="cf-sublim" onchange="anAplicarConfig(true)"><option value="auto" ${(c.sublimite||'auto')=='auto'?'selected':''}>Aplicar trava da 5ª faixa</option><option value="off" ${c.sublimite=='off'?'selected':''}>Não aplicar</option></select></div>
     <div><label>Trava da 5ª faixa na guia <span class="hint">(v7.36.0)</span></label><select id="cf-travadas" onchange="anAplicarConfig(true)"><option value="sim" ${c.travaNoDas===false?'':'selected'}>Dentro do DAS (PGDAS-D)</option><option value="nao" ${c.travaNoDas===false?'selected':''}>Fora do DAS — legado</option></select></div>
+    <div><label>ISS retido na base do IBS/CBS <span class="hint">(v7.69.0)</span></label><select id="cf-dedissret" onchange="anAplicarConfig(true)" title="LC 214/2025, art. 12, § 2º, V. Matéria interpretativa: o dispositivo fala do tributo incidente na operação; o ISS retido incide, mas quem recolhe é o tomador.">
+      <option value="nao" ${c.dedIssRetido?'':'selected'}>Não deduz — retido não é custo (padrão)</option>
+      <option value="sim" ${c.dedIssRetido?'selected':''}>Deduz — o ISS incidiu na operação</option></select></div>
     <div><label>Composição do FS12 (Fator R) <span class="hint">(v7.64.0)</span></label><select id="cf-frcomp" onchange="anAplicarConfig(true)" title="Res. CGSN 140/2018, art. 26, § 1º: as remunerações são acrescidas do 13º, do FGTS e da CPP efetivamente recolhida.">
       <option value="legal" ${String(c.frComposicao||'legal')==='legado'?'':'selected'}>Legal — com 13º e CPP (padrão)</option>
       <option value="legado" ${String(c.frComposicao||'legal')==='legado'?'selected':''}>Legado — só remunerações e FGTS</option></select></div>
@@ -4755,17 +4797,21 @@ function anAplicarConfig(silencioso) {
     // idêntica, e é isso que mantém o lacre 47f3f10b e os 754 gabaritos fora do alcance da opção.
     arredondaPorTributo: (vRaw('cf-arredtrib', _cfg.arredondaPorTributo?'sim':'nao') || 'nao') === 'sim',
     frComposicao: (vRaw('cf-frcomp', _cfg.frComposicao||'legal') === 'legado') ? 'legado' : 'legal',   // v7.64.0
+    dedIssRetido: vRaw('cf-dedissret', _cfg.dedIssRetido?'sim':'nao') === 'sim',   // v7.69.0
     ratBasico: gFx('cf-ratbas', _cfg.ratBasico, 'cfg.ratBasico'),
     fap: vNum('cf-fap', _cfg.fap),
     projJanela: projJanelaNorm(vRaw('cf-proj',_cfg.projJanela)),          // v7.39.0
     anoRefParecer: parAnoRefNorm(vRaw('cf-anoref',_cfg.anoRefParecer)),   // v7.41.7
     rbt12Direto: vNum('cf-rbtd',_cfg.rbt12Direto),
+    rbaa: vNum('cf-rbaa', _cfg.rbaa),                    // v7.70.0 · ano-calendário anterior
     inicioAtividade: (vRaw('cf-inicio', _cfg.inicioAtividade||'')||'').trim() });   // v7.52.0
   // v7.35.0 · período de apuração do Lucro Real e saldos de prejuízo (podem não existir em telas antigas)
   if (AN.cfg.arredondaPorTributo !== true) delete AN.cfg.arredondaPorTributo;   // v7.62.0: ausente ≠ false
+  if (!(+AN.cfg.rbaa > 0)) delete AN.cfg.rbaa;                       // v7.70.0: em branco = não informada
   if (!(+AN.cfg.ratBasico > 0)) delete AN.cfg.ratBasico;             // v7.64.0: em branco não grava
   if (!(+AN.cfg.fap > 0)) delete AN.cfg.fap;
   if (AN.cfg.frComposicao === 'legal') delete AN.cfg.frComposicao;   // o padrão não ocupa espaço
+  if (AN.cfg.dedIssRetido !== true) delete AN.cfg.dedIssRetido;      // v7.69.0: ausente = decisão 8.9
   if ($id('cf-lrper'))    AN.cfg.lrPeriodo  = $id('cf-lrper').value;
   if ($id('cf-lrprejir')) AN.cfg.lrPrejIrpj = Math.max(0, num($id('cf-lrprejir').value));
   if ($id('cf-lrprejcs')) AN.cfg.lrPrejCsll = Math.max(0, num($id('cf-lrprejcs').value));
@@ -5075,7 +5121,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.68.0';
+const APP_VERSAO = '7.70.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -5772,6 +5818,9 @@ function calcCenariosReforma(res, reforma) {
   const dasCheio = (T.das||0) + (T.sublimite||0);
   const _expCorrigida = rfx.expCorrigida;   // v7.68.0 · viaja até quem exibe
   const dasResto = dasCheio - (T.dasPisCof||0) - (T.dasIcmsIss||0);
+  // v7.69.0 · ICMS e ISS do período de impedimento, apurados fora da guia
+  const impForaDAS = meses.reduce((s,x)=>s + (+((x.simples||{}).impIcms)||0)
+                                          + (+((x.simples||{}).impIss)||0), 0);
   const sLP = k => meses.reduce((s,x)=>s+(+x.lp[k]||0),0), sLR = k => meses.reduce((s,x)=>s+(+x.lr[k]||0),0);
   const lpPis=sLP('pis'), lpCof=sLP('cofins'), lpIcms=sLP('icms'), lpIpi=sLP('ipi'), lpIss=sLP('iss');
   const lrPis=sLR('pis'), lrCof=sLR('cofins'), lrIcms=sLR('icms'), lrIpi=sLR('ipi'), lrIss=sLR('iss');
@@ -5825,7 +5874,17 @@ function calcCenariosReforma(res, reforma) {
     // Identidade entre relatórios por construção: mesma origem, nunca um segundo cálculo.
     // Reverte a decisão 2.4 da v7.50.0. A leitura literal do art. 12, §2º, V, admitiria o contrário
     // (o ISS retido é ISS da operação); a escolha é pela coerência com a v7.23.0 e vai declarada.
-    const dedIss = a >= 2027 ? lpIss * (+_q0.remIcmsIss||0) : 0;
+    // ══ v7.69.0 (parecer do Teste 8, achado 10) · ISS RETIDO NA DEDUÇÃO — MATÉRIA INTERPRETATIVA ══
+    // A decisão 8.9 fixou que a dedução é o `lpIss` puro, que já exclui as receitas com retenção:
+    // o ISS retido não é custo da empresa. O parecer externo opõe a leitura literal do art. 12,
+    // § 2º, V, da LC 214/2025 — o dispositivo fala do tributo INCIDENTE na operação, e o ISS
+    // retido incide sobre ela, apenas com recolhimento pelo tomador. As duas leituras são
+    // defensáveis, e escolher em silêncio é o que não se pode fazer: a opção passa a ser
+    // PARAMETRIZADA por empresa, com o padrão preservando a decisão 8.9 — nenhuma análise
+    // existente muda de valor.
+    const _issRetAno = (T.dedIssRetido === true)
+      ? meses.reduce((sm,x)=>sm + (+x.issRetLPLR||0), 0) : 0;
+    const dedIss = a >= 2027 ? (lpIss + _issRetAno) * (+_q0.remIcmsIss||0) : 0;
     // v7.48.0 (decisão 2.1) · o ICMS também não integra a base do IBS/CBS — LC 214, art. 12, §2º, V,
     // o MESMO inciso do ISS. Deduz-se o ICMS DESTACADO NAS SAÍDAS (icmsDeb), não o saldo a pagar: o
     // que a lei exclui é o imposto que incide sobre a operação e está no preço, não o resultado da
@@ -5839,7 +5898,12 @@ function calcCenariosReforma(res, reforma) {
     // ≤2026 permanece a regra atual (tudo dentro).
     const dasHib = P ? (P.dasMaisTrava - P.cbs - P.ibs)
                      : dasResto + (T.dasPisCof||0)*rPC + (T.dasIcmsIss||0)*rII;
-    const hib = dasHib + (T.cppRetida||0) + (T.cppForaDAS||0) + L.liquido + L.is;   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
+    // v7.69.0 (parecer do Teste 8, achado 11) · o ICMS e o ISS apurados FORA da guia no período de
+    // impedimento (v7.58.0) são devidos em qualquer cenário que mantenha a empresa no Simples —
+    // o "por dentro" já os continha, porque saem de T.simples, e o híbrido os omitia. Era essa,
+    // e só essa, a diferença que aparecia entre os dois cenários em 2026, quando nada migrou
+    // ainda e os dois deveriam ser idênticos.
+    const hib = dasHib + (T.cppRetida||0) + (T.cppForaDAS||0) + impForaDAS + L.liquido + L.is;   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
     const regLP = lpResto + (lpIcms+lpIss)*rII + (lpPis+lpCof)*rPC + (a<=2026?lpIpi:0) + L.liquido + L.is;
     const regLR = lrResto + (lrIcms+lrIss)*rII + (lrPis+lrCof)*rPC + (a<=2026?lrIpi:0) + L.liquido + L.is;
     const regular = Math.min(regLP, regLR);
@@ -9470,6 +9534,9 @@ function rlConferencia(){
           : `parcela da base do período acima do limite × 10%`, fmtR(P.adicional))]:[]),
       CF.lin('CSLL','bases próprias de comércio e serviços × 9%', fmtR(P.csll)),
       CF.lin('ICMS', `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`, fmtR(P.icms)),
+      // v7.69.0 (parecer do Teste 8, achado 13) · o IPI compunha o total sem linha própria: num
+      // papel de trabalho, tributo que entra no total sem aparecer não é auditável.
+      CF.lin('IPI a pagar', `débito das saídas industriais × ${CF.pc(+D.cfg.ipiV||0)} − crédito das entradas × ${CF.pc(+D.cfg.ipiC||0)} (CTN, art. 46, II — só a saída de estabelecimento industrial)`, fmtR(P.ipi||0)),
       CF.lin('ISS', `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(P.iss)),
       CF.lin('INSS patronal', `salários ${fmtR(_sal)} × ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)} + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)}${m===11?' + 13º':''}`, fmtR(P.inssPatr)),
       CF.lin('<b>Total do Lucro Presumido</b>','soma das parcelas acima (FGTS não considerado)', fmtR(P.total)),
@@ -9501,6 +9568,8 @@ function rlConferencia(){
       CF.lin('Lucro do mês (base IRPJ/CSLL)', `receita ${fmtR(M.receita)} + financeiras ${fmtR(_fin)} − custos ${fmtR(M.custos)} − folha ${fmtR(M.folhaTotal)} − despesas ${fmtR(M.despTotal)} − INSS patronal ${fmtR(M.inssPatr)} − PIS/COFINS ${fmtR(LR.pis+LR.cofins)} − ICMS ${fmtR(M.icmsPagar)} − IPI ${fmtR(M.ipiPagar)} − ISS ${fmtR(M.iss)}`, fmtR(LR.baseIRCS)),
       ...lrLinhasConfMes(m, LR, R),
       CF.lin('ICMS', `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`, fmtR(LR.icms)),
+      // v7.69.0 · mesma razão do Lucro Presumido: o IPI passa a ter linha própria
+      CF.lin('IPI a pagar', `débito das saídas industriais × ${CF.pc(+D.cfg.ipiV||0)} − crédito das entradas × ${CF.pc(+D.cfg.ipiC||0)}`, fmtR(LR.ipi||0)),
       CF.lin('ISS', `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(LR.iss)),
       CF.lin('INSS patronal', `salários ${fmtR(_sal)} × ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)} + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)}${m===11?' + 13º':''}`, fmtR(LR.inssPatr)),
       CF.lin('<b>Total do Lucro Real</b>','soma das parcelas acima (FGTS não considerado)', fmtR(LR.total)),
@@ -10057,6 +10126,9 @@ function rlConfDivergencias(){
       <li><b>Fator R sem o 13º salário</b> e sem a contribuição do Anexo IV.</li>
       <li><b>RBT12 proporcionalizado (v7.52.0):</b> com menos de 12 meses de atividade a RBT12 é a média dos meses anteriores × 12 (Res. CGSN 140/2018, art. 22, §§ 2º e 3º), e não a soma dos meses existentes — a receita do mês apurado nunca entra. <b>Mês sem receita entra no divisor</b> da média, o que reduz a média e a faixa: é o tratamento mais defensável em fiscalização, e fica declarado por não ser o único possível. Sem a <b>data de início de atividade</b> preenchida na aba RBT12 o aplicativo não proporcionaliza — e, nesse caso, <b>não</b> levanta hipótese sobre a causa de divergência com o PGDAS-D: declara que não sabe.</li>
       <li><b>Limite e sublimite proporcionais (v7.55.0):</b> valem <b>apenas no ano-calendário de início</b> de atividade (LC 123/2006, art. 3º, §§ 2º e 3º), contada a fração de mês como mês inteiro. No ano seguinte o limite volta a ser integral, ainda que a empresa tenha menos de 12 meses de existência.</li>
+      <li><b>ISS retido na dedução — opção da empresa (v7.69.0):</b> ${(RL?.dados?.cfg||{}).dedIssRetido
+        ? 'esta empresa está configurada para <b>deduzir</b> também o ISS retido da base do IBS/CBS, pela leitura literal do art. 12, § 2º, V, da LC 214/2025 — o dispositivo fala do tributo <b>incidente na operação</b>, e o ISS retido incide, apenas com recolhimento pelo tomador.'
+        : 'esta empresa <b>não deduz</b> o ISS retido (padrão), pela coerência com a decisão de que o retido não é custo da empresa. A leitura oposta é defensável e está disponível na Configuração — a escolha é declarada, não silenciosa.'}</li>
       <li><b>ISS retido fora da dedução da base do IBS/CBS (v7.54.0):</b> a dedução é o ISS do Lucro Presumido exibido no Consolidado analítico, que exclui as receitas com retenção. A leitura literal do art. 12, §2º, V, da LC 214/2025 admitiria o contrário — o ISS retido também incidiu sobre a operação —, mas a escolha é pela coerência com a decisão da v7.23.0 de que o ISS retido não é custo da empresa. É <b>decisão declarada</b>, não omissão.</li>
       <li><b>Redução de IBS/CBS — ordem das operações (v7.54.0):</b> a exclusão de ICMS e ISS é operação de <b>base</b> e a redução do regime diferenciado é operação de <b>alíquota</b>, então a dedução vem primeiro e é <b>rateada proporcionalmente à base de cada parcela</b>. O rateio por natureza (ISS só sobre serviço, ICMS só sobre mercadoria) seria mais fiel ao fato gerador e <b>não</b> está implementado.</li>
       <li><b>Receita da aba Reforma × exportação (v7.65.0):</b> ${(() => {
@@ -10086,7 +10158,9 @@ function rlConfDivergencias(){
       <li><b>Layout de NFS-e sem situação e sem retenção:</b> no layout simplificado <code>&lt;Notas&gt;&lt;xml&gt;</code> não há campo de cancelamento nem de ISS retido — nota cancelada não é detectável e nota com retenção pode cair no bloco errado. O importador <b>declara</b> isso no lote. E o valor chega sem separador decimal: enquanto não houver uma nota com centavos para fixar a regra, o registro carrega a ressalva em vez de o aplicativo decidir por 100×.</li>
       <li><b>Exportação da conferência em Excel (v7.55.0):</b> a pasta compõe em fórmula a <b>aritmética</b> das parcelas; ela <b>não</b> reimplementa regra tributária — isso criaria um segundo motor. As parcelas-folha vão como valor do motor, e a aba Conferência prova a identidade célula a célula. As células guardam precisão plena, enquanto os relatórios do aplicativo somam os valores já arredondados de cada mês (v7.42.1): pode haver diferença de centavos no total anual, e ela é de <b>método</b>, não de cálculo.</li>
       <li><b>Trava da 5ª faixa (v7.36.0):</b> quando o RBT12 supera R$ 3,6 milhões e <b>não há impedimento</b>, o ICMS/ISS é calculado pela fórmula do art. 21, III, "b", da Res. CGSN 140/2018, com o <b>RBT12 do próprio mês</b> — não pelo teto do sublimite, como fazia até a v7.35.0 — e integra o <b>DAS</b>. A planilha de referência não soma essa parcela; a diferença é proposital e o aplicativo é o correto.</li>
-      <li><b>Impedimento não é modelado:</b> ultrapassado o sublimite pela RBA (ou já pela RBAA), o ICMS/ISS passa a ser recolhido <b>fora do Simples</b>, pelas regras normais do Estado e do Município — e o mês em que a RBA cruza o sublimite se parte entre a parcela dentro e a excedente. O aplicativo <b>alerta</b> a trajetória, mas ainda não calcula esse cenário.</li>
+      <li><b>Impedimento de ICMS/ISS (v7.58.0, atualizado na v7.69.0):</b> ultrapassada a RBA do ano em <b>mais de 20%</b> do sublimite, o aplicativo <b>calcula</b> o cenário a partir do mês seguinte — a alíquota efetiva perde as parcelas de ICMS e ISS, a trava da 5ª faixa deixa de existir e os dois tributos são apurados <b>fora da guia</b>, pelas alíquotas do Estado e do Município, com o crédito de ICMS das compras; entram no <b>custo do regime</b> em todos os cenários que mantenham a empresa no Simples, inclusive no híbrido. <b>Impedimento pelo ano anterior (v7.70.0):</b> ${(+(RL?.dados?.cfg||{}).rbaa || 0) > 0
+        ? `a receita bruta do ano-calendário anterior está informada (${fmtR(+(RL?.dados?.cfg||{}).rbaa||0)}) e a regra do art. 20, § 1º, é <b>calculada</b>: acima do sublimite, ICMS e ISS ficam fora da guia desde 1º/01 e a trava da 5ª faixa não se aplica.`
+        : 'a <b>receita bruta do ano-calendário anterior não foi informada</b> (campo na aba RBT12), então esse impedimento é apenas <b>alertado</b>, não calculado. Os 12 meses lançados são janela <b>móvel</b> e não substituem o ano fechado: inferir um do outro eliminaria a trava da 5ª faixa justamente em quem cresceu no ano corrente, e por isso o aplicativo não o faz.'} <b>Segue sem cálculo:</b> o <b>desdobramento do mês</b> em que a RBA cruza o sublimite, hoje tratado por mês inteiro — também alertado no monitor.</li>
       <li><b>Retenção previdenciária de 11% não é modelada (v7.50.0):</b> o CPP do Anexo IV já fica fora do DAS (a empresa recolhe a contribuição por fora), então não existe bloco de "ISS e INSS retidos" para o Anexo IV. A retenção de 11% sobre cessão de mão de obra (Lei 8.212, art. 31) é <b>custo de caixa</b> e não é modelada em nenhum regime — use o campo de INSS patronal da folha se quiser refletir o efeito.</li>
       <li><b>Dedução de ICMS/ISS da base do IBS/CBS por estimativa (v7.48.0):</b> o ISS e o ICMS <b>destacado nas saídas</b> saem da base do IBS/CBS (LC 214/2025, art. 12, §2º, V) pelas <b>alíquotas médias da configuração</b>, não nota a nota — mesma aproximação já usada no Tema 69. Deduz-se o imposto <b>destacado</b>, não o saldo a pagar da conta gráfica; mercadoria com ST fica fora por não ter destaque próprio.</li>
       <li><b>Crédito presumido do transporte, quando informado (v7.48.1):</b> o percentual da Configuração é aplicado sobre o <b>débito da prestação de transporte</b> (base do Convênio ICMS 106/96 e dos regimes estaduais equivalentes). O aplicativo <b>não segrega por atividade os créditos de compra</b>: como o regime substitui o aproveitamento dos créditos vinculados às prestações, empresa <b>exclusivamente</b> de transporte deve zerar o % de ICMS de compras para não somar as duas coisas. Empresa mista deve conferir o resultado pelo override mensal de ICMS.</li>
