@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.72.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.72\.0';/.test(html) && html.includes('<b>v7.72.0</b>')
+    chk('v7.73.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.73\.0';/.test(html) && html.includes('<b>v7.73.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -2945,8 +2945,20 @@ console.log('\n■ Integridade da interface');
       vazios <= 9, 'catch vazios sem marca restantes: ' + vazios);
 
     // ── A11 · guardas de divisão ──
-    chk('A11 · a alíquota da 5ª faixa não divide por zero',
-      /const ef5 = A => rbt12 > 0 \?/.test(html));
+    // v7.73.0 · o ef5 passou a misturar a alíquota real com a do teto do sublimite (art. 24, I),
+    // então o teste do TEXTO caiu. O que precisa continuar valendo é a guarda: RBT12 zero não
+    // pode produzir NaN. Testado pelo comportamento.
+    { const zz = vm.runInContext('anNovo', ctx)('11111111000199', 2026);
+      for (const k of Object.keys(zz.receitas)) zz.receitas[k] = Array(12).fill(0);
+      zz.cfg.rbt12Lanc = Array(12).fill(0); zz.cfg.rbt12Direto = 0;
+      zz.folha.salarios = Array(12).fill(1000);
+      const rz = g.calcular(zz, clone(AD), {...FD});
+      chk('A11 · RBT12 zero não produz NaN em nenhum total (guarda do ef5 preservada)',
+        Number.isFinite(rz.totais.das) && Number.isFinite(rz.totais.simples)
+        && Number.isFinite(rz.totais.sublimite||0),
+        'DAS ' + rz.totais.das + ' · trava ' + (rz.totais.sublimite||0));
+      chk('A11 · e a guarda continua escrita no código',
+        /rbt12 > 0 \? \(rbt12\*A\.aliq\[4\] - A\.ded\[4\]\)\/rbt12 : 0/.test(html)); }
     chk('A11 · os dashboards não exibem NaN% com carteira vazia',
       !/\/tot\*100\)\.toFixed\(1\)/.test(html) && /\/\(tot\|\|1\)\*100\)\.toFixed\(1\)/.test(html));
 
@@ -3409,14 +3421,41 @@ console.log('\n■ Integridade da interface');
     chk('v7.72.0 · o DAS do ano cai — era isso que as auditorias mediram',
       true, 'DAS do ano: ' + r.totais.das.toFixed(2));
 
+    // v7.73.0 · art. 24, I, "b" — a mesma partição no mês que cruza o SUBLIMITE
+    { const b = vm.runInContext('anNovo', ctx)('13131313000113', 2026);
+      for (const k of Object.keys(b.receitas)) b.receitas[k] = z12();
+      b.cfg.rbt12Lanc = Array(12).fill(292500); b.cfg.icmsV = .17;
+      b.receitas.a1_semst = rec.slice(); b.folha.salarios = Array(12).fill(30000);
+      const rb = g.calcular(b, clone(AD), {...FD});
+      const SUB = 3600000;
+      chk('v7.73.0 · antes do sublimite não há partição', rb.meses[6].excSublimite === 0);
+      chk('v7.73.0 · no mês que cruza o sublimite a razão é a do § 2º',
+        Math.abs(rb.meses[7].excSublimite - (3314921.66 + 563759.68 - SUB)/563759.68) < 1e-6,
+        'razão de agosto: ' + (rb.meses[7].excSublimite*100).toFixed(4) + '% (auditoria: 49,4326%)');
+      chk('v7.73.0 · e depois toda a receita é excedente', rb.meses[8].excSublimite === 1);
+      // a trava da parcela excedente usa o RBT12 travado no sublimite
+      const ef5real = (rb.meses[8].rbt12*AD.I.aliq[4] - AD.I.ded[4]) / rb.meses[8].rbt12;
+      const ef5teto = (SUB*AD.I.aliq[4] - AD.I.ded[4]) / SUB;
+      const esperada = rb.meses[8].receita * ef5teto * AD.I.icms[4];
+      chk('v7.73.0 · com razão 1, a trava usa a fórmula do teto do sublimite',
+        Math.abs((rb.meses[8].subIcms||0) - esperada) < 0.02 && ef5teto < ef5real,
+        'trava de setembro: ' + (rb.meses[8].subIcms||0).toFixed(2));
+      chk('v7.73.0 · a memória declara a razão do sublimite',
+        /Parcela excedente ao sublimite<\/b>/.test(html) && /art\. 24, I, "b", e § 2º/.test(html));
+      chk('v7.73.0 · e a pendência saiu das divergências declaradas',
+        /A mesma partição vale para o sublimite<\/b> desde a v7\.73\.0/.test(html)
+        && !/ali o mês ainda é tratado por inteiro/.test(html));
+    }
+
     // a memória precisa mostrar a partição, senão o número não é reproduzível
     chk('v7.72.0 · a memória declara a razão e a alíquota travada',
       /Parcela excedente ao limite<\/b>/.test(html)
       && /RBT12 <b>travado no limite<\/b>/.test(html)
       && /art\. 24, § 4º/.test(html));
-    chk('v7.72.0 · e as divergências declaram o que ainda não é partido (sublimite)',
+    chk('v7.73.0 · e as divergências declaram as DUAS partições (limite e sublimite)',
       /Parcela excedente ao limite do Simples \(v7\.72\.0\)/.test(html)
-      && /art\. 24, I, "b"/.test(html));
+      && /art\. 24, I, "b", e § 2º/.test(html)
+      && /A mesma partição vale para o sublimite/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
