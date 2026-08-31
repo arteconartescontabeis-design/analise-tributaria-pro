@@ -685,6 +685,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.66.0</b></td><td>31/08/2026</td><td><b>🧪 Teste de estresse (Teste 6) auditado externamente: quatro correções no motor, três delas de regra tributária.</b> O cenário combinou Anexos I a V, ST, monofásico, redução, exportação de comércio, indústria e serviços, ISS retido, transporte, Anexo IV e crédito de IPI — e pressionou o motor onde os casos simples não chegam. <b>(1) A exportação industrial saía com IPI dentro do DAS.</b> O bloco <code>a2_exp</code> removia da alíquota efetiva as parcelas de ICMS e de PIS/COFINS, mas <b>não a de IPI</b>, que existe no Anexo II. A exportação é imune também ao IPI (CF, art. 153, § 3º, III). A auditoria mediu R$ 37,18 num único mês. <b>(2) O IPI incidia sobre REVENDA.</b> A base do débito somava todos os blocos de mercadoria, inclusive os do Anexo I — que é o anexo da revenda. O IPI incide na saída do <b>estabelecimento industrial ou equiparado</b> (CTN, art. 46, II): num cenário com 5% configurados, isso produziu <b>R$ 121.265,00</b> de IPI no ano onde a industrialização responde por R$ 38.010,00. A base passa a ser apenas os blocos do Anexo II; quem for <b>equiparado a industrial</b> na revenda continua informando o débito próprio na aba ICMS·IPI, que prevalece sobre o cálculo automático. <b>(3) O Tema 69 não alcançava o transporte.</b> Transporte e comunicação são fato gerador de ICMS (LC 87/96, art. 2º, II e III) e o imposto está destacado no preço, mas essas receitas ficavam fora da exclusão do RE 574.706 — a base de PIS/COFINS do Presumido e do Real saía superestimada em quem tem transporte. <b>(4) A provisão mensal de 13º saiu do FS12 do Fator R.</b> A v7.65.0 a mantinha como aproximação quando não havia 13º pago informado. O parecer trouxe o caso que derruba essa escolha: <b>27,92% sem a provisão contra 28,07% com ela</b> — a aproximação, sozinha, trocava o Anexo V pelo III. Aproximação que decide enquadramento é pior que ausência declarada. Agora só o 13º <b>pago</b> entra, e havendo provisão lançada sem pagamento informado o aplicativo <b>avisa</b> que o Fator R está subestimado. Registrado junto um detalhe que o teste expôs: como a janela do Fator R olha para trás, o 13º pago em dezembro compõe o FS12 dos meses <b>seguintes</b>, não o do próprio dezembro. <b>Conferidos e sem alteração:</b> o alerta de CMV zerado saiu corretamente no documento (achado 3.11, que o próprio parecer aprova) e a CPP proporcional do Anexo IV foi aprovada no cenário. <b>Permanecem em aberto, declarados:</b> a retenção previdenciária de 11% do bloco com ISS e INSS retidos, as reduções de ICMS que hoje não repercutem nos regimes normais, e a exportação que volta à base do IBS/CBS quando a aba Reforma tem receita própria — esta já com o alerta da v7.65.0. Lacre <code>47f3f10b</code> íntegro: os casos-gabarito não têm IPI configurado, nem transporte, nem 13º lançado.</td></tr>
                     <tr><td><b>v7.65.0</b></td><td>31/08/2026</td><td><b>🌍 Parecer externo do Teste 5: a exportação podia voltar à base de IBS/CBS pela receita da própria aba Reforma — e o 13º entrava no Fator R pela provisão, não pelo pagamento.</b> <b>(1)</b> O motor exclui a exportação da base desde a v7.24.0 (LC 214/2025, art. 8º), e isso foi reconferido: com a aba vazia, a base sai correta. Só que a aba Reforma tem receita <b>própria</b>, e o valor gravado nela <b>prevalece</b> sobre o cálculo automático — de modo que análise preenchida antes daquela versão, ou preenchida à mão com o total, carrega a exportação de volta para dentro da base, em silêncio. Foi assim que a auditoria externa encontrou <b>R$ 15.749,10</b> de IBS/CBS a mais em 2027 num caso com R$ 171.000,00 de exportação no ano — número reproduzido aqui ao centavo. O aplicativo tinha os dois valores e não os confrontava: agora <b>confronta</b>. Quando a receita da aba é a total, a aba mostra alerta <b>vermelho</b> dizendo que todos os anos da projeção estão superestimados e mandando reclicar "Preencher da análise"; quando apenas difere da interna, o alerta é âmbar e pede conferência. O papel de trabalho declara o confronto <b>nos dois sentidos</b>, inclusive quando está tudo certo. <b>(2) O 13º no FS12 do Fator R passa a ser o PAGO, não a provisão.</b> A v7.64.0 somou a provisão mensal para incluir o 13º, mas o art. 26, § 1º, da Res. CGSN 140/2018 fala em <b>montante pago</b> nos 12 meses anteriores — provisão de 1/12 ao mês não é pagamento. Havendo 13º informado na folha, é ele que entra, na competência do pagamento; não havendo, a provisão segue como <b>aproximação declarada</b>, porque ignorá-la subestimaria o FS12 de quem só tem a provisão lançada — e subestimar empurra indevidamente para o Anexo V, que é o enquadramento mais caro. <b>Conferido e sem alteração:</b> o CMV zerado apontado pelo parecer é <b>dado de entrada</b>, não defeito — o aplicativo já avisa desde a v7.51.0 sempre que houver compras lançadas com custo zero. Os demais pontos (premissa de crédito amplo dos fornecedores e os 27,91% como estimativa de referência) já constavam das divergências declaradas. Lacre <code>47f3f10b</code> íntegro — a mudança do 13º não alcança os casos-gabarito, que não têm 13º lançado.</td></tr>
                     <tr><td><b>v7.64.2</b></td><td>31/08/2026</td><td><b>✅ Terceiro parecer externo: as quatro divergências entre o motor e o verificador independente foram fechadas — e em todas as quatro o aplicativo estava certo.</b> O auditor abriu as diferenças por tributo e levantou hipóteses específicas; testadas uma a uma, todas apontaram para o <b>verificador</b>, não para o motor. <b>(1) Lucro Real da Empresa 02 (R$ 46.574,15):</b> o verificador não deduzia da base de IRPJ/CSLL o <b>FGTS</b> nem as despesas lançadas como geradoras de crédito de PIS/COFINS, e por isso inflava o lucro — exatamente as duas omissões que o parecer apontou, R$ 12.040,00 por mês. <b>(2) ICMS da Empresa 03:</b> o verificador creditava o ICMS de <b>compras com substituição tributária</b> e deixava a revenda <b>monofásica</b> fora do débito. O motor está certo nos dois pontos: mercadoria com ST já teve o imposto retido e não gera crédito nem débito, e o monofásico é regime de PIS/COFINS — o ICMS da revenda monofásica é normal. <b>(3) PIS/COFINS do Lucro Real:</b> o verificador incluía as <b>aquisições monofásicas</b> na base de crédito, o que os arts. 3º, I, "b", das Leis 10.637/2002 e 10.833/2003 vedam. <b>(4) Trava da 5ª faixa (R$ 1.494,16, aberta desde a rodada anterior): RESOLVIDA.</b> O verificador recompunha o transporte pela parcela de <b>ISS do Anexo III</b>, com o teto de 5%. A Res. CGSN 140/2018, <b>art. 25, § 1º, IV</b>, manda tributar o transporte pelo Anexo III <b>deduzida a parcela do ISS e acrescida a parcela do ICMS prevista no Anexo I</b> — que é precisamente o que o motor faz, e sem o teto, porque o teto é regra do ISS. Corrigido o verificador, a trava fechou <b>ao centavo</b>: R$ 151.194,90 nos dois. <b>Resultado do confronto nas três empresas-teste:</b> DAS, trava, Lucro Presumido e Lucro Real <b>coincidem integralmente</b>, com dois motores que não compartilham uma linha de código. <b>Fica declarada uma PREMISSA divergente</b>, que não é erro de cálculo: o aplicativo aplica a alíquota de IPI configurada sobre <b>todas</b> as saídas de mercadoria, inclusive revenda pura, enquanto a leitura estrita do CTN, art. 46, alcança só a saída do estabelecimento industrial ou equiparado. Na Empresa 03 isso responde por R$ 147.000,00 no ano. Empresa comercial não é afetada, porque nela a alíquota fica em zero; indústria que também revende, sim. O verificador passou a calcular as duas leituras, de modo que o efeito da premissa fique <b>isolado e mensurável</b> em vez de confundido com divergência de apuração. Motor e lacre <code>47f3f10b</code> intocados — todas as correções desta versão são do verificador.</td></tr>
                     <tr><td><b>v7.64.1</b></td><td>31/08/2026</td><td><b>🔁 Segundo parecer externo: o verificador independente entregue ao auditor era uma versão ANTIGA do arquivo, e por isso não reproduzia os números do relatório.</b> O achado é procedente e o erro é de entrega, não de cálculo: o arquivo publicado tinha 141 linhas — sem exportação, sem transporte, sem Lucro Presumido e sem impedimento —, enquanto o usado para gerar o relatório tinha 247. Três dos oito achados do parecer (cobertura de blocos, Fator R sem o mercado externo no denominador e ausência de motor de Lucro Presumido) descrevem exatamente essa versão antiga e já estavam resolvidos. <b>Erro real encontrado pelo auditor:</b> a COFINS da 6ª faixa do Anexo V estava digitada como <b>16,46%</b> quando a tabela legal traz <b>16,44%</b>, de modo que a repartição somava 100,02%. Corrigido — e o verificador passou a <b>conferir sozinho, ao ser carregado, que todas as 30 faixas dos cinco anexos somam exatamente 100%</b>, quebrando de imediato se alguma não somar. Um verificador cuja tabela não fecha não é árbitro de nada. <b>Segundo erro real:</b> a CPP embutida no DAS da <b>exportação</b> não estava sendo somada ao FS12 do verificador, o que produzia um Fator R menor que o do motor. O aplicativo estava certo: essa CPP é efetivamente recolhida e integra a folha do Fator R. Corrigido, o Fator R passou a coincidir <b>ao milionésimo de ponto percentual</b> nas Empresas 01 e 02. <b>Lucro Real independente</b> foi implementado — não cumulativo com saldo credor transportado, Tema 69, Lei 14.592/2023 e IRPJ/CSLL por trimestre. Ele fecha integralmente na Empresa 01 e <b>ainda diverge</b> nas Empresas 02 e 03, o que fica declarado como pendência do verificador. <b>Caso novo na suíte</b> (achado 5.3 do parecer): bloco sujeito ao Fator R <b>abaixo</b> de 28% convivendo com ISS retido — o cenário anterior tinha Fator R de 40% e escondia o comportamento. Confronto no CI: <b>1.054 conferências em 17 casos</b>. Motor e lacre <code>47f3f10b</code> intocados.</td></tr>
@@ -3064,10 +3065,16 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   // provisão lançada — e subestimar empurra indevidamente para o Anexo V.
   const _f13 = inp.folha13 || {};
   const _tem13Pago = ((+_f13.salarios13||0) + (+_f13.prolabore13||0)) > 0.005;
+  // v7.66.0 (parecer do Teste 6, achado 3.1) · A PROVISÃO NÃO ENTRA MAIS COMO APROXIMAÇÃO.
+  // A v7.65.0 fazia o 13º pago prevalecer sobre a provisão, mas mantinha a provisão quando não
+  // havia pagamento informado. O parecer mostrou o caso que derruba essa escolha: em fevereiro,
+  // 27,92% sem a provisão contra 28,07% com ela — a aproximação, sozinha, mudou o enquadramento
+  // do Anexo V para o III. O art. 26, § 1º, da Res. CGSN 140/2018 soma o montante PAGO, e uma
+  // aproximação que decide anexo é pior que uma ausência declarada: agora só o 13º informado
+  // entra, e a falta é ANUNCIADA na tela quando há provisão lançada sem pagamento informado.
   const folhaMesFR = m => F.prolabore[m] + F.salarios[m] + F.baseFgts[m]*fp.fgts
-    + (_frLegado ? 0
-       : _tem13Pago ? (m === 11 ? (+_f13.salarios13||0) + (+_f13.prolabore13||0) : 0)
-       : (+F.prov13[m] || 0));
+    + (_frLegado || !_tem13Pago ? 0
+       : (m === 11 ? (+_f13.salarios13||0) + (+_f13.prolabore13||0) : 0));
   // a CPP entra por fora, porque só existe depois que o DAS do mês foi apurado
   const cppMesFR = m => _frLegado ? 0 : (+cppPrev[m] || 0);
 
@@ -3167,7 +3174,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       comtransp_st: (A3.iss[fx]>0 ? e3*(1-A3.iss[fx]) : e3),
       // exportação: sobra apenas IRPJ + CSLL + CPP da repartição do anexo, na faixa da RBT12 externa
       a1_exp: efE(A1)*Math.max(0, 1 - A1.icms[fxE] - A1.piscof[fxE]),
-      a2_exp: efE(A2)*Math.max(0, 1 - A2.icms[fxE] - A2.piscof[fxE]),
+      // v7.66.0 (parecer do Teste 6, achado 3.2) · a exportação é imune também ao IPI
+      // (CF, art. 153, § 3º, III). O Anexo II tem parcela de IPI e ela não estava sendo retirada
+      // do bloco exportado: o DAS da exportação industrial saía com IPI embutido.
+      a2_exp: efE(A2)*Math.max(0, 1 - A2.icms[fxE] - A2.piscof[fxE] - (A2.ipi ? A2.ipi[fxE] : 0)),
       a3_exp: efE(A3)*Math.max(0, 1 - A3.iss[fxE]  - A3.piscof[fxE]),
       // v7.54.0 (item M · decisão 8.10) · o Fator R da exportação usa o MESMO fator do art. 26 já
       // adotado desde a v7.17.0 (RBT12 conjunta) — não se cria um segundo Fator R no aplicativo.
@@ -3356,7 +3366,15 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const icmsDeb  = inp.icms?.deb?.[m]  != null ? +inp.icms.deb[m]  : (R.a1_semst[m]+R.a1_red[m]+R.a1_mono[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m])*cfg.icmsV + R.comtransp[m]*icmsVTransp;
     const icmsPagar = icmsDeb - icmsCred;
     const ipiCred = inp.ipi?.cred?.[m] != null ? +inp.ipi.cred[m] : C.baseIpiCred[m]*cfg.ipiC;
-    const ipiDebBase = R.a1_semst[m]+R.a1_red[m]+R.a1_mono[m]+R.a1_comst[m]+R.a1_comst_mono[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m]+R.a2_comst[m]+R.a2_comst_mono[m];
+    // v7.66.0 (parecer do Teste 6, achado 3.3; e do Teste 5) · O IPI INCIDE NA SAÍDA DO
+    // ESTABELECIMENTO INDUSTRIAL OU EQUIPARADO (CTN, art. 46, II; RIPI, art. 35) — não na revenda
+    // por comerciante. A base somava TODOS os blocos de mercadoria, inclusive os do Anexo I, que
+    // é justamente o anexo da revenda: num cenário com 5% de IPI configurado, isso produziu
+    // R$ 121.265,00 de IPI no ano onde a industrialização responde por R$ 38.010,00.
+    // Empresa que revende E industrializa lança a produção nos blocos do Anexo II; quem é
+    // equiparado a industrial na revenda (importador, por exemplo) informa o débito próprio na
+    // aba ICMS·IPI, que continua prevalecendo sobre o cálculo automático.
+    const ipiDebBase = R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m]+R.a2_comst[m]+R.a2_comst_mono[m];
     const ipiDeb = inp.ipi?.deb?.[m] != null ? +inp.ipi.deb[m] : ipiDebBase*cfg.ipiV;
     const ipiPagar = ipiDeb - ipiCred;
 
@@ -3381,7 +3399,12 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // v7.18.0 · Tema 69 (STF, RE 574.706): exclui o ICMS DESTACADO das saídas que permanecem na base —
     // revenda sem ST e com redução (Anexos I/II). O monofásico já saiu da base inteira (corrigida a dupla
     // exclusão que subtraía o icmsDeb cheio); venda com ST não tem destaque próprio; exportação é imune.
-    const icmsDestacadoPC = (R.a1_semst[m]+R.a1_red[m]+R.a2_semst[m]+R.a2_red[m])*cfg.icmsV;
+    // v7.66.0 (parecer do Teste 6, achado 3.5) · o transporte e a comunicação são fato gerador de
+    // ICMS (LC 87/96, art. 2º, II e III) e o imposto está destacado no preço — logo o Tema 69
+    // (STF, RE 574.706) alcança essas receitas do mesmo modo. Ficavam de fora, e por isso a base
+    // de PIS/COFINS do Presumido e do Real saía superestimada em quem tem transporte.
+    const icmsDestacadoPC = (R.a1_semst[m]+R.a1_red[m]+R.a2_semst[m]+R.a2_red[m])*cfg.icmsV
+                          + R.comtransp[m]*icmsVTransp;
     const _baseLPliq = Math.max(0, basePisCofLP - icmsDestacadoPC);   // exclusão nunca negativa a base
     const lp_pis = _baseLPliq*.0065;
     const lp_cof = _baseLPliq*.03;
@@ -4433,6 +4456,16 @@ function anAvisoConfig(){
   // saiu de uma regra, não de um dado, e antes desta versão ele saía ZERO em silêncio.
   // v7.64.0 (parecer externo, achado 3.7) · a presunção da EXPORTAÇÃO era marcada pelo motor e não
   // era lida em lugar nenhum: acontecia em silêncio, que é o que a correção A01 existia para impedir.
+  // v7.66.0 · a provisão de 13º deixou de compor o FS12; quem só tem provisão lançada precisa
+  // saber que o 13º está FORA do Fator R, e não descobrir isso por um enquadramento inesperado.
+  { const _p13 = (AN.folha?.prov13||[]).reduce((a,b)=>a+(+b||0),0);
+    const _f13 = (+(AN.folha13?.salarios13)||0) + (+(AN.folha13?.prolabore13)||0);
+    const _svc = ['a3_semret','a5r','a4'].reduce((s,k)=>s+(AN.receitas[k]||[]).reduce((x,y)=>x+(+y||0),0),0);
+    if (_p13 > 0.005 && _f13 <= 0.005 && _svc > 0.005)
+      falta.push(`o <b>13º efetivamente pago</b> (aba Folha) — há provisão de 13º lançada e nenhum `
+        + `pagamento informado. A provisão <b>não entra no FS12</b> do Fator R, porque o art. 26, § 1º, `
+        + `da Res. CGSN 140/2018 soma o montante <b>pago</b>: enquanto o valor não for informado, o `
+        + `Fator R sai <b>subestimado</b> e pode empurrar os serviços para o Anexo V`); }
   { const pe = (AN._res?.meses||[]).map((M,i)=>M.rbt12PresumidoExp?MESES[i]:null).filter(Boolean);
     if (pe.length) falta.push(`o RBT12 de <b>exportação</b> de ${pe.join(', ')} — há receita de `
       + `exportação lançada e o histórico do mercado externo está zerado, então o aplicativo `
@@ -5028,7 +5061,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.65.0';
+const APP_VERSAO = '7.66.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -9948,9 +9981,9 @@ function rlConfDivergencias(){
           ? `<b>ATENÇÃO — a receita informada na aba Reforma (${fmtR(_d.naAba)}) não é a receita interna (${fmtR(_d.interna)})</b>. A exportação de ${fmtR(_d.exp)} é imune ao IBS/CBS (LC 214/2025, art. 8º) e não deveria compor a base; enquanto o valor da aba prevalecer, os anos projetados saem superestimados. Corrija com "Preencher da análise" na aba Reforma.`
           : 'a base do IBS/CBS é a receita <b>interna</b>: a exportação é imune (LC 214/2025, art. 8º) e fica fora, com os créditos das aquisições preservados. Confronto entre a receita da aba e a da análise conferido nesta emissão.';
       })()}</li>
-      <li><b>13º no FS12 (v7.65.0):</b> ${((RL?.dados?.folha13||{}).salarios13 || (RL?.dados?.folha13||{}).prolabore13)
-        ? 'o 13º entra pelo valor <b>pago</b> informado em folha13, na competência do pagamento — que é o que o art. 26, § 1º, da Res. CGSN 140/2018 manda somar ("montante pago nos 12 meses anteriores").'
-        : 'não há 13º pago informado, então a <b>provisão mensal</b> é usada como aproximação. É aproximação declarada: provisão contábil de 1/12 ao mês não é pagamento, e a leitura estrita do art. 26, § 1º, somaria o 13º só na competência em que foi pago. Informar o 13º pago na aba Folha elimina a aproximação.'}</li>
+      <li><b>13º no FS12 (v7.66.0):</b> ${((RL?.dados?.folha13||{}).salarios13 || (RL?.dados?.folha13||{}).prolabore13)
+        ? 'o 13º entra pelo valor <b>pago</b> informado na aba Folha, na competência do pagamento — o montante que o art. 26, § 1º, da Res. CGSN 140/2018 manda somar. Como a janela do Fator R olha para trás, o 13º pago em dezembro compõe o FS12 dos meses <b>seguintes</b>, não o do próprio dezembro.'
+        : 'não há 13º pago informado e a <b>provisão mensal não entra no FS12</b>. Até a v7.65.0 ela entrava como aproximação; uma auditoria externa demonstrou um caso em que essa aproximação, sozinha, movia o Fator R de 27,92% para 28,07% e <b>trocava o Anexo V pelo III</b>. Aproximação que decide enquadramento é pior que ausência declarada. Informe o 13º pago na aba Folha para que ele componha o Fator R.'}</li>
       <li><b>Composição do FS12 do Fator R (v7.64.0):</b> ${String((RL?.dados?.cfg||{}).frComposicao||'legal')==='legado'
         ? 'esta análise usa a composição <b>legada</b> (remunerações + FGTS, sem 13º e sem CPP), preservada para reproduzir documento emitido até a v7.63.0.'
         : 'o FS12 soma remunerações, pró-labore, 13º, FGTS e a <b>contribuição patronal previdenciária efetivamente recolhida</b> (Res. CGSN 140/2018, art. 26, § 1º). Em optante do Simples a CPP está <b>dentro do DAS</b>, e é a parcela apurada pelo próprio motor que entra — nunca um percentual presumido sobre a folha, que produziria valor que ninguém recolheu. Nos meses vindos do histórico da aba RBT12 a CPP <b>não é conhecida</b> e não é estimada: enquanto houver meses de histórico na janela, o Fator R sai <b>subestimado</b>, e isso fica declarado em vez de inventado.'}</li>
