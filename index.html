@@ -685,6 +685,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.65.0</b></td><td>31/08/2026</td><td><b>🌍 Parecer externo do Teste 5: a exportação podia voltar à base de IBS/CBS pela receita da própria aba Reforma — e o 13º entrava no Fator R pela provisão, não pelo pagamento.</b> <b>(1)</b> O motor exclui a exportação da base desde a v7.24.0 (LC 214/2025, art. 8º), e isso foi reconferido: com a aba vazia, a base sai correta. Só que a aba Reforma tem receita <b>própria</b>, e o valor gravado nela <b>prevalece</b> sobre o cálculo automático — de modo que análise preenchida antes daquela versão, ou preenchida à mão com o total, carrega a exportação de volta para dentro da base, em silêncio. Foi assim que a auditoria externa encontrou <b>R$ 15.749,10</b> de IBS/CBS a mais em 2027 num caso com R$ 171.000,00 de exportação no ano — número reproduzido aqui ao centavo. O aplicativo tinha os dois valores e não os confrontava: agora <b>confronta</b>. Quando a receita da aba é a total, a aba mostra alerta <b>vermelho</b> dizendo que todos os anos da projeção estão superestimados e mandando reclicar "Preencher da análise"; quando apenas difere da interna, o alerta é âmbar e pede conferência. O papel de trabalho declara o confronto <b>nos dois sentidos</b>, inclusive quando está tudo certo. <b>(2) O 13º no FS12 do Fator R passa a ser o PAGO, não a provisão.</b> A v7.64.0 somou a provisão mensal para incluir o 13º, mas o art. 26, § 1º, da Res. CGSN 140/2018 fala em <b>montante pago</b> nos 12 meses anteriores — provisão de 1/12 ao mês não é pagamento. Havendo 13º informado na folha, é ele que entra, na competência do pagamento; não havendo, a provisão segue como <b>aproximação declarada</b>, porque ignorá-la subestimaria o FS12 de quem só tem a provisão lançada — e subestimar empurra indevidamente para o Anexo V, que é o enquadramento mais caro. <b>Conferido e sem alteração:</b> o CMV zerado apontado pelo parecer é <b>dado de entrada</b>, não defeito — o aplicativo já avisa desde a v7.51.0 sempre que houver compras lançadas com custo zero. Os demais pontos (premissa de crédito amplo dos fornecedores e os 27,91% como estimativa de referência) já constavam das divergências declaradas. Lacre <code>47f3f10b</code> íntegro — a mudança do 13º não alcança os casos-gabarito, que não têm 13º lançado.</td></tr>
                     <tr><td><b>v7.64.2</b></td><td>31/08/2026</td><td><b>✅ Terceiro parecer externo: as quatro divergências entre o motor e o verificador independente foram fechadas — e em todas as quatro o aplicativo estava certo.</b> O auditor abriu as diferenças por tributo e levantou hipóteses específicas; testadas uma a uma, todas apontaram para o <b>verificador</b>, não para o motor. <b>(1) Lucro Real da Empresa 02 (R$ 46.574,15):</b> o verificador não deduzia da base de IRPJ/CSLL o <b>FGTS</b> nem as despesas lançadas como geradoras de crédito de PIS/COFINS, e por isso inflava o lucro — exatamente as duas omissões que o parecer apontou, R$ 12.040,00 por mês. <b>(2) ICMS da Empresa 03:</b> o verificador creditava o ICMS de <b>compras com substituição tributária</b> e deixava a revenda <b>monofásica</b> fora do débito. O motor está certo nos dois pontos: mercadoria com ST já teve o imposto retido e não gera crédito nem débito, e o monofásico é regime de PIS/COFINS — o ICMS da revenda monofásica é normal. <b>(3) PIS/COFINS do Lucro Real:</b> o verificador incluía as <b>aquisições monofásicas</b> na base de crédito, o que os arts. 3º, I, "b", das Leis 10.637/2002 e 10.833/2003 vedam. <b>(4) Trava da 5ª faixa (R$ 1.494,16, aberta desde a rodada anterior): RESOLVIDA.</b> O verificador recompunha o transporte pela parcela de <b>ISS do Anexo III</b>, com o teto de 5%. A Res. CGSN 140/2018, <b>art. 25, § 1º, IV</b>, manda tributar o transporte pelo Anexo III <b>deduzida a parcela do ISS e acrescida a parcela do ICMS prevista no Anexo I</b> — que é precisamente o que o motor faz, e sem o teto, porque o teto é regra do ISS. Corrigido o verificador, a trava fechou <b>ao centavo</b>: R$ 151.194,90 nos dois. <b>Resultado do confronto nas três empresas-teste:</b> DAS, trava, Lucro Presumido e Lucro Real <b>coincidem integralmente</b>, com dois motores que não compartilham uma linha de código. <b>Fica declarada uma PREMISSA divergente</b>, que não é erro de cálculo: o aplicativo aplica a alíquota de IPI configurada sobre <b>todas</b> as saídas de mercadoria, inclusive revenda pura, enquanto a leitura estrita do CTN, art. 46, alcança só a saída do estabelecimento industrial ou equiparado. Na Empresa 03 isso responde por R$ 147.000,00 no ano. Empresa comercial não é afetada, porque nela a alíquota fica em zero; indústria que também revende, sim. O verificador passou a calcular as duas leituras, de modo que o efeito da premissa fique <b>isolado e mensurável</b> em vez de confundido com divergência de apuração. Motor e lacre <code>47f3f10b</code> intocados — todas as correções desta versão são do verificador.</td></tr>
                     <tr><td><b>v7.64.1</b></td><td>31/08/2026</td><td><b>🔁 Segundo parecer externo: o verificador independente entregue ao auditor era uma versão ANTIGA do arquivo, e por isso não reproduzia os números do relatório.</b> O achado é procedente e o erro é de entrega, não de cálculo: o arquivo publicado tinha 141 linhas — sem exportação, sem transporte, sem Lucro Presumido e sem impedimento —, enquanto o usado para gerar o relatório tinha 247. Três dos oito achados do parecer (cobertura de blocos, Fator R sem o mercado externo no denominador e ausência de motor de Lucro Presumido) descrevem exatamente essa versão antiga e já estavam resolvidos. <b>Erro real encontrado pelo auditor:</b> a COFINS da 6ª faixa do Anexo V estava digitada como <b>16,46%</b> quando a tabela legal traz <b>16,44%</b>, de modo que a repartição somava 100,02%. Corrigido — e o verificador passou a <b>conferir sozinho, ao ser carregado, que todas as 30 faixas dos cinco anexos somam exatamente 100%</b>, quebrando de imediato se alguma não somar. Um verificador cuja tabela não fecha não é árbitro de nada. <b>Segundo erro real:</b> a CPP embutida no DAS da <b>exportação</b> não estava sendo somada ao FS12 do verificador, o que produzia um Fator R menor que o do motor. O aplicativo estava certo: essa CPP é efetivamente recolhida e integra a folha do Fator R. Corrigido, o Fator R passou a coincidir <b>ao milionésimo de ponto percentual</b> nas Empresas 01 e 02. <b>Lucro Real independente</b> foi implementado — não cumulativo com saldo credor transportado, Tema 69, Lei 14.592/2023 e IRPJ/CSLL por trimestre. Ele fecha integralmente na Empresa 01 e <b>ainda diverge</b> nas Empresas 02 e 03, o que fica declarado como pendência do verificador. <b>Caso novo na suíte</b> (achado 5.3 do parecer): bloco sujeito ao Fator R <b>abaixo</b> de 28% convivendo com ISS retido — o cenário anterior tinha Fator R de 40% e escondia o comportamento. Confronto no CI: <b>1.054 conferências em 17 casos</b>. Motor e lacre <code>47f3f10b</code> intocados.</td></tr>
                     <tr><td><b>v7.64.0</b></td><td>31/08/2026</td><td><b>⚖️ Resposta ao parecer externo sobre a auditoria das três empresas: a composição legal do FS12, a presunção de exportação que era silenciosa, o RAT demonstrável — e um segundo motor de auditoria que não importa nada deste aplicativo.</b> <b>(1) FS12 do Fator R.</b> Até aqui somava pró-labore, salários e FGTS. A Res. CGSN 140/2018, art. 26, § 1º, manda somar as remunerações — <b>incluído o 13º</b> — acrescidas do montante <b>efetivamente recolhido</b> de contribuição patronal previdenciária e de FGTS. Faltavam o 13º e a CPP, e a falta <b>subestima</b> o Fator R: empresa perto dos 28% era empurrada para o Anexo V, o enquadramento mais caro. Um ponto que decidiu a implementação: <b>a CPP de optante do Simples não é 20% da folha</b> — ela está dentro do DAS, como parcela da alíquota efetiva, e é isso que a empresa efetivamente recolhe. Por isso o que entra é a CPP <b>apurada pelo próprio motor</b> nos meses já calculados, nunca um percentual presumido sobre a folha, que produziria um número que ninguém recolheu. Nos meses vindos do histórico da aba RBT12 a CPP não é conhecida, e o aplicativo <b>declara isso</b> em vez de estimar. Seletor <b>Composição do FS12</b> na Configuração, com o modo legado preservado para reproduzir documento já emitido. <b>(2) A presunção do RBT12 de exportação era silenciosa.</b> A correção A01 da v7.63.0 marcava <code>rbt12PresumidoExp</code> — e esse campo não era lido em lugar nenhum: a presunção do mercado interno se anunciava, a da exportação não. Era regressão da própria correção que existia para acabar com o silêncio. Agora as duas se declaram, na tela e no papel de trabalho. <b>(3) RAT demonstrável.</b> O percentual de fábrica, 5,80%, era rotulado como "grau de risco" — impreciso, porque RAT legal é 1%, 2% ou 3% (Lei 8.212/91, art. 22, II) e 5,80% só existe já multiplicado pelo <b>FAP</b> (Lei 10.666/2003, art. 10). Informados os dois componentes na Configuração, o percentual passa a ser derivado e a conta fica à vista; sem eles vale o valor gravado, e nenhuma análise existente muda. <b>(4) Verificador independente</b> — <code>tests/verificador_independente.js</code>, no repositório. Ele <b>digita</b> os Anexos I a V e a repartição por tributo a partir da LC 123/2006, decide sozinho o anexo pelo Fator R e só então compara. Não importa uma linha deste aplicativo, e é por isso que responde à crítica que a conferência anterior não podia responder: reutilizando as tabelas do motor, ela recalcularia corretamente um Anexo III escolhido de forma indevida. Resultado do confronto: <b>1.240 conferências em 20 casos, zero divergências</b> — incluindo os dois lados da fronteira dos 28%, o teto e o primeiro real acima de cada faixa do RBT12, substituição tributária, monofásico, ISS retido e a 6ª faixa com a trava da 5ª. <b>O que ele já pegou:</b> um defeito introduzido nesta mesma versão — a CPP entrava no Fator R <b>defasada em um mês</b>, porque o acumulador lia o objeto do mês antes de ele existir. Nenhum teste de identidade pegaria isso: os dois lados do aplicativo estavam igualmente errados. <b>Sobre o achado tido como crítico no parecer</b> — Fator R indicando Anexo V com cálculo no Anexo III —, a apuração mostrou que o motor está correto e que o erro era do material de teste: consultoria foi lançada no bloco <code>a3_semret</code>, que é Anexo III <b>por lei</b> (art. 18, § 5º-B), quando a atividade é do § 5º-I e pertence ao bloco <code>a5r</code>. Movida a receita para o bloco certo, o motor vai ao Anexo V sozinho e o DAS sobe 25%. Motor selado e lacre <code>47f3f10b</code> <b>íntegros</b> nas quatro frentes.</td></tr>
@@ -3054,8 +3055,19 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   // precise refazer documento já emitido — mesma saída da trava da 5ª faixa na v7.36.0.
   const _frLegado = String(cfg.frComposicao||'legal') === 'legado';
   const cppPrev = [];        // CPP apurada pelo motor, mês a mês do ano corrente
+  // v7.65.0 (parecer externo do Teste 5) · O 13º ENTRA PELO QUE FOI PAGO, NÃO PELA PROVISÃO.
+  // A v7.64.0 somou `prov13` ao FS12 para incluir o 13º, mas o art. 26, § 1º, da Res. CGSN
+  // 140/2018 fala em "montante PAGO nos 12 meses anteriores" — provisão contábil de 1/12 ao mês
+  // não é pagamento. Havendo `folha13` informado, é ele que entra, na competência em que o
+  // aplicativo já o reconhece (dezembro, junto com o INSS do 13º). Sem `folha13`, a provisão
+  // entra como APROXIMAÇÃO declarada, porque ignorá-la subestimaria o FS12 de quem só tem a
+  // provisão lançada — e subestimar empurra indevidamente para o Anexo V.
+  const _f13 = inp.folha13 || {};
+  const _tem13Pago = ((+_f13.salarios13||0) + (+_f13.prolabore13||0)) > 0.005;
   const folhaMesFR = m => F.prolabore[m] + F.salarios[m] + F.baseFgts[m]*fp.fgts
-    + (_frLegado ? 0 : (+F.prov13[m] || 0));
+    + (_frLegado ? 0
+       : _tem13Pago ? (m === 11 ? (+_f13.salarios13||0) + (+_f13.prolabore13||0) : 0)
+       : (+F.prov13[m] || 0));
   // a CPP entra por fora, porque só existe depois que o DAS do mês foi apurado
   const cppMesFR = m => _frLegado ? 0 : (+cppPrev[m] || 0);
 
@@ -5016,7 +5028,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.64.2';
+const APP_VERSAO = '7.65.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -6029,7 +6041,7 @@ function rfCalcular() {
   const _av = $id('rf-avisos');
   if (_av) _av.innerHTML = (rfPendente()
     ? `<div class="hint" style="padding:10px 12px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109;margin-top:12px">⚠️ <b>Alterações da Reforma ainda não gravadas.</b> O parecer e a memória de cálculo leem o que está <b>salvo no banco</b>. Enquanto esta faixa estiver aqui, o crédito e a receita acima existem só nesta tela: clique em <b>💾 Salvar</b>.</div>`
-    : '') + fornNotaHtml();
+    : '') + rfAvisoExportacaoHtml() + fornNotaHtml();
   const atual = rfCargaAtual();
   // v7.45.0 (itens 2 e 5): a aba usa a MESMA base de crédito e a MESMA dedução de ISS dos cenários
   const _T = AN?._res?.totais || null;
@@ -7405,6 +7417,44 @@ async function empAtividadePatch(cnpj, campos){
 }
 
 // ═══════════ v6: REFORMA — PREENCHER DA ANÁLISE ═══════════
+// ══ v7.65.0 (parecer externo do Teste 5) · A RECEITA DA ABA PODE CONTER A EXPORTAÇÃO ══
+// O motor exclui a exportação da base de IBS/CBS desde a v7.24.0 (LC 214/2025, art. 8º). Mas a
+// aba Reforma tem receita PRÓPRIA, e o valor gravado nela prevalece: análise preenchida antes
+// daquela versão — ou preenchida à mão com o total — carrega a exportação para dentro da base,
+// e o efeito é silencioso. Foi assim que uma auditoria externa encontrou R$ 15.749,10 de IBS/CBS
+// a mais em 2027, num caso com R$ 171.000,00 de exportação no ano.
+// O aplicativo tem os dois números e passa a confrontá-los.
+function rfConfereExportacao(rf, T){
+  if (!rf || !T) return null;
+  const exp = +T.receitaExp || 0;
+  if (exp <= 0.005) return null;
+  const interna = Math.max(0, (+T.receita||0) - exp);
+  const naAba = +rf.receita || 0;
+  if (naAba <= 0.005) return null;
+  // a receita da aba bate com o TOTAL (e não com a interna) → a exportação está dentro da base
+  if (Math.abs(naAba - (+T.receita||0)) <= 0.02 && Math.abs(naAba - interna) > 0.02)
+    return { tipo:'total', exp, interna, naAba };
+  if (Math.abs(naAba - interna) > 0.02)
+    return { tipo:'difere', exp, interna, naAba };
+  return null;
+}
+function rfAvisoExportacaoHtml(){
+  const T = (typeof AN !== 'undefined' && AN && AN._res) ? AN._res.totais : null;
+  const d = rfConfereExportacao(typeof RF !== 'undefined' ? RF : null, T);
+  if (!d) return '';
+  const comum = `A exportação é <b>imune ao IBS e à CBS</b> (LC 214/2025, art. 8º) e o motor a exclui `
+    + `da base desde a v7.24.0 — mas a receita desta aba <b>prevalece</b> sobre o cálculo automático.`;
+  if (d.tipo === 'total')
+    return `<div class="hint" style="padding:10px 12px;border-left:4px solid var(--danger,#943126);background:#fdedec;color:#7b241c;margin-top:12px">`
+      + `⚠️ <b>A receita da aba Reforma inclui a exportação.</b> O valor informado (${fmtR(d.naAba)}) é a `
+      + `receita <b>total</b> da análise; a receita interna, que é a base do IBS/CBS, é ${fmtR(d.interna)} — `
+      + `a diferença de ${fmtR(d.exp)} é exportação. ${comum} Enquanto ficar assim, <b>todos os anos da `
+      + `projeção saem superestimados</b>. Clique em <b>Preencher da análise</b> para corrigir.</div>`;
+  return `<div class="hint" style="padding:10px 12px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109;margin-top:12px">`
+    + `⚠️ <b>A receita da aba difere da receita interna da análise.</b> Aba: ${fmtR(d.naAba)} · `
+    + `interna (base do IBS/CBS): ${fmtR(d.interna)} · exportação no período: ${fmtR(d.exp)}. ${comum} `
+    + `Confira se a diferença é intencional.</div>`;
+}
 function rfAutoPreencher() {
   if (!RF) { toast('Abra a aba Reforma com uma empresa selecionada.'); return; }
   if (!AN || !AN._res) { toast('Sem análise calculada — abra a empresa na aba Análise Atual (ou selecione-a aqui) e recalcule.'); return; }
@@ -9891,6 +9941,16 @@ function rlConfDivergencias(){
       <li><b>Limite e sublimite proporcionais (v7.55.0):</b> valem <b>apenas no ano-calendário de início</b> de atividade (LC 123/2006, art. 3º, §§ 2º e 3º), contada a fração de mês como mês inteiro. No ano seguinte o limite volta a ser integral, ainda que a empresa tenha menos de 12 meses de existência.</li>
       <li><b>ISS retido fora da dedução da base do IBS/CBS (v7.54.0):</b> a dedução é o ISS do Lucro Presumido exibido no Consolidado analítico, que exclui as receitas com retenção. A leitura literal do art. 12, §2º, V, da LC 214/2025 admitiria o contrário — o ISS retido também incidiu sobre a operação —, mas a escolha é pela coerência com a decisão da v7.23.0 de que o ISS retido não é custo da empresa. É <b>decisão declarada</b>, não omissão.</li>
       <li><b>Redução de IBS/CBS — ordem das operações (v7.54.0):</b> a exclusão de ICMS e ISS é operação de <b>base</b> e a redução do regime diferenciado é operação de <b>alíquota</b>, então a dedução vem primeiro e é <b>rateada proporcionalmente à base de cada parcela</b>. O rateio por natureza (ISS só sobre serviço, ICMS só sobre mercadoria) seria mais fiel ao fato gerador e <b>não</b> está implementado.</li>
+      <li><b>Receita da aba Reforma × exportação (v7.65.0):</b> ${(() => {
+        const _T = RL?.res?.totais, _rf = RL?.dados?.reforma;
+        const _d = (typeof rfConfereExportacao === 'function') ? rfConfereExportacao(_rf, _T) : null;
+        return _d
+          ? `<b>ATENÇÃO — a receita informada na aba Reforma (${fmtR(_d.naAba)}) não é a receita interna (${fmtR(_d.interna)})</b>. A exportação de ${fmtR(_d.exp)} é imune ao IBS/CBS (LC 214/2025, art. 8º) e não deveria compor a base; enquanto o valor da aba prevalecer, os anos projetados saem superestimados. Corrija com "Preencher da análise" na aba Reforma.`
+          : 'a base do IBS/CBS é a receita <b>interna</b>: a exportação é imune (LC 214/2025, art. 8º) e fica fora, com os créditos das aquisições preservados. Confronto entre a receita da aba e a da análise conferido nesta emissão.';
+      })()}</li>
+      <li><b>13º no FS12 (v7.65.0):</b> ${((RL?.dados?.folha13||{}).salarios13 || (RL?.dados?.folha13||{}).prolabore13)
+        ? 'o 13º entra pelo valor <b>pago</b> informado em folha13, na competência do pagamento — que é o que o art. 26, § 1º, da Res. CGSN 140/2018 manda somar ("montante pago nos 12 meses anteriores").'
+        : 'não há 13º pago informado, então a <b>provisão mensal</b> é usada como aproximação. É aproximação declarada: provisão contábil de 1/12 ao mês não é pagamento, e a leitura estrita do art. 26, § 1º, somaria o 13º só na competência em que foi pago. Informar o 13º pago na aba Folha elimina a aproximação.'}</li>
       <li><b>Composição do FS12 do Fator R (v7.64.0):</b> ${String((RL?.dados?.cfg||{}).frComposicao||'legal')==='legado'
         ? 'esta análise usa a composição <b>legada</b> (remunerações + FGTS, sem 13º e sem CPP), preservada para reproduzir documento emitido até a v7.63.0.'
         : 'o FS12 soma remunerações, pró-labore, 13º, FGTS e a <b>contribuição patronal previdenciária efetivamente recolhida</b> (Res. CGSN 140/2018, art. 26, § 1º). Em optante do Simples a CPP está <b>dentro do DAS</b>, e é a parcela apurada pelo próprio motor que entra — nunca um percentual presumido sobre a folha, que produziria valor que ninguém recolheu. Nos meses vindos do histórico da aba RBT12 a CPP <b>não é conhecida</b> e não é estimada: enquanto houver meses de histórico na janela, o Fator R sai <b>subestimado</b>, e isso fica declarado em vez de inventado.'}</li>
