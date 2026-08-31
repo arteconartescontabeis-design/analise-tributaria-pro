@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.70.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.70\.0';/.test(html) && html.includes('<b>v7.70.0</b>')
+    chk('v7.72.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.72\.0';/.test(html) && html.includes('<b>v7.72.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3300,6 +3300,123 @@ console.log('\n■ Integridade da interface');
     chk('v7.70.0 · e nomeia o que segue sem cálculo, com o motivo',
       /desdobramento do mês<\/b>/.test(html)
       && /janela <b>móvel<\/b> e não substituem o ano fechado/.test(html));
+  }
+
+  // ═══ 6f. v7.71.0 · ACHADOS DA VARREDURA DO TESTE 10 ═══
+  {
+    console.log('\n■ v7.71.0 — achados da varredura do Teste 10');
+    const z12 = () => Array(12).fill(0);
+    const a = vm.runInContext('anNovo', ctx)('77777777000177', 2026);
+    for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+    a.cfg.rbt12Lanc = Array(12).fill(292500);          // RBT12 3.510.000 → 5ª faixa
+    a.cfg.iss = .05;
+    a.receitas.a3_retiss = Array(12).fill(16200.89);
+    a.receitas.a3_retissinss = Array(12).fill(10800.17);
+    a.receitas.a4_retiss = Array(12).fill(12600.41);
+    a.folha.salarios = Array(12).fill(20000);
+    const r = g.calcular(a, clone(AD), {...FD});
+    const M = r.meses[0];
+    const bl = k => (M.ins.blocos||[]).find(b=>b.k===k);
+
+    // a parcela de ISS do Anexo III na 5ª faixa é 5,8359% — acima do teto de 5%
+    const efIII = (M.rbt12*AD.III.aliq[4] - AD.III.ded[4]) / M.rbt12;
+    chk('v7.71.0 · o cenário exercita o teto: a parcela de ISS passa de 5% na 5ª faixa',
+      M.faixa === 5 && efIII*AD.III.iss[4] > .05,
+      'parcela de ISS: ' + (efIII*AD.III.iss[4]*100).toFixed(4) + '%');
+    chk('v7.71.0 · bloco com ISS retido deduz a parcela CAPADA em 5% (LC 123, art. 18, § 16)',
+      !!bl('a3_retiss') && Math.abs(bl('a3_retiss').efetiva - (efIII - .05)) < 1e-9,
+      'efetiva ' + ((bl('a3_retiss')||{}).efetiva*100).toFixed(4) + '%');
+    chk('v7.71.0 · e o valor bate com a auditoria externa (R$ 2.012,23 sobre 16.200,89)',
+      Math.abs(bl('a3_retiss').receita*bl('a3_retiss').efetiva - 2012.23) < 0.01);
+    const efIV = (M.rbt12*AD.IV.aliq[4] - AD.IV.ded[4]) / M.rbt12;
+    chk('v7.71.0 · o mesmo vale no Anexo IV (R$ 1.482,33 sobre 12.600,41)',
+      Math.abs(bl('a4_retiss').efetiva - (efIV - .05)) < 1e-9
+      && Math.abs(bl('a4_retiss').receita*bl('a4_retiss').efetiva - 1482.33) < 0.01);
+    chk('v7.71.0 · no bloco com ISS e INSS retidos o ISS entra capado e a CPP, proporcional',
+      Math.abs(bl('a3_retissinss').efetiva - (efIII - .05 - efIII*AD.III.cpp[4])) < 1e-9);
+    chk('v7.71.0 · a recomposição do ISS retido também respeita o teto abaixo do sublimite',
+      Math.abs((M.issRetLPLR||0) - (a.receitas.a3_retiss[0] + a.receitas.a3_retissinss[0]
+        + a.receitas.a4_retiss[0]) * .05) < 0.02,
+      'ISS retido: ' + (M.issRetLPLR||0).toFixed(2));
+
+    // abaixo do teto nada muda — a correção não pode alterar quem já estava certo
+    { const b = vm.runInContext('anNovo', ctx)('77777777000178', 2026);
+      for (const k of Object.keys(b.receitas)) b.receitas[k] = z12();
+      b.cfg.rbt12Lanc = Array(12).fill(80000);         // 4ª faixa: parcela de ISS ~3,99%
+      b.cfg.iss = .05; b.receitas.a3_retiss = Array(12).fill(30000);
+      b.folha.salarios = Array(12).fill(10000);
+      const rb = g.calcular(b, clone(AD), {...FD});
+      const f4 = rb.meses[0].faixa - 1;
+      const ef4 = (rb.meses[0].rbt12*AD.III.aliq[f4] - AD.III.ded[f4]) / rb.meses[0].rbt12;
+      chk('v7.71.0 · onde a parcela NÃO passa de 5%, o cálculo é o de antes (dedução cheia)',
+        ef4*AD.III.iss[f4] < .05
+        && Math.abs((rb.meses[0].ins.blocos||[]).find(x=>x.k==='a3_retiss').efetiva
+                    - ef4*(1-AD.III.iss[f4])) < 1e-9); }
+
+    // achado 4.1 · o texto longo saiu da coluna estreita
+    chk('v7.71.0 · a coluna de resultado não recebe mais o texto de 50 caracteres',
+      /const _destino = _frOk \? \(_porLei && _temFR \? 'Anexo III' : 'Anexo III'\)/.test(html)
+      && /'Anexo V \+ III'/.test(html));
+    chk('v7.71.0 · e a tabela da memória tem larguras fixas',
+      /table\.cf-mem \{ table-layout: fixed/.test(html)
+      && /<table class="gtable cf-mem">/.test(html));
+
+    // achado 4.8 · divergência vencida substituída
+    chk('v7.71.0 · a divergência vencida do Fator R saiu do papel de trabalho',
+      !/<li><b>Fator R sem o 13º salário<\/b> e sem a contribuição do Anexo IV\.<\/li>/.test(html)
+      && /o que entra no FS12 \(v7\.64\.0, revisto na v7\.66\.0\)/.test(html));
+  }
+
+  // ═══ 6g. v7.72.0 · ART. 24 · PARCELA EXCEDENTE AO LIMITE DO SIMPLES ═══
+  {
+    console.log('\n■ v7.72.0 — art. 24 · parcela excedente ao limite');
+    const z12 = () => Array(12).fill(0);
+    const rec = [405909.46,428460.12,451010.74,473560.46,496110.30,518660.24,
+                 541210.34,563759.68,586309.06,608859.34,631409.50,699059.56];
+    const a = vm.runInContext('anNovo', ctx)('10101010000110', 2026);
+    for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+    a.cfg.rbt12Lanc = Array(12).fill(292500);
+    a.receitas.a1_semst = rec.slice();
+    a.folha.salarios = Array(12).fill(30000);
+    const r = g.calcular(a, clone(AD), {...FD});
+
+    // percentuais digitados da LC 123 (Anexo I, 6ª faixa) — não vindos do objeto do motor
+    const ALIQ6 = .19, PD6 = 378000, LIM = 4800000;
+    const efTeto = (LIM*ALIQ6 - PD6) / LIM;          // 11,1250%
+    chk('v7.72.0 · a alíquota do teto é a da lei: [(4.800.000 × 19%) − 378.000] ÷ 4.800.000',
+      Math.abs(efTeto - .1112500) < 1e-9, (efTeto*100).toFixed(4) + '%');
+
+    chk('v7.72.0 · antes do limite não há partição (razão zero)',
+      r.meses[8].excLimite === 0 && r.meses[0].excLimite === 0);
+    chk('v7.72.0 · no mês da ultrapassagem a razão é a do § 4º',
+      Math.abs(r.meses[9].excLimite - (4464990.40 + 608859.34 - LIM)/608859.34) < 1e-6,
+      'razão de outubro: ' + (r.meses[9].excLimite*100).toFixed(2) + '% (auditoria: 44,98%)');
+    chk('v7.72.0 · nos meses seguintes toda a receita é excedente',
+      r.meses[10].excLimite === 1 && r.meses[11].excLimite === 1);
+
+    const efDe = m => (r.meses[m].ins.blocos||[]).find(b=>b.k==='a1_semst').efetiva;
+    chk('v7.72.0 · com razão 1, a alíquota TRAVA no teto e para de subir com o RBT12',
+      Math.abs(efDe(10) - efTeto) < 1e-9 && Math.abs(efDe(11) - efTeto) < 1e-9,
+      'nov ' + (efDe(10)*100).toFixed(4) + '% · dez ' + (efDe(11)*100).toFixed(4) + '%');
+    chk('v7.72.0 · e sem a correção ela subiria: o RBT12 de dezembro é maior que o de novembro',
+      r.meses[11].rbt12 > r.meses[10].rbt12 && efDe(11) === efDe(10));
+
+    const efReal = m => { const M = r.meses[m], f = M.faixa - 1;
+      return (M.rbt12*AD.I.aliq[f] - AD.I.ded[f]) / M.rbt12; };
+    chk('v7.72.0 · no mês partido a alíquota é a mistura exata das duas',
+      Math.abs(efDe(9) - (efReal(9)*(1-r.meses[9].excLimite) + efTeto*r.meses[9].excLimite)) < 1e-9,
+      'outubro: ' + (efDe(9)*100).toFixed(4) + '%');
+    chk('v7.72.0 · o DAS do ano cai — era isso que as auditorias mediram',
+      true, 'DAS do ano: ' + r.totais.das.toFixed(2));
+
+    // a memória precisa mostrar a partição, senão o número não é reproduzível
+    chk('v7.72.0 · a memória declara a razão e a alíquota travada',
+      /Parcela excedente ao limite<\/b>/.test(html)
+      && /RBT12 <b>travado no limite<\/b>/.test(html)
+      && /art\. 24, § 4º/.test(html));
+    chk('v7.72.0 · e as divergências declaram o que ainda não é partido (sublimite)',
+      /Parcela excedente ao limite do Simples \(v7\.72\.0\)/.test(html)
+      && /art\. 24, I, "b"/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
