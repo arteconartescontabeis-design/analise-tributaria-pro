@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.79.4 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.79\.4';/.test(html) && html.includes('<b>v7.79.4</b>')
+    chk('v7.80.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.80\.0';/.test(html) && html.includes('<b>v7.80.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3293,10 +3293,13 @@ console.log('\n■ Integridade da interface');
     }
 
     // achado 13 · IPI com linha própria nas memórias mensais
-    chk('v7.69.0 · o IPI tem linha própria na memória do Lucro Presumido',
-      /CF\.lin\('IPI a pagar',[^\n]*fmtR\(P\.ipi\|\|0\)\)/.test(html));
-    chk('v7.69.0 · e na memória do Lucro Real',
-      /CF\.lin\('IPI a pagar',[^\n]*fmtR\(LR\.ipi\|\|0\)\)/.test(html));
+    // v7.80.0 · a linha do IPI deixou de ser uma expressão numa linha só: virou conta gráfica
+    // com saldo anterior e saldo a transportar. O teste do TEXTO da linha caiu; o que continua
+    // valendo é que o IPI é demonstrado à parte nos dois regimes.
+    chk('v7.80.0 · o IPI tem linha própria na memória do Lucro Presumido',
+      /CF\.lin\('IPI a pagar',[\s\S]{0,600}?fmtR\(P\.ipi\|\|0\)\)/.test(html));
+    chk('v7.80.0 · e na memória do Lucro Real',
+      /CF\.lin\('IPI a pagar',[\s\S]{0,600}?fmtR\(LR\.ipi\|\|0\)\)/.test(html));
 
     // achado 8 · o texto das divergências deixou de negar o que o motor faz
     chk('v7.69.0 · as divergências declaradas descrevem o impedimento como CALCULADO',
@@ -3976,6 +3979,85 @@ console.log('\n■ Integridade da interface');
       /NÃO pode optar pelo Simples Nacional/.test(txt));
     chk('v7.79.4 · a coluna "Melhor" do quadro por período não diz Simples',
       !/\|?\s*Simples\s*(<\/td>)?\s*$/m.test(txt) && /Presumido/.test(txt));
+  }
+
+  // ═══ 6q. v7.80.0 · ACHADOS DO TESTE 16 (estresse de bordas por centavos) ═══
+  {
+    console.log('\n■ v7.80.0 — achados do Teste 16');
+    const z12 = () => Array(12).fill(0);
+    const nova = (cnpj) => { const a = vm.runInContext('anNovo', ctx)(cnpj, 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12(); return a; };
+
+    // ── achado 3 · IPI é conta gráfica, não tributo negativo ──
+    { const a = nova('27272727000127');
+      a.cfg.rbt12Lanc = Array(12).fill(300000); a.cfg.ipiV = .05; a.cfg.ipiC = .15;
+      a.receitas.a2_semst = Array(12).fill(100000);      // débito 5.000
+      a.compras.baseIpiCred = Array(12).fill(120000);    // crédito 18.000 — excede
+      a.folha.salarios = Array(12).fill(20000);
+      const r = g.calcular(a, clone(AD), {...FD});
+      chk('v7.80.0 · o IPI nunca fica negativo em nenhum mês',
+        r.meses.every(M => (M.lp.ipi||0) >= 0 && (M.lr.ipi||0) >= 0),
+        'menor valor: ' + Math.min(...r.meses.map(M=>M.lp.ipi)).toFixed(2));
+      chk('v7.80.0 · o excesso vira saldo credor e é transportado ao mês seguinte',
+        r.meses[0].ipiSaldoFim > 0
+        && Math.abs(r.meses[1].ipiSaldoAnt - r.meses[0].ipiSaldoFim) < 0.01,
+        'jan → fev: ' + r.meses[0].ipiSaldoFim.toFixed(2));
+      chk('v7.80.0 · e o saldo ACUMULA enquanto o crédito superar o débito',
+        r.meses[2].ipiSaldoFim > r.meses[1].ipiSaldoFim
+        && r.meses[1].ipiSaldoFim > r.meses[0].ipiSaldoFim);
+      // o saldo tem de ser consumido quando o débito cresce
+      const b = nova('27272727000128');
+      b.cfg.rbt12Lanc = Array(12).fill(300000); b.cfg.ipiV = .05; b.cfg.ipiC = .15;
+      b.receitas.a2_semst = Array(12).fill(100000);
+      b.compras.baseIpiCred = [120000,0,0,0,0,0,0,0,0,0,0,0];   // crédito só em janeiro
+      b.folha.salarios = Array(12).fill(20000);
+      const rb = g.calcular(b, clone(AD), {...FD});
+      chk('v7.80.0 · o saldo é CONSUMIDO pelos débitos seguintes, até zerar',
+        rb.meses[0].ipiSaldoFim > 0 && rb.meses[1].lp.ipi === 0
+        && rb.meses[1].ipiSaldoFim < rb.meses[0].ipiSaldoFim
+        && rb.meses.some(M => M.lp.ipi > 0),
+        'saldo jan ' + rb.meses[0].ipiSaldoFim.toFixed(2)
+        + ' → fev ' + rb.meses[1].ipiSaldoFim.toFixed(2));
+      chk('v7.80.0 · a memória demonstra a conta gráfica do IPI',
+        /Saldo credor de IPI a transportar/.test(html)
+        && /CTN, art\. 49 — conta gráfica/.test(html));
+    }
+
+    // ── achados 6 e 10 · limite próprio da exportação no ano anterior e motivo nomeado ──
+    { const cenF = vm.runInContext('calcCenariosReforma', ctx);
+      const mk = (int, exp) => { const a = nova('28282828000128');
+        a.cfg.rbt12Lanc = Array(12).fill(300000); a.cfg.rbt12ExpLanc = Array(12).fill(300000);
+        a.receitas.a1_semst = Array(12).fill(int/12);
+        a.receitas.a1_exp = Array(12).fill(exp/12);
+        a.folha.salarios = Array(12).fill(30000); return a; };
+      const mot = (int, exp) => (cenF(g.calcular(mk(int,exp), clone(AD), {...FD}), null)
+        .REF.find(x=>x.ano===2033)||{}).snMotivo || '';
+      chk('v7.80.0 · exportação acima do limite próprio exclui do regime (art. 3º, § 14)',
+        /receita de EXPORTAÇÃO do ano-base/.test(mot(3000000, 6000000)));
+      chk('v7.80.0 · e o documento diz que o mercado interno ficou dentro',
+        /o mercado interno ficou dentro/.test(mot(3000000, 6000000)));
+      chk('v7.80.0 · com os DOIS acima, os dois motivos são nomeados',
+        /DOIS limites ultrapassados/.test(mot(6000000, 6000000))
+        && /os limites são independentes/.test(mot(6000000, 6000000)));
+      chk('v7.80.0 · só o interno acima mantém o motivo antigo',
+        /receita interna do ano-base/.test(mot(6000000, 1000000))
+        && !/EXPORTAÇÃO/.test(mot(6000000, 1000000)));
+      chk('v7.80.0 · e existe campo próprio para a RBA de exportação do ano anterior',
+        /id="cf-rbaaexp"/.test(html) && /rbaaExp: vNum\('cf-rbaaexp'/.test(html));
+    }
+
+    // ── achado 5 · base da Reforma: selo e alerta dimensionado ──
+    chk('v7.80.0 · a base do IBS/CBS é rotulada AUTOMÁTICA ou MANUAL',
+      /Origem da base do IBS\/CBS \(v7\.80\.0\)/.test(html)
+      && /<b>AUTOMÁTICA<\/b>/.test(html) && /<b>MANUAL<\/b>/.test(html));
+    chk('v7.80.0 · e a divergência acima de 5% é tratada como grave',
+      /A divergência passa de 5%/.test(html)
+      && /toda a projeção 2027–2033 sai sobre uma base que não é a desta empresa/.test(html));
+
+    // ── achado 9 · Fator R na fronteira ──
+    chk('v7.80.0 · o Fator R colado no limite é exibido com 8 casas',
+      /_frPerto = Math\.abs\(_fr - \.28\) < 0\.000001/.test(html)
+      && /o fator está a menos de 0,0001 p\.p\. do limite/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
