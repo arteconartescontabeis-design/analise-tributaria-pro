@@ -10,6 +10,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
+/* v7.71.0 (achado 4.1) · a tabela da memória tem 3 colunas: rótulo, fórmula (larga) e resultado.
+   Sem largura fixa, um texto longo no resultado espremia a fórmula a poucos caracteres por linha
+   e multiplicava o documento por 8. As larguras passam a ser explícitas, e a fórmula pode quebrar
+   em qualquer ponto sem estourar. */
+table.cf-mem { table-layout: fixed; width: 100%; }
+table.cf-mem td:nth-child(1) { width: 24%; }
+table.cf-mem td:nth-child(2) { width: 54%; overflow-wrap: anywhere; }
+table.cf-mem td:nth-child(3) { width: 22%; text-align: right; overflow-wrap: anywhere; }
+
 :root{
   --primary:#1a5276; --primary-dark:#12405e; --primary-light:#2e86ab;
   --bg:#f4f6f8; --card:#ffffff; --border:#e3e8ee;
@@ -685,6 +694,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.72.0</b></td><td>31/08/2026</td><td><b>📐 Art. 24 · a parcela da receita que excede o limite do Simples deixa de acompanhar a alíquota do RBT12 real.</b> Ultrapassado o limite no ano, a parcela <b>excedente</b> é tributada pelos percentuais efetivos calculados com o <b>RBT12 travado no limite</b> — Res. CGSN 140/2018, art. 24, II, "a" — e o mês em que o limite é cruzado se <b>parte</b> na razão do § 4º: quanto da receita do mês ficou dentro e quanto excedeu. Até aqui o motor aplicava o RBT12 real ao mês inteiro, e a alíquota seguia subindo indefinidamente. Duas auditorias externas independentes mediram o mesmo efeito no mesmo cenário: <b>R$ 31,8 mil</b> de DAS a maior em três meses, com a alíquota do Anexo I chegando a 12,7264% em dezembro contra os 11,1250% do teto. <b>Onde a correção foi feita importa:</b> na própria função da alíquota efetiva, e não em cada bloco. Assim ST, monofásico, retenção e redução seguem removendo exatamente as parcelas que já removiam — agora sobre a alíquota correta — e nenhum tratamento precisou ser reescrito. <b>A memória mostra a partição</b>, porque sem ela o número deixa de ser reproduzível: a alíquota aplicada não é a do RBT12 real nem a do teto, é a mistura das duas, e o documento agora exibe a razão, o valor excedente e a conta. <b>Lacre <code>47f3f10b</code> ÍNTEGRO</b> e 754/754 gabaritos preservados — o rebaseline que eu havia previsto <b>não foi necessário</b>: nenhum caso-gabarito ultrapassa o limite, de modo que a regra nova não os alcança. O confronto com o verificador independente ganhou o caso do art. 24, com a regra <b>digitada da norma</b> daquele lado também: <b>1.364 conferências, 22 casos</b>. <b>Segue sem cálculo, declarado nas divergências:</b> a mesma partição no mês em que a receita cruza o <b>sublimite</b> de ICMS/ISS (art. 24, I, "b"), hoje tratado por mês inteiro — a diferença ali é pequena, mas é a mesma mecânica. Suíte: <b>609 verificações</b>.</td></tr>
+                    <tr><td><b>v7.71.0</b></td><td>31/08/2026</td><td><b>🎯 Teste 10, dois pareceres independentes: o teto de 5% do ISS não valia abaixo do sublimite, e a memória colapsava em 9 dos 12 meses.</b> <b>(1) Erro de regra — teto de 5% do ISS.</b> O ISS do Simples é limitado a 5% do preço do serviço (LC 123/2006, art. 18, § 16), com redistribuição aos demais tributos (§ 16-A). Retido pelo tomador, o que sai da guia é o ISS <b>devido</b> — a parcela já limitada —, não a parcela cheia da tabela. O motor aplicava o teto na trava e na recomposição do retido, mas <b>não</b> nos blocos com retenção: na 5ª faixa a parcela do Anexo III é 5,8359% e a do Anexo IV, 6,7056%, e a dedução cheia produzia <b>DAS a menor</b>. Corrigido nos três blocos (<code>a3_retiss</code>, <code>a3_retissinss</code>, <code>a4_retiss</code>) e na recomposição em qualquer faixa. Os valores batem <b>ao centavo</b> com a auditoria: R$ 2.012,23 e R$ 1.482,33 nos blocos, R$ 1.980,07 no ISS retido recomposto. Onde a parcela não passa de 5%, nada muda. <b>(2) A conferência era ilegível em 9 dos 12 meses</b> — 92 páginas, coluna de fórmula reduzida a três caracteres por linha. A causa foi isolada: a coluna <b>Resultado</b>, estreita e feita para valores, recebia desde a v7.67.0 um texto de 50 caracteres quando o Fator R ficava <b>abaixo</b> de 28% — o que explica por que exatamente os meses de Anexo V quebravam e os de Anexo III não. A explicação foi para a coluna da fórmula, que é larga; a tabela ganhou larguras fixas e o rótulo perdeu o <code>nowrap</code> que somava ao problema. <b>(3) Divergência vencida removida:</b> o papel de trabalho ainda dizia "Fator R sem o 13º salário e sem a contribuição do Anexo IV" — texto anterior à v7.64.0, contradito pelos próprios números do relatório, como o parecer demonstrou. <b>Conferidos e sem alteração:</b> <code>a1_red</code> e <code>a2_red</code> usam a <b>mesma</b> fórmula — a diferença observada veio dos dados (0% contra 100% de redução), não do motor; e a decomposição por tributo <b>inclui</b> o IPI e fecha com o DAS, inclusive com exportação, o que sugere leitura prejudicada pelo layout quebrado. <b>Fica aberto, e depende de decisão:</b> o art. 24, II, da Res. CGSN 140/2018 — parcela da receita que excede R$ 4,8 milhões tributada com RBT12 travado no limite, e a razão do § 4º repartindo o mês da ultrapassagem. Estimativa das duas auditorias: <b>R$ 31,8 mil</b> no cenário. É mudança de regra que <b>re-sela o lacre</b> e por isso não entra junto de outras. Lacre <code>47f3f10b</code> íntegro nesta versão; suíte com <b>599 verificações</b>; verificador independente ampliado com o caso de 5ª faixa com retenção.</td></tr>
                     <tr><td><b>v7.70.0</b></td><td>31/08/2026</td><td><b>📅 Campo novo: receita bruta do ano-calendário anterior (RBAA) — e o impedimento do art. 20, § 1º passa a ser CALCULADO.</b> Receita do ano-calendário anterior acima do sublimite impede o recolhimento de ICMS e ISS na guia <b>desde 1º/01</b> deste ano (LC 123/2006, art. 20, § 1º; Res. CGSN 140/2018, art. 12). O aplicativo detectava a hipótese e apenas <b>alertava</b> — três auditorias externas seguidas apontaram a lacuna. <b>Por que não bastava usar o que já existia:</b> os 12 meses da aba RBT12 são a <b>janela móvel</b> que forma o RBT12 do mês, e não o ano-calendário fechado. A v7.68.0 tentou inferir um do outro e foi revertida no mesmo dia: a inferência eliminava a <b>trava da 5ª faixa</b> justamente em quem cresceu no ano corrente — empresa cujo RBT12 móvel cruza o sublimite sem que o ano anterior tenha cruzado — e derrubou oito testes de regra já validados. Agora existe o dado. O campo fica na aba <b>RBT12</b>, ao lado do RBT12 direto, com a distinção escrita ali mesmo entre janela móvel e ano fechado, e um selo que diz de imediato se o valor informado está acima ou abaixo do sublimite. <b>Três estados, todos declarados:</b> em branco, nada muda e o aplicativo segue apenas alertando — dado ausente não vira estimativa, a mesma linha já adotada na RBT12 presumida e na CPP do Fator R; informado e <b>abaixo</b> do sublimite, o resultado é idêntico ao de antes, e o alerta some porque a dúvida foi respondida; informado e <b>acima</b>, a empresa é tratada como impedida desde janeiro — a trava da 5ª faixa deixa de existir e ICMS e ISS são apurados fora da guia, pelas alíquotas do Estado e do Município, com o crédito das compras, entrando no custo do regime em todos os cenários. O monitor de sublimite passou a usar o valor informado em vez da estimativa, e quem tem os 12 meses lançados acima do sublimite <b>sem</b> a RBAA preenchida recebe aviso nomeando o que falta e o que muda. Lacre <code>47f3f10b</code> íntegro — os casos-gabarito não têm o campo, e é isso que os mantém fora do alcance da regra. Suíte: <b>589 verificações</b>.</td></tr>
                     <tr><td><b>v7.69.0</b></td><td>31/08/2026</td><td><b>⚖️ Teste 8: o cenário híbrido omitia o ICMS/ISS do período de impedimento, e dois textos do papel de trabalho negavam o que o motor já faz.</b> <b>(1) Erro real de cálculo.</b> O auditor apontou que "por dentro" e "híbrido" divergiam em 2026 — ano em que nada migrou e os dois deveriam ser idênticos. A causa: o ICMS e o ISS apurados <b>fora da guia</b> no período de impedimento (v7.58.0) entravam no cenário "por dentro", porque saem do total do Simples, e o híbrido não os somava. São devidos em <b>qualquer</b> cenário que mantenha a empresa no Simples. Corrigido, a diferença de 2026 vai a zero — no caso reproduzido, exatamente os R$ 56.000,00 que o parecer isolou. <b>(2) O papel de trabalho negava o que o motor faz.</b> As divergências declaradas ainda traziam "<i>Impedimento não é modelado</i>", texto anterior à v7.58.0 — e foi ele que levou três pareceres seguidos a classificarem o ponto como crítico. Um documento que declara não fazer o que faz é tão enganoso quanto o contrário. O texto agora descreve o tratamento real e <b>nomeia as duas hipóteses que seguem sem cálculo, com o motivo</b>: o impedimento pela <b>RBAA</b> (falta o dado — o aplicativo guarda janela móvel, não o ano-calendário anterior) e o desdobramento do mês em que a RBA cruza o sublimite. <b>(3) ISS retido na base do IBS/CBS: parametrizado.</b> O parecer opôs à decisão 8.9 a leitura literal do art. 12, § 2º, V, da LC 214/2025 — o dispositivo fala do tributo <b>incidente na operação</b>, e o ISS retido incide, apenas com recolhimento pelo tomador. As duas leituras são defensáveis; o que não se pode é escolher em silêncio. A opção passa a ser <b>por empresa</b>, com o padrão preservando a decisão 8.9 — nenhuma análise existente muda um centavo — e o papel de trabalho declarando qual leitura está em uso. No cenário do parecer, ligar a opção reduz o débito de 2027 em <b>R$ 1.630,63</b>, o mesmo valor que ele estimou. <b>(4) IPI com linha própria</b> nas memórias mensais do Presumido e do Real: ele compunha o total sem aparecer, e tributo que entra no total sem linha não é auditável. Lacre <code>47f3f10b</code> íntegro; suíte com <b>579 verificações</b>; verificador independente sem divergência.</td></tr>
                     <tr><td><b>v7.68.0</b></td><td>31/08/2026</td><td><b>🌍 A exportação deixa de voltar à base do IBS/CBS pela receita da aba — e o impedimento pelo ano anterior foi TENTADO e REVERTIDO, pelo motivo que fica registrado.</b> <b>(1) Exportação.</b> O motor exclui a exportação desde a v7.24.0, mas a aba Reforma tem receita própria e ela prevalecia <b>sem conferência alguma</b>: análise preenchida com o total devolvia a exportação para dentro da base, em silêncio — efeito apontado por três auditorias seguidas. Agora o motor confere. A correção é <b>estreita de propósito</b>: só age quando o valor informado é, ao centavo, a receita <b>total</b> da análise e existe exportação no período; qualquer outro valor é respeitado, porque a aba existe justamente para os casos em que a base difere do que a análise apurou. A correção não é silenciosa — a aba avisa e o papel de trabalho declara os três números (informado, usado e exportação retirada). <b>(2) Cenários hipotéticos.</b> Ultrapassado o limite do Simples no ano-base, as colunas <b>Por dentro</b> e <b>Cenário híbrido</b> de 2027 em diante passam a trazer ressalva em vermelho: elas pressupõem uma permanência no regime que a empresa não terá (LC 123/2006, art. 3º, §§ 9º e 10), com a distinção do efeito conforme o excesso passe ou não de 20%. São comparação, não projeção. <b>(3) O impedimento pelo ano anterior NÃO foi implementado, e o motivo está no código.</b> A regra é clara: receita do ano-calendário anterior acima do sublimite impede o ICMS/ISS na guia desde 1º/01. Mas o aplicativo <b>não tem esse dado</b> — <code>rbt12Lanc</code> são os 12 meses anteriores em <b>janela móvel</b>, que só coincidem com o ano-calendário anterior em parte dos casos. Inferir a RBAA desse campo foi implementado, testado e <b>revertido</b>: elimina a trava da 5ª faixa exatamente nos cenários em que ela deve existir — empresa cujo RBT12 móvel cruza o sublimite sem que o ano anterior tenha cruzado — e derrubou <b>oito testes de regra já validados</b>. Fazer certo exige campo próprio de RBAA na Configuração, e enquanto ele não existir o aplicativo <b>avisa</b> a hipótese e não a calcula, que é a postura já adotada em outras regras sem dado suficiente. Lacre <code>47f3f10b</code> íntegro; verificador independente em 1.240 conferências sem divergência; suíte com <b>568 verificações</b>.</td></tr>
@@ -3157,7 +3168,31 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const fx = faixaDe(rbt12);
     const fxE = faixaDe(rbt12Exp);
     const efE = A => rbt12Exp>0 ? (rbt12Exp*A.aliq[fxE] - A.ded[fxE])/rbt12Exp : 0;
-    const ef = A => rbt12>0 ? (rbt12*A.aliq[fx] - A.ded[fx])/rbt12 : 0;
+
+    // ══ v7.72.0 · ART. 24 · PARCELA DA RECEITA QUE EXCEDE O LIMITE ═══════════════════════════
+    // Ultrapassado o limite do Simples no ano, a parcela EXCEDENTE não segue subindo de alíquota
+    // junto com o RBT12: ela é tributada pelos percentuais efetivos calculados com o RBT12
+    // TRAVADO NO LIMITE (Res. CGSN 140/2018, art. 24, II, "a"). Até aqui o motor aplicava o RBT12
+    // real ao mês inteiro, e a alíquota crescia indefinidamente — duas auditorias externas
+    // mediram, no mesmo cenário, R$ 31,8 mil de DAS a maior em três meses.
+    //
+    // O mês em que o limite é cruzado se PARTE (art. 24, § 4º): a razão entre a parcela excedente
+    // e a receita do mês diz quanto vai para cada percentual. Nos meses seguintes a razão é 1.
+    // A mistura é feita AQUI, na alíquota efetiva, e por isso vale para todos os blocos com os
+    // tratamentos que já têm — ST, monofásico, retenção e redução seguem removendo as mesmas
+    // parcelas, agora sobre a alíquota correta.
+    const _limSN = FAIXAS_LIM[5] * _propAtiv.fator;
+    const _accAnt = S(totalPrev);                 // receita interna dos meses anteriores do ano
+    const _recMes = totalRec(m);
+    const _rExc = (cfg.limiteExcedente === 'off' || _recMes <= 0.005) ? 0
+      : (_accAnt >= _limSN ? 1
+        : ((_accAnt + _recMes > _limSN) ? (_accAnt + _recMes - _limSN) / _recMes : 0));
+    const _fxLim = faixaDe(_limSN);
+    const efTeto = A => _limSN>0 ? (_limSN*A.aliq[_fxLim] - A.ded[_fxLim])/_limSN : 0;
+    const ef = A => {
+      const _real = rbt12>0 ? (rbt12*A.aliq[fx] - A.ded[fx])/rbt12 : 0;
+      return _rExc > 0 ? _real*(1-_rExc) + efTeto(A)*_rExc : _real;
+    };
     const A1=anexos.I, A2=anexos.II, A3=anexos.III, A4=anexos.IV, A5=anexos.V;
     // v7.58.0 (M2) · a partir do mês do impedimento a trava do sublimite deixa de existir: não há
     // mais ICMS/ISS parcial dentro da guia — eles saem INTEIROS do Simples. A trava é o mecanismo
@@ -3182,15 +3217,25 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       a2_comst: A2.icms[fx]>0 ? e2*(1-A2.icms[fx]) : e2,
       a2_comst_mono: (()=>{ const adj = A2.icms[fx]+A2.piscof[fx]; return adj>0 ? e2*(1-adj) : e2; })(),
       a3_semret: e3,
-      a3_retiss: A3.iss[fx]>0 ? e3*(1-A3.iss[fx]) : e3,
-      a3_retissinss: (()=>{ const adj = A3.iss[fx]+A3.cpp[fx]; return adj>0 ? e3*(1-adj) : e3; })(),
+      // ══ v7.71.0 (varredura do Teste 10, achado 3.2) · O TETO DE 5% DO ISS VALE EM TODA FAIXA ══
+      // O ISS do Simples é limitado a 5% do preço do serviço (LC 123/2006, art. 18, § 16), e a
+      // diferença é redistribuída aos demais tributos (§ 16-A). Retido o ISS pelo tomador, o que
+      // sai da guia é o ISS DEVIDO — isto é, a parcela já limitada —, não a parcela cheia da
+      // tabela. O motor aplicava o teto na trava e na recomposição do retido, mas NÃO aqui:
+      // deduzia a parcela cheia e produzia DAS a MENOR sempre que a parcela passasse de 5%.
+      // Na 5ª faixa do Anexo III a parcela é 5,8359% e no Anexo IV, 6,7056% — daí o efeito.
+      a3_retiss: A3.iss[fx]>0 ? e3 - Math.min(e3*A3.iss[fx], .05) : e3,
+      // v7.71.0 · o ISS entra capado; a CPP retida não tem teto e segue proporcional
+      a3_retissinss: (()=>{ const _iss = Math.min(e3*A3.iss[fx], .05);
+        const _cpp = e3*A3.cpp[fx];
+        return (A3.iss[fx]+A3.cpp[fx])>0 ? Math.max(0, e3 - _iss - _cpp) : e3; })(),
       a4: e4,
       // v7.50.0 · Anexo IV com ISS RETIDO pelo tomador: a parcela de ISS sai do DAS, simétrico ao
       // a3_retiss. É o anexo com a MAIOR parcela de ISS (44,5% na 1ª faixa, 40% nas demais, zerando
       // em 2033 pela Res. CGSN 190) e o setor em que a retenção é a regra — construção, limpeza,
       // conservação e vigilância. Não há variante "ISS e INSS retidos": o CPP do Anexo IV já fica
       // fora do DAS, então a retenção previdenciária não muda a guia (decisão 2.2).
-      a4_retiss: A4.iss[fx]>0 ? e4*(1-A4.iss[fx]) : e4,
+      a4_retiss: A4.iss[fx]>0 ? e4 - Math.min(e4*A4.iss[fx], .05) : e4,   // v7.71.0
       a5r: fatorR < .28 ? e5 : e3,
       comtransp: (A3.iss[fx]>0 ? e3*(1-A3.iss[fx]) : e3) + e1*A1.icms[fx],
       // v7.48.0 · transporte/comunicação com ICMS RETIDO por substituição: quem recolhe o ICMS é o
@@ -3358,14 +3403,16 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // ISS retido pela alíquota efetiva do Simples (LC 123, art. 21, §4º); acima do sublimite, pela trava.
     const _pIssRet = (rbt12 > subLim && (cfg.sublimite||'auto') !== 'off')
       ? Math.min(((rbt12*anexos.III.aliq[4]-anexos.III.ded[4])/rbt12)*((anexos.III.iss&&anexos.III.iss[4]!=null)?anexos.III.iss[4]:.335), .05)   // v7.36.0: RBT12 efetivo
-      : e3*((anexos.III.iss&&anexos.III.iss[fx]!=null)?anexos.III.iss[fx]:0);
+      // v7.71.0 · abaixo do sublimite o teto de 5% também vale (art. 18, § 16): o que o tomador
+      // retém é o ISS devido, e ele nunca passa de 5% do preço do serviço.
+      : Math.min(e3*((anexos.III.iss&&anexos.III.iss[fx]!=null)?anexos.III.iss[fx]:0), .05);
     // v7.50.0 (decisão 2.1) · a recomposição do ISS retido passa a usar a parcela do PRÓPRIO anexo.
     // Até aqui só o Anexo III tinha retenção, então a parcela do III servia para tudo; a do Anexo IV
     // tem alíquota efetiva e percentual de ISS próprios, então a do III daria outro valor.
     // LC 123, art. 21, §4º — o teto de 5% da trava vale igual.
     const _pIssRet4 = (rbt12 > subLim && (cfg.sublimite||'auto') !== 'off')
       ? Math.min(((rbt12*anexos.IV.aliq[4]-anexos.IV.ded[4])/rbt12)*((anexos.IV.iss&&anexos.IV.iss[4]!=null)?anexos.IV.iss[4]:.40), .05)
-      : e4*((anexos.IV.iss&&anexos.IV.iss[fx]!=null)?anexos.IV.iss[fx]:0);
+      : Math.min(e4*((anexos.IV.iss&&anexos.IV.iss[fx]!=null)?anexos.IV.iss[fx]:0), .05);   // v7.71.0
     const issRetido = (R.a3_retiss[m] + R.a3_retissinss[m]) * _pIssRet + R.a4_retiss[m] * _pIssRet4;
     const cppRetida = R.a3_retissinss[m] * e3 * (REPX.III.cpp[fx]||0);
 
@@ -3484,6 +3531,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       // v7.52.0 · rastro da proporcionalização, para a memória imprimir a conta e não só o resultado
       rbt12Prop: _prop, mesAtividade: _iniAbs===null ? null : _nAnt+1, nAntProp: _prop ? _nAnt : null,
       rbt12Presumido: _rbtPresum, rbt12PresumidoExp: _rbtPresumExp,   // v7.63.0 (A01)
+      excLimite: _rExc, excLimiteValor: _rExc>0 ? _recMes*_rExc : 0,   // v7.72.0 (art. 24)
+      limiteSN: _limSN, rbaAnterior: _accAnt,
       frCppParcial: _frCppParcial, frCppSomada: _frLegado ? 0 : S(cppPrev),   // v7.64.0
       frMesesHistorico: _mesesHist,
       // ── v7.60.0 (M4) · INSUMOS DO MÊS, DEVOLVIDOS PELO MOTOR ────────────────────────────────
@@ -5121,7 +5170,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.70.0';
+const APP_VERSAO = '7.72.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -9183,11 +9232,12 @@ async function parecerIA(){
 
 // ═══ Conferência de cálculos — memória (papel de trabalho interno) ═══
 const CF = {
-  lin: (rot, formula, valor) => `<tr><td class="rot" style="white-space:nowrap">${rot}</td>
+  // v7.71.0 · o nowrap somava-se ao texto longo do resultado para espremer a coluna da fórmula
+  lin: (rot, formula, valor) => `<tr><td class="rot">${rot}</td>
       <td style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#566573">${formula||''}</td>
       <td class="num"><b>${valor}</b></td></tr>`,
   tab: (titulo, linhas) => `<div style="margin:14px 0 6px;font-weight:700;color:#1a5276;font-size:13px">${titulo}</div>
-      <table class="gtable"><tbody>${linhas.join('')}</tbody></table>`,
+      <table class="gtable cf-mem"><tbody>${linhas.join('')}</tbody></table>`,
   pc: v => (v*100).toFixed(4).replace('.',',') + '%',
 };
 // ═══ v7.26.0: bloco "0. Dados de entrada" — os dados que originaram TODOS os cálculos ═══
@@ -9415,6 +9465,26 @@ function rlConferencia(){
         : '12 meses anteriores lançados + meses já decorridos do ano', fmtR(M.rbt12)));
     }
     L.push(CF.lin('Faixa', `RBT12 ${fmtR(M.rbt12)} → faixa da tabela`, M.faixa + 'ª'));
+    // v7.72.0 (art. 24) · a partição do mês precisa aparecer: sem ela o leitor não chega à
+    // alíquota usada, porque ela não é nem a do RBT12 real nem a do teto — é a mistura das duas.
+    if ((M.excLimite||0) > 0){
+      const _pcT = v => (v*100).toFixed(4).replace('.',',') + '%';
+      L.push(CF.lin('<b>Parcela excedente ao limite</b>',
+        (M.excLimite >= 1
+          ? `a receita dos meses anteriores (${fmtR(M.rbaAnterior||0)}) já supera o limite de `
+            + `${fmtR(M.limiteSN||0)} — <b>toda</b> a receita deste mês é parcela excedente`
+          : `${fmtR(M.rbaAnterior||0)} + ${fmtR(M.receita)} − limite ${fmtR(M.limiteSN||0)} `
+            + `= ${fmtR(M.excLimiteValor||0)}, sobre receita de ${fmtR(M.receita)}`)
+        + ` — Res. CGSN 140/2018, art. 24, § 4º`,
+        _pcT(M.excLimite)));
+      L.push(CF.lin('Alíquota da parcela excedente',
+        `calculada com o RBT12 <b>travado no limite</b> de ${fmtR(M.limiteSN||0)} (art. 24, II, "a") — `
+        + `a parcela excedente não acompanha a alíquota do RBT12 real`, 'ver abaixo'));
+      L.push(CF.lin('Alíquota aplicada no mês',
+        `mistura das duas: (1 − ${_pcT(M.excLimite)}) × alíquota do RBT12 real + `
+        + `${_pcT(M.excLimite)} × alíquota do teto — aplicada a cada bloco com o tratamento que ele já tem`,
+        ''));
+    }
     // v7.60.0 (M4) · a lista de blocos vem do MOTOR (M.ins), não é mais deduzida aqui.
     const blocos = (M.ins ? M.ins.blocos.map(b=>b.k) : Object.keys(M.efb).filter(k => (Dm.receitas[k]||[])[m] > 0));
     // ── v7.42.0 (ATP-705/706): o rótulo e a alíquota vêm do anexo REALMENTE usado no mês.
@@ -9438,14 +9508,22 @@ function rlConferencia(){
       // blocos do § 5º-B seguem no III — e o documento imprimia "Anexo III por lei", que o
       // leitor associa ao mês inteiro. Agora cada destino aparece com o seu bloco.
       const _temFR = blocos.includes('a5r') || blocos.includes('a5r_exp');
-      const _destino = _frOk ? (_porLei && _temFR ? 'Anexo III (ambos os blocos)' : 'Anexo III')
-        : (_porLei && _temFR ? 'Anexo V (bloco do Fator R) · Anexo III (blocos do § 5º-B)'
-           : _porLei ? 'Anexo III por lei' : 'Anexo V');
+      // v7.71.0 (varredura do Teste 10, achado 4.1) · O TEXTO LONGO IA PARA A COLUNA ERRADA.
+      // A coluna "Resultado" é estreita, para valores; recebendo 50 caracteres — 'Anexo V (bloco
+      // do Fator R) · Anexo III (blocos do § 5º-B)' — ela se alargava e espremia a coluna da
+      // fórmula a ~3 caracteres por linha, o que estourava a conferência para 8 páginas por mês.
+      // Batia exatamente nos meses de Fator R abaixo de 28%, que é quando esse texto existe.
+      // A explicação passa para a coluna da FÓRMULA, que é larga; o resultado fica curto.
+      const _destino = _frOk ? (_porLei && _temFR ? 'Anexo III' : 'Anexo III')
+        : (_porLei && _temFR ? 'Anexo V + III' : _porLei ? 'Anexo III' : 'Anexo V');
+      const _destinoTxt = _frOk
+        ? (_porLei && _temFR ? ' — o bloco do Fator R e os do § 5º-B ficam ambos no Anexo III' : '')
+        : (_porLei && _temFR ? ' — o bloco do Fator R vai para o <b>Anexo V</b>; os blocos do § 5º-B seguem no <b>Anexo III</b>, porque não dependem do fator' : '');
       // v7.67.0 · a fórmula exibida passa a nomear o FS12 como ele é calculado desde a v7.66.0
       L.push(CF.lin('Fator R (FS12 ÷ RBT12r)',
         `${CF.pc(_fr)} ${_frOk?'≥':'<'} 28% · FS12 = pró-labore + salários + FGTS + 13º pago + CPP efetivamente recolhida, `
         + `dos 12 meses anteriores (Res. CGSN 140/2018, art. 26, § 1º); RBT12r conjunta — mercado interno + externo (art. 26)`
-        + (_porLei && !_frOk ? ' — <b>os blocos do Anexo III por lei não dependem do fator R</b> (art. 18, § 5º-B, da LC 123)' : ''),
+        + _destinoTxt,
         _destino));
     }
     // v7.67.0 (parecer do Teste 7, achado 6) · A EXPORTAÇÃO PASSA A SER DEMONSTRADA BLOCO A BLOCO.
@@ -10123,7 +10201,7 @@ function rlConfDivergencias(){
       <li><b>Tema 69 (STF) aplicado por estimativa:</b> desde a v7.18.0 o ICMS <b>destacado</b> das saídas é excluído da base de PIS/COFINS no Presumido e no Real — estimado pelas alíquotas médias da configuração, não nota a nota.</li>
       <li><b>Lei nº 14.592/2023 aplicada por estimativa:</b> desde a v7.18.3 o ICMS das aquisições fica fora do crédito de PIS/COFINS no Lucro Real (compras líquidas do ICMS), estimado pelo % de ICMS de compras da configuração.</li>
       <li><b>Crédito de PIS/COFINS no Lucro Real por aproximação:</b> receita menos compras (líquidas do ICMS) e menos a base extra informada. Não distingue insumo de não insumo; energia, aluguel e depreciação dependem do campo próprio estar preenchido.</li>
-      <li><b>Fator R sem o 13º salário</b> e sem a contribuição do Anexo IV.</li>
+      <li><b>Fator R — o que entra no FS12 (v7.64.0, revisto na v7.66.0):</b> entram pró-labore, salários, FGTS, a <b>CPP efetivamente recolhida</b> (parcela do DAS, CPP retida pelo tomador e a contribuição própria do <b>Anexo IV</b>, que corre fora da guia) e o <b>13º pago</b>, na competência do pagamento. <b>Não</b> entra a provisão mensal de 13º: o art. 26, § 1º, da Res. CGSN 140/2018 soma o montante <b>pago</b>, e uma auditoria externa mostrou caso em que a provisão, sozinha, movia o fator de 27,92% para 28,07% e trocava o Anexo V pelo III. Havendo provisão lançada sem pagamento informado, o aplicativo avisa que o fator sai subestimado.</li>
       <li><b>RBT12 proporcionalizado (v7.52.0):</b> com menos de 12 meses de atividade a RBT12 é a média dos meses anteriores × 12 (Res. CGSN 140/2018, art. 22, §§ 2º e 3º), e não a soma dos meses existentes — a receita do mês apurado nunca entra. <b>Mês sem receita entra no divisor</b> da média, o que reduz a média e a faixa: é o tratamento mais defensável em fiscalização, e fica declarado por não ser o único possível. Sem a <b>data de início de atividade</b> preenchida na aba RBT12 o aplicativo não proporcionaliza — e, nesse caso, <b>não</b> levanta hipótese sobre a causa de divergência com o PGDAS-D: declara que não sabe.</li>
       <li><b>Limite e sublimite proporcionais (v7.55.0):</b> valem <b>apenas no ano-calendário de início</b> de atividade (LC 123/2006, art. 3º, §§ 2º e 3º), contada a fração de mês como mês inteiro. No ano seguinte o limite volta a ser integral, ainda que a empresa tenha menos de 12 meses de existência.</li>
       <li><b>ISS retido na dedução — opção da empresa (v7.69.0):</b> ${(RL?.dados?.cfg||{}).dedIssRetido
@@ -10158,6 +10236,9 @@ function rlConfDivergencias(){
       <li><b>Layout de NFS-e sem situação e sem retenção:</b> no layout simplificado <code>&lt;Notas&gt;&lt;xml&gt;</code> não há campo de cancelamento nem de ISS retido — nota cancelada não é detectável e nota com retenção pode cair no bloco errado. O importador <b>declara</b> isso no lote. E o valor chega sem separador decimal: enquanto não houver uma nota com centavos para fixar a regra, o registro carrega a ressalva em vez de o aplicativo decidir por 100×.</li>
       <li><b>Exportação da conferência em Excel (v7.55.0):</b> a pasta compõe em fórmula a <b>aritmética</b> das parcelas; ela <b>não</b> reimplementa regra tributária — isso criaria um segundo motor. As parcelas-folha vão como valor do motor, e a aba Conferência prova a identidade célula a célula. As células guardam precisão plena, enquanto os relatórios do aplicativo somam os valores já arredondados de cada mês (v7.42.1): pode haver diferença de centavos no total anual, e ela é de <b>método</b>, não de cálculo.</li>
       <li><b>Trava da 5ª faixa (v7.36.0):</b> quando o RBT12 supera R$ 3,6 milhões e <b>não há impedimento</b>, o ICMS/ISS é calculado pela fórmula do art. 21, III, "b", da Res. CGSN 140/2018, com o <b>RBT12 do próprio mês</b> — não pelo teto do sublimite, como fazia até a v7.35.0 — e integra o <b>DAS</b>. A planilha de referência não soma essa parcela; a diferença é proposital e o aplicativo é o correto.</li>
+      <li><b>Parcela excedente ao limite do Simples (v7.72.0):</b> ${(RL?.res?.meses||[]).some(M=>(M.excLimite||0)>0)
+        ? `neste ano a receita ultrapassou o limite, e a parcela excedente é tributada pelos percentuais efetivos calculados com o <b>RBT12 travado no limite</b> (Res. CGSN 140/2018, art. 24, II, "a"), não pela alíquota do RBT12 real — que continuaria subindo. O mês da ultrapassagem é <b>partido</b> na razão do § 4º e a memória mostra a conta. <b>Até a v7.71.0 o aplicativo aplicava o RBT12 real ao mês inteiro</b>, e duas auditorias externas independentes mediram o efeito no mesmo cenário: R$ 31,8 mil de DAS a maior em três meses.`
+        : 'não se aplica: a receita do ano não ultrapassou o limite do Simples. Quando ultrapassar, a parcela excedente passa a ser tributada com o RBT12 travado no limite (Res. CGSN 140/2018, art. 24, II, "a"), com o mês da ultrapassagem partido na razão do § 4º.'} <b>Segue sem cálculo</b>, e declarado: a mesma partição no mês em que a receita cruza o <b>sublimite</b> de ICMS/ISS (art. 24, I, "b") — ali o mês ainda é tratado por inteiro.</li>
       <li><b>Impedimento de ICMS/ISS (v7.58.0, atualizado na v7.69.0):</b> ultrapassada a RBA do ano em <b>mais de 20%</b> do sublimite, o aplicativo <b>calcula</b> o cenário a partir do mês seguinte — a alíquota efetiva perde as parcelas de ICMS e ISS, a trava da 5ª faixa deixa de existir e os dois tributos são apurados <b>fora da guia</b>, pelas alíquotas do Estado e do Município, com o crédito de ICMS das compras; entram no <b>custo do regime</b> em todos os cenários que mantenham a empresa no Simples, inclusive no híbrido. <b>Impedimento pelo ano anterior (v7.70.0):</b> ${(+(RL?.dados?.cfg||{}).rbaa || 0) > 0
         ? `a receita bruta do ano-calendário anterior está informada (${fmtR(+(RL?.dados?.cfg||{}).rbaa||0)}) e a regra do art. 20, § 1º, é <b>calculada</b>: acima do sublimite, ICMS e ISS ficam fora da guia desde 1º/01 e a trava da 5ª faixa não se aplica.`
         : 'a <b>receita bruta do ano-calendário anterior não foi informada</b> (campo na aba RBT12), então esse impedimento é apenas <b>alertado</b>, não calculado. Os 12 meses lançados são janela <b>móvel</b> e não substituem o ano fechado: inferir um do outro eliminaria a trava da 5ª faixa justamente em quem cresceu no ano corrente, e por isso o aplicativo não o faz.'} <b>Segue sem cálculo:</b> o <b>desdobramento do mês</b> em que a RBA cruza o sublimite, hoje tratado por mês inteiro — também alertado no monitor.</li>
