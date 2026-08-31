@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.79.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.79\.1';/.test(html) && html.includes('<b>v7.79.1</b>')
+    chk('v7.79.2 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.79\.2';/.test(html) && html.includes('<b>v7.79.2</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3816,6 +3816,44 @@ console.log('\n■ Integridade da interface');
       chk(`v7.79.1 · o relatório "${rot}" abre sem erro`, erro === null, erro || '');
       chk(`v7.79.1 · e produz conteúdo (${rot})`, corpo().length > 300,
         corpo().length + ' caracteres');
+    }
+
+    // ══ v7.79.2 · O TESTE QUE FALTOU NAS TRÊS VEZES ═══════════════════════════════════════
+    // Três relatos seguidos do mesmo problema — o relatório apontando o Simples para empresa
+    // que não pode optar — e as três correções foram pontuais: guardei a eleição do menor, a
+    // tabela da carteira, os cenários projetados... e sobrou o RANKING do comparativo, que
+    // ordenava a lista inteira e escrevia "1º Simples Nacional".
+    // A causa de eu não ver: todos os testes olhavam CÓDIGO. Este renderiza o relatório e LÊ O
+    // TEXTO — se a palavra "Simples" aparecer como 1º lugar ou como melhor, reprova.
+    {
+      const bi = vm.runInContext('anNovo', ctx)('23232323000123', 2026);
+      for (const k of Object.keys(bi.receitas)) bi.receitas[k] = z12();
+      bi.cfg.rbt12Lanc = Array(12).fill(500000);
+      bi.receitas.a1_semst = Array(12).fill(583333.33);     // 7,0 mi — inelegível
+      bi.folha.salarios = Array(12).fill(40000);
+      const rbi = g.calcular(clone(bi), clone(AD), {...FD});
+      ctx.__bi = bi; ctx.__rbi = rbi;
+      vm.runInContext('RL.dados = __bi; RL.res = __rbi; AN = __bi; AN._res = __rbi;', ctx);
+      chk('v7.79.2 · o cenário é o relatado: Simples seria o mais barato, mas é indisponível',
+        rbi.totais.simples < rbi.totais.lp && rbi.totais.simples < rbi.totais.lr
+        && vm.runInContext('snElegibilidade', ctx)(rbi, bi.cfg).estado === 'inelegivel');
+
+      for (const tipo of ['regimes','parecer']) {
+        ctx.document.getElementById('rl-tipo').value = tipo;
+        ctx.document.getElementById('rl-per').value = '12';
+        ctx.document.getElementById('rl-corpo').innerHTML = '';
+        let erro = null;
+        try { vm.runInContext('rlRender()', ctx); } catch(e){ erro = e.message; }
+        const txt = (ctx.document.getElementById('rl-corpo').innerHTML || '')
+          .replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+        chk(`v7.79.2 · "${tipo}" NÃO coloca o Simples em 1º lugar`,
+          erro === null && !/1º\s*(Simples|SN)/i.test(txt),
+          erro || (txt.match(/1º\s*\S+(\s+\S+)?/) || ['(sem ranking)'])[0]);
+        chk(`v7.79.2 · "${tipo}" avisa que o Simples está indisponível`,
+          /não pode optar pelo Simples|INDISPON|indisponível|não concorrem/i.test(txt));
+        chk(`v7.79.2 · e a recomendação é Presumido ou Real, nunca Simples`,
+          !/(melhor|menor carga|recomend\w*)[^.]{0,40}Simples Nacional/i.test(txt));
+      }
     }
 
     // e o caso que quebrou: empresa INELEGÍVEL, que percorre os ramos de bloqueio
