@@ -694,6 +694,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.81.0</b></td><td>31/08/2026</td><td><b>🎯 As cinco prioridades do parecer final — o que separava 9,4 de 10.</b> <b>(1) A memória da Reforma dizia uma fórmula que não era a usada.</b> O texto afirmava, sempre, que a base é "receita interna menos as reduções" — mas, havendo valor informado na aba, a base é o que foi <b>digitado</b>, e a subtração descrita levaria a outro número. A auditoria flagrou: base manual de R$ 7.177.095,20 sobre receita apurada de R$ 6.480.000,01, com a fórmula fazendo parecer que uma decorria da outra. Agora as <b>três bases são exibidas separadas</b> — apurada, informada e efetivamente utilizada — com a diferença em reais e em percentual, e a frase explícita de que a base utilizada <b>não decorre</b> daquela subtração. <b>(2) Alerta virou confirmação.</b> Divergindo mais de 5% da receita apurada, o aplicativo <b>pergunta antes de emitir</b> o parecer, dizendo que toda a projeção 2027–2033 sairá sobre o valor informado. Recusando, a emissão é <b>cancelada</b> com orientação para corrigir. Dentro da tolerância, nada muda no fluxo. <b>(3) O campo de RBA de exportação do ano anterior estava criado e não era usado.</b> A v7.80.0 acrescentou o campo e calculou as variáveis — e não as ligou a nada. Agora a receita de <b>exportação</b> do ano-calendário anterior acima do limite exclui do regime tanto quanto a interna, porque os limites são <b>independentes</b> (LC 123/2006, art. 3º, II e § 14). No cenário do teste, interno em R$ 4.799.999,99 <b>não</b> exclui e exportação em R$ 4.800.000,01 <b>exclui</b> — um centavo decide, e a suíte guarda os dois lados. <b>(4) O motivo da exclusão passa a ser nomeado</b> no papel de trabalho, em três estados: dado não informado (e então o documento <b>não afirma</b> elegibilidade), informado e dentro dos limites, ou excluída — dizendo qual limite caiu, ou se foram os dois. Quando só a exportação excede, o texto registra que o limite interno é independente e foi respeitado. <b>(5) Mantidos como regressão obrigatória</b>, conforme pedido: a conta gráfica do IPI e os testes de precisão por centavos do sublimite, do limite e da regra dos 20%. Motor tocado apenas no cálculo da exclusão pelo ano anterior; lacre <code>2e1139e9</code> íntegro (os casos-gabarito não informam RBA anterior). Suíte: <b>734 verificações</b>.</td></tr>
                     <tr><td><b>v7.80.0</b></td><td>31/08/2026</td><td><b>🧨 Teste 16 (estresse por centavos): o IPI virou conta gráfica, a exportação ganhou limite próprio no ano anterior e a base da Reforma passou a se identificar.</b> <b>(1) IPI negativo — crítico.</b> Quando o crédito superava o débito, o confronto devolvia valor <b>negativo</b> e ele <b>reduzia a carga</b> do período, como se o Fisco devolvesse dinheiro no mês. O IPI é conta gráfica: o excesso vira <b>saldo credor</b> e abate o débito dos meses seguintes (CTN, art. 49). A auditoria mediu R$ 25.470,33 de "IPI negativo" no ano, subestimando o Presumido e o Real na mesma medida. Agora a estrutura é a mesma que o PIS/COFINS já usava desde a v7.20.0 — débito, crédito, saldo anterior, valor a pagar e saldo a transportar —, e a memória demonstra as cinco linhas. <b>O saldo acumula enquanto o crédito superar o débito e é consumido quando ele cresce</b>, o que a suíte verifica nos dois sentidos. <b>(2) Limite próprio da exportação.</b> O mercado externo tem limite <b>independente</b> de igual valor (LC 123/2006, art. 3º, § 14): ultrapassar qualquer um dos dois exclui do regime. O cenário do teste foi construído com a exportação <b>um centavo</b> acima, e o documento só falava do mercado interno. Entrou o campo <b>RBA de exportação do ano anterior</b>, ao lado do que a v7.70.0 criou para o interno, e o motivo da exclusão passa a nomear qual limite foi rompido — interno, externo, ou <b>os dois</b>, dizendo que são independentes. <b>(3) Base da Reforma: AUTOMÁTICA ou MANUAL.</b> O teste rodou com base manual de <b>outro</b> cenário — R$ 697.095,19 acima da receita apurada — e o alerta discreto não impediu que os números fossem lidos como do caso analisado. O papel de trabalho agora <b>rotula a origem</b> da base, e a divergência é <b>dimensionada</b>: acima de 5% o alerta fica vermelho e diz que toda a projeção 2027–2033 sai sobre uma base que não é a da empresa. <b>(4) Fator R na fronteira.</b> Com o indicador a menos de 0,0001 ponto do limite, duas casas faziam a memória parecer contradizer-se — "28,0000% &lt; 28%". Perto da fronteira o documento passa a mostrar <b>8 casas</b>, que é onde a decisão de anexo realmente se define. <b>Aprovados no estresse, sem alteração:</b> sublimite e limite testados <b>por centavos</b>, a regra dos 20%, a separação das exportações, o Fator R e o transporte do saldo de PIS/COFINS. Lacre <code>2e1139e9</code> íntegro — o caso 3 tem IPI, mas com débito maior que crédito, e a correção só age quando o crédito excede. Suíte: <b>721 verificações</b>.</td></tr>
                     <tr><td><b>v7.79.4</b></td><td>31/08/2026</td><td><b>🔍 Varredura completa do Comparativo de Regimes — cartões, gráfico e um terceiro quadro de 2033 que nunca tinha sido tocado.</b> <b>O que ainda apontava o Simples:</b> os <b>cartões do topo</b> — a primeira coisa que se lê — mostravam "Simples Nacional R$ 1.346.505,81" à esquerda, com o menor valor e <b>sem marca nenhuma</b>; o <b>gráfico</b> de cenários pintava a barra do Simples na cor normal, e ela é a menor de todas; e havia um <b>terceiro bloco de cartões de 2033</b>, dentro do próprio comparativo, que descrevia os cenários do Simples como opções válidas. Três lugares diferentes, nenhum deles alcançado pelas correções anteriores. <b>Por que cinco rodadas:</b> a cada relato eu corrigia o ponto que conseguia enxergar — a eleição do menor, a carteira, o ranking, o campo gravado. Todos eram reais e todos estavam certos; faltava sempre outro. O erro de método foi olhar <b>um elemento por vez</b> em vez de gerar o relatório e varrer <b>tudo o que ele mostra</b>. <b>Agora:</b> cartão indisponível fica esmaecido, com borda tracejada, valor riscado, ⛔ no título e o subtítulo <b>INDISPONÍVEL — referência apenas</b>; a barra do gráfico vira <b>cinza</b> e o rótulo ganha a marca; e o quadro de 2033 acompanha. Nada é omitido — os valores seguem à vista como referência —, mas nenhum deles se apresenta como escolha. <b>O teste desta versão varre o relatório inteiro:</b> renderiza o comparativo com empresa de R$ 7 milhões e percorre <b>todos</b> os cartões, <b>todas</b> as barras do gráfico e o texto — se qualquer cenário do Simples aparecer sem a marca, ou destacado como melhor, reprova. Ele mesmo teve de ser corrigido duas vezes no caminho: "Fora do Simples" contém a palavra mas é cenário válido, e o regex que extraía os cartões cortava antes do subtítulo. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro; suíte com <b>708 verificações</b>.</td></tr>
                     <tr><td><b>v7.79.3</b></td><td>31/08/2026</td><td><b>🎯 Quarta ocorrência do mesmo problema — e desta vez a causa explica as três anteriores.</b> O painel da carteira decidia a elegibilidade lendo <code>resumo.snElegivel</code>, campo que só passou a ser gravado na <b>v7.77.0</b> — e tratava a <b>ausência</b> como "elegível". Toda análise salva <b>antes</b> daquela versão continuava concorrendo com o Simples e aparecendo como melhor regime, por mais que a empresa estivesse acima do limite. <b>É por isso que o problema sobreviveu a três correções:</b> eu conferia com análises recalculadas na hora, que trazem o campo; você via as análises <b>já gravadas</b>, que não trazem. As três correções funcionavam — só não alcançavam o que estava no banco. A decisão passa a sair da <b>receita gravada no resumo</b>, que toda análise tem desde sempre: acima do limite, não há como estar elegível, e o campo entra apenas como reforço quando existe. Nenhuma análise precisa ser recalculada. <b>Detalhe do método que também mudou:</b> o teste novo, na primeira versão, <b>abortava a suíte inteira</b> quando a função não existia — e um teste que derruba o processo esconde os outros 697 resultados. Passou a reprovar com mensagem. Verificado contra a v7.79.2: acusa a falta com o texto <i>"snElegivelResumo não encontrada — o painel volta a depender do campo gravado"</i>. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro; suíte com <b>698 verificações</b>.</td></tr>
@@ -3082,8 +3083,29 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   // tanto em exportação. Ultrapassar QUALQUER um deles no ano anterior tira a empresa do regime,
   // e o cenário do Teste 16 foi construído justamente com a exportação um centavo acima.
   const _rbaaExpInf = +cfg.rbaaExp || 0;
+  // v7.81.0 (parecer final, prioridade 3) · a RBA de exportação do ano anterior também decide.
+  // A v7.80.0 criou o campo e calculou estas duas variáveis, mas NÃO as ligou a nada — o dado
+  // existia e não era usado. Ultrapassado o limite do mercado externo no ano anterior, a empresa
+  // está fora do regime neste exercício tanto quanto se fosse o interno (LC 123/2006, art. 3º,
+  // II e § 14, com os §§ 9º e 9º-A definindo quando o efeito começa).
   const _excluiAnoAntExp = _rbaaExpInf > FAIXAS_LIM[5] * _propAtiv.fator;
   const _excluiAnoAntInt = _rbaaInf > FAIXAS_LIM[5] * _propAtiv.fator;
+  out.exclusaoAnoAnterior = (_excluiAnoAntInt || _excluiAnoAntExp)
+    ? { interno: _excluiAnoAntInt, exportacao: _excluiAnoAntExp,
+        rbaa: _rbaaInf, rbaaExp: _rbaaExpInf, limite: FAIXAS_LIM[5] * _propAtiv.fator,
+        motivo: (_excluiAnoAntInt && _excluiAnoAntExp)
+          ? 'a receita do ano-calendário anterior superou os DOIS limites — mercado interno '
+            + fmt(_rbaaInf) + ' e exportação ' + fmt(_rbaaExpInf) + ', ambos acima de '
+            + fmt(FAIXAS_LIM[5] * _propAtiv.fator) + ' (LC 123/2006, art. 3º, II e § 14)'
+          : _excluiAnoAntExp
+            ? 'a receita de EXPORTAÇÃO do ano-calendário anterior (' + fmt(_rbaaExpInf)
+              + ') superou o limite próprio do mercado externo de '
+              + fmt(FAIXAS_LIM[5] * _propAtiv.fator) + ' (LC 123/2006, art. 3º, § 14) — '
+              + 'o limite do mercado interno é independente e foi respeitado'
+            : 'a receita interna do ano-calendário anterior (' + fmt(_rbaaInf)
+              + ') superou o limite de ' + fmt(FAIXAS_LIM[5] * _propAtiv.fator)
+              + ' (LC 123/2006, art. 3º, II)' }
+    : null;
   const _impedDesde = (()=>{
     if ((cfg.sublimite||'auto') === 'off') return -1;
     if (_impedAnoAnt) return 0;      // impedida desde janeiro, pela receita do ano anterior
@@ -5288,7 +5310,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.80.0';
+const APP_VERSAO = '7.81.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -8693,6 +8715,30 @@ function parecerTextosPadrao(D){
   return b;
 }
 
+// ══ v7.81.0 (parecer final, prioridade 2) · BASE MANUAL DIVERGENTE PEDE CONFIRMAÇÃO ═══════
+// Alerta na tela não impediu que uma projeção saísse sobre base de outro cenário. Divergindo
+// mais de 5% da receita apurada, o aplicativo passa a PERGUNTAR antes de emitir o parecer — uma
+// vez por análise, e a resposta fica registrada no documento.
+let _baseManualOk = null;
+function rfConfirmarBaseManual(){
+  const T = (RL && RL.res && RL.res.totais) || null;
+  const rf = (RL && RL.dados && RL.dados.reforma) || null;
+  if (!T || !rf) return true;
+  const apurada = Math.max(0, (+T.receita||0) - (+T.receitaExp||0));
+  const naAba = +rf.receita || 0;
+  if (!(naAba > 0) || apurada <= 0) return true;
+  const dif = Math.abs(naAba - apurada);
+  if (dif / apurada <= 0.05) return true;                  // dentro da tolerância: segue
+  const chave = (RL.cnpj||'') + '|' + (RL.ano||'') + '|' + naAba.toFixed(2);
+  if (_baseManualOk === chave) return true;                // já confirmado nesta análise
+  const ok = confirm('A base da Reforma informada na aba (' + fmt(naAba) + ') difere da receita '
+    + 'interna apurada nesta análise (' + fmt(apurada) + ') em ' + fmt(dif) + ' ('
+    + (dif/apurada*100).toFixed(2).replace('.',',') + '%).\n\n'
+    + 'Toda a projeção de 2027 a 2033 será calculada sobre o valor informado, não sobre o apurado.\n\n'
+    + 'Confirma que a base informada é a correta para esta empresa?');
+  if (ok) _baseManualOk = chave;
+  return ok;
+}
 function rlParecer(){
   const D = parecerDados();
   const TX = Object.assign(parecerTextosPadrao(D), (RL._ia && RL._ia.textos) || {});
@@ -10418,8 +10464,33 @@ function rlConfReforma(Rdoc){
           (9,11% = referência menos 0,1 p.p., LC 214 art. 347) enquanto o IBS segue nos 0,1% de teste; é o ano em que
           <b>PIS e COFINS desaparecem e ICMS e ISS continuam</b>. De <b>2029 a 2032</b> o IBS sobe em degraus de 10%
           ao ano e ICMS/ISS caem na mesma medida. Em <b>2033</b> o IBS chega a 18,70% e os tributos antigos zeram.
-          <br><b>Base tributável</b> = receita interna menos as reduções por cClassTrib; a exportação é imune
-          (LC 214, art. 8º) mas <b>mantém o crédito</b> das aquisições.
+          <br>${(() => {
+            // ══ v7.81.0 (parecer final, prioridade 1) · A FÓRMULA NÃO PODE MENTIR SOBRE A ORIGEM ══
+            // O texto afirmava SEMPRE que a base é "receita interna menos reduções". Havendo valor
+            // informado na aba Reforma isso é FALSO: a base é o que foi digitado, e a subtração
+            // descrita levaria a outro número. A auditoria mostrou o caso — base manual de
+            // R$ 7.177.095,20 sobre receita apurada de R$ 6.480.000,01 — e observou que a fórmula
+            // fazia parecer que um decorria do outro. As três bases passam a ser separadas.
+            const _Tb = (RL && RL.res && RL.res.totais) || {};
+            const _apurada = Math.max(0, (+_Tb.receita||0) - (+_Tb.receitaExp||0));
+            const _naAba = +(((RL && RL.dados && RL.dados.reforma) || {}).receita) || 0;
+            const _usada = +((C.rfx||{}).receita) || _apurada;
+            const _manual = _naAba > 0 && Math.abs(_naAba - _apurada) > 0.02;
+            if (!_manual)
+              return `<b>Base tributável</b> = receita interna menos as reduções por cClassTrib; a `
+                + `exportação é imune (LC 214, art. 8º) mas <b>mantém o crédito</b> das aquisições. `
+                + `<b>Origem: AUTOMÁTICA</b> — apurada nesta análise (${fmtR(_apurada)}).`;
+            return `<b style="color:var(--danger,#943126)">⛔ BASE MANUAL — três valores distintos:</b>`
+              + `<br>&nbsp;&nbsp;• <b>Base apurada nesta análise</b> (receita interna): ${fmtR(_apurada)}`
+              + `<br>&nbsp;&nbsp;• <b>Base informada na aba Reforma</b>: ${fmtR(_naAba)}`
+              + `<br>&nbsp;&nbsp;• <b>Base utilizada nos quadros acima</b>: ${fmtR(_usada)}`
+              + `<br>A base utilizada <b>não decorre</b> de "receita total menos exportações" — esse `
+              + `cálculo resultaria em ${fmtR(_apurada)}. Ela foi <b>digitada</b> na aba Reforma. `
+              + `Diferença: <b>${fmtR(Math.abs(_naAba - _apurada))}</b>`
+              + (_apurada > 0 ? ` (${(Math.abs(_naAba-_apurada)/_apurada*100).toFixed(2).replace('.',',')}%)` : '')
+              + `. As reduções por cClassTrib e a imunidade da exportação (LC 214, art. 8º, com `
+              + `crédito mantido) aplicam-se sobre a base utilizada.`;
+          })()}
           ${C.semCreditos ? '<br><b>Nesta análise o crédito é zero</b>, então líquido e débito coincidem — o rateio por ente é o do débito.' : ''}
         </div></div>`; })()}
       ${(()=>{ const cs = +(C.rfx?.contra?.compras_simples||0); if (!(cs>0.005) && !C.proxyCompras) return '';
@@ -10594,6 +10665,20 @@ function rlConfDivergencias(){
       <li><b>Layout de NFS-e sem situação e sem retenção:</b> no layout simplificado <code>&lt;Notas&gt;&lt;xml&gt;</code> não há campo de cancelamento nem de ISS retido — nota cancelada não é detectável e nota com retenção pode cair no bloco errado. O importador <b>declara</b> isso no lote. E o valor chega sem separador decimal: enquanto não houver uma nota com centavos para fixar a regra, o registro carrega a ressalva em vez de o aplicativo decidir por 100×.</li>
       <li><b>Exportação da conferência em Excel (v7.55.0):</b> a pasta compõe em fórmula a <b>aritmética</b> das parcelas; ela <b>não</b> reimplementa regra tributária — isso criaria um segundo motor. As parcelas-folha vão como valor do motor, e a aba Conferência prova a identidade célula a célula. As células guardam precisão plena, enquanto os relatórios do aplicativo somam os valores já arredondados de cada mês (v7.42.1): pode haver diferença de centavos no total anual, e ela é de <b>método</b>, não de cálculo.</li>
       <li><b>Trava da 5ª faixa (v7.36.0):</b> quando o RBT12 supera R$ 3,6 milhões e <b>não há impedimento</b>, o ICMS/ISS é calculado pela fórmula do art. 21, III, "b", da Res. CGSN 140/2018, com o <b>RBT12 do próprio mês</b> — não pelo teto do sublimite, como fazia até a v7.35.0 — e integra o <b>DAS</b>. A planilha de referência não soma essa parcela; a diferença é proposital e o aplicativo é o correto.</li>
+      <li><b>Exclusão pelo ano-calendário anterior (v7.81.0):</b> ${(() => {
+        const _ex = RL?.res?.exclusaoAnoAnterior;
+        const _c = RL?.dados?.cfg || {};
+        if (_ex) return `<b style="color:var(--danger,#943126)">A empresa está EXCLUÍDA do Simples neste exercício:</b> ${esc(_ex.motivo)}. `
+          + `Os cenários do regime nos quadros seguintes são <b>referência</b>, não opção.`;
+        if ((+_c.rbaa > 0) || (+_c.rbaaExp > 0))
+          return `informada — mercado interno ${fmtR(+_c.rbaa||0)} e exportação ${fmtR(+_c.rbaaExp||0)}, `
+            + `ambos dentro do limite de ${fmtR(4800000)}. Os dois limites são <b>independentes</b> `
+            + `(LC 123/2006, art. 3º, II e § 14) e nenhum foi ultrapassado.`;
+        return `<b>não informada</b>. Os campos <b>RBA do ano anterior — mercado interno</b> e `
+          + `<b>— exportação</b> estão na aba RBT12 e são o que permite concluir sobre a permanência `
+          + `no regime: os 12 meses lançados são <b>janela móvel</b> e não substituem o ano-calendário `
+          + `fechado. Sem eles, esta análise <b>não afirma</b> que a empresa era elegível no exercício.`;
+      })()}</li>
       <li><b>Elegibilidade ao Simples nos anos projetados (v7.75.0):</b> ${(() => {
         const _T = RL?.res?.totais; if (!_T) return 'não avaliada.';
         const _recI = Math.max(0, (_T.receita||0) - (_T.receitaExp||0));
@@ -10731,7 +10816,7 @@ function rlRender() {
   $id('rl-titulo').textContent = ({regimes:'Comparativo de Regimes Tributários', consolidado:'Consolidado Analítico — Simples · Presumido · Real · Reforma', registros:'Detalhamento dos Registros', reforma:'Reforma Tributária — Transição 2026–2033', parecer:'Parecer — Estudo de Impacto da Reforma Tributária', conferencia:'Conferência de Cálculos — Memória (documento interno)'})[tipo];
   $id('rl-sub').innerHTML = `<b>${emp?.razao_social||''}</b> · CNPJ ${fmtCNPJ(RL.dados.cnpj)} · Ano-base ${RL.dados.ano} · Periodicidade: ${$id('rl-per').selectedOptions[0].text} · Artecon Artes Contábeis`;
   if (tipo==='conferencia'){ $id('rl-corpo').innerHTML = rlAvisoDefasado() + rlConferencia(); return; }
-  if (tipo==='regimes') rlRegimes(rot,n); else if (tipo==='consolidado') rlConsolidado(rot,n); else if (tipo==='registros') rlRegistros(rot,n); else if (tipo==='parecer') rlParecer(); else rlReforma();
+  if (tipo==='regimes') rlRegimes(rot,n); else if (tipo==='consolidado') rlConsolidado(rot,n); else if (tipo==='registros') rlRegistros(rot,n); else if (tipo==='parecer') { if (rfConfirmarBaseManual()) rlParecer(); else { $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Emissão cancelada</h2><p>A base da Reforma informada na aba diverge da receita apurada. Corrija o valor (ou clique em <b>Preencher da análise</b>) e gere o parecer novamente.</p></div>'; } } else rlReforma();
 }
 
 function rlRegimes(rot, n) {
