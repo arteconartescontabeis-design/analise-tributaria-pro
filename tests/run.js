@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.79.2 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.79\.2';/.test(html) && html.includes('<b>v7.79.2</b>')
+    chk('v7.79.3 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.79\.3';/.test(html) && html.includes('<b>v7.79.3</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3872,6 +3872,42 @@ console.log('\n■ Integridade da interface');
       try { vm.runInContext('rlRender()', ctx); } catch(e){ erro = e.message; }
       chk(`v7.79.1 · "${tipo}" abre também com empresa INELEGÍVEL (ramo do bloqueio)`,
         erro === null && corpo().length > 300, erro || corpo().length + ' caracteres');
+    }
+  }
+
+  // ═══ 6o. v7.79.3 · CARTEIRA — ANÁLISE ANTIGA TAMBÉM PRECISA SER BARRADA ═══
+  // Quarta ocorrência do mesmo relato. As três correções anteriores funcionavam para análises
+  // RECALCULADAS, porque dependiam do campo `snElegivel`, gravado só a partir da v7.77.0 — e a
+  // ausência era tratada como "elegível". O usuário via as análises antigas; eu testava com as
+  // novas. A decisão passa a sair da RECEITA gravada, que toda análise tem.
+  {
+    console.log('\n■ v7.79.3 — elegibilidade na carteira, inclusive em análise antiga');
+    // v7.79.3 · buscar a função direto aborta a suíte inteira quando ela não existe, e um teste
+    // que derruba o processo esconde todos os outros resultados. Reprova com mensagem, não morre.
+    const f = vm.runInContext("typeof snElegivelResumo === 'function' ? snElegivelResumo : null", ctx);
+    chk('v7.79.3 · o helper de elegibilidade da carteira existe', !!f,
+      f ? '' : 'snElegivelResumo não encontrada — o painel volta a depender do campo gravado');
+    if (f) {
+    chk('v7.79.3 · análise ANTIGA (sem o campo) com 7 mi é barrada pela receita',
+      f({ receita: 7000000, simples: 1346505.82, lp: 1393700.79, lr: 3213860.11 }) === false);
+    chk('v7.79.3 · análise antiga dentro do limite segue elegível',
+      f({ receita: 3000000, simples: 1, lp: 2, lr: 3 }) === true);
+    chk('v7.79.3 · o campo gravado ainda é respeitado quando existe',
+      f({ receita: 3000000, snElegivel: false }) === false);
+    chk('v7.79.3 · resumo ausente ou vazio não quebra o painel',
+      f(null) === true && f({}) === true);
+    chk('v7.79.3 · e os dois pontos do painel usam o mesmo helper',
+      (html.match(/snElegivelResumo\(r\)/g) || []).length >= 2
+      && !/r\.snElegivel\s*!==\s*false/.test(html.replace(/return r\.snElegivel !== false;/, '')));
+
+    // o efeito prático: com 7 mi, a coluna "melhor" da carteira não pode dizer Simples
+    const rAnt = { receita: 7000000, simples: 1346505.82, lp: 1393700.79, lr: 3213860.11 };
+    const okAnt = f(rAnt);
+    const cands = okAnt ? [rAnt.simples, rAnt.lp, rAnt.lr] : [rAnt.lp, rAnt.lr];
+    const melhor = Math.min(...cands) === rAnt.simples ? 'Simples'
+      : Math.min(...cands) === rAnt.lp ? 'Presumido' : 'Real';
+    chk('v7.79.3 · com análise antiga de 7 mi, o melhor regime da carteira é Presumido',
+      melhor === 'Presumido', 'apontado: ' + melhor);
     }
   }
 
