@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.79.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.79\.0';/.test(html) && html.includes('<b>v7.79.0</b>')
+    chk('v7.79.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.79\.1';/.test(html) && html.includes('<b>v7.79.1</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3776,6 +3776,65 @@ console.log('\n■ Integridade da interface');
       && /\['compras\.baixaComstMono','Baixa — com ST e monofásica'\]/.test(html));
     chk('v7.79.0 · e a trava do sublimite já aparece com sinal (v7.76.0)',
       /\(\+\) ICMS\/ISS da trava do sublimite/.test(html));
+  }
+
+  // ═══ 6n. v7.79.1 · FUMAÇA: TODO RELATÓRIO TEM DE ABRIR ═══
+  // A v7.79.0 saiu com o Comparativo de Regimes quebrado por uma variável renomeada pela metade
+  // (_snVale onde o escopo tinha _snVale2). A suíte tinha 674 verificações e NENHUMA abria um
+  // relatório: todas liam o código-fonte ou chamavam o motor. Erro de referência não aparece na
+  // leitura do texto nem no cálculo — só quando a função roda.
+  // Estes testes RENDERIZAM cada tipo de relatório pelo caminho real (rlRender) e exigem saída.
+  {
+    console.log('\n■ v7.79.1 — fumaça dos relatórios (cada um tem de abrir)');
+    const z12 = () => Array(12).fill(0);
+    const a = vm.runInContext('anNovo', ctx)('21212121000121', 2026);
+    for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+    a.cfg.rbt12Lanc = Array(12).fill(300000); a.cfg.iss = .05;
+    a.cfg.icmsV = .17; a.cfg.icmsC = .12;
+    a.receitas.a1_semst = Array(12).fill(250000);
+    a.receitas.a3_semret = Array(12).fill(80000);
+    a.receitas.a3_retiss = Array(12).fill(20000);
+    a.folha.salarios = Array(12).fill(30000); a.folha.baseFgts = Array(12).fill(30000);
+    a.compras.semst = Array(12).fill(120000); a.compras.baixaSemst = Array(12).fill(110000);
+    const r = g.calcular(clone(a), clone(AD), {...FD});
+    ctx.__sa = a; ctx.__sr = r;
+    vm.runInContext(`RL = { cnpj:"21212121000121", ano:2026, dados:__sa, res:__sr,
+        empresa:{ razao_social:"EMPRESA DE FUMAÇA LTDA" } };
+      AN = __sa; AN._res = __sr;
+      rlConfProj = () => null;
+      Chart = function(){ return { destroy(){}, update(){} }; };
+      rlChart = () => null;`, ctx);
+
+    const corpo = () => (ctx.document.getElementById('rl-corpo').innerHTML || '');
+    for (const [tipo, rot] of [['regimes','Comparativo de Regimes'], ['reforma','Reforma Tributária'],
+                               ['conferencia','Conferência de cálculos'], ['parecer','Parecer com IA']]) {
+      ctx.document.getElementById('rl-tipo').value = tipo;
+      ctx.document.getElementById('rl-per').value = '1';
+      ctx.document.getElementById('rl-corpo').innerHTML = '';
+      let erro = null;
+      try { vm.runInContext('rlRender()', ctx); } catch(e){ erro = e.message; }
+      chk(`v7.79.1 · o relatório "${rot}" abre sem erro`, erro === null, erro || '');
+      chk(`v7.79.1 · e produz conteúdo (${rot})`, corpo().length > 300,
+        corpo().length + ' caracteres');
+    }
+
+    // e o caso que quebrou: empresa INELEGÍVEL, que percorre os ramos de bloqueio
+    const b = vm.runInContext('anNovo', ctx)('22222222000122', 2026);
+    for (const k of Object.keys(b.receitas)) b.receitas[k] = z12();
+    b.cfg.rbt12Lanc = Array(12).fill(500000);
+    b.receitas.a1_semst = Array(12).fill(583333.33);      // 7,0 mi: inelegível
+    b.folha.salarios = Array(12).fill(40000);
+    const rb = g.calcular(clone(b), clone(AD), {...FD});
+    ctx.__sb = b; ctx.__srb = rb;
+    vm.runInContext('RL.dados = __sb; RL.res = __srb; AN = __sb; AN._res = __srb;', ctx);
+    for (const tipo of ['regimes','parecer']) {
+      ctx.document.getElementById('rl-tipo').value = tipo;
+      ctx.document.getElementById('rl-corpo').innerHTML = '';
+      let erro = null;
+      try { vm.runInContext('rlRender()', ctx); } catch(e){ erro = e.message; }
+      chk(`v7.79.1 · "${tipo}" abre também com empresa INELEGÍVEL (ramo do bloqueio)`,
+        erro === null && corpo().length > 300, erro || corpo().length + ' caracteres');
+    }
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
