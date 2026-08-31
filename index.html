@@ -694,6 +694,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.80.0</b></td><td>31/08/2026</td><td><b>🧨 Teste 16 (estresse por centavos): o IPI virou conta gráfica, a exportação ganhou limite próprio no ano anterior e a base da Reforma passou a se identificar.</b> <b>(1) IPI negativo — crítico.</b> Quando o crédito superava o débito, o confronto devolvia valor <b>negativo</b> e ele <b>reduzia a carga</b> do período, como se o Fisco devolvesse dinheiro no mês. O IPI é conta gráfica: o excesso vira <b>saldo credor</b> e abate o débito dos meses seguintes (CTN, art. 49). A auditoria mediu R$ 25.470,33 de "IPI negativo" no ano, subestimando o Presumido e o Real na mesma medida. Agora a estrutura é a mesma que o PIS/COFINS já usava desde a v7.20.0 — débito, crédito, saldo anterior, valor a pagar e saldo a transportar —, e a memória demonstra as cinco linhas. <b>O saldo acumula enquanto o crédito superar o débito e é consumido quando ele cresce</b>, o que a suíte verifica nos dois sentidos. <b>(2) Limite próprio da exportação.</b> O mercado externo tem limite <b>independente</b> de igual valor (LC 123/2006, art. 3º, § 14): ultrapassar qualquer um dos dois exclui do regime. O cenário do teste foi construído com a exportação <b>um centavo</b> acima, e o documento só falava do mercado interno. Entrou o campo <b>RBA de exportação do ano anterior</b>, ao lado do que a v7.70.0 criou para o interno, e o motivo da exclusão passa a nomear qual limite foi rompido — interno, externo, ou <b>os dois</b>, dizendo que são independentes. <b>(3) Base da Reforma: AUTOMÁTICA ou MANUAL.</b> O teste rodou com base manual de <b>outro</b> cenário — R$ 697.095,19 acima da receita apurada — e o alerta discreto não impediu que os números fossem lidos como do caso analisado. O papel de trabalho agora <b>rotula a origem</b> da base, e a divergência é <b>dimensionada</b>: acima de 5% o alerta fica vermelho e diz que toda a projeção 2027–2033 sai sobre uma base que não é a da empresa. <b>(4) Fator R na fronteira.</b> Com o indicador a menos de 0,0001 ponto do limite, duas casas faziam a memória parecer contradizer-se — "28,0000% &lt; 28%". Perto da fronteira o documento passa a mostrar <b>8 casas</b>, que é onde a decisão de anexo realmente se define. <b>Aprovados no estresse, sem alteração:</b> sublimite e limite testados <b>por centavos</b>, a regra dos 20%, a separação das exportações, o Fator R e o transporte do saldo de PIS/COFINS. Lacre <code>2e1139e9</code> íntegro — o caso 3 tem IPI, mas com débito maior que crédito, e a correção só age quando o crédito excede. Suíte: <b>721 verificações</b>.</td></tr>
                     <tr><td><b>v7.79.4</b></td><td>31/08/2026</td><td><b>🔍 Varredura completa do Comparativo de Regimes — cartões, gráfico e um terceiro quadro de 2033 que nunca tinha sido tocado.</b> <b>O que ainda apontava o Simples:</b> os <b>cartões do topo</b> — a primeira coisa que se lê — mostravam "Simples Nacional R$ 1.346.505,81" à esquerda, com o menor valor e <b>sem marca nenhuma</b>; o <b>gráfico</b> de cenários pintava a barra do Simples na cor normal, e ela é a menor de todas; e havia um <b>terceiro bloco de cartões de 2033</b>, dentro do próprio comparativo, que descrevia os cenários do Simples como opções válidas. Três lugares diferentes, nenhum deles alcançado pelas correções anteriores. <b>Por que cinco rodadas:</b> a cada relato eu corrigia o ponto que conseguia enxergar — a eleição do menor, a carteira, o ranking, o campo gravado. Todos eram reais e todos estavam certos; faltava sempre outro. O erro de método foi olhar <b>um elemento por vez</b> em vez de gerar o relatório e varrer <b>tudo o que ele mostra</b>. <b>Agora:</b> cartão indisponível fica esmaecido, com borda tracejada, valor riscado, ⛔ no título e o subtítulo <b>INDISPONÍVEL — referência apenas</b>; a barra do gráfico vira <b>cinza</b> e o rótulo ganha a marca; e o quadro de 2033 acompanha. Nada é omitido — os valores seguem à vista como referência —, mas nenhum deles se apresenta como escolha. <b>O teste desta versão varre o relatório inteiro:</b> renderiza o comparativo com empresa de R$ 7 milhões e percorre <b>todos</b> os cartões, <b>todas</b> as barras do gráfico e o texto — se qualquer cenário do Simples aparecer sem a marca, ou destacado como melhor, reprova. Ele mesmo teve de ser corrigido duas vezes no caminho: "Fora do Simples" contém a palavra mas é cenário válido, e o regex que extraía os cartões cortava antes do subtítulo. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro; suíte com <b>708 verificações</b>.</td></tr>
                     <tr><td><b>v7.79.3</b></td><td>31/08/2026</td><td><b>🎯 Quarta ocorrência do mesmo problema — e desta vez a causa explica as três anteriores.</b> O painel da carteira decidia a elegibilidade lendo <code>resumo.snElegivel</code>, campo que só passou a ser gravado na <b>v7.77.0</b> — e tratava a <b>ausência</b> como "elegível". Toda análise salva <b>antes</b> daquela versão continuava concorrendo com o Simples e aparecendo como melhor regime, por mais que a empresa estivesse acima do limite. <b>É por isso que o problema sobreviveu a três correções:</b> eu conferia com análises recalculadas na hora, que trazem o campo; você via as análises <b>já gravadas</b>, que não trazem. As três correções funcionavam — só não alcançavam o que estava no banco. A decisão passa a sair da <b>receita gravada no resumo</b>, que toda análise tem desde sempre: acima do limite, não há como estar elegível, e o campo entra apenas como reforço quando existe. Nenhuma análise precisa ser recalculada. <b>Detalhe do método que também mudou:</b> o teste novo, na primeira versão, <b>abortava a suíte inteira</b> quando a função não existia — e um teste que derruba o processo esconde os outros 697 resultados. Passou a reprovar com mensagem. Verificado contra a v7.79.2: acusa a falta com o texto <i>"snElegivelResumo não encontrada — o painel volta a depender do campo gravado"</i>. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro; suíte com <b>698 verificações</b>.</td></tr>
                     <tr><td><b>v7.79.2</b></td><td>31/08/2026</td><td><b>⛔ O Comparativo ainda apontava "1º Simples Nacional" para empresa acima do limite — terceiro relato do mesmo problema, e a causa de eu não ter fechado antes.</b> <b>O ponto que faltava:</b> o <b>Resumo executivo — ranking dos cenários</b> ordenava a lista <b>inteira</b> e numerava a partir do primeiro colocado, sem consultar a elegibilidade. O filtro já existia (<code>_CENel</code>) e era usado na eleição do melhor regime, mas <b>não</b> nesta tabela — e é ela que o cliente lê primeiro. <b>Por que três rodadas:</b> nas duas anteriores corrigi o que os testes sabiam medir — a eleição do menor, a coluna da carteira, os cenários projetados —, e todos os testes olhavam <b>código-fonte</b>. Nenhum renderizava o relatório para <b>ler o que ele diz</b>. Corrigi um ponto de cada vez porque só enxergava um ponto de cada vez. <b>Agora:</b> os cenários indisponíveis saem da numeração, vão para o fim da tabela, aparecem esmaecidos com a marca <b>⛔ indisponível</b> e a coluna de diferença diz <b>"não concorre"</b> — continuam à vista como referência, que é o combinado, mas sem posição no ranking. O comparativo abre com <b>aviso em vermelho</b> dizendo que a empresa não pode optar, com a receita, o limite e o dispositivo. <b>E o teste que faltava nas três vezes:</b> ele <b>renderiza</b> o Comparativo e o Parecer com uma empresa de R$ 7 milhões e <b>lê o texto</b> — reprova se encontrar o Simples em 1º lugar, se faltar o aviso de indisponibilidade, ou se a recomendação citar o regime. Verificado contra a v7.79.1: acusa as três falhas com o texto exato ("1º Simples Nacional"). Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro; suíte com <b>691 verificações</b>.</td></tr>
@@ -3032,6 +3033,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   // Antes: `Math.max(0, …)` DESCARTAVA o excedente quando os créditos superavam as receitas do mês.
   // Na apuração real o saldo credor se acumula (art. 3º, § 4º, das mesmas leis). Agora transporta.
   let saldoCredorPC = 0;
+  // v7.80.0 (auditoria do Teste 16, achado 3) · conta gráfica do IPI, como a de PIS/COFINS
+  let saldoCredorIPI = 0;
 
   const REPX = repEfetiva(anexos);   // v7.1: repartição efetiva acompanha os parâmetros editados
   const rbt12Cfg = S(cfg.rbt12Lanc), folha12Cfg = S(cfg.folha12Lanc);
@@ -3074,6 +3077,13 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   const _rbaaInf = +cfg.rbaa || 0;
   const _impedAnoAnt = (cfg.sublimite||'auto') !== 'off' && _rbaaInf > 0
     && _rbaaInf > (+cfg.sublimiteValor || 3600000) * _propAtiv.fator;
+  // v7.80.0 (auditoria do Teste 16, achado 6) · o mercado externo tem limite PRÓPRIO de igual
+  // valor (LC 123/2006, art. 3º, § 14): a empresa pode faturar até o limite no interno E outro
+  // tanto em exportação. Ultrapassar QUALQUER um deles no ano anterior tira a empresa do regime,
+  // e o cenário do Teste 16 foi construído justamente com a exportação um centavo acima.
+  const _rbaaExpInf = +cfg.rbaaExp || 0;
+  const _excluiAnoAntExp = _rbaaExpInf > FAIXAS_LIM[5] * _propAtiv.fator;
+  const _excluiAnoAntInt = _rbaaInf > FAIXAS_LIM[5] * _propAtiv.fator;
   const _impedDesde = (()=>{
     if ((cfg.sublimite||'auto') === 'off') return -1;
     if (_impedAnoAnt) return 0;      // impedida desde janeiro, pela receita do ano anterior
@@ -3490,7 +3500,18 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // aba ICMS·IPI, que continua prevalecendo sobre o cálculo automático.
     const ipiDebBase = R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m]+R.a2_comst[m]+R.a2_comst_mono[m];
     const ipiDeb = inp.ipi?.deb?.[m] != null ? +inp.ipi.deb[m] : ipiDebBase*cfg.ipiV;
-    const ipiPagar = ipiDeb - ipiCred;
+    // ══ v7.80.0 (auditoria do Teste 16) · IPI NEGATIVO NÃO É TRIBUTO, É SALDO CREDOR ═══════
+    // O confronto débito × crédito devolvia valor NEGATIVO quando o crédito superava o débito, e
+    // esse negativo REDUZIA a carga do período — como se o Fisco devolvesse dinheiro no mês. O
+    // IPI é conta gráfica: o que exceder vira saldo credor e abate o débito dos meses seguintes
+    // (CTN, art. 49; RIPI, art. 256). A auditoria mediu R$ 25.470,33 de "IPI negativo" no ano,
+    // subestimando o Presumido e o Real na mesma medida.
+    // O PIS/COFINS já fazia isso desde a v7.20.0; o IPI ficou para trás. Mesma estrutura agora:
+    // débito do mês, crédito do mês, saldo anterior, valor a pagar e saldo a transportar.
+    const _ipiSaldoAnt = saldoCredorIPI;
+    const _ipiLiq = ipiDeb - ipiCred - _ipiSaldoAnt;
+    const ipiPagar = Math.max(0, _ipiLiq);
+    saldoCredorIPI = Math.max(0, -_ipiLiq);
 
     const serv = R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]+R.a4_retiss[m]+R.a5r[m];
     const com  = R.a1_semst[m]+R.a1_red[m]+R.a1_mono[m]+R.a1_comst[m]+R.a1_comst_mono[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m]+R.a2_comst[m]+R.a2_comst_mono[m]+R.comtransp[m]+R.comtransp_st[m];
@@ -3573,6 +3594,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       rbt12Presumido: _rbtPresum, rbt12PresumidoExp: _rbtPresumExp,   // v7.63.0 (A01)
       excLimite: _rExc, excLimiteValor: _rExc>0 ? _recMes*_rExc : 0,   // v7.72.0 (art. 24, II)
       excSublimite: _rExcSub, excSublimiteValor: _rExcSub>0 ? _recMes*_rExcSub : 0,  // v7.73.0 (art. 24, I)
+      // v7.80.0 · conta gráfica do IPI, para a memória demonstrar em vez de remontar
+      ipiDeb, ipiCred, ipiSaldoAnt: _ipiSaldoAnt, ipiSaldoFim: saldoCredorIPI,
       limiteSN: _limSN, rbaAnterior: _accAnt,
       frCppParcial: _frCppParcial, frCppSomada: _frLegado ? 0 : S(cppPrev),   // v7.64.0
       frMesesHistorico: _mesesHist,
@@ -4281,7 +4304,8 @@ function anRenderGrid() {
   <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto?fmt(c.rbt12Direto):''}" onchange="anAplicarConfig(true)"></div>
   <div class="hint" style="margin-top:8px">
     <b>Receita bruta do ano-calendário anterior (RBAA)</b>:
-    <input style="width:150px;display:inline-block" id="cf-rbaa" value="${c.rbaa?fmt(c.rbaa):''}" onchange="anAplicarConfig(true)" placeholder="opcional">
+    <input style="width:150px;display:inline-block" id="cf-rbaa" value="${c.rbaa?fmt(c.rbaa):''}" onchange="anAplicarConfig(true)" placeholder="mercado interno">
+    <input style="width:150px;display:inline-block;margin-left:6px" id="cf-rbaaexp" value="${c.rbaaExp?fmt(c.rbaaExp):''}" onchange="anAplicarConfig(true)" placeholder="exportação">
     <div style="margin-top:4px">Não é o mesmo que os 12 meses acima. Aqueles são a <b>janela móvel</b> que forma o RBT12; este é o <b>ano-calendário fechado</b> anterior, que decide o impedimento de ICMS/ISS: acima do sublimite, os dois tributos são recolhidos <b>fora do Simples desde 1º/01</b> deste ano (LC 123/2006, art. 20, § 1º). <b>Em branco o aplicativo não calcula esse impedimento</b> — apenas alerta, quando os meses lançados sugerem a hipótese.</div>
     ${(() => { const _r = +c.rbaa || 0, _sub = (+c.sublimiteValor || 3600000);
         if (!(_r > 0)) return '';
@@ -4916,10 +4940,12 @@ function anAplicarConfig(silencioso) {
     anoRefParecer: parAnoRefNorm(vRaw('cf-anoref',_cfg.anoRefParecer)),   // v7.41.7
     rbt12Direto: vNum('cf-rbtd',_cfg.rbt12Direto),
     rbaa: vNum('cf-rbaa', _cfg.rbaa),                    // v7.70.0 · ano-calendário anterior
+    rbaaExp: vNum('cf-rbaaexp', _cfg.rbaaExp),           // v7.80.0 · idem, mercado externo
     inicioAtividade: (vRaw('cf-inicio', _cfg.inicioAtividade||'')||'').trim() });   // v7.52.0
   // v7.35.0 · período de apuração do Lucro Real e saldos de prejuízo (podem não existir em telas antigas)
   if (AN.cfg.arredondaPorTributo !== true) delete AN.cfg.arredondaPorTributo;   // v7.62.0: ausente ≠ false
   if (!(+AN.cfg.rbaa > 0)) delete AN.cfg.rbaa;                       // v7.70.0: em branco = não informada
+  if (!(+AN.cfg.rbaaExp > 0)) delete AN.cfg.rbaaExp;                 // v7.80.0
   if (!(+AN.cfg.ratBasico > 0)) delete AN.cfg.ratBasico;             // v7.64.0: em branco não grava
   if (!(+AN.cfg.fap > 0)) delete AN.cfg.fap;
   if (AN.cfg.frComposicao === 'legal') delete AN.cfg.frComposicao;   // o padrão não ocupa espaço
@@ -5262,7 +5288,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.79.4';
+const APP_VERSAO = '7.80.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -5969,8 +5995,14 @@ function calcCenariosReforma(res, reforma) {
   // histórica do que o Simples custaria — mas rotulados como hipótese, nunca como opção.
   const _recIntBase = Math.max(0, (T.receita||0) - (T.receitaExp||0));
   const _limSNbase = 4800000 * ((T.propAtividade && T.propAtividade.fator) || 1);
-  const _excedeuLim = _recIntBase > _limSNbase;
-  const _excesso20 = _recIntBase > _limSNbase * 1.20;
+  const _recExpBase = +T.receitaExp || 0;
+  // v7.80.0 (auditoria do Teste 16, achado 10) · o mercado externo tem limite PRÓPRIO de igual
+  // valor (LC 123/2006, art. 3º, § 14). Excedê-lo exclui do regime tanto quanto o interno, e o
+  // documento precisa dizer QUAL dos dois — ou os dois — motivou a saída.
+  const _excedeuInt = _recIntBase > _limSNbase;
+  const _excedeuExp = _recExpBase > _limSNbase;
+  const _excedeuLim = _excedeuInt || _excedeuExp;
+  const _excesso20 = _recIntBase > _limSNbase * 1.20 || _recExpBase > _limSNbase * 1.20;
   // v7.79.0 · a consequência jurídica depende de a empresa estar em INÍCIO DE ATIVIDADE
   const _inicioAtiv = !!(T.propAtividade && T.propAtividade.proporcional);
   const _snIndisponivel = _excedeuLim;
@@ -6076,8 +6108,17 @@ function calcCenariosReforma(res, reforma) {
                // no ano-calendário de INÍCIO DE ATIVIDADE (§ 10), e ainda assim só acima de 20%
                // do limite proporcional (§ 12). Citar o § 9º para afirmar retroação era erro
                // jurídico num documento que orienta decisão de enquadramento.
-               ? ('receita interna do ano-base de ' + fmt(_recIntBase) + ' acima do limite de '
-                  + fmt(_limSNbase) + (_inicioAtiv
+               ? ((_excedeuInt && _excedeuExp
+                    ? 'DOIS limites ultrapassados no ano-base — mercado interno ' + fmt(_recIntBase)
+                      + ' e exportação ' + fmt(_recExpBase) + ', ambos acima de ' + fmt(_limSNbase)
+                      + ' (LC 123/2006, art. 3º, II, e § 14: os limites são independentes)'
+                    : _excedeuExp
+                      ? 'receita de EXPORTAÇÃO do ano-base de ' + fmt(_recExpBase)
+                        + ' acima do limite próprio do mercado externo de ' + fmt(_limSNbase)
+                        + ' (LC 123/2006, art. 3º, § 14) — o mercado interno ficou dentro'
+                      : 'receita interna do ano-base de ' + fmt(_recIntBase) + ' acima do limite de '
+                        + fmt(_limSNbase))
+                  + (_inicioAtiv
                     ? (_excesso20
                       ? ' em mais de 20% e em ano de INÍCIO DE ATIVIDADE — a exclusão retroage ao início das atividades (LC 123/2006, art. 3º, § 10)'
                       : ' em ano de início de atividade, mas em até 20% — os efeitos são no ano-calendário seguinte (art. 3º, § 12)')
@@ -7767,10 +7808,21 @@ function rfAvisoExportacaoHtml(){
       + `<b>O cálculo está usando ${fmtR(d.interna)}</b> — a exportação foi retirada automaticamente (v7.68.0) `
       + `e a correção fica declarada no papel de trabalho. Clique em <b>Preencher da análise</b> para `
       + `gravar o valor certo e encerrar este aviso.</div>`;
-  return `<div class="hint" style="padding:10px 12px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109;margin-top:12px">`
-    + `⚠️ <b>A receita da aba difere da receita interna da análise.</b> Aba: ${fmtR(d.naAba)} · `
-    + `interna (base do IBS/CBS): ${fmtR(d.interna)} · exportação no período: ${fmtR(d.exp)}. ${comum} `
-    + `Confira se a diferença é intencional.</div>`;
+  // v7.80.0 (auditoria do Teste 16, achado 5) · a divergência precisa ser DIMENSIONADA. Um teste
+  // de estresse rodou com base manual de outro cenário — R$ 697.095,19 acima da receita apurada —
+  // e o alerta discreto não impediu a leitura dos números como se fossem do caso analisado.
+  const _dif = Math.abs(d.naAba - d.interna);
+  const _pc = d.interna > 0 ? _dif / d.interna : 1;
+  const _grave = _pc > 0.05;
+  return `<div class="hint" style="padding:10px 12px;border-left:4px solid ${_grave?'var(--danger,#943126)':'var(--alerta,#b9770e)'};background:${_grave?'#fdedec':'#fef6e7'};color:${_grave?'#7b241c':'#7e5109'};margin-top:12px">`
+    + `${_grave?'⛔':'⚠️'} <b>BASE MANUAL — a receita desta aba NÃO é a apurada na análise.</b> `
+    + `Aba: ${fmtR(d.naAba)} · apurada (interna): ${fmtR(d.interna)} · diferença: <b>${fmtR(_dif)}</b> `
+    + `(${(_pc*100).toFixed(2).replace('.',',')}%) · exportação no período: ${fmtR(d.exp)}. ${comum} `
+    + (_grave
+      ? `<b>A divergência passa de 5%: toda a projeção 2027–2033 sai sobre uma base que não é a desta empresa.</b> `
+        + `Confirme o valor ou clique em <b>Preencher da análise</b> antes de emitir o documento.`
+      : `Confira se a diferença é intencional.`)
+    + `</div>`;
 }
 function rfAutoPreencher() {
   if (!RF) { toast('Abra a aba Reforma com uma empresa selecionada.'); return; }
@@ -9726,8 +9778,15 @@ function rlConferencia(){
         ? (_porLei && _temFR ? ' — o bloco do Fator R e os do § 5º-B ficam ambos no Anexo III' : '')
         : (_porLei && _temFR ? ' — o bloco do Fator R vai para o <b>Anexo V</b>; os blocos do § 5º-B seguem no <b>Anexo III</b>, porque não dependem do fator' : '');
       // v7.67.0 · a fórmula exibida passa a nomear o FS12 como ele é calculado desde a v7.66.0
+      // v7.80.0 (auditoria do Teste 16, achado 9) · com o fator a menos de 0,0001 p.p. do limite,
+      // duas casas fazem a memória parecer contraditória: "28,0000% < 28%". Perto da fronteira o
+      // documento passa a mostrar 8 casas, que é onde a decisão realmente se define.
+      const _frPerto = Math.abs(_fr - .28) < 0.000001;
+      const _frTxt = _frPerto
+        ? (_fr*100).toFixed(8).replace('.', ',') + '%'
+        : CF.pc(_fr);
       L.push(CF.lin('Fator R (FS12 ÷ RBT12r)',
-        `${CF.pc(_fr)} ${_frOk?'≥':'<'} 28% · FS12 = pró-labore + salários + FGTS + 13º pago + CPP efetivamente recolhida, `
+        `${_frTxt}${_frPerto ? ' <span class="hint">(8 casas — o fator está a menos de 0,0001 p.p. do limite)</span>' : ''} ${_frOk?'≥':'<'} 28% · FS12 = pró-labore + salários + FGTS + 13º pago + CPP efetivamente recolhida, `
         + `dos 12 meses anteriores (Res. CGSN 140/2018, art. 26, § 1º); RBT12r conjunta — mercado interno + externo (art. 26)`
         + _destinoTxt,
         _destino));
@@ -9867,7 +9926,20 @@ function rlConferencia(){
       CF.lin('ICMS', `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`, fmtR(P.icms)),
       // v7.69.0 (parecer do Teste 8, achado 13) · o IPI compunha o total sem linha própria: num
       // papel de trabalho, tributo que entra no total sem aparecer não é auditável.
-      CF.lin('IPI a pagar', `débito das saídas industriais × ${CF.pc(+D.cfg.ipiV||0)} − crédito das entradas × ${CF.pc(+D.cfg.ipiC||0)} (CTN, art. 46, II — só a saída de estabelecimento industrial)`, fmtR(P.ipi||0)),
+      // v7.80.0 · o IPI é conta gráfica: quando o crédito supera o débito, não há tributo
+      // negativo — há saldo a transportar. A memória demonstra as quatro parcelas.
+      ...(((M.ipiSaldoAnt||0) > 0.005) ? [CF.lin('(−) Saldo credor de IPI do mês anterior',
+        'crédito que excedeu o débito e foi transportado', fmtR(M.ipiSaldoAnt||0))] : []),
+      CF.lin('IPI a pagar',
+        ((M.ipiSaldoFim||0) > 0.005)
+          ? `débito ${fmtR(M.ipiDeb||0)} − crédito ${fmtR(M.ipiCred||0)}`
+            + ((M.ipiSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.ipiSaldoAnt||0)}` : '')
+            + ` = <b>negativo</b>, logo nada a recolher (CTN, art. 49 — conta gráfica)`
+          : `débito das saídas industriais ${fmtR(M.ipiDeb||0)} − crédito das entradas ${fmtR(M.ipiCred||0)}`
+            + ((M.ipiSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.ipiSaldoAnt||0)}` : ''),
+        fmtR(P.ipi||0)),
+      ...(((M.ipiSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de IPI a transportar',
+        'abate o débito do mês seguinte — não reduz a carga deste mês', fmtR(M.ipiSaldoFim||0))] : []),
       CF.lin('ISS', `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(P.iss)),
       CF.lin('INSS patronal', `salários ${fmtR(_sal)} × ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)} + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)}${m===11?' + 13º':''}`, fmtR(P.inssPatr)),
       CF.lin('<b>Total do Lucro Presumido</b>','soma das parcelas acima (FGTS não considerado)', fmtR(P.total)),
@@ -9900,7 +9972,17 @@ function rlConferencia(){
       ...lrLinhasConfMes(m, LR, R),
       CF.lin('ICMS', `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`, fmtR(LR.icms)),
       // v7.69.0 · mesma razão do Lucro Presumido: o IPI passa a ter linha própria
-      CF.lin('IPI a pagar', `débito das saídas industriais × ${CF.pc(+D.cfg.ipiV||0)} − crédito das entradas × ${CF.pc(+D.cfg.ipiC||0)}`, fmtR(LR.ipi||0)),
+      // v7.80.0 · mesma conta gráfica no Lucro Real
+      ...(((M.ipiSaldoAnt||0) > 0.005) ? [CF.lin('(−) Saldo credor de IPI do mês anterior',
+        'crédito transportado do mês anterior', fmtR(M.ipiSaldoAnt||0))] : []),
+      CF.lin('IPI a pagar',
+        ((M.ipiSaldoFim||0) > 0.005)
+          ? `débito ${fmtR(M.ipiDeb||0)} − crédito ${fmtR(M.ipiCred||0)} = <b>negativo</b>, nada a recolher`
+          : `débito ${fmtR(M.ipiDeb||0)} − crédito ${fmtR(M.ipiCred||0)}`
+            + ((M.ipiSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.ipiSaldoAnt||0)}` : ''),
+        fmtR(LR.ipi||0)),
+      ...(((M.ipiSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de IPI a transportar',
+        'abate o débito do mês seguinte', fmtR(M.ipiSaldoFim||0))] : []),
       CF.lin('ISS', `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(LR.iss)),
       CF.lin('INSS patronal', `salários ${fmtR(_sal)} × ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)} + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)}${m===11?' + 13º':''}`, fmtR(LR.inssPatr)),
       CF.lin('<b>Total do Lucro Real</b>','soma das parcelas acima (FGTS não considerado)', fmtR(LR.total)),
@@ -10474,6 +10556,17 @@ function rlConfDivergencias(){
         : 'esta empresa <b>não deduz</b> o ISS retido (padrão), pela coerência com a decisão de que o retido não é custo da empresa. A leitura oposta é defensável e está disponível na Configuração — a escolha é declarada, não silenciosa.'}</li>
       <li><b>ISS retido fora da dedução da base do IBS/CBS (v7.54.0):</b> a dedução é o ISS do Lucro Presumido exibido no Consolidado analítico, que exclui as receitas com retenção. A leitura literal do art. 12, §2º, V, da LC 214/2025 admitiria o contrário — o ISS retido também incidiu sobre a operação —, mas a escolha é pela coerência com a decisão da v7.23.0 de que o ISS retido não é custo da empresa. É <b>decisão declarada</b>, não omissão.</li>
       <li><b>Redução de IBS/CBS — ordem das operações (v7.54.0):</b> a exclusão de ICMS e ISS é operação de <b>base</b> e a redução do regime diferenciado é operação de <b>alíquota</b>, então a dedução vem primeiro e é <b>rateada proporcionalmente à base de cada parcela</b>. O rateio por natureza (ISS só sobre serviço, ICMS só sobre mercadoria) seria mais fiel ao fato gerador e <b>não</b> está implementado.</li>
+      <li><b>Origem da base do IBS/CBS (v7.80.0):</b> ${(() => {
+        const _rf = RL?.dados?.reforma, _T2 = RL?.res?.totais;
+        const _int = _T2 ? Math.max(0, (_T2.receita||0) - (_T2.receitaExp||0)) : 0;
+        const _naAba = +(_rf||{}).receita || 0;
+        if (!(_naAba > 0)) return '<b>AUTOMÁTICA</b> — a base é a receita interna apurada nesta análise, sem valor informado na aba Reforma.';
+        if (Math.abs(_naAba - _int) <= 0.02) return `<b>AUTOMÁTICA</b> — a receita informada na aba (${fmtR(_naAba)}) coincide com a interna apurada.`;
+        const _d = Math.abs(_naAba - _int), _p = _int>0 ? _d/_int : 1;
+        return `<b>MANUAL</b> — a projeção usa ${fmtR(_naAba)} informado na aba Reforma, e não os ${fmtR(_int)} apurados nesta análise. `
+          + `Diferença de ${fmtR(_d)} (${(_p*100).toFixed(2).replace('.',',')}%).`
+          + (_p > 0.05 ? ' <b>Acima de 5%: confira a origem do valor antes de usar a projeção para decidir.</b>' : '');
+      })()}</li>
       <li><b>Receita da aba Reforma × exportação (v7.65.0):</b> ${(() => {
         const _T = RL?.res?.totais, _rf = RL?.dados?.reforma;
         const _d = (typeof rfConfereExportacao === 'function') ? rfConfereExportacao(_rf, _T) : null;
