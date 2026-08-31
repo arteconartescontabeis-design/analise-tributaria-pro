@@ -685,6 +685,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.64.0</b></td><td>31/08/2026</td><td><b>⚖️ Resposta ao parecer externo sobre a auditoria das três empresas: a composição legal do FS12, a presunção de exportação que era silenciosa, o RAT demonstrável — e um segundo motor de auditoria que não importa nada deste aplicativo.</b> <b>(1) FS12 do Fator R.</b> Até aqui somava pró-labore, salários e FGTS. A Res. CGSN 140/2018, art. 26, § 1º, manda somar as remunerações — <b>incluído o 13º</b> — acrescidas do montante <b>efetivamente recolhido</b> de contribuição patronal previdenciária e de FGTS. Faltavam o 13º e a CPP, e a falta <b>subestima</b> o Fator R: empresa perto dos 28% era empurrada para o Anexo V, o enquadramento mais caro. Um ponto que decidiu a implementação: <b>a CPP de optante do Simples não é 20% da folha</b> — ela está dentro do DAS, como parcela da alíquota efetiva, e é isso que a empresa efetivamente recolhe. Por isso o que entra é a CPP <b>apurada pelo próprio motor</b> nos meses já calculados, nunca um percentual presumido sobre a folha, que produziria um número que ninguém recolheu. Nos meses vindos do histórico da aba RBT12 a CPP não é conhecida, e o aplicativo <b>declara isso</b> em vez de estimar. Seletor <b>Composição do FS12</b> na Configuração, com o modo legado preservado para reproduzir documento já emitido. <b>(2) A presunção do RBT12 de exportação era silenciosa.</b> A correção A01 da v7.63.0 marcava <code>rbt12PresumidoExp</code> — e esse campo não era lido em lugar nenhum: a presunção do mercado interno se anunciava, a da exportação não. Era regressão da própria correção que existia para acabar com o silêncio. Agora as duas se declaram, na tela e no papel de trabalho. <b>(3) RAT demonstrável.</b> O percentual de fábrica, 5,80%, era rotulado como "grau de risco" — impreciso, porque RAT legal é 1%, 2% ou 3% (Lei 8.212/91, art. 22, II) e 5,80% só existe já multiplicado pelo <b>FAP</b> (Lei 10.666/2003, art. 10). Informados os dois componentes na Configuração, o percentual passa a ser derivado e a conta fica à vista; sem eles vale o valor gravado, e nenhuma análise existente muda. <b>(4) Verificador independente</b> — <code>tests/verificador_independente.js</code>, no repositório. Ele <b>digita</b> os Anexos I a V e a repartição por tributo a partir da LC 123/2006, decide sozinho o anexo pelo Fator R e só então compara. Não importa uma linha deste aplicativo, e é por isso que responde à crítica que a conferência anterior não podia responder: reutilizando as tabelas do motor, ela recalcularia corretamente um Anexo III escolhido de forma indevida. Resultado do confronto: <b>1.240 conferências em 20 casos, zero divergências</b> — incluindo os dois lados da fronteira dos 28%, o teto e o primeiro real acima de cada faixa do RBT12, substituição tributária, monofásico, ISS retido e a 6ª faixa com a trava da 5ª. <b>O que ele já pegou:</b> um defeito introduzido nesta mesma versão — a CPP entrava no Fator R <b>defasada em um mês</b>, porque o acumulador lia o objeto do mês antes de ele existir. Nenhum teste de identidade pegaria isso: os dois lados do aplicativo estavam igualmente errados. <b>Sobre o achado tido como crítico no parecer</b> — Fator R indicando Anexo V com cálculo no Anexo III —, a apuração mostrou que o motor está correto e que o erro era do material de teste: consultoria foi lançada no bloco <code>a3_semret</code>, que é Anexo III <b>por lei</b> (art. 18, § 5º-B), quando a atividade é do § 5º-I e pertence ao bloco <code>a5r</code>. Movida a receita para o bloco certo, o motor vai ao Anexo V sozinho e o DAS sobe 25%. Motor selado e lacre <code>47f3f10b</code> <b>íntegros</b> nas quatro frentes.</td></tr>
                     <tr><td><b>v7.63.0</b></td><td>30/08/2026</td><td><b>🔍 As onze correções da auditoria completa — e a rede de testes passa a incluir o dado impossível.</b> <b>(A01, crítico)</b> Mês com receita lançada e RBT12 igual a zero apurava <b>DAS de R$ 0,00</b>. A alíquota efetiva é indeterminada com RBT12 zero, e a guarda devolvia zero em vez de escolher uma regra: no exemplo medido, R$ 100.000,00 de receita em janeiro produziam guia zerada, e só a partir de fevereiro — quando a receita do próprio ano já formou base — o cálculo se normalizava. Não existe hipótese em que optante do Simples com receita apure zero. Passa a valer a regra do <b>primeiro mês de atividade</b> (Res. CGSN 140/2018, art. 22, § 2º): receita do próprio mês × 12 — a mesma que o aplicativo já usava quando a data de início estava preenchida. É <b>presunção declarada</b>, não dado: o mês é marcado, a Análise avisa nomeando os meses e as divergências do papel de trabalho explicam a regra. <b>(A02, A03, A04)</b> Nenhum campo numérico tinha faixa: −5% de ISS gerava ISS anual <b>negativo</b>; 1200% (erro de digitação de 12) gerava R$ 1,2 milhão sobre receita de R$ 100 mil; redução de 500% e receita negativa geravam <b>DAS negativo</b>. Entrou uma camada única — <code>FAIXAS</code> + <code>faixaAplicar</code> — usada pela grade e pela Configuração, com duas forças deliberadamente distintas: <b>limite</b>, para o que não pode existir, corrigido e avisado; e <b>alerta</b>, para o que é improvável mas possível — ISS acima de 5% avisa e <b>obedece</b>, porque sociedade uniprofissional existe e o aplicativo não conhece a legislação de cada município. <b>(A05)</b> Os cinco importadores eram chamados direto pelo <code>onclick</code>, sem <code>try</code> e fora do <code>comBotao</code>: falha no meio da aplicação não produzia mensagem nenhuma e a tela ficava igual. Agora passam pelo padrão da casa. <b>(A06)</b> O snapshot da trava calculava os cenários num <code>try</code> de <code>catch</code> vazio e fechava a análise com a prova pela metade — justamente o que a trava existe para impedir; a falha agora viaja no snapshot. <b>(A07)</b> Relatório e Excel omitiam a Reforma em silêncio quando o cálculo falhava, e ausência de seção é indistinguível de "não se aplica"; entrou tarja declarando a lacuna. <b>(A08)</b> O bloqueio otimista falhava para o lado <b>permissivo</b>: não conseguindo consultar o servidor, gravava por cima sem perguntar. Agora pergunta. <b>(A09 — achado revisto)</b> A auditoria apontou base de PIS/COFINS negativa no Lucro Real; ao reexaminar, <b>o motor já estava correto</b> — limita a base a zero e transporta o saldo credor ao mês seguinte. O defeito era de <b>exibição</b>: a memória imprimia a conta bruta e um resultado zero que ela não produzia, sem mencionar o saldo. Mesma família do item H da v7.51.0. <b>(A10)</b> Os 27 pontos de silêncio foram classificados: os propositais ficaram <b>marcados como tais</b> no código, os indevidos viraram A06, A07 e A08. <b>(A11)</b> Guardas de divisão na alíquota da 5ª faixa e nos dashboards, que exibiam <code>NaN%</code> com carteira vazia. <b>Motor e lacre <code>47f3f10b</code> intocados nas onze</b> — inclusive no A01, porque os casos-gabarito nunca têm RBT12 zero com receita, e os 754 gabaritos passaram sem rebaseline. <b>A lição que fica na suíte:</b> as 510 verificações provavam que o cálculo certo continua certo, mas nenhuma alimentava o motor com dado impossível — que é por onde os onze entraram. O bloco novo faz exatamente isso.</td></tr>
                     <tr><td><b>v7.62.0</b></td><td>30/08/2026</td><td><b>⚖️ MELHORIA 3 · O arredondamento por tributo ganha onde ser ligado — por empresa, com o padrão desligado.</b> O PGDAS-D apura tributo a tributo, arredonda cada parcela e soma; o motor arredonda o <b>total</b> do mês uma vez. Nos seis meses do Kleyton a diferença é de <b>4 centavos</b> — R$ 4.288,82 declarados contra R$ 4.288,78 calculados. Não é erro de nenhum dos dois lados: a planilha v15, que é a origem dos casos-gabarito, arredonda o total, e a guia arredonda por tributo. Ligar isto é decidir qual dos dois é a <b>referência</b>, e a decisão foi tomada no lugar certo: <b>por empresa</b>, no seletor <b>Arredondamento do DAS</b> da Configuração, e não como padrão do sistema. A medição que sustentou a escolha: como padrão de fábrica, o lacre iria de <code>47f3f10b</code> para <code>801f0430</code> e <b>4 dos 754 gabaritos</b> estourariam a tolerância — todos no caso 2, todos no mesmo mês, entre 2,00 e 2,14 centavos. Como opção por empresa, <b>nada disso acontece</b>: a chave só existe no <code>cfg</code> de quem a ligar, os casos-gabarito não a têm, e o lacre e os 754 gabaritos passam <b>intactos</b>. Desligar apaga a chave, de modo que a análise volta a ser byte a byte a de antes. O alcance é pequeno por construção: o maior desvio mensal medido foi de <b>1,7 centavo</b>, o Presumido e o Real <b>não se movem</b> (a opção só toca o DAS), e uma guarda no motor recusa a substituição quando a soma por tributo se afasta do total em mais de R$ 0,10. A Configuração avisa o que a escolha significa e o <b>papel de trabalho declara em qual dos dois regimes de arredondamento a empresa está</b> — nos dois sentidos, porque "bate com a guia ao centavo" e "difere da guia em centavos" são afirmações que um documento de conferência tem de fazer explicitamente. <b>Ressalva registrada:</b> a evidência de que o PGDAS-D arredonda por tributo vem de seis meses de <b>uma</b> empresa, no Anexo IV, sem ST, sem monofásico e sem retenção — reproduzir 6/6 exatamente é forte, mas não prova a regra onde há mais parcelas a arredondar. Antes de qualquer mudança de padrão, o teste que vale é um PGDAS de Anexo I com ST ou monofásico.</td></tr>
                     <tr><td><b>v7.61.0</b></td><td>30/08/2026</td><td><b>🧾 Remediação da alíquota de ISS herdada de NFS-e, e a proteção das três RPC de exclusão sai do papel.</b> <b>(1)</b> A v7.53.0 impediu que a alíquota da nota configurasse a empresa <i>dali em diante</i>. O que já estava gravado continuou gravado: cada análise que importou NFS-e antes daquela versão carrega, na Configuração, a parcela de ISS da <b>alíquota efetiva do Simples</b> — que varia a cada competência com o RBT12 — no lugar da alíquota fixa do município. O Simples não se altera com isso, porque nele o ISS vem da partilha do anexo; quem calcula errado é o <b>Presumido e o Real</b>, e a comparação entre regimes é justamente o que o aplicativo existe para fazer. Entrou em Parâmetros a varredura <b>somente leitura</b> que encontra essas análises pelo indício que não depende de trilha de origem: alíquota de município é fixada em lei e sai <b>redonda</b> (2%, 2,5%, 3%, 5%), enquanto a parcela do Simples sai de uma divisão e chega com quatro casas (3,0674% · 3,1834% · 3,0886% nas notas que originaram a correção). É <b>indício, não veredito</b>: quem tenha alíquota legitimamente quebrada aparece na lista e basta confirmar o valor que já está lá. A correção é <b>uma a uma</b>, com a alíquota do município informada por você, o efeito no Presumido e no Real exibido <b>antes</b> de gravar, e a gravação pelo mesmo caminho do botão 💾 — com registro no histórico da análise. Correção em lote foi deliberadamente <b>não</b> implementada: a alíquota certa varia por município e não está em lugar nenhum do sistema. Análise fechada 🔒 é recusada, não contornada. <b>(2)</b> A pendência que a v7.57.0 deixou aberta — as três RPC <code>SECURITY DEFINER</code> de exclusão passam por cima da RLS e não checavam papel — é fechada pelo <b>setup_v7610_rpc_admin.sql</b>, entregue junto. Ele não reescreve as funções: cada uma é <b>renomeada</b> para <code>_impl</code>, com o corpo intacto byte a byte, e um invólucro de mesmo nome passa a exigir <code>atp_sou_admin()</code> antes de repassar a chamada. A <code>_impl</code> perde o <code>EXECUTE</code> de <code>authenticated</code> e some das rotas do PostgREST, de modo que não há porta dos fundos. O script é <b>idempotente</b>, descobre assinatura e tipo de retorno pelo catálogo, preserva quem já tenha o bloco colado à mão, e traz a reversão escrita. Provado em PostgreSQL real antes da entrega: <b>24 verificações</b>, com os casos negativos junto — operador barrado, admin passando, <code>_impl</code> inalcançável, regra de escritório preservada e corpo idêntico depois de duas execuções. Motor e lacre <code>47f3f10b</code> intocados nas duas.</td></tr>
@@ -3034,7 +3035,27 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   const totalPrev = [];   // receitas acumuladas dos meses anteriores do ano corrente
   const totalPrevExp = [];
   const folhaPrev = [];   // folha (pró-labore+salários+FGTS) dos meses anteriores — Fator R dinâmico
-  const folhaMesFR = m => F.prolabore[m] + F.salarios[m] + F.baseFgts[m]*fp.fgts;
+  // ══ v7.64.0 (parecer externo, achado 3.3) · COMPOSIÇÃO DO FS12 ══
+  // Até a v7.63.0 o FS12 somava pró-labore + salários + FGTS. A Res. CGSN 140/2018, art. 26, § 1º,
+  // manda somar as remunerações — incluídas as retiradas de pró-labore e o 13º — ACRESCIDAS do
+  // montante efetivamente recolhido a título de contribuição patronal previdenciária e de FGTS.
+  // Faltavam o 13º e a CPP, e a falta SUBESTIMA o Fator R: empresa perto dos 28% era empurrada
+  // indevidamente para o Anexo V, que é o enquadramento mais caro.
+  //
+  // A CPP DE OPTANTE DO SIMPLES NÃO É 20% DA FOLHA. Ela está dentro do DAS, como parcela da
+  // alíquota efetiva, e é isso que a empresa "efetivamente recolhe". Por isso a CPP somada aqui é
+  // a que o próprio motor apurou nos meses já calculados — nunca um percentual presumido sobre a
+  // folha, que produziria um número que ninguém recolheu. Nos meses vindos do histórico
+  // (cfg.folha12Lanc) a CPP não é conhecida, e o aplicativo DIZ isso em vez de estimar.
+  //
+  // cfg.frComposicao: 'legal' (padrão) · 'legado' reproduz o cálculo até a v7.63.0, para quem
+  // precise refazer documento já emitido — mesma saída da trava da 5ª faixa na v7.36.0.
+  const _frLegado = String(cfg.frComposicao||'legal') === 'legado';
+  const cppPrev = [];        // CPP apurada pelo motor, mês a mês do ano corrente
+  const folhaMesFR = m => F.prolabore[m] + F.salarios[m] + F.baseFgts[m]*fp.fgts
+    + (_frLegado ? 0 : (+F.prov13[m] || 0));
+  // a CPP entra por fora, porque só existe depois que o DAS do mês foi apurado
+  const cppMesFR = m => _frLegado ? 0 : (+cppPrev[m] || 0);
 
   for (let m=0; m<12; m++) {
     // v7.52.0 · meses de atividade ANTERIORES ao mês apurado. `_prop` só é verdadeiro com a data
@@ -3075,10 +3096,17 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // v7.52.0 · na proporcionalização a folha é anualizada pela MESMA janela e pelo MESMO divisor,
     // de modo que o Fator R continua sendo folha acumulada ÷ receita acumulada — anualizar só um
     // dos lados inventaria um fator que a Resolução não manda calcular.
-    const folha12m = _prop
+    // v7.64.0 · a CPP dos meses já apurados neste ano entra no FS12; a dos meses de histórico não
+    // é conhecida, e a falta é DECLARADA (frCppParcial) em vez de estimada.
+    const _cppAcum = S(cppPrev);
+    const _mesesHist = _prop ? Math.max(0, _nAnt - cppPrev.length)
+                             : (m===0 ? 12 : cfg.folha12Lanc.slice(m).filter(v=>+v>0).length);
+    const folha12m = (_prop
       ? (_nAnt===0 ? folhaMesFR(m)*12 : (S(cfg.folha12Lanc.slice(_janIni)) + S(folhaPrev))/_nAnt*12)
-      : (m===0 ? folha12Cfg : S(cfg.folha12Lanc.slice(m)) + S(folhaPrev));
+      : (m===0 ? folha12Cfg : S(cfg.folha12Lanc.slice(m)) + S(folhaPrev)))
+      + (_prop && _nAnt===0 ? 0 : _cppAcum);
     const fatorR = (rbt12 + rbt12Exp) > 0 ? folha12m / (rbt12 + rbt12Exp) : 0;
+    const _frCppParcial = !_frLegado && _mesesHist > 0 && folha12m > 0;
     out.fatorRMensal.push(fatorR);
     if (m===0) out.fatorR = fatorR;
     const fx = faixaDe(rbt12);
@@ -3392,6 +3420,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       // v7.52.0 · rastro da proporcionalização, para a memória imprimir a conta e não só o resultado
       rbt12Prop: _prop, mesAtividade: _iniAbs===null ? null : _nAnt+1, nAntProp: _prop ? _nAnt : null,
       rbt12Presumido: _rbtPresum, rbt12PresumidoExp: _rbtPresumExp,   // v7.63.0 (A01)
+      frCppParcial: _frCppParcial, frCppSomada: _frLegado ? 0 : S(cppPrev),   // v7.64.0
+      frMesesHistorico: _mesesHist,
       // ── v7.60.0 (M4) · INSUMOS DO MÊS, DEVOLVIDOS PELO MOTOR ────────────────────────────────
       // Três defeitos desta frente nasceram do mesmo lugar: a memória REMONTAVA, na hora de
       // imprimir, valores que o motor já tinha decidido — o numerador da RBT12p (v7.56.5), o
@@ -3436,6 +3466,14 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
             credDesp: credDespMes(m), saldoCredorAnt: _saldoAnt, saldoCredorFim: saldoCredorPC,
             credItens: Object.fromEntries(CRED_LR_KEYS.map(k=>[k, D[k][m]])) },
     });
+    // v7.64.0 · CPP efetivamente recolhida no mês, acumulada para o Fator R dos meses SEGUINTES.
+    // Precisa vir DEPOIS do push do mês: a primeira versão lia out.meses[length-1] antes de o mês
+    // atual entrar no array e somava a CPP defasada em um mês — defeito que o verificador
+    // independente pegou, e que nenhum teste de identidade pegaria, porque os dois lados do
+    // aplicativo estavam igualmente errados.
+    { const _M = out.meses[out.meses.length-1];
+      cppPrev.push(_frLegado ? 0 : ((_M && _M.dasTrib ? (+_M.dasTrib.cpp||0) : 0)
+        + (_M && _M.simples ? (+_M.simples.cppRetida||0) + (+_M.simples.inssPatrForaDAS||0) : 0))); }
   }
 
   // Adicional de IRPJ do PRESUMIDO (modo: off | mensal | trimestral)
@@ -4168,6 +4206,8 @@ const FAIXAS = {
   'cfg.ipiV':    { min:0, max:1,   alerta:0.35, rot:'IPI sobre vendas' },
   'cfg.ipiC':    { min:0, max:1,   alerta:0.35, rot:'IPI sobre compras' },
   'cfg.transpCredPres': { min:0, max:1, alerta:0.30, rot:'crédito presumido do transporte' },
+  'cfg.ratBasico': { min:0, max:0.03, rot:'RAT básico',
+                     nota:'as alíquotas legais são 1%, 2% ou 3% (Lei 8.212/91, art. 22, II)' },
   'red_pct':     { min:0, max:1,   alerta:1,    rot:'percentual de redução',
                    nota:'a redução da base não pode passar de 100%' },
   'receita':     { min:0, max:null, rot:'receita',
@@ -4377,6 +4417,13 @@ function anAvisoConfig(){
       falta.push('a <b>alíquota de ISS do município</b> — há ' + fmtR(svc) + ' de receita de serviços e o ISS está em 0%. Se houver ISS devido, o Lucro Presumido e o Lucro Real saem <b>subestimados</b> e a comparação com o Simples fica viciada. Sociedade uniprofissional com ISS fixo também precisa ser declarada aqui'); }
   // v7.63.0 (auditoria A01) · o mês em que a RBT12 foi PRESUMIDA precisa se anunciar: o número
   // saiu de uma regra, não de um dado, e antes desta versão ele saía ZERO em silêncio.
+  // v7.64.0 (parecer externo, achado 3.7) · a presunção da EXPORTAÇÃO era marcada pelo motor e não
+  // era lida em lugar nenhum: acontecia em silêncio, que é o que a correção A01 existia para impedir.
+  { const pe = (AN._res?.meses||[]).map((M,i)=>M.rbt12PresumidoExp?MESES[i]:null).filter(Boolean);
+    if (pe.length) falta.push(`o RBT12 de <b>exportação</b> de ${pe.join(', ')} — há receita de `
+      + `exportação lançada e o histórico do mercado externo está zerado, então o aplicativo `
+      + `<b>presumiu</b> a receita do próprio mês × 12 para a faixa da exportação, que é própria `
+      + `(LC 123/2006, art. 3º, § 14). Lance o histórico de exportação na aba RBT12`); }
   { const pres = (AN._res?.meses||[]).map((M,i)=>M.rbt12Presumido?MESES[i]:null).filter(Boolean);
     if (pres.length) falta.push(`o RBT12 de ${pres.join(', ')} — sem ele, o aplicativo <b>presumiu</b> `
       + `a receita do próprio mês × 12 (regra do 1º mês de atividade, Res. CGSN 140/2018, art. 22, § 2º) `
@@ -4431,11 +4478,23 @@ function anAvisoConfig(){
   el.style.display = el.innerHTML.trim() ? 'block' : 'none';
 }
 // percentuais de folha: a empresa herda do app enquanto não tiver ajuste próprio
+// v7.64.0 (parecer externo, achado 3.8) · o RAT legal é 1%, 2% ou 3% (Lei 8.212/91, art. 22, II),
+// ajustado pelo FAP entre 0,5 e 2,0 (Lei 10.666/2003, art. 10). O aplicativo guardava só o produto
+// — 5,80% de fábrica —, rotulado como "grau de risco", o que é impreciso: 5,80% não é alíquota de
+// grau de risco nenhum. Informados os componentes, o percentual passa a ser DERIVADO e demonstrável.
+// Sem eles vale o percentual único gravado, e nenhuma análise existente muda de valor.
+function ratAjustado(cfg){
+  const b = +((cfg||{}).ratBasico) || 0, f = +((cfg||{}).fap) || 0;
+  return (b > 0 && f > 0) ? { pc: b*f, basico:b, fap:f } : null;
+}
 function folhaPercDaEmpresa(cfg){
   const c = cfg || (AN && AN.cfg) || {};
   const own = c.folhaPerc || {};
   const out = { ...PARAMS.folha };
   for (const k of Object.keys(out)) if (own[k] != null && own[k] !== '') out[k] = +own[k];
+  // v7.64.0 · RAT informado por componentes prevalece sobre o percentual único
+  const _ra = ratAjustado(c);
+  if (_ra) { out.rat = _ra.pc; out._ratBasico = _ra.basico; out._fap = _ra.fap; }
   return out;
 }
 // v7.60.0 (M5) · gravação pontual, no mesmo desenho de cfgFolhaSet: campo em branco APAGA a
@@ -4480,6 +4539,12 @@ function anRenderConfig() {
     <div><label>Adicional de IRPJ</label><select id="cf-adic" onchange="anAplicarConfig(true)"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
     <div><label>Sublimite ICMS/ISS (R$ 3,6 mi)</label><select id="cf-sublim" onchange="anAplicarConfig(true)"><option value="auto" ${(c.sublimite||'auto')=='auto'?'selected':''}>Aplicar trava da 5ª faixa</option><option value="off" ${c.sublimite=='off'?'selected':''}>Não aplicar</option></select></div>
     <div><label>Trava da 5ª faixa na guia <span class="hint">(v7.36.0)</span></label><select id="cf-travadas" onchange="anAplicarConfig(true)"><option value="sim" ${c.travaNoDas===false?'':'selected'}>Dentro do DAS (PGDAS-D)</option><option value="nao" ${c.travaNoDas===false?'selected':''}>Fora do DAS — legado</option></select></div>
+    <div><label>Composição do FS12 (Fator R) <span class="hint">(v7.64.0)</span></label><select id="cf-frcomp" onchange="anAplicarConfig(true)" title="Res. CGSN 140/2018, art. 26, § 1º: as remunerações são acrescidas do 13º, do FGTS e da CPP efetivamente recolhida.">
+      <option value="legal" ${String(c.frComposicao||'legal')==='legado'?'':'selected'}>Legal — com 13º e CPP (padrão)</option>
+      <option value="legado" ${String(c.frComposicao||'legal')==='legado'?'selected':''}>Legado — só remunerações e FGTS</option></select></div>
+    <div><label>RAT básico / FAP <span class="hint">(v7.64.0)</span></label><span style="display:flex;gap:6px">
+      <input id="cf-ratbas" value="${c.ratBasico?String(+(c.ratBasico*100).toFixed(4)).replace('.',','):''}" style="width:62px" placeholder="1 a 3" onchange="anAplicarConfig(true)">
+      <input id="cf-fap" value="${c.fap?String(+(+c.fap).toFixed(4)).replace('.',','):''}" style="width:62px" placeholder="0,5 a 2" onchange="anAplicarConfig(true)"></span></div>
     <div><label>Arredondamento do DAS <span class="hint">(v7.62.0)</span></label><select id="cf-arredtrib" onchange="anAplicarConfig(true)" title="O PGDAS-D apura tributo a tributo, arredonda cada um e soma. O motor arredonda o total uma vez. A diferença é de centavos, e só aparece na conferência contra a guia.">
       <option value="nao" ${c.arredondaPorTributo?'':'selected'}>Total do mês (padrão)</option>
       <option value="sim" ${c.arredondaPorTributo?'selected':''}>Por tributo, como a guia</option></select></div>
@@ -4628,12 +4693,18 @@ function anAplicarConfig(silencioso) {
     // v7.62.0 (M3) · a chave só existe quando LIGADA: análise que nunca a viu segue byte a byte
     // idêntica, e é isso que mantém o lacre 47f3f10b e os 754 gabaritos fora do alcance da opção.
     arredondaPorTributo: (vRaw('cf-arredtrib', _cfg.arredondaPorTributo?'sim':'nao') || 'nao') === 'sim',
+    frComposicao: (vRaw('cf-frcomp', _cfg.frComposicao||'legal') === 'legado') ? 'legado' : 'legal',   // v7.64.0
+    ratBasico: gFx('cf-ratbas', _cfg.ratBasico, 'cfg.ratBasico'),
+    fap: vNum('cf-fap', _cfg.fap),
     projJanela: projJanelaNorm(vRaw('cf-proj',_cfg.projJanela)),          // v7.39.0
     anoRefParecer: parAnoRefNorm(vRaw('cf-anoref',_cfg.anoRefParecer)),   // v7.41.7
     rbt12Direto: vNum('cf-rbtd',_cfg.rbt12Direto),
     inicioAtividade: (vRaw('cf-inicio', _cfg.inicioAtividade||'')||'').trim() });   // v7.52.0
   // v7.35.0 · período de apuração do Lucro Real e saldos de prejuízo (podem não existir em telas antigas)
   if (AN.cfg.arredondaPorTributo !== true) delete AN.cfg.arredondaPorTributo;   // v7.62.0: ausente ≠ false
+  if (!(+AN.cfg.ratBasico > 0)) delete AN.cfg.ratBasico;             // v7.64.0: em branco não grava
+  if (!(+AN.cfg.fap > 0)) delete AN.cfg.fap;
+  if (AN.cfg.frComposicao === 'legal') delete AN.cfg.frComposicao;   // o padrão não ocupa espaço
   if ($id('cf-lrper'))    AN.cfg.lrPeriodo  = $id('cf-lrper').value;
   if ($id('cf-lrprejir')) AN.cfg.lrPrejIrpj = Math.max(0, num($id('cf-lrprejir').value));
   if ($id('cf-lrprejcs')) AN.cfg.lrPrejCsll = Math.max(0, num($id('cf-lrprejcs').value));
@@ -4943,7 +5014,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.63.0';
+const APP_VERSAO = '7.64.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -9818,6 +9889,11 @@ function rlConfDivergencias(){
       <li><b>Limite e sublimite proporcionais (v7.55.0):</b> valem <b>apenas no ano-calendário de início</b> de atividade (LC 123/2006, art. 3º, §§ 2º e 3º), contada a fração de mês como mês inteiro. No ano seguinte o limite volta a ser integral, ainda que a empresa tenha menos de 12 meses de existência.</li>
       <li><b>ISS retido fora da dedução da base do IBS/CBS (v7.54.0):</b> a dedução é o ISS do Lucro Presumido exibido no Consolidado analítico, que exclui as receitas com retenção. A leitura literal do art. 12, §2º, V, da LC 214/2025 admitiria o contrário — o ISS retido também incidiu sobre a operação —, mas a escolha é pela coerência com a decisão da v7.23.0 de que o ISS retido não é custo da empresa. É <b>decisão declarada</b>, não omissão.</li>
       <li><b>Redução de IBS/CBS — ordem das operações (v7.54.0):</b> a exclusão de ICMS e ISS é operação de <b>base</b> e a redução do regime diferenciado é operação de <b>alíquota</b>, então a dedução vem primeiro e é <b>rateada proporcionalmente à base de cada parcela</b>. O rateio por natureza (ISS só sobre serviço, ICMS só sobre mercadoria) seria mais fiel ao fato gerador e <b>não</b> está implementado.</li>
+      <li><b>Composição do FS12 do Fator R (v7.64.0):</b> ${String((RL?.dados?.cfg||{}).frComposicao||'legal')==='legado'
+        ? 'esta análise usa a composição <b>legada</b> (remunerações + FGTS, sem 13º e sem CPP), preservada para reproduzir documento emitido até a v7.63.0.'
+        : 'o FS12 soma remunerações, pró-labore, 13º, FGTS e a <b>contribuição patronal previdenciária efetivamente recolhida</b> (Res. CGSN 140/2018, art. 26, § 1º). Em optante do Simples a CPP está <b>dentro do DAS</b>, e é a parcela apurada pelo próprio motor que entra — nunca um percentual presumido sobre a folha, que produziria valor que ninguém recolheu. Nos meses vindos do histórico da aba RBT12 a CPP <b>não é conhecida</b> e não é estimada: enquanto houver meses de histórico na janela, o Fator R sai <b>subestimado</b>, e isso fica declarado em vez de inventado.'}</li>
+      <li><b>RBT12 de exportação (v7.64.0):</b> o mercado externo tem RBT12, faixa e limite próprios (LC 123/2006, art. 3º, § 14). Havendo exportação lançada sem histórico externo informado, vale a mesma presunção do mercado interno — receita do mês × 12 — e ela é <b>declarada mês a mês</b>, não silenciosa.</li>
+      <li><b>RAT ajustado (v7.64.0):</b> o percentual usado é o RAT <b>já multiplicado pelo FAP</b>. Informados o RAT básico (1%, 2% ou 3%) e o FAP (0,5 a 2,0) na Configuração, o percentual passa a ser derivado e a memória mostra a conta; sem eles, vale o percentual único gravado.</li>
       <li><b>RBT12 presumida (v7.63.0):</b> ${(RL?.res?.meses||[]).some(M=>M.rbt12Presumido)
         ? 'em pelo menos um mês deste ano a RBT12 apurada era <b>zero</b> e havia receita lançada. Como alíquota efetiva com RBT12 zero é indeterminada — e apurar <b>DAS zero</b> com receita não é resultado defensável —, o aplicativo aplicou a regra do <b>primeiro mês de atividade</b> (Res. CGSN 140/2018, art. 22, § 2º): receita do próprio mês × 12. É <b>presunção</b>, não dado: lance os 12 meses anteriores na aba RBT12, ou informe a data de início de atividade, e o número passa a sair do dado real.'
         : 'não se aplica a esta análise — todos os meses com receita têm RBT12 apurada a partir de dado lançado.'}</li>
