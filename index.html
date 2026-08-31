@@ -694,6 +694,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.78.0</b></td><td>31/08/2026</td><td><b>✍️ Sete ajustes de redação no parecer executivo, apontados por auditoria do documento que vai ao cliente.</b> Nenhum é de cálculo — e é justamente por isso que importam: num parecer, a frase errada custa tanto quanto o número errado. <b>(1)</b> O quadro de 2027 dizia "já com IBS/CBS plenos", transmitindo cronograma incorreto: 2027 é o <b>início</b> da transição efetiva e o modelo pleno só se completa em <b>2033</b>. O texto passa a nomear o ano e a dizer que a transição continua. <b>(2)</b> A introdução resumia a Reforma como substituição de PIS, COFINS, ICMS, ISS <b>e IPI</b>. O IPI não desaparece: tem alíquotas reduzidas a zero a partir de 2027, com hipóteses preservadas — entre elas as ligadas à <b>Zona Franca de Manaus</b> (EC 132/2023, art. 126). <b>(3)</b> A frase "toda e qualquer despesa destinada ao uso da empresa poderá gerar crédito" prometia mais do que a lei dá. A não cumulatividade é ampla, <b>não irrestrita</b>: há requisitos, vedações e restrições (LC 214/2025, arts. 47 a 57), e uso e consumo pessoal fica de fora. <b>(4)</b> A retenção de <b>100%</b> no split payment passou a ser declarada como <b>premissa conservadora do modelo</b>, adotada para medir o pior caso de caixa — e não como percentual fixado em lei, que ainda depende de regulamentação. <b>(5)</b> O gráfico "Para onde vai cada real do DAS" ocupa uma página inteira e, em empresa <b>inelegível</b> ao Simples, podia ser lido como a carga atual. Ganhou faixa em vermelho dizendo que é <b>simulação comparativa</b>, com o valor da receita e o dispositivo — e o título muda para "Simulação". <b>(6)</b> O prazo de opção dizia "na abertura do exercício" numa página e setembro/março em outra. Agora fala em <b>prazo regulamentar</b>, distinguindo a opção pelo Simples, as janelas do regime híbrido (art. 40-D) e a formalização do Presumido ou Real pelo primeiro recolhimento. <b>(7)</b> A economia acumulada virou <b>"economia teórica"</b>, com a ressalva de que não é economia frente à carga atual — era a leitura que o título anterior permitia. <b>Sobre a memória de cálculo:</b> o parecer <b>não</b> passa a carregá-la, por decisão de quem o usa — ela já existe, completa, na <b>Conferência de cálculos</b>. O que entrou foi o <b>vínculo explícito</b>: a introdução declara que o documento é executivo e que deve ser lido em conjunto com a conferência, onde cada número é demonstrado com base, fórmula e parâmetros. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro; suíte com <b>664 verificações</b>.</td></tr>
+                    <tr><td><b>v7.77.0</b></td><td>31/08/2026</td><td><b>⛔ O comparativo recomendava o Simples para empresa de R$ 7 milhões — a guarda existia em um lugar e faltava em outros três.</b> A v7.75.0 tirou o Simples da comparação quando a receita ultrapassa o limite, mas fez isso <b>só no quadro da Análise</b>. O <b>relatório comparativo</b>, a <b>conferência</b> e a <b>tabela da carteira</b> tinham cada um a sua escolha do menor, e as três continuavam elegendo o regime: com R$ 7 milhões de receita, a recomendação era Simples (R$ 1.346.505,82) quando o correto é Lucro Presumido (R$ 1.393.700,79). <b>O dado sempre esteve à mão:</b> <code>snElegibilidade</code> já respondia "inelegível" para esse cenário, e o gráfico do painel já consultava. Quem não perguntava eram os outros três — o valor do Simples é mesmo o menor, só que a empresa não pode usá-lo. Recomendar um regime juridicamente indisponível é o pior erro que um documento de decisão pode conter. Todos passam a consultar a <b>mesma fonte</b>. O relatório abre com aviso explicando que o Simples ficou fora da comparação, com o valor da receita e o dispositivo (LC 123/2006, art. 3º, II, e §§ 9º e 10); a carteira marca <b>"(SN indisponível)"</b> na coluna do melhor regime. Os valores do Simples continuam nos quadros como <b>referência</b> do que o regime custaria — omiti-los esconderia informação —, mas não concorrem. <b>O teste desta versão não confere um lugar: varre o arquivo inteiro</b> atrás de qualquer escolha do menor entre os três regimes que não pergunte a elegibilidade. Foi assim que os três pontos apareceram, e é assim que um quarto não passa despercebido. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro; suíte com <b>655 verificações</b>.</td></tr>
                     <tr><td><b>v7.76.0</b></td><td>31/08/2026</td><td><b>🧾 A decomposição do DAS listava SETE tributos e somava OITO — o achado que sobreviveu a três pareceres porque eu procurava no lugar errado.</b> A linha "Decomposição" da memória enumerava IRPJ, CSLL, COFINS, PIS, CPP, ICMS e ISS, e o valor ao lado somava também o <b>IPI</b>. Quem conferisse a olho encontrava uma parcela a descoberto — R$ 1.074,43 no cenário do Teste 13, R$ 1.074,43 no do 12, R$ 1.074,43 no do 11. <b>Por que demorou:</b> eu conferia o objeto <code>dasTrib</code>, que sempre fechou com o DAS, inclusive com exportação — e concluí três vezes que o achado "não se reproduzia". O defeito nunca esteve no cálculo: estava no <b>texto emitido</b>, num lugar do código onde a lista era escrita à mão e o total, calculado à parte. Só apareceu quando gerei o documento e li o que ele diz, em vez de inspecionar a estrutura de dados. Agora o texto e o total saem das <b>mesmas chaves</b>, de modo que não possam divergir nem quando um tributo novo entrar na repartição; e os tributos sem valor no período são <b>nomeados</b> em vez de sumirem em silêncio. Os testes desta versão leem o <b>HTML gerado</b>, não o objeto — foi essa a lição. <b>(2)</b> O texto da base de IRPJ citava o transporte de cargas como parcela adicional a 8% depois de já tê-lo somado no total do comércio: seguir o texto literalmente levava a <b>contá-lo duas vezes</b>. Ele passa a aparecer como <b>detalhe</b> do total — só o transporte de passageiros é parcela à parte, porque tem presunção própria de 16%. <b>(3)</b> A trava do sublimite ganhou <b>sinal</b> na memória, e o cabeçalho das projeções anuncia <b>⛔ CENÁRIO HIPOTÉTICO</b> quando a empresa está inelegível — sem precisar descer até as notas. Motor <b>intocado</b>: as três correções são de apresentação. Lacre <code>2e1139e9</code> íntegro; suíte com <b>649 verificações</b>.</td></tr>
                     <tr><td><b>v7.75.0</b></td><td>31/08/2026</td><td><b>⛔ Ultrapassado o limite, o Simples deixa de ser opção — e o sublimite passa a ser dito como o que é a partir de 2027.</b> <b>(1) Elegibilidade.</b> Receita interna do ano-base acima de R$ 4,8 milhões significa que a empresa <b>não permanece no regime</b> no exercício seguinte (LC 123/2006, art. 3º, §§ 9º e 10). Os cenários "Simples por dentro" e "híbrido" dos anos projetados passam a ser marcados como <b>INDISPONÍVEIS</b> e <b>saem da escolha do melhor regime</b>: a comparação real fica entre Lucro Presumido e Lucro Real com IBS/CBS por fora. Os valores continuam à vista, como referência do que o regime custaria — omiti-los esconderia informação —, mas nunca mais como opção. O ano-base não é bloqueado: ele é o realizado. <b>(2) Sublimite a partir de 2027.</b> Passar de R$ 3,6 milhões deixa de ser detalhe de guia. Acima dele o ICMS e o ISS já saem do Simples, e na vigência da Reforma permanecer "por dentro" <b>deixa de ser opção plena</b>: a empresa opera no <b>regime híbrido</b> — DAS sem as parcelas de consumo, IBS/CBS por fora, split payment e opção semestral (art. 22-A da Res. CGSN 140/2018 e art. 40-D) — <b>ou migra</b> para o Presumido ou o Real. O quadro de cenários passa a dizer isso, e o papel de trabalho declara qual dos <b>três estados</b> vale para a empresa: dentro do sublimite, entre sublimite e limite, ou acima do limite. <b>(3) Três memórias que não reproduziam o próprio número</b>, apontadas por auditorias sucessivas: a razão da parcela excedente usava a receita <b>total</b> como denominador quando o cálculo usa a <b>interna</b> — a exportação tem limite próprio e não entra nessa razão; o quadro da exportação resumia quatro anexos numa alíquota média que dava R$ 1.190,77 onde o motor apurava R$ 1.985,28, e passa a somar bloco a bloco; e a base de IRPJ do Presumido divergia em R$ 896,01 porque o texto exibia o <b>transporte dentro de serviços a 32%</b> enquanto o cálculo usa a presunção do <b>comércio, 8%</b> (cargas), além de somar a exportação sem mostrá-la. A correção do terceiro caso seguiu o desenho da M4: em vez de a memória <b>remontar</b> a base, o motor passa a <b>devolver os componentes</b> que usou. Remontagem foi a origem de três defeitos desta frente. Lacre <code>2e1139e9</code> íntegro; suíte com <b>644 verificações</b>.</td></tr>
                     <tr><td><b>v7.74.0</b></td><td>31/08/2026</td><td><b>🔒 O lacre passa a enxergar o que aprendeu: entra o CASO 3, e o selo vai de <code>47f3f10b</code> a <code>2e1139e9</code>.</b> <b>A pergunta que originou esta versão:</b> com tantas regras novas, os casos-gabarito não precisariam mudar para não se perder o que foi construído? <b>A resposta tem duas metades.</b> Os casos 1 e 2 <b>não</b> mudam — vêm da planilha de referência, são fonte <b>externa e anterior</b> ao motor, e é essa independência que os torna capazes de provar que o núcleo antigo não regrediu. Alterá-los para acompanhar o motor seria trocar gabarito por espelho. <b>Mas o risco apontado era real, e maior do que parecia:</b> os dois casos usam <b>um único bloco de receita cada</b>, não cruzam limite nem sublimite, e não têm retenção, exportação, transporte, IPI nem bloco de Fator R. Ou seja, <b>nenhuma</b> das regras corrigidas entre a v7.62.0 e a v7.73.0 estava sob o lacre. Ele permaneceu íntegro em todas aquelas versões não porque nada mudou, mas porque <b>não enxergava</b> o que mudava — e eu vinha relatando essa integridade como boa notícia. <b>Entra o Caso 3.</b> Um cenário desenhado para tocar tudo o que as auditorias externas fizeram o motor aprender: cruza o <b>sublimite</b> no 7º mês e o <b>limite</b> no 9º, os dois com o mês partido pelo art. 24; fica <b>impedido</b> nos quatro últimos; exercita o <b>teto de 5% do ISS</b> na 5ª faixa com os três blocos de retenção; usa os <b>cinco anexos</b> ao longo do ano; tem os <b>quatro blocos de exportação</b>; ST, monofásico, redução de ICMS, transporte, IPI apurado e 13º pago; e o <b>Fator R dos dois lados dos 28%</b> — quatro meses no Anexo III, oito no V. O lacre passa de <b>128 para 192 números</b> selados e o hash é re-selado para <code>2e1139e9</code>. <b>Os 754 gabaritos da planilha seguem intactos</b>: o caso 3 não é gabarito, é selo — ele não afirma qual valor é certo, afirma que o valor de hoje não pode mudar sem alguém saber. A suíte ganhou um bloco que <b>guarda a cobertura do próprio caso 3</b>: se alguém o simplificar, o lacre volta a ser cego e a falha aparece na hora, não seis meses depois. Suíte: <b>628 verificações</b>.</td></tr>
@@ -5228,7 +5230,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.76.0';
+const APP_VERSAO = '7.78.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -7980,12 +7982,27 @@ function rlConsolidado(rot, n) {
 
   // ── 1. SINTÉTICO (1 página) ──
   // v7.63.0 (A07): a tarja vem antes de tudo — quem lê precisa saber da lacuna antes dos números.
-  const menor = Math.min(T.simples, T.lp, T.lr);
-  const nomeMenor = menor===T.simples?'Simples Nacional':menor===T.lp?'Lucro Presumido':'Lucro Real';
+  // ══ v7.77.0 · UM REGIME INDISPONÍVEL NÃO PODE SER RECOMENDADO ══════════════════════════
+  // A v7.75.0 tirou o Simples da comparação no quadro da ANÁLISE quando a empresa ultrapassa o
+  // limite. Mas o RELATÓRIO e a CONFERÊNCIA têm cada um a sua escolha do menor, e as duas
+  // continuavam elegendo o Simples: com R$ 7 milhões de receita, o comparativo recomendava um
+  // regime que a empresa não pode usar — o pior erro possível num documento de decisão.
+  // A elegibilidade passa a ser consultada aqui também, da mesma fonte (snElegibilidade).
+  const _EL = (typeof snElegibilidade === 'function') ? snElegibilidade(R, (D||{}).cfg||{}) : null;
+  const _snVale = !_EL || _EL.estado !== 'inelegivel';
+  const menor = _snVale ? Math.min(T.simples, T.lp, T.lr) : Math.min(T.lp, T.lr);
+  const nomeMenor = (_snVale && menor===T.simples) ? 'Simples Nacional'
+    : menor===T.lp ? 'Lucro Presumido' : 'Lucro Real';
+  const _avisoInelig = _snVale ? '' :
+    `<div class="hint" style="margin:8px 0;padding:8px 10px;border-left:4px solid var(--danger,#943126);background:#fdedec;color:#7b241c">
+      ⛔ <b>O Simples Nacional está FORA desta comparação.</b> A receita do período (${fmtR(T.receita)})
+      ultrapassa o limite de permanência no regime (LC 123/2006, art. 3º, II, e §§ 9º e 10).
+      O valor do Simples segue nos quadros como <b>referência</b> do que o regime custaria, mas a
+      recomendação considera apenas <b>Lucro Presumido e Lucro Real</b>.</div>`;
   const rank = [['Simples Nacional (hoje)',T.simples],['Lucro Presumido (hoje)',T.lp],['Lucro Real (hoje)',T.lr]];
   if (l33) rank.push(['Reforma 2033 — Simples híbrido (LC 214)', l33.hib], [`Reforma 2033 — regime regular (${l33.regNome})`, l33.regular]);
   rank.sort((a,b)=>a[1]-b[1]);
-  let h = tarjaReforma + `<div class="card"><h3>1. Resumo sintético</h3>
+  let h = tarjaReforma + _avisoInelig + `<div class="card"><h3>1. Resumo sintético</h3>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin:10px 0">
       <div class="stat"><div class="n" style="font-size:19px">${fmtR(T.receita)}</div><div class="l">Receita bruta anual</div></div>
       <div class="stat"><div class="n" style="font-size:19px">${fmtR(menor)}</div><div class="l">Menor carga hoje — ${nomeMenor}</div></div>
@@ -8486,9 +8503,14 @@ function parecerDados(){
   const seloProj = PROJ ? '📊 Valores projetados para o ano: '+PROJ.nReais+(PROJ.nReais===1?' mês real':' meses reais')
       +' + '+PROJ.nProj+(PROJ.nProj===1?' mês estimado':' meses estimados')+' pela média dos '
       +(PROJ.janela==='todos' ? 'meses lançados' : PROJ.janelaN+' últimos meses')+'.' : '';
+  // v7.78.0 (auditoria do parecer, 3.3) · a página do DAS precisa saber se a empresa PODE optar:
+  // sem isso, um gráfico de destaque sobre a decomposição do Simples é lido como carga atual.
+  const _ELp = (typeof snElegibilidade === 'function' && RL.res)
+    ? snElegibilidade(RL.res, (RL.dados||{}).cfg||{}) : null;
+  const _snInelegivel = !!(_ELp && _ELp.estado === 'inelegivel');
   return { T, Mm, MmReal, cen, REF, anos, sAnos, sDentro, sHib, sReg, sLP, sLR, sHoje, variante, regime, regimeHojeNome,
            rbtMax, rbtMaxProj, acima, optante, hojeAnual, L33, L32, anoRef, anoRefOrigem:_AR.origem, dRef, frMed, alertas, split, janelaTxt, janelaMeses,
-           proj: PROJ, projJanela: PJ, seloProj, subMon: _subMonEf, cfgP: _cfgP,
+           proj: PROJ, projJanela: PJ, seloProj, subMon: _subMonEf, snInelegivel: _snInelegivel, cfgP: _cfgP,
            recCom: Mm.map(x=>x.recCom||0), recServ: Mm.map(x=>x.recServ||0), recExp: Mm.map(x=>x.recExp||0), dasTrib: T.dasTrib||null };
 }
 
@@ -8530,7 +8552,10 @@ function ppEnqFicha(D){
 function parecerTextosPadrao(D){
   const emp = esc(RL.empresa?.razao_social) || 'a empresa';
   const b = {};
-  b.intro = 'A Emenda Constitucional nº 132/2023 e a Lei Complementar nº 214/2025 substituem PIS, COFINS, ICMS, ISS e IPI por um IVA dual — a CBS (federal) e o IBS (estados e municípios) —, com transição gradual de 2027 a 2033, quando o novo sistema estará pleno. Este estudo projeta, ano a ano, o impacto da reforma sobre '+emp+', com estimativas direcionais que não substituem a apuração formal de cada período.';
+  // v7.78.0 (auditoria do parecer, 3.2) · dizer que o IPI é "substituído" simplifica demais: ele
+  // NÃO desaparece — tem alíquotas reduzidas a zero a partir de 2027, com hipóteses preservadas,
+  // entre elas a manutenção da vantagem competitiva da Zona Franca de Manaus (EC 132, art. 126).
+  b.intro = 'A Emenda Constitucional nº 132/2023 e a Lei Complementar nº 214/2025 substituem progressivamente PIS, COFINS, ICMS e ISS por um IVA dual — a CBS (federal) e o IBS (estados e municípios) — e reduzem substancialmente o IPI, que tem alíquotas zeradas a partir de 2027 mas permanece em hipóteses específicas previstas na legislação, entre elas as ligadas à Zona Franca de Manaus. A transição é gradual, de 2027 a 2033, quando o novo sistema estará pleno. Este estudo projeta, ano a ano, o impacto da reforma sobre '+emp+', com estimativas direcionais que não substituem a apuração formal de cada período. Trata-se de um relatório <b>executivo</b>: os números aqui apresentados são demonstrados, tributo a tributo e mês a mês, na <b>Conferência de cálculos</b> gerada pelo próprio sistema — documento que traz as bases, as fórmulas com os valores substituídos, os parâmetros e as divergências declaradas de cada apuração. Este parecer deve ser lido em conjunto com ela.';
   if (D.variante==='simples'){
     b.enquadramento = 'Empresa optante do Simples Nacional (RBT12 máximo realizado de '+fmtR(D.rbtMax)+', dentro do limite legal). Período efetivamente analisado: '+D.janelaTxt+(D.janelaMeses && D.janelaMeses<12?(D.proj?' — os meses seguintes foram projetados pela média dos lançados, de modo que os valores representam o ano-calendário estimado':' — os valores refletem esse período, não o ano-calendário completo'):'')+'. Com a reforma, surge uma decisão nova: manter o IBS/CBS dentro do DAS ("por dentro"), recolhê-lo separadamente ("híbrido") ou sair do regime.';
     b.caminho = 'Permanecendo "por dentro" do DAS, a carga do Simples não é alterada pela reforma. Os caminhos alternativos foram quantificados nos quadros a seguir — a decisão depende sobretudo do perfil da clientela (quem aproveita o crédito de IBS/CBS).';
@@ -8555,7 +8580,7 @@ function parecerTextosPadrao(D){
     {quando:'2027', titulo:'Adequar as notas fiscais', texto:'Emitir com o cClassTrib correto no novo leiaute e acompanhar o ano de implantação da CBS.'},
     {quando:'2029 em diante', titulo:'Monitorar a clientela PJ', texto:'Se a parcela de clientes que exige crédito integral crescer, reavaliar o cenário híbrido com esta mesma análise.'},
     {quando:'Todo ano', titulo:'Reprocessar a análise', texto:'Os cenários mudam com o faturamento, a folha e a regulamentação — atualizar os dados e revisar a decisão.'} ] : [
-    {quando:'Agora · '+(RL.dados.ano||''), titulo:'Definir o regime de '+((+RL.dados.ano||2026)+1), texto:'Formalizar a opção pelo regime de menor carga apontado neste estudo na abertura do exercício.'},
+    {quando:'Agora · '+(RL.dados.ano||''), titulo:'Definir o regime de '+((+RL.dados.ano||2026)+1), texto:'Formalizar a opção pelo regime de menor carga apontado neste estudo dentro do <b>prazo regulamentar</b> — para o Simples Nacional, a opção é feita em <b>janeiro</b> do ano de vigência, e a permanência no regime híbrido tem janelas próprias em <b>setembro e março</b> (art. 40-D). A mudança para Lucro Presumido ou Real se formaliza com o <b>primeiro recolhimento</b> do ano.'},
     {quando:'2027', titulo:'Gestão de créditos', texto:'Priorizar fornecedores que gerem crédito integral de IBS/CBS e adequar os documentos fiscais ao novo leiaute.'},
     {quando:'2027–2032', titulo:'Precificação do repasse', texto:'Planejar o repasse gradual do aumento de carga, em especial na parcela B2B, que aproveita o crédito.'},
     {quando:'Todo ano', titulo:'Reprocessar a análise', texto:'Revisar as premissas e o comparativo de regimes a cada exercício da transição.'} ];
@@ -8628,7 +8653,13 @@ function rlParecer(){
         if (D.variante==='acima') return fmtR(D.L33.regular);
         const d33 = D.dRef;
         return fmtR(Math.min(d33, D.L33.hib, D.L33.regular)); })()}</div><div class="pp-jsm">${(function(){ if(!D.L33) return '';
-        if (D.variante==='acima') return 'Carga anual no melhor regime, já com IBS/CBS plenos.';
+        // v7.78.0 (auditoria do parecer, 3.1) · o ano de referência do quadro pode ser 2027, e dizer
+      // "IBS/CBS plenos" ali transmite cronograma errado: 2027 é o INÍCIO da transição efetiva —
+      // a CBS entra cheia, o IBS ainda em 0,1%, e o modelo pleno só se completa em 2033.
+      if (D.variante==='acima') return D.anoRef >= 2033
+        ? 'Carga anual no melhor regime, no ano de vigência plena do IBS e da CBS.'
+        : 'Carga anual no melhor regime em ' + D.anoRef + ', com CBS e IBS nas alíquotas do próprio '
+          + 'exercício — a transição só se completa em 2033.';
         const d33 = D.dRef;
         const mn = Math.min(d33, D.L33.hib, D.L33.regular);
         const nm = mn===d33 ? 'permanecer "por dentro" do DAS' : mn===D.L33.hib ? 'o cenário híbrido (art. 22-A)' : 'o regime regular ('+D.L33.regNome+')';
@@ -8654,7 +8685,12 @@ function rlParecer(){
       ${(D.T.receitaExp||0)>0.005?`<tr><td class="rot">Tratamento das exportações</td><td>Imunes a IBS/CBS (LC 214/2025, art. 8º); créditos das aquisições vinculadas são mantidos.</td></tr>`:''}
       ${D.variante==='simples'?`<tr><td class="rot">ICMS/ISS · trava da 5ª faixa</td><td>${D.optante && D.rbtMaxProj>3600000?'Aplicada — RBT12 acima do sublimite de R$ 3,6 mi; ICMS/ISS calculados pela fórmula do art. 21, III, "b", da Res. CGSN nº 140/2018, com o RBT12 efetivo do mês.'+(D.subMon && D.subMon.impedimento?' <b>Impedimento no período (v7.58.0):</b> '+esc(D.subMon.impedimento.motivo)+'. A partir do mês seguinte à ultrapassagem a trava <b>deixa de existir</b> — ela é o mecanismo de quem permanece dentro do sublimite — e o ICMS e o ISS passam a ser apurados FORA da guia, pelas alíquotas do Estado e do Município, com o crédito de ICMS das compras. Os dois seguem no custo do regime: são devidos do mesmo jeito, só não passam pelo DAS.':''):'Não aplicável no período analisado — RBT12 dentro do sublimite de R$ 3,6 mi.'}</td></tr>
       <tr><td class="rot">Metodologia da transição 2027–2033</td><td>Partilha do DAS pelos novos Anexos I–V da Res. CGSN nº 190/2026, por vigência: PIS/COFINS saem já em 2027 (viram CBS); ICMS/ISS decrescem em degraus até zerar em 2033, absorvidos pelo IBS. A trava da 5ª faixa é recomposta a cada vigência, com teto do ISS decrescente.</td></tr>`:''}
-      <tr><td class="rot">Split payment</td><td>Retenção estimada em 100% do débito de IBS/CBS no pagamento; custo financeiro a 15% a.a. (proxy da Selic mínima) sobre um mês de retenção como saldo médio financiado ao longo do ano.</td></tr>
+      <tr><td class="rot">Split payment</td><td>Para fins <b>exclusivamente de simulação conservadora</b>,
+        este estudo considera retenção equivalente a <b>100% do débito bruto</b> projetado de IBS/CBS
+        no momento do pagamento. <b>Esse percentual é premissa do modelo</b>, adotada para medir o
+        pior caso de caixa — <b>não</b> é percentual definitivo fixado pela legislação, que ainda
+        depende de regulamentação. Custo financeiro a 15% a.a. (proxy da Selic mínima) sobre um mês
+        de retenção, como saldo médio financiado ao longo do ano.</td></tr>
     </tbody></table>
     <div class="hint" style="margin-top:6px">Este quadro permite a outro profissional reproduzir ou revisar os resultados deste parecer a partir das mesmas premissas.</div>
   </div></div>`;
@@ -8669,7 +8705,13 @@ function rlParecer(){
 
   // ── PÁG: DAS por tributo ──
   if (temDT) h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
-    <div class="pp-duo"><div class="pp-chartbox"><div class="pp-ct">Para onde vai cada real do DAS</div><canvas id="pc-das" height="190"></canvas>
+    ${D.snInelegivel ? `<div style="border:2px solid #943126;background:#fdedec;color:#7b241c;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px">
+        <b>⛔ SIMULAÇÃO DO SIMPLES NACIONAL — CENÁRIO APENAS COMPARATIVO.</b> A empresa <b>não é
+        elegível</b> ao regime: a receita do período (${fmtR(D.T.receita)}) supera o limite de
+        permanência (LC 123/2006, art. 3º, II). Os números desta página <b>não são a carga atual
+        da empresa</b> — servem para mostrar o que o Simples custaria se ela pudesse optar. A carga
+        atual está no quadro do regime em uso.</div>` : ''}
+      <div class="pp-duo"><div class="pp-chartbox"><div class="pp-ct">${D.snInelegivel ? 'Simulação — para onde iria cada real do DAS' : 'Para onde vai cada real do DAS'}</div><canvas id="pc-das" height="190"></canvas>
       <div class="hint" style="margin-top:6px">O DAS é uma guia única que a lei reparte entre até oito tributos (LC 123, Anexos I–V, percentuais por faixa de receita). A fatia de <b>consumo</b> — PIS, COFINS, ICMS, ISS e IPI — é a parcela substituída pela CBS e pelo IBS na Reforma; IRPJ, CSLL e CPP permanecem como são. Em meses com ST, monofásico ou retenções, a distribuição é proporcional estimada.</div></div>
       <div class="pp-chartbox"><div class="pp-ct">Valores por tributo · ano</div><table class="pp-tab">${[['PIS','pis'],['COFINS','cofins'],['IRPJ','irpj'],['CSLL','csll'],['CPP','cpp'],['ICMS','icms'],['ISS','iss'],['IPI','ipi']].filter(([,k])=>(D.dasTrib[k]||0)>0.005).map(([n,k])=>`<tr><td class="rot">${n}</td><td class="num">${fmt(D.dasTrib[k])}</td><td class="num">${fmtP(D.dasTrib[k]/((D.T.das||0)+(D.T.sublimite||0))*100, 1)}%</td></tr>`).join('')}</table>
       <div class="hint" style="margin-top:6px">Consumo (PIS+COFINS+ICMS+ISS+IPI): <b>${fmtP(( (D.dasTrib.pis+D.dasTrib.cofins+D.dasTrib.icms+D.dasTrib.iss+D.dasTrib.ipi) / ((D.T.das||0)+(D.T.sublimite||0)) )*100, 1)}% do DAS</b> — é a parcela em jogo na Reforma.</div></div></div>
@@ -8719,7 +8761,9 @@ function rlParecer(){
 
   // ── PÁG: split + plano + parecer ──
   h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
-    ${temREF?`<div class="pp-chartbox"><div class="pp-ct">${D.variante==='simples'?'Economia acumulada ao permanecer "por dentro" (vs. 2º melhor caminho)':'Economia acumulada ao escolher o melhor regime de cada ano (vs. o outro)'}</div><canvas id="pc-acum" height="130"></canvas></div>`:''}
+    ${temREF?`<div class="pp-chartbox"><div class="pp-ct">${D.variante==='simples'
+        ? 'Economia teórica acumulada ao permanecer "por dentro", frente ao 2º melhor caminho — mantidas as premissas do estudo'
+        : 'Economia teórica acumulada do regime de menor carga frente ao outro — mantidas as premissas do estudo (não é economia frente à carga atual)'}</div><canvas id="pc-acum" height="130"></canvas></div>`:''}
     ${TX.cenarios?`<p class="pp-p" style="font-size:9.5pt"><b>Leitura dos três caminhos:</b> ${TX.cenarios}</p>`:''}
     ${secao(++NS,'Split payment — impacto no caixa')}
     <div class="pp-split">
@@ -8759,7 +8803,13 @@ function rlParecer(){
       <li>A análise foi elaborada com <b>dados reais da empresa</b>, tomando como amostragem o período de <b>${D.janelaTxt}</b>; os resultados devem ser revisitados à medida que novos meses forem lançados.</li>
       <li>Analisamos o <b>percentual de vendas destinadas a CNPJ e a CPF</b> — informação de suma importância para a tomada de decisão, pois clientes PJ do regime regular tenderão a exigir crédito integral de IBS/CBS.</li>
       <li>O regime tributário de <b>clientes e fornecedores</b> foi considerado pela situação <b>atual</b> de cada um. Uma análise de mercado mais aprofundada exige tratativa direta com esses parceiros: a decisão que eles tomarem na transição altera o resultado desta análise.</li>
-      <li>A análise considerou os <b>documentos disponíveis</b>. Na Reforma, toda e qualquer despesa destinada ao uso da empresa poderá gerar crédito de IBS/CBS — por isso é essencial <b>exigir o documento fiscal em todas as aquisições</b>, para que a análise permaneça fidedigna à realidade da empresa.</li>
+      <li>A análise considerou os <b>documentos disponíveis</b>. Na Reforma, em regra as aquisições de
+        bens e serviços <b>vinculadas à atividade econômica</b> poderão gerar crédito de IBS/CBS,
+        desde que atendidos os requisitos legais e desde que não se enquadrem nas hipóteses de
+        <b>vedação ou restrição</b> previstas na legislação — o uso e consumo pessoal, por exemplo,
+        fica de fora (LC 214/2025, arts. 47 a 57). A não cumulatividade é ampla, mas <b>não é
+        irrestrita</b>. Por isso é essencial <b>exigir o documento fiscal em todas as aquisições</b>:
+        sem ele não há crédito, e a análise deixa de refletir a realidade da empresa.</li>
       <li>A decisão a ser formalizada em <b>setembro/2026</b> valerá para o período de <b>janeiro a junho/2027</b>, com possibilidade de nova opção em <b>março/2027</b>, válida para o segundo semestre (art. 40-D da Res. CGSN 140/2018, incluído pela Res. 190/2026).</li>
     </ol>
     ${D.variante!=='acima'?`<p class="pp-p" style="font-size:9.5pt"><b>Prazos da Res. CGSN nº 190/2026:</b> a opção pelo Simples Nacional passa a ser formalizada de 1º a 30 de setembro, com efeitos a partir de 1º de janeiro seguinte — para produzir efeitos em 2027, portanto, em setembro/2026 (art. 6º). A opção pelo recolhimento de IBS/CBS no regime regular (cenário híbrido) é semestral, nas janelas de setembro e março (art. 40-D). Quem ingressar no Simples em 1º/01/2027 deve confirmar receitas e folhas anteriores no módulo "Receitas Anteriores à Opção" do PGDAS-D até 20/12/2026 (competências dez/2025 a nov/2026) e até 20/01/2027 (dez/2026); sem manifestação, prevalece o pré-preenchimento da Receita Federal (arts. 144-D e 144-E).</p>`:''}
@@ -10538,8 +10588,13 @@ function rlRegimes(rot, n) {
   const g = f => agrupar(M.map(f), n);
   const sim = g(x=>x.simples.total), lp = g(x=>x.lp.total), lr = g(x=>x.lr.total), recA = g(x=>x.receita);
   const dasDecl = RL.dados._pgdas ? agrupar(RL.dados._pgdas.das, n) : null;
-  const menor = Math.min(T.simples, T.lp, T.lr);
-  const nomeMenor = menor===T.simples?'Simples Nacional':menor===T.lp?'Lucro Presumido':'Lucro Real';
+  // v7.77.0 · mesma guarda: regime indisponível não é eleito nem aqui
+  const _EL2 = (typeof snElegibilidade === 'function')
+    ? snElegibilidade(RL.res, ((RL.dados)||{}).cfg||{}) : null;
+  const _snVale2 = !_EL2 || _EL2.estado !== 'inelegivel';
+  const menor = _snVale2 ? Math.min(T.simples, T.lp, T.lr) : Math.min(T.lp, T.lr);
+  const nomeMenor = (_snVale2 && menor===T.simples) ? 'Simples Nacional'
+    : menor===T.lp ? 'Lucro Presumido' : 'Lucro Real';
   const ord = [T.simples,T.lp,T.lr].sort((a,b)=>a-b);
 
   // cenários da Reforma (2033) — calculados já no topo para o painel executivo
@@ -10956,9 +11011,14 @@ async function dashAnalises() {
     const r = a?.resumo||{};
     let melhor = '—', econ = null;
     if (r.simples!=null && r.lp!=null && r.lr!=null) {
-      const mn = Math.min(+r.simples,+r.lp,+r.lr);
-      melhor = mn===+r.simples?'Simples':mn===+r.lp?'Presumido':'Real';
-      const ord = [+r.simples,+r.lp,+r.lr].sort((x,y)=>x-y); econ = ord[1]-ord[0];
+      // v7.77.0 · a MESMA guarda que o gráfico ao lado já usava: empresa inelegível não tem o
+      // Simples como opção, e a coluna "melhor regime" da carteira não pode dizer que tem.
+      const _ok = r.snElegivel !== false;
+      const cands = _ok ? [+r.simples,+r.lp,+r.lr] : [+r.lp,+r.lr];
+      const mn = Math.min(...cands);
+      melhor = (_ok && mn===+r.simples) ? 'Simples' : mn===+r.lp ? 'Presumido' : 'Real';
+      if (!_ok) melhor += ' <span class="hint">(SN indisponível)</span>';
+      const ord = cands.slice().sort((x,y)=>x-y); econ = ord.length>1 ? ord[1]-ord[0] : null;
     }
     return `<tr><td><b>${e.razao_social||fmtCNPJ(e.cnpj)}</b><div class="hint">${fmtCNPJ(e.cnpj)}</div></td>
       <td>${e.regime||'—'}</td><td>${a?a.ano:'<span class="hint">sem análise</span>'}</td>
