@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.65.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.65\.0';/.test(html) && html.includes('<b>v7.65.0</b>')
+    chk('v7.66.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.66\.0';/.test(html) && html.includes('<b>v7.66.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3077,14 +3077,89 @@ console.log('\n■ Integridade da interface');
     comPago.folha13 = { salarios13: 30000, prolabore13: 0, baseFgts13: 30000 };
     const rProv = g.calcular(comProv, clone(AD), {...FD});
     const rPago = g.calcular(comPago, clone(AD), {...FD});
-    chk('v7.65.0 · sem 13º pago informado, a provisão entra como aproximação declarada',
-      rProv.meses[11].fatorR > 0 && /provisão mensal<\/b> é usada como aproximação/.test(html));
-    chk('v7.65.0 · com 13º pago, ele substitui a provisão no FS12',
-      Math.abs(rProv.meses[11].fatorR - rPago.meses[11].fatorR) > 1e-9,
-      'prov ' + (rProv.meses[11].fatorR*100).toFixed(4) + '% × pago ' + (rPago.meses[11].fatorR*100).toFixed(4) + '%');
-    chk('v7.65.0 · e o 13º pago entra na competência do pagamento, não mês a mês',
-      Math.abs(rProv.meses[5].fatorR - rPago.meses[5].fatorR) > 1e-9
-      || rPago.meses[5].fatorR <= rProv.meses[5].fatorR);
+    // v7.66.0 · a v7.65.0 mantinha a provisão como aproximação quando não havia 13º pago; o
+    // parecer do Teste 6 mostrou um caso em que essa aproximação, sozinha, virava o anexo
+    // (27,92% → 28,07%). Agora ela NÃO entra, e é isto que estes testes guardam.
+    const semProv = base();
+    const rSem = g.calcular(semProv, clone(AD), {...FD});
+    chk('v7.66.0 · a provisão mensal de 13º NÃO entra no FS12 (art. 26, § 1º — montante pago)',
+      Math.abs(rProv.meses[11].fatorR - rSem.meses[11].fatorR) < 1e-12,
+      'com provisão ' + (rProv.meses[11].fatorR*100).toFixed(4)
+      + '% = sem provisão ' + (rSem.meses[11].fatorR*100).toFixed(4) + '%');
+    chk('v7.66.0 · e a falta do 13º é declarada no papel de trabalho',
+      /provisão de 13º lançada e nenhum 13º pago informado|não entra no FS12/.test(html));
+    // o 13º pago em dezembro compõe a folha dos 12 meses SEGUINTES — não o Fator R do próprio mês,
+    // que olha para trás. Dentro de um ano-calendário isolado, portanto, ele não se move.
+    chk('v7.66.0 · o 13º pago de dezembro não altera o Fator R do próprio dezembro (a janela olha para trás)',
+      Math.abs(rPago.meses[11].fatorR - rSem.meses[11].fatorR) < 1e-12);
+  }
+
+  // ═══ 6d. v7.66.0 · ACHADOS DO PARECER EXTERNO DO TESTE 6 ═══
+  {
+    console.log('\n■ v7.66.0 — achados do parecer externo (Teste 6)');
+    const z12 = () => Array(12).fill(0);
+    const nova = (cnpj) => { const a = vm.runInContext('anNovo', ctx)(cnpj, 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12(); return a; };
+
+    // 3.2 · exportação industrial é imune ao IPI (CF, art. 153, § 3º, III)
+    { const a = nova('10000000000101');
+      a.cfg.rbt12Lanc = Array(12).fill(100000); a.cfg.rbt12ExpLanc = Array(12).fill(20000);
+      a.receitas.a2_exp = Array(12).fill(20000);
+      a.folha.salarios = Array(12).fill(10000);
+      const r = g.calcular(a, clone(AD), {...FD});
+      const A2 = AD.II, f = (r.meses[0].faixaExp||1) - 1;
+      const efCheia = (r.meses[0].rbt12Exp*A2.aliq[f] - A2.ded[f]) / r.meses[0].rbt12Exp;
+      const esperada = efCheia * Math.max(0, 1 - A2.icms[f] - A2.piscof[f] - (A2.ipi?A2.ipi[f]:0));
+      const usada = (r.meses[0].ins.blocosExp||[]).find(b=>b.k==='a2_exp');
+      chk('v7.66.0 · a exportação industrial sai sem a parcela de IPI',
+        !!usada && Math.abs(usada.efetiva - esperada) < 1e-9,
+        'efetiva ' + ((usada?usada.efetiva:0)*100).toFixed(4) + '%');
+      chk('v7.66.0 · e a alíquota da exportação é menor que a do mercado interno no mesmo anexo',
+        !!usada && usada.efetiva < efCheia);
+    }
+
+    // 3.3 · IPI só na saída do estabelecimento industrial (CTN, art. 46, II)
+    { const rev = nova('10000000000202');
+      rev.cfg.rbt12Lanc = Array(12).fill(100000); rev.cfg.ipiV = .05; rev.cfg.ipiC = .05;
+      rev.receitas.a1_semst = Array(12).fill(100000);          // revenda pura
+      rev.folha.salarios = Array(12).fill(5000);
+      const rRev = g.calcular(rev, clone(AD), {...FD});
+      chk('v7.66.0 · revenda pura NÃO gera IPI, mesmo com alíquota configurada',
+        rRev.meses.reduce((s,M)=>s+M.lp.ipi,0) === 0,
+        'IPI do ano: ' + rRev.meses.reduce((s,M)=>s+M.lp.ipi,0).toFixed(2));
+      const ind = nova('10000000000303');
+      ind.cfg.rbt12Lanc = Array(12).fill(100000); ind.cfg.ipiV = .05; ind.cfg.ipiC = .05;
+      ind.receitas.a2_semst = Array(12).fill(100000);          // industrialização
+      ind.folha.salarios = Array(12).fill(5000);
+      const rInd = g.calcular(ind, clone(AD), {...FD});
+      chk('v7.66.0 · industrialização gera IPI normalmente',
+        rInd.meses.reduce((s,M)=>s+M.lp.ipi,0) > 0,
+        'IPI do ano: ' + rInd.meses.reduce((s,M)=>s+M.lp.ipi,0).toFixed(2));
+      // o débito informado à mão continua prevalecendo (equiparado a industrial)
+      const eq = nova('10000000000404');
+      eq.cfg.rbt12Lanc = Array(12).fill(100000); eq.cfg.ipiV = .05;
+      eq.receitas.a1_semst = Array(12).fill(100000);
+      eq.ipi = { deb: Array(12).fill(5000), cred: z12() };
+      const rEq = g.calcular(eq, clone(AD), {...FD});
+      chk('v7.66.0 · quem é equiparado a industrial informa o débito e ele prevalece',
+        Math.abs(rEq.meses.reduce((s,M)=>s+M.lp.ipi,0) - 60000) < 0.02);
+    }
+
+    // 3.5 · Tema 69 alcança o ICMS destacado do transporte
+    { const a = nova('10000000000505');
+      a.cfg.rbt12Lanc = Array(12).fill(100000); a.cfg.icmsV = .17; a.cfg.icmsC = .17;
+      a.receitas.comtransp = Array(12).fill(27300);            // ~327.600 no ano
+      a.folha.salarios = Array(12).fill(8000);
+      const com = g.calcular(a, clone(AD), {...FD});
+      const b = JSON.parse(JSON.stringify(a)); b.cfg.icmsV = 0;
+      const sem = g.calcular(b, clone(AD), {...FD});
+      chk('v7.66.0 · o ICMS do transporte entra na exclusão do Tema 69',
+        com.meses[0].icmsDestacadoPC > 0
+        && Math.abs(com.meses[0].icmsDestacadoPC - 27300*0.17) < 0.02,
+        'destacado ' + com.meses[0].icmsDestacadoPC.toFixed(2));
+      chk('v7.66.0 · e a base de PIS/COFINS do Presumido cai na mesma medida',
+        com.meses[0].lp.basePC < sem.meses[0].lp.basePC);
+    }
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
