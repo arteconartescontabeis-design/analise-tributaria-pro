@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.64.2 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.64\.2';/.test(html) && html.includes('<b>v7.64.2</b>')
+    chk('v7.65.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.65\.0';/.test(html) && html.includes('<b>v7.65.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3034,6 +3034,57 @@ console.log('\n■ Integridade da interface');
         !fs.readFileSync(path.join(__dirname,'verificador_independente.js'),'utf8')
           .match(/require\(|index\.html/));
     }
+  }
+
+  // ═══ 6c. v7.65.0 · ACHADOS DO PARECER EXTERNO DO TESTE 5 ═══
+  {
+    console.log('\n■ v7.65.0 — achados do parecer externo (Teste 5)');
+    const z12 = () => Array(12).fill(0);
+    const base = () => { const a = vm.runInContext('anNovo', ctx)('99999999000199', 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+      a.cfg.rbt12Lanc = Array(12).fill(200000); a.cfg.iss = .03; a.cfg.icmsV = .18; a.cfg.icmsC = .18;
+      a.receitas.a1_semst = Array(12).fill(243500);
+      a.receitas.a1_exp = Array(12).fill(14250);          // 171.000 de exportação no ano
+      a.folha.salarios = Array(12).fill(30000); a.folha.baseFgts = Array(12).fill(30000);
+      return a; };
+
+    const r = g.calcular(base(), clone(AD), {...FD});
+    const cen = vm.runInContext('calcCenariosReforma', ctx);
+    const semAba = cen(r, null).REF.find(x=>x.ano===2027);
+    chk('v7.65.0 · o motor exclui a exportação da base de IBS/CBS (LC 214, art. 8º)',
+      Math.abs(semAba.deb / semAba.alq - (r.totais.receita - r.totais.receitaExp - semAba.ded)) < 0.02,
+      'base implícita ' + (semAba.deb/semAba.alq).toFixed(2));
+
+    // o caso que a auditoria externa encontrou: aba preenchida com a receita TOTAL
+    const comAba = cen(r, { receita: 3093000, compras: 1237000 }).REF.find(x=>x.ano===2027);
+    chk('v7.65.0 · aba com a receita TOTAL devolve a exportação à base — e o efeito é o medido',
+      Math.abs((comAba.deb - semAba.deb) - 171000*semAba.alq) < 0.02,
+      'Δ ' + (comAba.deb - semAba.deb).toFixed(2));
+
+    const conf = vm.runInContext('rfConfereExportacao', ctx);
+    chk('v7.65.0 · o detector acusa a receita da aba que inclui exportação',
+      (conf({ receita: 3093000 }, r.totais)||{}).tipo === 'total');
+    chk('v7.65.0 · e não acusa quando a aba traz a receita interna',
+      conf({ receita: r.totais.receita - r.totais.receitaExp }, r.totais) === null);
+    chk('v7.65.0 · nem quando não há exportação nenhuma',
+      conf({ receita: 100000 }, { receita: 100000, receitaExp: 0 }) === null);
+    chk('v7.65.0 · o aviso nomeia a imunidade e o valor da exportação',
+      /imune ao IBS e à CBS/.test(html) && /art\. 8º/.test(html));
+
+    // 13º: pago prevalece sobre a provisão (art. 26, § 1º — "montante pago")
+    const comProv = base(); comProv.folha.prov13 = Array(12).fill(2500);
+    const comPago = base(); comPago.folha.prov13 = Array(12).fill(2500);
+    comPago.folha13 = { salarios13: 30000, prolabore13: 0, baseFgts13: 30000 };
+    const rProv = g.calcular(comProv, clone(AD), {...FD});
+    const rPago = g.calcular(comPago, clone(AD), {...FD});
+    chk('v7.65.0 · sem 13º pago informado, a provisão entra como aproximação declarada',
+      rProv.meses[11].fatorR > 0 && /provisão mensal<\/b> é usada como aproximação/.test(html));
+    chk('v7.65.0 · com 13º pago, ele substitui a provisão no FS12',
+      Math.abs(rProv.meses[11].fatorR - rPago.meses[11].fatorR) > 1e-9,
+      'prov ' + (rProv.meses[11].fatorR*100).toFixed(4) + '% × pago ' + (rPago.meses[11].fatorR*100).toFixed(4) + '%');
+    chk('v7.65.0 · e o 13º pago entra na competência do pagamento, não mês a mês',
+      Math.abs(rProv.meses[5].fatorR - rPago.meses[5].fatorR) > 1e-9
+      || rPago.meses[5].fatorR <= rProv.meses[5].fatorR);
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
