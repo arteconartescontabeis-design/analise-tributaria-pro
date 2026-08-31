@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.68.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.68\.0';/.test(html) && html.includes('<b>v7.68.0</b>')
+    chk('v7.70.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.70\.0';/.test(html) && html.includes('<b>v7.70.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -2488,8 +2488,12 @@ console.log('\n■ Integridade da interface');
       Math.abs(P2.benefRec[p60[0]]/P2.receita - aba.benefRec[p60[0]]/aba.receita) < 1e-9);
 
     // ── L · o ISS retido não reduz a base do IBS/CBS (decisão 8.9) ──
-    chk('v7.54.0 · L · a dedução usa o lp.iss puro, sem somar o ISS retido',
-      /const dedIss = a >= 2027 \? lpIss \* \(\+_q0\.remIcmsIss\|\|0\) : 0;/.test(html));
+    // v7.69.0 · o teste olhava a LINHA do código, e a linha mudou quando a opção foi
+    // parametrizada. O que precisa continuar valendo é o COMPORTAMENTO PADRÃO: sem a opção
+    // ligada, a dedução é o lp.iss puro. Passou a ser testado pelo resultado, não pelo texto.
+    chk('v7.54.0 · L · no padrão, a dedução usa o lp.iss puro, sem somar o ISS retido',
+      /const dedIss = a >= 2027 \? \(lpIss \+ _issRetAno\)/.test(html)
+      && /_issRetAno = \(T\.dedIssRetido === true\)/.test(html));
     const cr = zerar(anNovo('11222333000181', 2026));
     cr.cfg.iss = .05; cr.cfg.rbt12Lanc = Array(12).fill(50000);
     cr.receitas.a3_semret = Array(12).fill(30000); cr.receitas.a3_retiss = Array(12).fill(20000);
@@ -3186,6 +3190,116 @@ console.log('\n■ Integridade da interface');
       chk('v7.66.0 · e a base de PIS/COFINS do Presumido cai na mesma medida',
         com.meses[0].lp.basePC < sem.meses[0].lp.basePC);
     }
+  }
+
+  // ═══ 6e. v7.69.0 · ACHADOS DO PARECER EXTERNO DO TESTE 8 ═══
+  {
+    console.log('\n■ v7.69.0 — achados do parecer externo (Teste 8)');
+    const z12 = () => Array(12).fill(0);
+    const nova = (cnpj) => { const a = vm.runInContext('anNovo', ctx)(cnpj, 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12(); return a; };
+    const cenF = vm.runInContext('calcCenariosReforma', ctx);
+    const dentroF = vm.runInContext('cenDentro', ctx);
+
+    // achado 11 · em 2026 nada migrou: "por dentro" e "híbrido" têm de ser IDÊNTICOS
+    { const a = nova('44444444000144');
+      a.cfg.rbt12Lanc = Array(12).fill(300000); a.cfg.iss = .05; a.cfg.icmsV = .17; a.cfg.icmsC = .17;
+      a.receitas.a1_semst = Array(12).fill(300000);      // cruza o sublimite: gera impedimento
+      a.receitas.a3_semret = Array(12).fill(100000);
+      a.folha.salarios = Array(12).fill(30000); a.folha.baseFgts = Array(12).fill(30000);
+      const r = g.calcular(a, clone(AD), {...FD});
+      const L26 = cenF(r, null).REF.find(x=>x.ano===2026);
+      const imp = r.meses.reduce((s,M)=>s+(M.simples.impIcms||0)+(M.simples.impIss||0), 0);
+      chk('v7.69.0 · o cenário exercita o impedimento (senão o teste não prova nada)', imp > 0,
+        'ICMS/ISS fora da guia: ' + imp.toFixed(2));
+      chk('v7.69.0 · em 2026 "por dentro" e "híbrido" são idênticos (nada migrou ainda)',
+        Math.abs(dentroF(r.totais, L26) - L26.hib) < 0.01,
+        'dentro ' + dentroF(r.totais, L26).toFixed(2) + ' × híbrido ' + L26.hib.toFixed(2));
+      chk('v7.69.0 · e o híbrido carrega o ICMS/ISS do período impedido, como o "por dentro"',
+        /const hib = dasHib \+ \(T\.cppRetida\|\|0\) \+ \(T\.cppForaDAS\|\|0\) \+ impForaDAS/.test(html));
+    }
+
+    // achado 10 · ISS retido na dedução: parametrizado, com o padrão preservando a decisão 8.9
+    { const mk = (op) => { const a = nova('55555555000155');
+        a.cfg.rbt12Lanc = Array(12).fill(100000); a.cfg.iss = .05;
+        a.receitas.a3_semret = Array(12).fill(100000);
+        a.receitas.a3_retiss = Array(12).fill(29508.33);
+        a.folha.salarios = Array(12).fill(30000);
+        if (op) a.cfg.dedIssRetido = true; return a; };
+      const rPad = g.calcular(mk(false), clone(AD), {...FD});
+      const rOpt = g.calcular(mk(true), clone(AD), {...FD});
+      const LPad = cenF(rPad, null).REF.find(x=>x.ano===2027);
+      const LOpt = cenF(rOpt, null).REF.find(x=>x.ano===2027);
+      const issRet = rPad.meses.reduce((s,M)=>s+(+M.issRetLPLR||0), 0);
+      chk('v7.69.0 · padrão: a dedução NÃO inclui o ISS retido (decisão 8.9 preservada)',
+        Math.abs(LPad.dedIss - rPad.meses.reduce((s,M)=>s+(+M.lp.iss||0),0)) < 0.02);
+      chk('v7.69.0 · com a opção ligada, o ISS retido entra na dedução',
+        Math.abs(LOpt.dedIss - (LPad.dedIss + issRet)) < 0.02,
+        'dedução ' + LPad.dedIss.toFixed(2) + ' → ' + LOpt.dedIss.toFixed(2));
+      chk('v7.69.0 · e o efeito no débito é o do ISS retido × alíquota do ano',
+        Math.abs((LPad.deb - LOpt.deb) - issRet*LPad.alq) < 0.02,
+        'Δ débito ' + (LPad.deb - LOpt.deb).toFixed(2));
+      chk('v7.69.0 · a escolha é declarada no papel de trabalho, nos dois sentidos',
+        /ISS retido na dedução — opção da empresa/.test(html)
+        && /esta empresa <b>não deduz<\/b> o ISS retido/.test(html));
+    }
+
+    // v7.70.0 · campo próprio de RBAA: a regra do art. 20, § 1º passa a ser calculada COM o dado
+    { const mk = (rbaa) => { const a = nova('66666666000166');
+        a.cfg.rbt12Lanc = Array(12).fill(320000);        // janela móvel acima do sublimite
+        a.cfg.icmsV = .17; a.cfg.icmsC = .17; a.cfg.iss = .03;
+        a.receitas.a1_semst = Array(12).fill(300000);
+        a.folha.salarios = Array(12).fill(20000);
+        if (rbaa) a.cfg.rbaa = rbaa; return a; };
+      const rVazio = g.calcular(mk(0), clone(AD), {...FD});
+      const rAbaixo = g.calcular(mk(3000000), clone(AD), {...FD});
+      const rAcima = g.calcular(mk(4100000), clone(AD), {...FD});
+      chk('v7.70.0 · RBAA em branco: nada muda — a janela móvel NÃO é inferida como ano anterior',
+        rVazio.meses[0].impedido === false
+        && (rVazio.meses[0].subIcms + rVazio.meses[0].subIss) > 0,
+        'trava de janeiro preservada: ' + (rVazio.meses[0].subIcms + rVazio.meses[0].subIss).toFixed(2));
+      chk('v7.70.0 · RBAA informada e ABAIXO do sublimite: idêntico ao caso em branco',
+        Math.abs(rAbaixo.totais.simples - rVazio.totais.simples) < 0.01);
+      chk('v7.70.0 · RBAA informada e ACIMA: impedida desde JANEIRO (art. 20, § 1º)',
+        rAcima.meses[0].impedido === true && rAcima.meses.every(M => M.impedido));
+      chk('v7.70.0 · e no mês impedido a trava deixa de existir e o ICMS sai da guia',
+        (rAcima.meses[0].subIcms + rAcima.meses[0].subIss) === 0 && rAcima.meses[0].impIcms > 0,
+        'ICMS fora da guia em janeiro: ' + rAcima.meses[0].impIcms.toFixed(2));
+      chk('v7.70.0 · o impedimento declara a origem e o valor que o motivou',
+        rAcima.impedimento && rAcima.impedimento.base === 'ano-anterior'
+        && Math.abs(rAcima.impedimento.rbaa - 4100000) < 0.01
+        && /ano-calendário anterior informada na Configuração/.test(rAcima.impedimento.motivo));
+      chk('v7.70.0 · o campo existe na tela e é lido pelo funil da Configuração',
+        /id="cf-rbaa"/.test(html) && /rbaa: vNum\('cf-rbaa'/.test(html));
+      chk('v7.70.0 · em branco a chave nem é gravada (ausente ≠ zero)',
+        /if \(!\(\+AN\.cfg\.rbaa > 0\)\) delete AN\.cfg\.rbaa;/.test(html));
+      chk('v7.70.0 · a tela distingue janela móvel de ano-calendário fechado',
+        /janela móvel<\/b> que forma o RBT12/.test(html)
+        && /ano-calendário fechado<\/b> anterior/.test(html));
+      chk('v7.70.0 · e avisa quem tem indício de ultrapassagem sem o dado informado',
+        /receita bruta do ano-calendário anterior<\/b> \(aba RBT12\)/.test(html));
+    }
+
+    // achado 13 · IPI com linha própria nas memórias mensais
+    chk('v7.69.0 · o IPI tem linha própria na memória do Lucro Presumido',
+      /CF\.lin\('IPI a pagar',[^\n]*fmtR\(P\.ipi\|\|0\)\)/.test(html));
+    chk('v7.69.0 · e na memória do Lucro Real',
+      /CF\.lin\('IPI a pagar',[^\n]*fmtR\(LR\.ipi\|\|0\)\)/.test(html));
+
+    // achado 8 · o texto das divergências deixou de negar o que o motor faz
+    chk('v7.69.0 · as divergências declaradas descrevem o impedimento como CALCULADO',
+      /Impedimento de ICMS\/ISS \(v7\.58\.0, atualizado na v7\.69\.0\)/.test(html)
+      && !/<li><b>Impedimento não é modelado:<\/b>/.test(html));
+    // v7.70.0 · a RBAA saiu da lista de "sem cálculo": ganhou campo próprio e passou a ser
+    // calculada quando informada. O que o papel de trabalho precisa dizer agora é OUTRA coisa —
+    // qual dos dois estados vale nesta análise, e o que continua sem cálculo.
+    chk('v7.70.0 · o papel de trabalho declara o estado do impedimento pelo ano anterior',
+      /Impedimento pelo ano anterior \(v7\.70\.0\)/.test(html)
+      && /não foi informada<\/b> \(campo na aba RBT12\)/.test(html)
+      && /é <b>calculada<\/b>/.test(html));
+    chk('v7.70.0 · e nomeia o que segue sem cálculo, com o motivo',
+      /desdobramento do mês<\/b>/.test(html)
+      && /janela <b>móvel<\/b> e não substituem o ano fechado/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
