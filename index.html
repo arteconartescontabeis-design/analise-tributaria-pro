@@ -694,6 +694,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.79.0</b></td><td>31/08/2026</td><td><b>⛔ O comparativo continuava apontando o Simples para empresa de R$ 7 milhões: a v7.77.0 fechou três portas e deixou SETE abertas.</b> A correção anterior guardou as escolhas escritas como <code>Math.min(T.simples, …)</code> — e a varredura daquele dia procurava exatamente esse padrão. Só que o aplicativo elege o melhor regime de várias formas: o <b>painel do topo do relatório</b> monta uma lista de <b>seis cenários</b> e tira o menor dela; o trio de 2033, o gráfico mês a mês, o quadro de 2033 e duas tabelas ano a ano fazem cada um do seu jeito; e a tabela do parecer decidia por uma variante que nem sempre acompanha a inelegibilidade. Nenhum deles casava com o padrão procurado. <b>Sete pontos corrigidos</b>, todos consultando a mesma fonte de elegibilidade, mais o quadro <code>refCenCard</code>, reaproveitado pela Análise e pelo relatório da Reforma. Os cenários do Simples continuam <b>visíveis</b> como referência do que o regime custaria — não concorrem. <b>A lição foi para o teste.</b> A varredura da v7.77.0 dava falsa segurança: passava em verde enquanto sete escolhas seguiam desprotegidas. Agora ela cobre <b>min, sort, reduce, listas de candidatos e comparação direta</b>, distingue série de gráfico de lista de candidatos, e reconhece as guardas por qualquer um dos nomes usados no código. Um teste que só encontra o que já foi corrigido não vale nada. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro; suíte com <b>664 verificações</b>.</td></tr>
+                    <tr><td><b>v7.79.0</b></td><td>31/08/2026</td><td><b>⚖️ Teste 14: um erro JURÍDICO meu, da v7.75.0, e o ISS retido como opção de leitura da carga.</b> <b>(1) A fundamentação da exclusão estava errada.</b> A v7.75.0 afirmava que o excesso superior a 20% do limite "retroage ao próprio ano", citando o art. 3º, § 9º, da LC 123/2006. O dispositivo diz o <b>contrário</b>: para empresa <b>já em atividade</b>, a exclusão produz efeitos no <b>mês seguinte</b> ao da ocorrência do excesso (§ 9º), e no <b>ano-calendário seguinte</b> quando o excesso não passa de 20% (§ 9º-A). A <b>retroação</b> existe apenas no ano-calendário de <b>início de atividade</b> (§ 10), e mesmo ali só acima de 20% do limite proporcional (§ 12). O texto agora distingue os quatro casos e cita o dispositivo certo em cada um. Era erro de <b>direito</b> num documento que orienta decisão de enquadramento — o pior lugar para uma citação errada. <b>(2) ISS retido na carga do regime.</b> O retido é imposto <b>suportado</b> na operação: a empresa recebe líquido. Contá-lo mede a carga <b>econômica</b>; não contá-lo mede o <b>desembolso próprio</b>, que foi a leitura adotada na v7.23.0. As duas são legítimas e servem a perguntas diferentes, então a escolha passa a ser <b>da empresa</b>, com o padrão preservando a leitura atual — nenhum documento já emitido muda de valor. No cenário da auditoria a diferença é de <b>R$ 31.240,99</b> no ano, o mesmo valor que ela calculou, e não altera o ranking entre os regimes. O papel de trabalho declara qual leitura está em uso. <b>Três achados já estavam resolvidos antes deste parecer</b>, e agora têm teste que impede a regressão: a <b>dedução</b> do ISS retido na base do IBS/CBS é parametrizada desde a <b>v7.69.0</b>; os campos <b>Baixa dos custos — com ST</b> e <b>Baixa — com ST e monofásica</b> existem na grade e são usados pelo motor; e a trava do sublimite já aparece com <b>sinal</b> desde a v7.76.0. Nos três casos o teste do PDF foi gerado antes da versão que os corrigiu. Lacre <code>2e1139e9</code> íntegro — a opção do ISS retido nasce desligada, e é isso que mantém os casos-gabarito fora do seu alcance. Suíte: <b>674 verificações</b>.</td></tr>
                     <tr><td><b>v7.78.0</b></td><td>31/08/2026</td><td><b>✍️ Sete ajustes de redação no parecer executivo, apontados por auditoria do documento que vai ao cliente.</b> Nenhum é de cálculo — e é justamente por isso que importam: num parecer, a frase errada custa tanto quanto o número errado. <b>(1)</b> O quadro de 2027 dizia "já com IBS/CBS plenos", transmitindo cronograma incorreto: 2027 é o <b>início</b> da transição efetiva e o modelo pleno só se completa em <b>2033</b>. O texto passa a nomear o ano e a dizer que a transição continua. <b>(2)</b> A introdução resumia a Reforma como substituição de PIS, COFINS, ICMS, ISS <b>e IPI</b>. O IPI não desaparece: tem alíquotas reduzidas a zero a partir de 2027, com hipóteses preservadas — entre elas as ligadas à <b>Zona Franca de Manaus</b> (EC 132/2023, art. 126). <b>(3)</b> A frase "toda e qualquer despesa destinada ao uso da empresa poderá gerar crédito" prometia mais do que a lei dá. A não cumulatividade é ampla, <b>não irrestrita</b>: há requisitos, vedações e restrições (LC 214/2025, arts. 47 a 57), e uso e consumo pessoal fica de fora. <b>(4)</b> A retenção de <b>100%</b> no split payment passou a ser declarada como <b>premissa conservadora do modelo</b>, adotada para medir o pior caso de caixa — e não como percentual fixado em lei, que ainda depende de regulamentação. <b>(5)</b> O gráfico "Para onde vai cada real do DAS" ocupa uma página inteira e, em empresa <b>inelegível</b> ao Simples, podia ser lido como a carga atual. Ganhou faixa em vermelho dizendo que é <b>simulação comparativa</b>, com o valor da receita e o dispositivo — e o título muda para "Simulação". <b>(6)</b> O prazo de opção dizia "na abertura do exercício" numa página e setembro/março em outra. Agora fala em <b>prazo regulamentar</b>, distinguindo a opção pelo Simples, as janelas do regime híbrido (art. 40-D) e a formalização do Presumido ou Real pelo primeiro recolhimento. <b>(7)</b> A economia acumulada virou <b>"economia teórica"</b>, com a ressalva de que não é economia frente à carga atual — era a leitura que o título anterior permitia. <b>Sobre a memória de cálculo:</b> o parecer <b>não</b> passa a carregá-la, por decisão de quem o usa — ela já existe, completa, na <b>Conferência de cálculos</b>. O que entrou foi o <b>vínculo explícito</b>: a introdução declara que o documento é executivo e que deve ser lido em conjunto com a conferência, onde cada número é demonstrado com base, fórmula e parâmetros. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro; suíte com <b>664 verificações</b>.</td></tr>
                     <tr><td><b>v7.77.0</b></td><td>31/08/2026</td><td><b>⛔ O comparativo recomendava o Simples para empresa de R$ 7 milhões — a guarda existia em um lugar e faltava em outros três.</b> A v7.75.0 tirou o Simples da comparação quando a receita ultrapassa o limite, mas fez isso <b>só no quadro da Análise</b>. O <b>relatório comparativo</b>, a <b>conferência</b> e a <b>tabela da carteira</b> tinham cada um a sua escolha do menor, e as três continuavam elegendo o regime: com R$ 7 milhões de receita, a recomendação era Simples (R$ 1.346.505,82) quando o correto é Lucro Presumido (R$ 1.393.700,79). <b>O dado sempre esteve à mão:</b> <code>snElegibilidade</code> já respondia "inelegível" para esse cenário, e o gráfico do painel já consultava. Quem não perguntava eram os outros três — o valor do Simples é mesmo o menor, só que a empresa não pode usá-lo. Recomendar um regime juridicamente indisponível é o pior erro que um documento de decisão pode conter. Todos passam a consultar a <b>mesma fonte</b>. O relatório abre com aviso explicando que o Simples ficou fora da comparação, com o valor da receita e o dispositivo (LC 123/2006, art. 3º, II, e §§ 9º e 10); a carteira marca <b>"(SN indisponível)"</b> na coluna do melhor regime. Os valores do Simples continuam nos quadros como <b>referência</b> do que o regime custaria — omiti-los esconderia informação —, mas não concorrem. <b>O teste desta versão não confere um lugar: varre o arquivo inteiro</b> atrás de qualquer escolha do menor entre os três regimes que não pergunte a elegibilidade. Foi assim que os três pontos apareceram, e é assim que um quarto não passa despercebido. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro; suíte com <b>655 verificações</b>.</td></tr>
                     <tr><td><b>v7.76.0</b></td><td>31/08/2026</td><td><b>🧾 A decomposição do DAS listava SETE tributos e somava OITO — o achado que sobreviveu a três pareceres porque eu procurava no lugar errado.</b> A linha "Decomposição" da memória enumerava IRPJ, CSLL, COFINS, PIS, CPP, ICMS e ISS, e o valor ao lado somava também o <b>IPI</b>. Quem conferisse a olho encontrava uma parcela a descoberto — R$ 1.074,43 no cenário do Teste 13, R$ 1.074,43 no do 12, R$ 1.074,43 no do 11. <b>Por que demorou:</b> eu conferia o objeto <code>dasTrib</code>, que sempre fechou com o DAS, inclusive com exportação — e concluí três vezes que o achado "não se reproduzia". O defeito nunca esteve no cálculo: estava no <b>texto emitido</b>, num lugar do código onde a lista era escrita à mão e o total, calculado à parte. Só apareceu quando gerei o documento e li o que ele diz, em vez de inspecionar a estrutura de dados. Agora o texto e o total saem das <b>mesmas chaves</b>, de modo que não possam divergir nem quando um tributo novo entrar na repartição; e os tributos sem valor no período são <b>nomeados</b> em vez de sumirem em silêncio. Os testes desta versão leem o <b>HTML gerado</b>, não o objeto — foi essa a lição. <b>(2)</b> O texto da base de IRPJ citava o transporte de cargas como parcela adicional a 8% depois de já tê-lo somado no total do comércio: seguir o texto literalmente levava a <b>contá-lo duas vezes</b>. Ele passa a aparecer como <b>detalhe</b> do total — só o transporte de passageiros é parcela à parte, porque tem presunção própria de 16%. <b>(3)</b> A trava do sublimite ganhou <b>sinal</b> na memória, e o cabeçalho das projeções anuncia <b>⛔ CENÁRIO HIPOTÉTICO</b> quando a empresa está inelegível — sem precisar descer até as notas. Motor <b>intocado</b>: as três correções são de apresentação. Lacre <code>2e1139e9</code> íntegro; suíte com <b>649 verificações</b>.</td></tr>
@@ -3593,7 +3595,15 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         // são devidos do mesmo jeito, só não passam pela guia. Omiti-los faria o Simples parecer
         // mais barato justamente no mês em que ele deixa de cobrir os dois tributos.
         impIcms, impIss,
-        total: das + subIcms + subIss + cppRetida + impIcms + impIss + ((receita>0 && (R.a4[m]+R.a4_retiss[m])>0) ? inssPatr*((R.a4[m]+R.a4_retiss[m])/receita) : 0) },   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
+        // ══ v7.79.0 (auditoria do Teste 14, achado 9) · ISS RETIDO NA CARGA — OPÇÃO ══════════
+        // O ISS retido pelo tomador é imposto suportado na operação: a empresa recebe líquido.
+        // Para medir a carga ECONÔMICA, ele deveria compor o custo do regime; para medir o
+        // DESEMBOLSO PRÓPRIO, não — foi por isso que a v7.23.0 o deixou fora, e é a leitura que
+        // segue como padrão, de modo que nenhum documento já emitido muda de valor.
+        // A escolha passa a ser da empresa, e o papel de trabalho declara qual está em uso.
+        total: das + subIcms + subIss + cppRetida + impIcms + impIss
+             + (cfg.issRetidoNaCarga === true ? issRetLPLR : 0)
+             + ((receita>0 && (R.a4[m]+R.a4_retiss[m])>0) ? inssPatr*((R.a4[m]+R.a4_retiss[m])/receita) : 0) },   // v7.18.0: sem FGTS · v7.23.0: ISS retido fora por padrão
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
             baseAdic: base32+base8, basePC:_baseLPliq, basePCbruta:basePisCofLP,
       // v7.75.0 (parecer do Teste 12, achado 7) · OS COMPONENTES DA BASE PRESUMIDA VIAJAM COM O
@@ -4720,6 +4730,9 @@ function anRenderConfig() {
     <div><label>Adicional de IRPJ</label><select id="cf-adic" onchange="anAplicarConfig(true)"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
     <div><label>Sublimite ICMS/ISS (R$ 3,6 mi)</label><select id="cf-sublim" onchange="anAplicarConfig(true)"><option value="auto" ${(c.sublimite||'auto')=='auto'?'selected':''}>Aplicar trava da 5ª faixa</option><option value="off" ${c.sublimite=='off'?'selected':''}>Não aplicar</option></select></div>
     <div><label>Trava da 5ª faixa na guia <span class="hint">(v7.36.0)</span></label><select id="cf-travadas" onchange="anAplicarConfig(true)"><option value="sim" ${c.travaNoDas===false?'':'selected'}>Dentro do DAS (PGDAS-D)</option><option value="nao" ${c.travaNoDas===false?'selected':''}>Fora do DAS — legado</option></select></div>
+    <div><label>ISS retido na carga do regime <span class="hint">(v7.79.0)</span></label><select id="cf-issretcarga" onchange="anAplicarConfig(true)" title="O ISS retido pelo tomador é imposto suportado na operação: a empresa recebe líquido. Contá-lo na carga mede o custo econômico; não contá-lo mede o desembolso próprio.">
+      <option value="nao" ${c.issRetidoNaCarga?'':'selected'}>Fora — o total é o desembolso próprio (padrão)</option>
+      <option value="sim" ${c.issRetidoNaCarga?'selected':''}>Dentro — carga econômica suportada</option></select></div>
     <div><label>ISS retido na base do IBS/CBS <span class="hint">(v7.69.0)</span></label><select id="cf-dedissret" onchange="anAplicarConfig(true)" title="LC 214/2025, art. 12, § 2º, V. Matéria interpretativa: o dispositivo fala do tributo incidente na operação; o ISS retido incide, mas quem recolhe é o tomador.">
       <option value="nao" ${c.dedIssRetido?'':'selected'}>Não deduz — retido não é custo (padrão)</option>
       <option value="sim" ${c.dedIssRetido?'selected':''}>Deduz — o ISS incidiu na operação</option></select></div>
@@ -4879,6 +4892,7 @@ function anAplicarConfig(silencioso) {
     arredondaPorTributo: (vRaw('cf-arredtrib', _cfg.arredondaPorTributo?'sim':'nao') || 'nao') === 'sim',
     frComposicao: (vRaw('cf-frcomp', _cfg.frComposicao||'legal') === 'legado') ? 'legado' : 'legal',   // v7.64.0
     dedIssRetido: vRaw('cf-dedissret', _cfg.dedIssRetido?'sim':'nao') === 'sim',   // v7.69.0
+    issRetidoNaCarga: vRaw('cf-issretcarga', _cfg.issRetidoNaCarga?'sim':'nao') === 'sim',  // v7.79.0
     ratBasico: gFx('cf-ratbas', _cfg.ratBasico, 'cfg.ratBasico'),
     fap: vNum('cf-fap', _cfg.fap),
     projJanela: projJanelaNorm(vRaw('cf-proj',_cfg.projJanela)),          // v7.39.0
@@ -4893,6 +4907,7 @@ function anAplicarConfig(silencioso) {
   if (!(+AN.cfg.fap > 0)) delete AN.cfg.fap;
   if (AN.cfg.frComposicao === 'legal') delete AN.cfg.frComposicao;   // o padrão não ocupa espaço
   if (AN.cfg.dedIssRetido !== true) delete AN.cfg.dedIssRetido;      // v7.69.0: ausente = decisão 8.9
+  if (AN.cfg.issRetidoNaCarga !== true) delete AN.cfg.issRetidoNaCarga;   // v7.79.0
   if ($id('cf-lrper'))    AN.cfg.lrPeriodo  = $id('cf-lrper').value;
   if ($id('cf-lrprejir')) AN.cfg.lrPrejIrpj = Math.max(0, num($id('cf-lrprejir').value));
   if ($id('cf-lrprejcs')) AN.cfg.lrPrejCsll = Math.max(0, num($id('cf-lrprejcs').value));
@@ -5230,7 +5245,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.78.0';
+const APP_VERSAO = '7.79.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -5939,6 +5954,8 @@ function calcCenariosReforma(res, reforma) {
   const _limSNbase = 4800000 * ((T.propAtividade && T.propAtividade.fator) || 1);
   const _excedeuLim = _recIntBase > _limSNbase;
   const _excesso20 = _recIntBase > _limSNbase * 1.20;
+  // v7.79.0 · a consequência jurídica depende de a empresa estar em INÍCIO DE ATIVIDADE
+  const _inicioAtiv = !!(T.propAtividade && T.propAtividade.proporcional);
   const _snIndisponivel = _excedeuLim;
   // v7.69.0 · ICMS e ISS do período de impedimento, apurados fora da guia
   const impForaDAS = meses.reduce((s,x)=>s + (+((x.simples||{}).impIcms)||0)
@@ -6034,10 +6051,22 @@ function calcCenariosReforma(res, reforma) {
     const _snBloqueado = _snIndisponivel && a > (res.ano || 2026);
     return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, anoTeste:L.anoTeste, ded:L.ded, dedIss, dedIcms, dasHib, hib, regular, regLP, regLR, p190:P, regNome: regular===regLP?'Presumido':'Real',
              snBloqueado: _snBloqueado, snMotivo: _snBloqueado
+               // ══ v7.79.0 (auditoria do Teste 14, achado 8) · A FUNDAMENTAÇÃO ESTAVA ERRADA ══
+               // A v7.75.0 dizia que o excesso acima de 20% "retroage ao próprio ano", citando o
+               // art. 3º, § 9º. O dispositivo diz o contrário: para empresa JÁ EM ATIVIDADE, a
+               // exclusão se dá no MÊS SUBSEQUENTE ao da ocorrência do excesso (§ 9º), e no ANO
+               // SEGUINTE quando o excesso não passa de 20% (§ 9º-A). A retroação existe apenas
+               // no ano-calendário de INÍCIO DE ATIVIDADE (§ 10), e ainda assim só acima de 20%
+               // do limite proporcional (§ 12). Citar o § 9º para afirmar retroação era erro
+               // jurídico num documento que orienta decisão de enquadramento.
                ? ('receita interna do ano-base de ' + fmt(_recIntBase) + ' acima do limite de '
-                  + fmt(_limSNbase) + (_excesso20
-                    ? ' em mais de 20% — a exclusão retroage ao próprio ano (LC 123/2006, art. 3º, § 9º)'
-                    : ' — a exclusão produz efeitos a partir de 1º/01 do ano seguinte (art. 3º, § 10)'))
+                  + fmt(_limSNbase) + (_inicioAtiv
+                    ? (_excesso20
+                      ? ' em mais de 20% e em ano de INÍCIO DE ATIVIDADE — a exclusão retroage ao início das atividades (LC 123/2006, art. 3º, § 10)'
+                      : ' em ano de início de atividade, mas em até 20% — os efeitos são no ano-calendário seguinte (art. 3º, § 12)')
+                    : (_excesso20
+                      ? ' em mais de 20% — a exclusão produz efeitos no MÊS SEGUINTE ao da ocorrência do excesso (LC 123/2006, art. 3º, § 9º)'
+                      : ' em até 20% — os efeitos são a partir de 1º/01 do ano-calendário seguinte (art. 3º, § 9º-A)')))
                : null };
   });
   const semCreditos = REF.every(l=>l.cred<=0.005);
@@ -8725,7 +8754,12 @@ function rlParecer(){
     <div class="pp-chartbox"><canvas id="pc-evo" height="185"></canvas></div>
     <table class="pp-tab pp-tab-f"><thead><tr><th>Ano</th>${D.variante!=='acima'?'<th class="num">Por dentro</th><th class="num">Híbrido</th>':''}<th class="num">L. Presumido</th><th class="num">L. Real</th><th>Menor</th></tr></thead><tbody>
     ${D.anos.map((L,i)=>{ const d = D.sDentro[i]!=null ? D.sDentro[i] : D.T.simples;
-      const cand = D.variante!=='acima' ? [['Por dentro',d],['Híbrido',L.hib],['Presumido',L.regLP],['Real',L.regLR]] : [['Presumido',L.regLP],['Real',L.regLR]]; const menor = cand.reduce((a,b)=>b[1]<a[1]?b:a);
+      // v7.79.0 · a tabela ano a ano decidia só pela `variante`; empresa inelegível pode não estar
+        // marcada como 'acima' e voltava a ter o Simples entre os candidatos. A elegibilidade
+        // apurada em parecerDados passa a valer aqui também.
+        const cand = (D.variante!=='acima' && !D.snInelegivel)
+          ? [['Por dentro',d],['Híbrido',L.hib],['Presumido',L.regLP],['Real',L.regLR]]
+          : [['Presumido',L.regLP],['Real',L.regLR]]; const menor = cand.reduce((a,b)=>b[1]<a[1]?b:a);
       return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td>${D.variante!=='acima'?`<td class="num">${fmt(d)}</td><td class="num">${fmt(L.hib)}</td>`:''}<td class="num">${fmt(L.regLP)}</td><td class="num">${fmt(L.regLR)}</td><td><span class="pp-pill">${menor[0]}</span></td></tr>`; }).join('')}
     </tbody></table>
     ${D.variante!=='acima' && D.sDentro.length && !D.sDentro.some((v,i,arr)=>i>0 && Math.abs(v-arr[0])>0.5) ? `<div class="hint" style="margin-top:6px">O "por dentro" permanece <b>estável</b> nos ${D.sDentro.length} anos simulados: o teto do ISS da trava da 5ª faixa (Res. CGSN nº 190/2026) decresce a cada vigência, mas a alíquota efetiva de ISS desta empresa fica abaixo do teto em todos os anos — quando isso acontece, a fórmula da trava não é afetada pela vigência e o total não se altera. Empresas com alíquota efetiva de ISS mais próxima do teto veem o "por dentro" variar ano a ano.</div>` : ''}
@@ -10415,6 +10449,9 @@ function rlConfDivergencias(){
       <li><b>Fator R — o que entra no FS12 (v7.64.0, revisto na v7.66.0):</b> entram pró-labore, salários, FGTS, a <b>CPP efetivamente recolhida</b> (parcela do DAS, CPP retida pelo tomador e a contribuição própria do <b>Anexo IV</b>, que corre fora da guia) e o <b>13º pago</b>, na competência do pagamento. <b>Não</b> entra a provisão mensal de 13º: o art. 26, § 1º, da Res. CGSN 140/2018 soma o montante <b>pago</b>, e uma auditoria externa mostrou caso em que a provisão, sozinha, movia o fator de 27,92% para 28,07% e trocava o Anexo V pelo III. Havendo provisão lançada sem pagamento informado, o aplicativo avisa que o fator sai subestimado.</li>
       <li><b>RBT12 proporcionalizado (v7.52.0):</b> com menos de 12 meses de atividade a RBT12 é a média dos meses anteriores × 12 (Res. CGSN 140/2018, art. 22, §§ 2º e 3º), e não a soma dos meses existentes — a receita do mês apurado nunca entra. <b>Mês sem receita entra no divisor</b> da média, o que reduz a média e a faixa: é o tratamento mais defensável em fiscalização, e fica declarado por não ser o único possível. Sem a <b>data de início de atividade</b> preenchida na aba RBT12 o aplicativo não proporcionaliza — e, nesse caso, <b>não</b> levanta hipótese sobre a causa de divergência com o PGDAS-D: declara que não sabe.</li>
       <li><b>Limite e sublimite proporcionais (v7.55.0):</b> valem <b>apenas no ano-calendário de início</b> de atividade (LC 123/2006, art. 3º, §§ 2º e 3º), contada a fração de mês como mês inteiro. No ano seguinte o limite volta a ser integral, ainda que a empresa tenha menos de 12 meses de existência.</li>
+      <li><b>ISS retido na carga do regime — opção da empresa (v7.79.0):</b> ${(RL?.dados?.cfg||{}).issRetidoNaCarga
+        ? 'o ISS retido pelo tomador <b>compõe</b> o custo total do regime nesta análise. É a leitura <b>econômica</b>: a empresa recebe líquido, e o imposto foi suportado na operação ainda que recolhido por terceiro.'
+        : 'o ISS retido <b>não compõe</b> o custo total (padrão): o total mede o <b>desembolso próprio</b> da empresa. A leitura econômica — em que o retido é carga suportada — está disponível na Configuração e altera os valores absolutos dos três regimes na mesma medida, sem mudar o ranking entre eles.'}</li>
       <li><b>ISS retido na dedução — opção da empresa (v7.69.0):</b> ${(RL?.dados?.cfg||{}).dedIssRetido
         ? 'esta empresa está configurada para <b>deduzir</b> também o ISS retido da base do IBS/CBS, pela leitura literal do art. 12, § 2º, V, da LC 214/2025 — o dispositivo fala do tributo <b>incidente na operação</b>, e o ISS retido incide, apenas com recolhimento pelo tomador.'
         : 'esta empresa <b>não deduz</b> o ISS retido (padrão), pela coerência com a decisão de que o retido não é custo da empresa. A leitura oposta é defensável e está disponível na Configuração — a escolha é declarada, não silenciosa.'}</li>
@@ -10454,9 +10491,13 @@ function rlConfDivergencias(){
         const _sub = 3600000 * ((_T.propAtividade && _T.propAtividade.fator) || 1);
         if (_recI > _lim)
           return `a receita interna do ano-base (${fmtR(_recI)}) <b>ultrapassou o limite</b> de ${fmtR(_lim)}`
-            + (_recI > _lim*1.20
-              ? ', em mais de 20% — a exclusão retroage ao próprio ano (LC 123/2006, art. 3º, § 9º)'
-              : ' — a exclusão produz efeitos a partir de 1º/01 do ano seguinte (art. 3º, § 10)')
+            + ((_T.propAtividade && _T.propAtividade.proporcional)
+              ? (_recI > _lim*1.20
+                ? ', em mais de 20% e em ano de <b>início de atividade</b> — a exclusão retroage ao início das atividades (LC 123/2006, art. 3º, § 10)'
+                : ', em ano de início de atividade e em até 20% — os efeitos são no ano-calendário seguinte (art. 3º, § 12)')
+              : (_recI > _lim*1.20
+                ? ', em mais de 20% — a exclusão produz efeitos no <b>mês seguinte</b> ao da ocorrência do excesso (LC 123/2006, art. 3º, § 9º)'
+                : ', em até 20% — os efeitos são a partir de <b>1º/01 do ano seguinte</b> (art. 3º, § 9º-A)'))
             + `. Os cenários de Simples dos anos projetados são exibidos apenas como <b>referência</b> e `
             + `<b>não participam da escolha do melhor regime</b>: a empresa não terá esse enquadramento.`;
         if (_recI > _sub)
@@ -10604,19 +10645,30 @@ function rlRegimes(rot, n) {
   const R33 = REF ? REF[REF.length-1] : null;
 
   const pctR = v => (v/T.receita*100||0).toFixed(2)+'% da receita';
-  const CEN = [
-    { nome:'Simples Nacional', sub:'regime atual · '+RL.dados.ano, v:T.simples, cor:'#1a5276' },
+  // ══ v7.79.0 · CENÁRIOS DO SIMPLES SAEM DA DISPUTA QUANDO A EMPRESA É INELEGÍVEL ══════════
+    // A v7.77.0 guardou as escolhas feitas com Math.min(T.simples, …), mas ESTE painel — o do topo
+    // do relatório — elege o menor entre SEIS cenários montados numa lista, três deles do Simples.
+    // A varredura daquele dia procurava um padrão só e não o alcançou: era ele que continuava
+    // anunciando o Simples como melhor opção para empresa acima do limite.
+    const _inelegivel = !_snVale;
+    const CEN = [
+    { nome:'Simples Nacional', sub:'regime atual · '+RL.dados.ano, v:T.simples, cor:'#1a5276', sn:true },
     { nome:'Lucro Presumido', sub:'regime atual · '+RL.dados.ano, v:T.lp, cor:'#b9770e' },
     { nome:'Lucro Real', sub:'regime atual · '+RL.dados.ano, v:T.lr, cor:'#943126' },
     ...(R33 ? [
-    { nome:'Simples "por dentro"', sub:'Reforma · pleno 2033', v:cenDentro(T, R33), cor:'#2874a6' },
-    { nome:'Simples híbrido', sub:'Reforma · pleno 2033 (LC 214)', v:R33.hib, cor:'#7d3c98' },
+    { nome:'Simples "por dentro"', sub:'Reforma · pleno 2033', v:cenDentro(T, R33), cor:'#2874a6', sn:true },
+    { nome:'Simples híbrido', sub:'Reforma · pleno 2033 (LC 214)', v:R33.hib, cor:'#7d3c98', sn:true },
     { nome:'Fora do Simples', sub:'Reforma · pleno 2033 ('+R33.regNome+')', v:R33.regular, cor:'#117864' } ] : []),
   ];
-  const melhorGeral = Math.min(...CEN.map(c=>c.v));
-  const ordGeral = CEN.map(c=>c.v).sort((a,b)=>a-b);
+  // v7.79.0 · a eleição do melhor considera apenas os cenários DISPONÍVEIS; os do Simples
+  // continuam sendo exibidos, como referência, mas não concorrem.
+  const _CENel = CEN.filter(c => !(_inelegivel && c.sn));
+  const _CENdisp = _CENel.length ? _CENel : CEN;
+  const melhorGeral = Math.min(..._CENdisp.map(c=>c.v));
+  const ordGeral = _CENdisp.map(c=>c.v).sort((a,b)=>a-b);
   const dentro33 = R33 ? cenDentro(T, R33) : T.simples;   // v7.23.0: fórmula única
-  const ord33 = R33 ? [dentro33,R33.hib,R33.regular].sort((a,b)=>a-b) : null;
+  // v7.79.0 · idem para o trio de 2033: inelegível, só o regime regular concorre
+  const ord33 = R33 ? (_inelegivel ? [R33.regular] : [dentro33,R33.hib,R33.regular]).sort((a,b)=>a-b) : null;
   const nome33 = R33 ? (ord33[0]===dentro33?'Simples "por dentro"':ord33[0]===R33.hib?'Simples híbrido':'Fora do Simples') : '';
 
   let h = `<div class="grid c4">
@@ -10642,7 +10694,8 @@ function rlRegimes(rot, n) {
   </div>
   <div class="card"><h3>Quadro por período</h3><div style="overflow-x:auto"><table>
     <thead><tr><th>Período</th><th class="num">Receita</th><th class="num">Simples</th>${dasDecl?'<th class="num">DAS declarado (PGDAS)</th><th class="num">Δ simulado×declarado</th>':''}<th class="num">Presumido</th><th class="num">Real</th><th>Melhor</th></tr></thead><tbody>`;
-  rot.forEach((r,i)=>{ const mn=Math.min(sim[i],lp[i],lr[i]);
+  // v7.79.0 · gráfico mês a mês: o Simples não é destacado como melhor se a empresa não pode optar
+      rot.forEach((r,i)=>{ const mn=_snVale2 ? Math.min(sim[i],lp[i],lr[i]) : Math.min(lp[i],lr[i]);
     const dasS = agrupar(M.map(x=>x.das), n)[i];
     h += `<tr><td>${r}</td><td class="num">${fmt(recA[i])}</td><td class="num">${fmt(sim[i])}</td>${dasDecl?`<td class="num">${fmt(dasDecl[i])}</td><td class="num">${fmt(dasS-dasDecl[i])}</td>`:''}<td class="num">${fmt(lp[i])}</td><td class="num">${fmt(lr[i])}</td><td>${mn===sim[i]?'Simples':mn===lp[i]?'Presumido':'Real'}</td></tr>`; });
   h += `<tr style="font-weight:700"><td>TOTAL</td><td class="num">${fmt(T.receita)}</td><td class="num">${fmt(T.simples)}</td>${dasDecl?`<td class="num">${fmt(dasDecl.reduce((a,b)=>a+b,0))}</td><td></td>`:''}<td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td><td>${nomeMenor}</td></tr></tbody></table></div></div>
@@ -10795,7 +10848,8 @@ function rlRegimes(rot, n) {
 
   // ── Reforma Tributária no comparativo: por dentro × híbrido × fora do Simples ──
   if (REF) {
-  const melhor33 = Math.min(dentro33, R33.hib, R33.regular);
+  // v7.79.0 · quadro de 2033: inelegível, só o regime regular pode ser marcado como melhor
+      const melhor33 = _snVale2 ? Math.min(dentro33, R33.hib, R33.regular) : R33.regular;
   h += `<div class="card"><h3>Reforma Tributária no comparativo — cenários do Simples (2026–2033)</h3>
   <div class="grid c3" style="margin-top:10px">
     <div class="stat ${melhor33===dentro33?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(dentro33)}</div><div class="l">Simples "por dentro" (2033)</div><div class="sub">tudo no DAS — crédito reduzido ao cliente</div></div>
@@ -10806,7 +10860,8 @@ function rlRegimes(rot, n) {
     <thead><tr><th>Ano</th><th class="num">Alíq. IBS+CBS</th><th class="num">Simples por dentro</th><th class="num">DAS ajustado (híbrido)</th><th class="num">IBS/CBS por fora</th><th class="num">Total híbrido</th><th class="num">Fora do Simples</th><th>Melhor</th></tr></thead><tbody>`;
   for (const L of REF) {
     const dentroAno = cenDentro(T, L);   // v7.23.0: fórmula única (veredito = parecer = comparativo = conferência)
-    const mn = Math.min(dentroAno, L.hib, L.regular);
+    // v7.79.0 · tabela ano a ano do comparativo, mesma regra
+        const mn = _snVale2 ? Math.min(dentroAno, L.hib, L.regular) : L.regular;
     h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(dentroAno)}</td><td class="num">${fmt(L.dasHib)}</td><td class="num">${fmt(L.liquido+L.is)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${mn===dentroAno?'Por dentro':mn===L.hib?'Híbrido':'Fora ('+L.regNome+')'}</td></tr>`;
   }
   h += `</tbody></table></div>
@@ -10894,9 +10949,14 @@ function rlRegistros(rot, n) {
 }
 
 function refCenCard(C, T2) {
+  // v7.79.0 · quadro reaproveitado pela Análise e pelo relatório Reforma. Ele elegia o "Melhor"
+  // entre os três cenários sem perguntar se a empresa pode ficar no Simples: ultrapassado o
+  // limite, os dois primeiros são referência, não opção.
+  const _cenInelig = !!(C && C.snIndisponivel);
   let x = `<div class="card"><h3>Cenários do Simples na transição (por dentro × híbrido × fora)</h3>
     <div style="overflow-x:auto;margin-top:10px"><table><thead><tr><th>Ano</th><th class="num">Simples por dentro</th><th class="num">Total híbrido (LC 214)</th><th class="num">Fora do Simples</th><th>Melhor</th></tr></thead><tbody>`;
-  for (const L of C.REF) { const dentroAno = cenDentro(T2, L); const mn = Math.min(dentroAno, L.hib, L.regular);   // v7.36.2: fórmula única (era T2.simples fixo — travava a coluna nos 7 anos)
+  for (const L of C.REF) { const dentroAno = cenDentro(T2, L);
+    const mn = _cenInelig ? L.regular : Math.min(dentroAno, L.hib, L.regular);   // v7.36.2: fórmula única (era T2.simples fixo — travava a coluna nos 7 anos)
     x += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(dentroAno)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${mn===dentroAno?'Por dentro':mn===L.hib?'Híbrido':'Fora ('+L.regNome+')'}</td></tr>`; }
   x += `</tbody></table></div><div class="hint" style="margin-top:6px">Detalhes, gráfico e notas na aba Relatórios → Comparativo de Regimes.${C.usouFallback?' (alíquotas-padrão; preencha esta aba e salve para usar créditos e reduções)':''}</div></div>`;
   return x;
