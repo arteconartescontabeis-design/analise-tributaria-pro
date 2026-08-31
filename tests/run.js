@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.75.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.75\.0';/.test(html) && html.includes('<b>v7.75.0</b>')
+    chk('v7.76.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.76\.0';/.test(html) && html.includes('<b>v7.76.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3575,13 +3575,16 @@ console.log('\n■ Integridade da interface');
       chk('v7.75.0 · e o texto da base de IRPJ reproduz o número do motor (achado 7)',
         Math.abs(recomp - rb.meses[0].lp.baseAdic) < 0.01,
         'recomposta ' + recomp.toFixed(2) + ' × motor ' + rb.meses[0].lp.baseAdic.toFixed(2));
-      chk('v7.75.0 · o transporte de cargas aparece com a presunção do COMÉRCIO, declarada',
+      // v7.76.0 · o texto mudou: o transporte de cargas deixou de ser PARCELA separada (o que
+      // levava a somá-lo duas vezes ao ler literalmente) e virou DETALHE do total do comércio.
+      chk('v7.76.0 · o transporte de cargas é detalhe do total, não parcela adicional',
         bc.transp > 0 && bc.transpModo === 'cargas'
-        && /transporte de <b>cargas<\/b>/.test(html)
-        && /<b>não<\/b> a de serviços/.test(html));
-      chk('v7.75.0 · e a exportação aparece nomeada dentro da presunção',
-        /inclui exportação de mercadoria/.test(html)
-        && /compõe a presunção/.test(html)); }
+        && /comércio, indústria\$\{_ehPass \? '' : ' e transporte'\}/.test(html)
+        && /inclui\$\{!_ehPass && _b\.transp > 0\.005/.test(html));
+      chk('v7.76.0 · e a soma do texto reproduz a base sem contar o transporte duas vezes',
+        Math.abs((bc.com*bc.comPc + bc.serv*bc.servPc + bc.fin) - rb.meses[0].lp.baseAdic) < 0.01);
+      chk('v7.76.0 · a exportação aparece nomeada dentro da presunção',
+        /exportação de mercadoria \$\{fmtR\(_b\.expCom\)\}, imune aos tributos sobre consumo/.test(html)); }
 
     // achados de memória do Teste 12
     chk('v7.75.0 · a razão do excedente usa a receita INTERNA como denominador (achado 3)',
@@ -3590,6 +3593,23 @@ console.log('\n■ Integridade da interface');
     chk('v7.75.0 · o quadro da exportação soma os blocos e não usa alíquota média (achado 6)',
       /não há alíquota única que reproduza este total/.test(html)
       && !/\$\{fmtR\(M\.recExp\)\} × alíquota acima/.test(html));
+  }
+
+  // ═══ 6j. v7.76.0 · ACHADOS DO PARECER DO TESTE 13 ═══
+  // O achado da decomposição sobreviveu a TRÊS pareceres porque eu procurava no lugar errado:
+  // conferia o objeto `dasTrib` (que sempre fechou) em vez de conferir o TEXTO EMITIDO. A lição
+  // virou teste: estes casos leem o HTML gerado, não a estrutura de dados.
+  {
+    console.log('\n■ v7.76.0 — achados do parecer (Teste 13)');
+    chk('v7.76.0 · a linha da decomposição monta o texto e o total das MESMAS chaves',
+      /const _ks = \[\['IRPJ','irpj'\],\['CSLL','csll'\],\['COFINS','cofins'\],\['PIS','pis'\],/.test(html)
+      && /\['irpj','csll','cofins','pis','cpp','icms','iss','ipi'\]\s*\n?\s*\.reduce\(\(s,k\) => s \+ \(\+T\[k\]\|\|0\), 0\)/.test(html));
+    chk('v7.76.0 · e nomeia os tributos sem valor, em vez de omiti-los em silêncio',
+      /sem valor no período: \$\{_zer\.join\(', '\)\}/.test(html));
+    chk('v7.76.0 · a trava do sublimite aparece com sinal na memória',
+      /\(\+\) ICMS\/ISS da trava do sublimite/.test(html));
+    chk('v7.76.0 · e o cabeçalho das projeções anuncia o cenário hipotético',
+      /⛔ CENÁRIO HIPOTÉTICO — empresa inelegível ao Simples nos anos projetados/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
