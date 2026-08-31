@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.64.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.64\.0';/.test(html) && html.includes('<b>v7.64.0</b>')
+    chk('v7.64.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.64\.1';/.test(html) && html.includes('<b>v7.64.1</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -2986,6 +2986,13 @@ console.log('\n■ Integridade da interface');
         a.receitas.a3_semret = Array(12).fill(50000); a.receitas.a3_retiss = Array(12).fill(30000);
         a.folha.salarios = Array(12).fill(20000); a.cfg.iss = .05;
         casos.push(['ISS retido', a]); }
+      // achado 5.3 do 2º parecer: retenção de ISS junto com Fator R ABAIXO de 28% — o cenário
+      // anterior tinha Fator R de 40% e escondia o comportamento.
+      { const a = nova('88888888000188'); a.cfg.rbt12Lanc = Array(12).fill(100000);
+        a.cfg.folha12Lanc = Array(12).fill(15000);           // Fator R ~15%, bem abaixo de 28%
+        a.receitas.a5r = Array(12).fill(70000); a.receitas.a3_retiss = Array(12).fill(30000);
+        a.folha.salarios = Array(12).fill(15000); a.cfg.iss = .04;
+        casos.push(['a5r no Anexo V + ISS retido no Anexo III', a]); }
       { const a = nova('55555555000155'); a.cfg.rbt12Lanc = Array(12).fill(330000);
         a.receitas.a1_semst = Array(12).fill(340000); a.folha.salarios = Array(12).fill(40000);
         a.folha.baseFgts = Array(12).fill(40000); casos.push(['6ª faixa com trava da 5ª', a]); }
@@ -3020,6 +3027,9 @@ console.log('\n■ Integridade da interface');
         diverg.length === 0, diverg.slice(0,3).join(' | '));
       chk('v7.64.0 · o verificador decide o anexo sozinho e acerta a fronteira dos 28%',
         diverg.length === 0 && casos.length >= 16);
+      chk('v7.64.0 · as tabelas digitadas somam 100% em todas as faixas (achado do 2º parecer)',
+        typeof V.conferirTabelas === 'function' && V.conferirTabelas().length === 0,
+        (V.conferirTabelas ? V.conferirTabelas() : ['sem autoverificação']).join(' · '));
       chk('v7.64.0 · e ele NÃO importa nada do aplicativo',
         !fs.readFileSync(path.join(__dirname,'verificador_independente.js'),'utf8')
           .match(/require\(|index\.html/));
