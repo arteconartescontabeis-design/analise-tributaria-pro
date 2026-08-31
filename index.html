@@ -685,6 +685,8 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.68.0</b></td><td>31/08/2026</td><td><b>🌍 A exportação deixa de voltar à base do IBS/CBS pela receita da aba — e o impedimento pelo ano anterior foi TENTADO e REVERTIDO, pelo motivo que fica registrado.</b> <b>(1) Exportação.</b> O motor exclui a exportação desde a v7.24.0, mas a aba Reforma tem receita própria e ela prevalecia <b>sem conferência alguma</b>: análise preenchida com o total devolvia a exportação para dentro da base, em silêncio — efeito apontado por três auditorias seguidas. Agora o motor confere. A correção é <b>estreita de propósito</b>: só age quando o valor informado é, ao centavo, a receita <b>total</b> da análise e existe exportação no período; qualquer outro valor é respeitado, porque a aba existe justamente para os casos em que a base difere do que a análise apurou. A correção não é silenciosa — a aba avisa e o papel de trabalho declara os três números (informado, usado e exportação retirada). <b>(2) Cenários hipotéticos.</b> Ultrapassado o limite do Simples no ano-base, as colunas <b>Por dentro</b> e <b>Cenário híbrido</b> de 2027 em diante passam a trazer ressalva em vermelho: elas pressupõem uma permanência no regime que a empresa não terá (LC 123/2006, art. 3º, §§ 9º e 10), com a distinção do efeito conforme o excesso passe ou não de 20%. São comparação, não projeção. <b>(3) O impedimento pelo ano anterior NÃO foi implementado, e o motivo está no código.</b> A regra é clara: receita do ano-calendário anterior acima do sublimite impede o ICMS/ISS na guia desde 1º/01. Mas o aplicativo <b>não tem esse dado</b> — <code>rbt12Lanc</code> são os 12 meses anteriores em <b>janela móvel</b>, que só coincidem com o ano-calendário anterior em parte dos casos. Inferir a RBAA desse campo foi implementado, testado e <b>revertido</b>: elimina a trava da 5ª faixa exatamente nos cenários em que ela deve existir — empresa cujo RBT12 móvel cruza o sublimite sem que o ano anterior tenha cruzado — e derrubou <b>oito testes de regra já validados</b>. Fazer certo exige campo próprio de RBAA na Configuração, e enquanto ele não existir o aplicativo <b>avisa</b> a hipótese e não a calcula, que é a postura já adotada em outras regras sem dado suficiente. Lacre <code>47f3f10b</code> íntegro; verificador independente em 1.240 conferências sem divergência; suíte com <b>568 verificações</b>.</td></tr>
+                    <tr><td><b>v7.67.0</b></td><td>31/08/2026</td><td><b>🔧 Teste 7: a correção do IPI na exportação industrial não tinha funcionado — e o teste que eu escrevi para ela era circular.</b> <b>(1) O erro.</b> A v7.66.0 retirava a parcela de IPI lendo <code>A2.ipi</code>, mas <code>ANEXOS_DEFAULT</code> guarda apenas <code>{aliq, ded, icms, piscof}</code>: a parcela de IPI vive na <b>repartição</b> (<code>REPX</code>), não na tabela de alíquotas. A expressão caía sempre em zero e o IPI continuava dentro do DAS da exportação industrial, exatamente como o auditor externo mediu — R$ 37,28 num único mês. Agora a parcela sai de fato. <b>E o teste que deveria ter pego isso repetia a mesma expressão errada</b>, inclusive o campo inexistente: passava com a correção desligada. Foi reescrito com os percentuais do Anexo II <b>digitados da LC 123/2006</b>, de modo que os dois lados não podem mais errar juntos. É o mesmo vício que os pareceres anteriores apontaram na conferência — desta vez ele estava no meu teste. <b>(2) Texto vencido corrigido.</b> A ressalva da trava da 5ª faixa ainda dizia, com a etiqueta da v7.41.2, que o impedimento é "cenário que este cálculo ainda não modela" — afirmação superada pela v7.58.0, que passou a calcular o impedimento. Um papel de trabalho que declara não fazer o que faz é tão enganoso quanto o contrário. O texto agora descreve o tratamento real: a partir do mês seguinte à ultrapassagem a trava deixa de existir e o ICMS/ISS são apurados fora da guia, entrando no custo do regime. <b>(3) Rótulo contraditório.</b> Com o Fator R abaixo de 28%, o bloco do Fator R vai para o Anexo V enquanto os blocos do § 5º-B seguem no III — e a memória imprimia um resultado só, "Anexo III por lei", que o leitor associa ao mês inteiro. Agora os dois destinos aparecem nomeados com os respectivos blocos. A linha também passou a descrever o FS12 como ele é calculado desde a v7.66.0: pró-labore, salários, FGTS, 13º <b>pago</b> e CPP efetivamente recolhida, sobre a RBT12r <b>conjunta</b>. <b>(4) A exportação passa a ser demonstrada bloco a bloco</b> na memória de cálculo: RBT12 e faixa externas, e para cada bloco a alíquota cheia da faixa, as parcelas imunes retiradas — ICMS e PIS/COFINS no Anexo I, mais o IPI no Anexo II, ISS e PIS/COFINS nos de serviço — e o valor. Antes havia uma única "efetiva externa" para blocos de anexos diferentes: o total conferia, mas não era reproduzível a olho, que é o que um papel de trabalho precisa ser. Lacre <code>47f3f10b</code> íntegro; verificador independente segue em 1.240 conferências sem divergência.</td></tr>
                     <tr><td><b>v7.66.0</b></td><td>31/08/2026</td><td><b>🧪 Teste de estresse (Teste 6) auditado externamente: quatro correções no motor, três delas de regra tributária.</b> O cenário combinou Anexos I a V, ST, monofásico, redução, exportação de comércio, indústria e serviços, ISS retido, transporte, Anexo IV e crédito de IPI — e pressionou o motor onde os casos simples não chegam. <b>(1) A exportação industrial saía com IPI dentro do DAS.</b> O bloco <code>a2_exp</code> removia da alíquota efetiva as parcelas de ICMS e de PIS/COFINS, mas <b>não a de IPI</b>, que existe no Anexo II. A exportação é imune também ao IPI (CF, art. 153, § 3º, III). A auditoria mediu R$ 37,18 num único mês. <b>(2) O IPI incidia sobre REVENDA.</b> A base do débito somava todos os blocos de mercadoria, inclusive os do Anexo I — que é o anexo da revenda. O IPI incide na saída do <b>estabelecimento industrial ou equiparado</b> (CTN, art. 46, II): num cenário com 5% configurados, isso produziu <b>R$ 121.265,00</b> de IPI no ano onde a industrialização responde por R$ 38.010,00. A base passa a ser apenas os blocos do Anexo II; quem for <b>equiparado a industrial</b> na revenda continua informando o débito próprio na aba ICMS·IPI, que prevalece sobre o cálculo automático. <b>(3) O Tema 69 não alcançava o transporte.</b> Transporte e comunicação são fato gerador de ICMS (LC 87/96, art. 2º, II e III) e o imposto está destacado no preço, mas essas receitas ficavam fora da exclusão do RE 574.706 — a base de PIS/COFINS do Presumido e do Real saía superestimada em quem tem transporte. <b>(4) A provisão mensal de 13º saiu do FS12 do Fator R.</b> A v7.65.0 a mantinha como aproximação quando não havia 13º pago informado. O parecer trouxe o caso que derruba essa escolha: <b>27,92% sem a provisão contra 28,07% com ela</b> — a aproximação, sozinha, trocava o Anexo V pelo III. Aproximação que decide enquadramento é pior que ausência declarada. Agora só o 13º <b>pago</b> entra, e havendo provisão lançada sem pagamento informado o aplicativo <b>avisa</b> que o Fator R está subestimado. Registrado junto um detalhe que o teste expôs: como a janela do Fator R olha para trás, o 13º pago em dezembro compõe o FS12 dos meses <b>seguintes</b>, não o do próprio dezembro. <b>Conferidos e sem alteração:</b> o alerta de CMV zerado saiu corretamente no documento (achado 3.11, que o próprio parecer aprova) e a CPP proporcional do Anexo IV foi aprovada no cenário. <b>Permanecem em aberto, declarados:</b> a retenção previdenciária de 11% do bloco com ISS e INSS retidos, as reduções de ICMS que hoje não repercutem nos regimes normais, e a exportação que volta à base do IBS/CBS quando a aba Reforma tem receita própria — esta já com o alerta da v7.65.0. Lacre <code>47f3f10b</code> íntegro: os casos-gabarito não têm IPI configurado, nem transporte, nem 13º lançado.</td></tr>
                     <tr><td><b>v7.65.0</b></td><td>31/08/2026</td><td><b>🌍 Parecer externo do Teste 5: a exportação podia voltar à base de IBS/CBS pela receita da própria aba Reforma — e o 13º entrava no Fator R pela provisão, não pelo pagamento.</b> <b>(1)</b> O motor exclui a exportação da base desde a v7.24.0 (LC 214/2025, art. 8º), e isso foi reconferido: com a aba vazia, a base sai correta. Só que a aba Reforma tem receita <b>própria</b>, e o valor gravado nela <b>prevalece</b> sobre o cálculo automático — de modo que análise preenchida antes daquela versão, ou preenchida à mão com o total, carrega a exportação de volta para dentro da base, em silêncio. Foi assim que a auditoria externa encontrou <b>R$ 15.749,10</b> de IBS/CBS a mais em 2027 num caso com R$ 171.000,00 de exportação no ano — número reproduzido aqui ao centavo. O aplicativo tinha os dois valores e não os confrontava: agora <b>confronta</b>. Quando a receita da aba é a total, a aba mostra alerta <b>vermelho</b> dizendo que todos os anos da projeção estão superestimados e mandando reclicar "Preencher da análise"; quando apenas difere da interna, o alerta é âmbar e pede conferência. O papel de trabalho declara o confronto <b>nos dois sentidos</b>, inclusive quando está tudo certo. <b>(2) O 13º no FS12 do Fator R passa a ser o PAGO, não a provisão.</b> A v7.64.0 somou a provisão mensal para incluir o 13º, mas o art. 26, § 1º, da Res. CGSN 140/2018 fala em <b>montante pago</b> nos 12 meses anteriores — provisão de 1/12 ao mês não é pagamento. Havendo 13º informado na folha, é ele que entra, na competência do pagamento; não havendo, a provisão segue como <b>aproximação declarada</b>, porque ignorá-la subestimaria o FS12 de quem só tem a provisão lançada — e subestimar empurra indevidamente para o Anexo V, que é o enquadramento mais caro. <b>Conferido e sem alteração:</b> o CMV zerado apontado pelo parecer é <b>dado de entrada</b>, não defeito — o aplicativo já avisa desde a v7.51.0 sempre que houver compras lançadas com custo zero. Os demais pontos (premissa de crédito amplo dos fornecedores e os 27,91% como estimativa de referência) já constavam das divergências declaradas. Lacre <code>47f3f10b</code> íntegro — a mudança do 13º não alcança os casos-gabarito, que não têm 13º lançado.</td></tr>
                     <tr><td><b>v7.64.2</b></td><td>31/08/2026</td><td><b>✅ Terceiro parecer externo: as quatro divergências entre o motor e o verificador independente foram fechadas — e em todas as quatro o aplicativo estava certo.</b> O auditor abriu as diferenças por tributo e levantou hipóteses específicas; testadas uma a uma, todas apontaram para o <b>verificador</b>, não para o motor. <b>(1) Lucro Real da Empresa 02 (R$ 46.574,15):</b> o verificador não deduzia da base de IRPJ/CSLL o <b>FGTS</b> nem as despesas lançadas como geradoras de crédito de PIS/COFINS, e por isso inflava o lucro — exatamente as duas omissões que o parecer apontou, R$ 12.040,00 por mês. <b>(2) ICMS da Empresa 03:</b> o verificador creditava o ICMS de <b>compras com substituição tributária</b> e deixava a revenda <b>monofásica</b> fora do débito. O motor está certo nos dois pontos: mercadoria com ST já teve o imposto retido e não gera crédito nem débito, e o monofásico é regime de PIS/COFINS — o ICMS da revenda monofásica é normal. <b>(3) PIS/COFINS do Lucro Real:</b> o verificador incluía as <b>aquisições monofásicas</b> na base de crédito, o que os arts. 3º, I, "b", das Leis 10.637/2002 e 10.833/2003 vedam. <b>(4) Trava da 5ª faixa (R$ 1.494,16, aberta desde a rodada anterior): RESOLVIDA.</b> O verificador recompunha o transporte pela parcela de <b>ISS do Anexo III</b>, com o teto de 5%. A Res. CGSN 140/2018, <b>art. 25, § 1º, IV</b>, manda tributar o transporte pelo Anexo III <b>deduzida a parcela do ISS e acrescida a parcela do ICMS prevista no Anexo I</b> — que é precisamente o que o motor faz, e sem o teto, porque o teto é regra do ISS. Corrigido o verificador, a trava fechou <b>ao centavo</b>: R$ 151.194,90 nos dois. <b>Resultado do confronto nas três empresas-teste:</b> DAS, trava, Lucro Presumido e Lucro Real <b>coincidem integralmente</b>, com dois motores que não compartilham uma linha de código. <b>Fica declarada uma PREMISSA divergente</b>, que não é erro de cálculo: o aplicativo aplica a alíquota de IPI configurada sobre <b>todas</b> as saídas de mercadoria, inclusive revenda pura, enquanto a leitura estrita do CTN, art. 46, alcança só a saída do estabelecimento industrial ou equiparado. Na Empresa 03 isso responde por R$ 147.000,00 no ano. Empresa comercial não é afetada, porque nela a alíquota fica em zero; indústria que também revende, sim. O verificador passou a calcular as duas leituras, de modo que o efeito da premissa fique <b>isolado e mensurável</b> em vez de confundido com divergência de apuração. Motor e lacre <code>47f3f10b</code> intocados — todas as correções desta versão são do verificador.</td></tr>
@@ -3022,6 +3024,15 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   // SEGUINTE ao da ultrapassagem; em até 20%, o efeito é só no ano seguinte e este ano não muda.
   // Decisão 8.20: calcula-se sobre o REALIZADO e alerta-se sobre o projetado — projeção informa,
   // não recolhe. Por isso a varredura abaixo usa a receita lançada, e nunca a estimada.
+  // v7.68.0 (parecer do Teste 7) · O IMPEDIMENTO PELO ANO ANTERIOR NÃO FOI IMPLEMENTADO, E O
+  // MOTIVO ESTÁ AQUI. A regra é clara — receita do ano-calendário anterior acima do sublimite
+  // impede o ICMS/ISS na guia desde 1º/01 (LC 123/2006, art. 20, § 1º) — mas o aplicativo NÃO
+  // TEM esse dado: `cfg.rbt12Lanc` são os 12 meses ANTERIORES em janela móvel, que só coincidem
+  // com o ano-calendário anterior quando a análise começa em janeiro e o usuário lançou assim.
+  // Inferir a RBAA desse campo foi tentado e REVERTIDO: elimina a trava da 5ª faixa exatamente
+  // nos cenários em que ela existe — empresa cujo RBT12 móvel cruza o sublimite sem que o ano
+  // anterior tenha cruzado — e derrubou oito testes de regra já validados. Enquanto não houver
+  // campo próprio de RBAA, o aplicativo AVISA a hipótese (monitorSublimite) e não a calcula.
   const _impedDesde = (()=>{
     if ((cfg.sublimite||'auto') === 'off') return -1;
     const lim = (+cfg.sublimiteValor || 3600000) * _propAtiv.fator * 1.20;
@@ -3174,10 +3185,13 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       comtransp_st: (A3.iss[fx]>0 ? e3*(1-A3.iss[fx]) : e3),
       // exportação: sobra apenas IRPJ + CSLL + CPP da repartição do anexo, na faixa da RBT12 externa
       a1_exp: efE(A1)*Math.max(0, 1 - A1.icms[fxE] - A1.piscof[fxE]),
-      // v7.66.0 (parecer do Teste 6, achado 3.2) · a exportação é imune também ao IPI
-      // (CF, art. 153, § 3º, III). O Anexo II tem parcela de IPI e ela não estava sendo retirada
-      // do bloco exportado: o DAS da exportação industrial saía com IPI embutido.
-      a2_exp: efE(A2)*Math.max(0, 1 - A2.icms[fxE] - A2.piscof[fxE] - (A2.ipi ? A2.ipi[fxE] : 0)),
+      // v7.67.0 (parecer do Teste 7) · A CORREÇÃO DA v7.66.0 NÃO FUNCIONOU, e o auditor externo
+      // pegou. Ela lia `A2.ipi`, mas `ANEXOS_DEFAULT` guarda só {aliq, ded, icms, piscof} — a
+      // parcela de IPI vive na REPARTIÇÃO (REPX), não na tabela de alíquotas. A expressão caía
+      // sempre em zero e o IPI continuava dentro do DAS da exportação industrial.
+      // A exportação é imune ao IPI (CF, art. 153, § 3º, III), e agora a parcela sai de fato.
+      a2_exp: efE(A2)*Math.max(0, 1 - A2.icms[fxE] - A2.piscof[fxE]
+                                  - ((REPX.II && REPX.II.ipi) ? REPX.II.ipi[fxE] : 0)),
       a3_exp: efE(A3)*Math.max(0, 1 - A3.iss[fxE]  - A3.piscof[fxE]),
       // v7.54.0 (item M · decisão 8.10) · o Fator R da exportação usa o MESMO fator do art. 26 já
       // adotado desde a v7.17.0 (RBT12 conjunta) — não se cria um segundo Fator R no aplicativo.
@@ -5061,7 +5075,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.66.0';
+const APP_VERSAO = '7.68.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -5740,8 +5754,23 @@ function calcCenariosReforma(res, reforma) {
   rfx.aliq = aliq;
   // v7.24.0: exportações são IMUNES a IBS/CBS (LC 214/2025, art. 8º) — a base usa só a receita
   // interna; os créditos das aquisições são MANTIDOS (a LC preserva o crédito do exportador).
-  if (!(rfx.receita>0)) rfx.receita = Math.max(0, T.receita - (T.receitaExp||0));
+  const _interna = Math.max(0, (T.receita||0) - (T.receitaExp||0));
+  if (!(rfx.receita>0)) rfx.receita = _interna;
+  // ══ v7.68.0 (parecer do Teste 7) · A RECEITA DA ABA NÃO PODE REINTRODUZIR A EXPORTAÇÃO ══
+  // A aba Reforma tem receita própria, e até aqui ela prevalecia sem conferência alguma. Análise
+  // preenchida antes da v7.24.0 — ou preenchida à mão com o total — devolvia a exportação para
+  // dentro da base, em silêncio, e três auditorias externas seguidas apontaram o mesmo efeito.
+  // A correção é estreita de propósito: só age quando o valor da aba é, ao centavo, a receita
+  // TOTAL da análise e existe exportação no período. Qualquer outro valor é respeitado, porque a
+  // aba existe justamente para os casos em que a base difere do que a análise apurou.
+  rfx.expCorrigida = null;
+  if ((T.receitaExp||0) > 0.005 && rfx.receita > 0
+      && Math.abs(rfx.receita - (T.receita||0)) <= 0.02 && Math.abs(rfx.receita - _interna) > 0.02) {
+    rfx.expCorrigida = { informado: rfx.receita, usado: _interna, exportacao: T.receitaExp||0 };
+    rfx.receita = _interna;
+  }
   const dasCheio = (T.das||0) + (T.sublimite||0);
+  const _expCorrigida = rfx.expCorrigida;   // v7.68.0 · viaja até quem exibe
   const dasResto = dasCheio - (T.dasPisCof||0) - (T.dasIcmsIss||0);
   const sLP = k => meses.reduce((s,x)=>s+(+x.lp[k]||0),0), sLR = k => meses.reduce((s,x)=>s+(+x.lr[k]||0),0);
   const lpPis=sLP('pis'), lpCof=sLP('cofins'), lpIcms=sLP('icms'), lpIpi=sLP('ipi'), lpIss=sLP('iss');
@@ -5817,7 +5846,8 @@ function calcCenariosReforma(res, reforma) {
     return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, anoTeste:L.anoTeste, ded:L.ded, dedIss, dedIcms, dasHib, hib, regular, regLP, regLR, p190:P, regNome: regular===regLP?'Presumido':'Real' };
   });
   const semCreditos = REF.every(l=>l.cred<=0.005);
-  return { rfx, REF, usouFallback: !reforma, proxyCompras, semCreditos };
+  return { rfx, REF, usouFallback: !reforma, proxyCompras, semCreditos,
+           expCorrigida: _expCorrigida };   // v7.68.0
 }
 
 
@@ -7478,11 +7508,12 @@ function rfAvisoExportacaoHtml(){
   const comum = `A exportação é <b>imune ao IBS e à CBS</b> (LC 214/2025, art. 8º) e o motor a exclui `
     + `da base desde a v7.24.0 — mas a receita desta aba <b>prevalece</b> sobre o cálculo automático.`;
   if (d.tipo === 'total')
-    return `<div class="hint" style="padding:10px 12px;border-left:4px solid var(--danger,#943126);background:#fdedec;color:#7b241c;margin-top:12px">`
-      + `⚠️ <b>A receita da aba Reforma inclui a exportação.</b> O valor informado (${fmtR(d.naAba)}) é a `
-      + `receita <b>total</b> da análise; a receita interna, que é a base do IBS/CBS, é ${fmtR(d.interna)} — `
-      + `a diferença de ${fmtR(d.exp)} é exportação. ${comum} Enquanto ficar assim, <b>todos os anos da `
-      + `projeção saem superestimados</b>. Clique em <b>Preencher da análise</b> para corrigir.</div>`;
+    return `<div class="hint" style="padding:10px 12px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109;margin-top:12px">`
+      + `⚠️ <b>A receita informada nesta aba é a receita TOTAL, e inclui a exportação.</b> `
+      + `Informado ${fmtR(d.naAba)} · receita interna ${fmtR(d.interna)} · exportação ${fmtR(d.exp)}. ${comum} `
+      + `<b>O cálculo está usando ${fmtR(d.interna)}</b> — a exportação foi retirada automaticamente (v7.68.0) `
+      + `e a correção fica declarada no papel de trabalho. Clique em <b>Preencher da análise</b> para `
+      + `gravar o valor certo e encerrar este aviso.</div>`;
   return `<div class="hint" style="padding:10px 12px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109;margin-top:12px">`
     + `⚠️ <b>A receita da aba difere da receita interna da análise.</b> Aba: ${fmtR(d.naAba)} · `
     + `interna (base do IBS/CBS): ${fmtR(d.interna)} · exportação no período: ${fmtR(d.exp)}. ${comum} `
@@ -8416,7 +8447,7 @@ function rlParecer(){
       ${premissaCred?`<tr><td class="rot">Créditos de IBS/CBS</td><td>${premissaCred}</td></tr>`:'<tr><td class="rot">Créditos de IBS/CBS</td><td>Estimados pelos fornecedores e compras informados na aba Reforma.</td></tr>'}
       ${D.L33?`<tr><td class="rot">Alíquota de referência (${D.anoRef})</td><td>${fmtP(D.L33.alq*100, 2)}% (CBS+IBS, Res. CGIBS nº 14/2026 — estimativa; a definitiva depende do cálculo do TCU homologado pelo Senado)</td></tr>`:''}
       ${(D.T.receitaExp||0)>0.005?`<tr><td class="rot">Tratamento das exportações</td><td>Imunes a IBS/CBS (LC 214/2025, art. 8º); créditos das aquisições vinculadas são mantidos.</td></tr>`:''}
-      ${D.variante==='simples'?`<tr><td class="rot">ICMS/ISS · trava da 5ª faixa</td><td>${D.optante && D.rbtMaxProj>3600000?'Aplicada — RBT12 acima do sublimite de R$ 3,6 mi; ICMS/ISS calculados pela fórmula do art. 21, III, "b", da Res. CGSN nº 140/2018, com o RBT12 efetivo do mês.'+(D.subMon && D.subMon.impedimento?' <b>Ressalva (v7.41.2):</b> o monitor de sublimite aponta impedimento — '+esc(D.subMon.impedimento.motivo)+'. A trava pressupõe ausência de impedimento, cenário que este cálculo ainda não modela.':''):'Não aplicável no período analisado — RBT12 dentro do sublimite de R$ 3,6 mi.'}</td></tr>
+      ${D.variante==='simples'?`<tr><td class="rot">ICMS/ISS · trava da 5ª faixa</td><td>${D.optante && D.rbtMaxProj>3600000?'Aplicada — RBT12 acima do sublimite de R$ 3,6 mi; ICMS/ISS calculados pela fórmula do art. 21, III, "b", da Res. CGSN nº 140/2018, com o RBT12 efetivo do mês.'+(D.subMon && D.subMon.impedimento?' <b>Impedimento no período (v7.58.0):</b> '+esc(D.subMon.impedimento.motivo)+'. A partir do mês seguinte à ultrapassagem a trava <b>deixa de existir</b> — ela é o mecanismo de quem permanece dentro do sublimite — e o ICMS e o ISS passam a ser apurados FORA da guia, pelas alíquotas do Estado e do Município, com o crédito de ICMS das compras. Os dois seguem no custo do regime: são devidos do mesmo jeito, só não passam pelo DAS.':''):'Não aplicável no período analisado — RBT12 dentro do sublimite de R$ 3,6 mi.'}</td></tr>
       <tr><td class="rot">Metodologia da transição 2027–2033</td><td>Partilha do DAS pelos novos Anexos I–V da Res. CGSN nº 190/2026, por vigência: PIS/COFINS saem já em 2027 (viram CBS); ICMS/ISS decrescem em degraus até zerar em 2033, absorvidos pelo IBS. A trava da 5ª faixa é recomposta a cada vigência, com teto do ISS decrescente.</td></tr>`:''}
       <tr><td class="rot">Split payment</td><td>Retenção estimada em 100% do débito de IBS/CBS no pagamento; custo financeiro a 15% a.a. (proxy da Selic mínima) sobre um mês de retenção como saldo médio financiado ao longo do ano.</td></tr>
     </tbody></table>
@@ -9338,10 +9369,44 @@ function rlConferencia(){
     if (_temServ){
       const _fr = M.fatorR || 0, _frOk = _fr >= .28;
       const _porLei = blocos.includes('a3_semret') || blocos.includes('a3_retiss') || blocos.includes('a3_retissinss');
-      L.push(CF.lin('Fator R (folha 12m ÷ RBT12)',
-        `${CF.pc(_fr)} ${_frOk?'≥':'<'} 28% · folha dos 12 meses (pró-labore + salários + encargos + FGTS) sobre a RBT12`
-        + (_porLei && !_frOk ? ' — <b>as receitas do Anexo III deste mês não dependem do fator R</b> (art. 18, § 5º-B, da LC 123): confira o enquadramento da atividade' : ''),
-        _frOk ? 'Anexo III' : (_porLei ? 'Anexo III por lei' : 'Anexo V')));
+      // v7.67.0 (parecer do Teste 7, achado 2) · o resultado era UM só quando os destinos são
+      // DOIS: com o fator abaixo de 28%, o bloco do Fator R vai para o Anexo V enquanto os
+      // blocos do § 5º-B seguem no III — e o documento imprimia "Anexo III por lei", que o
+      // leitor associa ao mês inteiro. Agora cada destino aparece com o seu bloco.
+      const _temFR = blocos.includes('a5r') || blocos.includes('a5r_exp');
+      const _destino = _frOk ? (_porLei && _temFR ? 'Anexo III (ambos os blocos)' : 'Anexo III')
+        : (_porLei && _temFR ? 'Anexo V (bloco do Fator R) · Anexo III (blocos do § 5º-B)'
+           : _porLei ? 'Anexo III por lei' : 'Anexo V');
+      // v7.67.0 · a fórmula exibida passa a nomear o FS12 como ele é calculado desde a v7.66.0
+      L.push(CF.lin('Fator R (FS12 ÷ RBT12r)',
+        `${CF.pc(_fr)} ${_frOk?'≥':'<'} 28% · FS12 = pró-labore + salários + FGTS + 13º pago + CPP efetivamente recolhida, `
+        + `dos 12 meses anteriores (Res. CGSN 140/2018, art. 26, § 1º); RBT12r conjunta — mercado interno + externo (art. 26)`
+        + (_porLei && !_frOk ? ' — <b>os blocos do Anexo III por lei não dependem do fator R</b> (art. 18, § 5º-B, da LC 123)' : ''),
+        _destino));
+    }
+    // v7.67.0 (parecer do Teste 7, achado 6) · A EXPORTAÇÃO PASSA A SER DEMONSTRADA BLOCO A BLOCO.
+    // O documento trazia uma única "alíquota efetiva externa" para blocos de anexos diferentes,
+    // cada um com parcelas distintas retiradas — o total conferia, mas não era reproduzível a olho.
+    if ((M.ins && M.ins.blocosExp || []).length){
+      const _fxE = (M.faixaExp || 1) - 1;
+      L.push(CF.lin('<b>Exportação — RBT12 e faixa próprias</b>',
+        `mercado externo tem RBT12, faixa e limite próprios (LC 123/2006, art. 3º, § 14): RBT12 externa `
+        + `${fmtR(M.rbt12Exp||0)} → ${M.faixaExp}ª faixa`, ''));
+      for (const b of M.ins.blocosExp){
+        const _ax = /^a1/.test(b.k) ? 'I' : /^a2/.test(b.k) ? 'II'
+          : (b.k === 'a5r_exp' ? ((M.fatorR||0) >= .28 ? 'III' : 'V') : 'III');
+        const AX = A[_ax];
+        const _cheia = (M.rbt12Exp > 0 && AX) ? (M.rbt12Exp*AX.aliq[_fxE] - AX.ded[_fxE])/M.rbt12Exp : 0;
+        const _tirado = _ax === 'I' || _ax === 'II'
+          ? (_ax === 'II' ? 'ICMS, PIS/COFINS e IPI' : 'ICMS e PIS/COFINS')
+          : 'ISS e PIS/COFINS';
+        const _rot = (PG_BLOCOS.find(x => x[0] === b.k) || [null, b.k])[1];
+        L.push(CF.lin(`↳ ${_rot} (Anexo ${_ax})`,
+          `efetiva cheia da faixa ${CF.pc(_cheia)} − parcelas imunes na exportação (${_tirado}) `
+          + `= ${CF.pc(b.efetiva)} · ${fmtR(b.receita)} × ${CF.pc(b.efetiva)}`,
+          fmtR(b.receita*b.efetiva)));
+      }
+      L.push(CF.lin('DAS da exportação', 'soma dos blocos acima', fmtR(M.dasExp||0)));
     }
     // v7.56.6 · sem bloco de receita no mês NÃO se inventa anexo: o padrão 'I' fazia o documento
     // afirmar "Anexo I · 7,3000% · dedução R$ 5.940,00" ao lado de um DAS calculado pelo Anexo IV.
@@ -9794,9 +9859,29 @@ function rlConfReforma(Rdoc){
     const travaTx = p33.trava!=null
       ? CF.lin('Trava do sublimite recomposta (2033)', 'ICMS/ISS da 5ª faixa migram integralmente ao IBS na vigência final (Res. 190/2026): ICMS×remanescente + IBS×(1−remanescente), teto do ISS decrescente até zerar', fmtR(p33.trava))
       : '';
-    const credTx = C.semCreditos
+    const credTx = (C.semCreditos
       ? '<div class="hint" style="color:#b9770e">⚠️ Créditos de IBS/CBS = ZERO — nenhuma compra informada (aba Reforma e Compras vazias).</div>'
-      : (C.proxyCompras ? `<div class="hint" style="color:#b9770e">⚠️ <b>Premissa de crédito não conservadora.</b> A aba Reforma não foi preenchida, então as compras de revenda da análise foram tratadas como aquisições de <b>PJ do regime regular</b> — crédito integral à alíquota cheia (${(REF_ALL[REF_ALL.length-1].alq*100).toFixed(2).replace('.',',')}% em 2033). Fornecedor optante do Simples daria apenas <b>${(credSimplesArt58(2033)*100).toFixed(2).replace('.',',')}%</b> pelo art. 58, cerca de ${Math.round(REF_ALL[REF_ALL.length-1].alq/Math.max(1e-9,credSimplesArt58(2033)))}× menos. <b>Deixar a aba vazia produz um cenário mais favorável do que preenchê-la</b> — separe Simples/MEI do regime regular antes de decidir.</div>` : '');
+      : (C.proxyCompras ? `<div class="hint" style="color:#b9770e">⚠️ <b>Premissa de crédito não conservadora.</b> A aba Reforma não foi preenchida, então as compras de revenda da análise foram tratadas como aquisições de <b>PJ do regime regular</b> — crédito integral à alíquota cheia (${(REF_ALL[REF_ALL.length-1].alq*100).toFixed(2).replace('.',',')}% em 2033). Fornecedor optante do Simples daria apenas <b>${(credSimplesArt58(2033)*100).toFixed(2).replace('.',',')}%</b> pelo art. 58, cerca de ${Math.round(REF_ALL[REF_ALL.length-1].alq/Math.max(1e-9,credSimplesArt58(2033)))}× menos. <b>Deixar a aba vazia produz um cenário mais favorável do que preenchê-la</b> — separe Simples/MEI do regime regular antes de decidir.</div>` : ''))
+      // v7.68.0 (parecer do Teste 7, achado 8) · ultrapassado o limite do Simples no ano-base, os
+      // cenários que pressupõem a empresa optante deixam de ser projeção e viram COMPARAÇÃO
+      // HIPOTÉTICA — quem excedeu o limite não permanece no regime no exercício seguinte
+      // (LC 123/2006, art. 3º, §§ 9º e 10).
+      + (() => {
+          const _el = (typeof snElegibilidade === 'function' && RL?.res)
+            ? snElegibilidade(RL.res, RL?.dados?.cfg || {}) : null;
+          const _int = _el && _el.interno;
+          if (!_int || !(_int.acumAno > _int.teto)) return '';
+          const _exc = _int.acumAno - _int.teto, _pc = _exc / _int.teto;
+          return `<div class="hint" style="color:var(--danger,#943126);border-left:4px solid var(--danger,#943126);background:#fdedec;padding:8px 10px;margin-top:8px">`
+            + `⚠️ <b>Cenários do Simples e híbrido são HIPÓTESES COMPARATIVAS neste caso.</b> A receita `
+            + `do mercado interno do ano-base (${fmtR(_int.acumAno)}) excede o limite de `
+            + `${fmtR(_int.teto)} em ${fmtR(_exc)} (${(_pc*100).toFixed(2).replace('.',',')}%). `
+            + (_pc > 0.20
+                ? 'Excesso superior a 20%: a exclusão produz efeitos <b>retroativos ao próprio ano</b> (LC 123/2006, art. 3º, § 9º). '
+                : 'Excesso de até 20%: a exclusão produz efeitos a partir de <b>1º/01 do ano seguinte</b> (LC 123/2006, art. 3º, § 10). ')
+            + `As colunas <b>Por dentro</b> e <b>Cenário híbrido</b> de 2027 em diante pressupõem uma `
+            + `permanência no Simples que a empresa não terá — leia-as como comparação, não como projeção.</div>`;
+        })();
     return `<div class="card"><h3 style="margin-top:0">Reforma Tributária — conferência ano a ano (${REF[0].ano}–${REF[REF.length-1].ano})</h3>
       <div class="hint" style="padding:8px 10px;background:#f4f6f7;border-left:3px solid #1a5276;margin-bottom:6px">${_baseTx}${
         REF.length < REF_ALL.length ? ` <b>Recorte:</b> dos oito anos da transição, este documento exibe apenas ${REF.map(L=>L.ano).join(', ')} — seleção feita na barra do relatório.` : ''}</div>
@@ -9978,7 +10063,9 @@ function rlConfDivergencias(){
         const _T = RL?.res?.totais, _rf = RL?.dados?.reforma;
         const _d = (typeof rfConfereExportacao === 'function') ? rfConfereExportacao(_rf, _T) : null;
         return _d
-          ? `<b>ATENÇÃO — a receita informada na aba Reforma (${fmtR(_d.naAba)}) não é a receita interna (${fmtR(_d.interna)})</b>. A exportação de ${fmtR(_d.exp)} é imune ao IBS/CBS (LC 214/2025, art. 8º) e não deveria compor a base; enquanto o valor da aba prevalecer, os anos projetados saem superestimados. Corrija com "Preencher da análise" na aba Reforma.`
+          ? (_d.tipo === 'total'
+            ? `a receita informada na aba Reforma (${fmtR(_d.naAba)}) é a receita <b>total</b> e inclui a exportação de ${fmtR(_d.exp)}, que é imune ao IBS/CBS (LC 214/2025, art. 8º). O cálculo <b>não</b> usou esse valor: a base foi corrigida para a receita interna de <b>${fmtR(_d.interna)}</b> (v7.68.0), e esta linha existe para que a correção não passe despercebida. Grave o valor certo com "Preencher da análise" na aba Reforma.`
+            : `<b>ATENÇÃO — a receita informada na aba Reforma (${fmtR(_d.naAba)}) não é a receita interna (${fmtR(_d.interna)})</b>. A exportação do período é ${fmtR(_d.exp)}. A diferença não corresponde exatamente à exportação, então o aplicativo <b>respeitou o valor informado</b> — a aba existe para os casos em que a base difere do que a análise apurou. Confira se é intencional.`)
           : 'a base do IBS/CBS é a receita <b>interna</b>: a exportação é imune (LC 214/2025, art. 8º) e fica fora, com os créditos das aquisições preservados. Confronto entre a receita da aba e a da análise conferido nesta emissão.';
       })()}</li>
       <li><b>13º no FS12 (v7.66.0):</b> ${((RL?.dados?.folha13||{}).salarios13 || (RL?.dados?.folha13||{}).prolabore13)
