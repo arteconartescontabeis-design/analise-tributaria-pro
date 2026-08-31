@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.79.3 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.79\.3';/.test(html) && html.includes('<b>v7.79.3</b>')
+    chk('v7.79.4 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.79\.4';/.test(html) && html.includes('<b>v7.79.4</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3909,6 +3909,73 @@ console.log('\n■ Integridade da interface');
     chk('v7.79.3 · com análise antiga de 7 mi, o melhor regime da carteira é Presumido',
       melhor === 'Presumido', 'apontado: ' + melhor);
     }
+  }
+
+  // ═══ 6p. v7.79.4 · VARREDURA COMPLETA DO COMPARATIVO PARA EMPRESA INELEGÍVEL ═══
+  // Quinta rodada do mesmo relato. As quatro anteriores corrigiram um ponto de cada vez —
+  // eleição do menor, carteira, ranking, campo gravado — porque eu olhava um ponto de cada vez.
+  // Este teste renderiza o relatório e VARRE TUDO: cartões, gráficos e tabelas. Se qualquer
+  // elemento apresentar um cenário do Simples sem a marca de indisponível, reprova.
+  {
+    console.log('\n■ v7.79.4 — varredura completa do comparativo (empresa inelegível)');
+    const z12 = () => Array(12).fill(0);
+    const a = vm.runInContext('anNovo', ctx)('26262626000126', 2026);
+    for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+    a.cfg.rbt12Lanc = Array(12).fill(500000);
+    a.receitas.a1_semst = Array(12).fill(583333.33);        // 7,0 mi
+    a.folha.salarios = Array(12).fill(40000);
+    const r = g.calcular(clone(a), clone(AD), {...FD});
+    ctx.__va = a; ctx.__vr = r; ctx.__vch = [];
+    vm.runInContext(`RL = { cnpj:"26262626000126", ano:2026, dados:__va, res:__vr,
+        empresa:{ razao_social:"SETE MILHOES LTDA" } };
+      AN = __va; AN._res = __vr; rlConfProj = () => null;
+      Chart = function(){ return { destroy(){}, update(){} }; };
+      rlChart = (id,cfg) => { __vch.push({ id, cfg }); };`, ctx);
+    ctx.document.getElementById('rl-tipo').value = 'regimes';
+    ctx.document.getElementById('rl-per').value = '12';
+    ctx.document.getElementById('rl-corpo').innerHTML = '';
+    let erro = null;
+    try { vm.runInContext('rlRender()', ctx); } catch(e){ erro = e.message; }
+    chk('v7.79.4 · o comparativo abre', erro === null, erro || '');
+    const h = ctx.document.getElementById('rl-corpo').innerHTML || '';
+
+    // 1 · nenhum CARTÃO do Simples pode estar sem a marca de indisponível
+    // fatiar por marcador é mais fiável que casar o fechamento: os cartões têm <div> aninhados,
+    // e o regex não-guloso cortava o cartão antes do subtítulo — reprovando o que estava certo.
+    const cartoes = h.split('<div class="stat').slice(1)
+      .map(p => '<div class="stat' + p.split('</div></div>')[0] + '</div></div>');
+    // "Fora do Simples" contém a palavra e é cenário VÁLIDO — o critério é o nome do cenário
+    // do regime, não a ocorrência da palavra. Errar isso faria o teste reprovar o certo.
+    const ehCenSN = t => /Simples Nacional|Simples "por dentro"|Simples &quot;por dentro&quot;|Simples híbrido/.test(t);
+    const cartSimples = cartoes.filter(ehCenSN);
+    chk('v7.79.4 · há cartões do Simples no relatório (senão o teste não prova nada)',
+      cartSimples.length >= 1, cartSimples.length + ' cartões');
+    chk('v7.79.4 · TODO cartão do Simples traz a marca INDISPONÍVEL',
+      cartSimples.every(c => /INDISPON/i.test(c)),
+      cartSimples.filter(c => !/INDISPON/i.test(c))
+        .map(c => (c.match(/class="l">([^<]{0,34})/)||[,'?'])[1]).join(' | ') || 'todos marcados');
+    chk('v7.79.4 · e nenhum cartão do Simples está destacado como "melhor"',
+      !cartSimples.some(c => /class="stat melhor"/.test(c)));
+
+    // 2 · o GRÁFICO não pode pintar o Simples com cor de cenário válido
+    const gr = (ctx.__vch || []).find(x => x.id === 'ch-seis');
+    chk('v7.79.4 · o gráfico de cenários existe', !!gr);
+    if (gr) {
+      const labs = gr.cfg.data.labels, cores = gr.cfg.data.datasets[0].backgroundColor;
+      const idxSN = labs.map((l,i)=>ehCenSN(l)?i:-1).filter(i=>i>=0);
+      chk('v7.79.4 · toda barra do Simples é rotulada como indisponível',
+        idxSN.every(i => /indispon/i.test(labs[i])), idxSN.map(i=>labs[i]).join(' · '));
+      chk('v7.79.4 · e pintada em cinza, não na cor do cenário',
+        idxSN.every(i => cores[i] === '#bdc3c7'));
+    }
+
+    // 3 · o ranking e o texto
+    const txt = h.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    chk('v7.79.4 · o ranking não numera o Simples', !/1º\s*Simples/i.test(txt));
+    chk('v7.79.4 · o aviso de topo está presente',
+      /NÃO pode optar pelo Simples Nacional/.test(txt));
+    chk('v7.79.4 · a coluna "Melhor" do quadro por período não diz Simples',
+      !/\|?\s*Simples\s*(<\/td>)?\s*$/m.test(txt) && /Presumido/.test(txt));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
