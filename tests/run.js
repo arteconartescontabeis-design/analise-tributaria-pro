@@ -1785,9 +1785,9 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.63.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.63\.0';/.test(html) && html.includes('<b>v7.63.0</b>')
-      && html.includes('<b>v7.62.0</b>') && html.includes('<b>v7.50.0</b>'));
+    chk('v7.64.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.64\.0';/.test(html) && html.includes('<b>v7.64.0</b>')
+      && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
       const corpo = html.slice(html.indexOf('<table id="tbl-versoes"'));
@@ -2950,6 +2950,80 @@ console.log('\n■ Integridade da interface');
     const lacA = vm.runInContext('lacreRodar()', ctx);
     chk('auditoria · nenhuma das 11 correções moveu o lacre',
       lacA && lacA.ok === true && lacA.hash === '47f3f10b', 'hash=' + (lacA && lacA.hash));
+  }
+
+  // ═══ 6b. v7.64.0 · CONFRONTO COM O VERIFICADOR INDEPENDENTE ═══
+  // Resposta ao achado 3.4 do parecer externo: a conferência anterior reutilizava as tabelas do
+  // próprio aplicativo, e por isso não conseguiria pegar tabela errada nem escolha errada de anexo.
+  // tests/verificador_independente.js digita os Anexos I a V da LC 123/2006 e a repartição por
+  // tributo, decide sozinho o anexo pelo Fator R, e só então compara.
+  {
+    console.log('\n■ v7.64.0 — confronto com o verificador independente');
+    let V = null;
+    try { V = require('./verificador_independente'); }
+    catch(e){ console.log('  (tests/verificador_independente.js ausente — confronto pulado)'); }
+    if (V) {
+      const z12 = () => Array(12).fill(0);
+      const nova = (cnpj) => { const a = vm.runInContext('anNovo', ctx)(cnpj, 2026);
+        for (const k of Object.keys(a.receitas)) a.receitas[k] = z12(); return a; };
+      const casos = [];
+      { const a = nova('11111111000191'); a.cfg.rbt12Lanc = Array(12).fill(35000);
+        a.receitas.a1_semst = Array(12).fill(40000); a.folha.salarios = Array(12).fill(6000);
+        a.folha.baseFgts = Array(12).fill(6000); casos.push(['comércio Anexo I', a]); }
+      { const a = nova('22222222000172'); a.cfg.rbt12Lanc = Array(12).fill(100000);
+        a.cfg.folha12Lanc = Array(12).fill(24000); a.receitas.a5r = Array(12).fill(100000);
+        a.folha.salarios = Array(12).fill(24000); a.cfg.iss = .03;
+        casos.push(['Fator R abaixo de 28% → Anexo V', a]); }
+      { const a = nova('22222222000173'); a.cfg.rbt12Lanc = Array(12).fill(100000);
+        a.cfg.folha12Lanc = Array(12).fill(30000); a.receitas.a5r = Array(12).fill(100000);
+        a.folha.salarios = Array(12).fill(30000); a.cfg.iss = .03;
+        casos.push(['Fator R acima de 28% → Anexo III', a]); }
+      { const a = nova('33333333000153'); a.cfg.rbt12Lanc = Array(12).fill(60000);
+        a.receitas.a1_semst = Array(12).fill(30000); a.receitas.a1_comst = Array(12).fill(20000);
+        a.receitas.a1_mono = Array(12).fill(10000); a.folha.salarios = Array(12).fill(8000);
+        a.folha.baseFgts = Array(12).fill(8000); casos.push(['ST e monofásico', a]); }
+      { const a = nova('44444444000144'); a.cfg.rbt12Lanc = Array(12).fill(80000);
+        a.receitas.a3_semret = Array(12).fill(50000); a.receitas.a3_retiss = Array(12).fill(30000);
+        a.folha.salarios = Array(12).fill(20000); a.cfg.iss = .05;
+        casos.push(['ISS retido', a]); }
+      { const a = nova('55555555000155'); a.cfg.rbt12Lanc = Array(12).fill(330000);
+        a.receitas.a1_semst = Array(12).fill(340000); a.folha.salarios = Array(12).fill(40000);
+        a.folha.baseFgts = Array(12).fill(40000); casos.push(['6ª faixa com trava da 5ª', a]); }
+      for (const teto of [180000, 360000, 720000, 1800000, 3600000])
+        for (const [rot, rbt] of [['no teto', teto], ['acima', teto+1]]) {
+          const a = nova('7777777' + teto + rbt); a.cfg.rbt12Lanc = Array(12).fill(rbt/12);
+          a.receitas.a1_semst = Array(12).fill(20000); a.folha.salarios = Array(12).fill(3000);
+          a.folha.baseFgts = Array(12).fill(3000);
+          casos.push([`faixa · RBT12 ${rot} de ${teto}`, a]); }
+
+      let coincidem = 0; const diverg = [];
+      for (const [nome, ent] of casos) {
+        const app = g.calcular(clone(ent), clone(AD), {...FD});
+        const ind = V.apurar(clone(ent));
+        const cmp = (item, a, b, tol) => { if (Math.abs(a-b) <= tol) coincidem++;
+          else diverg.push(`${nome} · ${item}: independente ${(+a).toFixed(4)} × app ${(+b).toFixed(4)}`); };
+        for (let m = 0; m < 12; m++) {
+          cmp(`RBT12 m${m+1}`, ind.meses[m].rbt12, app.meses[m].rbt12, 0.02);
+          cmp(`faixa m${m+1}`, ind.meses[m].faixa, app.meses[m].faixa, 0);
+          cmp(`Fator R m${m+1}`, ind.meses[m].fatorR, app.meses[m].fatorR, 0.0005);
+          cmp(`DAS m${m+1}`, ind.meses[m].das, app.meses[m].das, 0.02);
+          const axI = [...new Set(Object.values(ind.meses[m].porBloco).map(b=>b.ax))].sort().join(',');
+          const axA = [...new Set((app.meses[m].ins.blocos||[]).map(b=>{ const k=b.k;
+            return /^a1|comtransp/.test(k)?'I':/^a2/.test(k)?'II':/^a4/.test(k)?'IV'
+              :k==='a5r'?(app.meses[m].fatorR>=.28?'III':'V'):'III'; }))].sort().join(',');
+          if (axI === axA) coincidem++; else diverg.push(`${nome} · anexo m${m+1}: ${axI} × ${axA}`);
+        }
+        cmp('DAS do ano', ind.totais.das, app.totais.das, 0.05);
+        cmp('trava do ano', ind.totais.trava, app.totais.sublimite||0, 0.05);
+      }
+      chk(`v7.64.0 · motor × verificador INDEPENDENTE: ${coincidem} conferências em ${casos.length} casos`,
+        diverg.length === 0, diverg.slice(0,3).join(' | '));
+      chk('v7.64.0 · o verificador decide o anexo sozinho e acerta a fronteira dos 28%',
+        diverg.length === 0 && casos.length >= 16);
+      chk('v7.64.0 · e ele NÃO importa nada do aplicativo',
+        !fs.readFileSync(path.join(__dirname,'verificador_independente.js'),'utf8')
+          .match(/require\(|index\.html/));
+    }
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
