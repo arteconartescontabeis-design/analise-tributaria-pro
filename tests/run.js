@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.66.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.66\.0';/.test(html) && html.includes('<b>v7.66.0</b>')
+    chk('v7.68.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.68\.0';/.test(html) && html.includes('<b>v7.68.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3055,11 +3055,24 @@ console.log('\n■ Integridade da interface');
       Math.abs(semAba.deb / semAba.alq - (r.totais.receita - r.totais.receitaExp - semAba.ded)) < 0.02,
       'base implícita ' + (semAba.deb/semAba.alq).toFixed(2));
 
-    // o caso que a auditoria externa encontrou: aba preenchida com a receita TOTAL
-    const comAba = cen(r, { receita: 3093000, compras: 1237000 }).REF.find(x=>x.ano===2027);
-    chk('v7.65.0 · aba com a receita TOTAL devolve a exportação à base — e o efeito é o medido',
-      Math.abs((comAba.deb - semAba.deb) - 171000*semAba.alq) < 0.02,
-      'Δ ' + (comAba.deb - semAba.deb).toFixed(2));
+    // v7.68.0 · o teste da v7.65.0 media o DEFEITO (aba com o total devolvia a exportação à base).
+    // Agora o motor corrige sozinho, então o que se guarda é o inverso: o valor total informado
+    // na aba NÃO pode mais alterar o débito, e a correção tem de ficar registrada no resultado.
+    const cenAba = cen(r, { receita: 3093000, compras: 1237000 });
+    const comAba = cenAba.REF.find(x=>x.ano===2027);
+    chk('v7.68.0 · aba com a receita TOTAL não devolve mais a exportação à base',
+      Math.abs(comAba.deb - semAba.deb) < 0.02,
+      'débito com aba ' + comAba.deb.toFixed(2) + ' × sem aba ' + semAba.deb.toFixed(2));
+    chk('v7.68.0 · e a correção é registrada, com os três valores',
+      !!cenAba.expCorrigida && Math.abs(cenAba.expCorrigida.informado - 3093000) < 0.02
+      && Math.abs(cenAba.expCorrigida.usado - (r.totais.receita - r.totais.receitaExp)) < 0.02
+      && Math.abs(cenAba.expCorrigida.exportacao - 171000) < 0.02,
+      JSON.stringify(cenAba.expCorrigida));
+    // receita própria diferente do total continua sendo respeitada — a aba existe para isso
+    const cenLivre = cen(r, { receita: 2000000 });
+    chk('v7.68.0 · receita própria que NÃO é o total continua prevalecendo',
+      cenLivre.expCorrigida === null
+      && Math.abs(cenLivre.REF.find(x=>x.ano===2027).deb - comAba.deb) > 0.02);
 
     const conf = vm.runInContext('rfConfereExportacao', ctx);
     chk('v7.65.0 · o detector acusa a receita da aba que inclui exportação',
@@ -3109,12 +3122,25 @@ console.log('\n■ Integridade da interface');
       const r = g.calcular(a, clone(AD), {...FD});
       const A2 = AD.II, f = (r.meses[0].faixaExp||1) - 1;
       const efCheia = (r.meses[0].rbt12Exp*A2.aliq[f] - A2.ded[f]) / r.meses[0].rbt12Exp;
-      const esperada = efCheia * Math.max(0, 1 - A2.icms[f] - A2.piscof[f] - (A2.ipi?A2.ipi[f]:0));
+      // v7.67.0 · O TESTE DA v7.66.0 ERA CIRCULAR: ele repetia a mesma expressão do código,
+      // inclusive o `A2.ipi` que NÃO EXISTE em ANEXOS_DEFAULT — e por isso passava com a
+      // correção desligada. Um auditor externo pegou o que este teste deixou passar.
+      // Agora os percentuais vêm da LC 123/2006 (Anexo II) DIGITADOS aqui, não do objeto que o
+      // motor usa: se a tabela do aplicativo mudar, os dois lados não se acompanham em silêncio.
+      const IPI_II = [.075,.075,.075,.075,.075,.35];       // parcela de IPI do Anexo II, por faixa
+      const ICMS_II = [.32,.32,.32,.32,.32,0];
+      const PISCOF_II = [.1151+.0249, .1151+.0249, .1151+.0249, .1151+.0249, .1151+.0249, .2096+.0454];
+      const esperada = efCheia * Math.max(0, 1 - ICMS_II[f] - PISCOF_II[f] - IPI_II[f]);
       const usada = (r.meses[0].ins.blocosExp||[]).find(b=>b.k==='a2_exp');
-      chk('v7.66.0 · a exportação industrial sai sem a parcela de IPI',
+      chk('v7.67.0 · a exportação industrial sai sem ICMS, sem PIS/COFINS e sem IPI',
         !!usada && Math.abs(usada.efetiva - esperada) < 1e-9,
-        'efetiva ' + ((usada?usada.efetiva:0)*100).toFixed(4) + '%');
-      chk('v7.66.0 · e a alíquota da exportação é menor que a do mercado interno no mesmo anexo',
+        'efetiva ' + ((usada?usada.efetiva:0)*100).toFixed(4)
+        + '% · esperada ' + (esperada*100).toFixed(4) + '%');
+      chk('v7.67.0 · a parcela de IPI retirada é a da repartição do Anexo II (CF, art. 153, § 3º, III)',
+        !!usada && Math.abs((efCheia * (1 - ICMS_II[f] - PISCOF_II[f]) - usada.efetiva)
+                            - efCheia*IPI_II[f]) < 1e-9,
+        'IPI retirado sobre 10.000: R$ ' + (10000*efCheia*IPI_II[f]).toFixed(2));
+      chk('v7.67.0 · e a alíquota da exportação é menor que a do mercado interno no mesmo anexo',
         !!usada && usada.efetiva < efCheia);
     }
 
