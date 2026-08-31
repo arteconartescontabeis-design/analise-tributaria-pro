@@ -694,6 +694,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.76.0</b></td><td>31/08/2026</td><td><b>🧾 A decomposição do DAS listava SETE tributos e somava OITO — o achado que sobreviveu a três pareceres porque eu procurava no lugar errado.</b> A linha "Decomposição" da memória enumerava IRPJ, CSLL, COFINS, PIS, CPP, ICMS e ISS, e o valor ao lado somava também o <b>IPI</b>. Quem conferisse a olho encontrava uma parcela a descoberto — R$ 1.074,43 no cenário do Teste 13, R$ 1.074,43 no do 12, R$ 1.074,43 no do 11. <b>Por que demorou:</b> eu conferia o objeto <code>dasTrib</code>, que sempre fechou com o DAS, inclusive com exportação — e concluí três vezes que o achado "não se reproduzia". O defeito nunca esteve no cálculo: estava no <b>texto emitido</b>, num lugar do código onde a lista era escrita à mão e o total, calculado à parte. Só apareceu quando gerei o documento e li o que ele diz, em vez de inspecionar a estrutura de dados. Agora o texto e o total saem das <b>mesmas chaves</b>, de modo que não possam divergir nem quando um tributo novo entrar na repartição; e os tributos sem valor no período são <b>nomeados</b> em vez de sumirem em silêncio. Os testes desta versão leem o <b>HTML gerado</b>, não o objeto — foi essa a lição. <b>(2)</b> O texto da base de IRPJ citava o transporte de cargas como parcela adicional a 8% depois de já tê-lo somado no total do comércio: seguir o texto literalmente levava a <b>contá-lo duas vezes</b>. Ele passa a aparecer como <b>detalhe</b> do total — só o transporte de passageiros é parcela à parte, porque tem presunção própria de 16%. <b>(3)</b> A trava do sublimite ganhou <b>sinal</b> na memória, e o cabeçalho das projeções anuncia <b>⛔ CENÁRIO HIPOTÉTICO</b> quando a empresa está inelegível — sem precisar descer até as notas. Motor <b>intocado</b>: as três correções são de apresentação. Lacre <code>2e1139e9</code> íntegro; suíte com <b>649 verificações</b>.</td></tr>
                     <tr><td><b>v7.75.0</b></td><td>31/08/2026</td><td><b>⛔ Ultrapassado o limite, o Simples deixa de ser opção — e o sublimite passa a ser dito como o que é a partir de 2027.</b> <b>(1) Elegibilidade.</b> Receita interna do ano-base acima de R$ 4,8 milhões significa que a empresa <b>não permanece no regime</b> no exercício seguinte (LC 123/2006, art. 3º, §§ 9º e 10). Os cenários "Simples por dentro" e "híbrido" dos anos projetados passam a ser marcados como <b>INDISPONÍVEIS</b> e <b>saem da escolha do melhor regime</b>: a comparação real fica entre Lucro Presumido e Lucro Real com IBS/CBS por fora. Os valores continuam à vista, como referência do que o regime custaria — omiti-los esconderia informação —, mas nunca mais como opção. O ano-base não é bloqueado: ele é o realizado. <b>(2) Sublimite a partir de 2027.</b> Passar de R$ 3,6 milhões deixa de ser detalhe de guia. Acima dele o ICMS e o ISS já saem do Simples, e na vigência da Reforma permanecer "por dentro" <b>deixa de ser opção plena</b>: a empresa opera no <b>regime híbrido</b> — DAS sem as parcelas de consumo, IBS/CBS por fora, split payment e opção semestral (art. 22-A da Res. CGSN 140/2018 e art. 40-D) — <b>ou migra</b> para o Presumido ou o Real. O quadro de cenários passa a dizer isso, e o papel de trabalho declara qual dos <b>três estados</b> vale para a empresa: dentro do sublimite, entre sublimite e limite, ou acima do limite. <b>(3) Três memórias que não reproduziam o próprio número</b>, apontadas por auditorias sucessivas: a razão da parcela excedente usava a receita <b>total</b> como denominador quando o cálculo usa a <b>interna</b> — a exportação tem limite próprio e não entra nessa razão; o quadro da exportação resumia quatro anexos numa alíquota média que dava R$ 1.190,77 onde o motor apurava R$ 1.985,28, e passa a somar bloco a bloco; e a base de IRPJ do Presumido divergia em R$ 896,01 porque o texto exibia o <b>transporte dentro de serviços a 32%</b> enquanto o cálculo usa a presunção do <b>comércio, 8%</b> (cargas), além de somar a exportação sem mostrá-la. A correção do terceiro caso seguiu o desenho da M4: em vez de a memória <b>remontar</b> a base, o motor passa a <b>devolver os componentes</b> que usou. Remontagem foi a origem de três defeitos desta frente. Lacre <code>2e1139e9</code> íntegro; suíte com <b>644 verificações</b>.</td></tr>
                     <tr><td><b>v7.74.0</b></td><td>31/08/2026</td><td><b>🔒 O lacre passa a enxergar o que aprendeu: entra o CASO 3, e o selo vai de <code>47f3f10b</code> a <code>2e1139e9</code>.</b> <b>A pergunta que originou esta versão:</b> com tantas regras novas, os casos-gabarito não precisariam mudar para não se perder o que foi construído? <b>A resposta tem duas metades.</b> Os casos 1 e 2 <b>não</b> mudam — vêm da planilha de referência, são fonte <b>externa e anterior</b> ao motor, e é essa independência que os torna capazes de provar que o núcleo antigo não regrediu. Alterá-los para acompanhar o motor seria trocar gabarito por espelho. <b>Mas o risco apontado era real, e maior do que parecia:</b> os dois casos usam <b>um único bloco de receita cada</b>, não cruzam limite nem sublimite, e não têm retenção, exportação, transporte, IPI nem bloco de Fator R. Ou seja, <b>nenhuma</b> das regras corrigidas entre a v7.62.0 e a v7.73.0 estava sob o lacre. Ele permaneceu íntegro em todas aquelas versões não porque nada mudou, mas porque <b>não enxergava</b> o que mudava — e eu vinha relatando essa integridade como boa notícia. <b>Entra o Caso 3.</b> Um cenário desenhado para tocar tudo o que as auditorias externas fizeram o motor aprender: cruza o <b>sublimite</b> no 7º mês e o <b>limite</b> no 9º, os dois com o mês partido pelo art. 24; fica <b>impedido</b> nos quatro últimos; exercita o <b>teto de 5% do ISS</b> na 5ª faixa com os três blocos de retenção; usa os <b>cinco anexos</b> ao longo do ano; tem os <b>quatro blocos de exportação</b>; ST, monofásico, redução de ICMS, transporte, IPI apurado e 13º pago; e o <b>Fator R dos dois lados dos 28%</b> — quatro meses no Anexo III, oito no V. O lacre passa de <b>128 para 192 números</b> selados e o hash é re-selado para <code>2e1139e9</code>. <b>Os 754 gabaritos da planilha seguem intactos</b>: o caso 3 não é gabarito, é selo — ele não afirma qual valor é certo, afirma que o valor de hoje não pode mudar sem alguém saber. A suíte ganhou um bloco que <b>guarda a cobertura do próprio caso 3</b>: se alguém o simplificar, o lacre volta a ser cego e a falha aparece na hora, não seis meses depois. Suíte: <b>628 verificações</b>.</td></tr>
                     <tr><td><b>v7.73.0</b></td><td>31/08/2026</td><td><b>📐 Teste 11: o fracionamento do mês que cruza o SUBLIMITE — a outra metade do art. 24 — e a parcela que faltava na memória do híbrido.</b> <b>(1)</b> A v7.72.0 implementou a partição do mês que cruza o <b>limite</b> (art. 24, II) e deixou a do <b>sublimite</b> declarada como pendente. A auditoria do Teste 11 a apontou como o principal item remanescente e mediu a razão do mês em <b>49,4326%</b>. Agora vale a mesma mecânica: no mês em que a receita cruza os R$ 3,6 milhões, o ICMS e o ISS da parcela excedente usam a fórmula com o RBT12 <b>travado no sublimite</b> (Res. CGSN 140/2018, art. 24, I, "b", e § 2º); nos meses seguintes a razão é 1. A razão conferida bate ao quarto decimal com a da auditoria. A correção foi feita no <code>ef5</code> — a função única de onde saem todas as parcelas da trava —, do mesmo modo que a do limite foi feita na alíquota efetiva: os blocos, com seus tratamentos, herdam sem precisar ser reescritos. <b>(2)</b> A memória do cenário híbrido listava quatro parcelas e o total trazia <b>cinco</b>: o ICMS/ISS do período de impedimento entrou no cálculo na v7.69.0 e eu não o declarei ali. A auditoria isolou a diferença exata, de R$ 73.230,79 no cenário dela. A parcela agora aparece na linha, com o valor. <b>Conferidos e sem alteração:</b> a decomposição do DAS <b>inclui</b> o IPI em todos os quatro quadros do aplicativo e fecha com o total, inclusive com exportação — o achado não se reproduz aqui e pode ser leitura do PDF; e a memória da exportação já é bloco a bloco desde a v7.67.0. <b>Um teste caiu e foi reescrito:</b> o da guarda de divisão por zero no <code>ef5</code> verificava o <b>texto</b> da linha, que mudou com a nova fórmula. Passou a verificar o <b>comportamento</b> — RBT12 zero não produz NaN em nenhum total — mais a presença da guarda. Teste que quebra por mudança de redação estava medindo a coisa errada. Lacre <code>47f3f10b</code> íntegro; suíte com <b>616 verificações</b>; verificador independente com a regra do art. 24, I digitada da norma também do lado dele.</td></tr>
@@ -5041,7 +5042,7 @@ function anRecalcular() {
       ${_bloq ? `<div class="hint" style="margin-top:8px;padding:8px 10px;border-left:4px solid var(--danger,#943126);background:#fdedec;color:#7b241c">
         ⛔ <b>Os dois cenários de Simples estão INDISPONÍVEIS para esta empresa.</b> ${esc(R33.snMotivo||'')}.
         Os valores permanecem à vista como referência do que o regime custaria, mas <b>não participam da escolha do melhor regime</b>:
-        a comparação real é entre Lucro Presumido e Lucro Real, com o IBS/CBS por fora.</div>` : ''}<div class="hint" style="margin-top:6px">Quadro ano a ano (2026–2033) na aba <b>Relatórios → Comparativo de Regimes</b>.${C.usouFallback?' Aba Reforma sem dados: usei alíquotas-padrão e a receita INTERNA da análise (exportação imune — LC 214, art. 8º), sem créditos de compras.':''}</div></div>`;
+        a comparação real é entre Lucro Presumido e Lucro Real, com o IBS/CBS por fora.</div>` : ''}<div class="hint" style="margin-top:6px">${_bloq ? '<b style="color:var(--danger,#943126)">⛔ CENÁRIO HIPOTÉTICO — empresa inelegível ao Simples nos anos projetados.</b> ' : ''}Quadro ano a ano (2026–2033) na aba <b>Relatórios → Comparativo de Regimes</b>.${C.usouFallback?' Aba Reforma sem dados: usei alíquotas-padrão e a receita INTERNA da análise (exportação imune — LC 214, art. 8º), sem créditos de compras.':''}</div></div>`;
   } catch(e) { console.error('Cenários da Reforma (análise):', e); }
   $id('an-veredito').innerHTML = `<h3 style="margin-bottom:6px">Melhor regime: ${nomeMenor}</h3>
     ${snAvisoHtml(EL)}
@@ -5227,7 +5228,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.75.0';
+const APP_VERSAO = '7.76.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -8023,7 +8024,7 @@ function rlConsolidado(rot, n) {
   h += `<div class="card" style="margin-top:14px"><h3>2b. Impostos do DAS — decomposição por período</h3><div style="overflow-x:auto"><table><thead>${cab}</thead><tbody>
     ${TRIBS.map(([nm,k])=>linha('· '+nm, gDT(k))).join('')}
     ${linha('DAS (guia)', g(x=>x.das), true)}
-    ${T.sublimite>0.005?linha('ICMS/ISS da trava do sublimite (5ª faixa)', g(x=>(x.subIcms||0)+(x.subIss||0))):''}
+    ${T.sublimite>0.005?linha('(+) ICMS/ISS da trava do sublimite (5ª faixa)', g(x=>(x.subIcms||0)+(x.subIss||0))):''}
     ${T.issRetido>0.005?linha('(info) ISS retido pelo tomador — fora do total (LC 123, art. 21, § 4º)', g(x=>x.simples.issRetido||0)):''}
     ${T.cppRetida>0.005?linha('CPP retida na fonte', g(x=>x.simples.cppRetida||0)):''}
     ${T.cppForaDAS>0.005?linha('CPP fora do DAS — Anexo IV', g(x=>x.simples.inssPatrForaDAS||0)):''}
@@ -8045,7 +8046,7 @@ function rlConsolidado(rot, n) {
     ${linha('· ISS', g(x=>x.dasTrib?x.dasTrib.iss:0))}
     ${linha('· IPI', g(x=>x.dasTrib?x.dasTrib.ipi:0))}
     ${linha('DAS', g(x=>x.das))}
-    ${linha('ICMS/ISS da trava do sublimite', g(x=>(x.subIcms||0)+(x.subIss||0)))}
+    ${linha('(+) ICMS/ISS da trava do sublimite', g(x=>(x.subIcms||0)+(x.subIss||0)))}
     ${linha('ISS retido', g(x=>x.simples.issRetido||0))}
     ${linha('CPP retida na fonte', g(x=>x.simples.cppRetida||0))}
     ${linha('CPP fora do DAS — Anexo IV (proxy receita)', g(x=>x.simples.inssPatrForaDAS||0))}
@@ -9668,9 +9669,23 @@ function rlConferencia(){
         L.push(CF.lin(k, `${fmtR(_rec)} × ${CF.pc(_ef)}`, fmtR(_rec*_ef))); }
     L.push(CF.lin('<b>DAS do mês</b>','soma dos blocos acima', fmtR(M.das)));
     const T = M.dasTrib;
-    L.push(CF.lin('Decomposição',
-      `IRPJ ${fmtR(T.irpj)} · CSLL ${fmtR(T.csll)} · COFINS ${fmtR(T.cofins)} · PIS ${fmtR(T.pis)} · CPP ${fmtR(T.cpp)} · ICMS ${fmtR(T.icms)} · ISS ${fmtR(T.iss)}`,
-      fmtR(T.irpj+T.csll+T.cofins+T.pis+T.cpp+T.icms+T.iss+T.ipi)));
+    L.push(// ══ v7.76.0 (parecer do Teste 13, achado 5) · A LINHA LISTAVA SETE E SOMAVA OITO ══════════
+      // O texto enumerava IRPJ, CSLL, COFINS, PIS, CPP, ICMS e ISS; o valor ao lado somava também
+      // o IPI. Quem conferisse a olho achava uma parcela a descoberto — três pareceres seguidos
+      // apontaram, cada um com o número do seu cenário (R$ 1.074,43 no último). O motor sempre
+      // esteve certo: o defeito era a lista, não a conta.
+      // Agora o texto e o total saem das MESMAS chaves, de modo que não possam mais divergir —
+      // nem hoje, nem quando um tributo novo for acrescentado à repartição.
+      CF.lin('Decomposição', (() => {
+        const _ks = [['IRPJ','irpj'],['CSLL','csll'],['COFINS','cofins'],['PIS','pis'],
+                     ['CPP','cpp'],['ICMS','icms'],['ISS','iss'],['IPI','ipi']];
+        const _ex = _ks.filter(([,k]) => Math.abs(+T[k]||0) > 0.005);
+        const _zer = _ks.filter(([,k]) => Math.abs(+T[k]||0) <= 0.005).map(([n]) => n);
+        return _ex.map(([n,k]) => `${n} ${fmtR(T[k])}`).join(' · ')
+          + (_zer.length ? ` <span class="hint">(sem valor no período: ${_zer.join(', ')})</span>` : '');
+      })(),
+      fmtR(['irpj','csll','cofins','pis','cpp','icms','iss','ipi']
+             .reduce((s,k) => s + (+T[k]||0), 0))));
     const S = M.simples;
     if (S.sublimite) L.push(CF.lin('Trava do sublimite','ICMS/ISS da 5ª faixa, RBT12 acima de R$ 3,6 mi (Res. CGSN 140, art. 24)', fmtR(S.sublimite)));
     if (S.issRetido) L.push(CF.lin('ISS retido','recolhido na fonte pelo tomador e recomposto (LC 123, art. 21, § 4º)', fmtR(S.issRetido)));
@@ -9721,14 +9736,23 @@ function rlConferencia(){
         const _b = P.baseComp;
         if (!_b) return `comércio ${fmtR(M.recCom||0)} × ${CF.pc(+D.cfg.lpBaseCom||0)} + serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.lpBaseServ||0)} + financeiras ${fmtR(_fin)}`;
         const _p = [];
-        if (_b.com > 0.005) _p.push(`comércio e indústria ${fmtR(_b.com)} × ${CF.pc(_b.comPc)}`
-          + (_b.expCom > 0.005 ? ` <span class="hint">(inclui exportação de mercadoria ${fmtR(_b.expCom)} — imune aos tributos sobre consumo, mas compõe a presunção)</span>` : ''));
+        // v7.76.0 (parecer do Teste 13, achado 4.1) · o transporte de CARGAS já está somado
+        // dentro do total do comércio — listá-lo como parcela adicional levava a somá-lo duas
+        // vezes ao seguir o texto literalmente. Ele passa a aparecer como DETALHE do total, não
+        // como parcela. Só o de passageiros é parcela à parte, porque tem presunção própria.
+        const _ehPass = _b.transpModo === 'passageiros';
+        if (_b.com > 0.005) _p.push(`comércio, indústria${_ehPass ? '' : ' e transporte'} `
+          + `${fmtR(_b.com)} × ${CF.pc(_b.comPc)}`
+          + ((!_ehPass && _b.transp > 0.005) || _b.expCom > 0.005
+            ? ` <span class="hint">(inclui${!_ehPass && _b.transp > 0.005
+                ? ` transporte de cargas ${fmtR(_b.transp)}, que presume como comércio — Lei 9.249/95, art. 15, caput` : ''}`
+              + (_b.expCom > 0.005
+                ? `${!_ehPass && _b.transp > 0.005 ? ' e' : ''} exportação de mercadoria ${fmtR(_b.expCom)}, imune aos tributos sobre consumo mas dentro da presunção` : '')
+              + `)</span>` : ''));
         if (_b.serv > 0.005) _p.push(`serviços ${fmtR(_b.serv)} × ${CF.pc(_b.servPc)}`
           + (_b.expServ > 0.005 ? ` <span class="hint">(inclui exportação de serviço ${fmtR(_b.expServ)})</span>` : ''));
-        if (_b.transp > 0.005) _p.push(_b.transpModo === 'passageiros'
-          ? `transporte de <b>passageiros</b> ${fmtR(_b.transp)} × 16% (Lei 9.249/95, art. 15, § 1º, II, "a")`
-          : `transporte de <b>cargas</b> ${fmtR(_b.transp)} × ${CF.pc(_b.comPc)} — presunção do comércio, `
-            + `<b>não</b> a de serviços (premissa: cargas; passageiros presume 16% e é opção na Configuração)`);
+        if (_ehPass && _b.transp > 0.005) _p.push(
+          `transporte de <b>passageiros</b> ${fmtR(_b.transp)} × 16% <span class="hint">(Lei 9.249/95, art. 15, § 1º, II, "a" — parcela à parte, com presunção própria)</span>`);
         if (_b.fin > 0.005) _p.push(`receitas financeiras ${fmtR(_b.fin)} <b>integrais</b> (Lei 9.430/96, art. 25, II)`);
         return _p.join(' + ');
       })(), fmtR(P.baseAdic||0)),
