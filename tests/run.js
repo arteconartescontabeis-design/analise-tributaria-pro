@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.78.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.78\.0';/.test(html) && html.includes('<b>v7.78.0</b>')
+    chk('v7.79.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.79\.0';/.test(html) && html.includes('<b>v7.79.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3634,17 +3634,39 @@ console.log('\n■ Integridade da interface');
     chk('v7.77.0 · e a elegibilidade já sabia que a empresa está fora',
       EL.estado === 'inelegivel', 'estado: ' + EL.estado);
 
-    // VARREDURA: toda escolha do menor entre os três regimes tem de consultar a elegibilidade
+    // ══ VARREDURA · v7.79.0 · TODAS AS FORMAS, NÃO SÓ Math.min ═══════════════════════════════
+    // A varredura da v7.77.0 procurava um padrão só — Math.min(T.simples, …) — e por isso deixou
+    // passar SETE pontos: o painel de seis cenários do relatório (lista montada dinamicamente), o
+    // trio de 2033, o gráfico mês a mês, o quadro de 2033, duas tabelas ano a ano e a do parecer.
+    // O usuário voltou a ver "Simples é a melhor opção" numa empresa de R$ 7 milhões.
+    // Agora a varredura cobre min, sort, reduce e comparação direta — em qualquer arranjo.
     const semGuarda = [];
-    const re = /Math\.min\(\s*\+?\w*\.?simples\s*,[^)]*\)/g;
-    let m;
-    while ((m = re.exec(html)) !== null) {
-      const ctxTrecho = html.slice(Math.max(0, m.index - 320), m.index + 60);
-      if (!/snVale|snElegivel|_ok\b|EL\.estado|snElegibilidade/.test(ctxTrecho))
-        semGuarda.push(m[0].slice(0, 60));
+    // v7.79.0 · a varredura ignora a aba Versões: o changelog CITA os padrões antigos para
+    // registrar que foram corrigidos, e procurá-los ali faria a documentação derrubar o teste.
+    const _iVer = html.indexOf('id="page-versoes"');
+    const alvo = _iVer > 0 ? html.slice(0, _iVer) : html;
+    const padroes = [
+      /Math\.min\(\s*\.?\.?\.?\+?[\w.]*\b(simples|sim\[|dentro)[^)]{0,120}\)/g,
+      /Math\.min\(\s*dentro\w*\s*,[^)]{0,120}\)/g,
+      // só arrays de CANDIDATOS — pares [nome, valor] que terminam nos regimes regulares.
+      // Séries de gráfico têm um 3º elemento (a cor) e ficam de fora: ali não se elege nada.
+      /\[\s*\['Por dentro',\s*[\w.\[\]]+\],\s*\['Híbrido',\s*[\w.\[\]]+\],\s*\['Presumido'[^\]]{0,120}\]/g,
+      /cand\s*=\s*[^;]{0,220}/g,
+      /CEN\.filter|_CENdisp|_CENel/g
+    ];
+    for (const p of padroes) {
+      let m;
+      while ((m = p.exec(alvo)) !== null) {
+        const trecho = m[0];
+        if (/^\s*\/\//.test(trecho)) continue;                     // comentário
+        const ctxT = alvo.slice(Math.max(0, m.index - 420), m.index + trecho.length + 80);
+        if (/^\s*\/\/[^\n]*$/.test(alvo.slice(alvo.lastIndexOf('\n', m.index)+1, m.index+trecho.length))) continue;
+        if (!/snVale|snElegivel|_ok\b|EL\.estado|snElegibilidade|snInelegivel|_inelegivel|_cenInelig|_bloq|_CENdisp|_CENel/.test(ctxT))
+          semGuarda.push(trecho.replace(/\s+/g,' ').slice(0, 70));
+      }
     }
-    chk('v7.77.0 · nenhuma escolha do melhor regime ignora a elegibilidade',
-      semGuarda.length === 0, semGuarda.join(' | ') || 'todas guardadas');
+    chk('v7.79.0 · nenhuma escolha do melhor regime ignora a elegibilidade (varredura ampla)',
+      semGuarda.length === 0, semGuarda.slice(0,4).join(' | ') || 'todas guardadas');
 
     chk('v7.77.0 · o relatório avisa que o Simples ficou fora da comparação',
       /O Simples Nacional está FORA desta comparação/.test(html)
@@ -3695,6 +3717,65 @@ console.log('\n■ Integridade da interface');
     chk('v7.78.0 · o parecer se declara executivo e aponta a Conferência de cálculos',
       /Trata-se de um relatório <b>executivo<\/b>/.test(html)
       && /deve ser lido em conjunto com ela/.test(html));
+  }
+
+  // ═══ 6m. v7.79.0 · ACHADOS DO TESTE 14 ═══
+  {
+    console.log('\n■ v7.79.0 — achados do Teste 14');
+    const z12 = () => Array(12).fill(0);
+    const cenF = vm.runInContext('calcCenariosReforma', ctx);
+
+    // ── achado 8 · a fundamentação da exclusão estava juridicamente errada ──
+    const mkExc = (recMes) => { const a = vm.runInContext('anNovo', ctx)('19191919000119', 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+      a.cfg.rbt12Lanc = Array(12).fill(500000);
+      a.receitas.a1_semst = Array(12).fill(recMes);
+      a.folha.salarios = Array(12).fill(30000); return a; };
+    const r20mais = g.calcular(mkExc(500000), clone(AD), {...FD});   // 6,0 mi → excesso de 25%
+    const r20menos = g.calcular(mkExc(420000), clone(AD), {...FD});  // 5,04 mi → excesso de 5%
+    const m20mais = (cenF(r20mais, null).REF.find(x=>x.ano===2033)||{}).snMotivo || '';
+    const m20menos = (cenF(r20menos, null).REF.find(x=>x.ano===2033)||{}).snMotivo || '';
+    chk('v7.79.0 · excesso acima de 20% em empresa EM ATIVIDADE: efeito no MÊS SEGUINTE (§ 9º)',
+      /MÊS SEGUINTE ao da ocorrência do excesso/.test(m20mais) && /§ 9º/.test(m20mais)
+      && !/retroage/.test(m20mais), m20mais.slice(-72));
+    chk('v7.79.0 · excesso de até 20%: efeito a partir de 1º/01 do ano seguinte (§ 9º-A)',
+      /1º\/01 do ano-calendário seguinte/.test(m20menos) && /§ 9º-A/.test(m20menos));
+    chk('v7.79.0 · a retroação só é citada para INÍCIO DE ATIVIDADE (§ 10 e § 12)',
+      /ano de INÍCIO DE ATIVIDADE — a exclusão retroage ao início das atividades \(LC 123\/2006, art\. 3º, § 10\)/.test(html)
+      && /art\. 3º, § 12/.test(html));
+    chk('v7.79.0 · e o texto antigo, que citava o § 9º para afirmar retroação, saiu',
+      !/em mais de 20% — a exclusão retroage ao próprio ano \(LC 123\/2006, art\. 3º, § 9º\)/.test(html));
+
+    // ── achado 9 · ISS retido na carga do regime, parametrizado ──
+    const mkIss = (op) => { const a = vm.runInContext('anNovo', ctx)('20202020000120', 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+      a.cfg.rbt12Lanc = Array(12).fill(100000); a.cfg.iss = .05;
+      a.receitas.a3_semret = Array(12).fill(50000);
+      a.receitas.a3_retiss = Array(12).fill(52068.32);
+      a.folha.salarios = Array(12).fill(25000);
+      if (op) a.cfg.issRetidoNaCarga = true; return a; };
+    const rOff = g.calcular(mkIss(false), clone(AD), {...FD});
+    const rOn  = g.calcular(mkIss(true),  clone(AD), {...FD});
+    const issAno = rOff.meses.reduce((s,M)=>s+(+M.issRetLPLR||0), 0);
+    chk('v7.79.0 · padrão: o ISS retido fica FORA do custo do regime (desembolso próprio)',
+      Math.abs(rOff.totais.simples - (rOn.totais.simples - issAno)) < 0.02);
+    chk('v7.79.0 · com a opção, ele entra — e o efeito é o medido pela auditoria',
+      Math.abs((rOn.totais.simples - rOff.totais.simples) - issAno) < 0.02
+      && Math.abs(issAno - 31240.99) < 0.05,
+      'Δ ' + (rOn.totais.simples - rOff.totais.simples).toFixed(2) + ' (auditoria: 31.240,99)');
+    chk('v7.79.0 · a escolha é declarada nos dois sentidos no papel de trabalho',
+      /ISS retido na carga do regime — opção da empresa \(v7\.79\.0\)/.test(html)
+      && /mede o <b>desembolso próprio<\/b>/.test(html)
+      && /É a leitura <b>econômica<\/b>/.test(html));
+
+    // ── achados já resolvidos antes deste parecer: guardar para não regredirem ──
+    chk('v7.79.0 · a dedução do ISS retido no IBS/CBS já era parametrizada (v7.69.0)',
+      /id="cf-dedissret"/.test(html) && /dedIssRetido: vRaw/.test(html));
+    chk('v7.79.0 · os campos de baixa de estoque com ST já existem na grade',
+      /\['compras\.baixaComst','Baixa dos custos — com ST'\]/.test(html)
+      && /\['compras\.baixaComstMono','Baixa — com ST e monofásica'\]/.test(html));
+    chk('v7.79.0 · e a trava do sublimite já aparece com sinal (v7.76.0)',
+      /\(\+\) ICMS\/ISS da trava do sublimite/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
