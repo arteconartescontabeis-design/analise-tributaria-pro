@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.80.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.80\.0';/.test(html) && html.includes('<b>v7.80.0</b>')
+    chk('v7.81.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.81\.0';/.test(html) && html.includes('<b>v7.81.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -4058,6 +4058,70 @@ console.log('\n■ Integridade da interface');
     chk('v7.80.0 · o Fator R colado no limite é exibido com 8 casas',
       /_frPerto = Math\.abs\(_fr - \.28\) < 0\.000001/.test(html)
       && /o fator está a menos de 0,0001 p\.p\. do limite/.test(html));
+  }
+
+  // ═══ 6r. v7.81.0 · AS CINCO PRIORIDADES DO PARECER FINAL ═══
+  {
+    console.log('\n■ v7.81.0 — prioridades do parecer final');
+    const z12 = () => Array(12).fill(0);
+    const nova = (cnpj) => { const a = vm.runInContext('anNovo', ctx)(cnpj, 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12(); return a; };
+
+    // ── 1 · memória separa base apurada, manual e utilizada ──
+    chk('v7.81.0 · a memória da Reforma separa as TRÊS bases',
+      /Base apurada nesta análise/.test(html) && /Base informada na aba Reforma/.test(html)
+      && /Base utilizada nos quadros acima/.test(html));
+    chk('v7.81.0 · e diz explicitamente que a base manual NÃO decorre da subtração',
+      /não decorre<\/b> de "receita total menos exportações"/.test(html));
+    chk('v7.81.0 · com base automática, a origem também é declarada',
+      /<b>Origem: AUTOMÁTICA<\/b>/.test(html));
+
+    // ── 2 · confirmação quando a base manual diverge mais de 5% ──
+    chk('v7.81.0 · existe confirmação explícita antes de emitir com base manual divergente',
+      /function rfConfirmarBaseManual/.test(html)
+      && /dif \/ apurada <= 0\.05/.test(html)
+      && /Confirma que a base informada é a correta para esta empresa\?/.test(html));
+    chk('v7.81.0 · e recusar a confirmação cancela a emissão do parecer',
+      /if \(rfConfirmarBaseManual\(\)\) rlParecer\(\); else/.test(html)
+      && /Emissão cancelada/.test(html));
+    { const a = nova('30303030000130');
+      a.cfg.rbt12Lanc = Array(12).fill(300000);
+      a.receitas.a1_semst = Array(12).fill(540000);
+      a.folha.salarios = Array(12).fill(30000);
+      const r = g.calcular(clone(a), clone(AD), {...FD});
+      ctx.__pa = a; ctx.__pr = r;
+      vm.runInContext('RL={cnpj:"30",ano:2026,dados:__pa,res:__pr,empresa:{razao_social:"T"}}; AN=__pa; AN._res=__pr;', ctx);
+      const semAba = vm.runInContext('rfConfirmarBaseManual()', ctx);
+      chk('v7.81.0 · sem base manual, não há pergunta nenhuma', semAba === true);
+      ctx.__pa.reforma = { receita: (r.totais.receita - r.totais.receitaExp) * 1.02 };
+      vm.runInContext('RL.dados = __pa;', ctx);
+      chk('v7.81.0 · divergência de 2% (dentro da tolerância) também passa direto',
+        vm.runInContext('rfConfirmarBaseManual()', ctx) === true); }
+
+    // ── 3 e 4 · exclusão pelo ano anterior, interno e exportação ──
+    { const mk = (rbaa, rbaaExp) => { const a = nova('29292929000129');
+        a.cfg.rbt12Lanc = Array(12).fill(300000);
+        a.receitas.a1_semst = Array(12).fill(200000);
+        a.folha.salarios = Array(12).fill(20000);
+        if (rbaa) a.cfg.rbaa = rbaa;
+        if (rbaaExp) a.cfg.rbaaExp = rbaaExp; return a; };
+      const ex = (i,e) => g.calcular(mk(i,e), clone(AD), {...FD}).exclusaoAnoAnterior;
+      chk('v7.81.0 · sem os campos, não se afirma exclusão pelo ano anterior', ex(0,0) === null);
+      chk('v7.81.0 · interno em 4.799.999,99 (um centavo abaixo) NÃO exclui',
+        ex(4799999.99, 0) === null);
+      const eExp = ex(0, 4800000.01);
+      chk('v7.81.0 · exportação em 4.800.000,01 (um centavo acima) EXCLUI',
+        !!eExp && eExp.exportacao === true && eExp.interno === false,
+        (eExp && eExp.motivo || '').slice(0, 76));
+      chk('v7.81.0 · e o motivo diz que o limite interno é independente e foi respeitado',
+        /o limite do mercado interno é independente e foi respeitado/.test((eExp||{}).motivo||''));
+      const eDois = ex(5000000, 5000000);
+      chk('v7.81.0 · com os dois acima, ambos são nomeados',
+        !!eDois && /DOIS limites/.test(eDois.motivo));
+      chk('v7.81.0 · o papel de trabalho declara os três estados da exclusão anterior',
+        /Exclusão pelo ano-calendário anterior \(v7\.81\.0\)/.test(html)
+        && /não informada<\/b>\. Os campos/.test(html)
+        && /EXCLUÍDA do Simples neste exercício/.test(html)); }
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
