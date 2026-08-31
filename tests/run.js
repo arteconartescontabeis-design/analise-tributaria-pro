@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.76.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.76\.0';/.test(html) && html.includes('<b>v7.76.0</b>')
+    chk('v7.78.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.78\.0';/.test(html) && html.includes('<b>v7.78.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3610,6 +3610,91 @@ console.log('\n■ Integridade da interface');
       /\(\+\) ICMS\/ISS da trava do sublimite/.test(html));
     chk('v7.76.0 · e o cabeçalho das projeções anuncia o cenário hipotético',
       /⛔ CENÁRIO HIPOTÉTICO — empresa inelegível ao Simples nos anos projetados/.test(html));
+  }
+
+  // ═══ 6k. v7.77.0 · NENHUM LUGAR PODE ELEGER UM REGIME INDISPONÍVEL ═══
+  // O defeito: a v7.75.0 guardou a escolha do melhor regime no quadro da ANÁLISE, e havia outras
+  // TRÊS escolhas independentes — relatório, conferência e carteira. Com R$ 7 milhões de receita
+  // o comparativo recomendava o Simples, que a empresa não pode usar. O teste abaixo não confere
+  // um lugar: VARRE o arquivo atrás de qualquer escolha do menor que não pergunte a elegibilidade.
+  {
+    console.log('\n■ v7.77.0 — regime indisponível não é recomendado em lugar nenhum');
+    const z12 = () => Array(12).fill(0);
+    const a = vm.runInContext('anNovo', ctx)('18181818000118', 2026);
+    for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+    a.cfg.rbt12Lanc = Array(12).fill(500000);
+    a.receitas.a1_semst = Array(12).fill(583333.33);      // 7,0 milhões no ano
+    a.folha.salarios = Array(12).fill(40000);
+    const r = g.calcular(a, clone(AD), {...FD});
+    const EL = vm.runInContext('snElegibilidade', ctx)(r, a.cfg);
+
+    chk('v7.77.0 · o cenário reproduz o caso relatado: 7 mi e Simples mais barato',
+      r.totais.receita > 6900000 && r.totais.simples < r.totais.lp && r.totais.simples < r.totais.lr,
+      'Simples ' + r.totais.simples.toFixed(2) + ' × LP ' + r.totais.lp.toFixed(2));
+    chk('v7.77.0 · e a elegibilidade já sabia que a empresa está fora',
+      EL.estado === 'inelegivel', 'estado: ' + EL.estado);
+
+    // VARREDURA: toda escolha do menor entre os três regimes tem de consultar a elegibilidade
+    const semGuarda = [];
+    const re = /Math\.min\(\s*\+?\w*\.?simples\s*,[^)]*\)/g;
+    let m;
+    while ((m = re.exec(html)) !== null) {
+      const ctxTrecho = html.slice(Math.max(0, m.index - 320), m.index + 60);
+      if (!/snVale|snElegivel|_ok\b|EL\.estado|snElegibilidade/.test(ctxTrecho))
+        semGuarda.push(m[0].slice(0, 60));
+    }
+    chk('v7.77.0 · nenhuma escolha do melhor regime ignora a elegibilidade',
+      semGuarda.length === 0, semGuarda.join(' | ') || 'todas guardadas');
+
+    chk('v7.77.0 · o relatório avisa que o Simples ficou fora da comparação',
+      /O Simples Nacional está FORA desta comparação/.test(html)
+      && /permanece nos quadros como <b>referência<\/b>|segue nos quadros como <b>referência<\/b>/.test(html));
+    chk('v7.77.0 · a conferência usa a mesma fonte de elegibilidade',
+      /const _snVale2 = !_EL2 \|\| _EL2\.estado !== 'inelegivel'/.test(html));
+    chk('v7.77.0 · e a carteira marca "SN indisponível" na coluna do melhor regime',
+      /\(SN indisponível\)/.test(html));
+  }
+
+  // ═══ 6l. v7.78.0 · REDAÇÃO DO PARECER EXECUTIVO ═══
+  // Sete ajustes de auditoria externa sobre o documento que vai ao cliente. Nenhum é de cálculo:
+  // são afirmações que prometiam mais do que a lei dá, cronograma impreciso e um gráfico que
+  // podia ser lido como carga atual. Num parecer, a frase errada custa tanto quanto o número.
+  {
+    console.log('\n■ v7.78.0 — redação do parecer executivo');
+    // O teste de AUSÊNCIA precisa excluir o changelog: ele cita a frase antiga justamente para
+    // documentar que foi corrigida. Procurar no arquivo inteiro faria a correção derrubar o
+    // próprio teste — e o registro histórico é parte do valor da entrega, não ruído.
+    const _iCL = html.indexOf('id="page-versoes"');
+    const htmlSemCL = _iCL > 0 ? html.slice(0, _iCL) + html.slice(html.indexOf('</div>', html.lastIndexOf('<tr><td><b>v7.0'))) : html;
+    chk('v7.78.0 · 2027 não é descrito como IBS/CBS pleno (a transição vai até 2033)',
+      !/já com IBS\/CBS plenos/.test(htmlSemCL)
+      && /a transição só se completa em 2033/.test(html));
+    chk('v7.78.0 · o IPI é descrito como reduzido, não como extinto',
+      /reduzem substancialmente o IPI/.test(html)
+      && /permanece em hipóteses específicas/.test(html)
+      && /Zona Franca de Manaus/.test(html));
+    chk('v7.78.0 · o crédito de IBS/CBS não é prometido como irrestrito',
+      !/toda e qualquer despesa destinada ao uso da empresa poderá gerar crédito/.test(htmlSemCL)
+      && /vedação ou restrição<\/b> previstas na legislação/.test(html)
+      && /não é\s*\n?\s*irrestrita<\/b>/.test(html));
+    chk('v7.78.0 · o split payment de 100% é declarado como PREMISSA do modelo',
+      /Esse percentual é premissa do modelo<\/b>/.test(html)
+      && /não<\/b> é percentual definitivo fixado pela legislação/.test(html));
+    chk('v7.78.0 · o gráfico do DAS avisa quando a empresa é inelegível',
+      /SIMULAÇÃO DO SIMPLES NACIONAL — CENÁRIO APENAS COMPARATIVO/.test(html)
+      && /não são a carga atual/.test(html));
+    chk('v7.78.0 · e o parecer sabe informar a inelegibilidade (mesma fonte dos demais quadros)',
+      /snInelegivel: _snInelegivel/.test(html)
+      && /_ELp\.estado === 'inelegivel'/.test(html));
+    chk('v7.78.0 · a economia acumulada é rotulada como teórica e não confundida com a carga atual',
+      /Economia teórica acumulada/.test(html)
+      && /não é economia frente à carga atual/.test(html));
+    chk('v7.78.0 · o prazo de opção deixou de dizer apenas "abertura do exercício"',
+      !/na abertura do exercício\.'/.test(html)
+      && /dentro do <b>prazo regulamentar<\/b>/.test(html));
+    chk('v7.78.0 · o parecer se declara executivo e aponta a Conferência de cálculos',
+      /Trata-se de um relatório <b>executivo<\/b>/.test(html)
+      && /deve ser lido em conjunto com ela/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
