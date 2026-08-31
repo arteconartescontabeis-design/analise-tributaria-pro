@@ -1156,8 +1156,8 @@ console.log('\n■ Integridade da interface');
     d5 && d5.mig27===9.11 && d5.mig28===8.8, dErr || (d5?`27=${d5.mig27} 28=${d5.mig28}`:'—'));
   const lc = await Promise.race([RES_LACRE, new Promise(r=>setTimeout(()=>r(null), 8000))]);
   const lErr = typeof lc==='string' ? lc : '';
-  chk('v7.30.0 · LACRE ÍNTEGRO: selo embutido confere com o motor desta entrega (128 números ao centavo) — mudou regra? RE-SELE',
-    lc && lc.r && lc.r.ok===true && lc.r.hash===vm.runInContext('LACRE_HASH',ctx) && lc.r.n===128,
+  chk('v7.30.0 · LACRE ÍNTEGRO: selo embutido confere com o motor desta entrega (192 números ao centavo) — mudou regra? RE-SELE',
+    lc && lc.r && lc.r.ok===true && lc.r.hash===vm.runInContext('LACRE_HASH',ctx) && lc.r.n===192,
     lErr || (lc&&lc.r?`hash=${lc.r.hash} n=${lc.r.n}`:'timeout'));
   chk('v7.30.0 · lacre bate com os gabaritos pinados (caso1: LR 1.169.013,17 · 2033 híbrido 758.554,46 · regular 702.383,68)',
     lc && lc.r && Math.abs(lc.r.resumo[0].lr-1169013.17)<0.01 && Math.abs(lc.r.resumo[0].h33-758554.46)<0.01 && Math.abs(lc.r.resumo[0].r33-702383.68)<0.01, lErr);
@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.73.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.73\.0';/.test(html) && html.includes('<b>v7.73.0</b>')
+    chk('v7.74.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.74\.0';/.test(html) && html.includes('<b>v7.74.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -2181,7 +2181,7 @@ console.log('\n■ Integridade da interface');
           /icmsTranspV:0, transpCredPres:0/.test(html));
       }
       chk('v7.48.0 · lacre RE-SELADO e registrado no changelog (mudança deliberada de regra)',
-        /const LACRE_HASH = '47f3f10b';/.test(html) && /LACRE RE-SELADO/.test(html) && /e1a25234/.test(html));
+        /const LACRE_HASH = '2e1139e9';/.test(html) && /LACRE RE-SELADO/.test(html) && /e1a25234/.test(html));
     }
 
     // ═══ v7.47.1 — o crédito das compras chega ao parecer e à memória de cálculo ═══
@@ -2816,8 +2816,8 @@ console.log('\n■ Integridade da interface');
     // A PROVA QUE SUSTENTA A DECISÃO: os casos do lacre não têm a chave, então
     // ligar a opção numa empresa não move o selo nem os gabaritos.
     const lac = vm.runInContext('lacreRodar()', ctx);
-    chk('v7.62.0 · M3 · o lacre 47f3f10b segue íntegro com a opção disponível',
-      lac && lac.ok === true && lac.hash === '47f3f10b', 'hash=' + (lac && lac.hash));
+    chk('v7.62.0 · M3 · o lacre 2e1139e9 segue íntegro com a opção disponível',
+      lac && lac.ok === true && lac.hash === '2e1139e9', 'hash=' + (lac && lac.hash));
     const casosLimpos = vm.runInContext('LACRE_CASOS', ctx)
       .every(c => !('arredondaPorTributo' in (c.inp.cfg||{})));
     chk('v7.62.0 · M3 · e os casos-gabarito seguem SEM a chave — é isso que os protege',
@@ -2965,7 +2965,7 @@ console.log('\n■ Integridade da interface');
     // ── A rede continua de pé ──
     const lacA = vm.runInContext('lacreRodar()', ctx);
     chk('auditoria · nenhuma das 11 correções moveu o lacre',
-      lacA && lacA.ok === true && lacA.hash === '47f3f10b', 'hash=' + (lacA && lacA.hash));
+      lacA && lacA.ok === true && lacA.hash === '2e1139e9', 'hash=' + (lacA && lacA.hash));
   }
 
   // ═══ 6b. v7.64.0 · CONFRONTO COM O VERIFICADOR INDEPENDENTE ═══
@@ -3456,6 +3456,53 @@ console.log('\n■ Integridade da interface');
       /Parcela excedente ao limite do Simples \(v7\.72\.0\)/.test(html)
       && /art\. 24, I, "b", e § 2º/.test(html)
       && /A mesma partição vale para o sublimite/.test(html));
+  }
+
+  // ═══ 6h. v7.74.0 · O CASO 3 DO LACRE COBRE O QUE OS CASOS 1 E 2 NÃO ALCANÇAM ═══
+  // A pergunta que originou este bloco: com tantas regras novas, os casos-gabarito não deveriam
+  // mudar? A resposta é não — eles vêm de fonte externa e sua independência é o valor deles.
+  // Mas o risco apontado era real: nenhuma regra corrigida entre a v7.62.0 e a v7.73.0 estava
+  // sob o lacre, porque os dois casos usam um bloco só e não cruzam limite nem sublimite.
+  // Estes testes garantem que o caso 3 continue exercitando tudo aquilo — se alguém o simplificar,
+  // o lacre volta a ser cego e a suíte acusa aqui, não seis meses depois.
+  {
+    console.log('\n■ v7.74.0 — cobertura do caso 3 do lacre');
+    const LC = vm.runInContext('LACRE_CASOS', ctx);
+    chk('v7.74.0 · o lacre tem três casos', LC.length === 3);
+    const c3 = LC[2] && LC[2].inp;
+    chk('v7.74.0 · e os casos 1 e 2 seguem intocados (gabarito externo preservado)',
+      Object.keys(LC[0].inp.receitas).filter(k=>LC[0].inp.receitas[k].some(v=>+v>0)).join() === 'a1_semst'
+      && Object.keys(LC[1].inp.receitas).filter(k=>LC[1].inp.receitas[k].some(v=>+v>0)).join() === 'a3_semret');
+    if (c3) {
+      const r3 = g.calcular(clone(c3), clone(AD), {...FD});
+      const bl = Object.keys(c3.receitas).filter(k=>c3.receitas[k].some(v=>+v>0));
+      chk('v7.74.0 · caso 3 · cruza o SUBLIMITE com mês partido (art. 24, I)',
+        r3.meses.some(M => M.excSublimite > 0 && M.excSublimite < 1),
+        'mês partido: ' + (r3.meses.findIndex(M=>M.excSublimite>0&&M.excSublimite<1)+1));
+      chk('v7.74.0 · caso 3 · cruza o LIMITE com mês partido (art. 24, II)',
+        r3.meses.some(M => M.excLimite > 0 && M.excLimite < 1),
+        'mês partido: ' + (r3.meses.findIndex(M=>M.excLimite>0&&M.excLimite<1)+1));
+      chk('v7.74.0 · caso 3 · tem período de impedimento de ICMS/ISS',
+        r3.meses.some(M => M.impedido), r3.meses.filter(M=>M.impedido).length + ' meses');
+      chk('v7.74.0 · caso 3 · exercita o teto de 5% do ISS na 5ª faixa',
+        r3.meses[0].faixa === 5 && bl.some(k=>/retiss/.test(k)));
+      // o Anexo V só existe nos meses em que o Fator R cai abaixo de 28% — a cobertura é do ANO
+      const _ax = new Set(); r3.meses.forEach(M => (M.ins.anexos||[]).forEach(x => _ax.add(x)));
+      chk('v7.74.0 · caso 3 · usa os cinco anexos ao longo do ano',
+        ['I','II','III','IV','V'].every(x => _ax.has(x)), [..._ax].sort().join(','));
+      chk('v7.74.0 · caso 3 · tem os quatro blocos de exportação',
+        (r3.meses[0].ins.blocosExp||[]).length === 4);
+      chk('v7.74.0 · caso 3 · o Fator R fica dos DOIS lados dos 28% ao longo do ano',
+        r3.meses.some(M=>M.fatorR >= .28) && r3.meses.some(M=>M.fatorR < .28),
+        r3.meses.filter(M=>M.fatorR>=.28).length + ' meses no III · '
+        + r3.meses.filter(M=>M.fatorR<.28).length + ' no V');
+      chk('v7.74.0 · caso 3 · tem IPI de fato apurado (não zerado por acaso)',
+        r3.meses.reduce((s,M)=>s+M.lp.ipi,0) > 0);
+      chk('v7.74.0 · caso 3 · tem ST, monofásico, redução de ICMS e transporte',
+        ['a1_comst','a1_mono','a1_red','comtransp'].every(k=>bl.includes(k)));
+      chk('v7.74.0 · caso 3 · tem 13º pago informado (entra no FS12 na competência)',
+        (+(c3.folha13||{}).salarios13 || 0) > 0);
+    }
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
