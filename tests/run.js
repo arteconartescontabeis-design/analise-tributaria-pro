@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.74.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.74\.0';/.test(html) && html.includes('<b>v7.74.0</b>')
+    chk('v7.75.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.75\.0';/.test(html) && html.includes('<b>v7.75.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3503,6 +3503,93 @@ console.log('\n■ Integridade da interface');
       chk('v7.74.0 · caso 3 · tem 13º pago informado (entra no FS12 na competência)',
         (+(c3.folha13||{}).salarios13 || 0) > 0);
     }
+  }
+
+  // ═══ 6i. v7.75.0 · ELEGIBILIDADE E SUBLIMITE NOS CENÁRIOS PROJETADOS ═══
+  {
+    console.log('\n■ v7.75.0 — elegibilidade ao Simples e sublimite de 2027');
+    const z12 = () => Array(12).fill(0);
+    const cenF = vm.runInContext('calcCenariosReforma', ctx);
+    const mk = (recMes) => { const a = vm.runInContext('anNovo', ctx)('15151515000115', 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+      a.cfg.rbt12Lanc = Array(12).fill(300000); a.cfg.iss = .05;
+      a.receitas.a1_semst = Array(12).fill(recMes);
+      a.folha.salarios = Array(12).fill(30000); return a; };
+
+    const rDentro = g.calcular(mk(250000), clone(AD), {...FD});   // 3,0 mi — dentro do sublimite
+    const rSub    = g.calcular(mk(350000), clone(AD), {...FD});   // 4,2 mi — acima do sublimite
+    const rFora   = g.calcular(mk(500000), clone(AD), {...FD});   // 6,0 mi — acima do limite
+    const cDentro = cenF(rDentro, null), cSub = cenF(rSub, null), cFora = cenF(rFora, null);
+
+    chk('v7.75.0 · dentro do limite: nenhum cenário é bloqueado',
+      cDentro.snIndisponivel === false
+      && cDentro.REF.every(L => !L.snBloqueado));
+    chk('v7.75.0 · acima do SUBLIMITE mas dentro do limite: segue elegível',
+      cSub.snIndisponivel === false, 'receita interna: ' + cSub.recIntBase.toFixed(2));
+    chk('v7.75.0 · acima do LIMITE: o Simples fica indisponível',
+      cFora.snIndisponivel === true && cFora.excesso20 === true,
+      'receita interna: ' + cFora.recIntBase.toFixed(2) + ' × limite ' + cFora.limiteBase.toFixed(2));
+
+    // o ano-base continua sendo o realizado; o bloqueio é dos anos PROJETADOS
+    const L26 = cFora.REF.find(x=>x.ano===2026), L33 = cFora.REF.find(x=>x.ano===2033);
+    chk('v7.75.0 · o ano-base NÃO é bloqueado (ele é o realizado)', !L26.snBloqueado);
+    chk('v7.75.0 · os anos projetados são bloqueados, com o motivo e o dispositivo',
+      L33.snBloqueado === true && /art\. 3º, § 9º/.test(L33.snMotivo||''),
+      (L33.snMotivo||'').slice(0, 70));
+    chk('v7.75.0 · e os valores continuam sendo calculados (referência, não omissão)',
+      L33.hib > 0 && L33.dasHib > 0);
+
+    // a escolha do melhor regime ignora o cenário indisponível
+    chk('v7.75.0 · o quadro de melhor regime exclui o cenário bloqueado',
+      /const mn33 = _bloq \? R33\.regular : Math\.min\(dentro33, R33\.hib, R33\.regular\)/.test(html));
+    chk('v7.75.0 · e a tela diz que estão INDISPONÍVEIS, não apenas caros',
+      /⛔ <b>Os dois cenários de Simples estão INDISPONÍVEIS/.test(html)
+      && /não participam da escolha do melhor regime/.test(html));
+
+    // sublimite: a menção pedida para 2027
+    chk('v7.75.0 · acima do sublimite, a tela explica a obrigação do híbrido a partir de 2027',
+      /a partir de 2027 isso deixa de ser detalhe de guia/.test(html)
+      && /deixa de ser opção plena/.test(html)
+      && /art\. 22-A da Res\. CGSN 140\/2018 e art\. 40-D/.test(html));
+    chk('v7.75.0 · o papel de trabalho declara os TRÊS estados de elegibilidade',
+      /Elegibilidade ao Simples nos anos projetados \(v7\.75\.0\)/.test(html)
+      && /ultrapassou o limite<\/b>/.test(html)
+      && /acima do sublimite<\/b>/.test(html)
+      && /dentro do sublimite de/.test(html));
+
+    // achado 7 · a base de IRPJ do LP agora reproduz pelo texto
+    { const b = vm.runInContext('anNovo', ctx)('16161616000116', 2026);
+      for (const k of Object.keys(b.receitas)) b.receitas[k] = z12();
+      b.cfg.rbt12Lanc = Array(12).fill(300000); b.cfg.iss = .05;
+      b.receitas.a1_semst = Array(12).fill(200000);
+      b.receitas.comtransp = Array(12).fill(38505.10);
+      b.receitas.a3_semret = Array(12).fill(120000);
+      b.receitas.a1_exp = Array(12).fill(20000);
+      b.receitas.fin = Array(12).fill(3125.17);
+      b.folha.salarios = Array(12).fill(20000);
+      const rb = g.calcular(b, clone(AD), {...FD});
+      const bc = rb.meses[0].lp.baseComp;
+      chk('v7.75.0 · o motor devolve os componentes da base presumida', !!bc);
+      const recomp = bc.com*bc.comPc + bc.serv*bc.servPc + bc.fin
+        + (bc.transpModo === 'passageiros' ? bc.transp*0.16 : 0);
+      chk('v7.75.0 · e o texto da base de IRPJ reproduz o número do motor (achado 7)',
+        Math.abs(recomp - rb.meses[0].lp.baseAdic) < 0.01,
+        'recomposta ' + recomp.toFixed(2) + ' × motor ' + rb.meses[0].lp.baseAdic.toFixed(2));
+      chk('v7.75.0 · o transporte de cargas aparece com a presunção do COMÉRCIO, declarada',
+        bc.transp > 0 && bc.transpModo === 'cargas'
+        && /transporte de <b>cargas<\/b>/.test(html)
+        && /<b>não<\/b> a de serviços/.test(html));
+      chk('v7.75.0 · e a exportação aparece nomeada dentro da presunção',
+        /inclui exportação de mercadoria/.test(html)
+        && /compõe a presunção/.test(html)); }
+
+    // achados de memória do Teste 12
+    chk('v7.75.0 · a razão do excedente usa a receita INTERNA como denominador (achado 3)',
+      /sobre a receita <b>do mercado interno<\/b> de \$\{fmtR\(M\.recInt\)\}/.test(html)
+      && /tem limite próprio e fica fora desta razão/.test(html));
+    chk('v7.75.0 · o quadro da exportação soma os blocos e não usa alíquota média (achado 6)',
+      /não há alíquota única que reproduza este total/.test(html)
+      && !/\$\{fmtR\(M\.recExp\)\} × alíquota acima/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
