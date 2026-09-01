@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.81.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.81\.0';/.test(html) && html.includes('<b>v7.81.0</b>')
+    chk('v7.82.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.82\.0';/.test(html) && html.includes('<b>v7.82.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -4122,6 +4122,59 @@ console.log('\n■ Integridade da interface');
         /Exclusão pelo ano-calendário anterior \(v7\.81\.0\)/.test(html)
         && /não informada<\/b>\. Os campos/.test(html)
         && /EXCLUÍDA do Simples neste exercício/.test(html)); }
+  }
+
+  // ═══ 6s. v7.82.0 · SANIDADE DE ESCALA (achado da auditoria do banco de produção) ═══
+  // O caso que originou isto é real: análise gravada com receita de R$ 209.741.364,30 numa
+  // empresa cuja receita do ano seguinte foi R$ 949.304,05. Atravessou importação, cálculo e
+  // gravação sem aviso. O alerta pega o IMPROVÁVEL — o impossível já era pego pela faixa da
+  // v7.63.0 — e por isso precisa ser calibrado dos dois lados: acusar o erro E ficar calado
+  // diante de empresa grande de verdade. Um alerta que grita em cliente legítimo é ignorado,
+  // e alerta ignorado não protege ninguém.
+  {
+    console.log('\n■ v7.82.0 — sanidade de escala');
+    const f = vm.runInContext("typeof anSanidadeEscala === 'function' ? anSanidadeEscala : null", ctx);
+    chk('v7.82.0 · a detecção de escala existe', !!f, f ? '' : 'anSanidadeEscala não encontrada');
+    if (f) {
+      const z12 = () => Array(12).fill(0);
+      const mk = (rec, rbt, anom) => { const a = vm.runInContext('anNovo', ctx)('07894691000163', 2025);
+        for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+        a.receitas.a1_semst = Array(12).fill(rec/12);
+        if (anom) a.receitas.a1_semst[5] = anom;
+        if (rbt) a.cfg.rbt12Lanc = Array(12).fill(rbt/12);
+        return a; };
+
+      // ── acusa: o caso real da produção ──
+      const jv = f(mk(209741364.30, 949304.05, 0));
+      chk('v7.82.0 · o caso real da JV dispara alerta', jv.length >= 2, jv.length + ' alertas');
+      chk('v7.82.0 · e nomeia a hipótese de centavos com o valor corrigido',
+        jv.some(t => /centavos importados como reais/.test(t) && /2\.097\.413,64/.test(t)));
+      chk('v7.82.0 · e mede a desproporção contra o histórico',
+        jv.some(t => /221×/.test(t)));
+
+      // ── cala: o que é legítimo ──
+      chk('v7.82.0 · a mesma empresa com dado normal não dispara nada',
+        f(mk(949304.05, 900000, 0)).length === 0);
+      chk('v7.82.0 · empresa de 60 milhões COM histórico coerente não dispara',
+        f(mk(60000000, 55000000, 0)).length === 0,
+        'porte real não é erro de escala');
+      chk('v7.82.0 · sazonalidade forte (um mês 5× a mediana) não dispara',
+        f(mk(1200000, 1100000, 400000)).length === 0);
+
+      // ── acusa: mês isolado fora de esquadro ──
+      const dig = f(mk(1200000, 1100000, 2500000));
+      chk('v7.82.0 · um mês 25× a mediana dispara, apontando o mês',
+        dig.length === 1 && /Jun/.test(dig[0]) && /dígito ou separador a mais/.test(dig[0]));
+
+      // ── sem histórico, alerta a ordem de grandeza mas NÃO chuta a causa ──
+      const semH = f(mk(60000000, 0, 0));
+      chk('v7.82.0 · sem histórico, alerta o porte sem inventar a causa',
+        semH.length === 1 && !/centavos importados/.test(semH[0]));
+
+      chk('v7.82.0 · o alerta aparece na tela e na importação',
+        /for \(const _s of anSanidadeEscala\(AN\)\) falta\.push\(_s\)/.test(html)
+        && /os valores importados parecem estar fora de escala/.test(html));
+    }
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
