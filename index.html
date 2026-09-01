@@ -694,6 +694,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.83.0</b></td><td>01/09/2026</td><td><b>🤖 O parecer passa a declarar, NO DOCUMENTO, se os textos vieram da IA ou são os padrão.</b> <b>Como isto apareceu:</b> um teste da Edge Function em produção mostrou que a função <code>gerar-parecer</code> vinha falhando havia mais de um dia — preflight <code>OPTIONS</code> com <b>504 após 150 segundos</b>, taxa de erro 5XX em <b>100%</b>. E o parecer continuava sendo emitido normalmente, com o <b>texto padrão</b>, sem que ninguém percebesse. <b>Por que ninguém percebia:</b> o aviso de "textos padrão" existia — na <b>barra de ferramentas</b>, que a impressão esconde (<code>.pp-tools{display:none!important}</code>). Na tela ele passava despercebido entre os botões; no PDF e no papel, <b>não existia</b>. O documento entregue ao cliente se apresentava igual, tivesse ou não passado pela IA. Um parecer que promete análise e entrega redação fixa é pior que um parecer que não sai. <b>Agora a origem é declarada na Introdução</b>, dentro do miolo impresso, em três estados: <b>gerado por IA</b>, com data e hora, esclarecendo que quadros, memórias e valores <b>não dependem</b> da IA; <b>textos padrão</b>, avisando que as redações são as fixas do aplicativo, iguais para empresas de mesmo enquadramento; e <b>padrão após falha</b>, registrando que a última tentativa não funcionou. <b>E a falha deixou de ser silenciosa:</b> quando a geração cai, o aplicativo grava o motivo, <b>avisa em diálogo</b> que o parecer sairá com o texto padrão e que isso ficará escrito no documento, e recarrega o parecer já com a marca. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>751 verificações</b>.</td></tr>
                     <tr><td><b>v7.82.0</b></td><td>31/08/2026</td><td><b>🔬 Alerta de escala — nascido de uma auditoria do banco de PRODUÇÃO, não de um teste.</b> A varredura do banco encontrou uma análise gravada com receita de <b>R$ 209.741.364,30</b> numa empresa cuja receita do ano seguinte foi R$ 949.304,05 — <b>221 vezes</b> maior, e 43 vezes o limite do Simples. O dado atravessou importação, cálculo e gravação <b>sem um único aviso</b>. Dividido por 100 dá R$ 2.097.413,64: a assinatura clássica de <b>centavos importados como reais</b>. <b>Por que a faixa de validação não pegou:</b> a barreira da v7.63.0 recusa o <b>impossível</b> — receita negativa, percentual acima de 100%. Duzentos e nove milhões é possível; só é improvável. São coisas diferentes e precisavam de tratamentos diferentes. <b>Três sinais, todos usando dado que a própria análise já tem:</b> receita anual mais de 10× o limite do Simples <b>sem histórico que sustente o porte</b>; receita do ano mais de 20× a soma dos 12 meses anteriores lançados; e um mês isolado mais de 20× a mediana dos demais, apontando qual. O aviso aparece <b>na importação</b> — que é onde o erro nasce — e na análise. <b>Ele alerta e não corrige</b>, de propósito: quem fatura muito de verdade confirma e segue; quem importou errado descobre antes de emitir parecer. <b>E foi calibrado dos dois lados</b>, porque alerta que grita em cliente legítimo acaba ignorado — e alerta ignorado não protege ninguém. Empresa de R$ 60 milhões <b>com histórico coerente</b> não dispara nada: porte real não é erro de escala. Sazonalidade de um mês 5× a mediana também não. Sem histórico lançado, o aplicativo alerta o porte mas <b>não chuta</b> a causa — sugerir "centavos" sem base gastaria a confiança de quem lê. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>744 verificações</b>.</td></tr>
                     <tr><td><b>v7.81.0</b></td><td>31/08/2026</td><td><b>🎯 As cinco prioridades do parecer final — o que separava 9,4 de 10.</b> <b>(1) A memória da Reforma dizia uma fórmula que não era a usada.</b> O texto afirmava, sempre, que a base é "receita interna menos as reduções" — mas, havendo valor informado na aba, a base é o que foi <b>digitado</b>, e a subtração descrita levaria a outro número. A auditoria flagrou: base manual de R$ 7.177.095,20 sobre receita apurada de R$ 6.480.000,01, com a fórmula fazendo parecer que uma decorria da outra. Agora as <b>três bases são exibidas separadas</b> — apurada, informada e efetivamente utilizada — com a diferença em reais e em percentual, e a frase explícita de que a base utilizada <b>não decorre</b> daquela subtração. <b>(2) Alerta virou confirmação.</b> Divergindo mais de 5% da receita apurada, o aplicativo <b>pergunta antes de emitir</b> o parecer, dizendo que toda a projeção 2027–2033 sairá sobre o valor informado. Recusando, a emissão é <b>cancelada</b> com orientação para corrigir. Dentro da tolerância, nada muda no fluxo. <b>(3) O campo de RBA de exportação do ano anterior estava criado e não era usado.</b> A v7.80.0 acrescentou o campo e calculou as variáveis — e não as ligou a nada. Agora a receita de <b>exportação</b> do ano-calendário anterior acima do limite exclui do regime tanto quanto a interna, porque os limites são <b>independentes</b> (LC 123/2006, art. 3º, II e § 14). No cenário do teste, interno em R$ 4.799.999,99 <b>não</b> exclui e exportação em R$ 4.800.000,01 <b>exclui</b> — um centavo decide, e a suíte guarda os dois lados. <b>(4) O motivo da exclusão passa a ser nomeado</b> no papel de trabalho, em três estados: dado não informado (e então o documento <b>não afirma</b> elegibilidade), informado e dentro dos limites, ou excluída — dizendo qual limite caiu, ou se foram os dois. Quando só a exportação excede, o texto registra que o limite interno é independente e foi respeitado. <b>(5) Mantidos como regressão obrigatória</b>, conforme pedido: a conta gráfica do IPI e os testes de precisão por centavos do sublimite, do limite e da regra dos 20%. Motor tocado apenas no cálculo da exclusão pelo ano anterior; lacre <code>2e1139e9</code> íntegro (os casos-gabarito não informam RBA anterior). Suíte: <b>734 verificações</b>.</td></tr>
                     <tr><td><b>v7.80.0</b></td><td>31/08/2026</td><td><b>🧨 Teste 16 (estresse por centavos): o IPI virou conta gráfica, a exportação ganhou limite próprio no ano anterior e a base da Reforma passou a se identificar.</b> <b>(1) IPI negativo — crítico.</b> Quando o crédito superava o débito, o confronto devolvia valor <b>negativo</b> e ele <b>reduzia a carga</b> do período, como se o Fisco devolvesse dinheiro no mês. O IPI é conta gráfica: o excesso vira <b>saldo credor</b> e abate o débito dos meses seguintes (CTN, art. 49). A auditoria mediu R$ 25.470,33 de "IPI negativo" no ano, subestimando o Presumido e o Real na mesma medida. Agora a estrutura é a mesma que o PIS/COFINS já usava desde a v7.20.0 — débito, crédito, saldo anterior, valor a pagar e saldo a transportar —, e a memória demonstra as cinco linhas. <b>O saldo acumula enquanto o crédito superar o débito e é consumido quando ele cresce</b>, o que a suíte verifica nos dois sentidos. <b>(2) Limite próprio da exportação.</b> O mercado externo tem limite <b>independente</b> de igual valor (LC 123/2006, art. 3º, § 14): ultrapassar qualquer um dos dois exclui do regime. O cenário do teste foi construído com a exportação <b>um centavo</b> acima, e o documento só falava do mercado interno. Entrou o campo <b>RBA de exportação do ano anterior</b>, ao lado do que a v7.70.0 criou para o interno, e o motivo da exclusão passa a nomear qual limite foi rompido — interno, externo, ou <b>os dois</b>, dizendo que são independentes. <b>(3) Base da Reforma: AUTOMÁTICA ou MANUAL.</b> O teste rodou com base manual de <b>outro</b> cenário — R$ 697.095,19 acima da receita apurada — e o alerta discreto não impediu que os números fossem lidos como do caso analisado. O papel de trabalho agora <b>rotula a origem</b> da base, e a divergência é <b>dimensionada</b>: acima de 5% o alerta fica vermelho e diz que toda a projeção 2027–2033 sai sobre uma base que não é a da empresa. <b>(4) Fator R na fronteira.</b> Com o indicador a menos de 0,0001 ponto do limite, duas casas faziam a memória parecer contradizer-se — "28,0000% &lt; 28%". Perto da fronteira o documento passa a mostrar <b>8 casas</b>, que é onde a decisão de anexo realmente se define. <b>Aprovados no estresse, sem alteração:</b> sublimite e limite testados <b>por centavos</b>, a regra dos 20%, a separação das exportações, o Fator R e o transporte do saldo de PIS/COFINS. Lacre <code>2e1139e9</code> íntegro — o caso 3 tem IPI, mas com débito maior que crédito, e a correção só age quando o crédito excede. Suíte: <b>721 verificações</b>.</td></tr>
@@ -5390,7 +5391,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.82.0';
+const APP_VERSAO = '7.83.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -8829,7 +8830,29 @@ function rlParecer(){
   const temCS = D.recCom.some(v=>v>0.005) && D.recServ.some(v=>v>0.005);   // v7.18.0: só com as DUAS atividades
   const temDT = D.dasTrib && ['pis','cofins','irpj','csll','cpp','icms','iss','ipi'].some(k=>(D.dasTrib[k]||0)>0.005);
   const temREF = D.anos.length>0;
-  const statusIA = RL._ia ? '🤖 Textos gerados pela IA em '+RL._ia.quando : 'Textos padrão — clique em “Gerar textos com IA” para o parecer redigido sob medida';
+  // ══ v7.83.0 · A ORIGEM DOS TEXTOS PRECISA SAIR NO DOCUMENTO ═══════════════════════════════
+  // O aviso de "textos padrão" existia — na BARRA DE FERRAMENTAS, que a impressão esconde
+  // (`.pp-tools{display:none!important}`). O documento entregue ao cliente saía sem qualquer
+  // marca de origem. Um teste da Edge Function em produção mostrou o efeito: a função vinha
+  // falhando havia mais de um dia, o parecer continuava sendo gerado com o texto fixo, e não
+  // havia como perceber — nem na tela, nem no PDF, nem no papel.
+  // Agora a origem é declarada NO DOCUMENTO, que é onde a afirmação vale.
+  const _iaOk = !!(RL._ia && RL._ia.textos);
+  const statusIA = _iaOk
+    ? '🤖 Textos gerados pela IA em ' + RL._ia.quando
+    : (RL._iaErro
+      ? '⚠️ A geração com IA FALHOU (' + esc(String(RL._iaErro).slice(0,120)) + ') — o documento está com os textos padrão'
+      : 'Textos padrão — clique em “Gerar textos com IA” para o parecer redigido sob medida');
+  const seloOrigem = _iaOk
+    ? `<div class="hint" style="border-left:3px solid var(--ok,#1e8449);padding:6px 10px;margin:0 0 10px">
+        Textos analíticos <b>gerados por inteligência artificial</b> em ${esc(RL._ia.quando)}, a partir dos
+        números apurados neste estudo. Os quadros, memórias e valores são calculados pelo sistema e
+        <b>não</b> dependem da IA.</div>`
+    : `<div class="hint" style="border-left:3px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109;padding:6px 10px;margin:0 0 10px">
+        <b>Textos analíticos padrão do sistema</b> — este parecer <b>não</b> passou por geração com
+        inteligência artificial${RL._iaErro ? ' (a última tentativa falhou)' : ''}. As considerações
+        abaixo são as redações fixas do aplicativo, iguais para empresas de mesmo enquadramento; os
+        quadros e memórias são calculados a partir dos dados desta empresa.</div>`;
   // ═══ v7.41.7 · premissa do crédito de IBS/CBS ═══
   // O texto anterior afirmava "SEM créditos" sempre que a aba Reforma estava vazia. A afirmação é
   // enganosa em dois sentidos: (a) compra de fornecedor do Simples/MEI GERA crédito simplificado
@@ -8858,6 +8881,7 @@ function rlParecer(){
   // ── PÁG: introdução + enquadramento (v7.38.3: separada do "caminho" — a combinada estourava e cortava o parágrafo final) ──
   h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
     ${secao(1,'Introdução — o que muda e quando')}
+    ${seloOrigem}
     <p class="pp-p">${TX.intro}</p>
     <div class="pp-enq ${D.variante==='acima'?'pp-enq-v':''}"><b>Enquadramento:</b> ${TX.enquadramento}</div>
     ${ppEnqFicha(D)}
@@ -9588,6 +9612,7 @@ async function parecerIA(){
       ? v.map(p=>({ quando:esc(p?.quando), titulo:esc(p?.titulo), texto:esc(p?.texto) }))
       : esc(v);
     RL._ia = { textos: _tx, quando: new Date().toLocaleString('pt-BR') };
+    RL._iaErro = null;   // v7.83.0 · sucesso limpa a falha anterior
     toast('✅ Textos do parecer gerados pela IA.');
     rlRender();
     // v7.39.4: a IA é a única fonte de texto de tamanho imprevisível no documento — medir logo
@@ -9595,8 +9620,16 @@ async function parecerIA(){
     setTimeout(() => { try { ppReguaRender(); } catch(e){ console.error('régua/pós-IA', e); } }, 400);
   } catch(e) {
     console.error('parecerIA', e);
+    // v7.83.0 · a falha fica REGISTRADA: sem isso, o documento sai com o texto padrão sem
+    // qualquer marca, e quem o lê não distingue de um parecer efetivamente redigido pela IA.
+    RL._iaErro = e && e.message ? e.message : String(e);
     document.querySelectorAll('#rl-corpo .pp-skel').forEach(el=>el.classList.remove('pp-skel'));
     toast('⚠️ ' + e.message);
+    alert('A geração dos textos com IA FALHOU.\n\n' + (e && e.message ? e.message : e)
+      + '\n\nO parecer continua sendo emitido, mas com os TEXTOS PADRÃO do sistema — e isso '
+      + 'fica declarado no próprio documento, na Introdução. Se o cliente precisa do texto '
+      + 'analisado, resolva a geração antes de entregar.');
+    try { rlRender(); } catch(_) {}
     if (btn){ btn.disabled = false; btn.textContent = '🤖 Gerar textos com IA'; }
   }
 }
