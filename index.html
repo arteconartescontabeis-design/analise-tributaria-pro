@@ -694,6 +694,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.85.0</b></td><td>01/09/2026</td><td><b>🔎 Quarto sinal de escala: duas colunas da mesma análise em ordens de grandeza incompatíveis.</b> A inspeção do dado de produção que originou o alerta da v7.82.0 revelou algo mais preciso do que "receita alta demais". Naquela análise, a <b>revenda</b> vinha de R$ 15 a 21 <b>milhões</b> por mês enquanto os <b>serviços</b> ficavam entre R$ 44 e 107 <b>mil</b> — duas colunas da mesma empresa, com <b>270×</b> de diferença e uma delas em escala claramente doméstica. <b>O raciocínio:</b> fosse erro de escala do arquivo inteiro, todas as colunas subiriam juntas. Subindo <b>só uma</b>, o defeito é daquele campo — centavos lidos como reais numa coluna específica da importação. O sinal aponta <b>qual bloco</b> revisar e mostra quanto ele daria dividido por 100, em vez de dizer apenas que a receita é alta. <b>Por que ele é melhor que os três anteriores:</b> não depende do porte da empresa. Os outros comparam com o limite do Simples ou com o histórico, e por isso só enxergam empresa pequena com dado inflado. Este compara a análise <b>consigo mesma</b> — funciona igual em cliente de R$ 500 mil e em indústria de R$ 60 milhões. <b>Calibrado para o silêncio nos casos legítimos:</b> comércio forte com serviço pequeno (50×) não dispara; indústria grande com serviço miúdo (150×) também não — porte desigual entre blocos é comum e não é erro. O limite é de <b>200×</b>, duas ordens de grandeza inteiras. Bloco com menos de três meses lançados fica fora da comparação, para movimento esporádico não gerar ruído. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>771 verificações</b>.</td></tr>
                     <tr><td><b>v7.84.1</b></td><td>01/09/2026</td><td><b>🔧 CORREÇÃO URGENTE — o Consolidado Analítico não gerava desde a v7.77.0, e o meu teste tinha excluído justamente ele.</b> <b>O defeito:</b> uma linha escrita na v7.77.0 usava <code>(D||{}).cfg</code> — e <code>D</code> <b>nunca foi declarado</b> naquela função, onde a análise se chama <code>RL.dados</code>. O detalhe que engana: <code>(D||{})</code> protege contra valor <b>nulo</b>, não contra <b>identificador inexistente</b>. Referenciar um nome não declarado lança <code>ReferenceError</code> na hora, e o relatório morria antes de desenhar a primeira linha. <b>Como passou por 760 verificações:</b> o bloco de fumaça da v7.79.1 cobre cada relatório, e eu o criei com <b>quatro</b> tipos — deixando o <code>consolidado</code> de fora porque "dava erro no sandbox". Dava erro porque estava <b>quebrado</b>. Excluí do teste exatamente o que tinha defeito, e transformei a verificação num registro do que já funcionava. A lista agora tem os <b>cinco</b> relatórios, e a regra que fica é: o que não passa entra e <b>falha</b> até ser consertado. <b>E, corrigido o primeiro, apareceu o segundo:</b> com o relatório voltando a abrir, o teste de conteúdo acusou que o Consolidado também ranqueava <b>"1º Simples Nacional"</b> para empresa acima do limite — o mesmo defeito que o Comparativo levou quatro relatos para fechar. Ninguém tinha visto porque o relatório sequer gerava. Agora os cenários indisponíveis saem da numeração, vão para o fim da tabela, com valor riscado, marca <b>⛔</b> e "não concorre" na coluna de diferença. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>765 verificações</b>.</td></tr>
                     <tr><td><b>v7.84.0</b></td><td>01/09/2026</td><td><b>📄 Conferência do primeiro parecer impresso de verdade: três desencontros entre o texto da IA e os quadros do próprio documento.</b> <b>(1) A decomposição por tributo apresentada como "carga atual".</b> Os oito valores (PIS, COFINS, IRPJ, CSLL, CPP, ICMS, ISS, IPI) são a repartição do <b>DAS do Simples</b> — e a página seguinte os declara como simulação, já que a empresa é inelegível. Mas o texto da IA os chamava de "decomposição da carga atual", que é do Lucro Presumido. Somam R$ 1.763.825,30 contra a carga real de R$ 1.907.332,79: <b>os mesmos números com dois significados no mesmo documento</b>. <b>(2) O IPI descrito como substituído</b> pelo IBS/CBS na Introdução — afirmação que a v7.78.0 corrigiu no texto padrão do aplicativo, mas a Edge Function tem redação própria e não sabia. <b>(3) O split payment é calculado sobre 2032</b> — pior caso de caixa da transição — e o texto o chamava de "modelo projetado para o <b>ano de referência</b>", que no documento conferido era 2027. <b>Nenhum é erro de cálculo:</b> são leituras erradas do payload. Por isso a correção está em <b>declarar o que cada número é</b>, e não em recalcular. O payload passa a informar a <b>natureza</b> da decomposição (repartição real ou simulação, e de que regime é a carga atual) e o <b>ano do split</b>; três instruções novas impedem cada uma das leituras. O cartão e o texto do split passam a citar o ano que efetivamente usaram. <b>E o parecer impresso ganhou conferidor próprio</b> (<code>conferir_pdf_parecer.js</code>): ele lê o documento — PDF com texto ou HTML salvo pelo navegador — e refaz as contas que o documento afirma, cruzando página com página. Rodado no parecer real, encontrou <b>sozinho</b> os dois achados de texto. <b>Achado de ofício:</b> o PDF entregue vinha <b>rasterizado</b> — cada folha um JPEG, sem camada de texto, 6 MB. Assim o cliente não pesquisa nem copia valores, e nenhuma auditoria automática é possível. O conferidor passou a <b>detectar e avisar</b> quando recebe um PDF assim, explicando como reimprimir. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>754 verificações</b>.</td></tr>
                     <tr><td><b>v7.83.1</b></td><td>01/09/2026</td><td><b>📐 A régua acusava papel timbrado ausente em folha que apenas ainda estava carregando.</b> Na primeira emissão depois de publicar a v7.83.0, o parecer avisou "<b>timbrado ausente em 1 de 12 folhas</b>" — com o arquivo presente e as doze folhas corretas. A causa: a régua testava <code>complete && naturalWidth > 0</code>, que responde "não" tanto para a imagem que <b>falhou</b> quanto para a que <b>ainda está a caminho</b>. Medindo antes de uma das folhas terminar, uma imagem pendente virava folha sem timbrado. Agora a contagem separa os dois casos: só entra como <b>ausente</b> a que efetivamente falhou, e havendo folha ainda carregando a régua <b>remede quando ela terminar</b> — o quadro exibido passa a ser o final, não o instantâneo de meio caminho. <b>Por que isto merece versão própria:</b> falso alarme em régua de conferência é pior que silêncio. Ele ensina a ignorar o aviso, e no dia em que o timbrado faltar de verdade o alerta passa junto com o ruído. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>754 verificações</b>.</td></tr>
@@ -4101,6 +4102,42 @@ function anSanidadeEscala(a){
       + `anteriores lançados na aba RBT12 (${fmtR(rbt)}). Crescimento assim existe, mas essa é `
       + `também a cara de um erro de escala em um dos dois lados.`);
 
+  // 4 · DUAS COLUNAS DA MESMA ANÁLISE EM ORDENS DE GRANDEZA INCOMPATÍVEIS
+  // O sinal mais eloquente, e o que faltava. Na análise que originou este alerta, a revenda vinha
+  // de R$ 15 a 21 MILHÕES por mês enquanto os serviços ficavam entre R$ 44 e 107 MIL — 522× de
+  // diferença entre dois blocos da mesma empresa, com um deles em escala claramente doméstica.
+  // Fosse erro de escala do arquivo inteiro, as duas colunas estariam infladas; estando só uma,
+  // o defeito é da COLUNA — centavos lidos como reais na importação de um campo específico.
+  // Este sinal não depende do porte: aponta o bloco errado em vez de dizer "receita alta demais".
+  {
+    const porBloco = [];
+    for (const k of Object.keys(a.receitas)) {
+      if (/_pct$/.test(k)) continue;
+      const meses = (a.receitas[k] || []).map(v => +v || 0).filter(v => v > 0);
+      if (meses.length < 3) continue;               // bloco esporádico não entra na comparação
+      meses.sort((x,y) => x-y);
+      porBloco.push({ k, mediana: meses[Math.floor(meses.length/2)] });
+    }
+    if (porBloco.length >= 2) {
+      porBloco.sort((x,y) => y.mediana - x.mediana);
+      const alto = porBloco[0], baixo = porBloco[porBloco.length-1];
+      const razao = baixo.mediana > 0 ? alto.mediana / baixo.mediana : 0;
+      // 200× é folgado: comércio de alto giro convivendo com serviço pequeno chega a algumas
+      // dezenas de vezes. Duas ordens de grandeza inteiras é outra coisa.
+      if (razao > 200) {
+        const rot = kk => (typeof PG_BLOCOS !== 'undefined'
+          ? ((PG_BLOCOS.find(x => x[0] === kk) || [null, kk])[1]) : kk);
+        av.push(`<b>Duas colunas desta análise estão em escalas incompatíveis:</b> `
+          + `${rot(alto.k)} tem mediana mensal de ${fmtR(alto.mediana)} e ${rot(baixo.k)}, `
+          + `de ${fmtR(baixo.mediana)} — <b>${Math.round(razao)}×</b> de diferença. `
+          + `Quando o erro é do arquivo inteiro, todas as colunas sobem juntas; subindo só uma, `
+          + `o mais provável é <b>centavos lidos como reais</b> naquele campo. `
+          + `Dividida por 100, a coluna maior daria ${fmtR(alto.mediana/100)} por mês. `
+          + `Confira <b>${rot(alto.k)}</b> na origem antes de calcular.`);
+      }
+    }
+  }
+
   // 3 · um mês fora de esquadro com os demais
   const comMov = meses.map((v,i) => ({v, i})).filter(x => x.v > 0);
   if (comMov.length >= 3){
@@ -5394,7 +5431,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.84.1';
+const APP_VERSAO = '7.85.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
