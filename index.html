@@ -694,6 +694,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.84.0</b></td><td>01/09/2026</td><td><b>📄 Conferência do primeiro parecer impresso de verdade: três desencontros entre o texto da IA e os quadros do próprio documento.</b> <b>(1) A decomposição por tributo apresentada como "carga atual".</b> Os oito valores (PIS, COFINS, IRPJ, CSLL, CPP, ICMS, ISS, IPI) são a repartição do <b>DAS do Simples</b> — e a página seguinte os declara como simulação, já que a empresa é inelegível. Mas o texto da IA os chamava de "decomposição da carga atual", que é do Lucro Presumido. Somam R$ 1.763.825,30 contra a carga real de R$ 1.907.332,79: <b>os mesmos números com dois significados no mesmo documento</b>. <b>(2) O IPI descrito como substituído</b> pelo IBS/CBS na Introdução — afirmação que a v7.78.0 corrigiu no texto padrão do aplicativo, mas a Edge Function tem redação própria e não sabia. <b>(3) O split payment é calculado sobre 2032</b> — pior caso de caixa da transição — e o texto o chamava de "modelo projetado para o <b>ano de referência</b>", que no documento conferido era 2027. <b>Nenhum é erro de cálculo:</b> são leituras erradas do payload. Por isso a correção está em <b>declarar o que cada número é</b>, e não em recalcular. O payload passa a informar a <b>natureza</b> da decomposição (repartição real ou simulação, e de que regime é a carga atual) e o <b>ano do split</b>; três instruções novas impedem cada uma das leituras. O cartão e o texto do split passam a citar o ano que efetivamente usaram. <b>E o parecer impresso ganhou conferidor próprio</b> (<code>conferir_pdf_parecer.js</code>): ele lê o documento — PDF com texto ou HTML salvo pelo navegador — e refaz as contas que o documento afirma, cruzando página com página. Rodado no parecer real, encontrou <b>sozinho</b> os dois achados de texto. <b>Achado de ofício:</b> o PDF entregue vinha <b>rasterizado</b> — cada folha um JPEG, sem camada de texto, 6 MB. Assim o cliente não pesquisa nem copia valores, e nenhuma auditoria automática é possível. O conferidor passou a <b>detectar e avisar</b> quando recebe um PDF assim, explicando como reimprimir. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>754 verificações</b>.</td></tr>
                     <tr><td><b>v7.83.1</b></td><td>01/09/2026</td><td><b>📐 A régua acusava papel timbrado ausente em folha que apenas ainda estava carregando.</b> Na primeira emissão depois de publicar a v7.83.0, o parecer avisou "<b>timbrado ausente em 1 de 12 folhas</b>" — com o arquivo presente e as doze folhas corretas. A causa: a régua testava <code>complete && naturalWidth > 0</code>, que responde "não" tanto para a imagem que <b>falhou</b> quanto para a que <b>ainda está a caminho</b>. Medindo antes de uma das folhas terminar, uma imagem pendente virava folha sem timbrado. Agora a contagem separa os dois casos: só entra como <b>ausente</b> a que efetivamente falhou, e havendo folha ainda carregando a régua <b>remede quando ela terminar</b> — o quadro exibido passa a ser o final, não o instantâneo de meio caminho. <b>Por que isto merece versão própria:</b> falso alarme em régua de conferência é pior que silêncio. Ele ensina a ignorar o aviso, e no dia em que o timbrado faltar de verdade o alerta passa junto com o ruído. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>754 verificações</b>.</td></tr>
                     <tr><td><b>v7.83.0</b></td><td>01/09/2026</td><td><b>🤖 O parecer passa a declarar, NO DOCUMENTO, se os textos vieram da IA ou são os padrão.</b> <b>Como isto apareceu:</b> um teste da Edge Function em produção mostrou que a função <code>gerar-parecer</code> vinha falhando havia mais de um dia — preflight <code>OPTIONS</code> com <b>504 após 150 segundos</b>, taxa de erro 5XX em <b>100%</b>. E o parecer continuava sendo emitido normalmente, com o <b>texto padrão</b>, sem que ninguém percebesse. <b>Por que ninguém percebia:</b> o aviso de "textos padrão" existia — na <b>barra de ferramentas</b>, que a impressão esconde (<code>.pp-tools{display:none!important}</code>). Na tela ele passava despercebido entre os botões; no PDF e no papel, <b>não existia</b>. O documento entregue ao cliente se apresentava igual, tivesse ou não passado pela IA. Um parecer que promete análise e entrega redação fixa é pior que um parecer que não sai. <b>Agora a origem é declarada na Introdução</b>, dentro do miolo impresso, em três estados: <b>gerado por IA</b>, com data e hora, esclarecendo que quadros, memórias e valores <b>não dependem</b> da IA; <b>textos padrão</b>, avisando que as redações são as fixas do aplicativo, iguais para empresas de mesmo enquadramento; e <b>padrão após falha</b>, registrando que a última tentativa não funcionou. <b>E a falha deixou de ser silenciosa:</b> quando a geração cai, o aplicativo grava o motivo, <b>avisa em diálogo</b> que o parecer sairá com o texto padrão e que isso ficará escrito no documento, e recarrega o parecer já com a marca. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>751 verificações</b>.</td></tr>
                     <tr><td><b>v7.82.0</b></td><td>31/08/2026</td><td><b>🔬 Alerta de escala — nascido de uma auditoria do banco de PRODUÇÃO, não de um teste.</b> A varredura do banco encontrou uma análise gravada com receita de <b>R$ 209.741.364,30</b> numa empresa cuja receita do ano seguinte foi R$ 949.304,05 — <b>221 vezes</b> maior, e 43 vezes o limite do Simples. O dado atravessou importação, cálculo e gravação <b>sem um único aviso</b>. Dividido por 100 dá R$ 2.097.413,64: a assinatura clássica de <b>centavos importados como reais</b>. <b>Por que a faixa de validação não pegou:</b> a barreira da v7.63.0 recusa o <b>impossível</b> — receita negativa, percentual acima de 100%. Duzentos e nove milhões é possível; só é improvável. São coisas diferentes e precisavam de tratamentos diferentes. <b>Três sinais, todos usando dado que a própria análise já tem:</b> receita anual mais de 10× o limite do Simples <b>sem histórico que sustente o porte</b>; receita do ano mais de 20× a soma dos 12 meses anteriores lançados; e um mês isolado mais de 20× a mediana dos demais, apontando qual. O aviso aparece <b>na importação</b> — que é onde o erro nasce — e na análise. <b>Ele alerta e não corrige</b>, de propósito: quem fatura muito de verdade confirma e segue; quem importou errado descobre antes de emitir parecer. <b>E foi calibrado dos dois lados</b>, porque alerta que grita em cliente legítimo acaba ignorado — e alerta ignorado não protege ninguém. Empresa de R$ 60 milhões <b>com histórico coerente</b> não dispara nada: porte real não é erro de escala. Sazonalidade de um mês 5× a mediana também não. Sem histórico lançado, o aplicativo alerta o porte mas <b>não chuta</b> a causa — sugerir "centavos" sem base gastaria a confiança de quem lê. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>744 verificações</b>.</td></tr>
@@ -5392,7 +5393,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.83.1';
+const APP_VERSAO = '7.84.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -8699,7 +8700,13 @@ function parecerDados(){
   const sReg = anos.map(l=>l.regular);
   const sLP = anos.map(l=>l.regLP), sLR = anos.map(l=>l.regLR);
   const sHoje = anos.map(()=> hojeAnual);
-  const split = { fonteMes: L32 ? (L32.deb||0)/12 : 0 };
+  // ══ v7.84.0 (conferência do PDF real) · O SPLIT É DE 2032, E ISSO PRECISA VIAJAR JUNTO ═════
+// O cartão do split payment sempre usou o débito de 2032 — último ano antes da vigência plena,
+// que é o pior caso de caixa da transição. Mas o ANO DE REFERÊNCIA do documento pode ser outro
+// (2027, no parecer conferido), e a IA, recebendo só o número, escreveu "pelo modelo projetado
+// para o ano de referência" — atribuindo a 2027 um valor de 2032. O ano passa a acompanhar o
+// número, no payload e no texto, para que a IA não tenha como confundi-los.
+const split = { fonteMes: L32 ? (L32.deb||0)/12 : 0, ano: L32 ? L32.ano : null };
   split.giroAno = split.fonteMes*12; split.custoAno = split.fonteMes*0.15;
   // selo curto reaproveitado nos subtítulos das seções projetadas (sem criar linha nova na página)
   const seloProj = PROJ ? '📊 Valores projetados para o ano: '+PROJ.nReais+(PROJ.nReais===1?' mês real':' meses reais')
@@ -8775,7 +8782,7 @@ function parecerTextosPadrao(D){
   }
   b.retrato = 'Os quadros desta seção mostram os fatores do negócio que pesaram na conclusão: a composição da receita entre comércio/indústria e serviços e, quando houver PGDAS importado, a decomposição do DAS por tributo.';
   b.split = D.split.fonteMes>0.005
-    ? 'Com a reforma, a CBS e o IBS da própria venda passam a ser recolhidos na fonte (split payment) no momento do pagamento. '+(D.variante==='simples'?'No caminho "por dentro", nada é retido — o IBS/CBS segue no DAS mensal e o caixa é preservado. Nos caminhos híbrido e fora do Simples, ':'')+'a retenção estimada é de '+fmtR(D.split.fonteMes)+' por mês em 2032 — '+fmtR(D.split.giroAno)+' por ano que deixam de transitar pelo caixa, com custo financeiro estimado de '+fmtR(D.split.custoAno)+'/ano (15% a.a., mínimo Selic), além da perda de flexibilidade para administrar o imposto.'
+    ? 'Com a reforma, a CBS e o IBS da própria venda passam a ser recolhidos na fonte (split payment) no momento do pagamento. '+(D.variante==='simples'?'No caminho "por dentro", nada é retido — o IBS/CBS segue no DAS mensal e o caixa é preservado. Nos caminhos híbrido e fora do Simples, ':'')+'a retenção estimada é de '+fmtR(D.split.fonteMes)+' por mês em '+(D.split.ano||2032)+' — '+fmtR(D.split.giroAno)+' por ano que deixam de transitar pelo caixa, com custo financeiro estimado de '+fmtR(D.split.custoAno)+'/ano (15% a.a., mínimo Selic), além da perda de flexibilidade para administrar o imposto.'
     : 'Preencha a aba Reforma para estimar o impacto do split payment no caixa.';
   b.plano = D.variante==='simples' ? [
     {quando:'Agora · '+(RL.dados.ano||''), titulo:'Formalizar o caminho escolhido', texto:'Registrar a decisão sobre o recolhimento do IBS/CBS (por dentro × híbrido) e revisar o enquadramento dos anexos com a contabilidade.'},
@@ -9022,7 +9029,7 @@ function rlParecer(){
     ${secao(++NS,'Split payment — impacto no caixa')}
     <div class="pp-split">
       ${D.variante==='simples'?`<div class="pp-card"><div class="t">Por dentro · na fonte</div><div class="v" style="color:#0f7a5a">R$ 0</div><div class="s">IBS/CBS segue no DAS — caixa preservado</div></div>`:''}
-      <div class="pp-card"><div class="t">${D.variante==='simples'?'Híbrido/Fora · na fonte':'Recolhido na fonte'}</div><div class="v">${fmtR(D.split.fonteMes)}</div><div class="s">por mês (2032) · retido no pagamento</div></div>
+      <div class="pp-card"><div class="t">${D.variante==='simples'?'Híbrido/Fora · na fonte':'Recolhido na fonte'}</div><div class="v">${fmtR(D.split.fonteMes)}</div><div class="s">por mês (${D.split.ano||2032}) · retido no pagamento</div></div>
       <div class="pp-card"><div class="t">Volume anual segregado</div><div class="v">${fmtR(D.split.giroAno)}</div><div class="s">passam pelo split no ano · não é caixa parado</div></div>
       <div class="pp-card"><div class="t">Custo financeiro</div><div class="v">${fmtR(D.split.custoAno)}</div><div class="s">por ano · 15% a.a. (mín. Selic)</div></div>
     </div>
@@ -9618,7 +9625,32 @@ async function parecerIA(){
         'Se reducoesIbsCbs existir, a redução do regime diferenciado incide sobre a ALÍQUOTA e não sobre a base; a exclusão de ICMS/ISS vem antes e alcança todas as parcelas.',
         'O ISS RETIDO na fonte não reduz a base do IBS/CBS nesta análise — a dedução é o ISS do Lucro Presumido. Não afirme que todo o ISS sai da base.',
         'Se pontosDeAtencaoDoSistema existir, incorpore cada item em parecer1 ou parecer2, com as palavras do sistema — são ressalvas de dado, não opinião.',
+        // ══ v7.84.0 · TRÊS INSTRUÇÕES NASCIDAS DA CONFERÊNCIA DE UM PDF REAL ═══════════════
+        // O parecer impresso foi lido número a número e trouxe três desencontros entre o texto
+        // da IA e os quadros do próprio documento. Nenhum é erro de cálculo — são leituras
+        // erradas do payload, e por isso se corrigem aqui, na instrução.
+        'A decomposição por tributo (PIS, COFINS, IRPJ, CSLL, CPP, ICMS, ISS, IPI) é a repartição '
+        + 'do DAS do SIMPLES NACIONAL, e só existe nesse cenário. NUNCA a descreva como '
+        + '"decomposição da carga atual" quando o regime atual for Lucro Presumido ou Real: nesses '
+        + 'regimes a carga tem outra composição e outro total. Se a empresa não é optante, esses '
+        + 'valores são de SIMULAÇÃO e devem ser apresentados como tal.',
+        'O IPI NÃO é substituído pelo IBS/CBS. Ele tem alíquotas reduzidas a zero a partir de 2027, '
+        + 'mas permanece em hipóteses específicas da legislação, entre elas as ligadas à Zona Franca '
+        + 'de Manaus (EC 132/2023, art. 126). Ao listar o que a CBS e o IBS substituem, cite PIS, '
+        + 'COFINS, ICMS e ISS — e trate o IPI à parte, como tributo reduzido.',
+        'O split payment informado é calculado sobre o débito do ano indicado em split.ano, que '
+        + 'costuma ser 2032 (pior caso de caixa da transição) e pode ser DIFERENTE do ano de '
+        + 'referência do estudo. Sempre cite o ano do próprio split ao falar da retenção; nunca '
+        + 'escreva "no ano de referência" para esse número sem conferir que os dois coincidem.',
       ],
+      // v7.84.0 · o payload passa a dizer O QUE são os números, não só quais são
+      splitAno: (D.split && D.split.ano) || null,
+      decomposicaoPorTributo: {
+        natureza: D.optante ? 'repartição do DAS do Simples Nacional (regime em uso)'
+                            : 'SIMULAÇÃO da repartição do DAS caso a empresa fosse optante — '
+                              + 'NÃO é a carga atual, que é do ' + (D.regimeHojeNome || 'regime em uso'),
+        aplicavel: !!D.optante,
+      },
       premissas: { reformaFallback: !!(D.cen&&D.cen.usouFallback), creditosProxyCompras: !!(D.cen&&D.cen.proxyCompras), semCreditosIBSCBS: !!(D.cen&&D.cen.semCreditos), moedaConstante: true },
     };
     const r = await supaFn('gerar-parecer', payload);      // v7.17.1: token renovado antes da chamada (e repetição única em 401)
