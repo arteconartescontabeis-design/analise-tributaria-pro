@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.84.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.84\.1';/.test(html) && html.includes('<b>v7.84.1</b>')
+    chk('v7.85.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.85\.0';/.test(html) && html.includes('<b>v7.85.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -4179,6 +4179,33 @@ console.log('\n■ Integridade da interface');
       const semH = f(mk(60000000, 0, 0));
       chk('v7.82.0 · sem histórico, alerta o porte sem inventar a causa',
         semH.length === 1 && !/centavos importados/.test(semH[0]));
+
+      // ── v7.85.0 · quarto sinal: duas colunas em escalas incompatíveis ──
+      // O caso real da JV: revenda de R$ 15 a 21 MILHÕES/mês convivendo com serviços de R$ 44 a
+      // 107 MIL na mesma análise. Fosse erro do arquivo inteiro, as duas subiriam juntas; subindo
+      // só uma, o defeito é da COLUNA. Este sinal aponta QUAL, em vez de dizer "receita alta".
+      { const mkB = (blocos, rbt) => { const a = vm.runInContext('anNovo', ctx)('07894691000163', 2025);
+          for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+          for (const [k,v] of Object.entries(blocos)) a.receitas[k] = Array(12).fill(v);
+          if (rbt) a.cfg.rbt12Lanc = Array(12).fill(rbt/12);
+          return a; };
+        const inc = x => f(x).filter(t => /escalas incompatíveis/.test(t));
+
+        const jv = inc(mkB({ a1_semst: 17000000, a3_semret: 63000 }, 0));
+        chk('v7.85.0 · o caso real da JV dispara o sinal de colunas incompatíveis',
+          jv.length === 1, jv[0] ? jv[0].replace(/<[^>]+>/g,'').slice(0, 92) : '');
+        chk('v7.85.0 · e o alerta NOMEIA o bloco suspeito e o valor dividido por 100',
+          /Anexo I — Sem ST/.test(jv[0]||'') && /Dividida por 100/.test(jv[0]||''));
+
+        chk('v7.85.0 · comércio forte com serviço pequeno (50×) não dispara',
+          inc(mkB({ a1_semst: 500000, a3_semret: 10000 }, 6000000)).length === 0);
+        chk('v7.85.0 · indústria grande com serviço miúdo (150×) também não dispara',
+          inc(mkB({ a2_semst: 1500000, a3_semret: 10000 }, 18000000)).length === 0,
+          'o sinal não pode punir empresa de porte desigual, que é comum');
+        chk('v7.85.0 · com um bloco só não há o que comparar',
+          inc(mkB({ a1_semst: 400000 }, 4800000)).length === 0);
+        chk('v7.85.0 · bloco com menos de 3 meses lançados fica fora da comparação',
+          /if \(meses\.length < 3\) continue;/.test(html)); }
 
       chk('v7.82.0 · o alerta aparece na tela e na importação',
         /for \(const _s of anSanidadeEscala\(AN\)\) falta\.push\(_s\)/.test(html)
