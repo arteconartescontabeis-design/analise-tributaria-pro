@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.85.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.85\.0';/.test(html) && html.includes('<b>v7.85.0</b>')
+    chk('v7.86.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.86\.0';/.test(html) && html.includes('<b>v7.86.0</b>') && html.includes('<b>v7.85.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3819,7 +3819,9 @@ console.log('\n■ Integridade da interface');
     for (const [tipo, rot] of [['regimes','Comparativo de Regimes'],
                                ['consolidado','Consolidado Analítico'],
                                ['reforma','Reforma Tributária'],
-                               ['conferencia','Conferência de cálculos'], ['parecer','Parecer com IA']]) {
+                               ['conferencia','Conferência de cálculos'], ['parecer','Parecer com IA'],
+                               ['apresentacao_s','Apresentação simplificada'],     // v7.86.0
+                               ['apresentacao_c','Apresentação completa']]) {
       ctx.document.getElementById('rl-tipo').value = tipo;
       ctx.document.getElementById('rl-per').value = '1';
       ctx.document.getElementById('rl-corpo').innerHTML = '';
@@ -3877,13 +3879,58 @@ console.log('\n■ Integridade da interface');
     const rb = g.calcular(clone(b), clone(AD), {...FD});
     ctx.__sb = b; ctx.__srb = rb;
     vm.runInContext('RL.dados = __sb; RL.res = __srb; AN = __sb; AN._res = __srb;', ctx);
-    for (const tipo of ['regimes','parecer']) {
+    for (const tipo of ['regimes','parecer','apresentacao_s','apresentacao_c']) {
       ctx.document.getElementById('rl-tipo').value = tipo;
       ctx.document.getElementById('rl-corpo').innerHTML = '';
       let erro = null;
       try { vm.runInContext('rlRender()', ctx); } catch(e){ erro = e.message; }
       chk(`v7.79.1 · "${tipo}" abre também com empresa INELEGÍVEL (ramo do bloqueio)`,
         erro === null && corpo().length > 300, erro || corpo().length + ' caracteres');
+    }
+
+    // ── v7.86.0 · APRESENTAÇÃO — conteúdo, contagem de telas, paisagem só nela, IA por análise ──
+    {
+      console.log('\n● v7.86.0 · apresentação por empresa');
+      // volta para a empresa OPTANTE da fumaça (variante simples → 7 e 15 telas)
+      vm.runInContext('RL.dados = __sa; RL.res = __sr; AN = __sa; AN._res = __sr; RL.forn = null; RL._ia = null;', ctx);
+      const abrir = tipo => { ctx.document.getElementById('rl-tipo').value = tipo; ctx.document.getElementById('rl-corpo').innerHTML = '';
+        let erro = null; try { vm.runInContext('rlRender()', ctx); } catch(e){ erro = e.message; } return erro; };
+      const telas = () => (corpo().match(/class="ap-slide"/g) || []).length;
+      let e1 = abrir('apresentacao_s');
+      chk('v7.86.0 · simplificada abre com 7 telas para optante do Simples', e1 === null && telas() === 7, e1 || telas() + ' telas');
+      chk('v7.86.0 · toda tela de conteúdo tem "Esta tela mostra" e "Em resumo"',
+        (corpo().match(/Esta tela mostra/g)||[]).length === 5 && (corpo().match(/Em resumo:/g)||[]).length === 5,
+        (corpo().match(/Esta tela mostra/g)||[]).length + ' / ' + (corpo().match(/Em resumo:/g)||[]).length);
+      chk('v7.86.0 · capa usa capa.jpg e as demais o timbrado recortado', /src="capa\.jpg"/.test(corpo()) && (corpo().match(/class="ap-cab-logo"/g)||[]).length === 5);
+      chk('v7.86.0 · a origem dos textos é declarada (padrão, sem IA)', /Textos analíticos padrão do sistema/.test(corpo()));
+      let e2 = abrir('apresentacao_c');
+      chk('v7.86.0 · completa abre com 15 telas para optante do Simples', e2 === null && telas() === 15, e2 || telas() + ' telas');
+      chk('v7.86.0 · completa traz premissas, IBS/CBS e clientes/fornecedores',
+        /O que foi assumido para calcular/.test(corpo()) && /Como o IBS\/CBS é calculado/.test(corpo()) && /Clientes: quem pressiona/.test(corpo()) && /Fornecedores: quem gera/.test(corpo()));
+      chk('v7.86.0 · sem consulta gravada, a tela de clientes diz o que fazer', /Sem consulta de clientes gravada/.test(corpo()));
+      chk('v7.86.0 · os números da apresentação são os do parecer (carga de hoje = totais do Simples)',
+        corpo().includes(vm.runInContext('fmtR', ctx)(ctx.__sr.totais.simples)));
+      // @page paisagem: existe só na apresentação, e a função remove ao trocar de relatório
+      chk('v7.86.0 · a regra de página paisagem é injetada só pela apresentação',
+        /function apPrintCss\(ligar\)/.test(html) && /size:A4 landscape/.test(html)
+        && /function rlRender\(\) \{\s*rlLimparCharts\(\);\s*apPrintCss\(false\);/.test(html));
+      chk('v7.86.0 · o @media print do app segue em retrato (uma única @page global)',
+        (html.match(/@page\{size:A4;margin:0\}/g)||[]).length === 1);
+      // empresa acima do teto: Presumido × Real, sem caminhos do Simples
+      vm.runInContext('RL.dados = __sb; RL.res = __srb; AN = __sb; AN._res = __srb;', ctx);
+      let e3 = abrir('apresentacao_c');
+      const txt = corpo().replace(/<[^>]+>/g,' ');
+      chk('v7.86.0 · acima do teto, a apresentação compara Presumido e Real e não oferece "por dentro"',
+        e3 === null && /Lucro Presumido/.test(txt) && /Lucro Real/.test(txt) && !/Por dentro do DAS/.test(txt) && !/Híbrido/.test(txt), e3 || '');
+      chk('v7.86.0 · e diz na tela que a empresa não pode optar pelo Simples', /não pode optar/.test(txt));
+      // ── o BUG da FP77: textos da IA de outra empresa não podem sobreviver à troca ──
+      chk('v7.86.0 · o parecerIA grava a chave da análise nos textos', /RL\._ia = \{ textos: _tx, quando: [^}]*chave: /.test(html));
+      chk('v7.86.0 · o rlCarregar descarta RL._ia quando a chave (cnpj|ano) muda',
+        /if \(RL\._ia && RL\._ia\.chave !== chaveIA\)\{ RL\._ia = null; RL\._iaErro = null; \}/.test(html));
+      vm.runInContext('RL.dados = __sa; RL.res = __sr; AN = __sa; AN._res = __srb;', ctx);
+      vm.runInContext("RL._ia = { textos:{ recomendacao:'TEXTO DA OUTRA EMPRESA' }, quando:'01/09/2026, 11:19:41', chave:'21212121000121|2026' }", ctx);
+      let e4 = abrir('apresentacao_s');
+      chk('v7.86.0 · com a chave certa, os textos da IA entram na apresentação', e4 === null && /TEXTO DA OUTRA EMPRESA/.test(corpo()) && /gerados por inteligência artificial/.test(corpo()), e4 || '');
     }
   }
 
