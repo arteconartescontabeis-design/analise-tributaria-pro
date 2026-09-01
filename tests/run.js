@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.84.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.84\.0';/.test(html) && html.includes('<b>v7.84.0</b>')
+    chk('v7.84.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.84\.1';/.test(html) && html.includes('<b>v7.84.1</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3809,7 +3809,16 @@ console.log('\n■ Integridade da interface');
       rlChart = () => null;`, ctx);
 
     const corpo = () => (ctx.document.getElementById('rl-corpo').innerHTML || '');
-    for (const [tipo, rot] of [['regimes','Comparativo de Regimes'], ['reforma','Reforma Tributária'],
+    // ══ v7.84.1 · A LISTA PRECISA SER TODOS OS RELATÓRIOS, NÃO OS QUE PASSAVAM ═════════════
+    // A v7.79.1 criou este bloco com QUATRO tipos e deixou o `consolidado` de fora, porque ele
+    // "dava erro no sandbox". Dava erro porque estava QUEBRADO desde a v7.77.0 — uma linha
+    // referenciava `D`, variável que não existe naquela função. Excluí do teste exatamente o
+    // que estava com defeito, e o Consolidado Analítico ficou dias sem gerar.
+    // Regra que fica: relatório que não passa entra na lista e FALHA até ser consertado. Tirar
+    // da lista transforma o teste num registro do que já funciona, que não serve para nada.
+    for (const [tipo, rot] of [['regimes','Comparativo de Regimes'],
+                               ['consolidado','Consolidado Analítico'],
+                               ['reforma','Reforma Tributária'],
                                ['conferencia','Conferência de cálculos'], ['parecer','Parecer com IA']]) {
       ctx.document.getElementById('rl-tipo').value = tipo;
       ctx.document.getElementById('rl-per').value = '1';
@@ -3841,7 +3850,7 @@ console.log('\n■ Integridade da interface');
         rbi.totais.simples < rbi.totais.lp && rbi.totais.simples < rbi.totais.lr
         && vm.runInContext('snElegibilidade', ctx)(rbi, bi.cfg).estado === 'inelegivel');
 
-      for (const tipo of ['regimes','parecer']) {
+      for (const tipo of ['regimes','consolidado','parecer']) {
         ctx.document.getElementById('rl-tipo').value = tipo;
         ctx.document.getElementById('rl-per').value = '12';
         ctx.document.getElementById('rl-corpo').innerHTML = '';
