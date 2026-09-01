@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.86.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.86\.0';/.test(html) && html.includes('<b>v7.86.0</b>') && html.includes('<b>v7.85.0</b>')
+    chk('v7.86.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.86\.1';/.test(html) && html.includes('<b>v7.86.1</b>') && html.includes('<b>v7.86.0</b>') && html.includes('<b>v7.85.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -3931,6 +3931,13 @@ console.log('\n■ Integridade da interface');
       vm.runInContext("RL._ia = { textos:{ recomendacao:'TEXTO DA OUTRA EMPRESA' }, quando:'01/09/2026, 11:19:41', chave:'21212121000121|2026' }", ctx);
       let e4 = abrir('apresentacao_s');
       chk('v7.86.0 · com a chave certa, os textos da IA entram na apresentação', e4 === null && /TEXTO DA OUTRA EMPRESA/.test(corpo()) && /gerados por inteligência artificial/.test(corpo()), e4 || '');
+      // ── v7.86.1 · Enter não mudava de tela: foco preso no botão ──
+      chk('v7.86.1 · o handler de teclado aceita Enter, espaço e setas para avançar',
+        /if \(e\.key==='ArrowRight' \|\| e\.key==='ArrowDown' \|\| e\.key==='PageDown' \|\| e\.key===' ' \|\| e\.key==='Enter'\) \{ apIr\(1\);/.test(html));
+      chk('v7.86.1 · Apresentar tira o foco do botão e foca o contêiner',
+        /document\.activeElement\.blur\(\);[\s\S]{0,200}doc\.setAttribute\('tabindex', '-1'\)/.test(html) && /then\(\(\)=>\{ if \(doc\.focus\) doc\.focus\(\); \}\)/.test(html));
+      chk('v7.86.1 · clique na tela avança e a barra de navegação existe em tela cheia',
+        /closest\('\.ap-slide'\)\) apIr\(1\)/.test(html) && /class="ap-nav no-print"/.test(corpo()) && /\.ap-doc\.ap-fs \.ap-nav\{display:flex/.test(html));
     }
   }
 
