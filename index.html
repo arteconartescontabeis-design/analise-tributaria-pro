@@ -694,6 +694,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.84.1</b></td><td>01/09/2026</td><td><b>🔧 CORREÇÃO URGENTE — o Consolidado Analítico não gerava desde a v7.77.0, e o meu teste tinha excluído justamente ele.</b> <b>O defeito:</b> uma linha escrita na v7.77.0 usava <code>(D||{}).cfg</code> — e <code>D</code> <b>nunca foi declarado</b> naquela função, onde a análise se chama <code>RL.dados</code>. O detalhe que engana: <code>(D||{})</code> protege contra valor <b>nulo</b>, não contra <b>identificador inexistente</b>. Referenciar um nome não declarado lança <code>ReferenceError</code> na hora, e o relatório morria antes de desenhar a primeira linha. <b>Como passou por 760 verificações:</b> o bloco de fumaça da v7.79.1 cobre cada relatório, e eu o criei com <b>quatro</b> tipos — deixando o <code>consolidado</code> de fora porque "dava erro no sandbox". Dava erro porque estava <b>quebrado</b>. Excluí do teste exatamente o que tinha defeito, e transformei a verificação num registro do que já funcionava. A lista agora tem os <b>cinco</b> relatórios, e a regra que fica é: o que não passa entra e <b>falha</b> até ser consertado. <b>E, corrigido o primeiro, apareceu o segundo:</b> com o relatório voltando a abrir, o teste de conteúdo acusou que o Consolidado também ranqueava <b>"1º Simples Nacional"</b> para empresa acima do limite — o mesmo defeito que o Comparativo levou quatro relatos para fechar. Ninguém tinha visto porque o relatório sequer gerava. Agora os cenários indisponíveis saem da numeração, vão para o fim da tabela, com valor riscado, marca <b>⛔</b> e "não concorre" na coluna de diferença. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>765 verificações</b>.</td></tr>
                     <tr><td><b>v7.84.0</b></td><td>01/09/2026</td><td><b>📄 Conferência do primeiro parecer impresso de verdade: três desencontros entre o texto da IA e os quadros do próprio documento.</b> <b>(1) A decomposição por tributo apresentada como "carga atual".</b> Os oito valores (PIS, COFINS, IRPJ, CSLL, CPP, ICMS, ISS, IPI) são a repartição do <b>DAS do Simples</b> — e a página seguinte os declara como simulação, já que a empresa é inelegível. Mas o texto da IA os chamava de "decomposição da carga atual", que é do Lucro Presumido. Somam R$ 1.763.825,30 contra a carga real de R$ 1.907.332,79: <b>os mesmos números com dois significados no mesmo documento</b>. <b>(2) O IPI descrito como substituído</b> pelo IBS/CBS na Introdução — afirmação que a v7.78.0 corrigiu no texto padrão do aplicativo, mas a Edge Function tem redação própria e não sabia. <b>(3) O split payment é calculado sobre 2032</b> — pior caso de caixa da transição — e o texto o chamava de "modelo projetado para o <b>ano de referência</b>", que no documento conferido era 2027. <b>Nenhum é erro de cálculo:</b> são leituras erradas do payload. Por isso a correção está em <b>declarar o que cada número é</b>, e não em recalcular. O payload passa a informar a <b>natureza</b> da decomposição (repartição real ou simulação, e de que regime é a carga atual) e o <b>ano do split</b>; três instruções novas impedem cada uma das leituras. O cartão e o texto do split passam a citar o ano que efetivamente usaram. <b>E o parecer impresso ganhou conferidor próprio</b> (<code>conferir_pdf_parecer.js</code>): ele lê o documento — PDF com texto ou HTML salvo pelo navegador — e refaz as contas que o documento afirma, cruzando página com página. Rodado no parecer real, encontrou <b>sozinho</b> os dois achados de texto. <b>Achado de ofício:</b> o PDF entregue vinha <b>rasterizado</b> — cada folha um JPEG, sem camada de texto, 6 MB. Assim o cliente não pesquisa nem copia valores, e nenhuma auditoria automática é possível. O conferidor passou a <b>detectar e avisar</b> quando recebe um PDF assim, explicando como reimprimir. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>754 verificações</b>.</td></tr>
                     <tr><td><b>v7.83.1</b></td><td>01/09/2026</td><td><b>📐 A régua acusava papel timbrado ausente em folha que apenas ainda estava carregando.</b> Na primeira emissão depois de publicar a v7.83.0, o parecer avisou "<b>timbrado ausente em 1 de 12 folhas</b>" — com o arquivo presente e as doze folhas corretas. A causa: a régua testava <code>complete && naturalWidth > 0</code>, que responde "não" tanto para a imagem que <b>falhou</b> quanto para a que <b>ainda está a caminho</b>. Medindo antes de uma das folhas terminar, uma imagem pendente virava folha sem timbrado. Agora a contagem separa os dois casos: só entra como <b>ausente</b> a que efetivamente falhou, e havendo folha ainda carregando a régua <b>remede quando ela terminar</b> — o quadro exibido passa a ser o final, não o instantâneo de meio caminho. <b>Por que isto merece versão própria:</b> falso alarme em régua de conferência é pior que silêncio. Ele ensina a ignorar o aviso, e no dia em que o timbrado faltar de verdade o alerta passa junto com o ruído. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>754 verificações</b>.</td></tr>
                     <tr><td><b>v7.83.0</b></td><td>01/09/2026</td><td><b>🤖 O parecer passa a declarar, NO DOCUMENTO, se os textos vieram da IA ou são os padrão.</b> <b>Como isto apareceu:</b> um teste da Edge Function em produção mostrou que a função <code>gerar-parecer</code> vinha falhando havia mais de um dia — preflight <code>OPTIONS</code> com <b>504 após 150 segundos</b>, taxa de erro 5XX em <b>100%</b>. E o parecer continuava sendo emitido normalmente, com o <b>texto padrão</b>, sem que ninguém percebesse. <b>Por que ninguém percebia:</b> o aviso de "textos padrão" existia — na <b>barra de ferramentas</b>, que a impressão esconde (<code>.pp-tools{display:none!important}</code>). Na tela ele passava despercebido entre os botões; no PDF e no papel, <b>não existia</b>. O documento entregue ao cliente se apresentava igual, tivesse ou não passado pela IA. Um parecer que promete análise e entrega redação fixa é pior que um parecer que não sai. <b>Agora a origem é declarada na Introdução</b>, dentro do miolo impresso, em três estados: <b>gerado por IA</b>, com data e hora, esclarecendo que quadros, memórias e valores <b>não dependem</b> da IA; <b>textos padrão</b>, avisando que as redações são as fixas do aplicativo, iguais para empresas de mesmo enquadramento; e <b>padrão após falha</b>, registrando que a última tentativa não funcionou. <b>E a falha deixou de ser silenciosa:</b> quando a geração cai, o aplicativo grava o motivo, <b>avisa em diálogo</b> que o parecer sairá com o texto padrão e que isso ficará escrito no documento, e recarrega o parecer já com a marca. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>751 verificações</b>.</td></tr>
@@ -5393,7 +5394,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.84.0';
+const APP_VERSAO = '7.84.1';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -8191,7 +8192,17 @@ function rlConsolidado(rot, n) {
   // continuavam elegendo o Simples: com R$ 7 milhões de receita, o comparativo recomendava um
   // regime que a empresa não pode usar — o pior erro possível num documento de decisão.
   // A elegibilidade passa a ser consultada aqui também, da mesma fonte (snElegibilidade).
-  const _EL = (typeof snElegibilidade === 'function') ? snElegibilidade(R, (D||{}).cfg||{}) : null;
+  // ══ v7.84.1 · ESTA LINHA DERRUBAVA O CONSOLIDADO ANALÍTICO INTEIRO ══════════════════════
+  // Escrita na v7.77.0, usava `(D||{}).cfg` — mas `D` NUNCA foi declarado nesta função: aqui a
+  // análise se chama `RL.dados`. E `(D||{})` não protege contra variável inexistente, só contra
+  // valor nulo: referenciar um identificador não declarado lança ReferenceError na hora, e o
+  // relatório morria antes de desenhar a primeira linha.
+  // O teste de fumaça da v7.79.1 chegou a mostrar "D is not defined" neste relatório — e eu
+  // classifiquei como limitação do sandbox sem investigar, porque as outras versões mostravam o
+  // mesmo erro. Mostravam porque o defeito estava em todas elas desde a v7.77.0.
+  const _EL = (typeof snElegibilidade === 'function')
+    ? snElegibilidade(R, ((RL.dados||{}).cfg) || {}) : null;
+  const _inelegivelC = !!(_EL && _EL.estado === 'inelegivel');   // v7.84.1
   const _snVale = !_EL || _EL.estado !== 'inelegivel';
   const menor = _snVale ? Math.min(T.simples, T.lp, T.lr) : Math.min(T.lp, T.lr);
   const nomeMenor = (_snVale && menor===T.simples) ? 'Simples Nacional'
@@ -8202,9 +8213,19 @@ function rlConsolidado(rot, n) {
       ultrapassa o limite de permanência no regime (LC 123/2006, art. 3º, II, e §§ 9º e 10).
       O valor do Simples segue nos quadros como <b>referência</b> do que o regime custaria, mas a
       recomendação considera apenas <b>Lucro Presumido e Lucro Real</b>.</div>`;
-  const rank = [['Simples Nacional (hoje)',T.simples],['Lucro Presumido (hoje)',T.lp],['Lucro Real (hoje)',T.lr]];
-  if (l33) rank.push(['Reforma 2033 — Simples híbrido (LC 214)', l33.hib], [`Reforma 2033 — regime regular (${l33.regNome})`, l33.regular]);
-  rank.sort((a,b)=>a[1]-b[1]);
+  // ══ v7.84.1 · O CONSOLIDADO TAMBÉM NÃO PODE RANQUEAR UM REGIME INDISPONÍVEL ═════════════
+  // Mesmo defeito que o Comparativo teve por quatro relatos: "1º Simples Nacional" para empresa
+  // acima do limite. Aqui ninguém viu porque o relatório sequer abria — a linha do `D` o
+  // derrubava antes. Corrigido um, apareceu o outro.
+  const rank = [['Simples Nacional (hoje)', T.simples, true],
+                ['Lucro Presumido (hoje)', T.lp], ['Lucro Real (hoje)', T.lr]];
+  if (l33) rank.push(['Reforma 2033 — Simples híbrido (LC 214)', l33.hib, true],
+                     [`Reforma 2033 — regime regular (${l33.regNome})`, l33.regular]);
+  // v7.84.1 · indisponível vai para o fim, sem posição, e não concorre ao primeiro lugar
+  const _rkOk = rank.filter(r => !(_inelegivelC && r[2])).sort((a,b)=>a[1]-b[1]);
+  const _rkNo = rank.filter(r =>   _inelegivelC && r[2] ).sort((a,b)=>a[1]-b[1]);
+  rank.length = 0; rank.push(..._rkOk, ..._rkNo);
+  const _nDisp = _rkOk.length;
   let h = tarjaReforma + _avisoInelig + `<div class="card"><h3>1. Resumo sintético</h3>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin:10px 0">
       <div class="stat"><div class="n" style="font-size:19px">${fmtR(T.receita)}</div><div class="l">Receita bruta anual</div></div>
@@ -8213,7 +8234,15 @@ function rlConsolidado(rot, n) {
       ${l33?`<div class="stat"><div class="n" style="font-size:19px">${fmtR(Math.min(l33.hib,l33.regular))}</div><div class="l">Reforma 2033 — melhor cenário</div></div>`:''}
     </div>
     <table><thead><tr><th>#</th><th>Cenário</th><th class="num">Carga anual</th><th class="num">% da receita</th><th class="num">Dif. p/ o melhor</th></tr></thead><tbody>
-    ${rank.map((r,i)=>`<tr${i===0?' style="font-weight:700"':''}><td>${i+1}º</td><td>${r[0]}</td><td class="num">${fmt(r[1])}</td><td class="num">${T.receita?(r[1]/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${i===0?'—':'+'+fmt(r[1]-rank[0][1])}</td></tr>`).join('')}
+    ${rank.map((r,i)=>{
+      const _ind = i >= _nDisp;
+      return `<tr${i===0?' style="font-weight:700"':''}${_ind?' style="opacity:.6"':''}>`
+        + `<td>${_ind?'—':(i+1)+'º'}</td>`
+        + `<td>${r[0]}${_ind?' <span class="hint">⛔ indisponível — acima do limite</span>':''}</td>`
+        + `<td class="num"${_ind?' style="text-decoration:line-through"':''}>${fmt(r[1])}</td>`
+        + `<td class="num">${T.receita?(r[1]/T.receita*100).toFixed(2)+'%':'—'}</td>`
+        + `<td class="num">${_ind?'<span class="hint">não concorre</span>':(i===0?'—':'+'+fmt(r[1]-rank[0][1]))}</td></tr>`;
+    }).join('')}
     </tbody></table>
     <div class="hint" style="margin-top:8px">Cenários da Reforma a valores do regime pleno (2033), com as premissas da aba Reforma (editáveis). Documento de trabalho — Artecon Artes Contábeis.</div></div>`;
 
