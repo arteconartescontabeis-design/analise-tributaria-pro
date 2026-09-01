@@ -694,6 +694,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.82.0</b></td><td>31/08/2026</td><td><b>🔬 Alerta de escala — nascido de uma auditoria do banco de PRODUÇÃO, não de um teste.</b> A varredura do banco encontrou uma análise gravada com receita de <b>R$ 209.741.364,30</b> numa empresa cuja receita do ano seguinte foi R$ 949.304,05 — <b>221 vezes</b> maior, e 43 vezes o limite do Simples. O dado atravessou importação, cálculo e gravação <b>sem um único aviso</b>. Dividido por 100 dá R$ 2.097.413,64: a assinatura clássica de <b>centavos importados como reais</b>. <b>Por que a faixa de validação não pegou:</b> a barreira da v7.63.0 recusa o <b>impossível</b> — receita negativa, percentual acima de 100%. Duzentos e nove milhões é possível; só é improvável. São coisas diferentes e precisavam de tratamentos diferentes. <b>Três sinais, todos usando dado que a própria análise já tem:</b> receita anual mais de 10× o limite do Simples <b>sem histórico que sustente o porte</b>; receita do ano mais de 20× a soma dos 12 meses anteriores lançados; e um mês isolado mais de 20× a mediana dos demais, apontando qual. O aviso aparece <b>na importação</b> — que é onde o erro nasce — e na análise. <b>Ele alerta e não corrige</b>, de propósito: quem fatura muito de verdade confirma e segue; quem importou errado descobre antes de emitir parecer. <b>E foi calibrado dos dois lados</b>, porque alerta que grita em cliente legítimo acaba ignorado — e alerta ignorado não protege ninguém. Empresa de R$ 60 milhões <b>com histórico coerente</b> não dispara nada: porte real não é erro de escala. Sazonalidade de um mês 5× a mediana também não. Sem histórico lançado, o aplicativo alerta o porte mas <b>não chuta</b> a causa — sugerir "centavos" sem base gastaria a confiança de quem lê. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>744 verificações</b>.</td></tr>
                     <tr><td><b>v7.81.0</b></td><td>31/08/2026</td><td><b>🎯 As cinco prioridades do parecer final — o que separava 9,4 de 10.</b> <b>(1) A memória da Reforma dizia uma fórmula que não era a usada.</b> O texto afirmava, sempre, que a base é "receita interna menos as reduções" — mas, havendo valor informado na aba, a base é o que foi <b>digitado</b>, e a subtração descrita levaria a outro número. A auditoria flagrou: base manual de R$ 7.177.095,20 sobre receita apurada de R$ 6.480.000,01, com a fórmula fazendo parecer que uma decorria da outra. Agora as <b>três bases são exibidas separadas</b> — apurada, informada e efetivamente utilizada — com a diferença em reais e em percentual, e a frase explícita de que a base utilizada <b>não decorre</b> daquela subtração. <b>(2) Alerta virou confirmação.</b> Divergindo mais de 5% da receita apurada, o aplicativo <b>pergunta antes de emitir</b> o parecer, dizendo que toda a projeção 2027–2033 sairá sobre o valor informado. Recusando, a emissão é <b>cancelada</b> com orientação para corrigir. Dentro da tolerância, nada muda no fluxo. <b>(3) O campo de RBA de exportação do ano anterior estava criado e não era usado.</b> A v7.80.0 acrescentou o campo e calculou as variáveis — e não as ligou a nada. Agora a receita de <b>exportação</b> do ano-calendário anterior acima do limite exclui do regime tanto quanto a interna, porque os limites são <b>independentes</b> (LC 123/2006, art. 3º, II e § 14). No cenário do teste, interno em R$ 4.799.999,99 <b>não</b> exclui e exportação em R$ 4.800.000,01 <b>exclui</b> — um centavo decide, e a suíte guarda os dois lados. <b>(4) O motivo da exclusão passa a ser nomeado</b> no papel de trabalho, em três estados: dado não informado (e então o documento <b>não afirma</b> elegibilidade), informado e dentro dos limites, ou excluída — dizendo qual limite caiu, ou se foram os dois. Quando só a exportação excede, o texto registra que o limite interno é independente e foi respeitado. <b>(5) Mantidos como regressão obrigatória</b>, conforme pedido: a conta gráfica do IPI e os testes de precisão por centavos do sublimite, do limite e da regra dos 20%. Motor tocado apenas no cálculo da exclusão pelo ano anterior; lacre <code>2e1139e9</code> íntegro (os casos-gabarito não informam RBA anterior). Suíte: <b>734 verificações</b>.</td></tr>
                     <tr><td><b>v7.80.0</b></td><td>31/08/2026</td><td><b>🧨 Teste 16 (estresse por centavos): o IPI virou conta gráfica, a exportação ganhou limite próprio no ano anterior e a base da Reforma passou a se identificar.</b> <b>(1) IPI negativo — crítico.</b> Quando o crédito superava o débito, o confronto devolvia valor <b>negativo</b> e ele <b>reduzia a carga</b> do período, como se o Fisco devolvesse dinheiro no mês. O IPI é conta gráfica: o excesso vira <b>saldo credor</b> e abate o débito dos meses seguintes (CTN, art. 49). A auditoria mediu R$ 25.470,33 de "IPI negativo" no ano, subestimando o Presumido e o Real na mesma medida. Agora a estrutura é a mesma que o PIS/COFINS já usava desde a v7.20.0 — débito, crédito, saldo anterior, valor a pagar e saldo a transportar —, e a memória demonstra as cinco linhas. <b>O saldo acumula enquanto o crédito superar o débito e é consumido quando ele cresce</b>, o que a suíte verifica nos dois sentidos. <b>(2) Limite próprio da exportação.</b> O mercado externo tem limite <b>independente</b> de igual valor (LC 123/2006, art. 3º, § 14): ultrapassar qualquer um dos dois exclui do regime. O cenário do teste foi construído com a exportação <b>um centavo</b> acima, e o documento só falava do mercado interno. Entrou o campo <b>RBA de exportação do ano anterior</b>, ao lado do que a v7.70.0 criou para o interno, e o motivo da exclusão passa a nomear qual limite foi rompido — interno, externo, ou <b>os dois</b>, dizendo que são independentes. <b>(3) Base da Reforma: AUTOMÁTICA ou MANUAL.</b> O teste rodou com base manual de <b>outro</b> cenário — R$ 697.095,19 acima da receita apurada — e o alerta discreto não impediu que os números fossem lidos como do caso analisado. O papel de trabalho agora <b>rotula a origem</b> da base, e a divergência é <b>dimensionada</b>: acima de 5% o alerta fica vermelho e diz que toda a projeção 2027–2033 sai sobre uma base que não é a da empresa. <b>(4) Fator R na fronteira.</b> Com o indicador a menos de 0,0001 ponto do limite, duas casas faziam a memória parecer contradizer-se — "28,0000% &lt; 28%". Perto da fronteira o documento passa a mostrar <b>8 casas</b>, que é onde a decisão de anexo realmente se define. <b>Aprovados no estresse, sem alteração:</b> sublimite e limite testados <b>por centavos</b>, a regra dos 20%, a separação das exportações, o Fator R e o transporte do saldo de PIS/COFINS. Lacre <code>2e1139e9</code> íntegro — o caso 3 tem IPI, mas com débito maior que crédito, e a correção só age quando o crédito excede. Suíte: <b>721 verificações</b>.</td></tr>
                     <tr><td><b>v7.79.4</b></td><td>31/08/2026</td><td><b>🔍 Varredura completa do Comparativo de Regimes — cartões, gráfico e um terceiro quadro de 2033 que nunca tinha sido tocado.</b> <b>O que ainda apontava o Simples:</b> os <b>cartões do topo</b> — a primeira coisa que se lê — mostravam "Simples Nacional R$ 1.346.505,81" à esquerda, com o menor valor e <b>sem marca nenhuma</b>; o <b>gráfico</b> de cenários pintava a barra do Simples na cor normal, e ela é a menor de todas; e havia um <b>terceiro bloco de cartões de 2033</b>, dentro do próprio comparativo, que descrevia os cenários do Simples como opções válidas. Três lugares diferentes, nenhum deles alcançado pelas correções anteriores. <b>Por que cinco rodadas:</b> a cada relato eu corrigia o ponto que conseguia enxergar — a eleição do menor, a carteira, o ranking, o campo gravado. Todos eram reais e todos estavam certos; faltava sempre outro. O erro de método foi olhar <b>um elemento por vez</b> em vez de gerar o relatório e varrer <b>tudo o que ele mostra</b>. <b>Agora:</b> cartão indisponível fica esmaecido, com borda tracejada, valor riscado, ⛔ no título e o subtítulo <b>INDISPONÍVEL — referência apenas</b>; a barra do gráfico vira <b>cinza</b> e o rótulo ganha a marca; e o quadro de 2033 acompanha. Nada é omitido — os valores seguem à vista como referência —, mas nenhum deles se apresenta como escolha. <b>O teste desta versão varre o relatório inteiro:</b> renderiza o comparativo com empresa de R$ 7 milhões e percorre <b>todos</b> os cartões, <b>todas</b> as barras do gráfico e o texto — se qualquer cenário do Simples aparecer sem a marca, ou destacado como melhor, reprova. Ele mesmo teve de ser corrigido duas vezes no caminho: "Fora do Simples" contém a palavra mas é cenário válido, e o regex que extraía os cartões cortava antes do subtítulo. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro; suíte com <b>708 verificações</b>.</td></tr>
@@ -4041,6 +4042,76 @@ let AN_SUJO = false;    // v7.5.7: há importação/edição ainda não salva no
 // anAplicado(), a varredura fica aqui, num lugar só.
 // O aplicativo CORRIGE o impossível e DIZ o que corrigiu. Não corrige em silêncio: dado alterado
 // sem aviso é pior que dado errado, porque some a chance de conferir na origem.
+// ══ v7.82.0 · SANIDADE DE ESCALA — O DADO ABSURDO PRECISA SE ANUNCIAR ═══════════════════
+// Uma auditoria do banco de produção encontrou análise com receita de R$ 209.741.364,30 numa
+// empresa cuja receita do ano seguinte foi R$ 949.304,05. Duzentos e nove milhões não é receita
+// de cliente de Simples — e dividido por 100 dá R$ 2.097.413,64, que é a assinatura de
+// CENTAVOS IMPORTADOS COMO REAIS. O erro atravessou importação, cálculo e gravação sem aviso.
+//
+// A faixa de validação da v7.63.0 pega o impossível (negativo, percentual acima de 100%). Isto
+// aqui pega o IMPROVÁVEL, que é diferente: valores que a lei permite mas que, no contexto,
+// denunciam erro de escala. Por isso ALERTA e não corrige — quem fatura muito de verdade
+// confirma e segue; quem importou errado descobre antes de emitir parecer.
+//
+// Três sinais, todos usando dado que a própria análise já tem:
+//   1. receita anual muito acima do limite do Simples (a carteira é de Simples e LP);
+//   2. receita do ano desproporcional ao RBT12 lançado — os 12 meses anteriores;
+//   3. um mês isolado muito acima da mediana dos demais.
+function anSanidadeEscala(a){
+  const av = [];
+  if (!a || !a.receitas) return av;
+  const LIM = 4800000;
+  const mesTot = m => Object.keys(a.receitas)
+    .filter(k => !/_pct$/.test(k))
+    .reduce((s,k) => s + (+(a.receitas[k]||[])[m] || 0), 0);
+  const meses = Array.from({length:12}, (_,m) => mesTot(m));
+  const anual = meses.reduce((s,v) => s+v, 0);
+  if (anual <= 0) return av;
+
+  const rbt = (a.cfg?.rbt12Lanc || []).reduce((s,v) => s + (+v||0), 0);
+  // Empresa grande de verdade tem histórico grande: se os 12 meses anteriores acompanham a
+  // receita do ano, não há erro de escala — há porte. O alerta de ordem de grandeza só vale
+  // quando NÃO existe esse histórico coerente, senão vira ruído para todo cliente de Lucro Real.
+  const _coerente = rbt > 0 && anual <= rbt * 5;
+
+  // 1 · ordem de grandeza acima do limite, sem histórico que a sustente
+  if (anual > LIM * 10 && !_coerente){
+    const porCem = anual / 100;
+    // a hipótese dos centavos só se sustenta se o valor dividido por 100 for coerente com o
+    // histórico lançado — senão é chute, e chute em alerta gasta a confiança de quem lê
+    // sem histórico lançado não há como sustentar a hipótese dos centavos — alertar a ordem de
+    // grandeza basta; sugerir causa sem base gasta a confiança de quem lê o aviso
+    const _cemBate = rbt > 0 && porCem > 50000 && porCem >= rbt * 0.2 && porCem <= rbt * 5;
+    av.push(`<b>Receita anual de ${fmtR(anual)}</b> — mais de <b>10 vezes</b> o limite do Simples `
+      + `(${fmtR(LIM)})${rbt > 0 ? ', e sem histórico que sustente esse porte' : ''}. `
+      + `Confirme a escala dos valores lançados.`
+      + (_cemBate
+        ? ` Dividida por 100, daria ${fmtR(porCem)} — coerente com o restante da análise. É o padrão `
+          + `típico de <b>centavos importados como reais</b>. Confira a origem antes de emitir documento.`
+        : ''));
+  }
+
+  // 2 · desproporção contra os 12 meses anteriores lançados
+  if (rbt > 0 && anual > rbt * 20)
+    av.push(`A receita do ano (${fmtR(anual)}) é <b>${Math.round(anual/rbt)}×</b> a soma dos 12 meses `
+      + `anteriores lançados na aba RBT12 (${fmtR(rbt)}). Crescimento assim existe, mas essa é `
+      + `também a cara de um erro de escala em um dos dois lados.`);
+
+  // 3 · um mês fora de esquadro com os demais
+  const comMov = meses.map((v,i) => ({v, i})).filter(x => x.v > 0);
+  if (comMov.length >= 3){
+    const ord = comMov.map(x => x.v).sort((x,y) => x-y);
+    const mediana = ord[Math.floor(ord.length/2)];
+    // 20× já é fora de qualquer sazonalidade real; 50× deixava passar um dígito a mais digitado
+    const fora = comMov.filter(x => mediana > 0 && x.v > mediana * 20);
+    for (const f of fora)
+      av.push(`<b>${MESES[f.i]}</b> tem ${fmtR(f.v)} contra mediana de ${fmtR(mediana)} nos demais `
+        + `meses — <b>${Math.round(f.v/mediana)}×</b>. Sazonalidade não chega a esse ponto: confira `
+        + `se não há dígito ou separador a mais nesse lançamento.`);
+  }
+  return av;
+}
+
 function anSanear(d){
   const ajustes = [];
   if (!d) return ajustes;
@@ -4071,6 +4142,13 @@ function anAplicado(){
       + aj.slice(0,10).join('\n') + (aj.length>10 ? `\n… e mais ${aj.length-10}` : '')
       + '\n\nConfira na origem: valor negativo em receita, folha, compras ou despesas costuma ser '
       + 'lançamento de estorno ou balancete de encerramento importado como movimento.'); }
+  // v7.82.0 · o alerta de escala vem DEPOIS do saneamento, de propósito: sanear é obrigatório e
+  // roda sempre; alertar é informativo. Inverter a ordem afastaria o anSanear do início do funil
+  // — e existe teste guardando exatamente essa proximidade, desde a auditoria A02-04.
+  { const esc = anSanidadeEscala(AN);
+    if (esc.length) alert('ATENÇÃO — os valores importados parecem estar fora de escala:\n\n'
+      + esc.map(t => '• ' + t.replace(/<[^>]+>/g,'')).join('\n\n')
+      + '\n\nOs dados foram aplicados. Confira a origem antes de calcular ou emitir documento.'); }
   AN_SUJO = true; anRenderTabs(); anRenderGrid(); anRecalcular(); anSalvarAuto(); }
 // grava sozinho depois de importar; sem empresa definida não há onde gravar, e aí o aviso explica o porquê
 async function anSalvarAuto(){
@@ -4682,6 +4760,8 @@ function anAvisoConfig(){
         + `anterior também ficou acima, o ICMS e o ISS são devidos <b>fora do Simples desde 1º/01</b> `
         + `(LC 123/2006, art. 20, § 1º) e o cálculo muda o ano inteiro. Sem esse dado o aplicativo `
         + `<b>não</b> aplica o impedimento — os 12 meses acima são janela móvel, não o ano fechado`); }
+  // v7.82.0 · escala improvável entra como alerta, não como impedimento
+  for (const _s of anSanidadeEscala(AN)) falta.push(_s);
   const nRbt = (AN.cfg.rbt12Lanc||[]).filter(v=>+v>0).length;
   const paCfg = (typeof anMesesAtividade==='function') ? anMesesAtividade(c, 0) : null;
   if (!nRbt && !+c.rbt12Direto) falta.push('o RBT12 dos 12 meses anteriores');
@@ -5310,7 +5390,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.81.0';
+const APP_VERSAO = '7.82.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
