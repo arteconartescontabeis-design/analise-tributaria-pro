@@ -694,6 +694,7 @@ canvas{max-height:340px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.83.1</b></td><td>01/09/2026</td><td><b>📐 A régua acusava papel timbrado ausente em folha que apenas ainda estava carregando.</b> Na primeira emissão depois de publicar a v7.83.0, o parecer avisou "<b>timbrado ausente em 1 de 12 folhas</b>" — com o arquivo presente e as doze folhas corretas. A causa: a régua testava <code>complete && naturalWidth > 0</code>, que responde "não" tanto para a imagem que <b>falhou</b> quanto para a que <b>ainda está a caminho</b>. Medindo antes de uma das folhas terminar, uma imagem pendente virava folha sem timbrado. Agora a contagem separa os dois casos: só entra como <b>ausente</b> a que efetivamente falhou, e havendo folha ainda carregando a régua <b>remede quando ela terminar</b> — o quadro exibido passa a ser o final, não o instantâneo de meio caminho. <b>Por que isto merece versão própria:</b> falso alarme em régua de conferência é pior que silêncio. Ele ensina a ignorar o aviso, e no dia em que o timbrado faltar de verdade o alerta passa junto com o ruído. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>754 verificações</b>.</td></tr>
                     <tr><td><b>v7.83.0</b></td><td>01/09/2026</td><td><b>🤖 O parecer passa a declarar, NO DOCUMENTO, se os textos vieram da IA ou são os padrão.</b> <b>Como isto apareceu:</b> um teste da Edge Function em produção mostrou que a função <code>gerar-parecer</code> vinha falhando havia mais de um dia — preflight <code>OPTIONS</code> com <b>504 após 150 segundos</b>, taxa de erro 5XX em <b>100%</b>. E o parecer continuava sendo emitido normalmente, com o <b>texto padrão</b>, sem que ninguém percebesse. <b>Por que ninguém percebia:</b> o aviso de "textos padrão" existia — na <b>barra de ferramentas</b>, que a impressão esconde (<code>.pp-tools{display:none!important}</code>). Na tela ele passava despercebido entre os botões; no PDF e no papel, <b>não existia</b>. O documento entregue ao cliente se apresentava igual, tivesse ou não passado pela IA. Um parecer que promete análise e entrega redação fixa é pior que um parecer que não sai. <b>Agora a origem é declarada na Introdução</b>, dentro do miolo impresso, em três estados: <b>gerado por IA</b>, com data e hora, esclarecendo que quadros, memórias e valores <b>não dependem</b> da IA; <b>textos padrão</b>, avisando que as redações são as fixas do aplicativo, iguais para empresas de mesmo enquadramento; e <b>padrão após falha</b>, registrando que a última tentativa não funcionou. <b>E a falha deixou de ser silenciosa:</b> quando a geração cai, o aplicativo grava o motivo, <b>avisa em diálogo</b> que o parecer sairá com o texto padrão e que isso ficará escrito no documento, e recarrega o parecer já com a marca. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>751 verificações</b>.</td></tr>
                     <tr><td><b>v7.82.0</b></td><td>31/08/2026</td><td><b>🔬 Alerta de escala — nascido de uma auditoria do banco de PRODUÇÃO, não de um teste.</b> A varredura do banco encontrou uma análise gravada com receita de <b>R$ 209.741.364,30</b> numa empresa cuja receita do ano seguinte foi R$ 949.304,05 — <b>221 vezes</b> maior, e 43 vezes o limite do Simples. O dado atravessou importação, cálculo e gravação <b>sem um único aviso</b>. Dividido por 100 dá R$ 2.097.413,64: a assinatura clássica de <b>centavos importados como reais</b>. <b>Por que a faixa de validação não pegou:</b> a barreira da v7.63.0 recusa o <b>impossível</b> — receita negativa, percentual acima de 100%. Duzentos e nove milhões é possível; só é improvável. São coisas diferentes e precisavam de tratamentos diferentes. <b>Três sinais, todos usando dado que a própria análise já tem:</b> receita anual mais de 10× o limite do Simples <b>sem histórico que sustente o porte</b>; receita do ano mais de 20× a soma dos 12 meses anteriores lançados; e um mês isolado mais de 20× a mediana dos demais, apontando qual. O aviso aparece <b>na importação</b> — que é onde o erro nasce — e na análise. <b>Ele alerta e não corrige</b>, de propósito: quem fatura muito de verdade confirma e segue; quem importou errado descobre antes de emitir parecer. <b>E foi calibrado dos dois lados</b>, porque alerta que grita em cliente legítimo acaba ignorado — e alerta ignorado não protege ninguém. Empresa de R$ 60 milhões <b>com histórico coerente</b> não dispara nada: porte real não é erro de escala. Sazonalidade de um mês 5× a mediana também não. Sem histórico lançado, o aplicativo alerta o porte mas <b>não chuta</b> a causa — sugerir "centavos" sem base gastaria a confiança de quem lê. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>744 verificações</b>.</td></tr>
                     <tr><td><b>v7.81.0</b></td><td>31/08/2026</td><td><b>🎯 As cinco prioridades do parecer final — o que separava 9,4 de 10.</b> <b>(1) A memória da Reforma dizia uma fórmula que não era a usada.</b> O texto afirmava, sempre, que a base é "receita interna menos as reduções" — mas, havendo valor informado na aba, a base é o que foi <b>digitado</b>, e a subtração descrita levaria a outro número. A auditoria flagrou: base manual de R$ 7.177.095,20 sobre receita apurada de R$ 6.480.000,01, com a fórmula fazendo parecer que uma decorria da outra. Agora as <b>três bases são exibidas separadas</b> — apurada, informada e efetivamente utilizada — com a diferença em reais e em percentual, e a frase explícita de que a base utilizada <b>não decorre</b> daquela subtração. <b>(2) Alerta virou confirmação.</b> Divergindo mais de 5% da receita apurada, o aplicativo <b>pergunta antes de emitir</b> o parecer, dizendo que toda a projeção 2027–2033 sairá sobre o valor informado. Recusando, a emissão é <b>cancelada</b> com orientação para corrigir. Dentro da tolerância, nada muda no fluxo. <b>(3) O campo de RBA de exportação do ano anterior estava criado e não era usado.</b> A v7.80.0 acrescentou o campo e calculou as variáveis — e não as ligou a nada. Agora a receita de <b>exportação</b> do ano-calendário anterior acima do limite exclui do regime tanto quanto a interna, porque os limites são <b>independentes</b> (LC 123/2006, art. 3º, II e § 14). No cenário do teste, interno em R$ 4.799.999,99 <b>não</b> exclui e exportação em R$ 4.800.000,01 <b>exclui</b> — um centavo decide, e a suíte guarda os dois lados. <b>(4) O motivo da exclusão passa a ser nomeado</b> no papel de trabalho, em três estados: dado não informado (e então o documento <b>não afirma</b> elegibilidade), informado e dentro dos limites, ou excluída — dizendo qual limite caiu, ou se foram os dois. Quando só a exportação excede, o texto registra que o limite interno é independente e foi respeitado. <b>(5) Mantidos como regressão obrigatória</b>, conforme pedido: a conta gráfica do IPI e os testes de precisão por centavos do sublimite, do limite e da regra dos 20%. Motor tocado apenas no cálculo da exclusão pelo ano anterior; lacre <code>2e1139e9</code> íntegro (os casos-gabarito não informam RBA anterior). Suíte: <b>734 verificações</b>.</td></tr>
@@ -5391,7 +5392,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.83.0';
+const APP_VERSAO = '7.83.1';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -9430,8 +9431,16 @@ function ppTimbradoStatus(){
   const corpo = $id('rl-corpo'); if (!corpo) return null;
   const bgs = Array.from(corpo.querySelectorAll('.pp-page .pp-bg'));
   if (!bgs.length) return null;
-  const ok = bgs.filter(i => i.complete && i.naturalWidth > 0).length;
-  return { total: bgs.length, ok, faltando: bgs.length - ok };
+  // ══ v7.83.1 · NÃO CONTAR COMO AUSENTE O QUE AINDA ESTÁ CARREGANDO ═════════════════════
+  // `complete && naturalWidth > 0` responde "não" tanto para a imagem que FALHOU quanto para a
+  // que ainda está a caminho. Medindo antes de uma das folhas terminar, a régua acusava
+  // "ausente em 1 de 12" com o arquivo presente e as doze folhas corretas — foi o que apareceu
+  // na primeira emissão depois de publicar a v7.83.0. Falso alarme em régua de conferência é
+  // pior que silêncio: ensina a ignorar o aviso, e o alerta verdadeiro passa junto com ele.
+  const ok         = bgs.filter(i => i.complete && i.naturalWidth > 0).length;
+  const falhou     = bgs.filter(i => i.complete && !i.naturalWidth).length;
+  const carregando = bgs.length - ok - falhou;
+  return { total: bgs.length, ok, faltando: falhou, carregando };
 }
 function ppReguaRender(){
   const alvo = $id('pp-regua'); if (!alvo) return;
@@ -9455,6 +9464,17 @@ function ppReguaRender(){
     ? `<div class="pp-alerta" style="margin:8px 0 0"><b>⚠️ Medição não confiável:</b> a folha na tela está com ${lf.mm.toFixed(0)} mm de largura, e a impressão usa 210 mm. Com larguras diferentes o texto quebra em outro número de linhas e as medidas abaixo NÃO valem para o PDF. Verifique a regra <code>.pp-page{width:210mm}</code> no CSS.</div>`
     : '';
   const tb = ppTimbradoStatus();
+  // v7.83.1 · se alguma folha ainda carrega, remede quando terminar: assim o quadro exibido é o
+  // final, e não o instantâneo de meio caminho que gerava o falso alarme
+  if (tb && tb.carregando > 0) {
+    const _bgs = Array.from(($id('rl-corpo') || document).querySelectorAll('.pp-page .pp-bg'));
+    let _pend = tb.carregando;
+    const _fim = () => { if (--_pend <= 0) ppReguaRender(); };
+    for (const _i of _bgs) if (!_i.complete) {
+      _i.addEventListener('load', _fim, { once:true });
+      _i.addEventListener('error', _fim, { once:true });
+    }
+  }
   const avisoTb = (tb && tb.faltando)
     ? `<div class="pp-alerta" style="margin:8px 0 0"><b>⚠️ Papel timbrado ausente em ${tb.faltando} de ${tb.total} folhas.</b> ${tb.ok ? '' : 'Nenhuma folha carregou a arte — '}o arquivo <b>timbrado.jpg</b> precisa estar na mesma pasta do aplicativo. Sem ele o documento imprime com o miolo certo, mas sem cabeçalho nem rodapé.</div>`
     : '';
