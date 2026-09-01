@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.82.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.82\.0';/.test(html) && html.includes('<b>v7.82.0</b>')
+    chk('v7.83.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.83\.1';/.test(html) && html.includes('<b>v7.83.1</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -4175,6 +4175,76 @@ console.log('\n■ Integridade da interface');
         /for \(const _s of anSanidadeEscala\(AN\)\) falta\.push\(_s\)/.test(html)
         && /os valores importados parecem estar fora de escala/.test(html));
     }
+  }
+
+  // ═══ 6t. v7.83.0 · O PARECER DECLARA A ORIGEM DOS SEUS TEXTOS ═══
+  // Descoberto testando a Edge Function em produção: a função vinha falhando havia mais de um
+  // dia (preflight OPTIONS com 504 após 150s), o parecer continuava sendo emitido com o texto
+  // PADRÃO, e não havia como perceber. O aviso existia — na barra de ferramentas, que a
+  // impressão esconde. O documento entregue ao cliente saía sem marca nenhuma de origem.
+  {
+    console.log('\n■ v7.83.0 — origem dos textos do parecer');
+    const z12 = () => Array(12).fill(0);
+    const a = vm.runInContext('anNovo', ctx)('32323232000132', 2026);
+    for (const k of Object.keys(a.receitas)) a.receitas[k] = z12();
+    a.cfg.rbt12Lanc = Array(12).fill(300000);
+    a.receitas.a1_semst = Array(12).fill(250000);
+    a.folha.salarios = Array(12).fill(30000);
+    const r = g.calcular(clone(a), clone(AD), {...FD});
+    ctx.__oa = a; ctx.__or = r;
+    vm.runInContext(`RL={cnpj:"32",ano:2026,dados:__oa,res:__or,empresa:{razao_social:"T"}};
+      AN=__oa; AN._res=__or; rlConfProj=()=>null;
+      Chart=function(){return{destroy(){},update(){}}}; rlChart=()=>null;`, ctx);
+
+    // o corpo IMPRESSO é o documento sem a barra de ferramentas, que o @media print esconde
+    const corpoImpresso = () => {
+      ctx.document.getElementById('rl-tipo').value = 'parecer';
+      ctx.document.getElementById('rl-corpo').innerHTML = '';
+      vm.runInContext('rlRender()', ctx);
+      const h = ctx.document.getElementById('rl-corpo').innerHTML || '';
+      return h.replace(/<div class="card pp-tools"[\s\S]*?<div id="pp-regua"><\/div>/, '')
+              .replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    };
+
+    vm.runInContext('RL._ia = null; RL._iaErro = null;', ctx);
+    const semIA = corpoImpresso();
+    chk('v7.83.0 · sem IA, o DOCUMENTO declara que os textos são padrão',
+      /Textos analíticos padrão do sistema/.test(semIA)
+      && /não<\/b>? passou por geração com inteligência artificial|não passou por geração/.test(semIA));
+    chk('v7.83.0 · e explica que as redações são iguais para mesmo enquadramento',
+      /iguais para empresas de mesmo enquadramento/.test(semIA));
+
+    vm.runInContext('RL._ia = { textos:{intro:"x"}, quando:"01/09/2026 08:30" };', ctx);
+    const comIA = corpoImpresso();
+    chk('v7.83.0 · com IA, o documento diz quando foi gerado',
+      /gerados por inteligência artificial em 01\/09\/2026 08:30/.test(comIA));
+    chk('v7.83.0 · e separa o que NÃO depende da IA (quadros e valores)',
+      /quadros, memórias e valores são calculados pelo sistema/.test(comIA));
+
+    vm.runInContext('RL._ia = null; RL._iaErro = "Falha na function (504): timeout";', ctx);
+    const comErro = corpoImpresso();
+    chk('v7.83.0 · após falha, o documento registra que a tentativa falhou',
+      /a última tentativa falhou/.test(comErro));
+
+    chk('v7.83.0 · a falha da IA é gravada em RL._iaErro, não só exibida em toast',
+      /RL\._iaErro = e && e\.message/.test(html)
+      && /A geração dos textos com IA FALHOU/.test(html));
+    chk('v7.83.0 · e o sucesso limpa a marca de falha anterior',
+      /RL\._iaErro = null;   \/\/ v7\.83\.0/.test(html));
+  }
+
+  // ═══ 6u. v7.83.1 · A RÉGUA NÃO PODE DAR FALSO ALARME ═══
+  {
+    console.log('\n■ v7.83.1 — régua do papel timbrado');
+    const fn = vm.runInContext("typeof ppTimbradoStatus === 'function' ? ppTimbradoStatus : null", ctx);
+    chk('v7.83.1 · a régua separa "falhou" de "ainda carregando"',
+      /const falhou\s+= bgs\.filter\(i => i\.complete && !i\.naturalWidth\)\.length/.test(html)
+      && /const carregando = bgs\.length - ok - falhou/.test(html));
+    chk('v7.83.1 · e só conta como AUSENTE o que efetivamente falhou',
+      /faltando: falhou/.test(html) && !/faltando: bgs\.length - ok/.test(html));
+    chk('v7.83.1 · imagem pendente agenda nova medição em vez de congelar o alarme',
+      /if \(tb && tb\.carregando > 0\)/.test(html)
+      && /addEventListener\('load', _fim, \{ once:true \}\)/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
