@@ -179,6 +179,12 @@ canvas{max-height:340px}
 .ap-doc.ap-fs .ap-slide{display:none;margin:0}
 .ap-doc.ap-fs .ap-slide.ativo{display:block;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 .ap-doc.ap-fs .ap-tela{box-shadow:none}
+.ap-nav{display:none}
+.ap-doc.ap-fs .ap-nav{display:flex;position:fixed;right:18px;bottom:14px;z-index:5;gap:6px;align-items:center;background:rgba(11,44,82,.75);border-radius:999px;padding:6px 10px;color:#fff;font-size:13px;opacity:.35;transition:opacity .2s}
+.ap-doc.ap-fs .ap-nav:hover{opacity:1}
+.ap-nav button{background:none;border:none;color:#fff;font-size:22px;line-height:1;padding:2px 8px;cursor:pointer;border-radius:999px}
+.ap-nav button:hover{background:rgba(255,255,255,.18)}
+.ap-nav span{min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
 /* timbrado: recortes do timbrado.jpg (1241×1754) por background-position */
 .ap-cab{position:absolute;left:0;top:0;right:0;height:92px}
 .ap-cab-logo{position:absolute;left:14px;top:2px;width:189px;height:84px;background:url(timbrado.jpg) 0 0/366px auto no-repeat}
@@ -780,6 +786,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.86.1</b></td><td>01/09/2026</td><td><b>🔧 Apresentação: Enter não mudava de tela.</b> O botão <b>Apresentar</b> continuava com o foco depois do clique — e Enter ou espaço num botão focado disparam o clique de novo, reabrindo a apresentação na primeira tela em vez de avançar. O foco agora vai para o contêiner da apresentação, e a navegação passa a aceitar <b>Enter</b>, espaço, setas (nas quatro direções), PageUp/PageDown, Home/End, Backspace para voltar e <b>clique ou toque na tela</b> para avançar. Em tela cheia aparece uma barra discreta no canto com anterior / contador / próxima / sair, para quem apresenta com o mouse ou com controle. Nenhuma mudança fora da apresentação; motor intocado, lacre <code>2e1139e9</code> íntegro.</td></tr>
                     <tr><td><b>v7.86.0</b></td><td>01/09/2026</td><td><b>📽️ Apresentação por empresa, em dois formatos, dentro dos Relatórios — e o parecer deixa de herdar os textos de IA de outra empresa.</b> Duas entradas novas no seletor: <b>Apresentação — simplificada</b> (7 telas, para o dono da empresa numa reunião curta) e <b>Apresentação — completa</b> (15 telas, com premissas, memória do IBS/CBS, clientes, fornecedores e fundamentos). As duas são <b>outra forma de renderizar o mesmo D do parecer</b>: nenhum número novo, nenhum cálculo próprio — carga de hoje, caminhos ano a ano, três caminhos no ano de referência, split payment, clientes e fornecedores, plano e recomendação saem exatamente dos mesmos objetos que alimentam o Parecer com IA. Cada tela tem título em frase completa, uma linha "Esta tela mostra…" dizendo o que é e de onde vêm os números, e uma barra <b>"Em resumo"</b> com a conclusão em uma frase — gerada do número, nunca da IA (verde quando favorável, âmbar quando é alerta). Telas em 16:9 com altura fixa: não há empacotador nem régua porque não há fluxo. Timbrado e capa são os mesmos <code>timbrado.jpg</code> e <code>capa.jpg</code> do parecer, recortados por CSS. <b>Apresentar</b> entra em tela cheia com navegação pelas setas; <b>Imprimir / PDF</b> sai em <b>A4 paisagem</b>, uma tela por folha — a regra de página paisagem é injetada só enquanto a apresentação está na tela e removida ao trocar de relatório. A variante segue a do parecer (optante, elegível, acima do teto): empresa acima do teto compara Presumido e Real. Textos curtos vêm dos textos do parecer da mesma análise (IA ou padrão), com a origem declarada na última tela. <b>Correção no parecer:</b> os textos gerados pela IA ficavam guardados na sessão e vinham junto ao trocar de empresa — o parecer da FP77 saiu com Enquadramento, leitura dos caminhos, split e conclusão escritos para a KOEPPE, ao lado dos quadros certos. Os textos passam a carregar a chave da análise (CNPJ + ano) e são descartados quando ela muda. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: os dois formatos entram na fumaça dos relatórios e há teste do descarte dos textos na troca de empresa.</td></tr>
                     <tr><td><b>v7.85.0</b></td><td>01/09/2026</td><td><b>🔎 Quarto sinal de escala: duas colunas da mesma análise em ordens de grandeza incompatíveis.</b> A inspeção do dado de produção que originou o alerta da v7.82.0 revelou algo mais preciso do que "receita alta demais". Naquela análise, a <b>revenda</b> vinha de R$ 15 a 21 <b>milhões</b> por mês enquanto os <b>serviços</b> ficavam entre R$ 44 e 107 <b>mil</b> — duas colunas da mesma empresa, com <b>270×</b> de diferença e uma delas em escala claramente doméstica. <b>O raciocínio:</b> fosse erro de escala do arquivo inteiro, todas as colunas subiriam juntas. Subindo <b>só uma</b>, o defeito é daquele campo — centavos lidos como reais numa coluna específica da importação. O sinal aponta <b>qual bloco</b> revisar e mostra quanto ele daria dividido por 100, em vez de dizer apenas que a receita é alta. <b>Por que ele é melhor que os três anteriores:</b> não depende do porte da empresa. Os outros comparam com o limite do Simples ou com o histórico, e por isso só enxergam empresa pequena com dado inflado. Este compara a análise <b>consigo mesma</b> — funciona igual em cliente de R$ 500 mil e em indústria de R$ 60 milhões. <b>Calibrado para o silêncio nos casos legítimos:</b> comércio forte com serviço pequeno (50×) não dispara; indústria grande com serviço miúdo (150×) também não — porte desigual entre blocos é comum e não é erro. O limite é de <b>200×</b>, duas ordens de grandeza inteiras. Bloco com menos de três meses lançados fica fora da comparação, para movimento esporádico não gerar ruído. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>771 verificações</b>.</td></tr>
                     <tr><td><b>v7.84.1</b></td><td>01/09/2026</td><td><b>🔧 CORREÇÃO URGENTE — o Consolidado Analítico não gerava desde a v7.77.0, e o meu teste tinha excluído justamente ele.</b> <b>O defeito:</b> uma linha escrita na v7.77.0 usava <code>(D||{}).cfg</code> — e <code>D</code> <b>nunca foi declarado</b> naquela função, onde a análise se chama <code>RL.dados</code>. O detalhe que engana: <code>(D||{})</code> protege contra valor <b>nulo</b>, não contra <b>identificador inexistente</b>. Referenciar um nome não declarado lança <code>ReferenceError</code> na hora, e o relatório morria antes de desenhar a primeira linha. <b>Como passou por 760 verificações:</b> o bloco de fumaça da v7.79.1 cobre cada relatório, e eu o criei com <b>quatro</b> tipos — deixando o <code>consolidado</code> de fora porque "dava erro no sandbox". Dava erro porque estava <b>quebrado</b>. Excluí do teste exatamente o que tinha defeito, e transformei a verificação num registro do que já funcionava. A lista agora tem os <b>cinco</b> relatórios, e a regra que fica é: o que não passa entra e <b>falha</b> até ser consertado. <b>E, corrigido o primeiro, apareceu o segundo:</b> com o relatório voltando a abrir, o teste de conteúdo acusou que o Consolidado também ranqueava <b>"1º Simples Nacional"</b> para empresa acima do limite — o mesmo defeito que o Comparativo levou quatro relatos para fechar. Ninguém tinha visto porque o relatório sequer gerava. Agora os cenários indisponíveis saem da numeração, vão para o fim da tabela, com valor riscado, marca <b>⛔</b> e "não concorre" na coluna de diferença. Motor <b>intocado</b>; lacre <code>2e1139e9</code> íntegro. Suíte: <b>765 verificações</b>.</td></tr>
@@ -5518,7 +5525,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.86.0';
+const APP_VERSAO = '7.86.1';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -11552,7 +11559,7 @@ function rlApresentacao(modo){
   const statusIA = A.iaOk ? '🤖 Textos gerados pela IA em ' + esc(RL._ia.quando) : 'Textos padrão — gere os textos com IA no Parecer para a apresentação usar a redação sob medida';
   let h = `<div class="ap-doc" id="ap-doc" data-modo="${modo}">
     <div class="card pp-tools ap-tools"><div class="toolbar" style="align-items:center">
-      <span class="hint">${statusIA} · ${telas.length} telas · setas do teclado navegam em tela cheia</span><span style="flex:1"></span>
+      <span class="hint">${statusIA} · ${telas.length} telas · em tela cheia: Enter, espaço, setas ou clique avançam; Esc sai</span><span style="flex:1"></span>
       <button class="btn solid" onclick="apApresentar()">▶ Apresentar (tela cheia)</button>
       <button class="btn" onclick="window.print()" title="Na janela de impressão: Destino = Salvar como PDF · Layout = Paisagem · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · ativar Gráficos de segundo plano">🖨️ Imprimir / PDF</button>
     </div></div>`;
@@ -11562,7 +11569,7 @@ function rlApresentacao(modo){
       : apTimbrado(i+1, telas.length, modo) + `<div class="ap-miolo">${t.html}</div>`);
     h += `<div class="ap-slide" data-i="${i}"><div class="ap-tela${t.escuro?' escuro':''}">${inner}</div></div>`;
   });
-  h += `</div>`;
+  h += `<div class="ap-nav no-print"><button type="button" onclick="apIr(-1);this.blur()" title="Anterior (←)">‹</button><span id="ap-nav-cont"></span><button type="button" onclick="apIr(1);this.blur()" title="Próxima (→, Enter, espaço ou clique)">›</button><button type="button" onclick="document.exitFullscreen&&document.exitFullscreen()" title="Sair (Esc)">✕</button></div></div>`;
   $id('rl-corpo').innerHTML = rlAvisoDefasado() + h;
   telas.forEach(t => { if (t.apos) { try { t.apos(); } catch(e){ console.error('apresentação/gráfico', e); } } });
   apPrintCss(true);
@@ -11577,7 +11584,8 @@ function apAjustar(){
   const k = fs ? Math.min(window.innerWidth/1280, window.innerHeight/720)
                : Math.min(1, Math.max(0.3, (doc.clientWidth - 8)/1280));
   if (doc.style && doc.style.setProperty) doc.style.setProperty('--ap-zoom', String(k));
-  if (fs){ const sl = doc.querySelectorAll('.ap-slide'); sl.forEach((s,i)=>s.classList.toggle('ativo', i===AP_IDX)); }
+  if (fs){ const sl = doc.querySelectorAll('.ap-slide'); sl.forEach((s,i)=>s.classList.toggle('ativo', i===AP_IDX));
+    const c = $id('ap-nav-cont'); if (c) c.textContent = (AP_IDX+1) + ' / ' + sl.length; }
 }
 function apIr(d){
   const doc = $id('ap-doc'); if (!doc || document.fullscreenElement !== doc) return;
@@ -11587,14 +11595,25 @@ function apIr(d){
 function apApresentar(){
   const doc = $id('ap-doc'); if (!doc) return;
   AP_IDX = 0;
-  if (doc.requestFullscreen) doc.requestFullscreen().catch(()=>toast('O navegador não permitiu tela cheia.'));
+  // ══ v7.86.1 · ENTER NÃO MUDAVA DE TELA ═════════════════════════════════════════════════════
+  // O botão "Apresentar" continuava com o FOCO depois do clique. Enter e espaço, num botão
+  // focado, disparam o clique de novo — cada tecla reabria a apresentação na 1ª tela em vez
+  // de avançar. O foco vai para o contêiner (tabindex) e o handler passa a aceitar Enter.
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  if (doc.setAttribute) doc.setAttribute('tabindex', '-1');
+  if (doc.requestFullscreen) doc.requestFullscreen().then(()=>{ if (doc.focus) doc.focus(); }).catch(()=>toast('O navegador não permitiu tela cheia.'));
   else toast('Tela cheia não disponível neste navegador — use F11.');
 }
 document.addEventListener('keydown', e => {
   const doc = $id('ap-doc'); if (!doc || document.fullscreenElement !== doc) return;
-  if (e.key==='ArrowRight' || e.key==='PageDown' || e.key===' ') { apIr(1); e.preventDefault(); }
-  else if (e.key==='ArrowLeft' || e.key==='PageUp') { apIr(-1); e.preventDefault(); }
-  else if (e.key==='Home') apIr(-999); else if (e.key==='End') apIr(999);
+  if (e.key==='ArrowRight' || e.key==='ArrowDown' || e.key==='PageDown' || e.key===' ' || e.key==='Enter') { apIr(1); e.preventDefault(); e.stopPropagation(); }
+  else if (e.key==='ArrowLeft' || e.key==='ArrowUp' || e.key==='PageUp' || e.key==='Backspace') { apIr(-1); e.preventDefault(); e.stopPropagation(); }
+  else if (e.key==='Home') { apIr(-999); e.preventDefault(); } else if (e.key==='End') { apIr(999); e.preventDefault(); }
+});
+// v7.86.1 · clique (ou toque) na tela avança — para apresentar com o mouse ou o controle
+document.addEventListener('click', e => {
+  const doc = $id('ap-doc'); if (!doc || document.fullscreenElement !== doc) return;
+  if (e.target && e.target.closest && e.target.closest('.ap-slide')) apIr(1);
 });
 document.addEventListener('fullscreenchange', apAjustar);
 window.addEventListener('resize', apAjustar);
