@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.83.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.83\.1';/.test(html) && html.includes('<b>v7.83.1</b>')
+    chk('v7.84.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.84\.0';/.test(html) && html.includes('<b>v7.84.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -4245,6 +4245,34 @@ console.log('\n■ Integridade da interface');
     chk('v7.83.1 · imagem pendente agenda nova medição em vez de congelar o alarme',
       /if \(tb && tb\.carregando > 0\)/.test(html)
       && /addEventListener\('load', _fim, \{ once:true \}\)/.test(html));
+  }
+
+  // ═══ 6v. v7.84.0 · O PAYLOAD DIZ O QUE OS NÚMEROS SÃO ═══
+  // Conferência do primeiro parecer impresso: a IA recebia os números certos e os descrevia
+  // errado — decomposição do DAS chamada de "carga atual" do Lucro Presumido, IPI dito
+  // substituído, split de 2032 atribuído ao ano de referência. Mandar só o número não basta.
+  {
+    console.log('\n■ v7.84.0 — o payload declara a natureza dos números');
+    chk('v7.84.0 · o ano do split viaja com o valor',
+      /const split = \{ fonteMes: L32 \? \(L32\.deb\|\|0\)\/12 : 0, ano: L32 \? L32\.ano : null \}/.test(html)
+      && /splitAno: \(D\.split && D\.split\.ano\) \|\| null/.test(html));
+    chk('v7.84.0 · e o cartão cita o ano que usou, não um fixo',
+      /por mês \(\$\{D\.split\.ano\|\|2032\}\)/.test(html)
+      && !/por mês \(2032\) · retido no pagamento/.test(html.replace(/<td>[\s\S]*?<\/td>/g, '')));
+    chk('v7.84.0 · o payload declara se a decomposição é real ou simulação',
+      /decomposicaoPorTributo: \{/.test(html)
+      && /SIMULAÇÃO da repartição do DAS caso a empresa fosse optante/.test(html));
+    chk('v7.84.0 · e a instrução proíbe chamá-la de "carga atual" fora do Simples',
+      /NUNCA a descreva como/.test(html)
+      && /"decomposição da carga atual" quando o regime atual for Lucro Presumido ou Real/.test(html));
+    // a instrução é montada por concatenação, então a citação do dispositivo fica noutro pedaço
+    chk('v7.84.0 · a instrução do IPI corrige a redação da Edge Function',
+      /O IPI NÃO é substituído pelo IBS\/CBS/.test(html)
+      && /alíquotas reduzidas a zero a partir de 2027/.test(html)
+      && /Zona Franca/.test(html) && /trate o IPI à parte, como tributo reduzido/.test(html));
+    chk('v7.84.0 · e a do split impede atribuí-lo ao ano de referência',
+      /nunca \\?\n?\s*'?\+? ?'?escreva "no ano de referência" para esse número/.test(html)
+      || /escreva "no ano de referência" para esse número sem conferir/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
