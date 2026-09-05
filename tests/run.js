@@ -4368,3 +4368,5 @@ console.log('\n■ Integridade da interface');
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
   process.exit(FALHAS.length ? 1 : 0);
 })();
+      - name: Suíte da incorporação
+        run: node tests/run_incorporacao.js
