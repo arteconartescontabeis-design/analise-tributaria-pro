@@ -23,7 +23,9 @@ if (lacre === B.lacre) throw new Error('bloco do lacre: chave atp_lacre não enc
 
 const ORDEM = ['nucleo','dialogos','motor','params','helpers','normalizar','iniAtiv','folhaPerc','snEleg','prCarregar','reformaDefs','reformaCalc','ppDoc','ppMedir',
   // v1.1.0 · relatórios do Análise Tributária Pro (copiados pelas mesmas âncoras; rlRender é PRÓPRIO do incorporação — src/incorporacao_app_4.js)
-  'mesesRot','triExp','origemRot','pgBlocos','rfConfExp','rlEstado','rlCharts','rlBaseReforma','rlCnpj','rlRfTrib','conferencia','rlRegimes','rlReforma'];
+  'mesesRot','triExp','origemRot','pgBlocos','rfConfExp','rlEstado','rlCharts','rlBaseReforma','rlCnpj','rlRfTrib','conferencia','rlRegimes','rlReforma',
+  // v1.2.0 · demais relatórios (parecer com IA, apresentações, consolidado analítico, registros, produtos × Reforma)
+  'lrQuadro','rlConsolidado','parecerPags','parecer','rlCt','parecerIA','apresentacao','rlRegistros'];
 
 const copiado = ORDEM.map(k => `// ┌── copiado do index.html: bloco "${k}" ──\n${B[k]}`).join('\n\n') + `\n\n// ┌── copiado do index.html: bloco "lacre" (chave do localStorage renomeada) ──\n${lacre}`;
 

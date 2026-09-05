@@ -50,7 +50,8 @@ console.log('\n■ Motor copiado × motor do index');
   const BI = blocos(htmlIdx);
   const chave = k => `// ┌── copiado do index.html: bloco "${k}"`;
   for (const k of ['nucleo','dialogos','motor','params','helpers','normalizar','iniAtiv','folhaPerc','snEleg','prCarregar','reformaDefs','reformaCalc','ppDoc','ppMedir',
-                   'mesesRot','triExp','origemRot','pgBlocos','rfConfExp','rlEstado','rlCharts','rlBaseReforma','rlCnpj','rlRfTrib','conferencia','rlRegimes','rlReforma']){   // v1.1.0: relatórios
+                   'mesesRot','triExp','origemRot','pgBlocos','rfConfExp','rlEstado','rlCharts','rlBaseReforma','rlCnpj','rlRfTrib','conferencia','rlRegimes','rlReforma',
+                   'lrQuadro','rlConsolidado','parecerPags','parecer','rlCt','parecerIA','apresentacao','rlRegistros']){   // v1.1.0/v1.2.0: relatórios
     const i = jsInc.indexOf(chave(k)); const fim = jsInc.indexOf('\n// ┌── copiado do index.html', i+10);
     const corpo = i >= 0 ? jsInc.slice(jsInc.indexOf('\n', i)+1, fim > 0 ? fim : undefined).trimEnd() : null;
     chk(`bloco "${k}" idêntico ao index`, corpo !== null && corpo === BI[k].trimEnd(), corpo === null ? 'bloco ausente' : `${corpo.length} bytes`);
@@ -217,7 +218,8 @@ console.log('\n■ Tela e integração');
   chk('botões Importar dados e Recalcular separados', /onclick="incImportar\(\)"/.test(htmlInc) && /id="inc-btn-recalcular"/.test(htmlInc));
   chk('tabela própria atp_incorporacoes; nada gravado em atp_analises', /INC_TABELA = 'atp_incorporacoes'/.test(htmlInc) && !/supa\('(POST|PATCH)','atp_analises'/.test(jsInc.split('// ═══════════════════════════════════════════════════════════════════════════════════════════')[1]||''));
   chk('exclusão por função SECURITY DEFINER (rpc/atp_excluir_incorporacao)', /rpc\/atp_excluir_incorporacao/.test(htmlInc));
-  chk('Edge Function própria gerar-parecer-incorporacao', /INC_FN_IA  = 'gerar-parecer-incorporacao'/.test(htmlInc) && !/supaFn\('gerar-parecer'/.test(htmlInc));
+  { const proprio = jsInc.slice(jsInc.indexOf('// └── fim dos blocos copiados'));   // só o código PRÓPRIO do incorporação
+    chk('Edge Function própria gerar-parecer-incorporacao no parecer de incorporação (a gerar-parecer do ATP só no bloco copiado parecerIA)', /INC_FN_IA  = 'gerar-parecer-incorporacao'/.test(htmlInc) && /supaFn\(INC_FN_IA/.test(proprio) && !/supaFn\('gerar-parecer'/.test(proprio)); }
   chk('badge e changelog na aba Versões', /id="badge-versao"/.test(htmlInc) && /INC_CHANGELOG = \[/.test(htmlInc) && new RegExp("\\['" + R('INC_VERSAO') + "'").test(htmlInc));
   chk('conferência cruzada do lacre do index', /fetch\('index\.html'/.test(htmlInc));
   chk('parecer usa o papel timbrado e a régua do ATP', /ppDocumento\(B\)/.test(htmlInc) && /ppReguaRender\(\)/.test(htmlInc) && /capa\.jpg/.test(htmlInc));
@@ -246,7 +248,7 @@ console.log('\n■ Relatórios: os mesmos do index, para a consolidada e cada is
   const corpoHtml = () => R("document.getElementById('rl-corpo').innerHTML");
   const roda = async (tipo, chave, modo) => {
     R("document.getElementById('rl-tipo')").value = tipo; R("document.getElementById('rl-per')").value = '3';
-    R("document.getElementById('inc-rl-vista')").value = 'uma'; R("document.getElementById('inc-rl-ent')").value = chave;
+    R("document.getElementById('inc-rl-ent')").value = chave;
     if (modo) R("document.getElementById('rl-conf-modo')").value = modo;
     await R('rlRender')();
     return corpoHtml();
@@ -284,8 +286,21 @@ console.log('\n■ Relatórios: os mesmos do index, para a consolidada e cada is
     chk('Resumo Estatístico da consolidada renderiza (sem rede: cadastro indisponível, segue o resumo)', !erro && /Resumo Estat/i.test(h) && /Cadastro do CNPJ indispon/.test(h), erro || '');
     chk('… com a nota da consolidada (intragrupo fora, parceiro repetido = uma linha)', /deixam de existir com a incorpora/.test(jsInc) && /ficha cadastral exibida/.test(jsInc));
     // lado a lado: três colunas, sem exceção
-    erro = null; try { R("document.getElementById('inc-rl-vista')").value = 'lado'; R("document.getElementById('rl-tipo')").value = 'regimes'; await R('rlRender')(); } catch(e){ erro = e.message; }
-    chk('lado a lado renderiza as 3 entidades sem exceção', !erro, erro || '');
+    erro = null; try { R("document.getElementById('inc-rl-ent')").value = 'todas'; R("document.getElementById('rl-tipo')").value = 'regimes'; await R('rlRender')(); } catch(e){ erro = e.message; }
+    chk('"Todas — lado a lado" renderiza as 3 entidades sem exceção', !erro, erro || '');
+    // v1.2.0 · os demais relatórios do index
+    chk('os 10 relatórios do index oferecidos', ['parecer','conferencia','apresentacao_s','apresentacao_c','regimes','consolidado','registros','reforma','cnpj','produtos'].every(v => new RegExp('<option value="' + v + '"').test(htmlInc)));
+    chk('seletor Empresa em primeiro lugar, com "Todas — lado a lado" + entidades', /<label>Empresa<\/label><select id="inc-rl-ent"/.test(htmlInc) && /Todas — lado a lado/.test(jsInc));
+    for (const [tipo, chave, re, rotulo] of [['consolidado','cons',/Simples|Presumido/,'Consolidado analítico da consolidada'],['registros',A.cnpj,/Receita|receita/,'Detalhamento dos registros da isolada A'],['parecer','cons',/pp-page|Parecer|parecer/,'Parecer com IA (textos padrão) da consolidada'],['apresentacao_s','cons',/ap-slide|ap-tela/,'Apresentação simplificada da consolidada'],['apresentacao_c',Bc.cnpj,/ap-slide|ap-tela/,'Apresentação completa da isolada B'],['produtos',A.cnpj,/Produtos Vendidos/,'Produtos × Reforma da isolada (sem rede: documento vazio)'],['produtos','cons',/Produtos Vendidos/,'Produtos × Reforma da consolidada (um documento por CNPJ)']]){
+      erro = null; let hh = ''; try { hh = await roda(tipo, chave); } catch(e){ erro = e.message; }
+      chk(rotulo + ' renderiza', !erro && re.test(hh), erro || (hh.length + ' chars'));
+    }
+    { const TC2 = S.consolidada.T; erro = null; let hh = ''; try { hh = await roda('consolidado', 'cons'); } catch(e){ erro = e.message; }
+      chk('Consolidado analítico da consolidada traz LP e LR do quadro', !erro && hh.includes(fmtBR(TC2.lp)) && hh.includes(fmtBR(TC2.lr)), erro || fmtBR(TC2.lr)); }
+    { erro = null; try { R("document.getElementById('inc-rl-ent')").value = 'todas'; R("document.getElementById('rl-tipo')").value = 'apresentacao_s'; await R('rlRender')(); } catch(e){ erro = e.message; }
+      chk('apresentação com "Todas" cai para a consolidada (uma por vez)', !erro && R("document.getElementById('inc-rl-ent')").value === 'cons', erro || ''); }
+    { erro = null; try { R("document.getElementById('inc-rl-ent')").value = 'todas'; R("document.getElementById('rl-tipo')").value = 'parecer'; await R('rlRender')(); } catch(e){ erro = e.message; }
+      chk('parecer lado a lado (3 pareceres) sem exceção', !erro, erro || ''); }
     // analíticos: intragrupo sai da consolidada e o mesmo parceiro vira uma linha
     const E2 = ent([A, Bc], 2025);
     E2.empresas[0].analiticos.compra = { periodo:'01/2025', em:'2025-02-01', itens:[ { cnpj:'99999999000100', razao:'Forn X', classe:'normal', valor:100, cfops:{'1102':100} }, { cnpj: Bc.cnpj, razao:'B', classe:'simples', valor:50, cfops:{'1102':50} } ] };
@@ -303,7 +318,7 @@ console.log('\n■ Relatórios: os mesmos do index, para a consolidada e cada is
     chk('… isolada regerada = totais realizados da época ao centavo', perto(e2.lista[1].res.totais.simples, TA.simples) && perto(e2.lista[1].res.totais.lp, TA.lp));
     R('INC').res = S;
     chk('#rl-corpo é um só: parecer e relatórios o movem entre as páginas', (htmlInc.match(/id="rl-corpo"/g)||[]).length === 1 && /incRlCorpoPara\('inc-parecer-dock'\)/.test(jsInc) && /incRlCorpoPara\('inc-rl-dock'\)/.test(jsInc));
-    chk('changelog v1.1.0 registra a aba Relatórios', /\['1\.1\.0'/.test(jsInc) && /Aba Relatórios/.test(jsInc));
+    chk('changelog v1.1.0 e v1.2.0 registram a aba Relatórios', /\['1\.1\.0'/.test(jsInc) && /Aba Relatórios/.test(jsInc) && /\['1\.2\.0'/.test(jsInc) && /TODOS os relatórios/.test(jsInc));
     console.log(`\n${FALHAS.length ? '✗✗ FALHAS: ' + FALHAS.length : '✓✓ SUÍTE COMPLETA'}: ${OK} verificações OK${FALHAS.length ? ' · ' + FALHAS.join(' | ') : ''}`);
     process.exit(FALHAS.length ? 1 : 0);
   })();

@@ -36,6 +36,15 @@ function blocos(html){
   B.conferencia = faixa(/^\/\/ ═+ Conferência de cálculos — memória/, /^async function rlSalvarERecarregar/).txt; // CF, rlConf*, rlStatusProj, rlCmpHtml, rlProjTrocar…
   B.rlRegimes = faixa(/^function rlRegimes\(/, /^function rlRegistros\(/).txt;                // Comparativo de regimes (resumo anual + memória INSS/IRPJ/CSLL)
   B.rlReforma = faixa(/^function refCenCard\(/, /^\/\/ ═+ DASHBOARD DE ANÁLISES/).txt;         // refCenCard, rlReforma (ano a ano + abertura IBS/CBS)
+  // ── v1.2.0 · os DEMAIS relatórios do index (parecer com IA, apresentações, consolidado, registros, produtos) ──
+  B.lrQuadro = faixa(/^function lrQuadroApuracao/, /^async function anTrocarEmpresa/).txt;      // lrQuadroApuracao (Consolidado analítico)
+  B.rlConsolidado = faixa(/^\/\/ ═+ v6: RELATÓRIO CONSOLIDADO/, /^\/\/ ═+ RELATÓRIOS ═/).txt;  // rlConsolidado
+  B.parecerPags = faixa(/^\/\/ ═+ v7\.34\.0: página única do parecer/, /^function rlBaseReforma/).txt; // parecerPag*, PARECER_TETO, fornComprasSimplesMEI, ppBaseIbsCbs, ppCredCompras, premissaCreditoIBS
+  B.parecer  = faixa(/^function parecerDados\(/, /^\/\/ ═+ Notas fiscais do período/).txt;      // parecerDados, ppEnqFicha, parecerTextosPadrao, rfConfirmarBaseManual, rlParecer
+  B.rlCt     = faixa(/^async function rlCtBuscar/, /^\/\/ ═+ v7\.40\.1 · SEÇÕES EMPACOTADAS/).txt; // rlCtBuscar, rlCtResumoIA, rlProdRender (Produtos × Reforma)
+  B.parecerIA = faixa(/^async function parecerIA/, /^\/\/ ═+ Conferência de cálculos — memória/).txt; // parecerIA (Edge Function gerar-parecer do ATP)
+  B.apresentacao = faixa(/^async function rlSalvarERecarregar/, /^function rlRender\(\) \{/).txt;  // AP_*, ap*, rlApresentacao, apPrintCss (rlSalvarERecarregar vem junto; nunca é chamado aqui)
+  B.rlRegistros = faixa(/^function rlRegistros\(/, /^function refCenCard\(/).txt;               // rlRegistros
   B.versao   = (html.match(/^const APP_VERSAO = '([^']+)';/m)||[])[1];
   B.lacreHash = (html.match(/^const LACRE_HASH = '([^']+)';/m)||[])[1];
   return B;
