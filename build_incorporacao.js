@@ -51,6 +51,7 @@ ${src('incorporacao_app_1.js')}
 ${src('incorporacao_app_2.js')}
 ${src('incorporacao_app_3.js')}
 ${src('incorporacao_app_4.js')}
+${src('incorporacao_app_5.js')}
 </script>
 </body>
 </html>

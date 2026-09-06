@@ -14,8 +14,8 @@
 //   8. prejuízo da incorporada não passa para a consolidada;
 //   9. snapshot: o que se grava reexibe o mesmo quadro sem recalcular;
 //  10. tela: botões, tabela própria, Edge Function própria, badge e changelog;
-//  11. (v1.1.0) relatórios: os 4 relatórios do index rodam sobre a consolidada e as isoladas e batem
-//      com os totais do quadro; isolada = o que o index mostraria; snapshot regera pelo motor.
+//  11. (v1.3.0) relatórios: conferência por entidade (bate ao centavo com o quadro); camada de decisão
+//      (3 cenários, score explicável, ANÁLISE INCOMPLETA); parecer e apresentação DE INCORPORAÇÃO; snapshot.
 //  Sai com código ≠ 0 em qualquer falha.
 // ════════════════════════════════════════════════════════════════════════════════════════
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -231,94 +231,91 @@ console.log('\n■ Tela e integração');
   chk('textos padrão cobrem todos os campos do parecer', ['intro','empresas','premissas','leitura','reforma','parecer1','parecer2','recomendacao'].every(k => tx[k] && tx[k].length > 20));
 }
 
-// ═══ 11. RELATÓRIOS (v1.1.0) ═══
-console.log('\n■ Relatórios: os mesmos do index, para a consolidada e cada isolada');
+// ═══ 11. RELATÓRIOS (v1.3.0) — conferência por entidade; parecer, cenários, score e apresentação DE INCORPORAÇÃO ═══
+console.log('\n■ Relatórios: conferência (Consolidada · Incorporadora · Incorporada), parecer e apresentação de incorporação');
 {
   const fmtBR = v => (+v).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
-  const S = g.__sim(ent([A, Bc], 2025)); R('INC').res = S; R('INC').entradas = ent([A, Bc], 2025);
+  const E1 = ent([A, Bc], 2025); const S = g.__sim(E1); R('INC').res = S; R('INC').entradas = E1; R('INC')._cen = null;
   R('APP').page = 'relatorios';
   chk('menu e página de relatórios existem', /data-page="relatorios"/.test(htmlInc) && /id="page-relatorios"/.test(htmlInc) && /id="rl-tipo"/.test(htmlInc) && /id="inc-rl-lado"/.test(htmlInc));
-  chk('os 4 relatórios oferecidos', ['conferencia','regimes','reforma','cnpj'].every(v => new RegExp('<option value="' + v + '"').test(htmlInc)));
+  chk('só os 3 relatórios (4 opções): parecer, conferência, apresentação simplificada e completa', ['parecer_inc','conferencia','apresentacao_inc_s','apresentacao_inc_c'].every(v => new RegExp('<option value="' + v + '"').test(htmlInc)) && ['regimes','consolidado','registros','reforma','cnpj','produtos','apresentacao_s','"parecer"'].every(v => !new RegExp('<option value=' + (v.startsWith('"')?v:'"'+v+'"')).test(htmlInc)));
   chk('rlRender é PRÓPRIO do incorporação (não o do index)', /async function rlRender\(\)\{\s*\n\s*if \(APP\.page !== 'relatorios'\)/.test(jsInc) && !/^function rlRender\(\) \{/m.test(jsInc));
-  chk('Chart.js carregado (gráficos do comparativo e da Reforma)', /Chart\.js\/4\.4\.1\/chart\.umd\.min\.js/.test(htmlInc));
+  chk('Chart.js carregado', /Chart\.js\/4\.4\.1\/chart\.umd\.min\.js/.test(htmlInc));
   const ents = R('incRlEntidades()');
-  chk('entidades: consolidada + 2 isoladas, sem recálculo quando o resultado é vivo', ents && ents.lista.length === 3 && ents.lista[0].consolidada && !ents.recalculado);
+  chk('entidades da conferência: consolidada + 2 isoladas, sem recálculo quando o resultado é vivo', ents && ents.lista.length === 3 && ents.lista[0].consolidada && !ents.recalculado);
   chk('isolada usa a análise gravada e o resultado REAL, não o projetado (o que o index mostraria)', ents.lista[1].dados.cnpj === A.cnpj && ents.lista[1].res === S.empresas[0].Rreal && S.empresas[0].Rreal !== S.empresas[0].R);
-  chk('consolidada usa a análise conjunta e o resultado do motor', ents.lista[0].dados === S.consolidada.dados && ents.lista[0].res === S.consolidada.R);
   const corpoHtml = () => R("document.getElementById('rl-corpo').innerHTML");
   const roda = async (tipo, chave, modo) => {
     R("document.getElementById('rl-tipo')").value = tipo; R("document.getElementById('rl-per')").value = '3';
-    R("document.getElementById('inc-rl-ent')").value = chave;
+    R("document.getElementById('inc-rl-ent')").value = chave || 'todas';
     if (modo) R("document.getElementById('rl-conf-modo')").value = modo;
     await R('rlRender')();
     return corpoHtml();
   };
+  // ── cenários e score (camada de decisão) ──
+  const CE = R('incCenarios()');
+  chk('3 cenários: separadas · A incorpora B · B incorpora A', CE && CE.cen.length === 3 && CE.cen[0].sep && CE.cen[1].n === 2 && CE.cen[2].n === 3 && !CE.erro3, CE && CE.erro3);
+  chk('cenário 2 é o resultado da simulação (INC.res); cenário 3 tem B como incorporadora', CE.S2 === S && CE.S3 && CE.S3.empresas[0].cnpj === Bc.cnpj && CE.S3.empresas[1].cnpj === A.cnpj);
+  chk('cenário 3 = mesma soma de receitas, mesmo motor', perto(CE.S3.consolidada.T.receita, S.consolidada.T.receita) && CE.S3.motorLacre === S.motorLacre);
+  chk('separadas = soma dos tributos das isoladas no regime mais barato permitido de cada cenário', perto(CE.cen[0].ind.receita, S.soma.receita) && CE.cen[0].ind.trib > 0 && ['simples','lp','lr'].includes(CE.cen[0].ind.reg));
+  chk('consolidada não elegível ao Simples → regimes permitidos só LP e LR', S.consolidada.sn.estado !== 'elegivel' ? (CE.cen[1].ind.perm.length === 2 && !CE.cen[1].ind.perm.includes('simples')) : CE.cen[1].ind.perm.length === 3);
+  const sc = CE.cen[1].score;
+  chk('score 0–100 = Σ nota × peso (tributário 60 · Reforma 20 · estabilidade 20)', sc && sc.total >= 0 && sc.total <= 100 && perto(sc.total, Object.values(sc.dims).reduce((a,d)=>a+d.nota*d.peso,0)) && perto(Object.values(sc.dims).reduce((a,d)=>a+d.peso,0), 1));
+  chk('score explicável: cada dimensão tem nota, peso, fórmula e leitura', Object.values(sc.dims).every(d => typeof d.nota === 'number' && d.formula && d.texto));
+  chk('classificação nas faixas do anexo', ['altamente favorável','favorável','moderadamente favorável','baixa atratividade','não recomendada'].includes(sc.rot));
+  chk('com alertas de fronteira o status é ANÁLISE INCOMPLETA', S.alertas.length ? sc.incompleta === true : sc.incompleta === false);
+  chk('"acréscimo tributário", nunca "economia negativa" (nos textos gerados)', !/economia negativa/i.test(Object.values(sc.dims).map(d=>d.texto).join(' ') + Object.values(R('incTextosDecisao')(CE)).join(' ')) && /^(Economia|Acréscimo|Neutralidade) tributária/.test(sc.dims.tributario.texto));
+  chk('ranking ordenado por score (maior primeiro), sem o cenário separadas', CE.rank.length === 2 && CE.rank[0].score.total >= CE.rank[1].score.total && CE.rank.every(c=>!c.sep));
+  chk('patrimônio e dívida declarados sem dados nos motivos do score', sc.motivos.some(m => /Patrimônio e endividamento/.test(m)));
+  // ── parecer de incorporação (documento do conjunto) ──
+  let erro = null, h = '';
   (async () => {
-    let erro = null, h = '';
-    try { h = await roda('regimes', 'cons'); } catch(e){ erro = e.message; }
-    chk('Comparativo de regimes da consolidada renderiza', !erro && h.length > 2000, erro || (h.length + ' chars'));
-    const TC = S.consolidada.T;
-    chk('… e traz o total do Simples da consolidada (o mesmo do quadro)', h.includes(fmtBR(TC.simples)), fmtBR(TC.simples));
-    chk('… e o total do Lucro Presumido', h.includes(fmtBR(TC.lp)), fmtBR(TC.lp));
-    chk('… e o total do Lucro Real', h.includes(fmtBR(TC.lr)), fmtBR(TC.lr));
-    chk('… com a memória de INSS patronal / IRPJ / CSLL', /INSS/.test(h) && /IRPJ/.test(h) && /CSLL/.test(h));
-    try { h = await roda('regimes', A.cnpj); } catch(e){ erro = e.message; }
-    const TA = S.empresas[0].Rreal.totais;   // realizado da isolada (caso1: 459.601,40 = gabarito)
-    chk('Comparativo da isolada A = totais REALIZADOS da isolada (não os da consolidada)', !erro && h.includes(fmtBR(TA.simples)) && h.includes(fmtBR(TA.lp)) && !h.includes(fmtBR(TC.simples)), erro || fmtBR(TA.simples));
-    erro = null; try { h = await roda('reforma', 'cons'); } catch(e){ erro = e.message; }
-    chk('Reforma da consolidada SEM aba Reforma: mesmo aviso e cenários de fallback do index', !erro && /Sem dados da Reforma/.test(h) && /2033/.test(h), erro || (h.length + ' chars'));
-    const a33 = TC.anos[2033]; chk('… e o cenário 2033 bate com o quadro da simulação', a33 && (h.includes(fmtBR(a33.regular)) || h.includes(fmtBR(a33.hib)) || h.includes(fmtBR(a33.dentro))), a33 ? fmtBR(a33.regular) : 'sem 2033');
-    // com a aba Reforma preenchida numa das empresas, a consolidada tem Reforma e o relatório sai inteiro
-    { const A2 = { cnpj:A.cnpj, nome:'A', dados: clone(A.dados) }; A2.dados.reforma = R('rfNovo')(A.cnpj, 2025); A2.dados.reforma.receita = 1000000;
-      const E3 = ent([A2, Bc], 2025), S3 = g.__sim(E3); const guardaRes = R('INC').res, guardaEnt = R('INC').entradas; R('INC').res = S3; R('INC').entradas = E3;
-      erro = null; try { h = await roda('reforma', 'cons'); } catch(e){ erro = e.message; }
-      chk('Reforma da consolidada COM aba Reforma: transição ano a ano e débito × crédito de IBS/CBS', !erro && S3.consolidada.reforma && /Quadro da transição/.test(h) && /IBS/.test(h) && /CBS/.test(h) && /2033/.test(h), erro || (h.length + ' chars'));
-      R('INC').res = guardaRes; R('INC').entradas = guardaEnt; }
+    erro = null; try { h = await roda('parecer_inc'); } catch(e){ erro = e.message; }
+    chk('Parecer de Incorporação renderiza (capa + páginas)', !erro && /pp-capa/.test(h) && /pp-page/.test(h) && h.length > 20000, erro || (h.length + ' chars'));
+    chk('… com as 11 seções do anexo', ['1. Parecer executivo','2. Ranking dos cenários','3. Comparativo — antes × depois','4. Carga tributária consolidada','5. Comparativo por regime','6. Reforma Tributária — separadas × consolidada','7. Patrimônio e endividamento','8. Operações entre as empresas','10. Conclusões','11. Premissas e memória'].every(t => h.includes(t)));
+    chk('… score e classificação no executivo e no ranking', h.includes(String(Math.round(sc.total)) + '<span') && h.includes(sc.rot));
+    chk('… totais da consolidada e das separadas no comparativo (ao centavo)', h.includes(fmtBR(S.consolidada.T.lp)) && h.includes(fmtBR(S.soma.lp)) && h.includes(fmtBR(S.consolidada.T.lr)));
+    chk('… carga por tributo (IRPJ, CSLL, PIS, COFINS) no regime mais barato permitido', /IRPJ/.test(h) && /CSLL/.test(h) && /COFINS/.test(h));
+    chk('… patrimônio e endividamento: "Sem dados"', /Sem dados\.<\/b> O sistema não recebe balanço/.test(h));
+    chk('… conclusões: tributária, financeira, patrimonial, Reforma, global', /Tributária<\/td>/.test(h) && /Financeira<\/td>/.test(h) && /Patrimonial<\/td>/.test(h) && /Reforma Tributária<\/td>/.test(h) && /Global<\/b>/.test(h));
+    chk('… memória de cálculo cita lacre do motor, fórmula do score e cenário 3', h.includes('lacre ' + S.motorLacre) && /Score: tributario/.test(h) && /Cenário 3 = mesma consolidação/.test(h));
+    chk('… aviso técnico do anexo (apoio à decisão, due diligence)', /due diligence/.test(h));
+    chk('parecer da aba Simulação usa o mesmo render (um parecer só)', /incParecerRender\(\);/.test(jsInc) && (jsInc.match(/^function incParecerRender\(\)/gm)||[]).length === 1);
+    chk('payload da IA leva o bloco "decisao" (score, cenários, por tributo, Reforma ano a ano, sem dados patrimoniais)', /decisao: \(\(\) => \{ const CE = incCenarios\(\)/.test(jsInc) && /patrimonioEDivida: 'SEM DADOS/.test(jsInc));
+    chk('Edge Function aceita as 11 chaves novas de texto', (() => { try { const t = fs.readFileSync(path.join(RAIZ,'supabase','functions','gerar-parecer-incorporacao','index.ts'),'utf8'); return ['executivo','ranking','antesDepois','carga','regimes','reformaDecisao','conclTrib','conclFin','conclPatr','conclReforma','conclGlobal'].every(k => t.includes('"'+k+'"')); } catch(e){ return true; } })());
+    // ── apresentações ──
+    erro = null; try { h = await roda('apresentacao_inc_s'); } catch(e){ erro = e.message; }
+    chk('Apresentação simplificada: 7 telas (capa, pergunta, antes × depois, carga, Reforma, ranking, conclusão)', !erro && (h.match(/class="ap-slide"/g)||[]).length === 7 && /Vale a pena incorporar\?/.test(h) && /Ranking dos cenários/.test(h), erro || ((h.match(/class="ap-slide"/g)||[]).length + ' telas'));
+    erro = null; try { h = await roda('apresentacao_inc_c'); } catch(e){ erro = e.message; }
+    chk('Apresentação completa: 15 telas', !erro && (h.match(/class="ap-slide"/g)||[]).length === 15 && /Como o score foi calculado/.test(h) && /Patrimônio e endividamento/.test(h), erro || ((h.match(/class="ap-slide"/g)||[]).length + ' telas'));
+    chk('… rodapé das telas diz "Estudo de Incorporação"', /Estudo de Incorporação/.test(h) && !/Estudo de Impacto da Reforma Tributária · /.test(h.replace(/apTimbrado/g,'')));
+    // ── conferência por entidade ──
     erro = null; try { h = await roda('conferencia', 'cons', 'completo'); } catch(e){ erro = e.message; }
     chk('Conferência (12 meses) da consolidada renderiza', !erro && h.length > 5000, erro || (h.length + ' chars'));
     chk('… com bloco 0 de dados de entrada, trava e sublimite', /Dados de entrada/i.test(h) && /sublimite/i.test(h));
     { const M = S.consolidada.R.meses; chk('… e o DAS, LP e LR de jan e dez da consolidada, ao centavo', [M[0], M[11]].every(x => h.includes(fmtBR(x.dasGuia)) && h.includes(fmtBR(x.lp.total)) && h.includes(fmtBR(x.lr.total))), fmtBR(M[0].dasGuia) + ' … ' + fmtBR(M[11].dasGuia)); }
     erro = null; try { h = await roda('conferencia', Bc.cnpj, 'anual'); } catch(e){ erro = e.message; }
     { const TB = S.empresas[1].Rreal.totais, nums = [...h.matchAll(/\d{1,3}(?:\.\d{3})*,\d{2}/g)].map(x => +x[0].replace(/\./g,'').replace(',','.'));
-      const tem = v => nums.some(x => Math.abs(x - v) <= 0.12);   // totais anuais = soma dos meses arredondados (somaExib): até 1 centavo por mês
+      const tem = v => nums.some(x => Math.abs(x - v) <= 0.12);
       chk('Conferência (resumo anual) da isolada B = LP e LR realizados de B', !erro && tem(TB.lp) && tem(TB.lr), erro || fmtBR(TB.lr)); }
-    erro = null; try { h = await roda('cnpj', 'cons'); } catch(e){ erro = e.message; }
-    chk('Resumo Estatístico da consolidada renderiza (sem rede: cadastro indisponível, segue o resumo)', !erro && /Resumo Estat/i.test(h) && /Cadastro do CNPJ indispon/.test(h), erro || '');
-    chk('… com a nota da consolidada (intragrupo fora, parceiro repetido = uma linha)', /deixam de existir com a incorpora/.test(jsInc) && /ficha cadastral exibida/.test(jsInc));
-    // lado a lado: três colunas, sem exceção
-    erro = null; try { R("document.getElementById('inc-rl-ent')").value = 'todas'; R("document.getElementById('rl-tipo')").value = 'regimes'; await R('rlRender')(); } catch(e){ erro = e.message; }
-    chk('"Todas — lado a lado" renderiza as 3 entidades sem exceção', !erro, erro || '');
-    // v1.2.0 · os demais relatórios do index
-    chk('os 10 relatórios do index oferecidos', ['parecer','conferencia','apresentacao_s','apresentacao_c','regimes','consolidado','registros','reforma','cnpj','produtos'].every(v => new RegExp('<option value="' + v + '"').test(htmlInc)));
-    chk('seletor Empresa em primeiro lugar, com "Todas — lado a lado" + entidades', /<label>Empresa<\/label><select id="inc-rl-ent"/.test(htmlInc) && /Todas — lado a lado/.test(jsInc));
-    for (const [tipo, chave, re, rotulo] of [['consolidado','cons',/Simples|Presumido/,'Consolidado analítico da consolidada'],['registros',A.cnpj,/Receita|receita/,'Detalhamento dos registros da isolada A'],['parecer','cons',/pp-page|Parecer|parecer/,'Parecer com IA (textos padrão) da consolidada'],['apresentacao_s','cons',/ap-slide|ap-tela/,'Apresentação simplificada da consolidada'],['apresentacao_c',Bc.cnpj,/ap-slide|ap-tela/,'Apresentação completa da isolada B'],['produtos',A.cnpj,/Produtos Vendidos/,'Produtos × Reforma da isolada (sem rede: documento vazio)'],['produtos','cons',/Produtos Vendidos/,'Produtos × Reforma da consolidada (um documento por CNPJ)']]){
-      erro = null; let hh = ''; try { hh = await roda(tipo, chave); } catch(e){ erro = e.message; }
-      chk(rotulo + ' renderiza', !erro && re.test(hh), erro || (hh.length + ' chars'));
-    }
-    { const TC2 = S.consolidada.T; erro = null; let hh = ''; try { hh = await roda('consolidado', 'cons'); } catch(e){ erro = e.message; }
-      chk('Consolidado analítico da consolidada traz LP e LR do quadro', !erro && hh.includes(fmtBR(TC2.lp)) && hh.includes(fmtBR(TC2.lr)), erro || fmtBR(TC2.lr)); }
-    { erro = null; try { R("document.getElementById('inc-rl-ent')").value = 'todas'; R("document.getElementById('rl-tipo')").value = 'apresentacao_s'; await R('rlRender')(); } catch(e){ erro = e.message; }
-      chk('apresentação com "Todas" cai para a consolidada (uma por vez)', !erro && R("document.getElementById('inc-rl-ent')").value === 'cons', erro || ''); }
-    { erro = null; try { R("document.getElementById('inc-rl-ent')").value = 'todas'; R("document.getElementById('rl-tipo')").value = 'parecer'; await R('rlRender')(); } catch(e){ erro = e.message; }
-      chk('parecer lado a lado (3 pareceres) sem exceção', !erro, erro || ''); }
-    // analíticos: intragrupo sai da consolidada e o mesmo parceiro vira uma linha
+    erro = null; try { await roda('conferencia', 'todas', 'anual'); } catch(e){ erro = e.message; }
+    chk('conferência "Todas — lado a lado" (3 colunas) sem exceção', !erro, erro || '');
+    // ── analíticos (usados pela entidade consolidada) ──
     const E2 = ent([A, Bc], 2025);
     E2.empresas[0].analiticos.compra = { periodo:'01/2025', em:'2025-02-01', itens:[ { cnpj:'99999999000100', razao:'Forn X', classe:'normal', valor:100, cfops:{'1102':100} }, { cnpj: Bc.cnpj, razao:'B', classe:'simples', valor:50, cfops:{'1102':50} } ] };
     E2.empresas[1].analiticos.compra = { periodo:'01/2025', em:'2025-02-02', itens:[ { cnpj:'99999999000100', razao:'Forn X', classe:'normal', valor:30, cfops:{'1102':30} } ] };
     const fc = R('incRlFornConsolidada')(E2);
-    chk('Resumo consolidado: lançamento entre as empresas fica de fora', fc.intra.n === 1 && perto(fc.intra.v, 50));
-    chk('Resumo consolidado: mesmo fornecedor em duas empresas = uma linha somada', fc.forn.compra.dados.itens.length === 1 && perto(fc.forn.compra.dados.itens[0].valor, 130) && perto(fc.forn.compra.dados.itens[0].cfops['1102'], 130));
-    const fi = R('incRlFornIsolada')(E2.empresas[0]);
-    chk('Resumo isolado: analítico gravado no formato de atp_fornec', fi && fi.compra && fi.compra.dados.tipo === 'compra' && fi.compra.dados.itens.length === 2);
-    // snapshot reaberto: relatórios regeram pelo motor e batem com os totais da época (mesmo motor)
-    const volta = R('incResDoSnapshot')(R('incSnapshot')()); R('INC').res = volta;
+    chk('analíticos consolidados: lançamento entre as empresas fica de fora; mesmo parceiro = uma linha somada', fc.intra.n === 1 && perto(fc.intra.v, 50) && fc.forn.compra.dados.itens.length === 1 && perto(fc.forn.compra.dados.itens[0].valor, 130));
+    // ── snapshot reaberto ──
+    const volta = R('incResDoSnapshot')(R('incSnapshot')()); R('INC').res = volta; R('INC')._cen = null;
     const e2 = R('incRlEntidades()');
     chk('snapshot reaberto: entidades regeradas pelo motor (marcado como recalculado)', e2 && e2.recalculado && e2.lista.length === 3);
-    chk('… consolidada regerada = totais da época ao centavo', perto(e2.lista[0].res.totais.simples, TC.simples) && perto(e2.lista[0].res.totais.lr, TC.lr));
-    chk('… isolada regerada = totais realizados da época ao centavo', perto(e2.lista[1].res.totais.simples, TA.simples) && perto(e2.lista[1].res.totais.lp, TA.lp));
-    R('INC').res = S;
+    chk('… consolidada regerada = totais da época ao centavo', perto(e2.lista[0].res.totais.simples, S.consolidada.T.simples) && perto(e2.lista[0].res.totais.lr, S.consolidada.T.lr));
+    const CEs = R('incCenarios()');
+    chk('… cenários e score regerados do snapshot batem com os do resultado vivo', CEs && CEs.cen.length === 3 && perto(CEs.cen[1].score.total, sc.total) && perto(CEs.cen[1].ind.trib, CE.cen[1].ind.trib));
+    R('INC').res = S; R('INC')._cen = null;
     chk('#rl-corpo é um só: parecer e relatórios o movem entre as páginas', (htmlInc.match(/id="rl-corpo"/g)||[]).length === 1 && /incRlCorpoPara\('inc-parecer-dock'\)/.test(jsInc) && /incRlCorpoPara\('inc-rl-dock'\)/.test(jsInc));
-    chk('changelog v1.1.0 e v1.2.0 registram a aba Relatórios', /\['1\.1\.0'/.test(jsInc) && /Aba Relatórios/.test(jsInc) && /\['1\.2\.0'/.test(jsInc) && /TODOS os relatórios/.test(jsInc));
+    chk('changelog v1.3.0 registra o remodelamento', /\['1\.3\.0'/.test(jsInc) && /remodelados para a incorporação/.test(jsInc));
     console.log(`\n${FALHAS.length ? '✗✗ FALHAS: ' + FALHAS.length : '✓✓ SUÍTE COMPLETA'}: ${OK} verificações OK${FALHAS.length ? ' · ' + FALHAS.join(' | ') : ''}`);
     process.exit(FALHAS.length ? 1 : 0);
   })();

@@ -12,19 +12,13 @@
 //  Regra mantida: nada aqui altera o motor nem as análises; os relatórios da isolada saem da análise
 //  gravada, como no index; os da consolidada saem da análise consolidada que passou pelo mesmo motor.
 const INC_RL_TIPOS = {
-  parecer:     'Parecer — Estudo de Impacto da Reforma Tributária',
-  conferencia: 'Conferência de Cálculos — Memória (documento interno)',
-  apresentacao_s: 'Apresentação — Estudo de Impacto da Reforma Tributária (simplificada)',
-  apresentacao_c: 'Apresentação — Estudo de Impacto da Reforma Tributária (completa)',
-  regimes:     'Comparativo de Regimes Tributários',
-  consolidado: 'Consolidado Analítico — Simples · Presumido · Real · Reforma',
-  registros:   'Detalhamento dos Registros',
-  reforma:     'Reforma Tributária — Transição 2026–2033',
-  cnpj:        'Resumo Estatístico',
-  produtos:    'Produtos Vendidos no Período e Classificação para a Reforma (IBS/CBS)',
+  parecer_inc:     'Parecer de Incorporação — com IA',
+  conferencia:     'Conferência de Cálculos — Memória (documento interno)',
+  apresentacao_inc_s: 'Apresentação de Incorporação — simplificada (7 telas)',
+  apresentacao_inc_c: 'Apresentação de Incorporação — completa (15 telas)',
 };
-// relatórios que NÃO ficam lado a lado (a apresentação tem navegação própria por ids ap-*)
-const INC_RL_SO_UMA = ['apresentacao_s','apresentacao_c'];
+// relatórios DA INCORPORAÇÃO (um documento para o conjunto): o seletor de empresa não se aplica
+const INC_RL_CONJUNTO = ['parecer_inc','apresentacao_inc_s','apresentacao_inc_c'];
 
 function incRlCorpoPara(dockId){
   const c = $id('rl-corpo'), d = $id(dockId);
@@ -107,36 +101,7 @@ function incRlSub(ent, n){
 async function incRlDesenhar(tipo, ent, n){
   incRlSelecionar(ent);
   const corpo = $id('rl-corpo'); corpo.innerHTML = '';
-  const rot = PER_ROTULOS[n] || PER_ROTULOS[3];
-  const notaCons = txt => { if (ent.consolidada) corpo.insertAdjacentHTML('afterbegin', `<div class="card no-print hint" style="border-left:4px solid var(--primary-light)">${txt}</div>`); };
   if (tipo === 'conferencia') corpo.innerHTML = rlConferencia();
-  else if (tipo === 'regimes') rlRegimes(rot, n);
-  else if (tipo === 'consolidado') rlConsolidado(rot, n);
-  else if (tipo === 'registros') rlRegistros(rot, n);
-  else if (tipo === 'reforma') rlReforma();
-  else if (tipo === 'parecer'){
-    if (rfConfirmarBaseManual()) rlParecer();
-    else corpo.innerHTML = '<div class="card placeholder"><h2>Emissão cancelada</h2><p>A base da Reforma informada diverge da receita apurada.</p></div>';
-    notaCons('Parecer da <b>consolidada</b>: a análise conjunta é tratada como uma empresa só (CNPJ da incorporadora). Os textos de IA saem da mesma Edge Function <code>gerar-parecer</code> do Análise Tributária Pro e valem para esta simulação; o parecer de incorporação (isoladas × consolidada × Δ) continua na aba Simulação.');
-  }
-  else if (tipo === 'apresentacao_s' || tipo === 'apresentacao_c'){
-    rlApresentacao(tipo === 'apresentacao_s' ? 'simplificada' : 'completa');
-    notaCons('Apresentação da <b>consolidada</b>: mesma apresentação por empresa do Análise Tributária Pro, gerada sobre a análise conjunta.');
-  }
-  else if (tipo === 'cnpj'){
-    await rlCnpjRender(ent.cnpj);
-    notaCons(`Consolidada: clientes e fornecedores de <b>todas</b> as empresas, numa relação só (mesmo CNPJ em duas empresas = uma linha, valores somados). A ficha cadastral exibida é a da incorporadora. ${ent.intra && ent.intra.n ? `<b>${ent.intra.n}</b> lançamento(s) entre as próprias empresas (${fmtR(ent.intra.v)}) ficaram de fora — deixam de existir com a incorporação.` : 'Nenhum lançamento entre as próprias empresas nos analíticos.'}`);
-  }
-  else if (tipo === 'produtos'){
-    if (!ent.consolidada) await rlProdRender(ent.cnpj, ent.dados.ano, ent.nome);
-    else {
-      // a classificação é gravada POR CNPJ no Classificação RTC: a consolidada mostra o documento de cada empresa, em sequência
-      const E = INC.entradas, partes = [];
-      for (const e of E.empresas){ await rlProdRender(e.cnpj, ent.dados.ano, e.nome); partes.push(corpo.innerHTML); }
-      corpo.innerHTML = partes.join('');
-      notaCons('Consolidada: os produtos e a classificação IBS/CBS são gravados <b>por CNPJ</b> no Classificação RTC — abaixo, o documento de cada empresa, em sequência (' + E.empresas.map(e=>esc(e.nome)).join(', ') + ').');
-    }
-  }
 }
 
 function incRlPopularEntidades(ents){
@@ -156,36 +121,39 @@ async function rlRender(){
   rlLimparCharts();
   apPrintCss(false);                                      // @page paisagem só na apresentação (como no index)
   const tipo = $id('rl-tipo').value, n = +$id('rl-per').value || 3;
-  const conf = tipo === 'conferencia', apres = INC_RL_SO_UMA.includes(tipo), docProj = tipo === 'parecer' || apres;
+  const conf = tipo === 'conferencia', conjunto = INC_RL_CONJUNTO.includes(tipo);
   { const e1 = $id('rl-conf-modo-wrap'); if (e1) e1.style.display = conf ? '' : 'none';
     const sm = $id('rl-conf-mes'), e2 = $id('rl-conf-mes-wrap');
     if (conf && sm && !sm.options.length) sm.innerHTML = MESES_ROT.map((r,i)=>`<option value="${i}">${r}</option>`).join('');
     if (e2) e2.style.display = (conf && ($id('rl-conf-modo')||{}).value === 'mes') ? '' : 'none'; }
   { const aw = $id('rl-conf-anos-wrap'); if (aw){ aw.style.display = conf ? '' : 'none'; if (conf) rlConfAnosPopular(); } }
+  { const ew = $id('inc-rl-ent-wrap'); if (ew) ew.style.display = conjunto ? 'none' : ''; const pw = $id('rl-per-wrap'); if (pw) pw.style.display = conjunto ? 'none' : ''; }
   incRlCorpoPara('inc-rl-dock');
   const lado = $id('inc-rl-lado'), aviso = $id('inc-rl-aviso'), cab = $id('rl-cab'), corpo = $id('rl-corpo');
-  const ents = incRlEntidades();
   const esconde = id => { const el = $id(id); if (el) el.style.display = 'none'; };
-  if (!ents){
-    lado.innerHTML = ''; lado.style.display = 'none'; cab.style.display = 'none'; aviso.innerHTML = '';
-    ['rl-status-proj','rl-proj-wrap','rl-anoref-wrap'].forEach(esconde);
+  if (!INC.res || !INC.res.consolidada){
+    lado.innerHTML = ''; lado.style.display = 'none'; cab.style.display = 'none'; aviso.innerHTML = ''; esconde('rl-status-proj');
     const sel = $id('inc-rl-ent'); if (sel) sel.innerHTML = '<option value="todas">— calcule uma simulação —</option>';
-    corpo.innerHTML = '<div class="card placeholder"><h2>Sem simulação calculada</h2><p>Na aba Simulação, importe os dados e clique em <b>Calcular</b> (ou reabra uma simulação gravada). Os relatórios saem da consolidada e de cada empresa isolada.</p></div>';
+    corpo.innerHTML = '<div class="card placeholder"><h2>Sem simulação calculada</h2><p>Na aba Simulação, importe os dados e clique em <b>Calcular</b> (ou reabra uma simulação gravada).</p></div>';
     return;
   }
-  incRlPopularEntidades(ents);
   const S = INC.res;
+  if (conjunto){
+    lado.innerHTML = ''; lado.style.display = 'none'; cab.style.display = 'none'; esconde('rl-status-proj');
+    aviso.innerHTML = `Documento da <b>incorporação</b> (isoladas × consolidada × cenários). Os textos com IA são gerados no parecer e valem para a apresentação.`;
+    if (tipo === 'parecer_inc') incParecerRender();
+    else incApresentar(tipo === 'apresentacao_inc_s' ? 'simplificada' : 'completa');
+    corpo.style.display = '';
+    return;
+  }
+  const ents = incRlEntidades();
+  incRlPopularEntidades(ents);
   aviso.innerHTML = [
-    ents.recalculado ? `Resultado reaberto de um snapshot: os relatórios são gerados agora, passando a análise gravada pelo motor atual (lacre <b>${LACRE_HASH}</b>)${S.motorLacre && S.motorLacre !== LACRE_HASH ? ` — <span style="color:var(--warn)">o quadro da Simulação é da época (lacre ${esc(S.motorLacre)}) e pode diferir</span>` : ' — mesmo motor da época, mesmos números'}.` : '',
+    ents.recalculado ? `Resultado reaberto de um snapshot: a conferência é gerada agora, passando a análise gravada pelo motor atual (lacre <b>${LACRE_HASH}</b>)${S.motorLacre && S.motorLacre !== LACRE_HASH ? ` — <span style="color:var(--warn)">o quadro da Simulação é da época (lacre ${esc(S.motorLacre)}) e pode diferir</span>` : ' — mesmo motor da época, mesmos números'}.` : '',
     `Consolidada = análise conjunta (12 meses: as isoladas já projetadas e somadas); isoladas = análise gravada de cada empresa, exatamente como na aba Relatórios do Análise Tributária Pro.`,
   ].filter(Boolean).join('<br>');
-  let escolha = $id('inc-rl-ent').value || 'todas';
-  if (escolha === 'todas' && apres){ escolha = 'cons'; $id('inc-rl-ent').value = 'cons'; toast('A apresentação é exibida uma empresa por vez.'); }
+  const escolha = $id('inc-rl-ent').value || 'todas';
   const ent = ents.lista.find(e => e.chave === escolha) || ents.lista[0];
-  // seletores de projeção / ano de referência do documento (parecer e apresentações), como no index
-  incRlSelecionar(ent);
-  { const pw = $id('rl-proj-wrap'); if (pw){ pw.style.display = docProj ? '' : 'none'; if (docProj) rlProjPopular(); } }
-  { const aw = $id('rl-anoref-wrap'); if (aw){ aw.style.display = docProj ? '' : 'none'; if (docProj) rlAnoRefPopular(); } }
   if (escolha !== 'todas'){
     lado.innerHTML = ''; lado.style.display = 'none';
     cab.style.display = 'block'; $id('rl-titulo').textContent = INC_RL_TIPOS[tipo]; $id('rl-sub').innerHTML = incRlSub(ent, n);
@@ -194,7 +162,6 @@ async function rlRender(){
     corpo.style.display = '';
     return;
   }
-  // lado a lado: desenha cada entidade em #rl-corpo e move o desenho para a sua coluna
   cab.style.display = 'none'; esconde('rl-status-proj');
   lado.innerHTML = ''; lado.style.display = 'flex';
   for (const e of ents.lista){

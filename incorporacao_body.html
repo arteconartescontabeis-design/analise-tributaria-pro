@@ -97,25 +97,15 @@
          rl-* abaixo são os que essas funções procuram. O #rl-corpo é um só (vive no card do parecer e é MOVIDO para
          cá quando esta página abre — ver incRlCorpoPara). -->
     <div id="page-relatorios" style="display:none">
-      <div class="page-title"><h1>Relatórios</h1><span class="crumb">Consolidada e cada empresa isolada · todos os relatórios do Análise Tributária Pro</span></div>
+      <div class="page-title"><h1>Relatórios</h1><span class="crumb">Consolidada e cada empresa isolada · parecer, conferência e apresentações remodelados para a incorporação</span></div>
       <div class="card no-print"><div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
-        <div style="min-width:300px;flex:1"><label>Empresa</label><select id="inc-rl-ent" onchange="rlRender()"><option value="todas">— calcule uma simulação —</option></select></div>
-        <div style="min-width:280px"><label>Relatório</label><select id="rl-tipo" onchange="rlRender()">
-          <optgroup label="Projetam o ano quando faltam meses">
-            <option value="parecer">Parecer Reforma Tributária — com IA</option>
-            <option value="conferencia">Conferência de cálculos — memória (interno)</option>
-            <option value="apresentacao_s">Apresentação — simplificada (7 telas)</option>
-            <option value="apresentacao_c">Apresentação — completa (15 telas)</option>
-          </optgroup>
-          <optgroup label="Somente realizado (meses lançados)">
-            <option value="regimes" selected>Comparativo de regimes</option>
-            <option value="consolidado">Consolidado analítico (4 regimes)</option>
-            <option value="registros">Detalhamento dos registros</option>
-            <option value="reforma">Reforma Tributária</option>
-            <option value="cnpj">Resumo Estatístico</option>
-            <option value="produtos">Produtos vendidos × Reforma (IBS/CBS)</option>
-          </optgroup>
+        <div style="min-width:300px"><label>Relatório</label><select id="rl-tipo" onchange="rlRender()">
+          <option value="parecer_inc">Parecer de Incorporação — com IA</option>
+          <option value="conferencia">Conferência de cálculos — memória (Consolidada · Incorporadora · Incorporada)</option>
+          <option value="apresentacao_inc_s">Apresentação de Incorporação — simplificada (7 telas)</option>
+          <option value="apresentacao_inc_c">Apresentação de Incorporação — completa (15 telas)</option>
         </select></div>
+        <div style="min-width:300px;flex:1;display:none" id="inc-rl-ent-wrap"><label>Empresa</label><select id="inc-rl-ent" onchange="rlRender()"><option value="todas">— calcule uma simulação —</option></select></div>
         <div style="width:190px;display:none" id="rl-conf-modo-wrap"><label>Detalhe da conferência</label>
           <select id="rl-conf-modo" onchange="rlRender()">
             <option value="mes">Um mês (padrão)</option>
@@ -123,16 +113,12 @@
             <option value="completo">Completo — 12 meses</option>
           </select></div>
         <div style="width:110px;display:none" id="rl-conf-mes-wrap"><label>Mês</label><select id="rl-conf-mes" onchange="rlRender()"></select></div>
-        <div style="width:230px;display:none" id="rl-proj-wrap"><label>Projeção do ano <span class="hint" style="font-weight:400">(neste documento)</span></label>
-          <select id="rl-proj" onchange="rlProjTrocar(this.value)"></select></div>
-        <div style="width:230px;display:none" id="rl-anoref-wrap"><label>Ano de referência <span class="hint" style="font-weight:400">(neste documento)</span></label>
-          <select id="rl-anoref" onchange="rlAnoRefTrocar(this.value)"></select></div>
-        <div style="width:130px"><label>Periodicidade</label><select id="rl-per" onchange="rlRender()">
+        <div style="width:130px" id="rl-per-wrap"><label>Periodicidade</label><select id="rl-per" onchange="rlRender()">
           <option value="1">Mensal</option><option value="2">Bimestral</option>
           <option value="3" selected>Trimestral</option><option value="6">Semestral</option>
           <option value="12">Anual</option>
         </select></div>
-        <div style="align-self:flex-end"><button class="btn solid" onclick="window.print()" title="Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · Gráficos de segundo plano ligados. Com 'Todas — lado a lado', imprime uma empresa por página.">🖨️ Imprimir / PDF</button></div>
+        <div style="align-self:flex-end"><button class="btn solid" onclick="window.print()" title="Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · Gráficos de segundo plano ligados. Conferência com 'Todas — lado a lado' imprime uma empresa por página; apresentação em paisagem.">🖨️ Imprimir / PDF</button></div>
       </div>
       <div style="display:none;margin-top:8px" id="rl-conf-anos-wrap"><label>Anos no demonstrativo da Reforma <span class="hint" style="font-weight:400">(memória de cálculo ano a ano)</span></label>
         <div id="rl-conf-anos" style="display:flex;gap:2px;flex-wrap:wrap;align-items:center;padding:4px 0"></div></div>

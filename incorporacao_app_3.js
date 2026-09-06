@@ -172,42 +172,7 @@ function incTextosPadrao(R){
     recomendacao: `Considerando as premissas adotadas, os dados disponíveis e a regulamentação vigente na data-base, a incorporação ${D[menorCons].dif > 0.5 ? 'tem custo tributário e deve ser justificada por ganhos operacionais ou societários' : 'não tem custo tributário relevante e pode ser conduzida pelo regime ' + melhorHoje(menorCons)}.`,
   };
 }
-function incParecerRender(){
-  const R = INC.res, E = R.empresas, inc = E[0], C = R.consolidada.T, D = R.delta;
-  const TX = Object.assign(incTextosPadrao(R), (INC._ia && INC._ia.textos) || {});
-  const hoje = new Date().toLocaleDateString('pt-BR');
-  const statusIA = INC._ia ? `🤖 Textos gerados pela IA em ${INC._ia.quando}.` : (INC._iaErro ? `⚠️ A geração com IA falhou (${esc(INC._iaErro)}) — textos padrão do sistema.` : 'Textos padrão do sistema — clique em "Gerar textos com IA".');
-  let h = `<div class="card pp-tools"><div class="toolbar" style="align-items:center"><span class="hint">${statusIA}</span><span style="flex:1"></span>
-    <button class="btn" onclick="window.print()" title="Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · Gráficos de segundo plano ligados">🖨️ Imprimir / PDF</button>
-    <button class="btn solid" id="pp-ia-btn" onclick="incParecerIA()">🤖 Gerar textos com IA</button></div><div id="pp-regua"></div></div>`;
-  h += `<div class="pp-page pp-capa"><img class="pp-bg" src="capa.jpg" onerror="this.style.display='none';this.parentNode.classList.add('pp-semarte')">
-    <div class="pp-capa-cliente"><div class="pp-capa-lbl">Parecer de incorporação elaborado para</div>
-      <div class="pp-capa-nome">${esc(inc.nome)}</div>
-      <div class="pp-capa-cnpj">CNPJ ${fmtCNPJ(inc.cnpj)} · incorporação de ${esc(E.slice(1).map(e=>e.nome).join(', '))}</div>
-      <div class="pp-capa-data">Ano-base ${R.ano} · ${hoje}</div></div></div>`;
-  const sec = (n,t) => ({ html:`<h3 class="pp-sec">${n}. ${t}</h3>`, custo:2 });
-  const par = t => ({ html:`<p class="pp-p">${t}</p>`, custo: Math.max(2, Math.ceil(String(t).length/420)) });
-  const B = [];
-  B.push({ html:`<h3 class="pp-sec" style="margin-top:0">1. Introdução e objetivo</h3><div class="hint" style="margin-bottom:8px">${INC._ia?'Textos analíticos gerados com apoio de IA sobre os números calculados pelo sistema.':'Textos padrão do sistema — a IA não foi usada neste documento.'}${R.motorDefasado?' <b>Atenção:</b> calculado com cópia do motor diferente da versão em produção do Análise Tributária Pro.':''}</div>`, custo:4 }, par(TX.intro));
-  B.push(sec(2,'As empresas'), { thead:`<tr><th>Empresa</th><th>Regime (cadastro)</th><th class="num">Receita ${R.ano}</th><th class="num">Simples</th><th class="num">Presumido</th><th class="num">Real</th></tr>`, custoFixo:0,
-    linhas: E.map(e=>({ html:`<tr><td class="rot">${e.incorporadora?'★ ':''}${esc(e.nome)}<br><span class="hint">${fmtCNPJ(e.cnpj)}${e.P?' · '+e.P.nReais+' meses lançados, '+e.P.nProj+' estimados':''}</span></td><td>${esc(e.regime||'—')}</td><td class="num">${fmt(e.T.receita)}</td><td class="num">${fmt(e.T.simples)}</td><td class="num">${fmt(e.T.lp)}</td><td class="num">${fmt(e.T.lr)}</td></tr>`, custo:2 })) }, par(TX.empresas));
-  B.push(sec(3,'Premissas'), { html:`<ul class="pp-p" style="margin-left:18px">${R.premissas.concat(R.notas).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>`, custo: 2 + R.premissas.length + R.notas.length }, par(TX.premissas));
-  if (R.abatidos.length) B.push(sec(4,'Operações entre as empresas'), { thead:`<tr><th>Vendeu → comprou</th><th>Natureza</th><th class="num">Valor</th><th class="num">Abatido da receita</th><th>Fonte</th></tr>`, linhas: R.abatidos.map(a=>({ html:`<tr><td class="rot">${esc(a.deNome)} → ${esc(a.paraNome)}</td><td>${a.natureza}</td><td class="num">${fmt(a.valor)}</td><td class="num">${fmt(a.abatidoRec)}</td><td class="hint">${esc(a.fonte)}</td></tr>`, custo:1 })) });
-  else B.push(sec(4,'Operações entre as empresas'), par('Nenhuma operação entre as empresas foi abatida' + (R.premissas.length?'; se houver vendas ou serviços entre elas, o resultado consolidado está superestimado na receita e no crédito.':'.')));
-  B.push(sec(5,'Regimes de hoje — separadas × consolidada'), { thead:`<tr><th>Regime</th>${E.map(e=>`<th class="num">${esc(e.nome)}</th>`).join('')}<th class="num">Soma</th><th class="num">Consolidada</th><th class="num">Δ</th></tr>`,
-    linhas: [['Receita bruta','receita'],['Simples Nacional','simples'],['Lucro Presumido','lp'],['Lucro Real','lr']].map(([rot,k])=>({ html:`<tr><td class="rot">${rot}</td>${E.map(e=>`<td class="num">${fmt(e.T[k])}</td>`).join('')}<td class="num">${fmt(R.soma[k])}</td><td class="num"><b>${fmt(C[k])}</b></td><td class="num">${D[k]?fmt(D[k].dif):'—'}</td></tr>`, custo:1 })) }, par(TX.leitura));
-  const anos = Object.keys(D.anos).map(Number).sort();
-  if (anos.length) B.push(sec(6,'Reforma Tributária — ano a ano'), { thead:`<tr><th>Ano</th><th class="num">Por dentro (soma)</th><th class="num">Por dentro (consol.)</th><th class="num">Híbrido (soma)</th><th class="num">Híbrido (consol.)</th><th class="num">Regular (soma)</th><th class="num">Regular (consol.)</th></tr>`,
-    linhas: anos.map(a=>({ html:`<tr${a===R.anoRef?' style="background:#eaf2f8"':''}><td class="rot">${a}${a===R.anoRef?' ◀':''}</td>${['dentro','hib','regular'].map(k=>`<td class="num">${fmt(D.anos[a][k].soma)}</td><td class="num"><b>${fmt(D.anos[a][k].cons)}</b></td>`).join('')}</tr>`, custo:1 })) }, par(TX.reforma));
-  if (R.alertas.length) B.push(sec(7,'Alertas de fronteira'), { html:`<div class="pp-alerta"><ul style="margin:6px 0 0 18px">${R.alertas.map(a=>`<li>${esc(a.t)}</li>`).join('')}</ul></div>`, custo: 2 + R.alertas.length*2 });
-  B.push(sec(8,'Parecer'), par(TX.parecer1), par(TX.parecer2), { html:`<div class="pp-final"><b>Recomendação:</b> ${TX.recomendacao}</div>`, custo:4 });
-  const esc_ = PARAMS.escritorio || {};
-  B.push({ html:`<div class="hint" style="margin-top:14px">Simulação de Incorporação v${INC_VERSAO} · motor do Análise Tributária Pro (lacre ${R.motorLacre}) · calculado em ${new Date(R.calculadoEm).toLocaleString('pt-BR')}${INC.salvo?' · simulação nº '+INC.salvo.id:''}. Este documento não substitui a apuração oficial; os valores dependem das premissas declaradas e dos dados lançados nas análises de origem.</div>
-    <div style="margin-top:28px;border-top:1px solid #999;width:280px;padding-top:6px;font-size:12px">${esc(esc_.respNome||'Responsável técnico')}<br>${esc(esc_.respQualif||'Contador')}${esc_.respCRC?' · CRC '+esc(esc_.respCRC):''}<br>Artecon Artes Contábeis</div>`, custo:8 });
-  h += ppDocumento(B);
-  $id('rl-corpo').innerHTML = h;
-  setTimeout(() => { try { ppReguaRender(); } catch(e){ console.error('régua', e); } }, 350);
-}
+// v1.3.0: incParecerRender vive em src/incorporacao_app_5.js (parecer remodelado para incorporação)
 async function incParecerIA(){
   const R = INC.res; if (!R) return;
   const btn = $id('pp-ia-btn'); if (btn){ btn.disabled = true; btn.textContent = '⏳ Gerando…'; }
@@ -224,6 +189,17 @@ async function incParecerIA(){
       reformaAnoAAno: Object.keys(D.anos).sort().map(a=>({ ano:+a, porDentro:D.anos[a].dentro, hibrido:D.anos[a].hib, regimeRegular:D.anos[a].regular, lucroPresumido:D.anos[a].lp, lucroReal:D.anos[a].lr, porDentroBloqueado: !!(C.T.anos[a]&&C.T.anos[a].snBloqueado) })),
       abatimentosIntragrupo: R.abatidos.map(a=>({ de:a.deNome, para:a.paraNome, natureza:a.natureza, valor:a.valor, abatidoDaReceita:a.abatidoRec, fonte:a.fonte })),
       premissas: R.premissas, notas: R.notas, alertas: R.alertas.map(a=>a.t),
+      decisao: (() => { const CE = incCenarios(), c2 = CE.cen[1], sep = CE.cen[0]; return {
+        score: Math.round(c2.score.total), classificacao: c2.score.rot, incompleta: c2.score.incompleta, motivos: c2.score.motivos,
+        dimensoes: Object.fromEntries(Object.entries(c2.score.dims).map(([k,d])=>[k,{ nota:Math.round(d.nota), peso:d.peso, leitura:d.texto }])),
+        separadas: { tributos:sep.ind.trib, regime:sep.ind.regNome, cargaEfetiva:sep.ind.carga, reformaAcumulada:sep.ind.refAcum },
+        consolidada: { tributos:c2.ind.trib, regime:c2.ind.regNome, cargaEfetiva:c2.ind.carga, reformaAcumulada:c2.ind.refAcum, regimesPermitidos:c2.ind.perm },
+        resultadoLucroReal: c2.ind.resLR != null ? { consolidada:c2.ind.resLR, margem:c2.ind.margemLR, separadas: CE.iso.reduce((s,e)=>s+(e.ind.resLR||0),0) } : null,
+        porTributo: incPorTributo(R.consolidada.R, c2.ind.reg).map(([t,v],i)=>({ tributo:t, consolidada:v, separadas: E.reduce((s,e)=>s+incPorTributo(e.R, c2.ind.reg)[i][1],0) })),
+        reformaAnoAAno: c2.ind.refAnos.map((x,i)=>({ ano:x.ano, separadas:sep.ind.refAnos[i].v, consolidada:x.v, economiaOuAcrescimo: sep.ind.refAnos[i].v - x.v })),
+        cenarios: CE.rank.map(c=>({ cenario:c.nome, score:Math.round(c.score.total), classificacao:c.score.rot, tributos:c.ind.trib, regime:c.ind.regNome, reformaAcumulada:c.ind.refAcum })),
+        patrimonioEDivida: 'SEM DADOS — não avaliados', leituraSinal: 'economiaOuAcrescimo positivo = economia; negativo = acréscimo tributário',
+      }; })(),
       regrasDeTexto: [
         'Use apenas os números do JSON; nunca calcule, some ou estime.',
         'delta positivo é CUSTO da incorporação; negativo é ECONOMIA. Nunca inverta o sinal.',
