@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.86.1 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.86\.1';/.test(html) && html.includes('<b>v7.86.1</b>') && html.includes('<b>v7.86.0</b>') && html.includes('<b>v7.85.0</b>')
+    chk('v7.86.2 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.86\.2';/.test(html) && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>') && html.includes('<b>v7.86.0</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -4365,8 +4365,39 @@ console.log('\n■ Integridade da interface');
       || /escreva "no ano de referência" para esse número sem conferir/.test(html));
   }
 
+
+  // ═══ v7.86.2 — aba Reforma × cenários: ISS retido na dedução segue a MESMA opção ═══
+  console.log('\n■ v7.86.2 — ISS retido: aba Reforma fecha com o parecer');
+  {
+    chk('v7.86.2 · a aba lê totais.dedIssRetido, não soma o retido incondicionalmente',
+      /_T && _T\.dedIssRetido === true \? \(\+M\.issRetLPLR\|\|0\) : 0/.test(html)
+      && !/reduce\(\(sm,M\)=>sm\+\(\+\(\(M\.lp\|\|\{\}\)\.iss\)\|\|0\)\+\(\+M\.issRetLPLR\|\|0\),0\)/.test(html));
+    const _bk = { a: vm.runInContext('AN', ctx), r: vm.runInContext('RF', ctx) };
+    ctx.__bk = _bk;
+    for (const op of [false, true]) {
+      // 100.000 retido + 12.500 sem retenção, ISS 2% (padrão Lenita: retido não deduz)
+      vm.runInContext(`
+        AN = anNovo('11222333000181', 2026); AN.cfg.iss = 0.02; ${op ? 'AN.cfg.dedIssRetido = true;' : ''}
+        for (let m=0;m<12;m++){ AN.receitas.a3_retiss[m] = 100000; AN.receitas.a3_semret[m] = 12500; }
+        AN._res = calcular(AN, null, {});
+        RF = rfNovo('11222333000181', 2026); RF.receita = 12*112500;
+        rfCalcular();
+        __ab = RF._res.linhas.find(l=>l.ano===2027).dedIss;
+        __ce = calcCenariosReforma(AN._res, RF).REF.find(l=>l.ano===2027).dedIss;
+        __lp = AN._res.totais.lp ? (AN._res.meses.reduce((s,x)=>s+(+x.lp.iss||0),0)) : 0;
+        __ret = AN._res.meses.reduce((s,x)=>s+(+x.issRetLPLR||0),0);
+      `, ctx);
+      const ab = vm.runInContext('__ab', ctx), ce = vm.runInContext('__ce', ctx),
+            lp = vm.runInContext('__lp', ctx), ret = vm.runInContext('__ret', ctx);
+      chk(`v7.86.2 · dedIssRetido=${op} — aba (${ab.toFixed(2)}) = cenários (${ce.toFixed(2)}) em 2027`, Math.abs(ab-ce) < 0.005);
+      chk(`v7.86.2 · dedIssRetido=${op} — dedução = ISS devido ${op?'+ retido':'sem o retido'} (${lp.toFixed(2)}${op?' + '+ret.toFixed(2):''})`,
+        Math.abs(ab - (lp + (op ? ret : 0))) < 0.005, 'aba='+ab.toFixed(2));
+      if (!op) chk('v7.86.2 · padrão: 12.500 × 12 × 2% = 3.000,00 (e não 112.500 × 12 × 2% = 27.000,00)',
+        Math.abs(ab - 3000) < 0.005 && Math.abs(ret - 24000) < 0.005, 'aba='+ab.toFixed(2)+' ret='+ret.toFixed(2));
+    }
+    vm.runInContext('AN = __bk.a; RF = __bk.r;', ctx);
+  }
+
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
   process.exit(FALHAS.length ? 1 : 0);
 })();
-      - name: Suíte da incorporação
-        run: node tests/run_incorporacao.js
