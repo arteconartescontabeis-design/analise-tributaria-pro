@@ -1785,8 +1785,8 @@ console.log('\n■ Integridade da interface');
       && /const base = RR\.meses\.slice/.test(html));
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
-    chk('v7.86.2 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.86\.2';/.test(html) && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>') && html.includes('<b>v7.86.0</b>')
+    chk('v7.87.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
+      /const APP_VERSAO = '7\.87\.0';/.test(html) && html.includes('<b>v7.87.0</b>') && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -4396,6 +4396,102 @@ console.log('\n■ Integridade da interface');
         Math.abs(ab - 3000) < 0.005 && Math.abs(ret - 24000) < 0.005, 'aba='+ab.toFixed(2)+' ret='+ret.toFixed(2));
     }
     vm.runInContext('AN = __bk.a; RF = __bk.r;', ctx);
+  }
+
+  // ═══ v7.87.0 — sublimite: tabela por ano, RBAA do PGDAS-D, filiais e alerta bloqueante (§13) ═══
+  console.log('\n■ v7.87.0 — sublimite: tabela por ano, filiais, alerta §13');
+  {
+    const z12 = () => Array(12).fill(0);
+    const nova = (cnpj) => { const a = vm.runInContext('anNovo', ctx)(cnpj, 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12(); return a; };
+    const subVig = vm.runInContext('sublimiteVig', ctx), subDe = vm.runInContext('sublimiteDe', ctx),
+          subCrit = vm.runInContext('subCritico', ctx), TAB = vm.runInContext('SUBLIMITE_VIG', ctx);
+    // (1) tabela parametrizável
+    chk('v7.87.0 · SUBLIMITE_VIG tem os campos exigidos em toda linha',
+      Array.isArray(TAB) && TAB.length >= 2 && TAB.every(x => ['ano_calendario','limite_simples','sublimite','tributos_afetados','vigencia_inicio','vigencia_fim','fundamento_legal'].every(k => k in x)));
+    chk('v7.87.0 · 2026: sublimite 3,6 mi, tributos ICMS/ISS, com art. 13-A no fundamento',
+      subVig(2026).sublimite === 3600000 && subVig(2026).tributos_afetados.join('/') === 'ICMS/ISS' && /13-A/.test(subVig(2026).fundamento_legal));
+    chk('v7.87.0 · 2027 em diante: linha própria com reflexo no IBS (Res. CGSN 190/2026)',
+      subVig(2027).tributos_afetados.includes('IBS') && subVig(2030) === subVig(2027) && subVig(2026) !== subVig(2027));
+    chk('v7.87.0 · override por empresa prevalece; sem ele vale a tabela do ano',
+      subDe({ sublimiteValor: 3000000 }, 2026) === 3000000 && subDe({}, 2026) === 3600000 && subDe(null, 2027) === 3600000);
+    chk('v7.87.0 · nenhum "(+cfg.sublimiteValor || 3600000)" literal sobrou no código',
+      !html.includes('(+cfg.sublimiteValor || 3600000)'));
+    // (2) motor: mesmos números sem os campos novos; consolidação com filiais
+    const base = () => { const a = nova('77777777000177'); a.cfg.rbt12Lanc = Array(12).fill(200000);
+      a.cfg.icmsV = .17; a.cfg.icmsC = .17; a.cfg.iss = .03;
+      a.receitas.a1_semst = Array(12).fill(200000); a.folha.salarios = Array(12).fill(15000); return a; };
+    const r0 = g.calcular(base(), clone(AD), {...FD});
+    chk('v7.87.0 · o resultado carrega a linha da tabela usada (totais.sublimiteVig)',
+      r0.sublimiteVig && r0.sublimiteVig.valorUsado === 3600000 && r0.sublimiteVig.anoAnalisado === 2026
+      && r0.totais.sublimiteVig && r0.totais.sublimiteVig.valorProp === 3600000 && r0.outrosEstab === null);
+    { const a = base(); a.cfg.rbaa = 3000000; const r = g.calcular(a, clone(AD), {...FD});
+      chk('v7.87.0 · RBAA 3,0 mi sem filiais: sem impedimento (igual à v7.70.0)', !r.impedimento && r.meses.every(M => !M.impedido)); }
+    { const a = base(); a.cfg.rbaa = 3000000; a.cfg.rbaaOutros = 700000; const r = g.calcular(a, clone(AD), {...FD});
+      chk('v7.87.0 · RBAA 3,0 mi + filiais 0,7 mi = 3,7 mi: impedida desde JANEIRO pela pessoa jurídica',
+        r.impedimento && r.impedimento.base === 'ano-anterior' && r.impedimento.desde === 0
+        && Math.abs(r.impedimento.rbaaConsolidada - 3700000) < 0.01 && r.meses.every(M => M.impedido));
+      chk('v7.87.0 · e o motivo cita os arts. 13-A, 19 e 20 e a Res. 140', /13-A/.test(r.impedimento.motivo) && /art\. 9º|arts\. 9º/.test(r.impedimento.motivo)); }
+    { const a = base(); a.cfg.rbaaOutros = 3700000; const r = g.calcular(a, clone(AD), {...FD});
+      chk('v7.87.0 · filiais sem a RBAA da própria análise: dado incompleto, NÃO impede (nada vira estimativa)', !r.impedimento); }
+    { const a = base(); a.cfg.rbaOutros = 2500000; const r = g.calcular(a, clone(AD), {...FD});
+      // 2,4 mi próprios + 2,5 mi rateados = 408.333,33/mês → cruza 4,32 mi (sublimite+20%) no 11º mês → impedida a partir do 12º
+      chk('v7.87.0 · RBA do ano corrente consolidada: cruza sublimite+20% em nov e impede a partir de dez',
+        r.impedimento && r.impedimento.base === 'realizado' && r.impedimento.desde === 11
+        && r.meses[10].impedido === false && r.meses[11].impedido === true,
+        'desde=' + (r.impedimento && r.impedimento.desde));
+      chk('v7.87.0 · faixa e alíquota NÃO mudam com filiais (RBT12 intocado)',
+        r.meses.every((M,i) => Math.abs(M.rbt12 - r0.meses[i].rbt12) < 0.01 && M.faixa === r0.meses[i].faixa)); }
+    { const a = base(); a.cfg.rbaOutros = 2500000; const r = g.calcular(a, clone(AD), {...FD});
+      const mon = vm.runInContext('monitorSublimite', ctx)(r, a.cfg);
+      chk('v7.87.0 · o monitor de sublimite lê a mesma RBA consolidada (4,9 mi em dezembro)',
+        mon && Math.abs(mon.rbaInt[11] - 4900000) < 1 && mon.rbaOutros === 2500000 && mon.impedimento && mon.impedimento.quando === 'mes-seguinte'); }
+    { const a = base(); a.cfg.rbaOutros = 2500000; const r = g.calcular(a, clone(AD), {...FD});
+      const el = vm.runInContext('snElegibilidade', ctx)(r, a.cfg);
+      chk('v7.87.0 · a elegibilidade também soma as filiais (4,9 mi > 4,8 mi → transição)', el && el.estado !== 'elegivel' && Math.abs(el.acumAno - 4900000) < 1, el && el.estado); }
+    // (3) alerta de auditoria §13
+    { const a = base(); a.cfg.rbt12Lanc = Array(12).fill(310000);   // 3,72 mi (acima do sublimite, abaixo do limite)
+      const r = g.calcular(a, clone(AD), {...FD});
+      const c = subCrit(r, a.cfg, 2026);
+      chk('v7.87.0 · SUB-02: RBAA ausente com os 12 meses acima do sublimite é ERRO CRÍTICO', c && c.codigo === 'SUB-02' && /13-A/.test(c.texto));
+      a.cfg.rbaa = 3500000; const r2 = g.calcular(a, clone(AD), {...FD});
+      chk('v7.87.0 · informada a RBAA abaixo do sublimite, o erro some', subCrit(r2, a.cfg, 2026) === null);
+      a.cfg.rbaa = 3700000; const r3 = g.calcular(a, clone(AD), {...FD});
+      chk('v7.87.0 · RBAA acima com o motor impedindo todos os meses: sem erro (ICMS/ISS já fora da guia)', subCrit(r3, a.cfg, 2026) === null && r3.meses.every(M => M.impedido));
+      a.cfg.sublimite = 'off'; const r4 = g.calcular(a, clone(AD), {...FD});
+      chk('v7.87.0 · SUB-01: RBAA acima do sublimite com o tratamento DESLIGADO (ICMS/ISS na guia) é ERRO CRÍTICO', (subCrit(r4, a.cfg, 2026)||{}).codigo === 'SUB-01'); }
+    { const a = base(); a.cfg.rbt12Lanc = Array(12).fill(500000); a.receitas.a1_semst = Array(12).fill(583333.33);
+      const r = g.calcular(a, clone(AD), {...FD});
+      chk('v7.87.0 · empresa acima do LIMITE (inelegível) não é caso de sublimite: sem erro crítico', subCrit(r, a.cfg, 2026) === null); }
+    // (4) bloqueio da emissão
+    { const bi = nova('78787878000178'); bi.cfg.rbt12Lanc = Array(12).fill(310000); bi.cfg.icmsV=.17; bi.cfg.icmsC=.17;
+      bi.receitas.a1_semst = Array(12).fill(250000); bi.folha.salarios = Array(12).fill(15000);
+      const rbi = g.calcular(clone(bi), clone(AD), {...FD});
+      ctx.__bi = bi; ctx.__rbi = rbi;
+      vm.runInContext('RL.dados = __bi; RL.res = __rbi; AN = __bi; AN._res = __rbi;', ctx);
+      const render = (tipo) => { ctx.document.getElementById('rl-tipo').value = tipo; ctx.document.getElementById('rl-per').value = '12';
+        { const _m = ctx.document.getElementById('rl-conf-modo'); if (_m) _m.value = 'anual'; }
+        ctx.document.getElementById('rl-corpo').innerHTML = ''; let erro = null;
+        try { vm.runInContext('rlRender()', ctx); } catch(e){ erro = e.message; }
+        return { erro, txt: (ctx.document.getElementById('rl-corpo').innerHTML || '').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ') }; };
+      const p = render('parecer');
+      chk('v7.87.0 · parecer BLOQUEADO com erro crítico do sublimite', p.erro === null && /Emissão bloqueada/.test(p.txt) && /ERRO CRÍTICO — SUBLIMITE/.test(p.txt), p.erro || '');
+      const cf = render('conferencia');
+      chk('v7.87.0 · a Conferência segue aberta e mostra o mesmo erro no quadro do sublimite', cf.erro === null && /ERRO CRÍTICO — SUBLIMITE/.test(cf.txt) && /Limite e sublimite/.test(cf.txt), cf.erro || '');
+      chk('v7.87.0 · e declara a linha da tabela usada (ano, tributos, fundamento)', /tabela do ano-calendário 2026/.test(cf.txt) && /tributos: ICMS, ISS/.test(cf.txt));
+      vm.runInContext('AN.cfg.rbaa = 3500000; AN._res = calcular(AN); RL.res = AN._res;', ctx);
+      const p2 = render('parecer');
+      chk('v7.87.0 · informada a RBAA, o parecer volta a ser emitido', p2.erro === null && !/Emissão bloqueada/.test(p2.txt) && p2.txt.length > 2000, p2.erro || ''); }
+    // (5) importador e textos
+    chk('v7.87.0 · o importador do PGDAS-D lê a linha da RBAA (interno | externo | total)',
+      /ano-calend\[áa\]rio anterior\\s\*\\\(RBAA\\\)/.test(html) && /rbaaInt, rbaaExt/.test(html));
+    chk('v7.87.0 · e aplica SEMPRE sobrescrevendo, com origem e PA gravados',
+      /AN\.cfg\.rbaaOrigem = 'P'; AN\.cfg\.rbaaPA = _pa;/.test(html) && /substitui \$\{fmtR\(_antes\)\} informado antes/.test(html));
+    chk('v7.87.0 · a aba RBT12 tem os campos de outros estabelecimentos', /id="cf-rbaaoutros"/.test(html) && /id="cf-rbaoutros"/.test(html) && /rbaaOutros: vNum\('cf-rbaaoutros'/.test(html));
+    { const src = vm.runInContext('subMonTexto.toString()', ctx);
+      chk('v7.87.0 · o monitor traz o quadro "SUBLIMITE DO SIMPLES NACIONAL ULTRAPASSADO" e não diz mais "ainda não modela"',
+        /SUBLIMITE DO SIMPLES NACIONAL ULTRAPASSADO/.test(src) && !/ainda não modela/.test(src) && /13-A/.test(src)); }
+    chk('v7.87.0 · o payload da IA leva o sublimite vigente e o fundamento', /sublimiteVigente: D\.subVig/.test(html) && /fundamentoSublimite: SUB_FUNDAMENTO/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
