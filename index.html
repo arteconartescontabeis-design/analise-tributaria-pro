@@ -786,6 +786,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.89.0</b></td><td>11/09/2026</td><td><b>📋 Quatro pendências antigas fechadas (decisões de 11/09/2026): data de abertura e RBT12p lidas do PGDAS-D, crédito de PIS/COFINS sobre despesas com tela, Tema 69 nota a nota e regime de caixa encerrado.</b> <b>(1) Início de atividade lido do PGDAS-D.</b> A proporcionalização da RBT12 de empresa com menos de 12 meses (Res. CGSN 140/2018, art. 22, §§ 2º e 3º — 1º mês: receita × 12; 2º ao 12º: soma dos anteriores ÷ n × 12) existe desde a v7.52.0, mas dependia do campo "Início de atividade" digitado, e empresa nova aparecia na faixa errada quando ele ficava em branco. A linha <code>Data de abertura no CNPJ: DD/MM/AAAA</code> do extrato (rótulo confirmado na BUSCO LOG, PA 07/2026) passa a preencher o campo <b>sempre</b>, como a RBAA (decisão de 10/09), com selo <code>P · PGDAS-D mm/aaaa</code> ao lado do campo; editar à mão remove o selo. As linhas <code>RBT12</code> e <code>RBT12p</code> declaradas também são lidas, mês a mês, e a conferência passa a imprimir a <b>RBT12p declarada contra a do motor</b>, acusando divergência — régua que só se prova no primeiro extrato de empresa nova, já que em empresa madura a linha vem em branco. O <code>Regime de Apuração</code> (Competência/Caixa) é lido apenas como informação: o regime de caixa se encerra em 2026 e, por decisão de 11/09, não há tratamento. <b>(4) Crédito de PIS/COFINS sobre despesas no Lucro Real — a tela.</b> <code>cfg.credLRpct</code> existia só no JSON desde a v7.42.2; entra na Configuração da empresa, no bloco do Lucro Real, um percentual creditável por categoria (administrativas, com vendas, fiscais, financeiras, outras), com a base legal do art. 3º das Leis 10.637/2002 e 10.833/2003 e o padrão zero preservado: a chave só existe quando algum percentual é informado, e passa a ser <b>herdada</b> entre anos como parâmetro da empresa. <b>(3) Tema 69 e Lei 14.592/2023 nota a nota.</b> A exclusão do ICMS da base de PIS/COFINS (STF, RE 574.706) e a exclusão do ICMS das aquisições da base de crédito eram sempre <b>estimativas</b> por alíquota. O importador de XML passa a ler o <code>vICMS</code> de cada NF-e (o <code>vICMSST</code> fica fora, é do substituído) e, quando o lote é lançado num bloco com destaque próprio (revenda sem ST, com redução, transporte), alimenta <code>icms.tema69</code> nos meses cobertos, com origem <code>X</code> — monofásico e ST não alimentam. A aba ICMS·IPI ganha as duas linhas informáveis (<code>icms.tema69</code> e <code>icms.lei14592</code>); em branco, a estimativa continua, e a conferência declara em cada mês se o valor é <b>nota a nota</b> ou <b>estimativa</b>. As compras por XML de entrada não são importadas pelo app, por isso a Lei 14.592 fica informável (do SPED ou do Totais ICMS) e não automática. <b>Achado incidental corrigido:</b> no funil da Configuração, <code>_cfg</code> é a mesma referência de <code>AN.cfg</code>, então a comparação "mudou? tira o selo P" da RBAA (v7.87.0) nunca acusava mudança — editar a RBAA à mão mantinha o selo. Passa a comparar com um retrato tirado antes do funil, e vale para a RBAA e para o início de atividade. Lacre <code>c503dbd2</code> <b>íntegro</b>: os casos-gabarito não trazem os campos novos, e sem eles o motor produz os mesmos números. Suíte: bloco 5aa.</td></tr>
                     <tr><td><b>v7.88.0</b></td><td>11/09/2026</td><td><b>⚖️ Relatório consolidado de pontos críticos (11/09/2026): os seis pontos, com LACRE RE-SELADO <code>2e1139e9</code> → <code>c503dbd2</code>.</b> Dos seis achados, quatro eram defeitos reais confirmados no código; os outros dois, rotulagem e eleição. <b>P0-01 — transição do ICMS/ISS por fora.</b> O ICMS e o ISS apurados fora da guia no período de impedimento (v7.58.0) entravam no híbrido — e no "por dentro", via total do Simples — pelo valor <b>integral</b> até 2033. Fora do Simples eles se sujeitam às normas gerais (Res. CGSN 140/2018, art. 12, § 8º), e as normas gerais são a EC 132/2023: ADCT, arts. 128 e 129 — 9/10 em 2029, 8/10 em 2030, 7/10 em 2031, 6/10 em 2032, extinção em 2033. Passam a seguir o mesmo <code>remIcmsIss</code> de todo o resto da conta (100/100/90/80/70/60/0%). No híbrido o IBS que os substitui já estava no IBS/CBS por fora; no "por dentro" o IBS do período impedido <b>não cabe na guia</b> (o sublimite alcança o IBS desde 2027, Res. CGSN 190/2026) e entra por fora, sobre a base impedida, pela alíquota de IBS do ano com a mesma intensidade de crédito da linha — premissa declarada na memória. <b>P0-02 — estado de impedimento por exercício.</b> Os anos projetados herdavam, por construção, o estado do ano-base (RBAA de dois anos antes). Agora, para cada ano seguinte, o motor é <b>rodado de novo</b> com RBAA = receita interna do exercício anterior (a mesma base que já decide a elegibilidade), contra o sublimite da tabela daquele ano: quem estava impedido em janeiro do ano-base mas fechou o ano abaixo do sublimite <b>deixa de estar impedido</b> em 2027; quem cruzou o sublimite em setembro fica impedido <b>desde 1º/01</b> do ano seguinte (LC 123/2006, art. 20, § 1º). Nenhuma flag é copiada; a memória da conferência imprime a RBAA usada, o sublimite e o resultado, em <code>estadoSeguinte</code>. Linha antiga sem a entrada (snapshot) mantém o comportamento anterior e declara isso. <b>P0-03 — mês em branco não é zero.</b> A planilha modelo marcava origem <code>L</code> nos 12 meses mesmo com célula vazia, e o Faturamento (modo substituir) marcava <code>F</code> nos 12 mesmo quando o PDF listava seis: o ano ficava "coberto", <code>ultimoMesCoberto</code> dizia dezembro e a <b>projeção deixava de rodar</b> — exatamente o que o teste 10/10 viu. Três estados agora: célula vazia → valor 0 e <b>origem nula</b> (não informado); célula com 0 → informado zero; célula com valor. Só os meses listados no PDF recebem <code>F</code>. PGDAS-D, XML, balancete e Demonstrativo já estavam certos. <b>P1-01 — Lucro Real sem CMV.</b> Com receita de comércio/indústria e nenhum custo de mercadoria lançado, o motor passa a declarar <code>lrIncompleto</code> (DL 1.598/1977, art. 14; RIR/2018, art. 301): o Real aparece riscado como <b>SIMULAÇÃO INCOMPLETA</b> e fica <b>fora da eleição</b> do melhor ou do pior regime em todos os quadros — veredito, comparativo, dashboard, carteira, parecer, apresentação, cenários da Reforma (<code>regular</code> = Presumido) — e o resumo gravado leva a marca. <b>P1-02 — estimativa declarada.</b> Onde o ICMS/ISS por fora aparece (monitor, conferência, comparativo), agora consta que é estimativa pelas alíquotas gerais da empresa, sem benefícios, redução de base, diferimento, ST específica, DIFAL nem regras do item da LC 116. <b>P2-01 — "por dentro" hipotético.</b> A partir de 2027, ano com impedimento marca o cenário "por dentro" como <b>HIPOTÉTICO — NÃO ELEGÍVEL NESTA SIMULAÇÃO</b>, riscado e fora do ranking; a escolha real fica entre híbrido e sair do Simples. <b>Eleição única.</b> <code>cenRank</code> (três cenários) e <code>regimesAtuais</code> (Simples × LP × LR) passam a ser o único lugar que decide quem concorre — veredito, dashboard, comparativo, relatório Reforma, parecer (jornada, tabela anual, acumulado, textos e payload da IA) e apresentação leem dali, nenhum <code>Math.min</code> próprio sobrou. <b>Lacre:</b> os casos 1 e 2 seguem idênticos ao centavo; o caso 3 (único com impedimento) muda em 2027-2033 de propósito, e o "por dentro" passa a ser selado por linha (antes o selo repetia o híbrido no lugar dele). Suíte: bloco 5z com as provas dos seis pontos.</td></tr>
                     <tr><td><b>v7.87.0</b></td><td>10/09/2026</td><td><b>⚖️ Sublimite do Simples Nacional — o que faltava da especificação: RBAA lida do PGDAS-D, tabela por ano, alerta bloqueante e matriz + filiais.</b> Conferência da especificação "Implementação obrigatória — sublimite para ICMS e ISS" contra o código: dos 15 itens, 8 já estavam cobertos (RBAA com campo próprio, RBA mensal com o efeito de 20%, RBAA/RBA/RBT12 distintos, exportação segregada, ICMS/ISS fora da guia pelas alíquotas da empresa, três estados limite × sublimite). Esta versão fecha os quatro que não estavam. <b>(1) RBAA lida do PGDAS-D.</b> A linha "Receita bruta acumulada no ano-calendário anterior (RBAA)" do extrato — mercado interno e externo — passa a preencher a aba RBT12 <b>sempre</b>, sobrescrevendo o valor anterior (decisão de 10/09/2026), com origem marcada e o PA de onde veio; sem a linha nos PDFs, nada muda e o aplicativo avisa. É o caso do Guincho 24hrs: empresa impedida aparecia na 5ª faixa porque o campo estava em branco. <b>(2) Tabela <code>SUBLIMITE_VIG</code> por ano-calendário</b> — <code>ano_calendario</code>, <code>limite_simples</code>, <code>sublimite</code>, <code>tributos_afetados</code>, <code>vigencia_inicio</code>, <code>vigencia_fim</code> e <code>fundamento_legal</code>. O motor lê a linha do ano <b>analisado</b> e não transporta regra entre exercícios; a partir de 2027 a linha declara o reflexo no IBS (Res. CGSN 190/2026). O valor próprio da Configuração segue como override por empresa. Os oito pontos do código que traziam <code>3600000</code> literal passaram a ler a tabela. <b>(3) Alerta de auditoria (§13).</b> RBAA acima do sublimite com o tratamento desligado (ICMS/ISS ainda na guia), ou RBAA <b>não informada</b> com os 12 meses anteriores acima do sublimite, é <b>ERRO CRÍTICO</b> — na Análise, na Conferência e, por decisão, <b>bloqueia a emissão</b> do parecer e das apresentações até ser corrigido; a Conferência segue aberta para diagnóstico. <b>(4) Matriz e filiais.</b> Limite e sublimite são da pessoa jurídica (LC 123/2006, art. 3º c/c art. 13-A): a aba RBT12 ganhou "outros estabelecimentos" — ano anterior e ano corrente — somados à RBAA e à RBA (ano corrente rateado mês a mês na proporção da receita interna lançada, premissa declarada). Não alteram faixa nem alíquota. <b>(5) Fundamentação.</b> Os textos do impedimento passam a citar o art. 13-A, os arts. 19 e 20, §§ 1º e 1º-A, da LC 123/2006 e os arts. 9º, 12 e 24 da Res. CGSN 140/2018, com o quadro em destaque "SUBLIMITE DO SIMPLES NACIONAL ULTRAPASSADO" no monitor; o quadro de limite e sublimite da Conferência declara a linha da tabela usada. <b>Texto vencido corrigido:</b> o monitor ainda dizia que o impedimento pelo ano anterior era "cenário que este cálculo ainda não modela" — superado desde a v7.70.0. <b>Fica declarado como não modelado:</b> a apuração estadual e municipal completa por fora (benefícios, redução de base, diferimento, DIFAL, particularidades do item da LC 116). Lacre <code>2e1139e9</code> <b>íntegro</b> — sem os campos novos o motor produz os mesmos números ao centavo, e 2026 segue com R$ 3,6 milhões.</td></tr>
                     <tr><td><b>v7.86.2</b></td><td>07/09/2026</td><td><b>🐞 Aba Reforma: o ISS retido pelo tomador saía da base do IBS/CBS só nessa tela.</b> A dedução da aba somava o ISS <b>retido</b> incondicionalmente (resíduo da v7.50.0), enquanto os cenários do parecer, a conferência e o relatório Reforma só o somam quando a empresa opta por "Deduz" na Configuração (v7.54.0, decisão 8.9; v7.69.0, opção por empresa). Empresa com serviço retido e não retido via a aba deduzir a receita inteira × alíquota — na Clínica Lenita, R$ 2.089,08 — e o parecer deduzir apenas o ISS efetivamente devido, R$ 231,03. A aba passa a ler a <b>mesma opção</b> que viaja no resultado do motor (<code>totais.dedIssRetido</code>) e ganha a nota que declara se o ISS retido está dentro ou fora da dedução. Parecer, conferência e relatório <b>não mudam</b> — já estavam certos; a aba passa a fechar com eles ao centavo. Motor e lacre <code>2e1139e9</code> intocados; suíte com teste de identidade aba × cenários nas duas opções.</td></tr>
@@ -3747,7 +3748,11 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // ICMS (LC 87/96, art. 2º, II e III) e o imposto está destacado no preço — logo o Tema 69
     // (STF, RE 574.706) alcança essas receitas do mesmo modo. Ficavam de fora, e por isso a base
     // de PIS/COFINS do Presumido e do Real saía superestimada em quem tem transporte.
-    const icmsDestacadoPC = (R.a1_semst[m]+R.a1_red[m]+R.a2_semst[m]+R.a2_red[m])*cfg.icmsV
+    // v7.89.0 · Tema 69 NOTA A NOTA: com o ICMS destacado das saídas informado (XML das notas ou
+    // aba ICMS·IPI), é ele que sai da base — a estimativa por alíquota fica só como fallback.
+    const _t69Inf = inp.icms?.tema69?.[m] != null;
+    const icmsDestacadoPC = _t69Inf ? +inp.icms.tema69[m]
+                          : (R.a1_semst[m]+R.a1_red[m]+R.a2_semst[m]+R.a2_red[m])*cfg.icmsV
                           + R.comtransp[m]*icmsVTransp;
     const _baseLPliq = Math.max(0, basePisCofLP - icmsDestacadoPC);   // exclusão nunca negativa a base
     const lp_pis = _baseLPliq*.0065;
@@ -3771,7 +3776,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // v7.18.3 · Lei 14.592/2023: o ICMS incidente na AQUISIÇÃO fica fora do crédito de PIS/COFINS
     // no não cumulativo — as compras reduzem a base LÍQUIDAS do ICMS (estimado pelo % ICMS compras,
     // o mesmo usado no crédito de ICMS; a conferência de cálculos expõe a parcela).
-    const icmsComprasPC = (C.semst[m]+C.comst[m])*cfg.icmsC;
+    // v7.89.0 · Lei 14.592/2023 NOTA A NOTA: ICMS das aquisições para revenda informado vence a estimativa
+    const _l14Inf = inp.icms?.lei14592?.[m] != null;
+    const icmsComprasPC = _l14Inf ? +inp.icms.lei14592[m] : (C.semst[m]+C.comst[m])*cfg.icmsC;
     const basePisCofLR = R.a1_semst[m]+R.a1_red[m]+R.a1_comst[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_comst[m]
       + R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]+R.a4_retiss[m]
       + (fatorR<.28 ? R.a5r[m] : 0) + (fatorR>=.28 ? R.a5r[m] : 0)
@@ -3830,6 +3837,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       somaAntProp: _somaAntProp,
       dasExp, faixaExp: fxE+1, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasAx, trv190, dasTrib: dt, recCom, recServ, recTransp,
       fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, credPresTransp, icmsVTransp, issRetLPLR, ipiPagar, iss, custos, despTotal, icmsDestacadoPC, icmsComprasPC,
+      tema69Informado: _t69Inf, lei14592Informado: _l14Inf,   // v7.89.0 · origem do valor (nota a nota × estimativa)
       // v7.23.0: ISS retido deixa de ser RECOMPOSTO no total (recolhido na fonte pelo tomador,
       // LC 123, art. 21, §4º — não é desembolso em guia da empresa); campo mantido como informativo.
       // v7.36.0 · DAS DA GUIA: não havendo impedimento (RBA/RBAA abaixo do sublimite), o ICMS/ISS
@@ -4452,7 +4460,7 @@ function anNovo(cnpj, ano) {
     folha: Object.fromEntries(['prolabore','salarios','baseFgts','prov13','provFerias'].map(k=>[k,z12()])),
     folha13: { prolabore13:0, salarios13:0, baseFgts13:0 },
     compras: Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred'].map(k=>[k,z12()])),
-    icms: { cred:Array(12).fill(null), deb:Array(12).fill(null) },
+    icms: { cred:Array(12).fill(null), deb:Array(12).fill(null), tema69:Array(12).fill(null), lei14592:Array(12).fill(null) },   // v7.89.0 · nota a nota
     ipi:  { cred:Array(12).fill(null), deb:Array(12).fill(null) },
     despesas: Object.fromEntries([...DESP_KEYS, ...CRED_LR_KEYS].map(k=>[k,z12()])),
     origem: {} };                                          // v7.28.0: trilha de origem por campo×mês
@@ -4496,6 +4504,8 @@ const AN_SECOES = [
   { id:'impostos', nome:'🧾 ICMS · IPI', linhas:[
     ['ICMS — preencha só para substituir o valor apurado; em branco, o app calcula pelas bases × % da Config'],
     ['icms.cred','Crédito de ICMS (substituir)','nul'], ['icms.deb','Débito de ICMS (substituir)','nul'],
+    ['PIS/COFINS no Presumido e no Real — nota a nota (v7.89.0). Em branco, o app estima: (revenda sem ST + com redução) × % ICMS de vendas; compras p/ revenda × % ICMS de compras'],
+    ['icms.tema69','ICMS destacado nas saídas — Tema 69 (nota a nota)','nul'], ['icms.lei14592','ICMS nas aquisições p/ revenda — Lei 14.592/2023 (nota a nota)','nul'],
     ['IPI — preencha só para substituir o valor apurado'],
     ['ipi.cred','Crédito de IPI (substituir)','nul'], ['ipi.deb','Débito de IPI (substituir)','nul'],
   ]},
@@ -4665,7 +4675,7 @@ function anRenderGrid() {
   </div>
   <div class="hint" style="margin-top:6px">Início de atividade (data de abertura na Receita):
     <input type="month" style="width:150px;display:inline-block" id="cf-inicio" value="${esc(c.inicioAtividade||'')}" onchange="anSetInicioAtividade(this.value)">
-    <span id="cf-inicio-ext">${iniPorExtenso(c.inicioAtividade)}</span>
+    <span id="cf-inicio-ext">${iniPorExtenso(c.inicioAtividade)}</span>${c.inicioOrigem==='P'?` <span class="badge ok" title="lida do PGDAS-D de ${esc(c.inicioPA||'')}">P · PGDAS-D ${esc(c.inicioPA||'')}</span>`:''}
     — com <b>menos de 12 meses</b> de atividade o RBT12 é <b>proporcionalizado</b> (Res. CGSN 140/2018, art. 22, §§ 2º e 3º): a média mensal é anualizada. Em branco, o app usa a soma dos 12 meses anteriores.</div>
   <div id="cf-inicio-aviso">${iniAvisoInvalido(c, AN&&AN.ano)}${anAvisoInicioAtividade(c)}</div>
   <div style="overflow-x:auto;margin-top:8px"><table class="gtable"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m} (ant.)</th>`).join('')}</tr></thead><tbody>
@@ -5165,6 +5175,17 @@ function anRenderConfig() {
       ? '<b style="color:#943126">⚠️ Modo legado.</b> Reproduz o cálculo das versões até a v7.34.3, em que 15% e 9% saíam mês a mês (mês negativo descartado) e só o adicional usava o trimestre. Serve para refazer parecer já entregue — não é modalidade legal de apuração.'
       : 'Os saldos são <b>independentes</b> (prejuízo do IRPJ e base negativa da CSLL têm controles próprios) e a compensação fica limitada a <b>30%</b> do resultado do período, inclusive entre trimestres do mesmo ano. Deixe em branco quando a empresa <b>vinha do Simples</b>: quem migra do Simples não leva prejuízo fiscal, porque não houve apuração de lucro real anterior. O prejuízo apurado dentro desta simulação vale só para este ano-base e <b>não é transportado</b>.'}</div>
   </div>`;
+  // ══ v7.89.0 · CRÉDITO DE PIS/COFINS SOBRE DESPESAS NO LUCRO REAL — a tela que faltava ═════════
+  // `cfg.credLRpct` existe no motor desde a v7.42.2 (padrão zero por categoria), mas só no JSON.
+  // Sem a tela toda empresa de Real ficava sem crédito sobre despesas, com o aviso âmbar na
+  // conferência e nenhum lugar para corrigir. Percentual em branco = 0 (regra preservada).
+  { const cr = Object.assign({adm:0,vendas:0,fiscais:0,financeiras:0,outras:0}, c.credLRpct||{});
+    const ROT = { adm:'Administrativas', vendas:'Com vendas', fiscais:'Fiscais/tributárias', financeiras:'Financeiras', outras:'Outras' };
+    h += `<div style="margin-top:22px"><b style="font-size:13px">Lucro Real — crédito de PIS/COFINS sobre despesas (% creditável por categoria)</b>
+    <div class="hint">A lista do art. 3º das Leis 10.637/2002 e 10.833/2003 é <b>taxativa</b>: energia elétrica, aluguéis de PJ, arrendamento, fretes na venda e insumos creditam; folha, tributos e a maior parte da despesa administrativa <b>não</b>. Informe, por categoria, a fração da despesa lançada que se enquadra (ex.: 40 = 40% da categoria gera crédito de 9,25%). <b>Em branco = zero</b>, o padrão conservador. As rubricas nomeadas do balancete (energia, aluguel, leasing, depreciação, frete, vale-transporte) já creditam por conta própria e não passam por aqui.</div>
+    <div class="toolbar" style="margin-top:8px">
+      ${DESP_KEYS.map(k => `<div><label>${ROT[k]} %</label><input style="width:110px" id="cf-crlr-${k}" value="${+cr[k]>0?+(cr[k]*100).toFixed(2):''}" placeholder="0" onchange="anAplicarConfig(true)"></div>`).join('')}
+    </div></div>`; }
   const fp = PARAMS.folha, own = c.folhaPerc || {};
   const campoFP = (k, rot) => `<div><label>${rot} %</label>
     <input style="width:120px" value="${own[k]!=null&&own[k]!==''?(+(own[k]*100).toFixed(4)):''}"
@@ -5259,6 +5280,10 @@ function anAplicarConfig(silencioso) {
   // lido sem guarda: bastava mexer na Configuração sem ter aberto a seção RBT12 na sessão.
   // Regra a partir daqui: campo ausente MANTÉM o valor que já está no cfg; nunca zera, nunca estoura.
   const _cfg = AN.cfg || {};
+  // v7.89.0 · retrato ANTES do funil: `_cfg` é o próprio AN.cfg (mesma referência), então comparar
+  // AN.cfg com _cfg depois do Object.assign nunca acusava mudança — o selo P da RBAA (v7.87.0) e o
+  // do início de atividade não saíam quando o usuário editava o campo à mão. Compara-se com a cópia.
+  const _cfgAntes = { ...(AN.cfg || {}) };
   const el  = id => $id(id);
   const g   = (id, atual) => { const e = el(id); return e ? num(e.value)/100 : (+atual||0); };
   const vNum= (id, atual) => { const e = el(id); return e ? num(e.value) : (+atual||0); };
@@ -5303,13 +5328,17 @@ function anAplicarConfig(silencioso) {
   if (!(+AN.cfg.rbaaOutros > 0)) delete AN.cfg.rbaaOutros;           // v7.87.0
   if (!(+AN.cfg.rbaOutros > 0)) delete AN.cfg.rbaOutros;             // v7.87.0
   // v7.87.0 · valor digitado à mão substitui a marca de origem do PGDAS-D
-  if (_cfg.rbaaOrigem === 'P' && ((+AN.cfg.rbaa||0) !== (+_cfg.rbaa||0) || (+AN.cfg.rbaaExp||0) !== (+_cfg.rbaaExp||0))) { delete AN.cfg.rbaaOrigem; delete AN.cfg.rbaaPA; }
+  if (_cfgAntes.rbaaOrigem === 'P' && ((+AN.cfg.rbaa||0) !== (+_cfgAntes.rbaa||0) || (+AN.cfg.rbaaExp||0) !== (+_cfgAntes.rbaaExp||0))) { delete AN.cfg.rbaaOrigem; delete AN.cfg.rbaaPA; }   // v7.89.0 · compara com o retrato
+  if (_cfgAntes.inicioOrigem === 'P' && String(AN.cfg.inicioAtividade||'') !== String(_cfgAntes.inicioAtividade||'')) { delete AN.cfg.inicioOrigem; delete AN.cfg.inicioPA; }   // v7.89.0
   if (!(+AN.cfg.ratBasico > 0)) delete AN.cfg.ratBasico;             // v7.64.0: em branco não grava
   if (!(+AN.cfg.fap > 0)) delete AN.cfg.fap;
   if (AN.cfg.frComposicao === 'legal') delete AN.cfg.frComposicao;   // o padrão não ocupa espaço
   if (AN.cfg.dedIssRetido !== true) delete AN.cfg.dedIssRetido;      // v7.69.0: ausente = decisão 8.9
   if (AN.cfg.issRetidoNaCarga !== true) delete AN.cfg.issRetidoNaCarga;   // v7.79.0
   if ($id('cf-lrper'))    AN.cfg.lrPeriodo  = $id('cf-lrper').value;
+  // v7.89.0 · credLRpct: a chave só existe quando algum percentual foi informado (>0); análise sem a tela segue idêntica
+  if ($id('cf-crlr-' + DESP_KEYS[0])) { const o = {}; for (const k of DESP_KEYS) { const v = Math.max(0, Math.min(100, num($id('cf-crlr-'+k).value))); if (v > 0) o[k] = v/100; }
+    if (Object.keys(o).length) AN.cfg.credLRpct = o; else delete AN.cfg.credLRpct; }
   if ($id('cf-lrprejir')) AN.cfg.lrPrejIrpj = Math.max(0, num($id('cf-lrprejir').value));
   if ($id('cf-lrprejcs')) AN.cfg.lrPrejCsll = Math.max(0, num($id('cf-lrprejcs').value));
   if (_avisosFx.length) toast(_avisosFx[0] + (_avisosFx.length>1 ? ` (e mais ${_avisosFx.length-1})` : ''));
@@ -5582,7 +5611,7 @@ async function anTrocarEmpresa() {
 // alteração NÃO volta para trás (parecer já emitido não pode mudar sozinho — trava da v7.26.0).
 const CFG_HERDA = ['iss','icmsV','icmsC','ipiV','ipiC','icmsTranspV','transpCredPres','lpBaseServ',
   'lpBaseCom','lpBaseServCsll','lpBaseComCsll','transpPresuncao','folhaPerc','adicionalIR','sublimite',
-  'travaNoDas','lrPeriodo','projJanela','anoRefParecer'];
+  'travaNoDas','lrPeriodo','projJanela','anoRefParecer','credLRpct'];   // v7.89.0 · o % creditável é parâmetro da empresa, herda
 // NÃO se herda o que é do ano: rbt12Lanc, rbt12ExpLanc, folha12Lanc, rbt12Direto, lrPrejIrpj,
 // lrPrejCsll e snAntAcima — são apuração, não parâmetro.
 async function cfgHerdar(an, cnpj, ano){
@@ -5656,7 +5685,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.88.0';
+const APP_VERSAO = '7.89.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -7131,6 +7160,18 @@ async function pgdasLer(input) {
       const _rbaaL = txt.match(/Receita bruta acumulada no ano-calend[áa]rio anterior\s*\(RBAA\)\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})/i)
                   || txt.match(/\(RBAA\)\s*:?\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})/i);
       const rbaaInt = _rbaaL ? brNum(_rbaaL[1]) : null, rbaaExt = _rbaaL ? brNum(_rbaaL[2]) : null;
+      // ══ v7.89.0 · DATA DE ABERTURA e RBT12/RBT12p DECLARADAS ═══════════════════════════════
+      // "Data de abertura no CNPJ: DD/MM/AAAA" é o dado que faltava para a proporcionalização do
+      // art. 22, §§ 2º e 3º (v7.52.0) rodar sem depender de digitação. A linha RBT12p vem em
+      // branco em empresa madura (rótulo confirmado no extrato da BUSCO LOG, PA 07/2026) e com
+      // três colunas em empresa nova — quando vier, serve de régua contra o motor.
+      const _abL = txt.match(/Data de abertura no CNPJ\s*:?\s*(\d{2})\/(\d{2})\/(\d{4})/i);
+      const abertura = _abL ? (_abL[3] + '-' + _abL[2]) : null;
+      const _r12 = txt.match(/ao PA \(RBT12\)\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})/i);
+      const rbt12Decl = _r12 ? brNum(_r12[1]) : null;
+      const _r12p = txt.match(/ao PA proporcionalizada \(RBT12p\)\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})/i);
+      const rbt12pDecl = _r12p ? brNum(_r12p[1]) : null;
+      const regimeApur = (txt.match(/Regime de Apura[çc][ãa]o\s*:?\s*(Compet[êe]ncia|Caixa)/i)||[])[1] || null;
       let das = brNum((txt.match(/Valor Total do Débito Declarado \(R\$\)\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})/)||[])[2]);
       // o quadro 2.6 pode ser cortado pela quebra de página (o valor fica órfão) — cai no total do débito
       if (!das) { const td = [...txt.matchAll(/Total do Débito Exig[íi]vel \(R\$\)\s*IRPJ.*?Total\s+(?:[\d.]+,\d{2}\s+){8}([\d.]+,\d{2})/gs)];
@@ -7151,7 +7192,8 @@ async function pgdasLer(input) {
       let expSec = (txt.match(/2\.2\.2\) Mercado Externo(.+?)2\.3\)/s)||[])[1] || '';
       expSec = expSec.replace(/(\d{2}\/\d{4})/g, ' $1 ');
       const rbtExpAnt = {}; for (const mm of expSec.matchAll(/(\d{2})\/(\d{4})\s+([\d.]+,\d{2})/g)) rbtExpAnt[`${mm[1]}/${mm[2]}`] = brNum(mm[3]);
-      meses[chave] = { receita: rpa, rba, das, atividades: atividades.map(a=>({...a, bloco: pgdasBloco(a.texto)})), tributos: trib, rbtAnt, rbtExpAnt, rbaaInt, rbaaExt };
+      meses[chave] = { receita: rpa, rba, das, atividades: atividades.map(a=>({...a, bloco: pgdasBloco(a.texto)})), tributos: trib, rbtAnt, rbtExpAnt, rbaaInt, rbaaExt,
+                       abertura, rbt12Decl, rbt12pDecl, regimeApur };   // v7.89.0
     } catch(e) { console.error(e); erros.push(f.name+' ('+e.message+')'); }
     _pgN++; impProgresso(_pgN, _pgTot, 'Lendo PGDAS-D'); await new Promise(r=>setTimeout(r,0));
   }
@@ -7235,7 +7277,7 @@ async function pgdasAplicar() {
     if ($id('g-ano')) $id('g-ano').value = anoImp;
     toast(`Ano da análise ajustado para ${anoImp}, conforme as declarações.`);
   }
-  AN._pgdas = { das: z12(), tributos: {} };
+  AN._pgdas = { das: z12(), tributos: {}, rbt12Decl: Array(12).fill(null), rbt12pDecl: Array(12).fill(null) };   // v7.89.0
   // limpa APENAS os meses que vieram nas declarações: importar duas vezes somava,
   // e importar um lote menor deixava resíduo dos meses antigos
   const mesesImp = [...new Set(chaves.map(k => +k.split('/')[0] - 1))];
@@ -7250,6 +7292,7 @@ async function pgdasAplicar() {
     const _difRpa = (M.receita||0) - _somaAtv;
     if (_difRpa > 0.02) { const bl = M.rpaBloco||'a2_semst'; AN.receitas[bl][m] = (AN.receitas[bl][m]||0) + _difRpa; aplicados++; rpaFallback++; }
     AN._pgdas.das[m] = M.das||0; AN._pgdas.tributos[m] = M.tributos;
+    AN._pgdas.rbt12Decl[m] = M.rbt12Decl ?? null; AN._pgdas.rbt12pDecl[m] = M.rbt12pDecl ?? null;   // v7.89.0
   }
   for (const k of Object.keys(AN.receitas))                // v7.28.0: o PGDAS determinou estes meses (inclusive os zerados)
     if (Array.isArray(AN.receitas[k])) anOrigemMarcar('receitas.'+k, mesesImp, 'P');
@@ -7281,6 +7324,25 @@ async function pgdasAplicar() {
       delete AN.cfg.rbaaOrigem; delete AN.cfg.rbaaPA;
       toast('Os PDFs não trouxeram a linha "Receita bruta acumulada no ano-calendário anterior (RBAA)" — o campo da aba RBT12 não foi alterado. Confira o extrato completo.');
     }
+  }
+  // ══ v7.89.0 · DATA DE ABERTURA lida do PGDAS-D SEMPRE preenche "Início de atividade" ══════
+  // Mesma regra da RBAA: o dado vem da própria declaração e vale o PA mais recente do lote. É o
+  // que faz a RBT12 de empresa com menos de 12 meses ser proporcionalizada (1º mês × 12; 2º ao
+  // 12º: soma dos anteriores ÷ n × 12) sem depender do campo digitado — o caso que aparecia
+  // "na faixa errada" era este campo em branco.
+  {
+    const _ord2 = chaves.slice().sort((a,b)=>(+a.split('/')[0])-(+b.split('/')[0]));
+    let _ab = null, _paAb = null, _reg = null;
+    for (const k of _ord2) { const M = PG_DADOS.meses[k]; if (M && M.abertura) { _ab = M.abertura; _paAb = k; } if (M && M.regimeApur) _reg = M.regimeApur; }
+    if (_ab) {
+      const _antesAb = String(AN.cfg.inicioAtividade||'').trim();
+      AN.cfg.inicioAtividade = _ab; AN.cfg.inicioOrigem = 'P'; AN.cfg.inicioPA = _paAb;
+      const _pa2 = propAtividade(AN.cfg, AN.ano);
+      toast(`Data de abertura lida do PGDAS-D de ${_paAb}: ${_ab.split('-')[1]}/${_ab.split('-')[0]}`
+        + (_antesAb && _antesAb !== _ab ? ` — substitui ${_antesAb} informado antes.` : '.')
+        + (_pa2.proporcional ? ` Empresa em início de atividade no ano-base: limite e sublimite proporcionais a ${_pa2.meses} meses e RBT12 proporcionalizada.` : ''));
+    } else { delete AN.cfg.inicioOrigem; delete AN.cfg.inicioPA; }
+    if (_reg) AN.cfg.regimeApuracao = _reg;   // informativo (Competência/Caixa) — o regime de caixa se encerra em 2026, decisão de 11/09/2026: sem tratamento
   }
   // a análise cobre 12 meses; declarações parciais deixam o restante sem receita
   if (mesesImp.length < 12){
@@ -7729,6 +7791,8 @@ function xmlParseNota(t, arquivo) {
       tomador: tomC||tomF||'', tomadorPF: !!tomF && !tomC,
       cfop: [...new Set([...t.matchAll(/<CFOP>(\d+)<\/CFOP>/g)].map(m=>m[1]))].join(', '),
       ncm: [...new Set([...t.matchAll(/<NCM>(\d+)<\/NCM>/g)].map(m=>m[1]))].slice(0,4).join(', '),
+      // v7.89.0 · ICMS destacado da própria operação (ICMSTot/vICMS) — o ST (vICMSST) fica fora: é do substituído
+      icms: xNum(xTag(xSec(t,'ICMSTot'),'vICMS')) || 0, icmsSt: xNum(xTag(xSec(t,'ICMSTot'),'vICMSST')) || 0,
       item: null, itemFixo: true, ct: '000001',
       origem: 'mercadoria' };
   }
@@ -8036,6 +8100,24 @@ async function _xmlAplicarBase() {
     for (const n of inc) { if (n.mes==null || +n.ano !== +AN.ano) continue; AN.receitas[bloco][n.mes] = (AN.receitas[bloco][n.mes]||0) + n.valor; lanc++; }
     anOrigemMarcar('receitas.'+bloco, mesesXml, 'X');      // v7.28.0: trilha de origem
     msg += ` · ${lanc} receita(s) lançada(s) no bloco (ano ${AN.ano})`;
+    // ══ v7.89.0 · TEMA 69 NOTA A NOTA ═══════════════════════════════════════════════════════
+    // Blocos com destaque próprio de ICMS (revenda sem ST, com redução, transporte): o vICMS das
+    // NF-e do lote passa a ser o ICMS excluído da base de PIS/COFINS do Presumido e do Real nos
+    // meses cobertos (STF, RE 574.706). Monofásico e com ST ficam de fora — sem destaque próprio
+    // ou fora da base. Mês coberto pelo lote = valor informado (mesmo zero); demais seguem na
+    // estimativa por alíquota. Reimportar o lote substitui.
+    const T69_BLOCOS = ['a1_semst','a1_red','a2_semst','a2_red','comtransp'];
+    const _nfe = inc.filter(n => n.tipo === 'NF-e' && n.mes != null && +n.ano === +AN.ano);
+    if (T69_BLOCOS.includes(bloco) && _nfe.length) {
+      if (!AN.icms) AN.icms = {}; if (!Array.isArray(AN.icms.tema69)) AN.icms.tema69 = Array(12).fill(null);
+      let _somaT69 = 0;
+      for (const m of mesesXml) AN.icms.tema69[m] = 0;
+      for (const n of _nfe) { AN.icms.tema69[n.mes] = +(AN.icms.tema69[n.mes]||0) + (+n.icms||0); _somaT69 += +n.icms||0; }
+      anOrigemMarcar('icms.tema69', mesesXml, 'X');
+      msg += ` · ICMS destacado nas saídas lido nota a nota (Tema 69): ${fmtR(_somaT69)}`;
+    } else if (_nfe.length && !T69_BLOCOS.includes(bloco)) {
+      msg += ' · bloco sem destaque próprio de ICMS (monofásico/ST): Tema 69 não alimentado pelas notas';
+    }
   }
   $id('imp-xml-card').style.display='none';
   anAplicado();
@@ -10385,6 +10467,10 @@ function rlConferencia(){
         M.nAntProp===0 ? `receita do próprio mês ${fmtR(M.somaAntProp||0)} × 12 (1º mês de atividade)`
                        : `soma dos ${M.nAntProp} meses ANTERIORES ${fmtR(M.somaAntProp||0)} ÷ ${M.nAntProp} × 12 — a receita do mês apurado (${fmtR(M.recInt||0)}) não entra`,
         fmtR(M.rbt12)));
+      // v7.89.0 · régua: a RBT12p que a própria declaração traz (linha "proporcionalizada (RBT12p)")
+      { const _dp = D._pgdas && Array.isArray(D._pgdas.rbt12pDecl) ? D._pgdas.rbt12pDecl[m] : null;
+        if (_dp != null) { const _dif = M.rbt12 - _dp;
+          L.push(CF.lin('RBT12p declarada no PGDAS-D', Math.abs(_dif) < 0.02 ? 'confere com o motor ao centavo' : `motor ${fmtR(M.rbt12)} − declarada ${fmtR(_dp)} = ${fmtR(_dif)}${Math.abs(_dif)>0.02?' — <b>divergência</b>: confira a data de abertura e os meses anteriores lançados':''}`, fmtR(_dp))); } }
     } else {
       L.push(CF.lin('RBT12 (mercado interno)', M.mesAtividade!=null && M.mesAtividade>12
         ? '12 meses anteriores (13º mês de atividade em diante — acabou a proporcionalização)'
@@ -10568,7 +10654,7 @@ function rlConferencia(){
     const _credLRm = M.ins ? M.ins.despesas.credLR : (+((Dm.despesas.credLR||[])[m])||0);
     const LPl = [
       CF.lin('Base PIS/COFINS (bruta)', `receita ${fmtR(M.receita)} − revenda monofásica ${fmtR(_monoEx)} − exportação ${fmtR(M.recExp||0)}`, fmtR(P.basePCbruta||0)),
-      CF.lin('(−) ICMS destacado — Tema 69', `(revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706)`, fmtR(M.icmsDestacadoPC||0)),
+      CF.lin('(−) ICMS destacado — Tema 69', M.tema69Informado ? '<b>nota a nota</b> — vICMS das NF-e do mês (XML) ou valor informado na aba ICMS·IPI (STF, RE 574.706)' : `<b>estimativa</b>: (revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706) — importe os XMLs de saída para o valor nota a nota`, fmtR(M.icmsDestacadoPC||0)),
       CF.lin('Base PIS/COFINS (final)', `${fmtR(P.basePCbruta||0)} − ${fmtR(M.icmsDestacadoPC||0)}`, fmtR(P.basePC||0)),
       CF.lin('PIS', `${fmtR(P.basePC||0)} × 0,65%`, fmtR(P.pis)),
       CF.lin('COFINS', `${fmtR(P.basePC||0)} × 3,00%`, fmtR(P.cofins)),
@@ -10631,8 +10717,8 @@ function rlConferencia(){
       // refizesse 83.274,20 + 8.361,12 − 11.978,08 na tela chegava a outro número. Não há dupla
       // contagem — o valor já está embutido na linha bruta, que deduz as compras LÍQUIDAS do ICMS.
       // Agora é informativa e diz onde já foi considerada.
-      ...((M.icmsComprasPC||0)>0.005?[CF.lin('ICMS das aquisições fora do crédito — Lei 14.592/2023', `compras p/ revenda ${fmtR(_comprasLR)} × ${CF.pc(+D.cfg.icmsC||0)} — <i>já refletido na linha acima</i>, que deduz as compras líquidas do ICMS`, '<i>' + fmtR(M.icmsComprasPC||0) + '</i>')]:[]),
-      CF.lin('(−) ICMS destacado — Tema 69', `(revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706)`, fmtR(M.icmsDestacadoPC||0)),
+      ...((M.icmsComprasPC||0)>0.005?[CF.lin('ICMS das aquisições fora do crédito — Lei 14.592/2023', (M.lei14592Informado ? '<b>nota a nota</b> — valor informado na aba ICMS·IPI' : `<b>estimativa</b>: compras p/ revenda ${fmtR(_comprasLR)} × ${CF.pc(+D.cfg.icmsC||0)}`) + ` — <i>já refletido na linha acima</i>, que deduz as compras líquidas do ICMS`, '<i>' + fmtR(M.icmsComprasPC||0) + '</i>')]:[]),
+      CF.lin('(−) ICMS destacado — Tema 69', M.tema69Informado ? '<b>nota a nota</b> — vICMS das NF-e do mês (XML) ou valor informado na aba ICMS·IPI (STF, RE 574.706)' : `<b>estimativa</b>: (revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706)`, fmtR(M.icmsDestacadoPC||0)),
       // v7.63.0 (auditoria A09) · quando os créditos superam os débitos, a base tributável é ZERO e
       // o excesso vira saldo credor transportado ao mês seguinte — o motor sempre fez isso, mas a
       // memória imprimia a conta bruta e um resultado zero que ela não produzia. Quem refizesse na
