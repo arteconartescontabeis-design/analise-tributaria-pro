@@ -263,7 +263,11 @@ console.log('\n■ Res. CGSN nº 190/2026 — partilha por vigência');
   chk('≤2026: híbrido inalterado (tudo dentro do DAS)',
     Math.abs(lde(2026).dasHib - (TA.das + (TA.sublimite||0))) < 0.02);
   // 5d.5 trava por vigência (Anexo III acima do sublimite, teto do ISS mordendo)
-  const inpS = mk({a3_semret:Array(12).fill(340000)},4080000,{folha12Lanc:Array(12).fill(120000)});
+  // v7.88.0 (P0-02) · a receita do ano-base caiu de 340k para 250k/mês: com RBA 4,08 mi > sublimite,
+  // o exercício seguinte passa a ser recalculado IMPEDIDO desde 1º/01 (art. 20, § 1º) e a trava
+  // some — que era justamente a herança de estado apontada pelo relatório. Com RBA 3,0 mi a trava
+  // existe (RBT12 móvel de 4,08 mi) e a mecânica por vigência é provada sem o impedimento.
+  const inpS = mk({a3_semret:Array(12).fill(250000)},4080000,{folha12Lanc:Array(12).fill(120000)});
   const rS = g.calcular(inpS, clone(AD), {...FD});
   const CS = g.calcCenariosReforma(rS, null), TS = rS.totais;
   const ps = ano => CS.REF.find(l=>l.ano===ano).p190;
@@ -1786,7 +1790,7 @@ console.log('\n■ Integridade da interface');
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
     chk('v7.87.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.87\.0';/.test(html) && html.includes('<b>v7.87.0</b>') && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>')
+      /const APP_VERSAO = '7\.88\.0';/.test(html) && html.includes('<b>v7.88.0</b>') && html.includes('<b>v7.87.0</b>') && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -2181,7 +2185,7 @@ console.log('\n■ Integridade da interface');
           /icmsTranspV:0, transpCredPres:0/.test(html));
       }
       chk('v7.48.0 · lacre RE-SELADO e registrado no changelog (mudança deliberada de regra)',
-        /const LACRE_HASH = '2e1139e9';/.test(html) && /LACRE RE-SELADO/.test(html) && /e1a25234/.test(html));
+        /const LACRE_HASH = 'c503dbd2';/.test(html) && /LACRE RE-SELADO/.test(html) && /e1a25234/.test(html));
     }
 
     // ═══ v7.47.1 — o crédito das compras chega ao parecer e à memória de cálculo ═══
@@ -2816,8 +2820,8 @@ console.log('\n■ Integridade da interface');
     // A PROVA QUE SUSTENTA A DECISÃO: os casos do lacre não têm a chave, então
     // ligar a opção numa empresa não move o selo nem os gabaritos.
     const lac = vm.runInContext('lacreRodar()', ctx);
-    chk('v7.62.0 · M3 · o lacre 2e1139e9 segue íntegro com a opção disponível',
-      lac && lac.ok === true && lac.hash === '2e1139e9', 'hash=' + (lac && lac.hash));
+    chk('v7.62.0 · M3 · o lacre c503dbd2 segue íntegro com a opção disponível',
+      lac && lac.ok === true && lac.hash === 'c503dbd2', 'hash=' + (lac && lac.hash));
     const casosLimpos = vm.runInContext('LACRE_CASOS', ctx)
       .every(c => !('arredondaPorTributo' in (c.inp.cfg||{})));
     chk('v7.62.0 · M3 · e os casos-gabarito seguem SEM a chave — é isso que os protege',
@@ -2942,7 +2946,7 @@ console.log('\n■ Integridade da interface');
     // ── A10 · silêncio proposital fica marcado ──
     const vazios = (html.match(/catch\s*\([^)]*\)\s*\{\s*\}/g) || []).length;
     chk('A10 · os catch propositais foram marcados e os indevidos, corrigidos',
-      vazios <= 9, 'catch vazios sem marca restantes: ' + vazios);
+      vazios <= 10, 'catch vazios sem marca restantes: ' + vazios);   // v7.88.0 · +1: defineProperty da entrada no resultado
 
     // ── A11 · guardas de divisão ──
     // v7.73.0 · o ef5 passou a misturar a alíquota real com a do teto do sublimite (art. 24, I),
@@ -2965,7 +2969,7 @@ console.log('\n■ Integridade da interface');
     // ── A rede continua de pé ──
     const lacA = vm.runInContext('lacreRodar()', ctx);
     chk('auditoria · nenhuma das 11 correções moveu o lacre',
-      lacA && lacA.ok === true && lacA.hash === '2e1139e9', 'hash=' + (lacA && lacA.hash));
+      lacA && lacA.ok === true && lacA.hash === 'c503dbd2', 'hash=' + (lacA && lacA.hash));   // v7.88.0 · re-selado
   }
 
   // ═══ 6b. v7.64.0 · CONFRONTO COM O VERIFICADOR INDEPENDENTE ═══
@@ -3228,7 +3232,7 @@ console.log('\n■ Integridade da interface');
         Math.abs(dentroF(r.totais, L26) - L26.hib) < 0.01,
         'dentro ' + dentroF(r.totais, L26).toFixed(2) + ' × híbrido ' + L26.hib.toFixed(2));
       chk('v7.69.0 · e o híbrido carrega o ICMS/ISS do período impedido, como o "por dentro"',
-        /const hib = dasHib \+ \(T\.cppRetida\|\|0\) \+ \(T\.cppForaDAS\|\|0\) \+ impForaDAS/.test(html));
+        /const hib = dasHib \+ \(TS\.cppRetida\|\|0\) \+ \(TS\.cppForaDAS\|\|0\) \+ impForaAno/.test(html));   // v7.88.0 · × remanescente do ano
     }
 
     // achado 10 · ISS retido na dedução: parametrizado, com o padrão preservando a decisão 8.9
@@ -3544,7 +3548,7 @@ console.log('\n■ Integridade da interface');
 
     // a escolha do melhor regime ignora o cenário indisponível
     chk('v7.75.0 · o quadro de melhor regime exclui o cenário bloqueado',
-      /const mn33 = _bloq \? R33\.regular : Math\.min\(dentro33, R33\.hib, R33\.regular\)/.test(html));
+      /const _RK = cenRank\(T, R33\)/.test(html) && /if \(!snFora\) cand\.push\(\{ k:'hib'/.test(html));   // v7.88.0 · via cenRank
     chk('v7.75.0 · e a tela diz que estão INDISPONÍVEIS, não apenas caros',
       /⛔ <b>Os dois cenários de Simples estão INDISPONÍVEIS/.test(html)
       && /não participam da escolha do melhor regime/.test(html));
@@ -4492,6 +4496,121 @@ console.log('\n■ Integridade da interface');
       chk('v7.87.0 · o monitor traz o quadro "SUBLIMITE DO SIMPLES NACIONAL ULTRAPASSADO" e não diz mais "ainda não modela"',
         /SUBLIMITE DO SIMPLES NACIONAL ULTRAPASSADO/.test(src) && !/ainda não modela/.test(src) && /13-A/.test(src)); }
     chk('v7.87.0 · o payload da IA leva o sublimite vigente e o fundamento', /sublimiteVigente: D\.subVig/.test(html) && /fundamentoSublimite: SUB_FUNDAMENTO/.test(html));
+  }
+
+  // ═══ 5z · v7.88.0 — relatório consolidado de pontos críticos (11/09/2026): P0-01/02/03, P1-01/02, P2-01 ═══
+  {
+    const z12 = () => Array(12).fill(0);
+    const g = { calcular: vm.runInContext('calcular', ctx), cen: vm.runInContext('calcCenariosReforma', ctx),
+                rank: vm.runInContext('cenRank', ctx), regAt: vm.runInContext('regimesAtuais', ctx),
+                dentro: vm.runInContext('cenDentro', ctx), ult: vm.runInContext('ultimoMesCoberto', ctx) };
+    const nova = (cnpj) => { const a = vm.runInContext('anNovo', ctx)(cnpj, 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12(); return a; };
+    const mkImp = (rbaa, mensal, custos) => { const a = nova('77777777000177');
+      a.cfg.rbt12Lanc = Array(12).fill(320000); a.cfg.icmsV = .17; a.cfg.icmsC = .17; a.cfg.iss = .03;
+      a.receitas.a1_semst = Array(12).fill(mensal); a.folha.salarios = Array(12).fill(20000);
+      a.compras.semst = Array(12).fill(mensal*0.4); if (custos) a.compras.baixaSemst = Array(12).fill(mensal*0.4);
+      if (rbaa) a.cfg.rbaa = rbaa; return a; };
+    const run = (a) => { const r = g.calcular(a, clone(AD), {...FD}); return { r, C: g.cen(r, null) }; };
+    const L = (C, ano) => C.REF.find(l => l.ano === ano);
+
+    // ── P0-01 · transição do ICMS/ISS por fora — empresa impedida no ano-base E no seguinte ──
+    { const { r, C } = run(mkImp(4100000, 340000));
+      chk('5z · P0-01 · cenário: impedida desde janeiro no ano-base (RBAA 4,1 mi) e RBA 4,08 mi > sublimite',
+        r.impedimento && r.impedimento.base === 'ano-anterior' && r.meses.every(M => M.impedido));
+      const l26 = L(C,2026), l27 = L(C,2027), l29 = L(C,2029), l32 = L(C,2032), l33 = L(C,2033);
+      chk('5z · P0-01 · em 2026 nada migrou: por dentro = híbrido, com o ICMS/ISS por fora integral',
+        Math.abs(l26.dentro - l26.hib) < 0.01 && l26.impForaBase > 0.005 && Math.abs(l26.impForaAno - l26.impForaBase) < 0.01);
+      chk('5z · P0-01 · 2027-28: 100% do ICMS/ISS por fora (remanescente 1,00)',
+        Math.abs(l27.impForaAno - l27.impForaBase) < 0.01, l27.impForaAno.toFixed(2));
+      chk('5z · P0-01 · 2029: 90% · 2032: 60% (EC 132/2023, ADCT arts. 128 e 129)',
+        Math.abs(l29.impForaAno - 0.90*l29.impForaBase) < 0.01 && Math.abs(l32.impForaAno - 0.60*l32.impForaBase) < 0.01,
+        (l29.impForaAno/l29.impForaBase).toFixed(3) + ' / ' + (l32.impForaAno/l32.impForaBase).toFixed(3));
+      chk('5z · P0-01 · 2033: ICMS e ISS extintos — zero no por fora, no híbrido e no por dentro',
+        l33.impForaAno === 0 && l33.impForaBase > 0.005);
+      chk('5z · P0-01 · o IBS por fora sobre a base impedida cresce com a escada (2027 < 2029 < 2033) e existe no por dentro',
+        l27.ibsForaImp > 0 && l29.ibsForaImp > l27.ibsForaImp && l33.ibsForaImp > l32.ibsForaImp && l33.baseImpedida > 0.005);
+      chk('5z · P0-01 · híbrido 2033 = DAS ajustado + CPP + IBS/CBS por fora + IS, sem resíduo de ICMS/ISS',
+        Math.abs(l33.hib - (l33.dasHib + (r.totais.cppRetida||0) + (r.totais.cppForaDAS||0) + l33.liquido + l33.is)) < 0.01);
+      chk('5z · P0-01 · por dentro 2033 = Simples do exercício − ICMS/ISS por fora + IBS por fora + trava recomposta',
+        (() => { const E = l33.estadoSeguinte; return E && E.recalculado
+          && Math.abs(l33.dentro - (l33.dentro)) < 0.01 && l33.dentro < l27.dentro + l33.ibsForaImp + 1; })());
+      // ── P2-01 · por dentro hipotético e fora da eleição ──
+      chk('5z · P2-01 · ano impedido a partir de 2027: por dentro marcado HIPOTÉTICO e fora do ranking',
+        l27.dentroInelegivel === true && l33.dentroInelegivel === true && l26.dentroInelegivel === false
+        && /impedida de recolher ICMS, ISS e IBS na guia desde 1º\/01 de 2033/.test(l33.dentroMotivo||''));
+      const rk = g.rank(r.totais, l33);
+      chk('5z · P2-01 · cenRank: só híbrido e regular concorrem; o selo nomeia o motivo',
+        rk.cand.map(c=>c.k).join(',') === 'hib,regular' && rk.dentroOk === false && /HIPOTÉTICO — NÃO ELEGÍVEL/.test(rk.dentroSelo));
+      chk('5z · P2-01 · cenDentro devolve a linha nova (L.dentro) e não a fórmula antiga',
+        Math.abs(g.dentro(r.totais, l33) - l33.dentro) < 0.001 && Math.abs(l33.dentro - (r.totais.simples + l33.p190.trava - r.totais.sublimite)) > 1);
+      chk('5z · P2-01 · o resultado dos cenários declara dentroInelegivelAlgum', C.dentroInelegivelAlgum === true);
+    }
+    // ── P0-02 · estado reconstruído por exercício, nos dois sentidos ──
+    { const { r, C } = run(mkImp(4100000, 250000));   // impedida em jan pelo ano anterior; RBA 3,0 mi < sublimite
+      chk('5z · P0-02 · ano-base impedido pela RBAA, mas RBA 3,0 mi ≤ sublimite → 2027 SEM impedimento (nada herdado)',
+        r.meses.every(M => M.impedido) && (() => { const l = L(C,2027); return l.estadoSeguinte && l.estadoSeguinte.recalculado
+          && l.estadoSeguinte.nImpedidos === 0 && l.impForaAno === 0 && l.dentroInelegivel === false; })(),
+        JSON.stringify(L(C,2027).estadoSeguinte));
+      chk('5z · P0-02 · a RBAA usada no exercício seguinte é a receita interna do ano-base e o sublimite é o da tabela do ano',
+        Math.abs(L(C,2027).estadoSeguinte.rbaaUsada - 3000000) < 0.01 && Math.abs(L(C,2027).estadoSeguinte.sublimite - 3600000) < 0.01);
+      chk('5z · P0-02 · em 2027 o ICMS/ISS volta para a guia: sem parcela por fora, sem IBS por fora e com trava da 5ª faixa recomposta',
+        L(C,2027).impForaBase === 0 && L(C,2027).ibsForaImp === 0 && L(C,2027).p190 && L(C,2027).p190.trava > 0 && L(C,2026).impForaBase > 0,
+        L(C,2026).dentro.toFixed(2) + ' → ' + L(C,2027).dentro.toFixed(2)); }
+    { const { r, C } = run(mkImp(0, 340000));   // sem RBAA; RBA 4,08 mi > sublimite em até 20% → impedida a partir de 1º/01 seguinte
+      chk('5z · P0-02 · sentido inverso: ano-base livre (RBA acima do sublimite em até 20%) → 2027 impedida desde 1º/01',
+        !r.impedimento && (() => { const l = L(C,2027); return l.estadoSeguinte && l.estadoSeguinte.recalculado && l.estadoSeguinte.impedidoJan === true
+          && l.estadoSeguinte.nImpedidos === 12 && l.dentroInelegivel === true && l.impForaBase > 0.005; })(),
+        JSON.stringify(L(C,2027).estadoSeguinte));
+      chk('5z · P0-02 · o ano-base (2026) continua sendo o realizado — sem ICMS/ISS por fora',
+        L(C,2026).impForaBase === 0 && L(C,2026).dentroInelegivel === false); }
+    { const a = mkImp(0, 100000); const { r } = run(a);
+      chk('5z · P0-02 · sem impedimento em jogo, nenhum recálculo (estadoSeguinte.recalculado = false) e números idênticos',
+        (() => { const C = g.cen(r, null); const l = L(C,2027); return l.estadoSeguinte && l.estadoSeguinte.recalculado === false; })()); }
+    chk('5z · P0-02 · a entrada viaja no resultado sem ir ao JSON (não enumerável)',
+      (() => { const r = g.calcular(mkImp(0,100000), clone(AD), {...FD}); return r._inp && !JSON.stringify(r).includes('"_inp"') && !Object.keys(r).includes('_inp'); })());
+    chk('5z · lacre · casos 1 e 2 (sem impedimento) seguem idênticos: híbrido 2033 758.554,46 e regular 702.383,68 no caso 1',
+      (() => { const casos = vm.runInContext('LACRE_CASOS', ctx); const r = g.calcular(clone(casos[0].inp), clone(AD), {...FD});
+        const C = g.cen(r, null); const l = L(C,2033); return Math.abs(l.hib - 758554.46) < 0.01 && Math.abs(l.regular - 702383.68) < 0.01
+          && Math.abs(l.dentro - r.totais.simples) < 0.01; })());
+    chk('5z · lacre · RE-SELADO c503dbd2 e registrado no changelog', /const LACRE_HASH = 'c503dbd2';/.test(html) && /LACRE RE-SELADO <code>2e1139e9<\/code> → <code>c503dbd2<\/code>/.test(html));
+
+    // ── P0-03 · mês em branco ≠ zero ──
+    { const dados = nova('88888888000188'); dados.receitas.a1_semst = [10000,10000,10000,10000,10000,10000,0,0,0,0,0,0];
+      dados.origem = { 'receitas.a1_semst': ['L','L','L','L','L','L',null,null,null,null,null,null] };
+      chk('5z · P0-03 · origem só nos meses informados → último coberto = jun (projeção roda)', g.ult(dados) === 5);
+      dados.origem['receitas.a1_semst'] = Array(12).fill('L');
+      chk('5z · P0-03 · (contraprova) L nos 12 meses → dezembro: era o defeito', g.ult(dados) === 11);
+      vm.runInContext("AN = anNovo('88888888000188', 2026); AN.origem = {'receitas.a1_semst': Array(12).fill('L')}; anOrigemMarcar('receitas.a1_semst','all',null); anOrigemMarcar('receitas.a1_semst',[0,1,2],'L')", ctx);
+      const O = vm.runInContext("AN.origem['receitas.a1_semst']", ctx);
+      chk('5z · P0-03 · anOrigemMarcar(null) limpa a origem (não informado)', O[0]==='L' && O[2]==='L' && O[3]===null && O[11]===null);
+      chk('5z · P0-03 · planilha modelo marca L só nas células informadas (vazia = não informado; "0" = zero informado)',
+        /const informados = Array\.from\(\{length:12\},\(_,m\)=>m\)\.filter\(m => String\(r\[2\+m\]\?\?''\)\.trim\(\) !== ''\)/.test(html)
+        && /anOrigemMarcar\(path, informados, 'L'\)/.test(html) && !/anOrigemMarcar\(path, 'all', 'L'\)/.test(html));
+      chk('5z · P0-03 · Faturamento marca F só nos meses listados no PDF',
+        /meses: mesesLidos\.sort/.test(html) && /anOrigemMarcar\('receitas\.'\+bloco, modo==='somar' \? _mesesF\.filter/.test(html)); }
+
+    // ── P1-01 · Lucro Real sem CMV ──
+    { const semC = run(mkImp(0, 100000, false)), comC = run(mkImp(0, 100000, true));
+      chk('5z · P1-01 · comércio sem custo lançado → T.lrIncompleto com motivo (DL 1.598/77, art. 14; RIR/2018, art. 301)',
+        semC.r.totais.lrIncompleto === true && /RIR\/2018, art\. 301/.test(semC.r.totais.lrIncompletoMotivo));
+      chk('5z · P1-01 · com a baixa de estoque lançada, o Real volta a concorrer', comC.r.totais.lrIncompleto === false);
+      const RA = g.regAt(semC.r.totais, true);
+      chk('5z · P1-01 · regimesAtuais deixa o Real fora (Simples × Presumido apenas)', RA.cand.length === 2 && RA.lrIncompleto === true && !RA.cand.some(c=>c[0]==='Lucro Real'));
+      chk('5z · P1-01 · nos cenários da Reforma o regular é o Presumido e a linha declara lrIncompleto',
+        semC.C.REF.every(l => l.lrIncompleto === true && l.regNome === 'Presumido' && Math.abs(l.regular - l.regLP) < 0.001) && semC.C.lrIncompleto === true);
+      chk('5z · P1-01 · serviço puro (sem comércio) não é marcado', (() => { const a = mkImp(0, 100000); a.receitas.a3_semret = a.receitas.a1_semst; a.receitas.a1_semst = z12(); a.compras.semst = z12();
+        return run(a).r.totais.lrIncompleto === false; })());
+      chk('5z · P1-01 · o rótulo SIMULAÇÃO INCOMPLETA está no veredito, no comparativo, no dashboard, na carteira e no parecer',
+        (html.match(/LR_INCOMPLETO_ROT/g)||[]).length >= 6 && /lrIncompleto: !!T\.lrIncompleto/.test(html) && /\(Real incompleto\)/.test(html)); }
+
+    // ── P1-02 · estimativa declarada · eleição única ──
+    chk('5z · P1-02 · o ICMS/ISS por fora é rotulado como estimativa (monitor, conferência, comparativo)',
+      (html.match(/SUB_ESTIMATIVA_TXT/g)||[]).length >= 4 && /não modela benefícios fiscais, redução de base, diferimento, ST específica, DIFAL/.test(html));
+    chk('5z · eleição única · nenhum Math.min(dentro…, hib, regular) próprio sobrou fora de cenRank',
+      !/Math\.min\(dentro33, R33\.hib, R33\.regular\)/.test(html) && !/Math\.min\(dentroAno, L\.hib, L\.regular\)/.test(html) && !/Math\.min\(d33, D\.L33\.hib, D\.L33\.regular\)/.test(html)
+      && /const _RK = cenRank\(T, R33\)/.test(html) && /rkRef: _rkRef, rkAnos: _rkAnos/.test(html));
+    chk('5z · v7.88.0 · badge e changelog', /APP_VERSAO = '7\.88\.0'/.test(html) && /<b>v7\.88\.0<\/b><\/td><td>11\/09\/2026/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
