@@ -623,6 +623,7 @@ ul.ap-lista li{margin-bottom:7px}
           <div><label>% crédito s/ compras do Simples <span class="hint" style="display:block">0 = automático (art. 58, 1ª faixa)</span></label><input id="rf-credsimples" style="width:120px" value="0" onchange="rfCalcular()"></div>
         </div>
       </div>
+      <div id="rf-comp"></div>
       <div id="rf-avisos"></div>
       <div class="grid c4" id="rf-resumo" style="margin-bottom:18px"></div>
       <div class="card"><h3>Transição 2026–2033 — carga sobre o consumo</h3><div id="rf-tabela" style="overflow-x:auto"></div>
@@ -786,6 +787,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.91.0</b></td><td>11/09/2026</td><td><b>🧾 Créditos de IBS/CBS — composição dos fornecedores automática, editável, auditável; sensibilidade; nível de confiabilidade. Fim do proxy da v7.1. LACRE RE-SELADO <code>5996c4be</code> → <code>453f7b32</code>.</b> Implementa a especificação "v7.91 revisado" (Artecon(8), P0/P1). <b>Classificação automática (padrão, recomendado).</b> As consultas de fornecedores da Consulta CNPJ (Receita Federal) já traziam a classe de cada CNPJ; agora elas montam a <b>composição</b> em seis grupos — regime regular; Simples com IBS/CBS dentro do Simples; Simples com opção pelo regime regular; sem crédito integral (imune/isento/zero/vedado/PF); crédito presumido/regra específica; <b>não identificado</b> — com CNPJ, razão social, valor, documentos, fonte, grau de confiança e status por fornecedor, tudo à vista na aba Reforma. <b>Não identificado nunca vira regime regular</b>: zero de crédito no cenário-base, integral só no limite superior. <b>Edição.</b> "Editar composição" em dois modos (percentuais → recalcula valores; valores → recalcula percentuais), reclassificação por fornecedor, total obrigatoriamente 100,0000% ("ERRO — A composição dos fornecedores deve totalizar 100%"), justificativa opcional; <b>trilha de auditoria</b> com automático × editado, usuário, data/hora, motivo, versão do motor e origem — o automático original nunca é apagado; "Restaurar classificação automática" volta aos percentuais do motor e registra que houve edição. <b>Confirmação.</b> "SIM — confirmar composição" grava data/hora e usuário; "NÃO — manter como estimativa" segue calculando como estimativa. Tudo recalcula em tempo real (aba, cenários, veredito). <b>Regras de crédito.</b> Regular e Simples-opção-regular: pelo documento, IBS e CBS separados, sem compensação entre si (LC 214/2025, arts. 47 e 48); Simples dentro do Simples: montante devido no Simples (art. 47, § 9º, II; art. 58 da Res. CGSN 190/2026, 1ª faixa do Anexo I por conservadorismo), nunca a alíquota cheia; presumido: percentual informado; sem crédito: zero. <b>Sensibilidade</b> por ano: limite inferior (só confirmados), cenário-base (composição utilizada), limite superior (hipótese mais favorável — <b>nunca definitivo</b>), com vencedor em cada um; <b>teste de inversão</b>: variação do crédito ≥ margem do vencedor (2º − 1º) → "ALERTA CRÍTICO — A COMPOSIÇÃO DOS FORNECEDORES PODE ALTERAR O REGIME TRIBUTÁRIO VENCEDOR". <b>Nível de confiabilidade</b> ALTO / MÉDIO / BAIXO com texto e ícone (nunca só cor); BAIXO troca "Regime recomendado" por <b>"MELHOR RESULTADO DENTRO DAS PREMISSAS INFORMADAS — NÃO CONCLUSIVO"</b> no veredito, no parecer (jornada e recomendação) e no payload da IA. <b>Quadros novos</b> na Conferência (memória anual, item 5) e no parecer (página própria): composição automática × final, créditos IBS × CBS (débito, confirmado, estimado, não confirmado, líquido) e sensibilidade. <b>Fim do proxy da v7.1:</b> sem perfil de fornecedor as compras de revenda deixam de ser presumidas como regime regular — é por isso que o lacre muda: no caso 1 (comércio sem perfil) o híbrido 2033 vai de 758.554,46 para 1.205.153,42 no cenário-base, e os 758.554,46 passam a ser o limite superior; caso 2 (serviços, sem compras) idêntico. Contrapartes de compra da aba ficam geridas pela composição quando há consultas. Suíte: bloco 5ac, com a bateria de fronteira exigida (RBAA 3.599.999,99 / 3.600.000,00 / 3.600.000,01; RBA 4.320.000,00 / 4.320.000,01; limite 4.800.000,00 / 4.800.000,01 / 5.760.000,00 / 5.760.000,01; Fator R 27,9999 / 28,0000 / 28,0001%) e os sete cenários de crédito.</td></tr>
                     <tr><td><b>v7.90.0</b></td><td>11/09/2026</td><td><b>🔍 Auditoria "Artecon(8)", P0-01 — a memória do cenário híbrido não fechava com o total (R$ 213,84 por exercício). Duas causas, as duas corrigidas; LACRE RE-SELADO <code>c503dbd2</code> → <code>5996c4be</code>.</b> <b>(1) A memória imprimia a CPP do ano-base, o total usava a do exercício.</b> Desde a v7.88.0 os anos projetados vêm de um motor recalculado com a RBAA do exercício anterior; o total do híbrido já somava a CPP retida e a CPP fora do DAS <b>desse</b> resultado, mas a memória anual seguia imprimindo as do ano-base — diferença constante em todos os anos, que a auditoria isolou. Agora as seis parcelas que formam o total viajam na própria linha (<code>hibParcelas</code>: DAS ajustado, CPP retida, CPP fora do DAS, ICMS/ISS por fora × remanescente, IBS/CBS líquido, IS), a memória imprime <b>exatamente</b> elas, uma por linha, e declara "fecha ao centavo". <b>(2) Bug de motor por baixo:</b> no mês impedido a CPP retida pelo tomador era calculada com a alíquota efetiva <b>já reduzida</b> do ICMS/ISS (<code>e3 × _semIcmsIss</code>, v7.58.0). A CPP é parcela do DAS que o impedimento não altera em valor absoluto — tirar ICMS e ISS da guia não muda a contribuição previdenciária. Passa a usar a efetiva cheia. Só alcança empresa impedida com receita de serviço com INSS retido (a3_retissinss) fora da 6ª faixa; no caso 3 do lacre são +R$ 273,54 por exercício recalculado, e os casos 1 e 2 seguem idênticos. <b>(3) Validação bloqueante (MEM-01).</b> Antes de emitir parecer ou apresentação, |total híbrido − soma das parcelas| tem de ser ≤ R$ 0,02 em todos os anos; caso contrário a emissão é <b>bloqueada</b> com "ERRO CRÍTICO — MEMÓRIA DE CÁLCULO NÃO FECHA", com ano, total, soma e diferença — e a Conferência mostra o mesmo quadro. O total nunca é ajustado para fechar. Suíte: bloco 5ab, com o cenário que reproduz a diferença (5ª faixa, INSS retido, RBA acima do sublimite) provando antes/depois.</td></tr>
                     <tr><td><b>v7.89.0</b></td><td>11/09/2026</td><td><b>📋 Quatro pendências antigas fechadas (decisões de 11/09/2026): data de abertura e RBT12p lidas do PGDAS-D, crédito de PIS/COFINS sobre despesas com tela, Tema 69 nota a nota e regime de caixa encerrado.</b> <b>(1) Início de atividade lido do PGDAS-D.</b> A proporcionalização da RBT12 de empresa com menos de 12 meses (Res. CGSN 140/2018, art. 22, §§ 2º e 3º — 1º mês: receita × 12; 2º ao 12º: soma dos anteriores ÷ n × 12) existe desde a v7.52.0, mas dependia do campo "Início de atividade" digitado, e empresa nova aparecia na faixa errada quando ele ficava em branco. A linha <code>Data de abertura no CNPJ: DD/MM/AAAA</code> do extrato (rótulo confirmado na BUSCO LOG, PA 07/2026) passa a preencher o campo <b>sempre</b>, como a RBAA (decisão de 10/09), com selo <code>P · PGDAS-D mm/aaaa</code> ao lado do campo; editar à mão remove o selo. As linhas <code>RBT12</code> e <code>RBT12p</code> declaradas também são lidas, mês a mês, e a conferência passa a imprimir a <b>RBT12p declarada contra a do motor</b>, acusando divergência — régua que só se prova no primeiro extrato de empresa nova, já que em empresa madura a linha vem em branco. O <code>Regime de Apuração</code> (Competência/Caixa) é lido apenas como informação: o regime de caixa se encerra em 2026 e, por decisão de 11/09, não há tratamento. <b>(4) Crédito de PIS/COFINS sobre despesas no Lucro Real — a tela.</b> <code>cfg.credLRpct</code> existia só no JSON desde a v7.42.2; entra na Configuração da empresa, no bloco do Lucro Real, um percentual creditável por categoria (administrativas, com vendas, fiscais, financeiras, outras), com a base legal do art. 3º das Leis 10.637/2002 e 10.833/2003 e o padrão zero preservado: a chave só existe quando algum percentual é informado, e passa a ser <b>herdada</b> entre anos como parâmetro da empresa. <b>(3) Tema 69 e Lei 14.592/2023 nota a nota.</b> A exclusão do ICMS da base de PIS/COFINS (STF, RE 574.706) e a exclusão do ICMS das aquisições da base de crédito eram sempre <b>estimativas</b> por alíquota. O importador de XML passa a ler o <code>vICMS</code> de cada NF-e (o <code>vICMSST</code> fica fora, é do substituído) e, quando o lote é lançado num bloco com destaque próprio (revenda sem ST, com redução, transporte), alimenta <code>icms.tema69</code> nos meses cobertos, com origem <code>X</code> — monofásico e ST não alimentam. A aba ICMS·IPI ganha as duas linhas informáveis (<code>icms.tema69</code> e <code>icms.lei14592</code>); em branco, a estimativa continua, e a conferência declara em cada mês se o valor é <b>nota a nota</b> ou <b>estimativa</b>. As compras por XML de entrada não são importadas pelo app, por isso a Lei 14.592 fica informável (do SPED ou do Totais ICMS) e não automática. <b>Achado incidental corrigido:</b> no funil da Configuração, <code>_cfg</code> é a mesma referência de <code>AN.cfg</code>, então a comparação "mudou? tira o selo P" da RBAA (v7.87.0) nunca acusava mudança — editar a RBAA à mão mantinha o selo. Passa a comparar com um retrato tirado antes do funil, e vale para a RBAA e para o início de atividade. Lacre <code>c503dbd2</code> <b>íntegro</b>: os casos-gabarito não trazem os campos novos, e sem eles o motor produz os mesmos números. Suíte: bloco 5aa.</td></tr>
                     <tr><td><b>v7.88.0</b></td><td>11/09/2026</td><td><b>⚖️ Relatório consolidado de pontos críticos (11/09/2026): os seis pontos, com LACRE RE-SELADO <code>2e1139e9</code> → <code>c503dbd2</code>.</b> Dos seis achados, quatro eram defeitos reais confirmados no código; os outros dois, rotulagem e eleição. <b>P0-01 — transição do ICMS/ISS por fora.</b> O ICMS e o ISS apurados fora da guia no período de impedimento (v7.58.0) entravam no híbrido — e no "por dentro", via total do Simples — pelo valor <b>integral</b> até 2033. Fora do Simples eles se sujeitam às normas gerais (Res. CGSN 140/2018, art. 12, § 8º), e as normas gerais são a EC 132/2023: ADCT, arts. 128 e 129 — 9/10 em 2029, 8/10 em 2030, 7/10 em 2031, 6/10 em 2032, extinção em 2033. Passam a seguir o mesmo <code>remIcmsIss</code> de todo o resto da conta (100/100/90/80/70/60/0%). No híbrido o IBS que os substitui já estava no IBS/CBS por fora; no "por dentro" o IBS do período impedido <b>não cabe na guia</b> (o sublimite alcança o IBS desde 2027, Res. CGSN 190/2026) e entra por fora, sobre a base impedida, pela alíquota de IBS do ano com a mesma intensidade de crédito da linha — premissa declarada na memória. <b>P0-02 — estado de impedimento por exercício.</b> Os anos projetados herdavam, por construção, o estado do ano-base (RBAA de dois anos antes). Agora, para cada ano seguinte, o motor é <b>rodado de novo</b> com RBAA = receita interna do exercício anterior (a mesma base que já decide a elegibilidade), contra o sublimite da tabela daquele ano: quem estava impedido em janeiro do ano-base mas fechou o ano abaixo do sublimite <b>deixa de estar impedido</b> em 2027; quem cruzou o sublimite em setembro fica impedido <b>desde 1º/01</b> do ano seguinte (LC 123/2006, art. 20, § 1º). Nenhuma flag é copiada; a memória da conferência imprime a RBAA usada, o sublimite e o resultado, em <code>estadoSeguinte</code>. Linha antiga sem a entrada (snapshot) mantém o comportamento anterior e declara isso. <b>P0-03 — mês em branco não é zero.</b> A planilha modelo marcava origem <code>L</code> nos 12 meses mesmo com célula vazia, e o Faturamento (modo substituir) marcava <code>F</code> nos 12 mesmo quando o PDF listava seis: o ano ficava "coberto", <code>ultimoMesCoberto</code> dizia dezembro e a <b>projeção deixava de rodar</b> — exatamente o que o teste 10/10 viu. Três estados agora: célula vazia → valor 0 e <b>origem nula</b> (não informado); célula com 0 → informado zero; célula com valor. Só os meses listados no PDF recebem <code>F</code>. PGDAS-D, XML, balancete e Demonstrativo já estavam certos. <b>P1-01 — Lucro Real sem CMV.</b> Com receita de comércio/indústria e nenhum custo de mercadoria lançado, o motor passa a declarar <code>lrIncompleto</code> (DL 1.598/1977, art. 14; RIR/2018, art. 301): o Real aparece riscado como <b>SIMULAÇÃO INCOMPLETA</b> e fica <b>fora da eleição</b> do melhor ou do pior regime em todos os quadros — veredito, comparativo, dashboard, carteira, parecer, apresentação, cenários da Reforma (<code>regular</code> = Presumido) — e o resumo gravado leva a marca. <b>P1-02 — estimativa declarada.</b> Onde o ICMS/ISS por fora aparece (monitor, conferência, comparativo), agora consta que é estimativa pelas alíquotas gerais da empresa, sem benefícios, redução de base, diferimento, ST específica, DIFAL nem regras do item da LC 116. <b>P2-01 — "por dentro" hipotético.</b> A partir de 2027, ano com impedimento marca o cenário "por dentro" como <b>HIPOTÉTICO — NÃO ELEGÍVEL NESTA SIMULAÇÃO</b>, riscado e fora do ranking; a escolha real fica entre híbrido e sair do Simples. <b>Eleição única.</b> <code>cenRank</code> (três cenários) e <code>regimesAtuais</code> (Simples × LP × LR) passam a ser o único lugar que decide quem concorre — veredito, dashboard, comparativo, relatório Reforma, parecer (jornada, tabela anual, acumulado, textos e payload da IA) e apresentação leem dali, nenhum <code>Math.min</code> próprio sobrou. <b>Lacre:</b> os casos 1 e 2 seguem idênticos ao centavo; o caso 3 (único com impedimento) muda em 2027-2033 de propósito, e o "por dentro" passa a ser selado por linha (antes o selo repetia o híbrido no lugar dele). Suíte: bloco 5z com as provas dos seis pontos.</td></tr>
@@ -2708,8 +2710,11 @@ async function fornAutoAplicar(){
   }
   const partes = [];
   let lrlp = 0, simp = 0;
+  RF._fornRows = [];   // v7.91.0 · linhas por fornecedor para a composição (CNPJ, valor, docs, classe, fonte)
   for (const t of ['servico','revenda','compra']){
     const r = porTipo[t]; if (!r) continue;
+    if (Array.isArray(r.dados.itens)) for (const i of r.dados.itens) RF._fornRows.push({ cnpj:i.cnpj, nome:i.razao||i.nome||'', valor:+i.valor||0, docs:+i.docs||+i.n||1, classe: i.generico ? 'nid' : i.classe, fonte:'Receita Federal — consulta CNPJ (' + t + (r.dados.periodo?' · '+r.dados.periodo:'') + ')' });
+    else if (r.dados.stats && r.dados.stats.grupos) for (const [cl, g] of Object.entries(r.dados.stats.grupos)) if (g && +g.v > 0) RF._fornRows.push({ cnpj:'', nome:'(agregado — ' + t + ')', valor:+g.v, docs:+g.n||1, classe: cl, fonte:'consulta agregada (' + t + ')' });
     let pl, ps;
     if (t === 'compra'){                                 // triagem grava itens com classe — soma por item
       const ext = (r.dados.itens||[]).filter(i => i.classe !== 'proprio' && i.classe !== 'pf');
@@ -5498,6 +5503,7 @@ function anRecalcular() {
       </div>
       ${_dIn ? `<div class="hint" style="margin-top:8px;padding:8px 10px;border-left:4px solid var(--danger,#943126);background:#fdedec;color:#7b241c">
         ⚠️ <b>"Por dentro" é HIPOTÉTICO em 2033 — não elegível nesta simulação.</b> ${esc(_RK.dentroMotivo||'')}. O valor fica à vista como referência e <b>não concorre</b> ao melhor caminho: a escolha real é entre o <b>híbrido</b> (art. 22-A) e sair do Simples.</div>` : ''}
+      ${C.confianca ? `<div class="hint" style="margin-top:8px;padding:6px 10px;border-left:5px solid ${C.confianca.cor}"><b style="color:${C.confianca.cor}">${C.confianca.icone} Confiabilidade: ${C.confianca.nivel}</b>${C.confianca.naoConclusivo?' — <b>'+_RK.melhorRotulo+'</b>':''}${C.confianca.motivos.length?' <span class="hint">'+C.confianca.motivos.map(esc).join(' · ')+'</span>':''}${C.sens && C.sens.inversao ? '<br><b style="color:#943126">⛔ ALERTA CRÍTICO — a composição dos fornecedores pode alterar o regime vencedor ('+C.sens.anosInversao.join(', ')+').</b>' : ''}</div>` : ''}
       ${T.lrIncompleto ? `<div class="hint" style="margin-top:8px;padding:8px 10px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109">
         ⚠️ <b>Lucro Real = ${LR_INCOMPLETO_ROT}.</b> ${esc(T.lrIncompletoMotivo||'')}. Lance a baixa de estoque (custo) nas compras — ou o CMV por estoque inicial + compras − estoque final — para o Real voltar a concorrer.</div>` : ''}
       ${(() => {
@@ -5710,7 +5716,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.90.0';
+const APP_VERSAO = '7.91.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -6295,8 +6301,8 @@ function rfRenderBenef() {
   };
   bloco('rf-benef-rec', RF.benefRec, 'benefRec');
   bloco('rf-benef-cred', RF.benefCred, 'benefCred');
-  $id('rf-contrapartes').innerHTML = RF_CONTRA.map(([k,rot,sub]) =>
-    `<div><label>${rot}</label><input value="${RF.contra[k]?fmt(RF.contra[k]):''}" onchange="RF.contra.${k}=num(this.value);rfCalcular();rfRenderBenef()"><div class="hint">${sub} (anual)</div></div>`).join('');
+  $id('rf-contrapartes').innerHTML = RF_CONTRA.map(([k,rot,sub]) => { const gerido = /^compras_/.test(k) && RF.comp && RF.comp.origem === 'consultas';   // v7.91.0
+    return `<div><label>${rot}</label><input value="${RF.contra[k]?fmt(RF.contra[k]):''}" ${gerido?'disabled title="gerido pela composição dos fornecedores"':''} onchange="RF.contra.${k}=num(this.value);delete RF.comp;rfCalcular();rfRenderBenef()"><div class="hint">${sub} (anual)${gerido?' · <b>pela composição</b>':''}</div></div>`; }).join('');
   $id('rf-receita').value = RF.receita?fmt(RF.receita):''; $id('rf-compras').value = RF.compras?fmt(RF.compras):'';
   $id('rf-baseis').value = RF.baseIS?fmt(RF.baseIS):''; $id('rf-credsimples').value = RF.credSimplesPct||0;
 }
@@ -6320,13 +6326,214 @@ function rfCargaAtual() {
 // v7.45.0 (item 5): a base de crédito é UMA SÓ — a mesma da aba Reforma — para híbrido, LP e LR.
 // Sem compras informadas na aba, vale o proxy A5 (v7.1): compras de revenda da análise como
 // aquisições de PJ do regime regular. Aba e cenários chamam ESTA função; divergir ficou impossível.
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// v7.91.0 · COMPOSIÇÃO DOS FORNECEDORES PARA CRÉDITO IBS/CBS — automática, editável, auditável
+// Seis grupos (LC 214/2025, arts. 47-49; art. 47, § 9º, II; Res. CGSN 190/2026, art. 58):
+//   regular         — regime regular: crédito pelo documento (alíquota do ano)
+//   simples         — Simples com IBS/CBS dentro do Simples: crédito = montante devido no Simples (art. 58)
+//   simplesRegular  — Simples que optou pelo regime regular de IBS/CBS: como regular (origem registrada)
+//   semCredito      — sem crédito integral: imune/isento/zero/suspenso/vedado e pessoa física
+//   presumido       — crédito presumido/regra específica: percentual informado pelo usuário
+//   nid             — não identificado: ZERO no cenário-base, integral só no limite superior
+// A classificação automática nasce das consultas de fornecedores (Receita Federal) gravadas pela
+// Consulta CNPJ; nada é escondido — cada fornecedor traz fonte, confiança e status. O usuário edita
+// percentuais OU valores, confirma ou mantém como estimativa; toda edição vai para a trilha, e o
+// automático original nunca é apagado. Sem dado nenhum, o total cai em "não identificado" —
+// nunca mais em "regime regular" por presunção (fim do proxy da v7.1).
+// ══════════════════════════════════════════════════════════════════════════════════════════
+const COMP_GRUPOS = [
+  ['regular',        'Regime regular de IBS/CBS'],
+  ['simples',        'Simples — IBS/CBS dentro do Simples'],
+  ['simplesRegular', 'Simples — opção pelo regime regular'],
+  ['semCredito',     'Sem crédito integral'],
+  ['presumido',      'Crédito presumido / tratamento específico'],
+  ['nid',            'Não identificado'],
+];
+const COMP_ROT = Object.fromEntries(COMP_GRUPOS);
+const COMP_CLASSE = { normal:'regular', simples:'simples', mei:'simples', pf:'semCredito', nid:'nid' };   // 'proprio' fica fora
+function compVazio(total){ const g = {}; for (const [k] of COMP_GRUPOS) g[k] = { v:0, pct:0 }; return { total: +total||0, g, naoClass:0 }; }
+function compPct(c){ const t = c.total > 0 ? c.total : 0; for (const [k] of COMP_GRUPOS) c.g[k].pct = t > 0 ? c.g[k].v / t : 0; return c; }
+function compSomaPct(g){ return COMP_GRUPOS.reduce((s,[k]) => s + (+g[k].pct||0), 0); }
+function compClonar(c){ return JSON.parse(JSON.stringify(c)); }
+// linhas por fornecedor a partir das consultas gravadas (preenchidas por fornAutoAplicar)
+function compAutoDe(rows, total, contraInformado){
+  const c = compVazio(total); const forn = [];
+  if (Array.isArray(rows) && rows.length){
+    for (const r of rows){
+      const grupo = COMP_CLASSE[r.classe] || 'nid'; if (r.classe === 'proprio') continue;
+      const v = Math.round((+r.valor||0)*100)/100; if (!(v > 0)) continue;
+      c.g[grupo].v += v;
+      forn.push({ cnpj:r.cnpj||'', nome:r.nome||r.razao||'', valor:v, docs:+r.docs||+r.n||1, grupo, grupoAuto:grupo,
+        fonte: r.fonte || 'Receita Federal — consulta CNPJ', confianca: grupo === 'nid' ? 'baixa' : 'alta', status:'sugerido' });
+    }
+    const soma = COMP_GRUPOS.reduce((s,[k]) => s + c.g[k].v, 0);
+    c.naoClass = Math.max(0, c.total - soma);
+    if (c.total <= 0.005) c.total = soma;
+    c.g.nid.v += c.naoClass;            // o que a análise tem de compras e a consulta não cobriu
+    c.origem = 'consultas';
+  } else if (contraInformado && ((+contraInformado.compras_lrlp||0) + (+contraInformado.compras_simples||0)) > 0.005){
+    // valores digitados na aba pelo usuário: são dele, valem como informados
+    c.g.regular.v = +contraInformado.compras_lrlp||0; c.g.simples.v = +contraInformado.compras_simples||0;
+    c.total = Math.max(c.total, c.g.regular.v + c.g.simples.v);
+    c.g.nid.v = Math.max(0, c.total - c.g.regular.v - c.g.simples.v);
+    c.origem = 'usuario';
+  } else {
+    c.g.nid.v = c.total; c.origem = 'sem-dados';
+  }
+  return { comp: compPct(c), forn };
+}
+// estado completo guardado em RF.comp (viaja na análise, gravado no banco)
+function compMontar(RF, T){
+  const total = +(T && T.comprasRevenda) || 0;
+  const { comp: auto, forn } = compAutoDe(RF._fornRows, total, RF.contra);
+  const prev = RF.comp && typeof RF.comp === 'object' ? RF.comp : null;
+  const mesmoAuto = prev && prev.auto && JSON.stringify(prev.auto.g) === JSON.stringify(auto.g) && Math.abs((prev.auto.total||0) - auto.total) < 0.005;
+  if (prev && mesmoAuto) { prev.forn = forn.length ? forn.map(f => { const e = (prev.forn||[]).find(x => x.cnpj === f.cnpj); return e ? { ...f, grupo:e.grupo, status:e.status } : f; }) : (prev.forn||[]); prev.origem = auto.origem; return prev; }
+  // automático mudou (ou não existia): recomeça, preservando a trilha antiga
+  const c = { versao: APP_VERSAO, geradoEm: new Date().toISOString(), origem: auto.origem,
+    auto: compClonar(auto), final: compClonar(auto), forn, editada:false, status:'sugerida',
+    confirmadoEm:null, confirmadoPor:null, modo:null, presumidoPct: prev ? (+prev.presumidoPct||0) : 0,
+    trilha: prev ? (prev.trilha||[]).concat([{ quando:new Date().toISOString(), usuario:(APP&&APP.user&&APP.user.email)||'', evento:'automático recalculado — composição anterior substituída (trilha preservada)' }]) : [] };
+  return c;
+}
+// composição → contrapartes usadas pelo motor de crédito (cenário-base)
+function compAplicarContra(RF){
+  const c = RF.comp; if (!c || !c.final) return false;
+  const g = c.final.g;
+  RF.contra.compras_lrlp = Math.round((g.regular.v + g.simplesRegular.v)*100)/100;
+  RF.contra.compras_simples = Math.round(g.simples.v*100)/100;
+  RF.contra.compras_presumido = Math.round(g.presumido.v*100)/100;
+  RF.contra.compras_nid = Math.round(g.nid.v*100)/100;
+  RF.contra.compras_semcred = Math.round(g.semCredito.v*100)/100;
+  RF.presumidoPct = +c.presumidoPct || 0;
+  return true;
+}
+// contrapartes dos três cenários de sensibilidade (LC 214: o superior nunca é definitivo)
+function compContraCenarios(comp, contraBase){
+  const base = Object.assign({}, contraBase);
+  if (!comp || !comp.final) {   // sem composição: o não identificado (fim do proxy) só entra no limite superior
+    const nid = +base.compras_nid || 0;
+    return { inf: base, base, sup: Object.assign({}, base, { compras_lrlp: (+base.compras_lrlp||0) + nid, compras_nid: 0 }) }; }
+  const g = comp.final.g, fonteOk = comp.status === 'confirmada' || comp.origem === 'consultas' || comp.origem === 'usuario';
+  const inf = Object.assign({}, base, { compras_lrlp: fonteOk ? (g.regular.v + g.simplesRegular.v) : 0, compras_simples: fonteOk ? g.simples.v : 0, compras_presumido: fonteOk ? g.presumido.v : 0, compras_nid: 0 });
+  const sup = Object.assign({}, base, { compras_lrlp: g.regular.v + g.simplesRegular.v + g.nid.v, compras_simples: g.simples.v, compras_presumido: g.presumido.v, compras_nid: 0 });
+  return { inf, base, sup };
+}
+// nível de confiabilidade da análise (item 15) — texto + ícone, nunca só cor
+function compConfianca(comp, sens, critico){
+  const c = comp; const pend = [];
+  if (critico) pend.push('divergência matemática (' + critico + ')');
+  if (!c) return { nivel:'BAIXO', cor:'#943126', icone:'⛔', motivos:['composição dos fornecedores ausente'].concat(pend), rotulo:'BAIXO', naoConclusivo:true };
+  const nidPct = c.final ? (c.final.g.nid.pct||0) : 1;
+  const confirmada = c.status === 'confirmada';
+  if (nidPct > 0.25 || c.origem === 'sem-dados') pend.push('parcela relevante não identificada (' + (nidPct*100).toFixed(1).replace('.',',') + '% das compras)');
+  if (sens && sens.inversao) pend.push('a composição pode alterar o regime vencedor');
+  if (!confirmada) pend.push('composição não confirmada pelo usuário');
+  let nivel;
+  if (pend.length === 0) nivel = 'ALTO';
+  else if ((sens && sens.inversao) || nidPct > 0.25 || c.origem === 'sem-dados' || critico) nivel = 'BAIXO';
+  else nivel = 'MÉDIO';
+  if (nivel === 'ALTO' && !confirmada) nivel = 'MÉDIO';
+  return { nivel, cor: nivel==='ALTO'?'#1e8449':nivel==='MÉDIO'?'#b9770e':'#943126', icone: nivel==='ALTO'?'✅':nivel==='MÉDIO'?'⚠️':'⛔', motivos: pend, rotulo: nivel, naoConclusivo: nivel === 'BAIXO' };
+}
+// ── edição ──
+function compEditar(modo){ if (!RF || !RF.comp) return; RF.comp.modo = modo; compRender(); }
+function compSetPct(k, v){ const c = RF.comp; if (!c) return; const p = Math.max(0, num(v))/100; c.final.g[k].pct = p; c.final.g[k].v = Math.round(p * c.final.total*100)/100; c.editada = true; compRender(); }
+function compSetVal(k, v){ const c = RF.comp; if (!c) return; c.final.g[k].v = Math.max(0, num(v)); compPct(c.final); c.editada = true; compRender(); }
+function compSetPresumido(v){ if (!RF || !RF.comp) return; RF.comp.presumidoPct = Math.max(0, Math.min(100, num(v))); rfCalcular(); }
+function compSetForn(i, grupo){ const c = RF.comp; if (!c || !c.forn[i]) return; const f = c.forn[i]; if (f.grupo === grupo) return;
+  c.final.g[f.grupo].v = Math.max(0, c.final.g[f.grupo].v - f.valor); c.final.g[grupo].v += f.valor; compPct(c.final);
+  c.trilha.push({ quando:new Date().toISOString(), usuario:(APP&&APP.user&&APP.user.email)||'', fornecedor:f.cnpj, de:f.grupo, para:grupo, motivo:'reclassificação manual do fornecedor' });
+  f.grupo = grupo; f.status = 'alterado manualmente'; c.editada = true; c.status = 'sugerida'; rfCalcular(); }
+function compFechar100(c){ return Math.abs(compSomaPct(c.final.g) - 1) < 0.00005 || c.final.total <= 0.005; }
+function compAplicarEdicao(){
+  const c = RF.comp; if (!c) return;
+  if (c.modo === 'pct' && !compFechar100(c)) { toast('ERRO — A composição dos fornecedores deve totalizar 100%.'); compRender(); return; }
+  if (c.modo === 'val') { const soma = COMP_GRUPOS.reduce((s,[k]) => s + c.final.g[k].v, 0); c.final.total = Math.round(soma*100)/100; compPct(c.final); }
+  const motivo = ($id('comp-motivo') && $id('comp-motivo').value || '').trim();
+  for (const [k] of COMP_GRUPOS){ const a = c.auto.g[k], f = c.final.g[k];
+    if (Math.abs(a.pct - f.pct) > 0.00005 || Math.abs(a.v - f.v) > 0.005)
+      c.trilha.push({ quando:new Date().toISOString(), usuario:(APP&&APP.user&&APP.user.email)||'', grupo:k, pctAuto:a.pct, pctEditado:f.pct, vAuto:a.v, vEditado:f.v, motivo, versao:APP_VERSAO, origem:c.origem }); }
+  c.modo = null; c.status = 'sugerida'; rfCalcular();
+}
+function compConfirmar(sim){
+  const c = RF.comp; if (!c) return;
+  if (sim){ if (!compFechar100(c)) { toast('ERRO — A composição dos fornecedores deve totalizar 100%.'); return; }
+    c.status = 'confirmada'; c.confirmadoEm = new Date().toISOString(); c.confirmadoPor = (APP&&APP.user&&APP.user.email)||'';
+    c.autoConfirmadaOriginal = c.autoConfirmadaOriginal || compClonar(c.auto); c.forn.forEach(f => { if (f.status === 'sugerido') f.status = 'confirmado'; });
+    c.trilha.push({ quando:c.confirmadoEm, usuario:c.confirmadoPor, evento:'COMPOSIÇÃO CONFIRMADA' });
+  } else { c.status = 'estimativa'; c.confirmadoEm = null; c.confirmadoPor = null;
+    c.trilha.push({ quando:new Date().toISOString(), usuario:(APP&&APP.user&&APP.user.email)||'', evento:'mantida como ESTIMATIVA' }); }
+  rfCalcular();
+}
+function compRestaurar(){
+  const c = RF.comp; if (!c) return;
+  c.trilha.push({ quando:new Date().toISOString(), usuario:(APP&&APP.user&&APP.user.email)||'', evento:'RESTAURADA a classificação automática' + (c.editada ? ' (havia edição manual — trilha preservada)' : '') });
+  c.final = compClonar(c.auto); c.editada = false; c.status = 'sugerida'; c.confirmadoEm = null; c.confirmadoPor = null; c.modo = null;
+  c.forn.forEach(f => { f.grupo = f.grupoAuto; f.status = 'sugerido'; }); rfCalcular();
+}
+// ── card na aba Reforma ──
+function compRender(){
+  const el = $id('rf-comp'); if (!el) return;
+  const c = RF && RF.comp; if (!c){ el.innerHTML = ''; return; }
+  const sens = RF._res && RF._res.sens, conf = RF._res && RF._res.confianca;
+  const pcs = p => (p*100).toFixed(4).replace('.',',') + '%';
+  const st = k => { const a = c.auto.g[k], f = c.final.g[k]; if (c.status === 'confirmada') return Math.abs(a.v-f.v)>0.005 ? 'alterado manualmente' : 'confirmado'; return Math.abs(a.v-f.v)>0.005 ? 'alterado manualmente' : 'sugerido'; };
+  const linhas = COMP_GRUPOS.map(([k,rot]) => { const a = c.auto.g[k], f = c.final.g[k];
+    return `<tr><td>${rot}${k==='presumido'?` <span class="hint">· crédito <input style="width:60px" value="${+c.presumidoPct||0}" onchange="compSetPresumido(this.value)"> % da alíquota</span>`:''}</td>
+      <td class="num">${pcs(a.pct)}</td>
+      <td class="num">${c.modo==='pct' ? `<input style="width:90px;text-align:right" value="${(f.pct*100).toFixed(4)}" onchange="compSetPct('${k}',this.value)">` : pcs(f.pct)}</td>
+      <td class="num">${fmt(a.v)}</td>
+      <td class="num">${c.modo==='val' ? `<input style="width:110px;text-align:right" value="${f.v?fmt(f.v):''}" onchange="compSetVal('${k}',this.value)">` : fmt(f.v)}</td>
+      <td>${st(k)}</td></tr>`; }).join('');
+  const somaPct = compSomaPct(c.final.g), fecha = Math.abs(somaPct-1) < 0.00005;
+  const selo = c.status === 'confirmada' ? '<span class="badge ok">✅ COMPOSIÇÃO CONFIRMADA</span>' : c.status === 'estimativa' ? '<span class="badge" style="background:#fef6e7;color:#7e5109">⚠️ mantida como ESTIMATIVA</span>' : '<span class="badge" style="background:#eaf2f8;color:#1a5276">🔎 CLASSIFICAÇÃO AUTOMÁTICA — RECOMENDADO (sugestão técnica, editável)</span>';
+  const fornHtml = c.forn && c.forn.length ? `<details style="margin-top:8px"><summary class="hint">Fornecedores classificados (${c.forn.length}) — CNPJ, valor, documentos, classificação, fonte, confiança, status</summary>
+    <div style="overflow-x:auto;max-height:260px;overflow-y:auto"><table><thead><tr><th>CNPJ</th><th>Razão social</th><th class="num">Valor</th><th class="num">Docs</th><th>Classificação</th><th>Fonte</th><th>Confiança</th><th>Status</th></tr></thead><tbody>
+    ${c.forn.map((f,i)=>`<tr><td>${esc(f.cnpj)}</td><td>${esc(f.nome||'')}</td><td class="num">${fmt(f.valor)}</td><td class="num">${f.docs}</td><td><select onchange="compSetForn(${i},this.value)">${COMP_GRUPOS.map(([k,rot])=>`<option value="${k}" ${f.grupo===k?'selected':''}>${rot}</option>`).join('')}</select></td><td class="hint">${esc(f.fonte)}</td><td>${f.confianca}</td><td>${f.status}</td></tr>`).join('')}</tbody></table></div></details>` : `<div class="hint" style="margin-top:6px">Não foi possível determinar automaticamente a composição dos fornecedores${c.origem==='usuario'?' — usados os valores informados na aba':''}. Use <b>Editar composição</b> para informar os percentuais manualmente.</div>`;
+  const trilha = (c.trilha||[]).slice(-8).reverse().map(t => `<li>${new Date(t.quando).toLocaleString('pt-BR')} · ${esc(t.usuario||'—')} · ${t.evento ? esc(t.evento) : `${COMP_ROT[t.grupo]||esc(t.fornecedor||'')}: automático ${t.pctAuto!=null?pcs(t.pctAuto):esc(t.de||'')} → editado ${t.pctEditado!=null?pcs(t.pctEditado):esc(t.para||'')}${t.pctAuto!=null?' ('+((t.pctEditado-t.pctAuto)*100).toFixed(2).replace('.',',')+' p.p.)':''}${t.motivo?' · motivo: '+esc(t.motivo):''}`}</li>`).join('');
+  const sensHtml = sens ? `<div style="margin-top:10px"><b>Sensibilidade dos créditos — ${sens.anoRef}</b>
+    <table><thead><tr><th>Cenário</th><th class="num">Crédito IBS/CBS</th><th class="num">Híbrido</th><th class="num">Fora do Simples</th><th>Vencedor</th></tr></thead><tbody>
+    ${['inf','base','sup'].map(k=>{ const S = sens.ref[k]; return `<tr><td>${k==='inf'?'Limite inferior (só confirmados)':k==='base'?'Cenário-base (composição utilizada)':'Limite superior (hipótese mais favorável — nunca definitivo)'}</td><td class="num">${fmt(S.cred)}</td><td class="num">${fmt(S.hib)}</td><td class="num">${fmt(S.regular)}</td><td>${esc(S.melhorNome)}</td></tr>`; }).join('')}
+    </tbody></table><div class="hint">Margem do vencedor (2º − 1º): <b>${fmtR(sens.ref.margem)}</b> · variação do crédito (superior − inferior): <b>${fmtR(sens.ref.variacao)}</b> · pode inverter o vencedor? <b>${sens.inversao?'SIM':'NÃO'}</b></div>
+    ${sens.inversao ? `<div class="hint" style="margin-top:6px;padding:8px 10px;border-left:4px solid #943126;background:#fdedec;color:#7b241c">⛔ <b>ALERTA CRÍTICO — A COMPOSIÇÃO DOS FORNECEDORES PODE ALTERAR O REGIME TRIBUTÁRIO VENCEDOR.</b> Confirme ${c.final.g.nid.v>0.005?'a parcela não identificada ('+fmtR(c.final.g.nid.v)+')':'os percentuais'} antes de concluir — anos afetados: ${sens.anosInversao.join(', ')}.</div>` : ''}</div>` : '';
+  const confHtml = conf ? `<div style="margin-top:10px;padding:10px 12px;border-left:5px solid ${conf.cor};background:#fff"><b style="color:${conf.cor}">${conf.icone} NÍVEL DE CONFIABILIDADE DA ANÁLISE: ${conf.nivel}</b>${conf.motivos.length?`<div class="hint">${conf.motivos.map(esc).join(' · ')}</div>`:'<div class="hint">100% das compras classificadas, composição confirmada, nenhuma premissa crítica pendente, nenhuma divergência matemática.</div>'}${conf.naoConclusivo?'<div class="hint"><b>Sem "regime recomendado":</b> o parecer sai como "MELHOR RESULTADO DENTRO DAS PREMISSAS INFORMADAS — NÃO CONCLUSIVO".</div>':''}</div>` : '';
+  el.innerHTML = `<div class="card"><h3>Composição dos fornecedores para crédito IBS/CBS</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">${selo}<span class="hint">origem: ${c.origem==='consultas'?'consultas de fornecedores (Receita Federal)':c.origem==='usuario'?'valores informados na aba':'sem dados'} · gerada em ${new Date(c.geradoEm).toLocaleString('pt-BR')} · motor v${esc(c.versao||'')}</span></div>
+    <div style="overflow-x:auto"><table><thead><tr><th>Grupo</th><th class="num">% automático</th><th class="num">% editado</th><th class="num">Valor automático</th><th class="num">Valor ajustado</th><th>Status</th></tr></thead><tbody>${linhas}
+    <tr style="font-weight:700;border-top:2px solid #1a5276"><td>TOTAL DOS PERCENTUAIS</td><td class="num">${pcs(compSomaPct(c.auto.g))}</td><td class="num" style="color:${fecha?'#1e8449':'#943126'}">${pcs(somaPct)}${fecha?'':' ✗'}</td><td class="num">${fmt(c.auto.total)}</td><td class="num">${fmt(c.final.total)}</td><td></td></tr></tbody></table></div>
+    <div class="hint">TOTAL DAS COMPRAS CLASSIFICADAS = ${fmtR(c.final.total - c.final.g.nid.v)} · TOTAL DAS COMPRAS NÃO CLASSIFICADAS = ${fmtR(c.final.g.nid.v)}${!fecha?' · <b style="color:#943126">ERRO — A composição dos fornecedores deve totalizar 100%.</b>':''}</div>
+    <div class="toolbar" style="margin-top:8px;flex-wrap:wrap;gap:6px">
+      ${c.modo ? `<input id="comp-motivo" placeholder="justificativa (opcional)" style="width:260px"><button class="btn solid" onclick="compAplicarEdicao()">Aplicar edição</button><button class="btn" onclick="RF.comp.modo=null;compRender()">Cancelar</button>`
+               : `<button class="btn" onclick="compEditar('pct')">✏️ Editar composição — percentuais</button><button class="btn" onclick="compEditar('val')">✏️ Editar composição — valores</button>`}
+      <button class="btn" onclick="compRestaurar()">↩ Restaurar classificação automática</button>
+      <span style="flex:1"></span>
+      <span class="hint">Composição dos fornecedores confirmada pelo usuário?</span>
+      <button class="btn solid" onclick="compConfirmar(true)" ${c.status==='confirmada'?'disabled':''}>SIM — confirmar composição</button>
+      <button class="btn" onclick="compConfirmar(false)">NÃO — manter como estimativa</button>
+    </div>
+    ${fornHtml}${sensHtml}${confHtml}
+    ${trilha ? `<details style="margin-top:8px"><summary class="hint">Trilha de auditoria (${c.trilha.length})</summary><ul class="hint">${trilha}</ul></details>` : ''}
+    <div class="hint" style="margin-top:6px">Regras: regime regular e Simples com opção pelo regular → crédito pelo documento, IBS e CBS separados (LC 214/2025, arts. 47 e 48); Simples com IBS/CBS dentro do Simples → crédito limitado ao montante devido no Simples (art. 47, § 9º, II; Res. CGSN 190/2026, art. 58 — 1ª faixa do Anexo I por conservadorismo); sem crédito integral → zero; presumido → percentual informado; <b>não identificado → zero no cenário-base e integral só no limite superior</b>, nunca presumido como regime regular.</div>
+  </div>`;
+}
+
 function rfContraEfetivo(rf, T){
   const contra = Object.assign({}, rf?.contra||{});
-  let proxy = false;
+  // v7.91.0 · a composição dos fornecedores governa as contrapartes de compra
+  if (rf && rf.comp && rf.comp.final){ const g = rf.comp.final.g;
+    contra.compras_lrlp = g.regular.v + g.simplesRegular.v; contra.compras_simples = g.simples.v;
+    contra.compras_presumido = g.presumido.v; contra.compras_nid = g.nid.v; contra.compras_semcred = g.semCredito.v;
+    return { contra, proxy:false, semPerfil: rf.comp.origem === 'sem-dados', comp: rf.comp }; }
+  // ══ v7.91.0 · FIM DO PROXY DA v7.1 ═══════════════════════════════════════════════════════
+  // Sem perfil de fornecedor, as compras de revenda NÃO entram mais como regime regular com
+  // crédito integral (Artecon(8), P0/P1; LC 214/2025, art. 47). Entram como NÃO IDENTIFICADAS:
+  // zero no cenário-base, integral só no limite superior da sensibilidade — e o parecer avisa.
+  let semPerfil = false;
   if (!((contra.compras_lrlp||0) > 0) && !((contra.compras_simples||0) > 0) && (T?.comprasRevenda||0) > 0){
-    contra.compras_lrlp = T.comprasRevenda; proxy = true;
+    contra.compras_nid = T.comprasRevenda; semPerfil = true;
   }
-  return { contra, proxy };
+  return { contra, proxy:false, semPerfil, comp:null };
 }
 
 // Débito/crédito de IBS/CBS por ano a partir dos dados da aba Reforma (compartilhado com o Relatório)
@@ -6362,6 +6569,8 @@ function rfLinhaBase(rf, a, dedBase) {
   for (const [k,,red] of RF_REDUCOES) cred += (rf.benefCred?.[k]||0)*alq*(1-red);
   // v7.29.0: % manual preenchido prevalece (override); zerado = automático pelo art. 58 (1ª faixa)
   cred += (rf.contra?.compras_simples||0) * ((rf.credSimplesPct||0) > 0 ? (rf.credSimplesPct/100) : credSimplesArt58(a));
+  // v7.91.0 · crédito presumido/regra específica pelo percentual informado da alíquota; não identificado = zero
+  cred += (rf.contra?.compras_presumido||0) * alq * (Math.max(0, Math.min(100, +rf.presumidoPct||0))/100);
   const anoTeste = (a <= 2026);
   return { q, alq, deb, cred, anoTeste, ded, dedParcelas,
     liquido: anoTeste ? 0 : Math.max(0, deb - cred),
@@ -6401,6 +6610,8 @@ function cenRank(T, L){
   cand.push({ k:'regular', nome:'Fora do Simples (' + (L.regNome||'') + ')', v:regular });
   const ord = cand.slice().sort((a,b)=>a.v-b.v);
   return { dentro, hib, regular, cand, ord, melhor: ord[0], segundo: ord[1]||null,
+           naoConclusivo: !!L.naoConclusivo,   // v7.91.0 · confiança BAIXA: sem "regime recomendado"
+           melhorRotulo: L.naoConclusivo ? 'MELHOR RESULTADO DENTRO DAS PREMISSAS INFORMADAS — NÃO CONCLUSIVO' : 'Regime recomendado',
            dentroOk: !snFora && !dentroFora, hibOk: !snFora,
            dentroSelo: dentroFora ? 'HIPOTÉTICO — NÃO ELEGÍVEL NESTA SIMULAÇÃO' : (snFora ? 'INDISPONÍVEL — referência apenas' : ''),
            dentroMotivo: L.dentroMotivo || L.snMotivo || '' };
@@ -6414,7 +6625,10 @@ function calcCenariosReforma(res, reforma) {
   // como proxy de aquisições de PJ do regime regular — evita cenários híbrido/fora sem NENHUM crédito.
   const _ce = rfContraEfetivo(rfx, T);   // v7.45.0 (item 5): mesma base de crédito da aba
   rfx.contra = _ce.contra;
-  const proxyCompras = _ce.proxy;
+  const proxyCompras = _ce.proxy;   // v7.91.0 · sempre false: o proxy acabou (vide semPerfil)
+  const semPerfil = !!_ce.semPerfil;
+  const _comp = _ce.comp || null;
+  const _csen = compContraCenarios(_comp, _ce.contra);   // v7.91.0 · inferior / base / superior
   // v7.16.3: as alíquotas vêm SEMPRE dos Parâmetros do aplicativo (ou do padrão de fábrica),
   // nunca da cópia gravada na análise — atualizar Parâmetros reflete em tudo que já existe.
   const aliqApp = PARAMS.reforma || RF_ALIQ_DEFAULT;
@@ -6586,6 +6800,9 @@ function calcCenariosReforma(res, reforma) {
     // só sobre saídas SEM ST (decisão 2.2): mercadoria com ST não tem destaque próprio.
     const dedIcms = a >= 2027 ? lpIcmsDeb * (+_q0.remIcmsIss||0) : 0;
     const L = rfLinhaBase(rfx, a, dedIss + dedIcms), q = L.q;
+    // v7.91.0 · as mesmas linhas com as contrapartes do limite inferior e do superior
+    const LInf = rfLinhaBase(Object.assign({}, rfx, { contra: _csen.inf }), a, dedIss + dedIcms);
+    const LSup = rfLinhaBase(Object.assign({}, rfx, { contra: _csen.sup }), a, dedIss + dedIcms);
     const rPC = +q.remPisCof||0, rII = +q.remIcmsIss||0;
     // v7.88.0 (P0-02) · bloco do Simples do EXERCÍCIO: ano-base = realizado; anos seguintes =
     // motor recalculado com a RBAA do exercício anterior (quando houver impedimento em jogo).
@@ -6637,6 +6854,10 @@ function calcCenariosReforma(res, reforma) {
     return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, anoTeste:L.anoTeste, ded:L.ded, dedIss, dedIcms, dasHib, hib, regular, regLP, regLR, p190:P, regNome: regular===regLP?'Presumido':'Real',
              dentro, impForaAno, impForaBase: S.impForaDAS, ibsForaImp, baseImpedida: S.baseImpedida,   // v7.88.0
              hibParcelas, hibSoma, hibConfere,   // v7.90.0
+             // v7.91.0 · sensibilidade: o que muda entre os cenários é só o IBS/CBS líquido (crédito)
+             sens: { inf: { cred: LInf.cred, liquido: LInf.liquido, hib: hib - L.liquido + LInf.liquido, regLP: regLP - L.liquido + LInf.liquido, regLR: regLR - L.liquido + LInf.liquido },
+                     base: { cred: L.cred, liquido: L.liquido, hib, regLP, regLR },
+                     sup: { cred: LSup.cred, liquido: LSup.liquido, hib: hib - L.liquido + LSup.liquido, regLP: regLP - L.liquido + LSup.liquido, regLR: regLR - L.liquido + LSup.liquido } },
              dentroInelegivel: _dentroInelegivel, dentroMotivo: _dentroMotivo, lrIncompleto,
              estadoSeguinte: a > _anoBase ? { recalculado: !!_rProx, rbaaUsada: _rProx ? _recIntBase : null,
                sublimite: _subProx(a), impedidoJan: S.impedidoJan, nImpedidos: S.nImpedidos } : null,
@@ -6669,7 +6890,27 @@ function calcCenariosReforma(res, reforma) {
                : null };
   });
   const semCreditos = REF.every(l=>l.cred<=0.005);
-  return { rfx, REF, usouFallback: !reforma, proxyCompras, semCreditos,
+  // ══ v7.91.0 · SENSIBILIDADE, TESTE DE INVERSÃO E NÍVEL DE CONFIABILIDADE ═══════════════════
+  // margem_vencedor = 2º − 1º (cenário-base); variacao_credito = crédito superior − inferior.
+  // variacao ≥ margem em qualquer ano projetado → a composição pode inverter o vencedor.
+  const _lrInc = !!T.lrIncompleto;
+  const _rankDe = (l, S) => { const l2 = Object.assign({}, l, { hib: S.hib, regLP: S.regLP, regLR: S.regLR }); l2.regular = _lrInc ? S.regLP : Math.min(S.regLP, S.regLR); l2.regNome = l2.regular === S.regLP ? 'Presumido' : 'Real'; return cenRank(T, l2); };
+  const _porAno = REF.filter(l => l.ano >= 2027).map(l => { const rb = _rankDe(l, l.sens.base), ri = _rankDe(l, l.sens.inf), rs = _rankDe(l, l.sens.sup);
+    const margem = rb.segundo ? rb.segundo.v - rb.melhor.v : Infinity, variacao = l.sens.sup.cred - l.sens.inf.cred;
+    return { ano:l.ano, margem, variacao, inverte: isFinite(margem) && variacao >= margem - 0.005 && variacao > 0.005,
+      inf:{ cred:l.sens.inf.cred, hib:l.sens.inf.hib, regular:ri.regular, melhorNome:ri.melhor.nome, melhorK:ri.melhor.k },
+      base:{ cred:l.sens.base.cred, hib:l.sens.base.hib, regular:rb.regular, melhorNome:rb.melhor.nome, melhorK:rb.melhor.k },
+      sup:{ cred:l.sens.sup.cred, hib:l.sens.sup.hib, regular:rs.regular, melhorNome:rs.melhor.nome, melhorK:rs.melhor.k } }; });
+  const _anosInv = _porAno.filter(x => x.inverte || x.inf.melhorK !== x.sup.melhorK).map(x => x.ano);
+  const _ref = _porAno.find(x => x.ano === 2033) || _porAno[_porAno.length-1] || null;
+  const sens = _ref ? { anoRef: _ref.ano, ref: Object.assign({}, _ref), porAno: _porAno, inversao: _anosInv.length > 0, anosInversao: _anosInv } : null;
+  const hibNaoFechaArr = REF.filter(l => !l.hibConfere);
+  // sem compras não há composição a confirmar; compras digitadas na aba valem como informadas pelo usuário
+  const _compRef = _comp || (semPerfil ? null : ((T.comprasRevenda||0) > 0.005 || (_ce.contra.compras_lrlp||0) + (_ce.contra.compras_simples||0) > 0.005
+    ? { status:'sugerida', origem:'usuario', final: { g: { nid: { pct: 0 } } } } : { status:'confirmada', origem:'nenhuma', final: { g: { nid: { pct: 0 } } } }));
+  const confianca = compConfianca(_compRef, sens, hibNaoFechaArr.length ? 'MEM-01' : null);
+  for (const l of REF) l.naoConclusivo = !!confianca.naoConclusivo;
+  return { rfx, REF, usouFallback: !reforma, proxyCompras, semCreditos, semPerfil, comp: _comp, sens, confianca,   // v7.91.0
            lrIncompleto: !!T.lrIncompleto, lrIncompletoMotivo: T.lrIncompletoMotivo || null,   // v7.88.0 (P1-01)
            dentroInelegivelAlgum: REF.some(l=>l.dentroInelegivel),                              // v7.88.0 (P2-01)
            hibNaoFecha: REF.filter(l => !l.hibConfere).map(l => ({ ano:l.ano, hib:l.hib, soma:l.hibSoma, dif:l.hib-l.hibSoma })),   // v7.90.0
@@ -6863,7 +7104,7 @@ const LACRE_CASOS = [
   // de 5% do ISS na 5ª faixa, os cinco anexos, os quatro blocos de exportação, ST, monofásico,
   // redução de ICMS, transporte, IPI, 13º pago e o Fator R dos DOIS lados dos 28%.
   { nome:'Caso 3 — Estresse (art. 24, teto de ISS, exportação, impedimento, Fator R)', inp: {"cnpj": "33333333000399", "ano": 2026, "cfg": {"iss": 0.05, "icmsV": 0.17, "icmsC": 0.12, "ipiV": 0.075, "ipiC": 0.05, "rbt12Direto": 0, "rbt12Lanc": [292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500], "rbt12ExpLanc": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "folha12Lanc": [105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000], "lpBaseServ": 0.32, "lpBaseCom": 0.08, "lpBaseServCsll": 0, "lpBaseComCsll": 0.12, "transpPresuncao": "cargas", "icmsTranspV": 0, "transpCredPres": 0, "folhaPerc": {}, "adicionalIR": "trimestral", "sublimite": "auto", "lrPeriodo": "trimestral", "lrPrejIrpj": 0, "lrPrejCsll": 0, "inicioAtividade": ""}, "receitas": {"a1_semst": [280000, 300000, 320000, 340000, 360000, 380000, 400000, 420000, 440000, 460000, 480000, 520000], "a1_red": [15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000], "a1_red_pct": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3], "a1_mono": [20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000], "a1_mono_pct": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a1_comst": [30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000], "a1_comst_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_semst": [40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000], "a2_red": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_red_pct": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_comst": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_comst_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a3_semret": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "a3_retiss": [16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200], "a3_retissinss": [10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800], "a4": [12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000], "a4_retiss": [12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600], "a5r": [35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000], "fin": [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500], "comtransp": [18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000], "comtransp_st": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a1_exp": [14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000], "a2_exp": [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000], "a3_exp": [8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000], "a5r_exp": [6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000]}, "folha": {"prolabore": [14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000], "salarios": [78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000], "baseFgts": [78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000], "prov13": [3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750], "provFerias": [5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000]}, "folha13": {"prolabore13": 14000, "salarios13": 78000, "baseFgts13": 78000}, "compras": {"semst": [150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000], "baixaSemst": [140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000], "mono": [15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000], "baixaMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "comst": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "baixaComst": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "comstMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "baixaComstMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "baseIpiCred": [20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000]}, "icms": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "ipi": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "despesas": {"adm": [38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000], "vendas": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "fiscais": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "financeiras": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "outras": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credInsumos": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credEnergia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credAlugueisPJ": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credArrendamento": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credDepreciacao": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credBenfeitorias": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credFretesVenda": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credValeTransp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credDevolucoes": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credLR": [9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000]}, "origem": {}} }];
-const LACRE_HASH = '5996c4be';   // v7.48.0 — RE-SELADO: o ICMS destacado passou a sair da base do IBS/CBS (LC 214, art. 12, §2º, V) e o transporte passou a gerar débito de ICMS no LP/LR. Anterior: e1a25234 (v7.45.0); antes fa39eefb (v7.35.0)
+const LACRE_HASH = '453f7b32';   // v7.48.0 — RE-SELADO: o ICMS destacado passou a sair da base do IBS/CBS (LC 214, art. 12, §2º, V) e o transporte passou a gerar débito de ICMS no LP/LR. Anterior: e1a25234 (v7.45.0); antes fa39eefb (v7.35.0)
 function lacreHash(str){ let h = 0x811c9dc5;
   for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   return h.toString(16).padStart(8,'0'); }
@@ -6926,7 +7167,7 @@ function lacreRender(){
 //      bloco ANTIGO por cima do que a aba já tinha salvado.
 let RF_MARCO = '';   // retrato do bloco de Reforma como está GRAVADO no banco
 function rfLimpo(rf){ return { ...rf, _res:undefined, _forn:undefined, _vend:undefined,
-  _benefFonte:undefined, _benefDet:undefined, _benefOpcoes:undefined }; }
+  _benefFonte:undefined, _benefDet:undefined, _benefOpcoes:undefined, _fornRows:undefined, _compUi:undefined }; }   // v7.91.0 · linhas de fornecedores e estado de tela não vão ao banco
 function rfMarco(rf){ try { return JSON.stringify(rfLimpo(rf)); } catch(e){ return ''; } }
 function rfPendente(){ return !!RF && !!RF.cnpj && rfMarco(RF) !== RF_MARCO; }
 
@@ -6946,6 +7187,12 @@ function rfCalcular() {
   const atual = rfCargaAtual();
   // v7.45.0 (itens 2 e 5): a aba usa a MESMA base de crédito e a MESMA dedução de ISS dos cenários
   const _T = AN?._res?.totais || null;
+  // v7.91.0 · composição dos fornecedores: automática (consultas) → editável → confirmada; governa as compras
+  try { RF.comp = compMontar(RF, _T); compAplicarContra(RF);
+        const _o = RF.comp ? RF.comp.origem : ''; if (RF._compUi !== _o) { RF._compUi = _o; rfRenderBenef(); } } catch(e){ console.error('composição', e); }
+  RF.compras = (RF.contra.compras_lrlp||0) + (RF.contra.compras_simples||0) + (RF.contra.compras_presumido||0);
+  $id('rf-compras').value = RF.compras ? fmt(RF.compras) : '';
+  if (AN && AN.cnpj === RF.cnpj && +AN.ano === +RF.ano) AN.reforma = rfLimpo(RF);
   const _ce = rfContraEfetivo(RF, _T);
   const RFX = Object.assign({}, RF, { contra: _ce.contra });
   // ══ v7.86.2 · ABA REFORMA × PARECER: O ISS RETIDO ENTRAVA NA DEDUÇÃO SÓ AQUI ══
@@ -6973,6 +7220,9 @@ function rfCalcular() {
     linhas.push({ ano:a, alq, deb, cred, liquido, is:is_, rem, ded, dedIss:_dedIss, dedIcms:_dedIcms, total: liquido + is_ + rem });
   }
   RF._res = { linhas, atual };
+  // v7.91.0 · sensibilidade + nível de confiabilidade (mesma conta do parecer)
+  try { if (AN && AN._res && AN.cnpj === RF.cnpj) { const C = calcCenariosReforma(AN._res, rfLimpo(RF)); RF._res.sens = C.sens; RF._res.confianca = C.confianca; } } catch(e){ console.error('sensibilidade', e); }
+  compRender();
   // resumo
   const l26 = linhas[0], l33 = linhas[linhas.length-1];
   const cards = [];
@@ -6994,7 +7244,7 @@ function rfCalcular() {
   const notas = [];
   notas.push('Débitos e créditos "por fora": alíquotas aplicadas sobre os valores informados, com reduções da EC 132/LC 214 nas parcelas indicadas. O IS não gera crédito. <b>Base do IBS/CBS sem o ISS da configuração e sem o ICMS destacado nas saídas</b> (LC 214, art. 12, §2º, V — o mesmo inciso exclui os dois), pelo percentual remanescente de cada ano; deduz-se o ICMS <b>destacado</b>, não o saldo a pagar, e a mercadoria com ST fica fora por não ter destaque próprio. Em 2033 não há dedução: ICMS e ISS estão extintos.');
   notas.push('Esta aba trabalha sobre o <b>realizado</b> (é a ferramenta de edição). No parecer, na conferência e no relatório Reforma, com ano incompleto, receita, compras e créditos entram <b>projetados para o ano cheio</b> pelo fator da janela — é lá que os documentos fecham entre si, ao centavo.');
-  if (_ce.proxy) notas.push('<b>Crédito automático:</b> sem compras informadas na aba, as compras de revenda da análise entram como aquisições de PJ do regime regular — a MESMA regra e o MESMO valor dos cenários híbrido/Presumido/Real do parecer.');
+  if (_ce.semPerfil) notas.push('<b style="color:#943126">Compras sem perfil de fornecedor:</b> entram como <b>NÃO IDENTIFICADAS</b> — zero de crédito no cenário-base e crédito integral só no limite superior da sensibilidade (LC 214/2025, art. 47). Nada é presumido como regime regular. Importe a consulta de fornecedores na Consulta CNPJ ou informe os percentuais na composição acima.');
   { const _issRetAno = AN?._res ? (AN._res.meses||[]).reduce((sm,M)=>sm+(+M.issRetLPLR||0),0) : 0;   // v7.86.2
     if (_issRetAno > 0.005) notas.push(_T && _T.dedIssRetido === true
       ? `<b>ISS retido pelo tomador</b> (${fmtR(_issRetAno)}/ano) <b>incluído</b> na dedução da base — opção "Deduz" na Configuração da empresa (v7.69.0).`
@@ -9122,6 +9372,38 @@ function ppBaseIbsCbs(D){
   if ((L.dedIcms||0) > 0.005) partes.push(`<b>ICMS destacado nas saídas</b> ${fmtR(L.dedIcms)}`);
   return `<div class="hint" style="margin-top:8px;padding:8px 10px;border-left:3px solid #1a5276;background:#f4f6f7"><b>Base do IBS/CBS em ${a}:</b> saem da base ${partes.join(' e ')} — LC 214/2025, art. 12, §2º, V, pelo percentual remanescente do ano. O débito de <b>${fmtR(L.deb)}</b> já está calculado sobre a base líquida dessas parcelas.</div>`;
 }
+// ══ v7.91.0 · QUADROS: COMPOSIÇÃO DOS FORNECEDORES · CRÉDITOS IBS/CBS · SENSIBILIDADE ═══════════
+function compQuadrosHtml(C, L, compacto){
+  if (!C || !L) return '';
+  const comp = C.comp, sens = C.sens, conf = C.confianca;
+  const pcs = p => (p*100).toFixed(2).replace('.',',') + '%';
+  const q = (L.q||{}), tot = (+q.cbs||0) + (+q.ibse||0) + (+q.ibsm||0), fC = tot>0 ? (+q.cbs||0)/tot : 0, fI = 1 - fC;   // rateio IBS × CBS pelas alíquotas do ano
+  const g = comp && comp.final ? comp.final.g : null;
+  const credConf = g ? (g.regular.v + g.simplesRegular.v) * L.alq + g.simples.v * (((C.rfx||{}).credSimplesPct||0) > 0 ? C.rfx.credSimplesPct/100 : credSimplesArt58(L.ano)) : (C.semPerfil ? 0 : L.cred);
+  const credEst = g ? g.presumido.v * L.alq * ((+comp.presumidoPct||0)/100) : 0;
+  const credNao = L.sens ? (L.sens.sup.cred - L.cred) : 0;
+  const st = compacto ? 'font-size:8.5pt' : '';
+  const q1 = comp && g ? `<table class="${compacto?'pp-tab':''}" style="${st}"><thead><tr><th>Grupo</th><th class="num">% automático</th><th class="num">% final</th><th class="num">Compras (final)</th><th>Alterado?</th></tr></thead><tbody>
+      ${COMP_GRUPOS.map(([k,rot])=>`<tr><td>${rot}</td><td class="num">${pcs(comp.auto.g[k].pct)}</td><td class="num">${pcs(g[k].pct)}</td><td class="num">${fmt(g[k].v)}</td><td>${Math.abs(comp.auto.g[k].pct-g[k].pct)>0.00005?'sim':'—'}</td></tr>`).join('')}
+      <tr style="font-weight:700"><td>Total</td><td class="num">${pcs(compSomaPct(comp.auto.g))}</td><td class="num">${pcs(compSomaPct(g))}</td><td class="num">${fmt(comp.final.total)}</td><td></td></tr></tbody></table>
+      <div class="hint">Não identificado: <b>${pcs(g.nid.pct)}</b> (${fmtR(g.nid.v)}) · confirmação do usuário: <b>${comp.status==='confirmada'?'SIM — '+new Date(comp.confirmadoEm).toLocaleString('pt-BR')+' · '+esc(comp.confirmadoPor||''):comp.status==='estimativa'?'NÃO — mantida como estimativa':'pendente (classificação automática sugerida)'}</b> · origem: ${comp.origem==='consultas'?'consultas de fornecedores (Receita Federal)':comp.origem==='usuario'?'informada pelo usuário':'sem dados'}${comp.editada?' · <b>percentuais alterados manualmente</b> (trilha na aba Reforma)':''}</div>`
+    : `<div class="hint">${C.semPerfil ? '<b style="color:#943126">Não foi possível determinar a composição dos fornecedores</b> — as compras de ' + fmtR((C.rfx&&C.rfx.contra&&C.rfx.contra.compras_nid)||0) + ' entram como NÃO IDENTIFICADAS (zero de crédito no cenário-base).' : 'Compras informadas diretamente na aba Reforma (regime regular ' + fmtR((C.rfx&&C.rfx.contra&&C.rfx.contra.compras_lrlp)||0) + ' · Simples ' + fmtR((C.rfx&&C.rfx.contra&&C.rfx.contra.compras_simples)||0) + ').'}</div>`;
+  const q2 = `<table class="${compacto?'pp-tab':''}" style="${st}"><thead><tr><th></th><th class="num">IBS</th><th class="num">CBS</th><th class="num">Total</th></tr></thead><tbody>
+      <tr><td>Débito</td><td class="num">${fmt(L.deb*fI)}</td><td class="num">${fmt(L.deb*fC)}</td><td class="num">${fmt(L.deb)}</td></tr>
+      <tr><td>Crédito confirmado</td><td class="num">${fmt(credConf*fI)}</td><td class="num">${fmt(credConf*fC)}</td><td class="num">${fmt(credConf)}</td></tr>
+      <tr><td>Crédito estimado (presumido/regra específica)</td><td class="num">${fmt(credEst*fI)}</td><td class="num">${fmt(credEst*fC)}</td><td class="num">${fmt(credEst)}</td></tr>
+      <tr><td>Crédito NÃO confirmado (fora do cenário-base)</td><td class="num">${fmt(credNao*fI)}</td><td class="num">${fmt(credNao*fC)}</td><td class="num">${fmt(credNao)}</td></tr>
+      <tr style="font-weight:700"><td>Líquido (cenário-base)</td><td class="num">${fmt(L.liquido*fI)}</td><td class="num">${fmt(L.liquido*fC)}</td><td class="num">${fmt(L.liquido)}</td></tr></tbody></table>
+      <div class="hint">IBS e CBS apurados separadamente e sem compensação entre si (LC 214/2025, arts. 47 e 48); rateio pelas alíquotas do ano. Crédito confirmado = regime regular e Simples com opção pelo regular (documento) + Simples dentro do Simples (art. 47, § 9º, II — montante devido no Simples, art. 58 da Res. CGSN 190/2026).</div>`;
+  const R = sens && sens.porAno ? sens.porAno.find(x=>x.ano===L.ano) : null;
+  const q3 = R ? `<table class="${compacto?'pp-tab':''}" style="${st}"><thead><tr><th>Cenário</th><th class="num">Crédito</th><th class="num">Híbrido</th><th class="num">Fora do Simples</th><th>Vencedor</th></tr></thead><tbody>
+      <tr><td>Limite inferior — só créditos confirmados</td><td class="num">${fmt(R.inf.cred)}</td><td class="num">${fmt(R.inf.hib)}</td><td class="num">${fmt(R.inf.regular)}</td><td>${esc(R.inf.melhorNome)}</td></tr>
+      <tr style="font-weight:700"><td>Cenário-base — composição utilizada</td><td class="num">${fmt(R.base.cred)}</td><td class="num">${fmt(R.base.hib)}</td><td class="num">${fmt(R.base.regular)}</td><td>${esc(R.base.melhorNome)}</td></tr>
+      <tr><td>Limite superior — hipótese mais favorável (nunca definitivo)</td><td class="num">${fmt(R.sup.cred)}</td><td class="num">${fmt(R.sup.hib)}</td><td class="num">${fmt(R.sup.regular)}</td><td>${esc(R.sup.melhorNome)}</td></tr></tbody></table>
+      <div class="hint">Diferença superior − inferior no crédito: <b>${fmtR(R.variacao)}</b> · margem do vencedor (2º − 1º): <b>${isFinite(R.margem)?fmtR(R.margem):'cenário único'}</b> · pode inverter o vencedor? <b>${R.inverte || R.inf.melhorK!==R.sup.melhorK ? 'SIM' : 'NÃO'}</b></div>` : '';
+  const confHtml = conf ? `<div style="margin:6px 0;padding:6px 10px;border-left:5px solid ${conf.cor}"><b style="color:${conf.cor}">${conf.icone} NÍVEL DE CONFIABILIDADE DA ANÁLISE: ${conf.nivel}</b>${conf.motivos.length?' — <span class="hint">'+conf.motivos.map(esc).join(' · ')+'</span>':''}${sens && sens.inversao ? '<div style="color:#943126"><b>⛔ ALERTA CRÍTICO — A COMPOSIÇÃO DOS FORNECEDORES PODE ALTERAR O REGIME TRIBUTÁRIO VENCEDOR</b> (' + sens.anosInversao.join(', ') + ').</div>' : ''}</div>` : '';
+  return `<div class="hint" style="margin-top:8px"><b>Composição dos fornecedores — ${L.ano}</b></div>${q1}<div class="hint" style="margin-top:6px"><b>Créditos IBS/CBS — ${L.ano}</b></div>${q2}${q3?`<div class="hint" style="margin-top:6px"><b>Sensibilidade — ${L.ano}</b></div>${q3}`:''}${confHtml}`;
+}
 function ppCredCompras(D){
   if (!D || !D.cen || !D.L33) return '';
   const rfx = D.cen.rfx || {}, a = D.anoRef || 2027, L = D.L33;
@@ -9168,7 +9450,8 @@ function premissaCreditoIBS(D){
       + 'Compras de PJ do regime regular geram crédito pela alíquota cheia e compras de fornecedores do Simples/MEI geram crédito simplificado '
       + '(art. 58, §§4º-6º, da Res. CGSN nº 190/2026 — ' + pct + '% em ' + a + '). Preencha a aba Reforma ou lance as Compras da análise.';
   }
-  if (D.cen.proxyCompras) return 'ℹ️ Créditos de IBS/CBS estimados pelas compras de revenda da análise (aba Reforma não preenchida), tratadas como aquisições de PJ do regime regular — preencha a aba Reforma para separar Simples/MEI e refinar.';
+  if (D.cen.semPerfil) return '⚠️ CRÉDITOS DE IBS/CBS NÃO CONFIRMADOS — as compras de revenda não têm perfil de fornecedor e entram como NÃO IDENTIFICADAS (zero de crédito no cenário-base; crédito integral só no limite superior da sensibilidade). Não utilizar este resultado como recomendação tributária definitiva: importe a consulta de fornecedores ou informe a composição na aba Reforma.';
+  if (D.cen.confianca && D.cen.confianca.nivel !== 'ALTO') return (D.cen.confianca.nivel==='BAIXO'?'⛔':'⚠️') + ' Créditos de IBS/CBS com confiabilidade ' + D.cen.confianca.nivel + ': ' + D.cen.confianca.motivos.join('; ') + '.';
   if (cl > 0.005) return 'Compras de PJ do regime regular: ' + fmtR(cl) + ', com crédito pela alíquota cheia. Não há compras de fornecedores do Simples/MEI informadas.';
   if (D.cen.usouFallback) return 'ℹ️ Cenários com as alíquotas padrão da transição (aba Reforma não preenchida).';
   return '';
@@ -9368,11 +9651,14 @@ function parecerTextosPadrao(D){
     {quando:'2027–2032', titulo:'Precificação do repasse', texto:'Planejar o repasse gradual do aumento de carga, em especial na parcela B2B, que aproveita o crédito.'},
     {quando:'Todo ano', titulo:'Reprocessar a análise', texto:'Revisar as premissas e o comparativo de regimes a cada exercício da transição.'} ];
   const _mk = D.rkRef ? D.rkRef.melhor.k : 'dentro';   // v7.88.0 · o texto segue a eleição, não presume "por dentro"
+  const _nc = !!(D.rkRef && D.rkRef.naoConclusivo);   // v7.91.0 · confiabilidade BAIXA: sem "regime recomendado"
   const _mkNome = _mk==='dentro' ? 'a permanência no Simples Nacional com recolhimento integral pelo DAS' : _mk==='hib' ? 'o cenário híbrido do Simples (art. 22-A da Res. CGSN 140/2018)' : 'a saída do Simples para o regime regular ('+(D.L33?D.L33.regNome:'')+')';
   b.parecer1 = D.variante==='simples'
     ? 'Sob as premissas adotadas, ' + _mkNome + ' apresenta o menor desembolso próprio nos anos analisados.' + (D.dentroInelegivel ? ' O cenário "por dentro" foi mantido apenas como referência hipotética, por não ser elegível nos anos em que a empresa está impedida de recolher ICMS, ISS e IBS na guia (sublimite).' : '') + (D.lrIncompleto ? ' O Lucro Real consta como simulação incompleta (sem CMV/estoques) e não participou da eleição.' : '') + ' Os caminhos alternativos foram quantificados e devem ser reavaliados se o perfil da clientela PJ mudar.'
     : 'Sob as premissas adotadas, ' + (D.lrIncompleto ? 'o Lucro Real consta como simulação incompleta (sem CMV/estoques) e não participou da eleição; ' : '') + 'o regime de menor carga em cada ano da transição está identificado no comparativo. O aumento decorrente do modelo pleno (2033) é estrutural; a mitigação passa pela gestão de créditos, pela precificação do repasse e pelo planejamento de caixa para o split payment.';
-  b.recomendacao = D.variante==='simples'
+  b.recomendacao = _nc
+    ? 'MELHOR RESULTADO DENTRO DAS PREMISSAS INFORMADAS — NÃO CONCLUSIVO. ' + (D.rkRef ? D.rkRef.melhor.nome : 'o cenário de menor carga') + ' apresenta o menor valor nos cálculos, mas o nível de confiabilidade da análise é BAIXO' + (D.cen && D.cen.confianca && D.cen.confianca.motivos.length ? ' (' + D.cen.confianca.motivos.join('; ') + ')' : '') + '. Recomenda-se confirmar a composição dos fornecedores e os créditos de IBS/CBS antes de qualquer decisão de enquadramento; este documento não constitui recomendação tributária definitiva.'
+    : D.variante==='simples'
     ? 'Considerando as premissas adotadas, os dados disponíveis e a regulamentação vigente na data-base desta análise, ' + (_mk==='dentro' ? 'a manutenção do recolhimento integral pelo Simples Nacional ("por dentro" do DAS)' : _mk==='hib' ? 'o cenário híbrido do Simples (DAS sem as parcelas de CBS/IBS e IBS/CBS apurados por fora, art. 22-A)' : 'a migração para o regime regular ('+(D.L33?D.L33.regNome:'')+')') + ' apresenta-se como a alternativa economicamente mais vantajosa entre os cenários simulados — recomenda-se executar o plano de ação e reavaliar anualmente o perfil da clientela e o limite de faturamento, já que mudanças na regulamentação ou na composição de clientes e fornecedores podem alterar essa conclusão.'
     : (D.variante==='eleg'
       ? 'Considerando as premissas adotadas, os dados disponíveis e a regulamentação vigente na data-base desta análise, o caminho de menor carga apontado no comparativo (incluindo a avaliação de entrada no Simples Nacional) apresenta-se como a alternativa mais vantajosa entre os cenários simulados, com revisão anual recomendada ao longo da transição.'
@@ -9493,7 +9779,7 @@ function rlParecer(){
           + 'exercício — a transição só se completa em 2033.';
         const k = D.rkRef ? D.rkRef.melhor.k : 'dentro';
         const nm = k==='dentro' ? 'permanecer "por dentro" do DAS' : k==='hib' ? 'o cenário híbrido (art. 22-A)' : 'o regime regular ('+D.L33.regNome+')';
-        return 'Melhor caminho: '+nm+'.' + (D.dentroInelegivel ? ' O "por dentro" é hipotético neste ano (impedimento do sublimite) e não concorreu.' : ''); })()}</div></div>
+        return (D.rkRef && D.rkRef.naoConclusivo ? 'Melhor resultado dentro das premissas informadas — NÃO CONCLUSIVO: ' : 'Melhor caminho: ')+nm+'.' + (D.dentroInelegivel ? ' O "por dentro" é hipotético neste ano (impedimento do sublimite) e não concorreu.' : ''); })()}</div></div>
     </div>
     <p class="pp-p">${TX.caminho}</p>
   </div></div>`;
@@ -9583,6 +9869,11 @@ function rlParecer(){
 `;
     }
     h += `</div></div>`;
+    // v7.91.0 · página própria (todas as variantes): composição dos fornecedores · créditos IBS/CBS · sensibilidade · confiabilidade
+    if (D.L33) h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
+      ${secao(++NS,'Composição dos fornecedores, créditos de IBS/CBS e sensibilidade — ' + D.anoRef, 'Classificação automática pelas consultas de fornecedores, editável e auditável; o limite superior nunca é cenário definitivo.')}
+      ${compQuadrosHtml(D.cen, D.L33, true)}
+    </div></div>`;
 
     // ── PÁG: análise evolutiva (variantes fora do Simples) ──
     if (D.variante!=='simples') {
@@ -10140,7 +10431,7 @@ async function parecerIA(){
           percentualSimplesArt58: credSimplesArt58(D.anoRef),
           creditoTotalNoAnoDeReferencia: D.L33 ? D.L33.cred : 0,
           origem: (D.cen.semCreditos ? 'nenhuma compra informada na aba Reforma'
-                 : (D.cen.proxyCompras ? 'proxy — compras de revenda da análise tratadas como aquisições de PJ do regime regular'
+                 : (D.cen.semPerfil ? 'sem perfil de fornecedor — compras NÃO IDENTIFICADAS, zero de crédito no cenário-base (v7.91.0)'
                  : 'compras informadas na aba Reforma')),
         } : null,
         transporte: (D.T.recTransp||0) > 0.005 ? {
@@ -10235,7 +10526,12 @@ async function parecerIA(){
                               + 'NÃO é a carga atual, que é do ' + (D.regimeHojeNome || 'regime em uso'),
         aplicavel: !!D.optante,
       },
-      premissas: { reformaFallback: !!(D.cen&&D.cen.usouFallback), creditosProxyCompras: !!(D.cen&&D.cen.proxyCompras), semCreditosIBSCBS: !!(D.cen&&D.cen.semCreditos), moedaConstante: true },
+      premissas: { reformaFallback: !!(D.cen&&D.cen.usouFallback), creditosProxyCompras: false, creditosSemPerfil: !!(D.cen&&D.cen.semPerfil), semCreditosIBSCBS: !!(D.cen&&D.cen.semCreditos), moedaConstante: true },
+      // v7.91.0 · composição, sensibilidade e confiabilidade — a IA não elege nem presume crédito
+      composicaoFornecedores: D.cen && D.cen.comp && D.cen.comp.final ? { status: D.cen.comp.status, origem: D.cen.comp.origem, editada: !!D.cen.comp.editada, confirmadoEm: D.cen.comp.confirmadoEm,
+        grupos: COMP_GRUPOS.map(([k,rot])=>({ grupo: rot, pctAutomatico: +(D.cen.comp.auto.g[k].pct*100).toFixed(4), pctFinal: +(D.cen.comp.final.g[k].pct*100).toFixed(4), compras: D.cen.comp.final.g[k].v })) } : null,
+      sensibilidadeCreditos: D.cen && D.cen.sens ? { anoReferencia: D.cen.sens.anoRef, inferior: D.cen.sens.ref.inf, base: D.cen.sens.ref.base, superior: D.cen.sens.ref.sup, margemVencedor: D.cen.sens.ref.margem, variacaoCredito: D.cen.sens.ref.variacao, podeInverterVencedor: D.cen.sens.inversao, anos: D.cen.sens.anosInversao, regra: 'o limite superior NUNCA é cenário definitivo' } : null,
+      nivelConfiabilidade: D.cen && D.cen.confianca ? { nivel: D.cen.confianca.nivel, motivos: D.cen.confianca.motivos, naoConclusivo: !!D.cen.confianca.naoConclusivo, rotuloRecomendacao: D.cen.confianca.naoConclusivo ? 'MELHOR RESULTADO DENTRO DAS PREMISSAS INFORMADAS — NÃO CONCLUSIVO' : 'REGIME RECOMENDADO' } : null,
     };
     const r = await supaFn('gerar-parecer', payload);      // v7.17.1: token renovado antes da chamada (e repetição única em 401)
     if (!r.ok) { const t = await r.text().catch(()=> '');
@@ -11050,10 +11346,10 @@ function rlConfRefMemAno(C, L, R){
   lcre.push(CF.lin('Compras que geram crédito (base do ano)',
     baseCred > 0.005
       ? fmtR(cLR) + ' de PJ do regime regular + ' + fmtR(cSN) + ' de optantes do Simples/MEI'
-        + (C.proxyCompras ? ' <b>(proxy: aba Reforma sem compras informadas — entraram as compras de revenda da análise)</b>' : ' — informados na aba Reforma')
+        + (C.semPerfil ? ' <b>(sem perfil de fornecedor — compras NÃO IDENTIFICADAS, zero de crédito no cenário-base)</b>' : (C.comp ? ' — pela composição dos fornecedores (' + (C.comp.status==='confirmada'?'confirmada':C.comp.status) + ')' : ' — informados na aba Reforma'))
       : 'nenhuma compra informada na aba Reforma — sem base de crédito no ano',
     fmtR(baseCred)));
-  if (cLR > 0.005) lcre.push(CF.lin('Compras de PJ do regime regular', fmtR(cLR) + ' × ' + pcs(alqPc) + ' — crédito integral, alíquota cheia' + (C.proxyCompras ? ' <b>(proxy: aba Reforma vazia)</b>' : ''), fmtR(cLR*alq)));
+  if (cLR > 0.005) lcre.push(CF.lin('Compras de PJ do regime regular', fmtR(cLR) + ' × ' + pcs(alqPc) + ' — crédito integral, alíquota cheia (inclui Simples com opção pelo regime regular)', fmtR(cLR*alq)));
   if (cSN > 0.005) lcre.push(CF.lin('Compras de optante do Simples', fmtR(cSN) + ' × ' + (pct58*100).toFixed(2).replace('.',',') + '% — art. 58, §§ 4º a 6º, Res. CGSN 190/2026' + ((rfx.credSimplesPct||0)>0 ? ' (% manual)' : ' (1ª faixa do Anexo I)'), fmtR(cSN*pct58)));
   for (const [k, rot, red] of RF_REDUCOES){ const v = +(rfx.benefCred?.[k]||0); if (v > 0.005)
     lcre.push(CF.lin('Crédito com ' + rot.toLowerCase(), fmtR(v) + ' × ' + pcs(alqPc) + ' × (1 − ' + (red*100).toFixed(0) + '%)', fmtR(v*alq*(1-red)))); }
@@ -11125,7 +11421,9 @@ function rlConfRefMemAno(C, L, R){
     + ' · <b>combinada ' + pcs(alqPc) + '</b> · ICMS/ISS remanescentes ' + pcs(rII*100) + ' · PIS/COFINS remanescentes ' + pcs(rPC*100)
     + '<br>Procedência da alíquota: ' + proc + '</div>'
     + CF.tab('1. Débito de IBS/CBS', ldeb) + CF.tab('2. Crédito e apuração', lcre) + tabAntigo
-    + CF.tab('4. Cenários do optante do Simples', lcen) + '</div>';
+    + CF.tab('4. Cenários do optante do Simples', lcen)
+    + '<div style="margin-top:8px"><b>5. Composição dos fornecedores · créditos IBS/CBS · sensibilidade</b>' + compQuadrosHtml(C, L, false) + '</div>'   // v7.91.0
+    + '</div>';
 }
 function rlConfReforma(Rdoc){
   try {
@@ -11162,7 +11460,7 @@ function rlConfReforma(Rdoc){
       : '';
     const credTx = (C.semCreditos
       ? '<div class="hint" style="color:#b9770e">⚠️ Créditos de IBS/CBS = ZERO — nenhuma compra informada (aba Reforma e Compras vazias).</div>'
-      : (C.proxyCompras ? `<div class="hint" style="color:#b9770e">⚠️ <b>Premissa de crédito não conservadora.</b> A aba Reforma não foi preenchida, então as compras de revenda da análise foram tratadas como aquisições de <b>PJ do regime regular</b> — crédito integral à alíquota cheia (${(REF_ALL[REF_ALL.length-1].alq*100).toFixed(2).replace('.',',')}% em 2033). Fornecedor optante do Simples daria apenas <b>${(credSimplesArt58(2033)*100).toFixed(2).replace('.',',')}%</b> pelo art. 58, cerca de ${Math.round(REF_ALL[REF_ALL.length-1].alq/Math.max(1e-9,credSimplesArt58(2033)))}× menos. <b>Deixar a aba vazia produz um cenário mais favorável do que preenchê-la</b> — separe Simples/MEI do regime regular antes de decidir.</div>` : ''))
+      : (C.semPerfil ? `<div class="hint" style="color:#943126">⛔ <b>CRÉDITOS DE IBS/CBS NÃO CONFIRMADOS.</b> As compras de revenda da análise não têm perfil de fornecedor e entram como <b>não identificadas</b>: zero de crédito no cenário-base; crédito integral (${(REF_ALL[REF_ALL.length-1].alq*100).toFixed(2).replace('.',',')}% em 2033) só no limite superior da sensibilidade, que nunca é definitivo. Importe a consulta de fornecedores ou informe a composição na aba Reforma.</div>` : ''))
       // v7.68.0 (parecer do Teste 7, achado 8) · ultrapassado o limite do Simples no ano-base, os
       // cenários que pressupõem a empresa optante deixam de ser projeção e viram COMPARAÇÃO
       // HIPOTÉTICA — quem excedeu o limite não permanece no regime no exercício seguinte
@@ -11257,7 +11555,7 @@ function rlConfReforma(Rdoc){
           })()}
           ${C.semCreditos ? '<br><b>Nesta análise o crédito é zero</b>, então líquido e débito coincidem — o rateio por ente é o do débito.' : ''}
         </div></div>`; })()}
-      ${(()=>{ const cs = +(C.rfx?.contra?.compras_simples||0); if (!(cs>0.005) && !C.proxyCompras) return '';
+      ${(()=>{ const cs = +(C.rfx?.contra?.compras_simples||0); if (!(cs>0.005) && !C.semPerfil) return '';
         const man = +(C.rfx?.credSimplesPct||0);
         return `<div class="hint" style="margin-top:6px"><b>Crédito sobre compras de optantes do Simples (art. 58, §§ 4º a 6º, da Res. CGSN nº 190/2026)</b> — ${
           man>0 ? `percentual <b>manual</b> de ${man.toLocaleString('pt-BR')}%, informado na aba Reforma (substitui o automático).`
