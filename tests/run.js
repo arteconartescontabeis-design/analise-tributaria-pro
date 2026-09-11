@@ -1793,7 +1793,7 @@ console.log('\n■ Integridade da interface');
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
     chk('v7.87.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.91\.0';/.test(html) && html.includes('<b>v7.91.0</b>') && html.includes('<b>v7.90.0</b>') && html.includes('<b>v7.89.0</b>') && html.includes('<b>v7.88.0</b>') && html.includes('<b>v7.87.0</b>') && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>')
+      /const APP_VERSAO = '7\.91\.1';/.test(html) && html.includes('<b>v7.91.1</b>') && html.includes('<b>v7.91.0</b>') && html.includes('<b>v7.90.0</b>') && html.includes('<b>v7.89.0</b>') && html.includes('<b>v7.88.0</b>') && html.includes('<b>v7.87.0</b>') && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -4613,7 +4613,7 @@ console.log('\n■ Integridade da interface');
     chk('5z · eleição única · nenhum Math.min(dentro…, hib, regular) próprio sobrou fora de cenRank',
       !/Math\.min\(dentro33, R33\.hib, R33\.regular\)/.test(html) && !/Math\.min\(dentroAno, L\.hib, L\.regular\)/.test(html) && !/Math\.min\(d33, D\.L33\.hib, D\.L33\.regular\)/.test(html)
       && /const _RK = cenRank\(T, R33\)/.test(html) && /rkRef: _rkRef, rkAnos: _rkAnos/.test(html));
-    chk('5z · v7.88.0 · changelog', /APP_VERSAO = '7\.(8[89]|9[01])\.0'/.test(html) && /<b>v7\.88\.0<\/b><\/td><td>11\/09\/2026/.test(html));
+    chk('5z · v7.88.0 · changelog', /APP_VERSAO = '7\.(8[89]|9[01])\.[0-9]+'/.test(html) && /<b>v7\.88\.0<\/b><\/td><td>11\/09\/2026/.test(html));
   }
 
   // ═══ 5aa · v7.89.0 — data de abertura/RBT12p do PGDAS-D, credLRpct na tela, Tema 69 nota a nota ═══
@@ -4689,7 +4689,7 @@ console.log('\n■ Integridade da interface');
         return Array.isArray(d.icms.tema69) && d.icms.tema69.every(v=>v===null) && Array.isArray(d.icms.lei14592); })());
     chk('5aa · conferência · declara nota a nota × estimativa nas três linhas', (html.match(/M\.tema69Informado \?/g)||[]).length >= 2 && /M\.lei14592Informado \?/.test(html));
     chk('5aa · lacre íntegro (casos-gabarito sem os campos novos da v7.89.0)', (() => { const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '453f7b32'; })());
-    chk('5aa · v7.89.0 · changelog', /APP_VERSAO = '7\.(89|9[01])\.0'/.test(html) && /<b>v7\.89\.0<\/b><\/td><td>11\/09\/2026/.test(html));
+    chk('5aa · v7.89.0 · changelog', /APP_VERSAO = '7\.(89|9[01])\.[0-9]+'/.test(html) && /<b>v7\.89\.0<\/b><\/td><td>11\/09\/2026/.test(html));
   }
 
   // ═══ 5ab · v7.90.0 — Artecon(8) P0-01: memória do híbrido fecha com o total; CPP retida no mês impedido ═══
@@ -4734,12 +4734,12 @@ console.log('\n■ Integridade da interface');
       chk('5ab · conferência renderiza as parcelas, fecha ao centavo e não levanta MEM-01', erro === null && /parcela 6/.test(txt) && /fecha ao centavo/.test(txt) && !/MEM-01/.test(txt) && !/NÃO FECHA/.test(txt), erro||'');
       chk('5ab · regressão · ICMS/ISS por fora 2033 = 0, por dentro hipotético em 2027-33 e RBAA reavaliada por exercício seguem valendo',
         C.REF.find(l=>l.ano===2033).impForaAno === 0 && C.REF.find(l=>l.ano===2033).dentroInelegivel === true && C.REF.find(l=>l.ano===2027).estadoSeguinte.recalculado === true); }
-    chk('5ab · v7.90.0 · changelog', /APP_VERSAO = '7\.9[01]\.0'/.test(html) && /<b>v7\.90\.0<\/b><\/td><td>11\/09\/2026/.test(html) && /MEM-01/.test(html));
+    chk('5ab · v7.90.0 · changelog', /APP_VERSAO = '7\.9[01]\.[0-9]+'/.test(html) && /<b>v7\.90\.0<\/b><\/td><td>11\/09\/2026/.test(html) && /MEM-01/.test(html));
   }
 
   // ═══ 5ac · v7.91.0 — composição dos fornecedores (créditos IBS/CBS) + bateria de fronteira obrigatória ═══
   {
-    const z12 = () => Array(12).fill(0);
+    const z12 = () => Array(12).fill(0); const COMP = ['regular','simples','simplesRegular','semCredito','presumido','nid'];
     const calc = vm.runInContext('calcular', ctx), cen = vm.runInContext('calcCenariosReforma', ctx);
     const compAutoDe = vm.runInContext('compAutoDe', ctx), compContraCenarios = vm.runInContext('compContraCenarios', ctx), compConfianca = vm.runInContext('compConfianca', ctx);
     const nova = (cnpj) => { const a = vm.runInContext('anNovo', ctx)(cnpj, 2026);
@@ -4827,7 +4827,21 @@ console.log('\n■ Integridade da interface');
       (() => { const ult = vm.runInContext('ultimoMesCoberto', ctx); const d = nova('15151515000115'); d.receitas.a1_semst = [10000,0,10000,0,0,0,0,0,0,0,0,0];
         d.origem = { 'receitas.a1_semst': ['L','L','L',null,null,null,null,null,null,null,null,null] }; const a = ult(d);
         d.origem['receitas.a1_semst'][3] = 'L'; const b = ult(d); return a === 2 && b === 3; })());
-    chk('5ac · v7.91.0 · badge e changelog', /APP_VERSAO = '7\.91\.0'/.test(html) && /<b>v7\.91\.0<\/b><\/td><td>11\/09\/2026/.test(html));
+    chk('5ac · v7.91.0 · changelog', /APP_VERSAO = '7\.91\.[01]'/.test(html) && /<b>v7\.91\.0<\/b><\/td><td>11\/09\/2026/.test(html));
+    // ── v7.91.1 · a edição 50/30/10/10/0/0 SEM consultas sobrevive ao recálculo ──
+    { vm.runInContext("RF = rfNovo('16161616000116', 2026); RF._fornRows = []; AN = anNovo('16161616000116', 2026); AN.cfg.icmsV=.17; AN.receitas.a1_semst=Array(12).fill(200000); AN.compras.semst=Array(12).fill(100000); AN._res = calcular(AN); rfCalcular();", ctx);
+      chk('5ac · v7.91.1 · sem consultas a composição nasce 100% não identificada (sem dados)', vm.runInContext('RF.comp.origem', ctx) === 'sem-dados' && vm.runInContext('RF.comp.auto.g.nid.pct', ctx) === 1);
+      vm.runInContext("compEditar('pct'); compSetPct('regular',50); compSetPct('simples',30); compSetPct('simplesRegular',10); compSetPct('semCredito',10); compSetPct('presumido',0); compSetPct('nid',0); compAplicarEdicao(); rfCalcular(); rfCalcular();", ctx);
+      const c = vm.runInContext('RF.comp', ctx), g = c.final.g;
+      chk('5ac · v7.91.1 · após aplicar e recalcular duas vezes, a edição permanece: 50 / 30 / 10 / 10 / 0 / 0',
+        Math.abs(g.regular.pct-0.5)<1e-9 && Math.abs(g.simples.pct-0.3)<1e-9 && Math.abs(g.simplesRegular.pct-0.1)<1e-9 && Math.abs(g.semCredito.pct-0.1)<1e-9 && g.presumido.pct===0 && g.nid.pct===0 && c.editada===true && c.auto.g.nid.pct===1,
+        COMP.map(k=>k+':'+(g[k].pct*100).toFixed(2)).join(' '));
+      chk('5ac · v7.91.1 · as contrapartes seguem a edição (regular + opção pelo regular = 60% · Simples 30%) e o crédito reflete',
+        Math.abs(vm.runInContext('RF.contra.compras_lrlp', ctx) - 0.6*1200000) < 0.01 && Math.abs(vm.runInContext('RF.contra.compras_simples', ctx) - 0.3*1200000) < 0.01 && vm.runInContext('RF._res.sens.ref.base.cred', ctx) > 0);
+      vm.runInContext("compConfirmar(true); rfCalcular();", ctx);
+      chk('5ac · v7.91.1 · confirmada, continua confirmada após recálculo', vm.runInContext('RF.comp.status', ctx) === 'confirmada' && vm.runInContext('RF._res.confianca.nivel', ctx) === 'ALTO');
+      chk('5ac · v7.91.1 · edição atualiza só os números (compRefresh), sem redesenhar o card', /oninput="compSetPct\('\$\{k\}',this\.value\)"/.test(html) && /function compRefresh\(\)/.test(html) && /id="comp-tot-pct"/.test(html));
+      chk('5ac · v7.91.1 · badge e changelog', /APP_VERSAO = '7\.91\.1'/.test(html) && /<b>v7\.91\.1<\/b><\/td><td>11\/09\/2026/.test(html)); }
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
