@@ -1790,7 +1790,7 @@ console.log('\n■ Integridade da interface');
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
     chk('v7.87.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.89\.0';/.test(html) && html.includes('<b>v7.89.0</b>') && html.includes('<b>v7.88.0</b>') && html.includes('<b>v7.87.0</b>') && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>')
+      /const APP_VERSAO = '7\.90\.0';/.test(html) && html.includes('<b>v7.90.0</b>') && html.includes('<b>v7.89.0</b>') && html.includes('<b>v7.88.0</b>') && html.includes('<b>v7.87.0</b>') && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -2185,7 +2185,7 @@ console.log('\n■ Integridade da interface');
           /icmsTranspV:0, transpCredPres:0/.test(html));
       }
       chk('v7.48.0 · lacre RE-SELADO e registrado no changelog (mudança deliberada de regra)',
-        /const LACRE_HASH = 'c503dbd2';/.test(html) && /LACRE RE-SELADO/.test(html) && /e1a25234/.test(html));
+        /const LACRE_HASH = '5996c4be';/.test(html) && /LACRE RE-SELADO/.test(html) && /e1a25234/.test(html));
     }
 
     // ═══ v7.47.1 — o crédito das compras chega ao parecer e à memória de cálculo ═══
@@ -2820,8 +2820,8 @@ console.log('\n■ Integridade da interface');
     // A PROVA QUE SUSTENTA A DECISÃO: os casos do lacre não têm a chave, então
     // ligar a opção numa empresa não move o selo nem os gabaritos.
     const lac = vm.runInContext('lacreRodar()', ctx);
-    chk('v7.62.0 · M3 · o lacre c503dbd2 segue íntegro com a opção disponível',
-      lac && lac.ok === true && lac.hash === 'c503dbd2', 'hash=' + (lac && lac.hash));
+    chk('v7.62.0 · M3 · o lacre 5996c4be segue íntegro com a opção disponível',
+      lac && lac.ok === true && lac.hash === '5996c4be', 'hash=' + (lac && lac.hash));
     const casosLimpos = vm.runInContext('LACRE_CASOS', ctx)
       .every(c => !('arredondaPorTributo' in (c.inp.cfg||{})));
     chk('v7.62.0 · M3 · e os casos-gabarito seguem SEM a chave — é isso que os protege',
@@ -2969,7 +2969,7 @@ console.log('\n■ Integridade da interface');
     // ── A rede continua de pé ──
     const lacA = vm.runInContext('lacreRodar()', ctx);
     chk('auditoria · nenhuma das 11 correções moveu o lacre',
-      lacA && lacA.ok === true && lacA.hash === 'c503dbd2', 'hash=' + (lacA && lacA.hash));   // v7.88.0 · re-selado
+      lacA && lacA.ok === true && lacA.hash === '5996c4be', 'hash=' + (lacA && lacA.hash));   // v7.88.0 · re-selado
   }
 
   // ═══ 6b. v7.64.0 · CONFRONTO COM O VERIFICADOR INDEPENDENTE ═══
@@ -3232,7 +3232,7 @@ console.log('\n■ Integridade da interface');
         Math.abs(dentroF(r.totais, L26) - L26.hib) < 0.01,
         'dentro ' + dentroF(r.totais, L26).toFixed(2) + ' × híbrido ' + L26.hib.toFixed(2));
       chk('v7.69.0 · e o híbrido carrega o ICMS/ISS do período impedido, como o "por dentro"',
-        /const hib = dasHib \+ \(TS\.cppRetida\|\|0\) \+ \(TS\.cppForaDAS\|\|0\) \+ impForaAno/.test(html));   // v7.88.0 · × remanescente do ano
+        /const hib = hibParcelas\.dasHib \+ hibParcelas\.cppRetida \+ hibParcelas\.cppForaDAS \+ hibParcelas\.icmsIssFora/.test(html));   // v7.88.0 · × remanescente · v7.90.0 · parcelas exatas
     }
 
     // achado 10 · ISS retido na dedução: parametrizado, com o padrão preservando a decisão 8.9
@@ -4573,7 +4573,7 @@ console.log('\n■ Integridade da interface');
       (() => { const casos = vm.runInContext('LACRE_CASOS', ctx); const r = g.calcular(clone(casos[0].inp), clone(AD), {...FD});
         const C = g.cen(r, null); const l = L(C,2033); return Math.abs(l.hib - 758554.46) < 0.01 && Math.abs(l.regular - 702383.68) < 0.01
           && Math.abs(l.dentro - r.totais.simples) < 0.01; })());
-    chk('5z · lacre · RE-SELADO c503dbd2 e registrado no changelog', /const LACRE_HASH = 'c503dbd2';/.test(html) && /LACRE RE-SELADO <code>2e1139e9<\/code> → <code>c503dbd2<\/code>/.test(html));
+    chk('5z · lacre · RE-SELADO c503dbd2 e registrado no changelog', /const LACRE_HASH = '5996c4be';/.test(html) && /LACRE RE-SELADO <code>2e1139e9<\/code> → <code>c503dbd2<\/code>/.test(html));
 
     // ── P0-03 · mês em branco ≠ zero ──
     { const dados = nova('88888888000188'); dados.receitas.a1_semst = [10000,10000,10000,10000,10000,10000,0,0,0,0,0,0];
@@ -4610,7 +4610,7 @@ console.log('\n■ Integridade da interface');
     chk('5z · eleição única · nenhum Math.min(dentro…, hib, regular) próprio sobrou fora de cenRank',
       !/Math\.min\(dentro33, R33\.hib, R33\.regular\)/.test(html) && !/Math\.min\(dentroAno, L\.hib, L\.regular\)/.test(html) && !/Math\.min\(d33, D\.L33\.hib, D\.L33\.regular\)/.test(html)
       && /const _RK = cenRank\(T, R33\)/.test(html) && /rkRef: _rkRef, rkAnos: _rkAnos/.test(html));
-    chk('5z · v7.88.0 · changelog (badge já na v7.89.0)', /APP_VERSAO = '7\.8[89]\.0'/.test(html) && /<b>v7\.88\.0<\/b><\/td><td>11\/09\/2026/.test(html));
+    chk('5z · v7.88.0 · changelog (badge já na v7.90.0)', /APP_VERSAO = '7\.(8[89]|90)\.0'/.test(html) && /<b>v7\.88\.0<\/b><\/td><td>11\/09\/2026/.test(html));
   }
 
   // ═══ 5aa · v7.89.0 — data de abertura/RBT12p do PGDAS-D, credLRpct na tela, Tema 69 nota a nota ═══
@@ -4685,8 +4685,53 @@ console.log('\n■ Integridade da interface');
       (() => { const d = vm.runInContext('anNormalizar', ctx)({ cnpj:'11111111000111', ano:2026, icms:{cred:Array(12).fill(null)} }, '11111111000111', 2026);
         return Array.isArray(d.icms.tema69) && d.icms.tema69.every(v=>v===null) && Array.isArray(d.icms.lei14592); })());
     chk('5aa · conferência · declara nota a nota × estimativa nas três linhas', (html.match(/M\.tema69Informado \?/g)||[]).length >= 2 && /M\.lei14592Informado \?/.test(html));
-    chk('5aa · lacre c503dbd2 íntegro (casos-gabarito sem os campos novos)', (() => { const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === 'c503dbd2'; })());
-    chk('5aa · v7.89.0 · badge e changelog', /APP_VERSAO = '7\.89\.0'/.test(html) && /<b>v7\.89\.0<\/b><\/td><td>11\/09\/2026/.test(html));
+    chk('5aa · lacre íntegro (casos-gabarito sem os campos novos da v7.89.0)', (() => { const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '5996c4be'; })());
+    chk('5aa · v7.89.0 · changelog (badge já na v7.90.0)', /APP_VERSAO = '7\.(89|90)\.0'/.test(html) && /<b>v7\.89\.0<\/b><\/td><td>11\/09\/2026/.test(html));
+  }
+
+  // ═══ 5ab · v7.90.0 — Artecon(8) P0-01: memória do híbrido fecha com o total; CPP retida no mês impedido ═══
+  {
+    const z12 = () => Array(12).fill(0);
+    const calc = vm.runInContext('calcular', ctx), cen = vm.runInContext('calcCenariosReforma', ctx);
+    const nova = (cnpj) => { const a = vm.runInContext('anNovo', ctx)(cnpj, 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12(); return a; };
+    // cenário que reproduz a auditoria: 5ª faixa (RBT12 2,4 mi), serviço com INSS retido, RBA 4,08 mi > sublimite
+    const a = nova('99999999000199'); a.cfg.rbt12Lanc = Array(12).fill(200000); a.cfg.iss = .03; a.cfg.icmsV = .17; a.cfg.icmsC = .17;
+    a.receitas.a3_semret = Array(12).fill(250000); a.receitas.a3_retissinss = Array(12).fill(90000); a.folha.salarios = Array(12).fill(120000);
+    const r = calc(a, clone(AD), {...FD}); const C = cen(r, null);
+    chk('5ab · cenário: livre no ano-base, exercício seguinte recalculado e impedido desde 1º/01', !r.impedimento && C.REF.find(l=>l.ano===2027).estadoSeguinte.impedidoJan === true);
+    const b = clone(a); b.cfg.rbaa = 4080000; const r2 = calc(b, clone(AD), {...FD});
+    chk('5ab · motor · CPP retida NÃO muda com o impedimento (efetiva cheia × parcela de CPP): base = exercício impedido',
+      r2.meses.every(M=>M.impedido) && Math.abs(r.totais.cppRetida - r2.totais.cppRetida) < 0.01, r.totais.cppRetida.toFixed(2) + ' × ' + r2.totais.cppRetida.toFixed(2));
+    chk('5ab · motor · e o DAS do mês impedido segue sem ICMS/ISS (a correção é só na CPP retida)', r2.meses[0].das < r.meses[0].das && r2.meses[0].impIss > 0);
+    chk('5ab · motor · a CPP retida = a3_retissinss × efetiva do Anexo III × % CPP da faixa (5ª faixa: 43,4%)',
+      (() => { const M = r2.meses[0]; const efCheia = (M.rbt12*AD.III.aliq[4] - AD.III.ded[4]) / M.rbt12;   // efb do mês impedido já vem reduzida do ICMS/ISS
+        return M.faixa === 5 && Math.abs(M.simples.cppRetida - 90000*efCheia*0.434) < 0.01 && M.efb.a3_retissinss < efCheia; })());
+    for (const L of C.REF) {
+      const HP = L.hibParcelas, soma = Object.values(HP).reduce((x,y)=>x+y,0);
+      chk('5ab · ' + L.ano + ' · total híbrido = soma das 6 parcelas exatas (|Δ| ≤ 0,02)', L.hibConfere === true && Math.abs(L.hib - soma) <= 0.02 && Math.abs(L.hib - L.hibSoma) <= 0.02, (L.hib-soma).toFixed(4));
+    }
+    chk('5ab · as parcelas são as do EXERCÍCIO (CPP retida do motor recalculado), não as do ano-base', (() => { const L = C.REF.find(l=>l.ano===2027); return L.hibParcelas.cppRetida === +r2.totais.cppRetida; })());
+    chk('5ab · C.hibNaoFecha vazio e memCritico nulo quando fecha', C.hibNaoFecha.length === 0 && vm.runInContext('memCritico', ctx)(C) === null);
+    chk('5ab · MEM-01 · com uma linha que não fecha, memCritico bloqueia com ano, total, soma e diferença',
+      (() => { const fake = { hibNaoFecha: [{ ano:2029, hib:964814.45, soma:965028.30, dif:-213.85 }] }; const m = vm.runInContext('memCritico', ctx)(fake);
+        return m && m.codigo === 'MEM-01' && /MEMÓRIA DE CÁLCULO NÃO FECHA/.test(m.titulo) && /2029/.test(m.texto) && /213,85/.test(m.texto); })());
+    chk('5ab · o parecer, as apresentações e a Conferência passam por emissaoCritica (sublimite OU memória)',
+      /emissaoCritica\(RL\.res, \(RL\.dados\|\|\{\}\)\.cfg, \(RL\.dados\|\|\{\}\)\.ano\) : null;\s*\/\/ v7\.90\.0/.test(html) && /rlAvisoDefasado\(\) \+ subCriticoHtml\(emissaoCritica\(/.test(html) && /return memCritico\(calcCenariosReforma\(_B\.res, _B\.reforma \|\| null\)\)/.test(html));
+    chk('5ab · a memória anual imprime as seis parcelas a partir de L.hibParcelas e declara "fecha ao centavo"',
+      /const HP = L\.hibParcelas \|\|/.test(html) && /soma das parcelas 1 a 6 = /.test(html) && /✓ fecha ao centavo/.test(html) && !/CPP retida ' \+ fmtR\(T\.cppRetida\|\|0\)/.test(html));
+    // regressão viva do que a auditoria mandou proteger
+    { const RL = vm.runInContext('RL', ctx); RL.dados = a; RL.res = r; RL.reforma = null; RL.empresa = { razao_social:'AUD8', regime:'Simples Nacional' }; RL._ia = null;
+      vm.runInContext('AN = RL.dados; AN._res = RL.res;', ctx);
+      const box = ctx.document.getElementById('rl-conf-anos'); box.querySelectorAll = () => [2027,2033].map(v=>({checked:true,value:String(v)}));
+      ctx.document.getElementById('rl-tipo').value = 'conferencia'; ctx.document.getElementById('rl-per').value = '12';
+      { const _m = ctx.document.getElementById('rl-conf-modo'); if (_m) _m.value = 'anual'; }
+      let erro = null; try { vm.runInContext('rlRender()', ctx); } catch(e){ erro = e.message; }
+      const txt = (ctx.document.getElementById('rl-corpo').innerHTML||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+      chk('5ab · conferência renderiza as parcelas, fecha ao centavo e não levanta MEM-01', erro === null && /parcela 6/.test(txt) && /fecha ao centavo/.test(txt) && !/MEM-01/.test(txt) && !/NÃO FECHA/.test(txt), erro||'');
+      chk('5ab · regressão · ICMS/ISS por fora 2033 = 0, por dentro hipotético em 2027-33 e RBAA reavaliada por exercício seguem valendo',
+        C.REF.find(l=>l.ano===2033).impForaAno === 0 && C.REF.find(l=>l.ano===2033).dentroInelegivel === true && C.REF.find(l=>l.ano===2027).estadoSeguinte.recalculado === true); }
+    chk('5ab · v7.90.0 · badge e changelog', /APP_VERSAO = '7\.90\.0'/.test(html) && /<b>v7\.90\.0<\/b><\/td><td>11\/09\/2026/.test(html) && /MEM-01/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
