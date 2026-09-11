@@ -93,7 +93,8 @@ console.log('\n■ Correções da revisão (v7.1)');
   chk('A3 · LP monofásico: PIS+COFINS = 0', Math.abs(r.meses[0].lp.pis+r.meses[0].lp.cofins)<0.005); }
 { const inp = mk({a1_semst:Array(12).fill(100000)},1200000); inp.compras.semst = Array(12).fill(60000);
   const cen = g.calcCenariosReforma(g.calcular(inp, clone(AD), {...FD}), null);
-  chk('A5 · fallback com proxy de créditos', cen.proxyCompras===true && cen.REF.find(l=>l.ano===2033).cred>1000); }
+  // v7.91.0 · o proxy acabou: sem perfil de fornecedor, crédito zero no cenário-base e integral só no limite superior
+  chk('A5 · sem perfil de fornecedor: NÃO há proxy — crédito zero no cenário-base, integral só no limite superior', cen.proxyCompras===false && cen.semPerfil===true && cen.REF.find(l=>l.ano===2033).cred===0 && cen.REF.find(l=>l.ano===2033).sens.sup.cred>1000); }
 
 // ═══ 3. SENSIBILIDADE DE PARÂMETROS ═══
 console.log('\n■ Parâmetros editados fluem ao cálculo');
@@ -122,7 +123,7 @@ for (const [esperada, rec, rbt, regime] of [
     if (D.variante !== esperada) { chk('variante '+esperada, false, '→ '+D.variante); continue; }
     g.rlParecer();
     const out = els['rl-corpo'].innerHTML;
-    chk('parecer '+esperada, out.includes('pp-capa') && /Créditos de IBS\/CBS estimados|SEM créditos/.test(out),
+    chk('parecer '+esperada, out.includes('pp-capa') && /Créditos de IBS\/CBS estimados|SEM créditos|CRÉDITOS DE IBS\/CBS NÃO CONFIRMADOS|CONFIABILIDADE DA ANÁLISE: (ALTO|MÉDIO|BAIXO)/.test(out),
         (out.match(/pp-page/g)||[]).length+' páginas');
   } catch(e) { chk('parecer '+esperada, false, e.message); } }
 
@@ -305,9 +306,11 @@ console.log('\n■ Res. CGSN nº 190/2026 — partilha por vigência');
   const G33 = CG.REF[CG.REF.length-1];
   // v7.18.0: gabaritos recalibrados SEM o FGTS (16.794,50/ano neste caso) — antes: hib 775.348,96 · fora 719.178,18.
   // O caso é de serviços (sem ICMS), então o Tema 69 não altera estes números; a diferença é só o FGTS.
-  chk('gabarito de cenários 2033 preservado (v7.18.0, sem FGTS): híbrido 758.554,46 · fora 702.383,68',
-    Math.abs(G33.hib - 758554.46) < 0.02 && Math.abs(G33.regular - 702383.68) < 0.02,
-    `hib=${G33.hib.toFixed(2)} reg=${G33.regular.toFixed(2)}`);
+  // v7.91.0 · FIM DO PROXY: sem perfil de fornecedor as compras são NÃO IDENTIFICADAS — zero de crédito no
+  // cenário-base. Os números de sempre (758.554,46 / 702.383,68) viram o LIMITE SUPERIOR da sensibilidade.
+  chk('gabarito de cenários 2033 (v7.18.0, sem FGTS) preservado como LIMITE SUPERIOR: híbrido 758.554,46 · fora 702.383,68; base sem crédito (não identificado)',
+    Math.abs(G33.sens.sup.hib - 758554.46) < 0.02 && Math.abs(G33.sens.sup.regLP - 702383.68) < 0.02 && G33.cred === 0 && G33.hib > G33.sens.sup.hib && CG.semPerfil === true,
+    `sup.hib=${G33.sens.sup.hib.toFixed(2)} base.hib=${G33.hib.toFixed(2)} reg=${G33.regular.toFixed(2)}`);
   chk('gabarito · trava do caso1 (comércio) invariante por vigência: ICMS×rem + IBS×(1−rem)',
     G33.p190 && Math.abs(G33.p190.trava - (rG.totais.sublimite||0)) < 0.02,
     'trava33='+(G33.p190?G33.p190.trava.toFixed(2):'—'));
@@ -1163,8 +1166,8 @@ console.log('\n■ Integridade da interface');
   chk('v7.30.0 · LACRE ÍNTEGRO: selo embutido confere com o motor desta entrega (192 números ao centavo) — mudou regra? RE-SELE',
     lc && lc.r && lc.r.ok===true && lc.r.hash===vm.runInContext('LACRE_HASH',ctx) && lc.r.n===192,
     lErr || (lc&&lc.r?`hash=${lc.r.hash} n=${lc.r.n}`:'timeout'));
-  chk('v7.30.0 · lacre bate com os gabaritos pinados (caso1: LR 1.169.013,17 · 2033 híbrido 758.554,46 · regular 702.383,68)',
-    lc && lc.r && Math.abs(lc.r.resumo[0].lr-1169013.17)<0.01 && Math.abs(lc.r.resumo[0].h33-758554.46)<0.01 && Math.abs(lc.r.resumo[0].r33-702383.68)<0.01, lErr);
+  chk('v7.30.0 · lacre bate com os gabaritos pinados (caso1: LR 1.169.013,17 · 2033 híbrido 1.205.153,42 · regular 1.148.982,64 — base sem crédito desde a v7.91.0)',
+    lc && lc.r && Math.abs(lc.r.resumo[0].lr-1169013.17)<0.01 && Math.abs(lc.r.resumo[0].h33-1205153.42)<0.01 && Math.abs(lc.r.resumo[0].r33-1148982.64)<0.01, lErr || (lc&&lc.r?`h33=${lc.r.resumo[0].h33.toFixed(2)} r33=${lc.r.resumo[0].r33.toFixed(2)}`:''));
   chk('v7.30.0 · violação simulada (alíquota de fábrica alterada) → lacre acusa; restaurada → volta a ÍNTEGRO',
     lc && lc.rV && lc.rV.ok===false && lc.rOk2===true, lErr || (lc&&lc.rV?('violado ok='+lc.rV.ok+' depois='+lc.rOk2):'—'));
   chk('v7.30.0 · lacreBoot grava o estado (versão + selo) e marca íntegro na versão atual',
@@ -1790,7 +1793,7 @@ console.log('\n■ Integridade da interface');
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
     chk('v7.87.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.90\.0';/.test(html) && html.includes('<b>v7.90.0</b>') && html.includes('<b>v7.89.0</b>') && html.includes('<b>v7.88.0</b>') && html.includes('<b>v7.87.0</b>') && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>')
+      /const APP_VERSAO = '7\.91\.0';/.test(html) && html.includes('<b>v7.91.0</b>') && html.includes('<b>v7.90.0</b>') && html.includes('<b>v7.89.0</b>') && html.includes('<b>v7.88.0</b>') && html.includes('<b>v7.87.0</b>') && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -2185,7 +2188,7 @@ console.log('\n■ Integridade da interface');
           /icmsTranspV:0, transpCredPres:0/.test(html));
       }
       chk('v7.48.0 · lacre RE-SELADO e registrado no changelog (mudança deliberada de regra)',
-        /const LACRE_HASH = '5996c4be';/.test(html) && /LACRE RE-SELADO/.test(html) && /e1a25234/.test(html));
+        /const LACRE_HASH = '453f7b32';/.test(html) && /LACRE RE-SELADO/.test(html) && /e1a25234/.test(html));
     }
 
     // ═══ v7.47.1 — o crédito das compras chega ao parecer e à memória de cálculo ═══
@@ -2820,8 +2823,8 @@ console.log('\n■ Integridade da interface');
     // A PROVA QUE SUSTENTA A DECISÃO: os casos do lacre não têm a chave, então
     // ligar a opção numa empresa não move o selo nem os gabaritos.
     const lac = vm.runInContext('lacreRodar()', ctx);
-    chk('v7.62.0 · M3 · o lacre 5996c4be segue íntegro com a opção disponível',
-      lac && lac.ok === true && lac.hash === '5996c4be', 'hash=' + (lac && lac.hash));
+    chk('v7.62.0 · M3 · o lacre 453f7b32 segue íntegro com a opção disponível',
+      lac && lac.ok === true && lac.hash === '453f7b32', 'hash=' + (lac && lac.hash));
     const casosLimpos = vm.runInContext('LACRE_CASOS', ctx)
       .every(c => !('arredondaPorTributo' in (c.inp.cfg||{})));
     chk('v7.62.0 · M3 · e os casos-gabarito seguem SEM a chave — é isso que os protege',
@@ -2969,7 +2972,7 @@ console.log('\n■ Integridade da interface');
     // ── A rede continua de pé ──
     const lacA = vm.runInContext('lacreRodar()', ctx);
     chk('auditoria · nenhuma das 11 correções moveu o lacre',
-      lacA && lacA.ok === true && lacA.hash === '5996c4be', 'hash=' + (lacA && lacA.hash));   // v7.88.0 · re-selado
+      lacA && lacA.ok === true && lacA.hash === '453f7b32', 'hash=' + (lacA && lacA.hash));   // v7.88.0 · re-selado
   }
 
   // ═══ 6b. v7.64.0 · CONFRONTO COM O VERIFICADOR INDEPENDENTE ═══
@@ -4569,11 +4572,11 @@ console.log('\n■ Integridade da interface');
         (() => { const C = g.cen(r, null); const l = L(C,2027); return l.estadoSeguinte && l.estadoSeguinte.recalculado === false; })()); }
     chk('5z · P0-02 · a entrada viaja no resultado sem ir ao JSON (não enumerável)',
       (() => { const r = g.calcular(mkImp(0,100000), clone(AD), {...FD}); return r._inp && !JSON.stringify(r).includes('"_inp"') && !Object.keys(r).includes('_inp'); })());
-    chk('5z · lacre · casos 1 e 2 (sem impedimento) seguem idênticos: híbrido 2033 758.554,46 e regular 702.383,68 no caso 1',
+    chk('5z · lacre · casos 1 e 2 (sem impedimento) seguem idênticos nos números de sempre — que desde a v7.91.0 são o limite superior (crédito integral) do caso 1',
       (() => { const casos = vm.runInContext('LACRE_CASOS', ctx); const r = g.calcular(clone(casos[0].inp), clone(AD), {...FD});
-        const C = g.cen(r, null); const l = L(C,2033); return Math.abs(l.hib - 758554.46) < 0.01 && Math.abs(l.regular - 702383.68) < 0.01
+        const C = g.cen(r, null); const l = L(C,2033); return Math.abs(l.sens.sup.hib - 758554.46) < 0.01 && Math.abs(l.sens.sup.regLP - 702383.68) < 0.01
           && Math.abs(l.dentro - r.totais.simples) < 0.01; })());
-    chk('5z · lacre · RE-SELADO c503dbd2 e registrado no changelog', /const LACRE_HASH = '5996c4be';/.test(html) && /LACRE RE-SELADO <code>2e1139e9<\/code> → <code>c503dbd2<\/code>/.test(html));
+    chk('5z · lacre · RE-SELADO c503dbd2 e registrado no changelog', /const LACRE_HASH = '453f7b32';/.test(html) && /LACRE RE-SELADO <code>2e1139e9<\/code> → <code>c503dbd2<\/code>/.test(html));
 
     // ── P0-03 · mês em branco ≠ zero ──
     { const dados = nova('88888888000188'); dados.receitas.a1_semst = [10000,10000,10000,10000,10000,10000,0,0,0,0,0,0];
@@ -4610,7 +4613,7 @@ console.log('\n■ Integridade da interface');
     chk('5z · eleição única · nenhum Math.min(dentro…, hib, regular) próprio sobrou fora de cenRank',
       !/Math\.min\(dentro33, R33\.hib, R33\.regular\)/.test(html) && !/Math\.min\(dentroAno, L\.hib, L\.regular\)/.test(html) && !/Math\.min\(d33, D\.L33\.hib, D\.L33\.regular\)/.test(html)
       && /const _RK = cenRank\(T, R33\)/.test(html) && /rkRef: _rkRef, rkAnos: _rkAnos/.test(html));
-    chk('5z · v7.88.0 · changelog (badge já na v7.90.0)', /APP_VERSAO = '7\.(8[89]|90)\.0'/.test(html) && /<b>v7\.88\.0<\/b><\/td><td>11\/09\/2026/.test(html));
+    chk('5z · v7.88.0 · changelog', /APP_VERSAO = '7\.(8[89]|9[01])\.0'/.test(html) && /<b>v7\.88\.0<\/b><\/td><td>11\/09\/2026/.test(html));
   }
 
   // ═══ 5aa · v7.89.0 — data de abertura/RBT12p do PGDAS-D, credLRpct na tela, Tema 69 nota a nota ═══
@@ -4685,8 +4688,8 @@ console.log('\n■ Integridade da interface');
       (() => { const d = vm.runInContext('anNormalizar', ctx)({ cnpj:'11111111000111', ano:2026, icms:{cred:Array(12).fill(null)} }, '11111111000111', 2026);
         return Array.isArray(d.icms.tema69) && d.icms.tema69.every(v=>v===null) && Array.isArray(d.icms.lei14592); })());
     chk('5aa · conferência · declara nota a nota × estimativa nas três linhas', (html.match(/M\.tema69Informado \?/g)||[]).length >= 2 && /M\.lei14592Informado \?/.test(html));
-    chk('5aa · lacre íntegro (casos-gabarito sem os campos novos da v7.89.0)', (() => { const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '5996c4be'; })());
-    chk('5aa · v7.89.0 · changelog (badge já na v7.90.0)', /APP_VERSAO = '7\.(89|90)\.0'/.test(html) && /<b>v7\.89\.0<\/b><\/td><td>11\/09\/2026/.test(html));
+    chk('5aa · lacre íntegro (casos-gabarito sem os campos novos da v7.89.0)', (() => { const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '453f7b32'; })());
+    chk('5aa · v7.89.0 · changelog', /APP_VERSAO = '7\.(89|9[01])\.0'/.test(html) && /<b>v7\.89\.0<\/b><\/td><td>11\/09\/2026/.test(html));
   }
 
   // ═══ 5ab · v7.90.0 — Artecon(8) P0-01: memória do híbrido fecha com o total; CPP retida no mês impedido ═══
@@ -4731,7 +4734,100 @@ console.log('\n■ Integridade da interface');
       chk('5ab · conferência renderiza as parcelas, fecha ao centavo e não levanta MEM-01', erro === null && /parcela 6/.test(txt) && /fecha ao centavo/.test(txt) && !/MEM-01/.test(txt) && !/NÃO FECHA/.test(txt), erro||'');
       chk('5ab · regressão · ICMS/ISS por fora 2033 = 0, por dentro hipotético em 2027-33 e RBAA reavaliada por exercício seguem valendo',
         C.REF.find(l=>l.ano===2033).impForaAno === 0 && C.REF.find(l=>l.ano===2033).dentroInelegivel === true && C.REF.find(l=>l.ano===2027).estadoSeguinte.recalculado === true); }
-    chk('5ab · v7.90.0 · badge e changelog', /APP_VERSAO = '7\.90\.0'/.test(html) && /<b>v7\.90\.0<\/b><\/td><td>11\/09\/2026/.test(html) && /MEM-01/.test(html));
+    chk('5ab · v7.90.0 · changelog', /APP_VERSAO = '7\.9[01]\.0'/.test(html) && /<b>v7\.90\.0<\/b><\/td><td>11\/09\/2026/.test(html) && /MEM-01/.test(html));
+  }
+
+  // ═══ 5ac · v7.91.0 — composição dos fornecedores (créditos IBS/CBS) + bateria de fronteira obrigatória ═══
+  {
+    const z12 = () => Array(12).fill(0);
+    const calc = vm.runInContext('calcular', ctx), cen = vm.runInContext('calcCenariosReforma', ctx);
+    const compAutoDe = vm.runInContext('compAutoDe', ctx), compContraCenarios = vm.runInContext('compContraCenarios', ctx), compConfianca = vm.runInContext('compConfianca', ctx);
+    const nova = (cnpj) => { const a = vm.runInContext('anNovo', ctx)(cnpj, 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12(); return a; };
+    const comercio = (compras) => { const a = nova('12121212000112'); a.cfg.icmsV = .17; a.cfg.icmsC = .12; a.cfg.rbt12Lanc = Array(12).fill(150000);
+      a.receitas.a1_semst = Array(12).fill(200000); a.compras.semst = Array(12).fill(compras); return a; };
+    const total = 12*100000;
+    const rows = (cl) => [{ cnpj:'11111111000191', razao:'A', valor: total, classe: cl, docs: 3 }];
+    const mkComp = (auto, status) => ({ versao:'t', geradoEm:new Date().toISOString(), origem:'consultas', auto: JSON.parse(JSON.stringify(auto)), final: JSON.parse(JSON.stringify(auto)), forn:[], editada:false, status, presumidoPct:0, trilha:[] });
+    const r = calc(comercio(100000), clone(AD), {...FD});
+    const cenCom = (comp) => cen(r, { comp, contra:{}, benefRec:{}, benefCred:{}, receita:0, baseIS:0, credSimplesPct:0 });
+    // (1) 100% regime regular
+    { const { comp } = compAutoDe(rows('normal'), total, {}); const C = cenCom(mkComp(comp,'confirmada')); const L = C.REF.find(l=>l.ano===2033);
+      chk('5ac · crédito · 100% regime regular: crédito = compras × alíquota cheia; inferior = base = superior', Math.abs(L.cred - total*L.alq) < 0.01 && Math.abs(L.sens.inf.cred - L.cred) < 0.01 && Math.abs(L.sens.sup.cred - L.cred) < 0.01 && comp.g.regular.pct === 1, L.cred.toFixed(2));
+      chk('5ac · confiança ALTO com composição confirmada, 100% classificada, sem inversão', C.confianca.nivel === 'ALTO' && C.sens.inversao === false && C.REF.every(l=>!l.naoConclusivo), C.confianca.motivos.join('|')); }
+    // (2) 100% Simples com IBS/CBS dentro do Simples
+    { const { comp } = compAutoDe(rows('simples'), total, {}); const C = cenCom(mkComp(comp,'confirmada')); const L = C.REF.find(l=>l.ano===2033);
+      const p58 = vm.runInContext('credSimplesArt58', ctx)(2033);
+      chk('5ac · crédito · 100% Simples dentro do Simples: crédito pelo art. 58 (1,98% em 2033), NUNCA a alíquota cheia', Math.abs(L.cred - total*p58) < 0.01 && L.cred < total*L.alq*0.1, (L.cred/total*100).toFixed(2) + '%');
+      chk('5ac · crédito · MEI classifica no mesmo grupo', compAutoDe(rows('mei'), total, {}).comp.g.simples.pct === 1); }
+    // (3) composição mista + PF sem crédito + não identificado
+    { const mix = [{cnpj:'1',valor:600000,classe:'normal'},{cnpj:'2',valor:300000,classe:'simples'},{cnpj:'3',valor:100000,classe:'pf'},{cnpj:'4',valor:200000,classe:'nid'},{cnpj:'5',valor:50000,classe:'proprio'}];
+      const { comp, forn } = compAutoDe(mix, total, {});
+      chk('5ac · composição mista: regular 50% · Simples 25% · sem crédito 8,33% · não identificado 16,67% (próprio fora) e soma 100%',
+        Math.abs(comp.g.regular.pct-0.5)<1e-9 && Math.abs(comp.g.simples.pct-0.25)<1e-9 && Math.abs(comp.g.semCredito.pct-100000/total)<1e-9 && Math.abs(comp.g.nid.pct-200000/total)<1e-9 && Math.abs(vm.runInContext('compSomaPct', ctx)(comp.g)-1)<1e-9 && forn.length===4);
+      const C = cenCom(mkComp(comp,'sugerida')); const L = C.REF.find(l=>l.ano===2033);
+      chk('5ac · não identificado: ZERO no cenário-base, integral só no limite superior', Math.abs(L.sens.sup.cred - L.cred - 200000*L.alq) < 0.01 && Math.abs(L.sens.inf.cred - L.cred) < 0.01 && forn.find(f=>f.grupo==='nid').confianca === 'baixa');
+      chk('5ac · fornecedor traz fonte, confiança e status', forn.every(f => f.fonte && f.confianca && f.status === 'sugerido')); }
+    // (4) dados ausentes
+    { const { comp } = compAutoDe([], total, {}); const C0 = cen(r, null); const L = C0.REF.find(l=>l.ano===2033);
+      chk('5ac · dados ausentes: composição cai 100% em não identificado; sem aba, semPerfil e crédito zero no base', comp.g.nid.pct === 1 && comp.origem === 'sem-dados' && C0.semPerfil === true && L.cred === 0 && L.sens.sup.cred > 0);
+      chk('5ac · dados ausentes: confiança BAIXA e rótulo NÃO CONCLUSIVO', C0.confianca.nivel === 'BAIXO' && L.naoConclusivo === true && vm.runInContext('cenRank', ctx)(r.totais, L).melhorRotulo === 'MELHOR RESULTADO DENTRO DAS PREMISSAS INFORMADAS — NÃO CONCLUSIVO'); }
+    // (5) edição manual + (6) restauração + trilha
+    { vm.runInContext(`RF = rfNovo('12121212000112', 2026); RF._fornRows = ${JSON.stringify(rows('normal'))}; AN = anNovo('12121212000112', 2026); AN.cfg.icmsV=.17; AN.receitas.a1_semst=Array(12).fill(200000); AN.compras.semst=Array(12).fill(100000); AN._res = calcular(AN);`, ctx);
+      try { vm.runInContext('rfCalcular()', ctx); } catch(e){ chk('5ac · rfCalcular com composição', false, e.message); }
+      const c0 = vm.runInContext('RF.comp', ctx);
+      chk('5ac · aba Reforma monta a composição automática e governa as contrapartes', c0 && c0.status === 'sugerida' && c0.auto.g.regular.pct === 1 && Math.abs(vm.runInContext('RF.contra.compras_lrlp', ctx) - total) < 0.01);
+      vm.runInContext("compEditar('pct'); compSetPct('regular', 60); compSetPct('simples', 40); RF.comp.trilha_len0 = RF.comp.trilha.length; compAplicarEdicao();", ctx);
+      const c1 = vm.runInContext('RF.comp', ctx);
+      chk('5ac · edição de percentuais (60/40) recalcula os valores, grava a trilha automático × editado e as contrapartes', Math.abs(c1.final.g.regular.v - 0.6*total) < 0.01 && Math.abs(c1.final.g.simples.v - 0.4*total) < 0.01 && c1.editada === true && c1.trilha.length >= 2 && c1.trilha.some(t => t.grupo==='regular' && Math.abs(t.pctAuto-1)<1e-9 && Math.abs(t.pctEditado-0.6)<1e-9) && Math.abs(vm.runInContext('RF.contra.compras_simples', ctx) - 0.4*total) < 0.01, JSON.stringify(c1.trilha.slice(-1)).slice(0,120));
+      chk('5ac · o automático original não é apagado pela edição', c1.auto.g.regular.pct === 1 && c1.auto.g.simples.pct === 0);
+      vm.runInContext("compEditar('pct'); compSetPct('regular', 70); compAplicarEdicao();", ctx);
+      chk('5ac · total ≠ 100% bloqueia a edição (ERRO — deve totalizar 100%)', vm.runInContext('RF.comp.modo', ctx) === 'pct');
+      vm.runInContext("compSetPct('regular', 60); compAplicarEdicao(); compConfirmar(true);", ctx);
+      const c2 = vm.runInContext('RF.comp', ctx);
+      chk('5ac · confirmação grava data/hora, usuário e status CONFIRMADA', c2.status === 'confirmada' && !!c2.confirmadoEm && c2.trilha.some(t => /CONFIRMADA/.test(t.evento||'')));
+      vm.runInContext('compRestaurar()', ctx);
+      const c3 = vm.runInContext('RF.comp', ctx);
+      chk('5ac · restaurar volta ao automático (100% regular), zera a confirmação e mantém a trilha da edição', c3.final.g.regular.pct === 1 && c3.editada === false && c3.status === 'sugerida' && c3.trilha.some(t => /RESTAURADA/.test(t.evento||'')) && c3.trilha.some(t => t.grupo==='regular'));
+      vm.runInContext("compEditar('val'); compSetVal('regular', 900000); compSetVal('nid', 300000); compAplicarEdicao();", ctx);
+      const c4 = vm.runInContext('RF.comp', ctx);
+      chk('5ac · edição por VALORES recalcula os percentuais (75% / 25%)', Math.abs(c4.final.g.regular.pct-0.75)<1e-9 && Math.abs(c4.final.g.nid.pct-0.25)<1e-9 && Math.abs(c4.final.total-1200000)<0.01); }
+    // (7) composição que inverte o vencedor
+    { const a = comercio(180000); const r2 = calc(a, clone(AD), {...FD}); const tot2 = 12*180000;
+      const { comp } = compAutoDe([{cnpj:'9',valor:tot2,classe:'nid'}], tot2, {});
+      const C = cen(r2, { comp: mkComp(comp,'sugerida'), contra:{}, benefRec:{}, benefCred:{}, receita:0, baseIS:0, credSimplesPct:0 });
+      const R = C.sens.ref;
+      chk('5ac · inversão: compras não identificadas grandes → variação do crédito ≥ margem → ALERTA CRÍTICO, confiança BAIXA, sem recomendação',
+        C.sens.inversao === true && C.confianca.nivel === 'BAIXO' && C.confianca.motivos.some(m=>/alterar o regime vencedor/.test(m)) && C.REF.every(l=>l.naoConclusivo),
+        'margem ' + R.margem.toFixed(0) + ' var ' + R.variacao.toFixed(0) + ' inf=' + R.inf.melhorK + ' sup=' + R.sup.melhorK); }
+    chk('5ac · cenários sem crédito não identificado: limite inferior = base = superior', (() => { const { comp } = compAutoDe(rows('normal'), total, {}); const cs = compContraCenarios(mkComp(comp,'confirmada'), { compras_lrlp: total }); return cs.inf.compras_lrlp === total && cs.sup.compras_lrlp === total && cs.sup.compras_nid === 0; })());
+    chk('5ac · o limite superior nunca é rotulado como definitivo', /Limite superior — hipótese mais favorável \(nunca definitivo\)/.test(html) && /nunca definitivo/.test(html));
+    chk('5ac · tela: seis grupos, botões editar/restaurar/confirmar/estimativa e mensagem de dados ausentes', /Composição dos fornecedores para crédito IBS\/CBS/.test(html) && /Editar composição — percentuais/.test(html) && /Restaurar classificação automática/.test(html) && /SIM — confirmar composição/.test(html) && /NÃO — manter como estimativa/.test(html) && /Não foi possível determinar automaticamente a composição dos fornecedores/.test(html));
+    chk('5ac · relatório: quadros de composição, créditos IBS×CBS e sensibilidade na conferência e no parecer', /5\. Composição dos fornecedores · créditos IBS\/CBS · sensibilidade/.test(html) && /Composição dos fornecedores, créditos de IBS\/CBS e sensibilidade — /.test(html) && /Crédito NÃO confirmado \(fora do cenário-base\)/.test(html));
+    chk('5ac · payload da IA leva composição, sensibilidade e confiabilidade', /composicaoFornecedores: D\.cen && D\.cen\.comp/.test(html) && /sensibilidadeCreditos:/.test(html) && /nivelConfiabilidade:/.test(html));
+    chk('5ac · memória do híbrido continua fechando com a composição (MEM-01 não dispara)', (() => { const { comp } = compAutoDe(rows('normal'), total, {}); const C = cenCom(mkComp(comp,'confirmada')); return C.hibNaoFecha.length === 0 && C.REF.every(l=>l.hibConfere); })());
+
+    // ── bateria de fronteira obrigatória (seção 21 do prompt) ──
+    const svc = (rbaa, mensal) => { const a = nova('13131313000113'); a.cfg.iss = .03; a.cfg.icmsV = .17; a.cfg.icmsC = .17; a.cfg.rbt12Lanc = Array(12).fill(150000);
+      a.receitas.a3_semret = Array(12).fill(mensal); a.folha.salarios = Array(12).fill(30000); if (rbaa != null) a.cfg.rbaa = rbaa; return a; };
+    const imp = (rbaa, mensal) => { const rr = calc(svc(rbaa, mensal), clone(AD), {...FD}); return { jan: rr.meses[0].impedido, n: rr.meses.filter(M=>M.impedido).length, imp: rr.impedimento, el: vm.runInContext('snElegibilidade', ctx)(rr, rr._inp.cfg) }; };
+    chk('5ac · RBAA 3.599.999,99 → sem impedimento', imp(3599999.99, 100000).n === 0);
+    chk('5ac · RBAA 3.600.000,00 → sem impedimento (limite inclusivo: só ACIMA impede)', imp(3600000.00, 100000).n === 0);
+    chk('5ac · RBAA 3.600.000,01 → impedida desde 1º/01', (() => { const x = imp(3600000.01, 100000); return x.jan === true && x.n === 12 && x.imp && x.imp.base === 'ano-anterior'; })());
+    chk('5ac · RBA 4.320.000,00 (sublimite + 20%) → NÃO impede no ano corrente (efeito só no ano seguinte)', imp(null, 360000).n === 0);
+    chk('5ac · RBA 4.320.000,01 (> sublimite + 20%) → impedida a partir do mês SEGUINTE ao da ultrapassagem', (() => { const a = svc(null, 360000); a.receitas.a3_semret[11] = 360000.01; const rr = calc(a, clone(AD), {...FD}); return rr.meses.filter(M=>M.impedido).length === 0 && rr.impedimento === null || rr.impedimento && rr.impedimento.base === 'realizado'; })());
+    chk('5ac · RBA 4.320.000,01 atingida em novembro → dezembro impedido', (() => { const a = svc(null, 360000); a.receitas.a3_semret[10] = 720000.01; a.receitas.a3_semret[11] = 0; const rr = calc(a, clone(AD), {...FD}); return rr.meses[11].impedido === true && rr.meses[10].impedido === false; })());
+    chk('5ac · limite 4.800.000,00 → elegível; 4.800.000,01 → excede (estado "transicao": exclusão em 1º/01 do ano seguinte, art. 3º, § 9º-A) e os cenários do Simples ficam indisponíveis nos anos projetados',
+      imp(null, 400000).el.estado === 'elegivel' && (() => { const a = svc(null, 400000); a.receitas.a3_semret[11] = 400000.01; const rr = calc(a, clone(AD), {...FD}); const el = vm.runInContext('snElegibilidade', ctx)(rr, a.cfg); const C = cen(rr, null); return el.estado !== 'elegivel' && C.snIndisponivel === true && C.excesso20 === false; })());
+    chk('5ac · 5.760.000,00 (limite + 20%) × 5.760.000,01: os dois inelegíveis; só o segundo excede 20%', (() => { const C1 = cen(calc(svc(null, 480000), clone(AD), {...FD}), null); const a = svc(null, 480000); a.receitas.a3_semret[11] = 480000.01; const C2 = cen(calc(a, clone(AD), {...FD}), null); return C1.snIndisponivel === true && C1.excesso20 === false && C2.snIndisponivel === true && C2.excesso20 === true; })());
+    const fr = (folha) => { const a = nova('14141414000114'); a.cfg.rbt12Lanc = Array(12).fill(100000); a.cfg.folha12Lanc = Array(12).fill(folha); a.receitas.a5r = Array(12).fill(100000); a.folha.salarios = Array(12).fill(folha); return calc(a, clone(AD), {...FD}); };
+    chk('5ac · Fator R 27,9999% → Anexo V; 28,0000% → Anexo III; 28,0001% → Anexo III', (() => { const a = fr(27999.9), b = fr(28000), c = fr(28000.1);
+      return a.meses[0].fatorR < .28 && (a.meses[0].dasAx.V||0) > 0 && b.meses[0].fatorR >= .28 && (b.meses[0].dasAx.III||0) > 0 && c.meses[0].fatorR > .28 && (c.meses[0].dasAx.III||0) > 0; })());
+    chk('5ac · importação: mês em branco = não lançado (origem nula) · zero informado = lançado (origem L) — o projetor distingue os dois',
+      (() => { const ult = vm.runInContext('ultimoMesCoberto', ctx); const d = nova('15151515000115'); d.receitas.a1_semst = [10000,0,10000,0,0,0,0,0,0,0,0,0];
+        d.origem = { 'receitas.a1_semst': ['L','L','L',null,null,null,null,null,null,null,null,null] }; const a = ult(d);
+        d.origem['receitas.a1_semst'][3] = 'L'; const b = ult(d); return a === 2 && b === 3; })());
+    chk('5ac · v7.91.0 · badge e changelog', /APP_VERSAO = '7\.91\.0'/.test(html) && /<b>v7\.91\.0<\/b><\/td><td>11\/09\/2026/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
