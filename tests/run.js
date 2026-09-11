@@ -1790,7 +1790,7 @@ console.log('\n■ Integridade da interface');
     chk('v7.56.5 · nota de precisão integral consta das divergências declaradas',
       /os cálculos correm em <b>precisão integral<\/b>/.test(vm.runInContext('rlConfDivergencias', ctx)()));
     chk('v7.87.0 · versão e changelog registrados (badge sai do APP_VERSAO)',
-      /const APP_VERSAO = '7\.88\.0';/.test(html) && html.includes('<b>v7.88.0</b>') && html.includes('<b>v7.87.0</b>') && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>')
+      /const APP_VERSAO = '7\.89\.0';/.test(html) && html.includes('<b>v7.89.0</b>') && html.includes('<b>v7.88.0</b>') && html.includes('<b>v7.87.0</b>') && html.includes('<b>v7.86.2</b>') && html.includes('<b>v7.86.1</b>')
       && html.includes('<b>v7.63.0</b>') && html.includes('<b>v7.50.0</b>'));
     // v7.56.2 · as nove versões novas entraram ABAIXO da v7.50.0 e a aba abria na versão errada.
     {
@@ -4610,7 +4610,83 @@ console.log('\n■ Integridade da interface');
     chk('5z · eleição única · nenhum Math.min(dentro…, hib, regular) próprio sobrou fora de cenRank',
       !/Math\.min\(dentro33, R33\.hib, R33\.regular\)/.test(html) && !/Math\.min\(dentroAno, L\.hib, L\.regular\)/.test(html) && !/Math\.min\(d33, D\.L33\.hib, D\.L33\.regular\)/.test(html)
       && /const _RK = cenRank\(T, R33\)/.test(html) && /rkRef: _rkRef, rkAnos: _rkAnos/.test(html));
-    chk('5z · v7.88.0 · badge e changelog', /APP_VERSAO = '7\.88\.0'/.test(html) && /<b>v7\.88\.0<\/b><\/td><td>11\/09\/2026/.test(html));
+    chk('5z · v7.88.0 · changelog (badge já na v7.89.0)', /APP_VERSAO = '7\.8[89]\.0'/.test(html) && /<b>v7\.88\.0<\/b><\/td><td>11\/09\/2026/.test(html));
+  }
+
+  // ═══ 5aa · v7.89.0 — data de abertura/RBT12p do PGDAS-D, credLRpct na tela, Tema 69 nota a nota ═══
+  {
+    const z12 = () => Array(12).fill(0);
+    const calc = vm.runInContext('calcular', ctx);
+    const nova = (cnpj) => { const a = vm.runInContext('anNovo', ctx)(cnpj, 2026);
+      for (const k of Object.keys(a.receitas)) a.receitas[k] = z12(); return a; };
+    // texto REAL do extrato PGDAS-D da BUSCO LOG (PA 07/2026), como o pdf.js entrega (itens unidos por espaço)
+    const PG = "Programa Gerador do Documento de Arrecadação do Simples Nacional - Declaratório Declaração Original Período de Apuração: 01/07/2026 a 31/07/2026 . 1. Identificação do Contribuinte CNPJ Matriz: 20.425.164/0001-78 Nome empresarial: BUSCO LOG PHA LTDA Data de abertura no CNPJ: 09/06/2014 Optante pelo Simples Nacional: Sim Regime de Apuração: Competência Nº da Declaração: 20425164202607001 1.1 CNPJ das filiais presentes nesta declaração: Nenhuma . 2.Apuração do Simples Nacional 2.1 Discriminativo de Receitas Total de Receitas Brutas (R$) Mercado Interno Mercado Externo Total Receita Bruta do PA (RPA) - Competência 100.890,50 0,00 100.890,50 Receita bruta acumulada nos doze meses anteriores ao PA (RBT12) 1.274.452,53 0,00 1.274.452,53 Receita bruta acumulada nos doze meses anteriores ao PA proporcionalizada (RBT12p) Receita bruta acumulada no ano-calendário corrente (RBA) 596.922,34 0,00 596.922,34 Receita bruta acumulada no ano-calendário anterior (RBAA) 1.488.040,31 0,00 1.488.040,31 Limite de receita bruta proporcionalizado 4.800.000,00 4.800.000,00 ";
+    const rxAb = /Data de abertura no CNPJ\s*:?\s*(\d{2})\/(\d{2})\/(\d{4})/i;
+    const rx12 = /ao PA \(RBT12\)\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})/i;
+    const rx12p = /ao PA proporcionalizada \(RBT12p\)\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})/i;
+    const rxReg = /Regime de Apura[çc][ãa]o\s*:?\s*(Compet[êe]ncia|Caixa)/i;
+    const ab = PG.match(rxAb), r12 = PG.match(rx12), r12p = PG.match(rx12p), reg = PG.match(rxReg);
+    chk('5aa · PGDAS-D · "Data de abertura no CNPJ" lida do texto real → 2014-06', ab && ab[3]+'-'+ab[2] === '2014-06');
+    chk('5aa · PGDAS-D · RBT12 declarada lida (interno | externo | total) = 1.274.452,53', r12 && r12[1] === '1.274.452,53' && r12[2] === '0,00');
+    chk('5aa · PGDAS-D · RBT12p em branco (empresa madura) NÃO captura os números da linha seguinte', r12p === null);
+    chk('5aa · PGDAS-D · regime de apuração lido como informação (Competência)', reg && /Compet/.test(reg[1]));
+    chk('5aa · PGDAS-D · as mesmas regexes estão no importador e os campos viajam no mês lido',
+      html.includes("Data de abertura no CNPJ\\s*:?\\s*(\\d{2})\\/(\\d{2})\\/(\\d{4})") && html.includes("ao PA proporcionalizada \\(RBT12p\\)") && /abertura, rbt12Decl, rbt12pDecl, regimeApur \}/.test(html));
+    chk('5aa · PGDAS-D · a data de abertura preenche "Início de atividade" SEMPRE, com origem e PA gravados',
+      /AN\.cfg\.inicioAtividade = _ab; AN\.cfg\.inicioOrigem = 'P'; AN\.cfg\.inicioPA = _paAb;/.test(html) && /substitui \$\{_antesAb\} informado antes/.test(html));
+    chk('5aa · PGDAS-D · editar a data à mão remove o selo P (comparação com o RETRATO de antes do funil — `_cfg` é a mesma referência de AN.cfg)',
+      /const _cfgAntes = \{ \.\.\.\(AN\.cfg \|\| \{\}\) \};/.test(html) && /_cfgAntes\.inicioOrigem === 'P'/.test(html) && /_cfgAntes\.rbaaOrigem === 'P'/.test(html) && /P · PGDAS-D \$\{esc\(c\.inicioPA\|\|''\)\}/.test(html));
+    { vm.runInContext("AN = anNovo('20425164000178', 2026); AN.cfg.inicioAtividade='2026-03'; AN.cfg.inicioOrigem='P'; AN.cfg.inicioPA='07/2026'; AN.cfg.rbaa=1488040.31; AN.cfg.rbaaOrigem='P'; AN.cfg.rbaaPA='07/2026';", ctx);
+      ctx.document.getElementById('cf-inicio').value = '2026-04'; ctx.document.getElementById('cf-rbaa').value = '1488040.31';
+      try { vm.runInContext('anAplicarConfig(true)', ctx); } catch(e){}
+      chk('5aa · funil · editar o início remove SÓ o selo do início; a RBAA intocada mantém o seu',
+        vm.runInContext("AN.cfg.inicioAtividade", ctx) === '2026-04' && vm.runInContext("AN.cfg.inicioOrigem", ctx) === undefined && vm.runInContext("AN.cfg.rbaaOrigem", ctx) === 'P',
+        JSON.stringify({ ini: vm.runInContext("AN.cfg.inicioOrigem", ctx), rbaa: vm.runInContext("AN.cfg.rbaaOrigem", ctx) }));
+      ctx.document.getElementById('cf-rbaa').value = '1500000';
+      try { vm.runInContext('anAplicarConfig(true)', ctx); } catch(e){}
+      chk('5aa · funil · editar a RBAA remove o selo P da RBAA (defeito da v7.87.0 corrigido)', vm.runInContext("AN.cfg.rbaaOrigem", ctx) === undefined && Math.abs(vm.runInContext("+AN.cfg.rbaa", ctx) - 1500000) < 0.01); }
+    chk('5aa · PGDAS-D · a conferência imprime a RBT12p declarada contra a do motor', /RBT12p declarada no PGDAS-D/.test(html) && /rbt12pDecl: Array\(12\)\.fill\(null\)/.test(html));
+    // proporcionalização continua sendo do motor (prova com a data preenchida como o importador faria)
+    { const a = nova('20425164000178'); a.cfg.inicioAtividade = '2026-03'; a.cfg.inicioOrigem = 'P';
+      a.receitas.a3_semret = [0,0,50000,60000,70000,80000,0,0,0,0,0,0]; a.folha.salarios = Array(12).fill(10000);
+      const r = calc(a, clone(AD), {...FD});
+      chk('5aa · motor · com a data lida, o 1º mês é receita × 12 e o 2º é a média dos anteriores × 12',
+        r.meses[2].rbt12Prop === true && Math.abs(r.meses[2].rbt12 - 600000) < 0.01 && Math.abs(r.meses[3].rbt12 - 600000) < 0.01 && Math.abs(r.meses[4].rbt12 - 660000) < 0.01,
+        r.meses.slice(2,5).map(M=>M.rbt12.toFixed(2)).join(' / ')); }
+
+    // ── (4) credLRpct na tela ──
+    chk('5aa · credLRpct · a Configuração tem os cinco campos e o funil grava só quando >0', /id="cf-crlr-\$\{k\}"/.test(html) && /if \(Object\.keys\(o\)\.length\) AN\.cfg\.credLRpct = o; else delete AN\.cfg\.credLRpct;/.test(html) && /'anoRefParecer','credLRpct'\]/.test(html));
+    { const a = nova('44444444000144'); a.receitas.a3_semret = Array(12).fill(100000); a.despesas.adm = Array(12).fill(20000);
+      const r0 = calc(a, clone(AD), {...FD}); a.cfg.credLRpct = { adm: 0.5 }; const r1 = calc(a, clone(AD), {...FD});
+      const pc = r => r.meses.reduce((s,M)=>s+M.lr.pis+M.lr.cofins,0);
+      chk('5aa · credLRpct · 50% das despesas administrativas creditáveis reduz o PIS/COFINS do Real em 20.000 × 50% × 9,25% × 12 = 11.100 (e o IRPJ/CSLL sobe 34% disso, tributo é despesa dedutível)',
+        Math.abs((pc(r0) - pc(r1)) - 11100) < 1 && Math.abs((r0.totais.lr - r1.totais.lr) - 11100*0.66) < 1, (pc(r0)-pc(r1)).toFixed(2) + ' / total ' + (r0.totais.lr - r1.totais.lr).toFixed(2)); }
+
+    // ── (3) Tema 69 e Lei 14.592 nota a nota ──
+    { const a = nova('55555555000155'); a.cfg.icmsV = .17; a.cfg.icmsC = .12;
+      a.receitas.a1_semst = Array(12).fill(100000); a.compras.semst = Array(12).fill(40000);
+      const est = calc(a, clone(AD), {...FD});
+      chk('5aa · Tema 69 · sem informação, estimativa: 100.000 × 17% = 17.000 e a origem diz estimativa',
+        Math.abs(est.meses[0].icmsDestacadoPC - 17000) < 0.01 && est.meses[0].tema69Informado === false && Math.abs(est.meses[0].icmsComprasPC - 4800) < 0.01 && est.meses[0].lei14592Informado === false);
+      a.icms.tema69 = [12000, ...Array(11).fill(null)]; a.icms.lei14592 = [3000, ...Array(11).fill(null)];
+      const inf = calc(a, clone(AD), {...FD});
+      chk('5aa · Tema 69 · informado nota a nota, o motor usa o valor (12.000) só no mês informado e mantém a estimativa nos outros',
+        Math.abs(inf.meses[0].icmsDestacadoPC - 12000) < 0.01 && inf.meses[0].tema69Informado === true && Math.abs(inf.meses[1].icmsDestacadoPC - 17000) < 0.01 && inf.meses[1].tema69Informado === false);
+      chk('5aa · Lei 14.592 · idem para o ICMS das aquisições (3.000 informado × 4.800 estimado)',
+        Math.abs(inf.meses[0].icmsComprasPC - 3000) < 0.01 && inf.meses[0].lei14592Informado === true && Math.abs(inf.meses[1].icmsComprasPC - 4800) < 0.01);
+      chk('5aa · Tema 69 · a base do Presumido muda pelo delta exato (17.000 − 12.000 = 5.000 a mais na base)',
+        Math.abs((inf.meses[0].lp.pis + inf.meses[0].lp.cofins) - (est.meses[0].lp.pis + est.meses[0].lp.cofins) - 5000*0.0365) < 0.01);
+      chk('5aa · Tema 69 · zero informado é zero (não cai no fallback)', (() => { a.icms.tema69[0] = 0; const r = calc(a, clone(AD), {...FD}); return r.meses[0].icmsDestacadoPC === 0 && r.meses[0].tema69Informado === true; })()); }
+    chk('5aa · XML · a NF-e passa a trazer vICMS (sem o vICMSST) e o lançamento alimenta icms.tema69 só nos blocos com destaque próprio',
+      /icms: xNum\(xTag\(xSec\(t,'ICMSTot'\),'vICMS'\)\) \|\| 0, icmsSt: xNum\(xTag\(xSec\(t,'ICMSTot'\),'vICMSST'\)\)/.test(html)
+      && /const T69_BLOCOS = \['a1_semst','a1_red','a2_semst','a2_red','comtransp'\]/.test(html) && /anOrigemMarcar\('icms\.tema69', mesesXml, 'X'\)/.test(html));
+    chk('5aa · grade · a aba ICMS·IPI tem as duas linhas informáveis', /\['icms\.tema69','ICMS destacado nas saídas — Tema 69 \(nota a nota\)','nul'\]/.test(html) && /\['icms\.lei14592'/.test(html));
+    chk('5aa · normalizador · análise antiga sem os campos novos ganha null (automático), não zero',
+      (() => { const d = vm.runInContext('anNormalizar', ctx)({ cnpj:'11111111000111', ano:2026, icms:{cred:Array(12).fill(null)} }, '11111111000111', 2026);
+        return Array.isArray(d.icms.tema69) && d.icms.tema69.every(v=>v===null) && Array.isArray(d.icms.lei14592); })());
+    chk('5aa · conferência · declara nota a nota × estimativa nas três linhas', (html.match(/M\.tema69Informado \?/g)||[]).length >= 2 && /M\.lei14592Informado \?/.test(html));
+    chk('5aa · lacre c503dbd2 íntegro (casos-gabarito sem os campos novos)', (() => { const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === 'c503dbd2'; })());
+    chk('5aa · v7.89.0 · badge e changelog', /APP_VERSAO = '7\.89\.0'/.test(html) && /<b>v7\.89\.0<\/b><\/td><td>11\/09\/2026/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
