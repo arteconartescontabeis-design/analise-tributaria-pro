@@ -786,6 +786,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.88.0</b></td><td>11/09/2026</td><td><b>⚖️ Relatório consolidado de pontos críticos (11/09/2026): os seis pontos, com LACRE RE-SELADO <code>2e1139e9</code> → <code>c503dbd2</code>.</b> Dos seis achados, quatro eram defeitos reais confirmados no código; os outros dois, rotulagem e eleição. <b>P0-01 — transição do ICMS/ISS por fora.</b> O ICMS e o ISS apurados fora da guia no período de impedimento (v7.58.0) entravam no híbrido — e no "por dentro", via total do Simples — pelo valor <b>integral</b> até 2033. Fora do Simples eles se sujeitam às normas gerais (Res. CGSN 140/2018, art. 12, § 8º), e as normas gerais são a EC 132/2023: ADCT, arts. 128 e 129 — 9/10 em 2029, 8/10 em 2030, 7/10 em 2031, 6/10 em 2032, extinção em 2033. Passam a seguir o mesmo <code>remIcmsIss</code> de todo o resto da conta (100/100/90/80/70/60/0%). No híbrido o IBS que os substitui já estava no IBS/CBS por fora; no "por dentro" o IBS do período impedido <b>não cabe na guia</b> (o sublimite alcança o IBS desde 2027, Res. CGSN 190/2026) e entra por fora, sobre a base impedida, pela alíquota de IBS do ano com a mesma intensidade de crédito da linha — premissa declarada na memória. <b>P0-02 — estado de impedimento por exercício.</b> Os anos projetados herdavam, por construção, o estado do ano-base (RBAA de dois anos antes). Agora, para cada ano seguinte, o motor é <b>rodado de novo</b> com RBAA = receita interna do exercício anterior (a mesma base que já decide a elegibilidade), contra o sublimite da tabela daquele ano: quem estava impedido em janeiro do ano-base mas fechou o ano abaixo do sublimite <b>deixa de estar impedido</b> em 2027; quem cruzou o sublimite em setembro fica impedido <b>desde 1º/01</b> do ano seguinte (LC 123/2006, art. 20, § 1º). Nenhuma flag é copiada; a memória da conferência imprime a RBAA usada, o sublimite e o resultado, em <code>estadoSeguinte</code>. Linha antiga sem a entrada (snapshot) mantém o comportamento anterior e declara isso. <b>P0-03 — mês em branco não é zero.</b> A planilha modelo marcava origem <code>L</code> nos 12 meses mesmo com célula vazia, e o Faturamento (modo substituir) marcava <code>F</code> nos 12 mesmo quando o PDF listava seis: o ano ficava "coberto", <code>ultimoMesCoberto</code> dizia dezembro e a <b>projeção deixava de rodar</b> — exatamente o que o teste 10/10 viu. Três estados agora: célula vazia → valor 0 e <b>origem nula</b> (não informado); célula com 0 → informado zero; célula com valor. Só os meses listados no PDF recebem <code>F</code>. PGDAS-D, XML, balancete e Demonstrativo já estavam certos. <b>P1-01 — Lucro Real sem CMV.</b> Com receita de comércio/indústria e nenhum custo de mercadoria lançado, o motor passa a declarar <code>lrIncompleto</code> (DL 1.598/1977, art. 14; RIR/2018, art. 301): o Real aparece riscado como <b>SIMULAÇÃO INCOMPLETA</b> e fica <b>fora da eleição</b> do melhor ou do pior regime em todos os quadros — veredito, comparativo, dashboard, carteira, parecer, apresentação, cenários da Reforma (<code>regular</code> = Presumido) — e o resumo gravado leva a marca. <b>P1-02 — estimativa declarada.</b> Onde o ICMS/ISS por fora aparece (monitor, conferência, comparativo), agora consta que é estimativa pelas alíquotas gerais da empresa, sem benefícios, redução de base, diferimento, ST específica, DIFAL nem regras do item da LC 116. <b>P2-01 — "por dentro" hipotético.</b> A partir de 2027, ano com impedimento marca o cenário "por dentro" como <b>HIPOTÉTICO — NÃO ELEGÍVEL NESTA SIMULAÇÃO</b>, riscado e fora do ranking; a escolha real fica entre híbrido e sair do Simples. <b>Eleição única.</b> <code>cenRank</code> (três cenários) e <code>regimesAtuais</code> (Simples × LP × LR) passam a ser o único lugar que decide quem concorre — veredito, dashboard, comparativo, relatório Reforma, parecer (jornada, tabela anual, acumulado, textos e payload da IA) e apresentação leem dali, nenhum <code>Math.min</code> próprio sobrou. <b>Lacre:</b> os casos 1 e 2 seguem idênticos ao centavo; o caso 3 (único com impedimento) muda em 2027-2033 de propósito, e o "por dentro" passa a ser selado por linha (antes o selo repetia o híbrido no lugar dele). Suíte: bloco 5z com as provas dos seis pontos.</td></tr>
                     <tr><td><b>v7.87.0</b></td><td>10/09/2026</td><td><b>⚖️ Sublimite do Simples Nacional — o que faltava da especificação: RBAA lida do PGDAS-D, tabela por ano, alerta bloqueante e matriz + filiais.</b> Conferência da especificação "Implementação obrigatória — sublimite para ICMS e ISS" contra o código: dos 15 itens, 8 já estavam cobertos (RBAA com campo próprio, RBA mensal com o efeito de 20%, RBAA/RBA/RBT12 distintos, exportação segregada, ICMS/ISS fora da guia pelas alíquotas da empresa, três estados limite × sublimite). Esta versão fecha os quatro que não estavam. <b>(1) RBAA lida do PGDAS-D.</b> A linha "Receita bruta acumulada no ano-calendário anterior (RBAA)" do extrato — mercado interno e externo — passa a preencher a aba RBT12 <b>sempre</b>, sobrescrevendo o valor anterior (decisão de 10/09/2026), com origem marcada e o PA de onde veio; sem a linha nos PDFs, nada muda e o aplicativo avisa. É o caso do Guincho 24hrs: empresa impedida aparecia na 5ª faixa porque o campo estava em branco. <b>(2) Tabela <code>SUBLIMITE_VIG</code> por ano-calendário</b> — <code>ano_calendario</code>, <code>limite_simples</code>, <code>sublimite</code>, <code>tributos_afetados</code>, <code>vigencia_inicio</code>, <code>vigencia_fim</code> e <code>fundamento_legal</code>. O motor lê a linha do ano <b>analisado</b> e não transporta regra entre exercícios; a partir de 2027 a linha declara o reflexo no IBS (Res. CGSN 190/2026). O valor próprio da Configuração segue como override por empresa. Os oito pontos do código que traziam <code>3600000</code> literal passaram a ler a tabela. <b>(3) Alerta de auditoria (§13).</b> RBAA acima do sublimite com o tratamento desligado (ICMS/ISS ainda na guia), ou RBAA <b>não informada</b> com os 12 meses anteriores acima do sublimite, é <b>ERRO CRÍTICO</b> — na Análise, na Conferência e, por decisão, <b>bloqueia a emissão</b> do parecer e das apresentações até ser corrigido; a Conferência segue aberta para diagnóstico. <b>(4) Matriz e filiais.</b> Limite e sublimite são da pessoa jurídica (LC 123/2006, art. 3º c/c art. 13-A): a aba RBT12 ganhou "outros estabelecimentos" — ano anterior e ano corrente — somados à RBAA e à RBA (ano corrente rateado mês a mês na proporção da receita interna lançada, premissa declarada). Não alteram faixa nem alíquota. <b>(5) Fundamentação.</b> Os textos do impedimento passam a citar o art. 13-A, os arts. 19 e 20, §§ 1º e 1º-A, da LC 123/2006 e os arts. 9º, 12 e 24 da Res. CGSN 140/2018, com o quadro em destaque "SUBLIMITE DO SIMPLES NACIONAL ULTRAPASSADO" no monitor; o quadro de limite e sublimite da Conferência declara a linha da tabela usada. <b>Texto vencido corrigido:</b> o monitor ainda dizia que o impedimento pelo ano anterior era "cenário que este cálculo ainda não modela" — superado desde a v7.70.0. <b>Fica declarado como não modelado:</b> a apuração estadual e municipal completa por fora (benefícios, redução de base, diferimento, DIFAL, particularidades do item da LC 116). Lacre <code>2e1139e9</code> <b>íntegro</b> — sem os campos novos o motor produz os mesmos números ao centavo, e 2026 segue com R$ 3,6 milhões.</td></tr>
                     <tr><td><b>v7.86.2</b></td><td>07/09/2026</td><td><b>🐞 Aba Reforma: o ISS retido pelo tomador saía da base do IBS/CBS só nessa tela.</b> A dedução da aba somava o ISS <b>retido</b> incondicionalmente (resíduo da v7.50.0), enquanto os cenários do parecer, a conferência e o relatório Reforma só o somam quando a empresa opta por "Deduz" na Configuração (v7.54.0, decisão 8.9; v7.69.0, opção por empresa). Empresa com serviço retido e não retido via a aba deduzir a receita inteira × alíquota — na Clínica Lenita, R$ 2.089,08 — e o parecer deduzir apenas o ISS efetivamente devido, R$ 231,03. A aba passa a ler a <b>mesma opção</b> que viaja no resultado do motor (<code>totais.dedIssRetido</code>) e ganha a nota que declara se o ISS retido está dentro ou fora da dedução. Parecer, conferência e relatório <b>não mudam</b> — já estavam certos; a aba passa a fechar com eles ao centavo. Motor e lacre <code>2e1139e9</code> intocados; suíte com teste de identidade aba × cenários nas duas opções.</td></tr>
                     <tr><td><b>v7.86.1</b></td><td>01/09/2026</td><td><b>🔧 Apresentação: Enter não mudava de tela.</b> O botão <b>Apresentar</b> continuava com o foco depois do clique — e Enter ou espaço num botão focado disparam o clique de novo, reabrindo a apresentação na primeira tela em vez de avançar. O foco agora vai para o contêiner da apresentação, e a navegação passa a aceitar <b>Enter</b>, espaço, setas (nas quatro direções), PageUp/PageDown, Home/End, Backspace para voltar e <b>clique ou toque na tela</b> para avançar. Em tela cheia aparece uma barra discreta no canto com anterior / contador / próxima / sair, para quem apresenta com o mouse ou com controle. Nenhuma mudança fora da apresentação; motor intocado, lacre <code>2e1139e9</code> íntegro.</td></tr>
@@ -2487,6 +2488,11 @@ function anModeloImportar(inp){
           continue;
         }
         const vals = Array.from({length:12},(_,m)=>num(String(r[2+m]??'')));
+        // ══ v7.88.0 (P0-03) · CÉLULA VAZIA NÃO É ZERO ══════════════════════════════════════
+        // Três estados: "não informado" (célula vazia → valor 0 e origem nula), "informado igual a
+        // zero" (célula com 0 → origem L) e "informado com valor". Antes os 12 meses recebiam L, o
+        // ano ficava "coberto" e a projeção deixava de rodar — meses vazios viravam receita zero.
+        const informados = Array.from({length:12},(_,m)=>m).filter(m => String(r[2+m]??'').trim() !== '');
         if (path.startsWith('cfg.') && !/Lanc$/.test(path)) {
           // linha de percentual em branco = "não mexer" (antes zerava a config)
           const vazia = Array.from({length:12},(_,m)=>String(r[2+m]??'').trim()).every(x=>x==='');
@@ -2495,7 +2501,8 @@ function anModeloImportar(inp){
         const { o, k } = anPath(AN, path);
         if (/_pct$/.test(path)) { for (let m=0;m<12;m++) o[k][m] = vals[m]/100; }
         else { for (let m=0;m<12;m++) o[k][m] = vals[m]; }
-        anOrigemMarcar(path, 'all', 'L');                  // v7.28.0: trilha de origem
+        anOrigemMarcar(path, 'all', null);                 // v7.88.0: limpa antes — vazio = não informado
+        anOrigemMarcar(path, informados, 'L');             // v7.28.0: trilha de origem (só os informados)
         aplicados++;
       }
       anRenderTabs(); anRenderConfig(); anRenderGrid(); anRecalcular();
@@ -2943,6 +2950,9 @@ const SUBLIMITE_VIG = [
     fundamento_legal: 'LC 123/2006, arts. 13-A, 19 e 20; LC 214/2025; Res. CGSN 190/2026 (sublimite com reflexo no IBS a partir de 2027)' },
 ];
 const SUB_FUNDAMENTO = 'LC 123/2006, arts. 13-A, 19 e 20, §§ 1º e 1º-A; Res. CGSN 140/2018, arts. 9º, 12 e 24';
+// v7.88.0 (P1-02) · o ICMS/ISS apurado fora da guia é ESTIMATIVA: alíquota geral da empresa × base,
+// sem benefícios, redução de base, diferimento, ST específica, DIFAL nem regras do item da LC 116.
+const SUB_ESTIMATIVA_TXT = 'alíquota geral do Estado e do Município configurada para a empresa, com o crédito de ICMS das compras; não modela benefícios fiscais, redução de base, diferimento, ST específica, DIFAL nem particularidades do item da LC 116 — Res. CGSN 140/2018, art. 12, § 8º, remete às normas gerais de cada ente, e a apuração exata depende dessas regras';
 function sublimiteVig(ano){
   const a = +ano || 0; let v = SUBLIMITE_VIG[0];
   for (const x of SUBLIMITE_VIG) if (a >= x.ano_calendario) v = x;
@@ -3911,6 +3921,22 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     dasTrib: ['pis','cofins','irpj','csll','cpp','icms','iss','ipi'].reduce((o,t)=>(o[t]=S(out.meses.map(x=>x.dasTrib?x.dasTrib[t]:0)),o),{}),
     dedIssRetido: cfg.dedIssRetido === true,   // v7.69.0 · a opção viaja com o resultado
   };
+  // ══ v7.88.0 (P1-01) · LUCRO REAL SEM CMV/ESTOQUES = SIMULAÇÃO INCOMPLETA ═══════════════════
+  // Com receita de comércio/indústria e NENHUM custo de mercadoria lançado (baixa de estoque nas
+  // compras), a base do Real fica superestimada — DL 1.598/1977, art. 14, e RIR/2018, art. 301:
+  // o custo sai do inventário, e compra não é custo. O motor não presume CMV; ele DECLARA o
+  // estado, e a eleição do melhor/pior regime deixa o Real fora enquanto o estado persistir.
+  { const _custos = S(out.meses.map(x=>x.custos||0));
+    const _recComT = out.totais.recCom || 0;
+    out.totais.custos = _custos;
+    out.totais.lrIncompleto = _recComT > 0.005 && _custos <= 0.005;
+    out.totais.lrIncompletoMotivo = out.totais.lrIncompleto
+      ? 'receita de comércio/indústria de ' + fmt(_recComT) + ' sem custo de mercadoria (CMV) lançado — base do Lucro Real superestimada (DL 1.598/1977, art. 14; RIR/2018, art. 301)'
+      : null; }
+  // v7.88.0 (P0-02) · a entrada viaja com o resultado, NÃO enumerável (não vai ao JSON nem ao
+  // snapshot): é o que permite recalcular o estado de impedimento do exercício seguinte.
+  try { Object.defineProperty(out, '_inp', { value: inp, enumerable: false, writable: true });
+        Object.defineProperty(out, '_calcArgs', { value: { anexos, fp }, enumerable: false, writable: true }); } catch(e){}
   // v7.43.1 · o monitor de sublimite tem de projetar pelo MESMO período da projeção do parecer,
   // senão o parecer fala de um ano e o alerta de ultrapassagem fala de outro.
   try { out.ultCoberto = ultimoMesCoberto(inp); } catch(e){ out.ultCoberto = null; }
@@ -4496,7 +4522,7 @@ function anOrigemMarcar(path, meses, cod){
   if (!AN) return;
   if (!AN.origem || typeof AN.origem !== 'object' || Array.isArray(AN.origem)) AN.origem = {};
   if (!Array.isArray(AN.origem[path])) AN.origem[path] = Array(12).fill(null);
-  for (const m of (meses === 'all' ? [...Array(12).keys()] : meses)) AN.origem[path][+m] = cod;
+  for (const m of (meses === 'all' ? [...Array(12).keys()] : meses)) AN.origem[path][+m] = cod || null;   // v7.88.0 · null = "não informado"
 }
 
 function anRenderTabs() {
@@ -5385,8 +5411,8 @@ function anRecalcular() {
   anAvisoConfig();
   const EL = snElegibilidade(r, AN.cfg); AN._sn = EL;
   const snVale = EL.estado !== 'inelegivel';
-  const menor = snVale ? Math.min(T.simples, T.lp, T.lr) : Math.min(T.lp, T.lr);
-  const nomeMenor = (snVale && menor===T.simples) ? 'Simples Nacional' : menor===T.lp ? 'Lucro Presumido' : 'Lucro Real';
+  const _RA = regimesAtuais(T, snVale);   // v7.88.0 (P1-01)
+  const menor = _RA.menor, nomeMenor = _RA.nome;
   const card = (rot, v, sub, on) => `<div class="stat ${on?'melhor':''}"><div class="n" style="font-size:20px">${fmtR(v)}</div><div class="l">${rot}</div><div class="sub">${sub}</div></div>`;
   const pct = v => T.receita>0 ? (v/T.receita*100).toFixed(2)+'% da receita' : '';
   $id('an-resumo').innerHTML =
@@ -5394,8 +5420,10 @@ function anRecalcular() {
     (snVale ? card('Simples Nacional', T.simples, pct(T.simples), menor===T.simples)
             : `<div class="stat" style="opacity:.55"><div class="n" style="font-size:20px">—</div><div class="l">Simples Nacional</div><div class="sub">acima do teto · não elegível</div></div>`) +
     card('Lucro Presumido', T.lp, pct(T.lp), menor===T.lp) +
-    card('Lucro Real', T.lr, pct(T.lr), menor===T.lr);
-  const econ2 = (snVale ? [T.simples,T.lp,T.lr] : [T.lp,T.lr]).sort((a,b)=>a-b);
+    (T.lrIncompleto
+      ? `<div class="stat" style="opacity:.6;border:1px dashed var(--alerta,#b9770e)" title="${esc(T.lrIncompletoMotivo||'')}"><div class="n" style="font-size:20px;text-decoration:line-through">${fmtR(T.lr)}</div><div class="l">Lucro Real</div><div class="sub" style="color:#7e5109"><b>⚠️ ${LR_INCOMPLETO_ROT}</b> · fora da eleição</div></div>`
+      : card('Lucro Real', T.lr, pct(T.lr), menor===T.lr));
+  const econ2 = _RA.ord;
   $id('an-veredito').style.display='block';
   let refHtml = '';
   try {
@@ -5405,14 +5433,19 @@ function anRecalcular() {
     // v7.75.0 · cenário indisponível não concorre: com o limite ultrapassado, a comparação passa
     // a ser entre as opções que a empresa REALMENTE tem — e o Simples aparece como referência.
     const _bloq = !!R33.snBloqueado;
-    const mn33 = _bloq ? R33.regular : Math.min(dentro33, R33.hib, R33.regular);
-    const st = (rot,v,sub,on) => `<div class="stat ${on?'melhor':''}"><div class="n" style="font-size:17px">${fmtR(v)}</div><div class="l">${rot}</div><div class="sub">${sub}</div></div>`;
+    const _RK = cenRank(T, R33);   // v7.88.0 · eleição única (P2-01 / P1-01)
+    const mn33 = _RK.melhor.v, _dIn = !_RK.dentroOk && !_bloq;
+    const st = (rot,v,sub,on,hip) => `<div class="stat ${on?'melhor':''}" style="${hip?'opacity:.6;border:1px dashed var(--danger,#943126)':''}"><div class="n" style="font-size:17px${hip?';text-decoration:line-through':''}">${fmtR(v)}</div><div class="l">${rot}</div><div class="sub">${sub}</div></div>`;
     refHtml = `<div style="margin-top:14px;border-top:1px solid var(--borda,#e5e7eb);padding-top:12px"><b style="font-size:13px">Reforma Tributária — ano pleno (2033)</b>
       <div class="grid c3" style="margin-top:8px">
-      ${st('Simples "por dentro"', dentro33, _bloq ? '⛔ INDISPONÍVEL — referência apenas' : 'tudo no DAS — crédito reduzido ao cliente', !_bloq && mn33===dentro33)}
-      ${st('Simples híbrido (LC 214)', R33.hib, _bloq ? '⛔ INDISPONÍVEL — referência apenas' : 'DAS sem consumo + IBS/CBS por fora — crédito integral', !_bloq && mn33===R33.hib)}
-      ${st('Fora do Simples', R33.regular, 'regime regular pleno ('+R33.regNome+' + IBS/CBS)', mn33===R33.regular)}
+      ${st('Simples "por dentro"', dentro33, _bloq ? '⛔ INDISPONÍVEL — referência apenas' : (_dIn ? '⚠️ ' + _RK.dentroSelo : 'tudo no DAS — crédito reduzido ao cliente'), _RK.melhor.k==='dentro', _bloq || _dIn)}
+      ${st('Simples híbrido (LC 214)', R33.hib, _bloq ? '⛔ INDISPONÍVEL — referência apenas' : 'DAS sem consumo + IBS/CBS por fora — crédito integral', _RK.melhor.k==='hib', _bloq)}
+      ${st('Fora do Simples', R33.regular, 'regime regular pleno ('+R33.regNome+' + IBS/CBS)' + (R33.lrIncompleto ? ' · Real fora da eleição (sem CMV)' : ''), _RK.melhor.k==='regular')}
       </div>
+      ${_dIn ? `<div class="hint" style="margin-top:8px;padding:8px 10px;border-left:4px solid var(--danger,#943126);background:#fdedec;color:#7b241c">
+        ⚠️ <b>"Por dentro" é HIPOTÉTICO em 2033 — não elegível nesta simulação.</b> ${esc(_RK.dentroMotivo||'')}. O valor fica à vista como referência e <b>não concorre</b> ao melhor caminho: a escolha real é entre o <b>híbrido</b> (art. 22-A) e sair do Simples.</div>` : ''}
+      ${T.lrIncompleto ? `<div class="hint" style="margin-top:8px;padding:8px 10px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109">
+        ⚠️ <b>Lucro Real = ${LR_INCOMPLETO_ROT}.</b> ${esc(T.lrIncompletoMotivo||'')}. Lance a baixa de estoque (custo) nas compras — ou o CMV por estoque inicial + compras − estoque final — para o Real voltar a concorrer.</div>` : ''}
       ${(() => {
         // ══ v7.75.0 · SUBLIMITE A PARTIR DE 2027 ═══════════════════════════════════════════
         // Passado o sublimite de R$ 3,6 milhões, o ICMS e o ISS saem da guia: quem fica no
@@ -5623,7 +5656,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.87.0';
+const APP_VERSAO = '7.88.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -5711,7 +5744,7 @@ async function anSalvar() {
   }
   const T = AN._res?.totais || {};
   const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined, _verEm:undefined},
-    resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr }, atualizado_em:new Date().toISOString() }];
+    resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr, lrIncompleto: !!T.lrIncompleto }, atualizado_em:new Date().toISOString() }];
   try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); AN_SUJO = false; AN._verEm = body[0].atualizado_em;
     await anHistGravar(body[0]);
     if (AN._cfgHerdadaDe) delete AN._cfgHerdadaDe;   // v7.49.0: gravado — deixa de ser herança
@@ -5821,7 +5854,7 @@ async function issCorrigir(i){
   if (!ok) return;
   const T = depois.totais;
   const body = [{ cnpj:r.cnpj, ano:r.ano, dados:{...dNovo, _res:undefined, _verEm:undefined},
-    resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr },
+    resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr, lrIncompleto: !!T.lrIncompleto },
     atualizado_em:new Date().toISOString() }];
   try {
     await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body });
@@ -6284,7 +6317,40 @@ function rfLinhaBase(rf, a, dedBase) {
 // v7.23.0 · fórmula ÚNICA do cenário "por dentro" (Simples permanece 100% no DAS):
 // total do Simples do ano-base com a trava do sublimite RECOMPOSTA pela vigência (Res. 190).
 // Usada pelo veredito da análise, pelo parecer e pela conferência — uma fonte, sem divergência.
-function cenDentro(T, L){ return (T.simples||0) + (L && L.p190 ? L.p190.trava - (T.sublimite||0) : 0); }
+// v7.88.0 · quando a linha do ano já traz `dentro` (calculada em calcCenariosReforma com o estado do
+// exercício e a transição do ICMS/ISS por fora), é ela que vale — a fórmula antiga fica como reserva
+// para linhas antigas (snapshot de análise fechada, por exemplo).
+function cenDentro(T, L){
+  if (L && typeof L.dentro === 'number' && isFinite(L.dentro)) return L.dentro;
+  return (T.simples||0) + (L && L.p190 ? L.p190.trava - (T.sublimite||0) : 0);
+}
+// ══ v7.88.0 (P2-01 · P1-01 · v7.75.0) · ELEIÇÃO ÚNICA DO MELHOR CENÁRIO DE UM ANO ═══════════════
+// Um só lugar decide quem CONCORRE: (1) limite ultrapassado → os dois cenários do Simples são
+// referência (v7.75.0); (2) ano com impedimento do sublimite → o "por dentro" é HIPOTÉTICO e não
+// concorre (P2-01), porque o IBS não cabe na guia de quem está impedido (Res. CGSN 190/2026);
+// (3) Lucro Real sem CMV → o regular já vem como Presumido (P1-01). Veredito, dashboard,
+// comparativo, relatório Reforma e parecer leem daqui — nunca um Math.min próprio.
+const LR_INCOMPLETO_ROT = 'SIMULAÇÃO INCOMPLETA — sem CMV/estoques';
+// v7.88.0 (P1-01) · candidatos do regime ATUAL (Simples × LP × LR) com o Real fora quando incompleto
+function regimesAtuais(T, snVale){
+  const c = []; if (snVale) c.push(['Simples Nacional', T.simples]); c.push(['Lucro Presumido', T.lp]);
+  if (!T.lrIncompleto) c.push(['Lucro Real', T.lr]);
+  const menor = Math.min(...c.map(x=>x[1]));
+  return { cand: c, menor, nome: (c.find(x=>x[1]===menor)||c[0])[0], ord: c.map(x=>x[1]).sort((a,b)=>a-b), lrIncompleto: !!T.lrIncompleto };
+}
+function cenRank(T, L){
+  const dentro = cenDentro(T, L), hib = +L.hib || 0, regular = +L.regular || 0;
+  const snFora = !!L.snBloqueado, dentroFora = !!L.dentroInelegivel;
+  const cand = [];
+  if (!snFora && !dentroFora) cand.push({ k:'dentro', nome:'Simples "por dentro"', v:dentro });
+  if (!snFora) cand.push({ k:'hib', nome:'Simples híbrido (art. 22-A)', v:hib });
+  cand.push({ k:'regular', nome:'Fora do Simples (' + (L.regNome||'') + ')', v:regular });
+  const ord = cand.slice().sort((a,b)=>a.v-b.v);
+  return { dentro, hib, regular, cand, ord, melhor: ord[0], segundo: ord[1]||null,
+           dentroOk: !snFora && !dentroFora, hibOk: !snFora,
+           dentroSelo: dentroFora ? 'HIPOTÉTICO — NÃO ELEGÍVEL NESTA SIMULAÇÃO' : (snFora ? 'INDISPONÍVEL — referência apenas' : ''),
+           dentroMotivo: L.dentroMotivo || L.snMotivo || '' };
+}
 // Cenários da Reforma p/ empresa do Simples: por dentro × híbrido (LC 214) × fora do Simples.
 // Mescla os dados salvos com os padrões ano a ano (análises antigas podem não ter todos os campos).
 function calcCenariosReforma(res, reforma) {
@@ -6317,9 +6383,7 @@ function calcCenariosReforma(res, reforma) {
     rfx.expCorrigida = { informado: rfx.receita, usado: _interna, exportacao: T.receitaExp||0 };
     rfx.receita = _interna;
   }
-  const dasCheio = (T.das||0) + (T.sublimite||0);
   const _expCorrigida = rfx.expCorrigida;   // v7.68.0 · viaja até quem exibe
-  const dasResto = dasCheio - (T.dasPisCof||0) - (T.dasIcmsIss||0);
   // ══ v7.75.0 · ELEGIBILIDADE PARA OS ANOS PROJETADOS ══════════════════════════════════════
   // Ultrapassado o limite do Simples no ano-base, a empresa NÃO permanece no regime no exercício
   // seguinte (LC 123/2006, art. 3º, §§ 9º e 10). Projetar "Simples por dentro" e "híbrido" até
@@ -6341,9 +6405,60 @@ function calcCenariosReforma(res, reforma) {
   // v7.79.0 · a consequência jurídica depende de a empresa estar em INÍCIO DE ATIVIDADE
   const _inicioAtiv = !!(T.propAtividade && T.propAtividade.proporcional);
   const _snIndisponivel = _excedeuLim;
-  // v7.69.0 · ICMS e ISS do período de impedimento, apurados fora da guia
-  const impForaDAS = meses.reduce((s,x)=>s + (+((x.simples||{}).impIcms)||0)
-                                          + (+((x.simples||{}).impIss)||0), 0);
+  // ══ v7.88.0 (P0-02) · O ESTADO DE IMPEDIMENTO É RECONSTRUÍDO A CADA EXERCÍCIO ══════════════
+  // Até a v7.87.0 os anos projetados herdavam, por construção, o estado do ano-base: a RBAA que
+  // impedia 2026 desde janeiro seguia "impedindo" 2027-2033, e a empresa que cruzou o sublimite
+  // em setembro do ano-base seguia com só 4 meses impedidos em todos os anos seguintes. Nenhuma
+  // das duas coisas é o que a lei diz: o impedimento de um exercício nasce da receita do
+  // EXERCÍCIO ANTERIOR (LC 123/2006, art. 20, § 1º; Res. CGSN 140/2018, art. 12), apurado ano a
+  // ano contra o sublimite vigente naquele ano. Para o exercício seguinte, a "receita do ano
+  // anterior" é a receita interna do próprio ano-base (projetada, quando o chamador passa o ano
+  // projetado — a MESMA base que decide a elegibilidade acima). O motor é rodado de novo com
+  // essa RBAA, e é desse resultado que saem DAS, trava e ICMS/ISS por fora dos anos projetados.
+  // Sem a entrada disponível (linha antiga, snapshot), o comportamento anterior é mantido e
+  // declarado em `estadoSeguinte.recalculado = false`.
+  const _cfgBase = (res._inp && res._inp.cfg) || {};
+  const _paBase = res.propAtividade || { fator: 1 };
+  const _rbaProxInt = _recIntBase + (+_cfgBase.rbaOutros || 0);     // RBA da PJ (com filiais)
+  const _anoBase = res.ano || 2026;
+  const _subProx = a => sublimiteDe(_cfgBase, a) * (_paBase.fator || 1);
+  const _impedBaseJan = !!(res.impedimento && res.impedimento.base === 'ano-anterior');
+  const _impedBaseAlgum = !!(res.impedimento);
+  const _resProx = {};   // memo por valor de sublimite do ano
+  const _proxDe = a => {
+    if (!(a > _anoBase) || !res._inp) return null;
+    const sub = _subProx(a); const key = String(sub);
+    if (_resProx[key] !== undefined) return _resProx[key];
+    const precisa = _impedBaseAlgum || _rbaProxInt > sub;
+    if (!precisa) { _resProx[key] = null; return null; }
+    let r = null;
+    try {
+      const inp2 = JSON.parse(JSON.stringify(res._inp));
+      inp2.cfg = Object.assign({}, inp2.cfg, { rbaa: _recIntBase, rbaaExp: _recExpBase,
+        rbaaOutros: +_cfgBase.rbaOutros || 0, rbaOutros: +_cfgBase.rbaOutros || 0 });
+      inp2.ano = a;
+      const args = res._calcArgs || {};
+      r = calcular(inp2, args.anexos, args.fp);
+    } catch(e){ console.error('calcCenariosReforma/exercício seguinte', e); r = null; }
+    _resProx[key] = r; return r;
+  };
+  // Bloco do Simples de um resultado (ano-base ou exercício seguinte)
+  const snBloco = R => {
+    const TT = R.totais, MM = R.meses;
+    const impFora = MM.reduce((s,x)=>s + (+((x.simples||{}).impIcms)||0) + (+((x.simples||{}).impIss)||0), 0);
+    const baseImp = MM.reduce((s,x)=> s + (x.impedido ? (+x.recInt||0) : 0), 0);
+    const nImp = MM.filter(x=>x.impedido).length;
+    return { T: TT, meses: MM, impForaDAS: impFora, baseImpedida: baseImp, nImpedidos: nImp,
+             impedidoJan: !!(R.impedimento && R.impedimento.base === 'ano-anterior'),
+             impedimento: R.impedimento || null,
+             dasCheio: (TT.das||0) + (TT.sublimite||0),
+             dasResto: (TT.das||0) + (TT.sublimite||0) - (TT.dasPisCof||0) - (TT.dasIcmsIss||0),
+             subIcmsTot: MM.reduce((s,M)=>s+(M.subIcms||0),0),
+             subIssTot: MM.reduce((s,M)=>s+(M.subIss||0),0) };
+  };
+  const S0 = snBloco(res);
+  const impForaDAS = S0.impForaDAS;   // do ano-base (mantido para quem lê)
+  const dasCheio = S0.dasCheio, dasResto = S0.dasResto;
   const sLP = k => meses.reduce((s,x)=>s+(+x.lp[k]||0),0), sLR = k => meses.reduce((s,x)=>s+(+x.lr[k]||0),0);
   const lpPis=sLP('pis'), lpCof=sLP('cofins'), lpIcms=sLP('icms'), lpIpi=sLP('ipi'), lpIss=sLP('iss');
   const lrPis=sLR('pis'), lrCof=sLR('cofins'), lrIcms=sLR('icms'), lrIpi=sLR('ipi'), lrIss=sLR('iss');
@@ -6361,11 +6476,13 @@ function calcCenariosReforma(res, reforma) {
   // Trava da 5ª faixa recomposta por vigência: ICMS×rem + IBS×(1−rem) (soma invariante) e ISS com
   // teto decrescente (Anexos III/IV) + IBS pela fórmula do rodapé, sem teto (art. 21, III e IV).
   const CBS27_D6 = {I:-.0038,II:-.0028,III:-.0021,IV:-.0030,V:-.0022};   // CBS da 6ª faixa 2027-28 − PIS/COFINS atuais
-  const subIcmsTot = meses.reduce((s,M)=>s+(M.subIcms||0),0);
-  const subIssTot  = meses.reduce((s,M)=>s+(M.subIss||0),0);
-  const coreII = (T.dasIcmsIss||0) - subIcmsTot - subIssTot;             // partilha ICMS/ISS sem a trava
-  const p190 = a => {
+  const subIcmsTot = S0.subIcmsTot, subIssTot = S0.subIssTot;
+  // v7.88.0 · a partilha por vigência é calculada sobre o bloco do EXERCÍCIO (ano-base ou seguinte)
+  const p190 = (a, S) => {
     if (a<=2026) return null;
+    S = S || S0; const T = S.T, meses = S.meses;
+    const subIcmsTot = S.subIcmsTot, subIssTot = S.subIssTot;
+    const coreII = (T.dasIcmsIss||0) - subIcmsTot - subIssTot;             // partilha ICMS/ISS sem a trava
     const v = vig190(a), rem = REM190[v] ?? 0, teto = TETO_ISS_190[v] ?? 0;
     let issV = 0, ibsTrava = subIcmsTot*(1-rem);
     for (const M of meses) for (const [ax,b,p] of ((M.trv190&&M.trv190.iss)||[])) {
@@ -6416,24 +6533,53 @@ function calcCenariosReforma(res, reforma) {
     const dedIcms = a >= 2027 ? lpIcmsDeb * (+_q0.remIcmsIss||0) : 0;
     const L = rfLinhaBase(rfx, a, dedIss + dedIcms), q = L.q;
     const rPC = +q.remPisCof||0, rII = +q.remIcmsIss||0;
-    const P = p190(a);
+    // v7.88.0 (P0-02) · bloco do Simples do EXERCÍCIO: ano-base = realizado; anos seguintes =
+    // motor recalculado com a RBAA do exercício anterior (quando houver impedimento em jogo).
+    const _rProx = _proxDe(a);
+    const S = _rProx ? snBloco(_rProx) : S0;
+    const TS = S.T;
+    const P = p190(a, S);
     // v7.17.0 · art. 22-A (Res. 190): híbrido = DAS (com a trava do ano) − parcelas de CBS/IBS da partilha.
     // ≤2026 permanece a regra atual (tudo dentro).
     const dasHib = P ? (P.dasMaisTrava - P.cbs - P.ibs)
-                     : dasResto + (T.dasPisCof||0)*rPC + (T.dasIcmsIss||0)*rII;
-    // v7.69.0 (parecer do Teste 8, achado 11) · o ICMS e o ISS apurados FORA da guia no período de
-    // impedimento (v7.58.0) são devidos em qualquer cenário que mantenha a empresa no Simples —
-    // o "por dentro" já os continha, porque saem de T.simples, e o híbrido os omitia. Era essa,
-    // e só essa, a diferença que aparecia entre os dois cenários em 2026, quando nada migrou
-    // ainda e os dois deveriam ser idênticos.
-    const hib = dasHib + (T.cppRetida||0) + (T.cppForaDAS||0) + impForaDAS + L.liquido + L.is;   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
+                     : S.dasResto + (TS.dasPisCof||0)*rPC + (TS.dasIcmsIss||0)*rII;
+    // ══ v7.88.0 (P0-01) · O ICMS/ISS "POR FORA" TAMBÉM SEGUE A TRANSIÇÃO ═══════════════════════
+    // A v7.69.0 somava ao híbrido o ICMS/ISS apurado fora da guia no impedimento — correto em
+    // 2026, mas o valor entrava INTEGRAL até 2033. Fora do Simples, esses tributos ficam sujeitos
+    // às normas gerais (Res. CGSN 140/2018, art. 12, § 8º), e as normas gerais são a EC 132/2023:
+    // ADCT arts. 128 e 129 reduzem ICMS e ISS a 9/10 em 2029, 8/10 em 2030, 7/10 em 2031, 6/10
+    // em 2032 e os extinguem em 2033. Aplica-se o mesmo `remIcmsIss` de todo o resto da conta.
+    // No híbrido, o IBS que substitui essa parcela já está em `L.liquido` (IBS/CBS sobre toda a
+    // receita interna). No "por dentro", o IBS do período impedido não cabe na guia — o
+    // sublimite alcança o IBS a partir de 2027 (Res. CGSN 190/2026) — e entra por fora, sobre a
+    // base impedida, pela alíquota de IBS do ano, com a mesma intensidade de crédito da linha.
+    const impForaAno = S.impForaDAS * (a >= 2027 ? rII : 1);
+    const _ibsAliq = a >= 2027 ? ((+q.ibse||0) + (+q.ibsm||0)) / 100 : 0;
+    const _credRatio = (L.deb > 0.005) ? Math.max(0, Math.min(1, L.cred / L.deb)) : 0;
+    const ibsForaImp = (a >= 2027 && S.baseImpedida > 0.005) ? S.baseImpedida * _ibsAliq * (1 - _credRatio) : 0;
+    const dentro = (TS.simples||0) - S.impForaDAS + impForaAno + ibsForaImp
+                 + (P ? P.trava - (TS.sublimite||0) : 0);
+    const hib = dasHib + (TS.cppRetida||0) + (TS.cppForaDAS||0) + impForaAno + L.liquido + L.is;   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
     const regLP = lpResto + (lpIcms+lpIss)*rII + (lpPis+lpCof)*rPC + (a<=2026?lpIpi:0) + L.liquido + L.is;
     const regLR = lrResto + (lrIcms+lrIss)*rII + (lrPis+lrCof)*rPC + (a<=2026?lrIpi:0) + L.liquido + L.is;
-    const regular = Math.min(regLP, regLR);
+    // v7.88.0 (P1-01) · Lucro Real sem CMV é simulação incompleta: não elege nem é eleito
+    const lrIncompleto = !!T.lrIncompleto;
+    const regular = lrIncompleto ? regLP : Math.min(regLP, regLR);
     // v7.75.0 · o ano-base (2026) continua sendo o realizado — o bloqueio vale para os anos
     // PROJETADOS, que é onde a empresa já não estaria no regime.
-    const _snBloqueado = _snIndisponivel && a > (res.ano || 2026);
+    const _snBloqueado = _snIndisponivel && a > _anoBase;
+    // v7.88.0 (P2-01) · ano com impedimento a partir de 2027: "por dentro" é hipotético
+    const _dentroInelegivel = a >= 2027 && S.nImpedidos > 0;
+    const _dentroMotivo = _dentroInelegivel
+      ? (S.impedidoJan
+          ? 'impedida de recolher ICMS, ISS e IBS na guia desde 1º/01 de ' + a + ' — receita do exercício anterior de ' + fmt(S.impedimento && S.impedimento.rbaaConsolidada || S.impedimento && S.impedimento.rbaa || _rbaProxInt) + ' acima do sublimite de ' + fmt(_subProx(a)) + ' (LC 123/2006, art. 20, § 1º; Res. CGSN 190/2026)'
+          : 'impedida de recolher ICMS, ISS e IBS na guia em ' + S.nImpedidos + ' ' + (S.nImpedidos===1?'mês':'meses') + ' de ' + a + ' (RBA acima do sublimite em mais de 20% — LC 123/2006, art. 20, § 1º; Res. CGSN 190/2026)')
+      : null;
     return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, anoTeste:L.anoTeste, ded:L.ded, dedIss, dedIcms, dasHib, hib, regular, regLP, regLR, p190:P, regNome: regular===regLP?'Presumido':'Real',
+             dentro, impForaAno, impForaBase: S.impForaDAS, ibsForaImp, baseImpedida: S.baseImpedida,   // v7.88.0
+             dentroInelegivel: _dentroInelegivel, dentroMotivo: _dentroMotivo, lrIncompleto,
+             estadoSeguinte: a > _anoBase ? { recalculado: !!_rProx, rbaaUsada: _rProx ? _recIntBase : null,
+               sublimite: _subProx(a), impedidoJan: S.impedidoJan, nImpedidos: S.nImpedidos } : null,
              snBloqueado: _snBloqueado, snMotivo: _snBloqueado
                // ══ v7.79.0 (auditoria do Teste 14, achado 8) · A FUNDAMENTAÇÃO ESTAVA ERRADA ══
                // A v7.75.0 dizia que o excesso acima de 20% "retroage ao próprio ano", citando o
@@ -6464,6 +6610,8 @@ function calcCenariosReforma(res, reforma) {
   });
   const semCreditos = REF.every(l=>l.cred<=0.005);
   return { rfx, REF, usouFallback: !reforma, proxyCompras, semCreditos,
+           lrIncompleto: !!T.lrIncompleto, lrIncompletoMotivo: T.lrIncompletoMotivo || null,   // v7.88.0 (P1-01)
+           dentroInelegivelAlgum: REF.some(l=>l.dentroInelegivel),                              // v7.88.0 (P2-01)
            expCorrigida: _expCorrigida,     // v7.68.0
            snIndisponivel: _snIndisponivel, excesso20: _excesso20,   // v7.75.0
            limiteBase: _limSNbase, recIntBase: _recIntBase };
@@ -6654,7 +6802,7 @@ const LACRE_CASOS = [
   // de 5% do ISS na 5ª faixa, os cinco anexos, os quatro blocos de exportação, ST, monofásico,
   // redução de ICMS, transporte, IPI, 13º pago e o Fator R dos DOIS lados dos 28%.
   { nome:'Caso 3 — Estresse (art. 24, teto de ISS, exportação, impedimento, Fator R)', inp: {"cnpj": "33333333000399", "ano": 2026, "cfg": {"iss": 0.05, "icmsV": 0.17, "icmsC": 0.12, "ipiV": 0.075, "ipiC": 0.05, "rbt12Direto": 0, "rbt12Lanc": [292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500], "rbt12ExpLanc": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "folha12Lanc": [105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000], "lpBaseServ": 0.32, "lpBaseCom": 0.08, "lpBaseServCsll": 0, "lpBaseComCsll": 0.12, "transpPresuncao": "cargas", "icmsTranspV": 0, "transpCredPres": 0, "folhaPerc": {}, "adicionalIR": "trimestral", "sublimite": "auto", "lrPeriodo": "trimestral", "lrPrejIrpj": 0, "lrPrejCsll": 0, "inicioAtividade": ""}, "receitas": {"a1_semst": [280000, 300000, 320000, 340000, 360000, 380000, 400000, 420000, 440000, 460000, 480000, 520000], "a1_red": [15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000], "a1_red_pct": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3], "a1_mono": [20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000], "a1_mono_pct": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a1_comst": [30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000], "a1_comst_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_semst": [40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000], "a2_red": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_red_pct": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_comst": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_comst_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a3_semret": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "a3_retiss": [16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200], "a3_retissinss": [10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800], "a4": [12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000], "a4_retiss": [12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600], "a5r": [35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000], "fin": [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500], "comtransp": [18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000], "comtransp_st": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a1_exp": [14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000], "a2_exp": [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000], "a3_exp": [8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000], "a5r_exp": [6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000]}, "folha": {"prolabore": [14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000], "salarios": [78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000], "baseFgts": [78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000], "prov13": [3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750], "provFerias": [5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000]}, "folha13": {"prolabore13": 14000, "salarios13": 78000, "baseFgts13": 78000}, "compras": {"semst": [150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000], "baixaSemst": [140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000], "mono": [15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000], "baixaMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "comst": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "baixaComst": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "comstMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "baixaComstMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "baseIpiCred": [20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000]}, "icms": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "ipi": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "despesas": {"adm": [38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000], "vendas": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "fiscais": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "financeiras": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "outras": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credInsumos": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credEnergia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credAlugueisPJ": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credArrendamento": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credDepreciacao": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credBenfeitorias": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credFretesVenda": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credValeTransp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credDevolucoes": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credLR": [9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000]}, "origem": {}} }];
-const LACRE_HASH = '2e1139e9';   // v7.48.0 — RE-SELADO: o ICMS destacado passou a sair da base do IBS/CBS (LC 214, art. 12, §2º, V) e o transporte passou a gerar débito de ICMS no LP/LR. Anterior: e1a25234 (v7.45.0); antes fa39eefb (v7.35.0)
+const LACRE_HASH = 'c503dbd2';   // v7.48.0 — RE-SELADO: o ICMS destacado passou a sair da base do IBS/CBS (LC 214, art. 12, §2º, V) e o transporte passou a gerar débito de ICMS no LP/LR. Anterior: e1a25234 (v7.45.0); antes fa39eefb (v7.35.0)
 function lacreHash(str){ let h = 0x811c9dc5;
   for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   return h.toString(16).padStart(8,'0'); }
@@ -6843,7 +6991,7 @@ async function rfSalvar() {
   }
   const T = (_mesmo && AN._res?.totais) ? AN._res.totais : (dados._res?.totais || {});
   const _resumo = _mesmo || !_resumoAtual
-    ? { receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr, reforma2033: RF._res?.linhas?.at(-1)?.total,
+    ? { receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr, lrIncompleto: !!T.lrIncompleto, reforma2033: RF._res?.linhas?.at(-1)?.total,
         snElegivel: (AN?._sn?.estado || 'elegivel') !== 'inelegivel' }
     : { ..._resumoAtual, reforma2033: RF._res?.linhas?.at(-1)?.total };   // preserva o resumo do ano
   try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body:[{ cnpj:RF.cnpj, ano:RF.ano, dados,
@@ -7206,14 +7354,14 @@ async function fatLer(input) {
     const cnpj = (txt.match(/CNPJ:\s*([\d.\/\-]+)/)||[])[1];
     const nomeF = (txt.match(/\d{3,4}\s+(.+?)\s*-\s*Matriz/)||txt.match(/\d{3,4}\s*-?\s*(.+?)\s+CNPJ/)||[])[1];
     const ano = +((txt.match(/Período:\s*\d{2}\/\d{2}\/(\d{4})/)||[])[1]) || null;
-    const valores = z12(); let achou = 0;
+    const valores = z12(); let achou = 0; const mesesLidos = [];
     for (const m of txt.toUpperCase().matchAll(/(JANEIRO|FEVEREIRO|MAR[ÇC]O|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO)\s+(\d{4})\s+([\d.]+,\d{2})/g)) {
       const idx = FAT_MESES[m[1]]; if (idx==null) continue;
-      valores[idx] = brNum(m[3]); achou++;
+      valores[idx] = brNum(m[3]); achou++; if (mesesLidos.indexOf(idx) < 0) mesesLidos.push(idx);
     }
     const total = brNum((txt.match(/TOTAL\s+([\d.]+,\d{2})/i)||[])[1]);
     if (!achou) { toast('Não encontrei o quadro mensal — é o "Demonstrativo Mensal do Faturamento"?'); return; }
-    FAT = { cnpj, nome: (nomeF||'').trim(), ano, valores, total };
+    FAT = { cnpj, nome: (nomeF||'').trim(), ano, valores, total, meses: mesesLidos.sort((a,b)=>a-b) };   // v7.88.0 (P0-03)
     const soma = valores.reduce((a,b)=>a+b,0);
     let h = `<div class="hint" style="margin-bottom:8px">CNPJ ${cnpj||'?'} · ano ${ano||'?'} · ${achou} meses lidos · soma ${fmt(soma)}${total?` (total do relatório: ${fmt(total)} ${Math.abs(soma-total)<0.02?'✓':'⚠️ difere'})`:''}</div>
     <table class="gtable"><thead><tr>${MESES.map(m=>`<th class="num">${m}</th>`).join('')}</tr></thead><tbody><tr>${valores.map(v=>`<td class="num">${fmt(v)}</td>`).join('')}</tr></tbody></table>
@@ -7235,7 +7383,11 @@ async function fatAplicar() {
   if (FAT.ano && +AN.ano !== FAT.ano) { AN.ano = FAT.ano; $id('an-ano').value = FAT.ano; }
   const bloco = $id('fat-bloco').value, modo = $id('fat-modo').value;
   for (let m=0;m<12;m++) AN.receitas[bloco][m] = (modo==='somar' ? (AN.receitas[bloco][m]||0) : 0) + FAT.valores[m];
-  anOrigemMarcar('receitas.'+bloco, modo==='somar' ? FAT.valores.map((v,m)=>+v?m:-1).filter(m=>m>=0) : 'all', 'F');   // v7.28.0
+  // v7.88.0 (P0-03) · só os meses LISTADOS no PDF são "informados" (mês listado com 0,00 é zero
+  // informado); os demais ficam sem origem, para a projeção seguir enxergando-os como vazios.
+  const _mesesF = Array.isArray(FAT.meses) ? FAT.meses : FAT.valores.map((v,m)=>+v?m:-1).filter(m=>m>=0);
+  if (modo !== 'somar') anOrigemMarcar('receitas.'+bloco, 'all', null);
+  anOrigemMarcar('receitas.'+bloco, modo==='somar' ? _mesesF.filter(m=>+FAT.valores[m]) : _mesesF, 'F');   // v7.28.0 · v7.88.0
   $id('imp-fat-card').style.display='none';
   anAplicado();
   toast('Faturamento aplicado no bloco selecionado. Salve a análise para persistir.');
@@ -8469,15 +8621,16 @@ function rlConsolidado(rot, n) {
     ? snElegibilidade(R, ((RL.dados||{}).cfg) || {}) : null;
   const _inelegivelC = !!(_EL && _EL.estado === 'inelegivel');   // v7.84.1
   const _snVale = !_EL || _EL.estado !== 'inelegivel';
-  const menor = _snVale ? Math.min(T.simples, T.lp, T.lr) : Math.min(T.lp, T.lr);
-  const nomeMenor = (_snVale && menor===T.simples) ? 'Simples Nacional'
-    : menor===T.lp ? 'Lucro Presumido' : 'Lucro Real';
-  const _avisoInelig = _snVale ? '' :
+  const _RA = regimesAtuais(T, _snVale);   // v7.88.0 (P1-01)
+  const menor = _RA.menor, nomeMenor = _RA.nome;
+  const _avisoLR = T.lrIncompleto ? `<div class="hint" style="margin:8px 0;padding:8px 10px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109">
+      ⚠️ <b>Lucro Real = ${LR_INCOMPLETO_ROT}.</b> ${esc(T.lrIncompletoMotivo||'')}. O valor segue nos quadros como referência, mas <b>não participa da eleição</b> do melhor ou do pior regime.</div>` : '';
+  const _avisoInelig = (_snVale ? '' :
     `<div class="hint" style="margin:8px 0;padding:8px 10px;border-left:4px solid var(--danger,#943126);background:#fdedec;color:#7b241c">
       ⛔ <b>O Simples Nacional está FORA desta comparação.</b> A receita do período (${fmtR(T.receita)})
       ultrapassa o limite de permanência no regime (LC 123/2006, art. 3º, II, e §§ 9º e 10).
       O valor do Simples segue nos quadros como <b>referência</b> do que o regime custaria, mas a
-      recomendação considera apenas <b>Lucro Presumido e Lucro Real</b>.</div>`;
+      recomendação considera apenas <b>Lucro Presumido e Lucro Real</b>.</div>`) + _avisoLR;
   // ══ v7.84.1 · O CONSOLIDADO TAMBÉM NÃO PODE RANQUEAR UM REGIME INDISPONÍVEL ═════════════
   // Mesmo defeito que o Comparativo teve por quatro relatos: "1º Simples Nacional" para empresa
   // acima do limite. Aqui ninguém viu porque o relatório sequer abria — a linha do `D` o
@@ -9020,7 +9173,11 @@ const split = { fonteMes: L32 ? (L32.deb||0)/12 : 0, ano: L32 ? L32.ano : null }
   const _ELp = (typeof snElegibilidade === 'function' && RL.res)
     ? snElegibilidade(RL.res, (RL.dados||{}).cfg||{}) : null;
   const _snInelegivel = !!(_ELp && _ELp.estado === 'inelegivel');
+  // v7.88.0 · eleição única do ano de referência (P2-01 / P1-01) — o parecer não faz Math.min próprio
+  const _rkRef = L33 ? cenRank(T, L33) : null;
+  const _rkAnos = anos.map(l => cenRank(T, l));
   return { T, Mm, MmReal, cen, REF, anos, sAnos, sDentro, sHib, sReg, sLP, sLR, sHoje, variante, regime, regimeHojeNome,
+           rkRef: _rkRef, rkAnos: _rkAnos, dentroInelegivel: !!(_rkRef && !_rkRef.dentroOk), lrIncompleto: !!T.lrIncompleto,   // v7.88.0
            rbtMax, rbtMaxProj, subVig:_subVig, acima, optante, hojeAnual, L33, L32, anoRef, anoRefOrigem:_AR.origem, dRef, frMed, alertas, split, janelaTxt, janelaMeses,
            proj: PROJ, projJanela: PJ, seloProj, subMon: _subMonEf, snInelegivel: _snInelegivel, cfgP: _cfgP,
            recCom: Mm.map(x=>x.recCom||0), recServ: Mm.map(x=>x.recServ||0), recExp: Mm.map(x=>x.recExp||0), dasTrib: T.dasTrib||null };
@@ -9096,11 +9253,13 @@ function parecerTextosPadrao(D){
     {quando:'2027', titulo:'Gestão de créditos', texto:'Priorizar fornecedores que gerem crédito integral de IBS/CBS e adequar os documentos fiscais ao novo leiaute.'},
     {quando:'2027–2032', titulo:'Precificação do repasse', texto:'Planejar o repasse gradual do aumento de carga, em especial na parcela B2B, que aproveita o crédito.'},
     {quando:'Todo ano', titulo:'Reprocessar a análise', texto:'Revisar as premissas e o comparativo de regimes a cada exercício da transição.'} ];
+  const _mk = D.rkRef ? D.rkRef.melhor.k : 'dentro';   // v7.88.0 · o texto segue a eleição, não presume "por dentro"
+  const _mkNome = _mk==='dentro' ? 'a permanência no Simples Nacional com recolhimento integral pelo DAS' : _mk==='hib' ? 'o cenário híbrido do Simples (art. 22-A da Res. CGSN 140/2018)' : 'a saída do Simples para o regime regular ('+(D.L33?D.L33.regNome:'')+')';
   b.parecer1 = D.variante==='simples'
-    ? 'Sob as premissas adotadas, a permanência no Simples Nacional com recolhimento integral pelo DAS apresenta o menor desembolso próprio nos anos analisados. Os caminhos alternativos foram quantificados e devem ser reavaliados se o perfil da clientela PJ mudar.'
-    : 'Sob as premissas adotadas, o regime de menor carga em cada ano da transição está identificado no comparativo. O aumento decorrente do modelo pleno (2033) é estrutural; a mitigação passa pela gestão de créditos, pela precificação do repasse e pelo planejamento de caixa para o split payment.';
+    ? 'Sob as premissas adotadas, ' + _mkNome + ' apresenta o menor desembolso próprio nos anos analisados.' + (D.dentroInelegivel ? ' O cenário "por dentro" foi mantido apenas como referência hipotética, por não ser elegível nos anos em que a empresa está impedida de recolher ICMS, ISS e IBS na guia (sublimite).' : '') + (D.lrIncompleto ? ' O Lucro Real consta como simulação incompleta (sem CMV/estoques) e não participou da eleição.' : '') + ' Os caminhos alternativos foram quantificados e devem ser reavaliados se o perfil da clientela PJ mudar.'
+    : 'Sob as premissas adotadas, ' + (D.lrIncompleto ? 'o Lucro Real consta como simulação incompleta (sem CMV/estoques) e não participou da eleição; ' : '') + 'o regime de menor carga em cada ano da transição está identificado no comparativo. O aumento decorrente do modelo pleno (2033) é estrutural; a mitigação passa pela gestão de créditos, pela precificação do repasse e pelo planejamento de caixa para o split payment.';
   b.recomendacao = D.variante==='simples'
-    ? 'Considerando as premissas adotadas, os dados disponíveis e a regulamentação vigente na data-base desta análise, a manutenção do recolhimento integral pelo Simples Nacional ("por dentro" do DAS) apresenta-se como a alternativa economicamente mais vantajosa entre os cenários simulados — recomenda-se executar o plano de ação e reavaliar anualmente o perfil da clientela e o limite de faturamento, já que mudanças na regulamentação ou na composição de clientes e fornecedores podem alterar essa conclusão.'
+    ? 'Considerando as premissas adotadas, os dados disponíveis e a regulamentação vigente na data-base desta análise, ' + (_mk==='dentro' ? 'a manutenção do recolhimento integral pelo Simples Nacional ("por dentro" do DAS)' : _mk==='hib' ? 'o cenário híbrido do Simples (DAS sem as parcelas de CBS/IBS e IBS/CBS apurados por fora, art. 22-A)' : 'a migração para o regime regular ('+(D.L33?D.L33.regNome:'')+')') + ' apresenta-se como a alternativa economicamente mais vantajosa entre os cenários simulados — recomenda-se executar o plano de ação e reavaliar anualmente o perfil da clientela e o limite de faturamento, já que mudanças na regulamentação ou na composição de clientes e fornecedores podem alterar essa conclusão.'
     : (D.variante==='eleg'
       ? 'Considerando as premissas adotadas, os dados disponíveis e a regulamentação vigente na data-base desta análise, o caminho de menor carga apontado no comparativo (incluindo a avaliação de entrada no Simples Nacional) apresenta-se como a alternativa mais vantajosa entre os cenários simulados, com revisão anual recomendada ao longo da transição.'
       : 'Considerando as premissas adotadas, os dados disponíveis e a regulamentação vigente na data-base desta análise, o regime de menor carga apontado no comparativo apresenta-se como a alternativa mais vantajosa entre os cenários simulados, com revisão anual recomendada ao longo da transição 2027–2033.');
@@ -9210,8 +9369,7 @@ function rlParecer(){
       <div class="pp-jseta">➜</div>
       <div class="pp-jbox" style="background:#8c2f39"><div class="pp-jet">${D.anoRef} · ${parAnoRefRotulo(D.anoRef)}</div><div class="pp-jbig">${(function(){ if(!D.L33) return '—';
         if (D.variante==='acima') return fmtR(D.L33.regular);
-        const d33 = D.dRef;
-        return fmtR(Math.min(d33, D.L33.hib, D.L33.regular)); })()}</div><div class="pp-jsm">${(function(){ if(!D.L33) return '';
+        return fmtR(D.rkRef ? D.rkRef.melhor.v : Math.min(D.dRef, D.L33.hib, D.L33.regular)); })()}</div><div class="pp-jsm">${(function(){ if(!D.L33) return '';
         // v7.78.0 (auditoria do parecer, 3.1) · o ano de referência do quadro pode ser 2027, e dizer
       // "IBS/CBS plenos" ali transmite cronograma errado: 2027 é o INÍCIO da transição efetiva —
       // a CBS entra cheia, o IBS ainda em 0,1%, e o modelo pleno só se completa em 2033.
@@ -9219,10 +9377,9 @@ function rlParecer(){
         ? 'Carga anual no melhor regime, no ano de vigência plena do IBS e da CBS.'
         : 'Carga anual no melhor regime em ' + D.anoRef + ', com CBS e IBS nas alíquotas do próprio '
           + 'exercício — a transição só se completa em 2033.';
-        const d33 = D.dRef;
-        const mn = Math.min(d33, D.L33.hib, D.L33.regular);
-        const nm = mn===d33 ? 'permanecer "por dentro" do DAS' : mn===D.L33.hib ? 'o cenário híbrido (art. 22-A)' : 'o regime regular ('+D.L33.regNome+')';
-        return 'Melhor caminho: '+nm+'.'; })()}</div></div>
+        const k = D.rkRef ? D.rkRef.melhor.k : 'dentro';
+        const nm = k==='dentro' ? 'permanecer "por dentro" do DAS' : k==='hib' ? 'o cenário híbrido (art. 22-A)' : 'o regime regular ('+D.L33.regNome+')';
+        return 'Melhor caminho: '+nm+'.' + (D.dentroInelegivel ? ' O "por dentro" é hipotético neste ano (impedimento do sublimite) e não concorreu.' : ''); })()}</div></div>
     </div>
     <p class="pp-p">${TX.caminho}</p>
   </div></div>`;
@@ -9287,10 +9444,12 @@ function rlParecer(){
       // v7.79.0 · a tabela ano a ano decidia só pela `variante`; empresa inelegível pode não estar
         // marcada como 'acima' e voltava a ter o Simples entre os candidatos. A elegibilidade
         // apurada em parecerDados passa a valer aqui também.
-        const cand = (D.variante!=='acima' && !D.snInelegivel)
-          ? [['Por dentro',d],['Híbrido',L.hib],['Presumido',L.regLP],['Real',L.regLR]]
-          : [['Presumido',L.regLP],['Real',L.regLR]]; const menor = cand.reduce((a,b)=>b[1]<a[1]?b:a);
-      return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td>${D.variante!=='acima'?`<td class="num">${fmt(d)}</td><td class="num">${fmt(L.hib)}</td>`:''}<td class="num">${fmt(L.regLP)}</td><td class="num">${fmt(L.regLR)}</td><td><span class="pp-pill">${menor[0]}</span></td></tr>`; }).join('')}
+        // v7.88.0 · P2-01 (por dentro hipotético) e P1-01 (Real incompleto) fora da eleição
+        const _rk = D.rkAnos ? D.rkAnos[i] : null;
+        const cand = ((D.variante!=='acima' && !D.snInelegivel)
+          ? [].concat(_rk && !_rk.dentroOk ? [] : [['Por dentro',d]], [['Híbrido',L.hib]])
+          : []).concat([['Presumido',L.regLP]], L.lrIncompleto ? [] : [['Real',L.regLR]]); const menor = cand.reduce((a,b)=>b[1]<a[1]?b:a);
+      return `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td>${D.variante!=='acima'?`<td class="num"${_rk && !_rk.dentroOk?' style="opacity:.55;text-decoration:line-through"':''}>${fmt(d)}${_rk && !_rk.dentroOk?' <span title="'+esc(_rk.dentroSelo)+'">⚠️</span>':''}</td><td class="num">${fmt(L.hib)}</td>`:''}<td class="num">${fmt(L.regLP)}</td><td class="num"${L.lrIncompleto?' style="opacity:.55;text-decoration:line-through"':''}>${fmt(L.regLR)}${L.lrIncompleto?' <span title="'+LR_INCOMPLETO_ROT+'">⚠️</span>':''}</td><td><span class="pp-pill">${menor[0]}</span></td></tr>`; }).join('')}
     </tbody></table>
     ${D.variante!=='acima' && D.sDentro.length && !D.sDentro.some((v,i,arr)=>i>0 && Math.abs(v-arr[0])>0.5) ? `<div class="hint" style="margin-top:6px">O "por dentro" permanece <b>estável</b> nos ${D.sDentro.length} anos simulados: o teto do ISS da trava da 5ª faixa (Res. CGSN nº 190/2026) decresce a cada vigência, mas a alíquota efetiva de ISS desta empresa fica abaixo do teto em todos os anos — quando isso acontece, a fórmula da trava não é afetada pela vigência e o total não se altera. Empresas com alíquota efetiva de ISS mais próxima do teto veem o "por dentro" variar ano a ano.</div>` : ''}
     </div></div>`;
@@ -9420,9 +9579,10 @@ function rlParecer(){
       options:{ responsive:true, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>(c.raw>0?'paga a mais ':'paga a menos ')+fmtR(Math.abs(c.raw))+'/ano'}}} } });
     const acum = []; let s = 0;
     for (let i=0;i<D.anos.length;i++){
+      const _rk = D.rkAnos ? D.rkAnos[i] : null;
       const dif = D.variante==='simples'
-        ? Math.min(D.sHib[i], D.sReg[i]) - D.T.simples
-        : Math.abs(D.sLP[i]-D.sLR[i]);
+        ? (_rk && _rk.segundo ? _rk.segundo.v - _rk.melhor.v : Math.min(D.sHib[i], D.sReg[i]) - D.T.simples)
+        : (D.lrIncompleto ? 0 : Math.abs(D.sLP[i]-D.sLR[i]));
       s += Math.max(0, dif); acum.push(s);
     }
     rlChart('pc-acum', { type:'bar', data:{ labels:D.sAnos, datasets:[{ data:acum, backgroundColor:CORES.verde }] },
@@ -9843,7 +10003,11 @@ async function parecerIA(){
         // v7.41.7: o ano dos cenários passou a ser escolhível. A chave antiga continua para não quebrar
         // o prompt da Edge Function enquanto ela não é atualizada; anoReferencia diz de que ano ela fala.
         anoReferencia: D.anoRef,
-        cenariosAnoReferencia: D.L33 ? { ano: D.anoRef, porDentro: D.dRef, hibrido: D.L33.hib, foraDoSimples: D.L33.regular, regNome: D.L33.regNome } : null,
+        cenariosAnoReferencia: D.L33 ? { ano: D.anoRef, porDentro: D.dRef, hibrido: D.L33.hib, foraDoSimples: D.L33.regular, regNome: D.L33.regNome,
+          melhorCaminho: D.rkRef ? D.rkRef.melhor.nome : null,   // v7.88.0 · a eleição já feita; a IA não elege
+          porDentroHipotetico: !!D.dentroInelegivel, porDentroMotivo: D.dentroInelegivel ? (D.rkRef.dentroMotivo||'') : null,
+          lucroRealIncompleto: !!D.lrIncompleto, lucroRealMotivo: D.lrIncompleto ? (D.T.lrIncompletoMotivo||'') : null,
+          icmsIssForaTransicao: 'o ICMS/ISS apurado fora da guia no impedimento segue a transição da EC 132/2023 (100% 2027-28, 90/80/70/60% 2029-32, 0% em 2033) e é estimativa pelas alíquotas gerais' } : null,
         cenarios2033: D.L33 ? { porDentro: (D.dRef), hibrido: D.L33.hib, foraDoSimples: D.L33.regular, regNome: D.L33.regNome } : null,   // v7.36.2: fórmula única (era D.T.simples fixo)
         splitPayment: D.split, fatorRMedio: D.frMed,
         // v7.48.2 · sem estes campos a IA descreve a base do IBS/CBS como se fosse a receita cheia
@@ -10807,7 +10971,15 @@ function rlConfRefMemAno(C, L, R){
     + '<div class="hint">O cenário adotado no quadro-resumo é o <b>menor</b> dos dois: <b>' + (L.regNome||'') + '</b>, ' + fmtR(L.regular) + '.</div>';
   // ── cenários do Simples
   const P = L.p190;
-  const lcen = [ CF.lin('Por dentro (permanece 100% no Simples)', 'total do Simples do ano ' + fmtR(T.simples||0) + (P ? ' + trava recomposta pela vigência ' + fmtR(P.trava - (T.sublimite||0)) : ''), fmtR(cenDentro(T, L))) ];
+  // v7.88.0 · a memória do "por dentro" declara a transição do ICMS/ISS por fora e o estado do exercício
+  const _E = L.estadoSeguinte || null, _TSs = L.impForaBase > 0.005 || (_E && _E.recalculado);
+  const lcen = [ CF.lin('Por dentro (permanece 100% no Simples)' + (L.dentroInelegivel ? ' — <b style="color:#943126">HIPOTÉTICO, NÃO ELEGÍVEL</b>' : ''),
+      'total do Simples do ano ' + fmtR(T.simples||0) + (P ? ' + trava recomposta pela vigência ' + fmtR(P.trava - (T.sublimite||0)) : '')
+      + (L.impForaBase > 0.005 ? ' − ICMS/ISS por fora do ano-base ' + fmtR(L.impForaBase) + ' + ICMS/ISS por fora × ' + pcs(rII*100) + ' remanescente = ' + fmtR(L.impForaAno) : '')
+      + (L.ibsForaImp > 0.005 ? ' + IBS por fora sobre a base impedida ' + fmtR(L.baseImpedida) + ' = ' + fmtR(L.ibsForaImp) : ''), fmtR(cenDentro(T, L))) ];
+  if (_E && _E.recalculado) lcen.push(CF.lin('Estado do exercício ' + L.ano, 'reconstruído: RBAA = receita interna do exercício anterior ' + fmtR(_E.rbaaUsada) + ' × sublimite ' + fmtR(_E.sublimite) + ' → ' + (_E.impedidoJan ? 'impedida desde 1º/01' : (_E.nImpedidos > 0 ? 'impedida em ' + _E.nImpedidos + ' mês(es)' : 'sem impedimento')) + ' (LC 123/2006, art. 20, § 1º) — nenhuma marca herdada do ano-base', _E.impedidoJan ? '12 meses' : (_E.nImpedidos + ' mês(es)')));
+  if (_TSs && L.ano >= 2027) lcen.push(CF.lin('ICMS/ISS por fora — natureza', 'ESTIMATIVA: ' + SUB_ESTIMATIVA_TXT + '. Transição EC 132/2023 (ADCT, arts. 128 e 129): ' + pcs(rII*100) + ' remanescente em ' + L.ano, '—'));
+  if (L.dentroInelegivel) lcen.push(CF.lin('Por que hipotético', L.dentroMotivo || '', '—'));
   if (P){
     lcen.push(CF.lin('DAS + trava do ano', 'DAS ' + fmtR(T.das||0) + ' + trava da 5ª faixa recomposta ' + fmtR(P.trava), fmtR(P.dasMaisTrava)));
     lcen.push(CF.lin('(−) CBS na partilha do DAS', 'parcela de CBS dos Anexos da Res. CGSN 190/2026', '− ' + fmtR(P.cbs)));
@@ -10821,7 +10993,7 @@ function rlConfRefMemAno(C, L, R){
       lcen.push(CF.lin('<b>Cenário híbrido</b>',
         'DAS ajustado ' + fmtR(L.dasHib) + ' + CPP retida ' + fmtR(T.cppRetida||0)
         + ' + CPP fora do DAS ' + fmtR(T.cppForaDAS||0)
-        + (_impF > 0.005 ? ' + ICMS/ISS do período de impedimento ' + fmtR(_impF) : '')
+        + (L.impForaAno > 0.005 ? ' + ICMS/ISS do período de impedimento × ' + pcs(rII*100) + ' (estimativa) ' + fmtR(L.impForaAno) : (_impF > 0.005 ? ' + ICMS/ISS do impedimento extinto em ' + L.ano + ' (0%)' : ''))
         + ' + IBS/CBS por fora ' + fmtR(L.liquido + (L.is||0)), fmtR(L.hib))); }
   } else {
     lcen.push(CF.lin('Cenário híbrido', L.ano <= 2026 ? 'até 2026 tudo permanece dentro do DAS — o art. 22-A ainda não se aplica' : '—', fmtR(L.hib)));
@@ -11074,7 +11246,7 @@ function subMonTexto(M){
   const p = [];
   if (M.impedimento){
     const q = M.impedimento.quando;
-    if (q === 'ano-corrente') p.push(`<b>SUBLIMITE DO SIMPLES NACIONAL ULTRAPASSADO.</b> A receita bruta do ano-calendário anterior${M.rbaaOutros>0?' (matriz e filiais)':''} ultrapassou o sublimite de ${fmtR(M.subLim)}. Consequentemente, a empresa encontra-se <b>impedida de recolher ICMS e ISS pelo Simples Nacional</b> no presente exercício, devendo esses tributos, quando incidentes, ser apurados <b>fora do DAS</b> segundo as normas gerais do Estado e do Município competentes. O art. 13-A da LC 123/2006 fixa em ${fmtR(M.subLim)} o limite para recolher ICMS e ISS na guia; os arts. 19 e 20 da mesma lei e os arts. 9º e 12 da Res. CGSN 140/2018 determinam que, ultrapassado o sublimite, os dois tributos passam a observar as normas gerais dos respectivos entes.${M.rbaaInformada>0?' O impedimento é <b>calculado</b>: a trava da 5ª faixa deixa de existir e o ICMS/ISS entra no custo do regime pelas alíquotas do Estado e do Município.':' A RBAA <b>não foi informada</b> — esta leitura vem da estimativa pelos 12 meses lançados e o impedimento ainda <b>não</b> está sendo calculado.'}`);
+    if (q === 'ano-corrente') p.push(`<b>SUBLIMITE DO SIMPLES NACIONAL ULTRAPASSADO.</b> A receita bruta do ano-calendário anterior${M.rbaaOutros>0?' (matriz e filiais)':''} ultrapassou o sublimite de ${fmtR(M.subLim)}. Consequentemente, a empresa encontra-se <b>impedida de recolher ICMS e ISS pelo Simples Nacional</b> no presente exercício, devendo esses tributos, quando incidentes, ser apurados <b>fora do DAS</b> segundo as normas gerais do Estado e do Município competentes. O art. 13-A da LC 123/2006 fixa em ${fmtR(M.subLim)} o limite para recolher ICMS e ISS na guia; os arts. 19 e 20 da mesma lei e os arts. 9º e 12 da Res. CGSN 140/2018 determinam que, ultrapassado o sublimite, os dois tributos passam a observar as normas gerais dos respectivos entes.${M.rbaaInformada>0?' O impedimento é <b>calculado</b>: a trava da 5ª faixa deixa de existir e o ICMS/ISS entra no custo do regime pelas alíquotas do Estado e do Município — <b>estimativa</b> ('+SUB_ESTIMATIVA_TXT+').':' A RBAA <b>não foi informada</b> — esta leitura vem da estimativa pelos 12 meses lançados e o impedimento ainda <b>não</b> está sendo calculado.'}`);
     else if (q === 'mes-seguinte') p.push(`A RBA do mercado interno ultrapassa o sublimite em <b>mais de 20%</b> em <b>${mes(M.impedimento.mes)}</b>${M.impedimento.projetado?' (projeção)':''} — o ICMS/ISS sai do DAS <b>a partir do mês seguinte</b>.`);
     else p.push(`A RBA do mercado interno ultrapassa o sublimite em <b>${mes(M.impedimento.mes)}</b>${M.impedimento.projetado?' (projeção)':''} — o ICMS/ISS sai do DAS <b>a partir de 1º/01 do ano seguinte</b>.`);
   }
@@ -11341,14 +11513,14 @@ function apCaminhos(A){
   if (!D.L33) return [];
   if (D.variante === 'acima') return [
     { nome:'Lucro Presumido', curto:'Presumido', cor:'pl', serie:D.sLP, quando:'Menor carga entre os regimes disponíveis; sem opção pelo Simples.' },
-    { nome:'Lucro Real', curto:'Real', cor:'warn', serie:D.sLR, quando:'Margens apertadas ou muitos créditos: o Real pode ficar abaixo do Presumido.' } ];
+    { nome:'Lucro Real' + (D.lrIncompleto ? ' (simulação incompleta)' : ''), curto:'Real', cor:'warn', serie:D.sLR, quando: D.lrIncompleto ? 'Sem CMV/estoques lançados: valor de referência, fora da eleição.' : 'Margens apertadas ou muitos créditos: o Real pode ficar abaixo do Presumido.', fora: D.lrIncompleto ? D.sAnos.map(()=>true) : null } ];   // v7.88.0 (P1-01)
   const reg = D.L33.regNome || 'Presumido';
   return [
-    { nome: D.variante==='eleg' ? 'Simples por dentro (se optar)' : 'Por dentro do DAS', curto:'Por dentro', cor:'ok', serie:D.sDentro, quando:'Clientela de consumo final; sem split payment.' },
+    { nome: D.variante==='eleg' ? 'Simples por dentro (se optar)' : 'Por dentro do DAS', curto:'Por dentro', cor:'ok', serie:D.sDentro, quando:'Clientela de consumo final; sem split payment.', fora: (D.rkAnos||[]).map(r=>!r.dentroOk) },   // v7.88.0 (P2-01)
     { nome:'Híbrido', curto:'Híbrido', cor:'pl', serie:D.sHib, quando:'Clientes PJ exigem crédito integral de IBS/CBS.' },
     { nome:(D.variante==='eleg'?'Regime regular':'Sair do Simples')+' ('+reg+')', curto:reg, cor:'warn', serie:D.sReg, quando:'Crescimento além do teto ou clientela quase toda PJ.' } ];
 }
-function apMenorIdx(cam, i){ let k=0; cam.forEach((c,j)=>{ if ((c.serie[i]||0) < (cam[k].serie[i]||0)) k=j; }); return k; }
+function apMenorIdx(cam, i){ let k=-1; cam.forEach((c,j)=>{ if (c.fora && c.fora[i]) return; if (k<0 || (c.serie[i]||0) < (cam[k].serie[i]||0)) k=j; }); return k<0?0:k; }   // v7.88.0 · caminho fora da eleição no ano não é eleito
 
 // ── construtores de tela (cada um devolve {html, apos?, escuro?, capa?}) ──────────────────
 function apTelas(A, modo){
@@ -11821,10 +11993,9 @@ function rlRegimes(rot, n) {
   const _EL2 = (typeof snElegibilidade === 'function')
     ? snElegibilidade(RL.res, ((RL.dados)||{}).cfg||{}) : null;
   const _snVale2 = !_EL2 || _EL2.estado !== 'inelegivel';
-  const menor = _snVale2 ? Math.min(T.simples, T.lp, T.lr) : Math.min(T.lp, T.lr);
-  const nomeMenor = (_snVale2 && menor===T.simples) ? 'Simples Nacional'
-    : menor===T.lp ? 'Lucro Presumido' : 'Lucro Real';
-  const ord = [T.simples,T.lp,T.lr].sort((a,b)=>a-b);
+  const _RAd = regimesAtuais(T, _snVale2);   // v7.88.0 (P1-01)
+  const menor = _RAd.menor, nomeMenor = _RAd.nome;
+  const ord = _RAd.ord;
 
   // cenários da Reforma (2033) — calculados já no topo para o painel executivo
   let REF=null, usouFallback=true, rfxInfo=null;
@@ -11850,13 +12021,17 @@ function rlRegimes(rot, n) {
   ];
   // v7.79.0 · a eleição do melhor considera apenas os cenários DISPONÍVEIS; os do Simples
   // continuam sendo exibidos, como referência, mas não concorrem.
-  const _CENel = CEN.filter(c => !(_inelegivel && c.sn));
+  // v7.88.0 · P1-01 (Real incompleto) e P2-01 (por dentro hipotético) também saem da eleição
+  const _RK33d = R33 ? cenRank(T, R33) : null;
+  CEN.forEach(c => { if (c.nome==='Lucro Real' && T.lrIncompleto) c.fora = LR_INCOMPLETO_ROT;
+                     if (c.nome==='Simples "por dentro"' && _RK33d && !_RK33d.dentroOk && !_inelegivel) c.fora = _RK33d.dentroSelo; });
+  const _CENel = CEN.filter(c => !(_inelegivel && c.sn) && !c.fora);
   const _CENdisp = _CENel.length ? _CENel : CEN;
   const melhorGeral = Math.min(..._CENdisp.map(c=>c.v));
   const ordGeral = _CENdisp.map(c=>c.v).sort((a,b)=>a-b);
   const dentro33 = R33 ? cenDentro(T, R33) : T.simples;   // v7.23.0: fórmula única
   // v7.79.0 · idem para o trio de 2033: inelegível, só o regime regular concorre
-  const ord33 = R33 ? (_inelegivel ? [R33.regular] : [dentro33,R33.hib,R33.regular]).sort((a,b)=>a-b) : null;
+  const ord33 = R33 ? (_inelegivel ? [R33.regular] : _RK33d.cand.map(c=>c.v)).sort((a,b)=>a-b) : null;
   const nome33 = R33 ? (ord33[0]===dentro33?'Simples "por dentro"':ord33[0]===R33.hib?'Simples híbrido':'Fora do Simples') : '';
 
   let h = `${_inelegivel ? `<div class="card" style="border-left:5px solid var(--danger,#943126);background:#fdedec;color:#7b241c;margin-bottom:12px">
@@ -11872,21 +12047,21 @@ function rlRegimes(rot, n) {
       // são a primeira coisa que se lê no relatório — mostravam "Simples Nacional" com o MENOR
       // valor, à esquerda, sem marca nenhuma. Quem bate o olho lê exatamente o que o texto
       // abaixo desmente. Foi este o ponto das quatro reclamações seguidas.
-      const _ind = _inelegivel && c.sn;
+      const _ind = (_inelegivel && c.sn) || !!c.fora;   // v7.88.0 · Real incompleto também sai
       return `<div class="stat ${(!_ind && c.v===menor)?'melhor':''}" style="${_ind?'opacity:.55;border:1px dashed var(--danger,#943126)':''}">`
         + `<div class="n" style="font-size:19px${_ind?';text-decoration:line-through':''}">${fmtR(c.v)}</div>`
-        + `<div class="l">${c.nome}${_ind?' <span style="color:var(--danger,#943126)">⛔</span>':''}</div>`
-        + `<div class="sub">${_ind?'<b style="color:var(--danger,#943126)">INDISPONÍVEL</b> — referência apenas':c.sub+' · '+pctR(c.v)}</div></div>`;
+        + `<div class="l">${c.nome}${_ind?' <span style="color:var(--danger,#943126)">'+(c.fora?'⚠️':'⛔')+'</span>':''}</div>`
+        + `<div class="sub">${_ind?'<b style="color:var(--danger,#943126)">'+(c.fora||'INDISPONÍVEL')+'</b> — referência apenas':c.sub+' · '+pctR(c.v)}</div></div>`;
     }).join('')}
     <div class="stat"><div class="n" style="font-size:19px;color:var(--ok)">${fmtR(ord[1]-ord[0])}</div><div class="l">Economia anual hoje — ${nomeMenor}</div><div class="sub">frente à 2ª melhor opção do regime atual</div></div>
   </div>
   ${R33 ? `<div class="grid c4" style="margin-top:12px">
     ${CEN.slice(3).map(c=>{
-        const _ind = _inelegivel && c.sn;
+        const _ind = (_inelegivel && c.sn) || !!c.fora;   // v7.88.0 · por dentro hipotético também sai
         return `<div class="stat ${(!_ind && c.v===ord33[0])?'melhor':''}" style="${_ind?'opacity:.55;border:1px dashed var(--danger,#943126)':''}">`
           + `<div class="n" style="font-size:19px${_ind?';text-decoration:line-through':''}">${fmtR(c.v)}</div>`
-          + `<div class="l">${c.nome} (2033)${_ind?' <span style="color:var(--danger,#943126)">⛔</span>':''}</div>`
-          + `<div class="sub">${_ind?'<b style="color:var(--danger,#943126)">INDISPONÍVEL</b> — referência apenas':c.sub+' · '+pctR(c.v)}</div></div>`;
+          + `<div class="l">${c.nome} (2033)${_ind?' <span style="color:var(--danger,#943126)">'+(c.fora?'⚠️':'⛔')+'</span>':''}</div>`
+          + `<div class="sub">${_ind?'<b style="color:var(--danger,#943126)">'+(c.fora||'INDISPONÍVEL')+'</b> — referência apenas':c.sub+' · '+pctR(c.v)}</div></div>`;
       }).join('')}
     <div class="stat"><div class="n" style="font-size:19px;color:var(--ok)">${ord33.length>1?fmtR(ord33[1]-ord33[0]):'—'}</div><div class="l">${ord33.length>1?'Economia anual 2033 — '+nome33:'Cenário único em 2033 — '+nome33}</div><div class="sub">${ord33.length>1?'frente ao 2º melhor cenário da Reforma':'os cenários de Simples não se aplicam a esta empresa'}</div></div>
   </div>` : ''}
@@ -12077,22 +12252,25 @@ function rlRegimes(rot, n) {
   // ── Reforma Tributária no comparativo: por dentro × híbrido × fora do Simples ──
   if (REF) {
   // v7.79.0 · quadro de 2033: inelegível, só o regime regular pode ser marcado como melhor
-      const melhor33 = _snVale2 ? Math.min(dentro33, R33.hib, R33.regular) : R33.regular;
+      const _RK33 = cenRank(T, R33);   // v7.88.0 · eleição única
+      const melhor33 = _RK33.melhor.v, _dIn33 = !_RK33.dentroOk && _snVale2;
   h += `<div class="card"><h3>Reforma Tributária no comparativo — cenários do Simples (2026–2033)</h3>
   <div class="grid c3" style="margin-top:10px">
-    <div class="stat ${(_snVale2 && melhor33===dentro33)?'melhor':''}" style="${!_snVale2?'opacity:.55;border:1px dashed var(--danger,#943126)':''}"><div class="n" style="font-size:19px${!_snVale2?';text-decoration:line-through':''}">${fmtR(dentro33)}</div><div class="l">Simples "por dentro" (2033)${!_snVale2?' <span style="color:var(--danger,#943126)">⛔</span>':''}</div><div class="sub">${!_snVale2?'<b style="color:var(--danger,#943126)">INDISPONÍVEL</b> — referência apenas':'tudo no DAS — crédito reduzido ao cliente'}</div></div>
-    <div class="stat ${(_snVale2 && melhor33===R33.hib)?'melhor':''}" style="${!_snVale2?'opacity:.55;border:1px dashed var(--danger,#943126)':''}"><div class="n" style="font-size:19px${!_snVale2?';text-decoration:line-through':''}">${fmtR(R33.hib)}</div><div class="l">Simples híbrido (2033)${!_snVale2?' <span style="color:var(--danger,#943126)">⛔</span>':''}</div><div class="sub">${!_snVale2?'<b style="color:var(--danger,#943126)">INDISPONÍVEL</b> — referência apenas':'DAS sem consumo + IBS/CBS por fora — crédito integral ao cliente'}</div></div>
-    <div class="stat ${melhor33===R33.regular?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(R33.regular)}</div><div class="l">Fora do Simples (2033)</div><div class="sub">regime regular pleno (${R33.regNome} + IBS/CBS)</div></div>
+    <div class="stat ${(_RK33.melhor.k==='dentro')?'melhor':''}" style="${(!_snVale2||_dIn33)?'opacity:.55;border:1px dashed var(--danger,#943126)':''}"><div class="n" style="font-size:19px${(!_snVale2||_dIn33)?';text-decoration:line-through':''}">${fmtR(dentro33)}</div><div class="l">Simples "por dentro" (2033)${!_snVale2?' <span style="color:var(--danger,#943126)">⛔</span>':(_dIn33?' <span style="color:var(--danger,#943126)">⚠️</span>':'')}</div><div class="sub">${!_snVale2?'<b style="color:var(--danger,#943126)">INDISPONÍVEL</b> — referência apenas':(_dIn33?'<b style="color:var(--danger,#943126)">'+_RK33.dentroSelo+'</b>':'tudo no DAS — crédito reduzido ao cliente')}</div></div>
+    <div class="stat ${(_RK33.melhor.k==='hib')?'melhor':''}" style="${!_snVale2?'opacity:.55;border:1px dashed var(--danger,#943126)':''}"><div class="n" style="font-size:19px${!_snVale2?';text-decoration:line-through':''}">${fmtR(R33.hib)}</div><div class="l">Simples híbrido (2033)${!_snVale2?' <span style="color:var(--danger,#943126)">⛔</span>':''}</div><div class="sub">${!_snVale2?'<b style="color:var(--danger,#943126)">INDISPONÍVEL</b> — referência apenas':'DAS sem consumo + IBS/CBS por fora — crédito integral ao cliente'}</div></div>
+    <div class="stat ${_RK33.melhor.k==='regular'?'melhor':''}"><div class="n" style="font-size:19px">${fmtR(R33.regular)}</div><div class="l">Fora do Simples (2033)</div><div class="sub">regime regular pleno (${R33.regNome} + IBS/CBS)${R33.lrIncompleto?' · Real fora da eleição (sem CMV)':''}</div></div>
   </div>
+  ${_dIn33 ? `<div class="hint" style="margin-top:8px;padding:8px 10px;border-left:4px solid var(--danger,#943126);background:#fdedec;color:#7b241c">⚠️ <b>"Por dentro" marcado como HIPOTÉTICO nos anos com impedimento do sublimite</b> — ${esc(_RK33.dentroMotivo||'')}. O IBS não cabe na guia de quem está impedido (Res. CGSN 190/2026); o valor é referência e não concorre. Nos anos projetados o estado de impedimento é <b>reconstruído a cada exercício</b> a partir da receita do exercício anterior — nenhuma marca é herdada do ano-base.</div>` : ''}
   <div style="overflow-x:auto;margin-top:14px"><table>
     <thead><tr><th>Ano</th><th class="num">Alíq. IBS+CBS</th><th class="num">Simples por dentro</th><th class="num">DAS ajustado (híbrido)</th><th class="num">IBS/CBS por fora</th><th class="num">Total híbrido</th><th class="num">Fora do Simples</th><th>Melhor</th></tr></thead><tbody>`;
   for (const L of REF) {
     const dentroAno = cenDentro(T, L);   // v7.23.0: fórmula única (veredito = parecer = comparativo = conferência)
     // v7.79.0 · tabela ano a ano do comparativo, mesma regra
-        const mn = _snVale2 ? Math.min(dentroAno, L.hib, L.regular) : L.regular;
-    h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num">${fmt(dentroAno)}</td><td class="num">${fmt(L.dasHib)}</td><td class="num">${fmt(L.liquido+L.is)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${mn===dentroAno?'Por dentro':mn===L.hib?'Híbrido':'Fora ('+L.regNome+')'}</td></tr>`;
+        const _rk = cenRank(T, L), mn = _rk.melhor.v;
+    h += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${(L.alq*100).toFixed(2)}%</td><td class="num"${!_rk.dentroOk?' style="opacity:.55;text-decoration:line-through" title="'+esc(_rk.dentroSelo)+'"':''}>${fmt(dentroAno)}${!_rk.dentroOk?' <span title="'+esc(_rk.dentroMotivo)+'">⚠️</span>':''}</td><td class="num">${fmt(L.dasHib)}</td><td class="num">${fmt(L.liquido+L.is)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${_rk.melhor.k==='dentro'?'Por dentro':_rk.melhor.k==='hib'?'Híbrido':'Fora ('+L.regNome+')'}</td></tr>`;
   }
   h += `</tbody></table></div>
+  ${REF.some(L=>L.impForaBase>0.005) ? `<div class="hint" style="margin-top:6px"><b>ICMS/ISS apurados fora da guia (impedimento):</b> entram na transição pelos mesmos percentuais remanescentes da EC 132/2023 (ADCT, arts. 128 e 129) — 100% em 2027-28, 90% em 2029, 80% em 2030, 70% em 2031, 60% em 2032 e <b>zero em 2033</b>; o IBS que os substitui está no IBS/CBS por fora. Valores por fora são <b>estimativa pelas alíquotas gerais</b> da empresa (${SUB_ESTIMATIVA_TXT}).</div>` : ''}
 
   <div class="card" style="margin-top:14px"><h3>Composição do cenário híbrido, ano a ano</h3><div style="overflow-x:auto"><table>
     <thead><tr><th>Ano</th><th class="num">DAS ajustado</th><th class="num">Débito IBS/CBS</th><th class="num">Crédito IBS/CBS</th><th class="num">IBS/CBS líquido</th><th class="num">IS</th><th class="num">Total híbrido</th></tr></thead><tbody>
@@ -12189,8 +12367,8 @@ function refCenCard(C, T2) {
   let x = `<div class="card"><h3>Cenários do Simples na transição (por dentro × híbrido × fora)</h3>
     <div style="overflow-x:auto;margin-top:10px"><table><thead><tr><th>Ano</th><th class="num">Simples por dentro</th><th class="num">Total híbrido (LC 214)</th><th class="num">Fora do Simples</th><th>Melhor</th></tr></thead><tbody>`;
   for (const L of C.REF) { const dentroAno = cenDentro(T2, L);
-    const mn = _cenInelig ? L.regular : Math.min(dentroAno, L.hib, L.regular);   // v7.36.2: fórmula única (era T2.simples fixo — travava a coluna nos 7 anos)
-    x += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(dentroAno)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${mn===dentroAno?'Por dentro':mn===L.hib?'Híbrido':'Fora ('+L.regNome+')'}</td></tr>`; }
+    const _rk = cenRank(T2, L), mn = _rk.melhor.v;   // v7.88.0 · eleição única (v7.36.2: fórmula única)
+    x += `<tr${L.ano===2033?' style="font-weight:700"':''}><td>${L.ano}</td><td class="num">${fmt(dentroAno)}</td><td class="num">${fmt(L.hib)}</td><td class="num">${fmt(L.regular)}</td><td>${_rk.melhor.k==='dentro'?'Por dentro':_rk.melhor.k==='hib'?'Híbrido':'Fora ('+L.regNome+')'}${!_rk.dentroOk && !_cenInelig ? ' <span class="hint" title="'+esc(_rk.dentroMotivo)+'">(por dentro hipotético)</span>' : ''}</td></tr>`; }
   x += `</tbody></table></div><div class="hint" style="margin-top:6px">Detalhes, gráfico e notas na aba Relatórios → Comparativo de Regimes.${C.usouFallback?' (alíquotas-padrão; preencha esta aba e salve para usar créditos e reduções)':''}</div></div>`;
   return x;
 }
@@ -12275,7 +12453,7 @@ async function dashAnalises() {
     const a = as[0], r = a.resumo||{};
     recTot += +r.receita||0;
     if (r.simples!=null && r.lp!=null && r.lr!=null) {
-      const ord = [+r.simples,+r.lp,+r.lr].sort((x,y)=>x-y); econTot += ord[1]-ord[0];
+      const ord = (r.lrIncompleto ? [+r.simples,+r.lp] : [+r.simples,+r.lp,+r.lr]).sort((x,y)=>x-y); econTot += ord[1]-ord[0];   // v7.88.0 (P1-01)
     }
     linhas.push({e, a});
   }
@@ -12307,10 +12485,12 @@ async function dashAnalises() {
       // v7.77.0 · a MESMA guarda que o gráfico ao lado já usava: empresa inelegível não tem o
       // Simples como opção, e a coluna "melhor regime" da carteira não pode dizer que tem.
       const _ok = snElegivelResumo(r);   // v7.79.3 · não depende de campo gravado
-      const cands = _ok ? [+r.simples,+r.lp,+r.lr] : [+r.lp,+r.lr];
+      const _lrOk = !r.lrIncompleto;   // v7.88.0 (P1-01) · Real sem CMV não é eleito
+      const cands = (_ok ? [+r.simples,+r.lp] : [+r.lp]).concat(_lrOk ? [+r.lr] : []);
       const mn = Math.min(...cands);
       melhor = (_ok && mn===+r.simples) ? 'Simples' : mn===+r.lp ? 'Presumido' : 'Real';
       if (!_ok) melhor += ' <span class="hint">(SN indisponível)</span>';
+      if (!_lrOk) melhor += ' <span class="hint" title="'+LR_INCOMPLETO_ROT+'">(Real incompleto)</span>';
       const ord = cands.slice().sort((x,y)=>x-y); econ = ord.length>1 ? ord[1]-ord[0] : null;
     }
     return `<tr><td><b>${e.razao_social||fmtCNPJ(e.cnpj)}</b><div class="hint">${fmtCNPJ(e.cnpj)}</div></td>
