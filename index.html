@@ -787,6 +787,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.92.0</b></td><td>12/09/2026</td><td><b>🛠️ Composição dos fornecedores — relatório de auditoria de 12/09 (v7.91.1), P0-01, P0-02, P1-01 e P1-02.</b> <b>(P0-01) Denominador dos percentuais:</b> o total da composição vinha das compras de <i>mercadoria</i> da análise (na Artecon, R$ 2.279,70) enquanto os fornecedores consultados somavam R$ 177.061,54 (serviços tomados incluídos) — os percentuais saíam em 4.568% / 3.198% e a própria validação de 100% acusava erro. A <b>soma monetária dos fornecedores passa a ser a fonte de verdade</b>: total = máximo entre as compras da análise e essa soma; percentual = valor do grupo ÷ total; o excedente da análise não coberto pela consulta segue como não identificado. A edição por percentuais e por valores usa o mesmo total (60/40 → 106.236,92 / 70.824,62). O crédito monetário (104.148,18 × 27,91% + 72.913,36 × 1,98% = 30.511,44) já estava correto e não muda. <b>(P0-02) Limite inferior:</b> era rotulado "só confirmados" mas contava consulta da Receita e digitação como confirmadas. Agora só entra o que o usuário <b>confirmou</b> — a composição inteira (SIM) ou <b>fornecedor a fornecedor</b> (botão ✓ confirmar em cada linha da tabela); sugerido e alterado manualmente NÃO contam, e editar ou reclassificar retira a confirmação. Com tudo apenas sugerido o limite inferior é R$ 0,00 e o cenário-base fica rotulado <b>ESTIMADO</b>; conferência e parecer mostram crédito CONFIRMADO × ESTIMADO × POTENCIAL. Efeito prático: até confirmar a composição o teste de inversão tende a disparar e o parecer sai como "melhor resultado dentro das premissas informadas — não conclusivo"; a confirmação vira etapa do fluxo. <b>(P1-01) Restauração</b> devolve exatamente o automático (valores, percentuais, origem, confiança e status das linhas); <b>Cancelar</b> a edição descarta o que foi digitado (antes ficava aplicado). <b>(P1-02) Histórico:</b> evento único na trilha com empresa, exercício, usuário, data/hora, tipo, valores e percentuais antes/depois, motivo, origem e versão do motor, para edição, confirmação, confirmação por fornecedor, reclassificação, recálculo automático e restauração; a trilha aparece completa (não mais só os 8 últimos) e o automático anterior nunca é apagado — vai para "automáticos anteriores preservados". <b>Bloqueio:</b> composição ≠ 100% vira erro crítico <b>COMP-01</b> e impede parecer e apresentações (junto de SUB-01/MEM-01), sem travar o salvamento. Incidental: linhas agregadas (CNPJ vazio) casavam todas com a primeira ao reconstruir a tabela. Lacre 453f7b32 intocado (só sensibilidade e composição mudam). Suíte: bloco 5ad.</td></tr>
                     <tr><td><b>v7.91.1</b></td><td>11/09/2026</td><td><b>🛠️ Edição da composição era desfeita — dois defeitos da v7.91.0 corrigidos (achado dele ao editar 50/30/10/10/0/0).</b> (1) Sem consulta de fornecedores gravada, o "automático" era reconstruído a cada recálculo a partir das contrapartes — que a própria edição acabara de gravar. Resultado: "Simples com opção pelo regular" voltava para regime regular, "sem crédito" caía em "não identificado" e a composição voltava a "sugerida". Sem consultas, a composição existente passa a ser <b>preservada</b>; o automático só se reconstrói pelas consultas (e, sem edição nem confirmação, acompanha o total de compras da análise por reescala proporcional). (2) Cada campo redesenhava o card inteiro ao perder o foco; se o clique em "Aplicar edição" caía nesse instante, o botão era trocado e o clique se perdia. Durante a edição só os números calculados (valores, total, mensagem de 100%) são atualizados, em tempo real (<code>oninput</code>); o card só é redesenhado ao aplicar. Suíte: teste que reproduz a edição 50/30/10/10 com recálculo no meio.</td></tr>
                     <tr><td><b>v7.91.0</b></td><td>11/09/2026</td><td><b>🧾 Créditos de IBS/CBS — composição dos fornecedores automática, editável, auditável; sensibilidade; nível de confiabilidade. Fim do proxy da v7.1. LACRE RE-SELADO <code>5996c4be</code> → <code>453f7b32</code>.</b> Implementa a especificação "v7.91 revisado" (Artecon(8), P0/P1). <b>Classificação automática (padrão, recomendado).</b> As consultas de fornecedores da Consulta CNPJ (Receita Federal) já traziam a classe de cada CNPJ; agora elas montam a <b>composição</b> em seis grupos — regime regular; Simples com IBS/CBS dentro do Simples; Simples com opção pelo regime regular; sem crédito integral (imune/isento/zero/vedado/PF); crédito presumido/regra específica; <b>não identificado</b> — com CNPJ, razão social, valor, documentos, fonte, grau de confiança e status por fornecedor, tudo à vista na aba Reforma. <b>Não identificado nunca vira regime regular</b>: zero de crédito no cenário-base, integral só no limite superior. <b>Edição.</b> "Editar composição" em dois modos (percentuais → recalcula valores; valores → recalcula percentuais), reclassificação por fornecedor, total obrigatoriamente 100,0000% ("ERRO — A composição dos fornecedores deve totalizar 100%"), justificativa opcional; <b>trilha de auditoria</b> com automático × editado, usuário, data/hora, motivo, versão do motor e origem — o automático original nunca é apagado; "Restaurar classificação automática" volta aos percentuais do motor e registra que houve edição. <b>Confirmação.</b> "SIM — confirmar composição" grava data/hora e usuário; "NÃO — manter como estimativa" segue calculando como estimativa. Tudo recalcula em tempo real (aba, cenários, veredito). <b>Regras de crédito.</b> Regular e Simples-opção-regular: pelo documento, IBS e CBS separados, sem compensação entre si (LC 214/2025, arts. 47 e 48); Simples dentro do Simples: montante devido no Simples (art. 47, § 9º, II; art. 58 da Res. CGSN 190/2026, 1ª faixa do Anexo I por conservadorismo), nunca a alíquota cheia; presumido: percentual informado; sem crédito: zero. <b>Sensibilidade</b> por ano: limite inferior (só confirmados), cenário-base (composição utilizada), limite superior (hipótese mais favorável — <b>nunca definitivo</b>), com vencedor em cada um; <b>teste de inversão</b>: variação do crédito ≥ margem do vencedor (2º − 1º) → "ALERTA CRÍTICO — A COMPOSIÇÃO DOS FORNECEDORES PODE ALTERAR O REGIME TRIBUTÁRIO VENCEDOR". <b>Nível de confiabilidade</b> ALTO / MÉDIO / BAIXO com texto e ícone (nunca só cor); BAIXO troca "Regime recomendado" por <b>"MELHOR RESULTADO DENTRO DAS PREMISSAS INFORMADAS — NÃO CONCLUSIVO"</b> no veredito, no parecer (jornada e recomendação) e no payload da IA. <b>Quadros novos</b> na Conferência (memória anual, item 5) e no parecer (página própria): composição automática × final, créditos IBS × CBS (débito, confirmado, estimado, não confirmado, líquido) e sensibilidade. <b>Fim do proxy da v7.1:</b> sem perfil de fornecedor as compras de revenda deixam de ser presumidas como regime regular — é por isso que o lacre muda: no caso 1 (comércio sem perfil) o híbrido 2033 vai de 758.554,46 para 1.205.153,42 no cenário-base, e os 758.554,46 passam a ser o limite superior; caso 2 (serviços, sem compras) idêntico. Contrapartes de compra da aba ficam geridas pela composição quando há consultas. Suíte: bloco 5ac, com a bateria de fronteira exigida (RBAA 3.599.999,99 / 3.600.000,00 / 3.600.000,01; RBA 4.320.000,00 / 4.320.000,01; limite 4.800.000,00 / 4.800.000,01 / 5.760.000,00 / 5.760.000,01; Fator R 27,9999 / 28,0000 / 28,0001%) e os sete cenários de crédito.</td></tr>
                     <tr><td><b>v7.90.0</b></td><td>11/09/2026</td><td><b>🔍 Auditoria "Artecon(8)", P0-01 — a memória do cenário híbrido não fechava com o total (R$ 213,84 por exercício). Duas causas, as duas corrigidas; LACRE RE-SELADO <code>c503dbd2</code> → <code>5996c4be</code>.</b> <b>(1) A memória imprimia a CPP do ano-base, o total usava a do exercício.</b> Desde a v7.88.0 os anos projetados vêm de um motor recalculado com a RBAA do exercício anterior; o total do híbrido já somava a CPP retida e a CPP fora do DAS <b>desse</b> resultado, mas a memória anual seguia imprimindo as do ano-base — diferença constante em todos os anos, que a auditoria isolou. Agora as seis parcelas que formam o total viajam na própria linha (<code>hibParcelas</code>: DAS ajustado, CPP retida, CPP fora do DAS, ICMS/ISS por fora × remanescente, IBS/CBS líquido, IS), a memória imprime <b>exatamente</b> elas, uma por linha, e declara "fecha ao centavo". <b>(2) Bug de motor por baixo:</b> no mês impedido a CPP retida pelo tomador era calculada com a alíquota efetiva <b>já reduzida</b> do ICMS/ISS (<code>e3 × _semIcmsIss</code>, v7.58.0). A CPP é parcela do DAS que o impedimento não altera em valor absoluto — tirar ICMS e ISS da guia não muda a contribuição previdenciária. Passa a usar a efetiva cheia. Só alcança empresa impedida com receita de serviço com INSS retido (a3_retissinss) fora da 6ª faixa; no caso 3 do lacre são +R$ 273,54 por exercício recalculado, e os casos 1 e 2 seguem idênticos. <b>(3) Validação bloqueante (MEM-01).</b> Antes de emitir parecer ou apresentação, |total híbrido − soma das parcelas| tem de ser ≤ R$ 0,02 em todos os anos; caso contrário a emissão é <b>bloqueada</b> com "ERRO CRÍTICO — MEMÓRIA DE CÁLCULO NÃO FECHA", com ano, total, soma e diferença — e a Conferência mostra o mesmo quadro. O total nunca é ajustado para fechar. Suíte: bloco 5ab, com o cenário que reproduz a diferença (5ª faixa, INSS retido, RBA acima do sublimite) provando antes/depois.</td></tr>
@@ -3017,6 +3018,7 @@ function memCritico(C){
 function emissaoCritica(res, cfg, ano){
   const c1 = subCritico(res, cfg, ano); if (c1) return c1;
   try { const _B = (typeof rlBaseReforma === 'function') ? rlBaseReforma() : null;
+        const c2 = compCritico(_B && _B.reforma && _B.reforma.comp); if (c2) return c2;   // v7.92.0 · composição ≠ 100% bloqueia
         if (_B && _B.res) return memCritico(calcCenariosReforma(_B.res, _B.reforma || null)); } catch(e){/* silêncio proposital (A10): sem base não há o que conferir */}
   return null;
 }
@@ -5717,7 +5719,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.91.1';
+const APP_VERSAO = '7.92.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -6367,9 +6369,14 @@ function compAutoDe(rows, total, contraInformado){
       forn.push({ cnpj:r.cnpj||'', nome:r.nome||r.razao||'', valor:v, docs:+r.docs||+r.n||1, grupo, grupoAuto:grupo,
         fonte: r.fonte || 'Receita Federal — consulta CNPJ', confianca: grupo === 'nid' ? 'baixa' : 'alta', status:'sugerido' });
     }
-    const soma = COMP_GRUPOS.reduce((s,[k]) => s + c.g[k].v, 0);
-    c.naoClass = Math.max(0, c.total - soma);
-    if (c.total <= 0.005) c.total = soma;
+    const soma = Math.round(COMP_GRUPOS.reduce((s,[k]) => s + c.g[k].v, 0)*100)/100;
+    // ══ v7.92.0 (P0-01) · A SOMA DOS FORNECEDORES É A FONTE DE VERDADE ═══════════════════════
+    // O total vinha de T.comprasRevenda (só mercadoria: 2.279,70 na Artecon) enquanto os
+    // fornecedores somavam 177.061,54 (serviços tomados incluídos) → percentuais de 4.568%.
+    // Agora: total = máximo entre as compras da análise e a soma dos fornecedores; percentual =
+    // valor do grupo ÷ esse total; o excedente da análise não coberto pela consulta segue em NID.
+    if (c.total < soma - 0.005) c.total = soma;
+    c.naoClass = Math.max(0, Math.round((c.total - soma)*100)/100);
     c.g.nid.v += c.naoClass;            // o que a análise tem de compras e a consulta não cobriu
     c.origem = 'consultas';
   } else if (contraInformado && ((+contraInformado.compras_lrlp||0) + (+contraInformado.compras_simples||0)) > 0.005){
@@ -6398,13 +6405,46 @@ function compMontar(RF, T){
       for (const c of [prev.auto, prev.final]) { c.total = total; for (const [k] of COMP_GRUPOS) c.g[k].v = Math.round(c.g[k].pct * total * 100)/100; } }
     return prev; }
   const mesmoAuto = prev && prev.auto && JSON.stringify(prev.auto.g) === JSON.stringify(auto.g) && Math.abs((prev.auto.total||0) - auto.total) < 0.005;
-  if (prev && mesmoAuto) { prev.forn = forn.length ? forn.map(f => { const e = (prev.forn||[]).find(x => x.cnpj === f.cnpj); return e ? { ...f, grupo:e.grupo, status:e.status } : f; }) : (prev.forn||[]); prev.origem = auto.origem; return prev; }
-  // automático mudou (ou não existia): recomeça, preservando a trilha antiga
-  const c = { versao: APP_VERSAO, geradoEm: new Date().toISOString(), origem: auto.origem,
+  // v7.92.0 · linhas agregadas (CNPJ vazio) casam pelo nome — antes todas caíam na primeira
+  const _mesma = (x, f) => x.cnpj === f.cnpj && (f.cnpj ? true : x.nome === f.nome);
+  if (prev && mesmoAuto) { prev.forn = forn.length ? forn.map(f => { const e = (prev.forn||[]).find(x => _mesma(x, f)); return e ? { ...f, grupo:e.grupo, status:e.status, confirmadoEm:e.confirmadoEm||null, confirmadoPor:e.confirmadoPor||null } : f; }) : (prev.forn||[]); prev.origem = prev.editada || prev.status === 'confirmada' ? (prev.origem||auto.origem) : auto.origem; prev.origemAuto = auto.origem; return prev; }
+  // automático mudou (ou não existia): recomeça, preservando a trilha antiga e o automático anterior
+  // v7.92.0 (P1-02) · o automático original NUNCA é apagado: a versão anterior vai para autoAnteriores
+  const c = { versao: APP_VERSAO, geradoEm: new Date().toISOString(), origem: auto.origem, origemAuto: auto.origem,
     auto: compClonar(auto), final: compClonar(auto), forn, editada:false, status:'sugerida',
     confirmadoEm:null, confirmadoPor:null, modo:null, presumidoPct: prev ? (+prev.presumidoPct||0) : 0,
-    trilha: prev ? (prev.trilha||[]).concat([{ quando:new Date().toISOString(), usuario:(APP&&APP.user&&APP.user.email)||'', evento:'automático recalculado — composição anterior substituída (trilha preservada)' }]) : [] };
+    autoAnteriores: prev ? (prev.autoAnteriores||[]).concat(prev.auto ? [{ versao:prev.versao, geradoEm:prev.geradoEm, origem:prev.origem, status:prev.status, auto:compClonar(prev.auto), final:prev.final?compClonar(prev.final):null }] : []) : [],
+    trilha: prev ? (prev.trilha||[]) : [] };
+  if (prev) compEvento(c, 'automatico-recalculado', { evento:'automático recalculado — composição anterior substituída (automático e trilha preservados em autoAnteriores)', antes: compSnap(prev.final), depois: compSnap(c.final) });
   return c;
+}
+// ── v7.92.0 (P1-02) · evento único da trilha: empresa, exercício, usuário, data/hora, tipo, antes/depois, motivo, origem, versão do motor ──
+function compSnap(x){ if (!x || !x.g) return null; const g = {}; for (const [k] of COMP_GRUPOS) g[k] = { v: Math.round((x.g[k].v||0)*100)/100, pct: x.g[k].pct||0 }; return { total: x.total, g }; }
+function compEvento(c, tipo, extra){
+  if (!Array.isArray(c.trilha)) c.trilha = [];
+  const e = Object.assign({ quando:new Date().toISOString(), usuario:(APP&&APP.user&&APP.user.email)||'', empresa:(typeof RF!=='undefined'&&RF&&RF.cnpj)||'', exercicio:(typeof RF!=='undefined'&&RF&&RF.ano)||null,
+    tipo, versao:APP_VERSAO, origem:c.origem, status:c.status }, extra||{});
+  c.trilha.push(e); return e;
+}
+// v7.92.0 (P0-02) · crédito CONFIRMADO = só o que o usuário confirmou: a composição inteira (status
+// 'confirmada') ou, fornecedor a fornecedor, as linhas com status 'confirmado'. Sugerido e alterado
+// manualmente NÃO contam. Resultado por grupo, limitado ao valor final do grupo.
+function compConfirmadosPorGrupo(comp){
+  const out = {}; for (const [k] of COMP_GRUPOS) out[k] = 0;
+  if (!comp || !comp.final) return out;
+  if (comp.status === 'confirmada') { for (const [k] of COMP_GRUPOS) out[k] = comp.final.g[k].v; return out; }
+  for (const f of (comp.forn||[])) if (f.status === 'confirmado' && out[f.grupo] != null) out[f.grupo] += +f.valor||0;
+  for (const [k] of COMP_GRUPOS) out[k] = Math.round(Math.min(out[k], comp.final.g[k].v)*100)/100;
+  return out;
+}
+// v7.92.0 · composição inválida (≠ 100%) bloqueia parecer e apresentações (junto de SUB-01/MEM-01)
+function compCritico(comp){
+  try {
+    if (!comp || !comp.final || !(comp.final.total > 0.005) || compFechar100(comp)) return null;
+    const s = compSomaPct(comp.final.g);
+    return { codigo:'COMP-01', titulo:'ERRO CRÍTICO — COMPOSIÇÃO DOS FORNECEDORES NÃO TOTALIZA 100%',
+      texto:`A composição dos fornecedores usada nos créditos de IBS/CBS soma ${(s*100).toFixed(4).replace('.',',')}% (total ${fmtR(comp.final.total)}). O parecer e as apresentações não podem ser emitidos: restaure a classificação automática ou corrija a edição na aba Reforma.` };
+  } catch(e){ return null; }
 }
 // composição → contrapartes usadas pelo motor de crédito (cenário-base)
 function compAplicarContra(RF){
@@ -6424,8 +6464,11 @@ function compContraCenarios(comp, contraBase){
   if (!comp || !comp.final) {   // sem composição: o não identificado (fim do proxy) só entra no limite superior
     const nid = +base.compras_nid || 0;
     return { inf: base, base, sup: Object.assign({}, base, { compras_lrlp: (+base.compras_lrlp||0) + nid, compras_nid: 0 }) }; }
-  const g = comp.final.g, fonteOk = comp.status === 'confirmada' || comp.origem === 'consultas' || comp.origem === 'usuario';
-  const inf = Object.assign({}, base, { compras_lrlp: fonteOk ? (g.regular.v + g.simplesRegular.v) : 0, compras_simples: fonteOk ? g.simples.v : 0, compras_presumido: fonteOk ? g.presumido.v : 0, compras_nid: 0 });
+  const g = comp.final.g;
+  // v7.92.0 (P0-02) · o limite inferior era "só confirmados" no rótulo, mas contava consulta e
+  // digitação como confirmadas. Agora só entra o que o usuário confirmou (compConfirmadosPorGrupo).
+  const cf = compConfirmadosPorGrupo(comp);
+  const inf = Object.assign({}, base, { compras_lrlp: cf.regular + cf.simplesRegular, compras_simples: cf.simples, compras_presumido: cf.presumido, compras_nid: 0, compras_semcred: cf.semCredito });
   const sup = Object.assign({}, base, { compras_lrlp: g.regular.v + g.simplesRegular.v + g.nid.v, compras_simples: g.simples.v, compras_presumido: g.presumido.v, compras_nid: 0 });
   return { inf, base, sup };
 }
@@ -6448,7 +6491,9 @@ function compConfianca(comp, sens, critico){
   return { nivel, cor: nivel==='ALTO'?'#1e8449':nivel==='MÉDIO'?'#b9770e':'#943126', icone: nivel==='ALTO'?'✅':nivel==='MÉDIO'?'⚠️':'⛔', motivos: pend, rotulo: nivel, naoConclusivo: nivel === 'BAIXO' };
 }
 // ── edição ──
-function compEditar(modo){ if (!RF || !RF.comp) return; RF.comp.modo = modo; compRender(); }
+function compEditar(modo){ if (!RF || !RF.comp) return; RF._compEditAntes = compClonar(RF.comp.final); RF.comp.modo = modo; compRender(); }
+// v7.92.0 · cancelar devolve o que havia antes de abrir a edição (antes ficavam os valores já digitados)
+function compCancelarEdicao(){ const c = RF && RF.comp; if (!c) return; if (RF._compEditAntes) { c.final = compClonar(RF._compEditAntes); RF._compEditAntes = null; } c.modo = null; rfCalcular(); }
 function compSetPct(k, v){ const c = RF.comp; if (!c) return; const p = Math.max(0, num(v))/100; c.final.g[k].pct = p; c.final.g[k].v = Math.round(p * c.final.total*100)/100; c.editada = true; compRefresh(); }
 function compSetVal(k, v){ const c = RF.comp; if (!c) return; c.final.g[k].v = Math.max(0, num(v)); c.final.total = Math.round(COMP_GRUPOS.reduce((s,[q]) => s + c.final.g[q].v, 0)*100)/100; compPct(c.final); c.editada = true; compRefresh(); }
 // v7.91.1 · durante a edição só os números calculados são atualizados — o card não é redesenhado
@@ -6466,36 +6511,52 @@ function compRefresh(){
 }
 function compSetPresumido(v){ if (!RF || !RF.comp) return; RF.comp.presumidoPct = Math.max(0, Math.min(100, num(v))); rfCalcular(); }
 function compSetForn(i, grupo){ const c = RF.comp; if (!c || !c.forn[i]) return; const f = c.forn[i]; if (f.grupo === grupo) return;
-  c.final.g[f.grupo].v = Math.max(0, c.final.g[f.grupo].v - f.valor); c.final.g[grupo].v += f.valor; compPct(c.final);
-  c.trilha.push({ quando:new Date().toISOString(), usuario:(APP&&APP.user&&APP.user.email)||'', fornecedor:f.cnpj, de:f.grupo, para:grupo, motivo:'reclassificação manual do fornecedor' });
-  f.grupo = grupo; f.status = 'alterado manualmente'; c.editada = true; c.status = 'sugerida'; rfCalcular(); }
+  const antes = compSnap(c.final); c.final.g[f.grupo].v = Math.max(0, c.final.g[f.grupo].v - f.valor); c.final.g[grupo].v += f.valor; compPct(c.final);
+  compEvento(c, 'reclassificacao-fornecedor', { fornecedor:f.cnpj, nome:f.nome||'', valor:f.valor, de:f.grupo, para:grupo, motivo:'reclassificação manual do fornecedor', antes, depois: compSnap(c.final) });
+  // v7.92.0 (P0-02) · alteração manual NÃO é confirmação: a linha perde a confirmação individual
+  f.grupo = grupo; f.status = 'alterado manualmente'; f.confirmadoEm = null; f.confirmadoPor = null; c.editada = true; if (c.status === 'confirmada') { c.status = 'sugerida'; c.confirmadoEm = null; c.confirmadoPor = null; } rfCalcular(); }
+// v7.92.0 (P0-02) · confirmação FORNECEDOR A FORNECEDOR — só o confirmado entra no crédito confirmado
+function compConfirmarForn(i, sim){ const c = RF && RF.comp; if (!c || !c.forn || !c.forn[i]) return; const f = c.forn[i];
+  if (sim) { f.status = 'confirmado'; f.confirmadoEm = new Date().toISOString(); f.confirmadoPor = (APP&&APP.user&&APP.user.email)||''; }
+  else { f.status = f.grupo === f.grupoAuto ? 'sugerido' : 'alterado manualmente'; f.confirmadoEm = null; f.confirmadoPor = null; if (c.status === 'confirmada') { c.status = 'sugerida'; c.confirmadoEm = null; c.confirmadoPor = null; } }
+  compEvento(c, sim ? 'fornecedor-confirmado' : 'fornecedor-desconfirmado', { fornecedor:f.cnpj, nome:f.nome||'', valor:f.valor, grupo:f.grupo, evento:(sim?'fornecedor CONFIRMADO: ':'fornecedor DESCONFIRMADO: ') + (f.nome||f.cnpj||'') });
+  rfCalcular(); }
 function compFechar100(c){ return Math.abs(compSomaPct(c.final.g) - 1) < 0.00005; }
 function compAplicarEdicao(){
   const c = RF.comp; if (!c) return;
   if (c.modo === 'pct' && !compFechar100(c)) { toast('ERRO — A composição dos fornecedores deve totalizar 100%.'); compRender(); return; }
   if (c.modo === 'val') { const soma = COMP_GRUPOS.reduce((s,[k]) => s + c.final.g[k].v, 0); c.final.total = Math.round(soma*100)/100; compPct(c.final); }
   const motivo = ($id('comp-motivo') && $id('comp-motivo').value || '').trim();
+  const antes = compSnap(RF._compEditAntes || c.auto), depois = compSnap(c.final);
   for (const [k] of COMP_GRUPOS){ const a = c.auto.g[k], f = c.final.g[k];
     if (Math.abs(a.pct - f.pct) > 0.00005 || Math.abs(a.v - f.v) > 0.005)
-      c.trilha.push({ quando:new Date().toISOString(), usuario:(APP&&APP.user&&APP.user.email)||'', grupo:k, pctAuto:a.pct, pctEditado:f.pct, vAuto:a.v, vEditado:f.v, motivo, versao:APP_VERSAO, origem:c.origem }); }
-  c.modo = null; c.status = 'sugerida'; if (c.origem === 'sem-dados') c.origem = 'usuario';   // v7.91.1 · editada = informada pelo usuário
+      compEvento(c, 'edicao-grupo', { grupo:k, pctAuto:a.pct, pctEditado:f.pct, vAuto:a.v, vEditado:f.v, motivo, modo:c.modo }); }
+  compEvento(c, 'edicao-aplicada', { evento:'edição aplicada (' + (c.modo==='pct'?'percentuais':'valores') + ')' + (motivo?' · motivo: '+motivo:''), motivo, antes, depois });
+  // v7.92.0 (P0-02) · edição = alteração manual, NÃO confirmação: a composição e as linhas perdem a confirmação
+  c.forn.forEach(f => { if (f.status === 'confirmado') { f.status = f.grupo === f.grupoAuto ? 'sugerido' : 'alterado manualmente'; f.confirmadoEm = null; f.confirmadoPor = null; } });
+  RF._compEditAntes = null; c.modo = null; c.status = 'sugerida'; c.confirmadoEm = null; c.confirmadoPor = null; if (c.origem === 'sem-dados') c.origem = 'usuario';   // v7.91.1 · editada = informada pelo usuário
   rfCalcular();
 }
 function compConfirmar(sim){
   const c = RF.comp; if (!c) return;
   if (sim){ if (!compFechar100(c)) { toast('ERRO — A composição dos fornecedores deve totalizar 100%.'); return; }
     c.status = 'confirmada'; c.confirmadoEm = new Date().toISOString(); c.confirmadoPor = (APP&&APP.user&&APP.user.email)||''; if (c.origem === 'sem-dados') c.origem = 'usuario';
-    c.autoConfirmadaOriginal = c.autoConfirmadaOriginal || compClonar(c.auto); c.forn.forEach(f => { if (f.status === 'sugerido') f.status = 'confirmado'; });
-    c.trilha.push({ quando:c.confirmadoEm, usuario:c.confirmadoPor, evento:'COMPOSIÇÃO CONFIRMADA' });
+    // v7.92.0 · confirmar a composição confirma TODAS as linhas (inclusive as alteradas manualmente — o usuário assumiu a composição inteira)
+    c.autoConfirmadaOriginal = c.autoConfirmadaOriginal || compClonar(c.auto); c.forn.forEach(f => { f.status = 'confirmado'; f.confirmadoEm = c.confirmadoEm; f.confirmadoPor = c.confirmadoPor; });
+    compEvento(c, 'composicao-confirmada', { evento:'COMPOSIÇÃO CONFIRMADA', antes: compSnap(c.final), depois: compSnap(c.final) });
   } else { c.status = 'estimativa'; c.confirmadoEm = null; c.confirmadoPor = null;
-    c.trilha.push({ quando:new Date().toISOString(), usuario:(APP&&APP.user&&APP.user.email)||'', evento:'mantida como ESTIMATIVA' }); }
+    compEvento(c, 'mantida-estimativa', { evento:'mantida como ESTIMATIVA' }); }
   rfCalcular();
 }
 function compRestaurar(){
   const c = RF.comp; if (!c) return;
-  c.trilha.push({ quando:new Date().toISOString(), usuario:(APP&&APP.user&&APP.user.email)||'', evento:'RESTAURADA a classificação automática' + (c.editada ? ' (havia edição manual — trilha preservada)' : '') });
-  c.final = compClonar(c.auto); c.editada = false; c.status = 'sugerida'; c.confirmadoEm = null; c.confirmadoPor = null; c.modo = null;
-  c.forn.forEach(f => { f.grupo = f.grupoAuto; f.status = 'sugerido'; }); rfCalcular();
+  const antes = compSnap(c.final);
+  // v7.92.0 (P1-01) · restaura EXATAMENTE o automático: valores, percentuais, origem, confiança e status;
+  // a restauração é um evento novo — nunca elimina a trilha anterior
+  c.final = compClonar(c.auto); c.editada = false; c.status = 'sugerida'; c.confirmadoEm = null; c.confirmadoPor = null; c.modo = null; RF._compEditAntes = null;
+  if (c.origemAuto) c.origem = c.origemAuto;
+  c.forn.forEach(f => { f.grupo = f.grupoAuto; f.status = 'sugerido'; f.confirmadoEm = null; f.confirmadoPor = null; f.confianca = f.grupoAuto === 'nid' ? 'baixa' : 'alta'; });
+  compEvento(c, 'restaurada', { evento:'RESTAURADA a classificação automática' + (antes ? ' (havia edição manual — trilha preservada)' : ''), antes, depois: compSnap(c.final) }); rfCalcular();
 }
 // ── card na aba Reforma ──
 function compRender(){
@@ -6503,7 +6564,12 @@ function compRender(){
   const c = RF && RF.comp; if (!c){ el.innerHTML = ''; return; }
   const sens = RF._res && RF._res.sens, conf = RF._res && RF._res.confianca;
   const pcs = p => (p*100).toFixed(4).replace('.',',') + '%';
-  const st = k => { const a = c.auto.g[k], f = c.final.g[k]; if (c.status === 'confirmada') return Math.abs(a.v-f.v)>0.005 ? 'alterado manualmente' : 'confirmado'; return Math.abs(a.v-f.v)>0.005 ? 'alterado manualmente' : 'sugerido'; };
+  // v7.92.0 · três estados: sugerido / alterado manualmente / confirmado — e quantos fornecedores do grupo estão confirmados
+  const st = k => { const a = c.auto.g[k], f = c.final.g[k], alt = Math.abs(a.v-f.v)>0.005 || Math.abs(a.pct-f.pct)>0.00005;
+    const fg = (c.forn||[]).filter(x => x.grupo === k), nc = fg.filter(x => x.status === 'confirmado').length;
+    if (c.status === 'confirmada') return 'confirmado' + (alt ? ' (alterado manualmente)' : '');
+    return (alt ? 'alterado manualmente' : 'sugerido') + (fg.length ? ` · ${nc}/${fg.length} forn. confirmados` : ''); };
+  const cfG = compConfirmadosPorGrupo(c);
   const linhas = COMP_GRUPOS.map(([k,rot]) => { const a = c.auto.g[k], f = c.final.g[k];
     return `<tr><td>${rot}${k==='presumido'?` <span class="hint">· crédito <input style="width:60px" value="${+c.presumidoPct||0}" onchange="compSetPresumido(this.value)"> % da alíquota</span>`:''}</td>
       <td class="num">${pcs(a.pct)}</td>
@@ -6514,12 +6580,17 @@ function compRender(){
   const somaPct = compSomaPct(c.final.g), fecha = Math.abs(somaPct-1) < 0.00005;
   const selo = c.status === 'confirmada' ? '<span class="badge ok">✅ COMPOSIÇÃO CONFIRMADA</span>' : c.status === 'estimativa' ? '<span class="badge" style="background:#fef6e7;color:#7e5109">⚠️ mantida como ESTIMATIVA</span>' : '<span class="badge" style="background:#eaf2f8;color:#1a5276">🔎 CLASSIFICAÇÃO AUTOMÁTICA — RECOMENDADO (sugestão técnica, editável)</span>';
   const fornHtml = c.forn && c.forn.length ? `<details style="margin-top:8px"><summary class="hint">Fornecedores classificados (${c.forn.length}) — CNPJ, valor, documentos, classificação, fonte, confiança, status</summary>
-    <div style="overflow-x:auto;max-height:260px;overflow-y:auto"><table><thead><tr><th>CNPJ</th><th>Razão social</th><th class="num">Valor</th><th class="num">Docs</th><th>Classificação</th><th>Fonte</th><th>Confiança</th><th>Status</th></tr></thead><tbody>
-    ${c.forn.map((f,i)=>`<tr><td>${esc(f.cnpj)}</td><td>${esc(f.nome||'')}</td><td class="num">${fmt(f.valor)}</td><td class="num">${f.docs}</td><td><select onchange="compSetForn(${i},this.value)">${COMP_GRUPOS.map(([k,rot])=>`<option value="${k}" ${f.grupo===k?'selected':''}>${rot}</option>`).join('')}</select></td><td class="hint">${esc(f.fonte)}</td><td>${f.confianca}</td><td>${f.status}</td></tr>`).join('')}</tbody></table></div></details>` : `<div class="hint" style="margin-top:6px">Não foi possível determinar automaticamente a composição dos fornecedores${c.origem==='usuario'?' — usados os valores informados na aba':''}. Use <b>Editar composição</b> para informar os percentuais manualmente.</div>`;
-  const trilha = (c.trilha||[]).slice(-8).reverse().map(t => `<li>${new Date(t.quando).toLocaleString('pt-BR')} · ${esc(t.usuario||'—')} · ${t.evento ? esc(t.evento) : `${COMP_ROT[t.grupo]||esc(t.fornecedor||'')}: automático ${t.pctAuto!=null?pcs(t.pctAuto):esc(t.de||'')} → editado ${t.pctEditado!=null?pcs(t.pctEditado):esc(t.para||'')}${t.pctAuto!=null?' ('+((t.pctEditado-t.pctAuto)*100).toFixed(2).replace('.',',')+' p.p.)':''}${t.motivo?' · motivo: '+esc(t.motivo):''}`}</li>`).join('');
+    <div style="overflow-x:auto;max-height:260px;overflow-y:auto"><table><thead><tr><th>CNPJ</th><th>Razão social</th><th class="num">Valor</th><th class="num">Docs</th><th>Classificação</th><th>Fonte</th><th>Confiança</th><th>Status</th><th>Confirmar</th></tr></thead><tbody>
+    ${c.forn.map((f,i)=>`<tr><td>${esc(f.cnpj)}</td><td>${esc(f.nome||'')}</td><td class="num">${fmt(f.valor)}</td><td class="num">${f.docs}</td><td><select onchange="compSetForn(${i},this.value)">${COMP_GRUPOS.map(([k,rot])=>`<option value="${k}" ${f.grupo===k?'selected':''}>${rot}</option>`).join('')}</select></td><td class="hint">${esc(f.fonte)}</td><td>${f.confianca}</td><td>${f.status}${f.confirmadoEm?' <span class="hint">('+new Date(f.confirmadoEm).toLocaleDateString('pt-BR')+')</span>':''}</td><td><button class="btn" style="padding:2px 6px" onclick="compConfirmarForn(${i},${f.status!=='confirmado'})">${f.status==='confirmado'?'desconfirmar':'✓ confirmar'}</button></td></tr>`).join('')}</tbody></table></div>
+    <div class="hint">Crédito confirmado por grupo: ${COMP_GRUPOS.filter(([k])=>cfG[k]>0.005).map(([k,rot])=>rot+' '+fmtR(cfG[k])).join(' · ') || 'nenhum fornecedor confirmado'} — confirme linha a linha ou a composição inteira (SIM).</div></details>` : `<div class="hint" style="margin-top:6px">Não foi possível determinar automaticamente a composição dos fornecedores${c.origem==='usuario'?' — usados os valores informados na aba':''}. Use <b>Editar composição</b> para informar os percentuais manualmente.</div>`;
+  // v7.92.0 (P1-02) · histórico COMPLETO e consultável (todos os eventos, antes → depois, versão do motor)
+  const COMP_CURTO = { regular:'regular', simples:'Simples dentro', simplesRegular:'Simples opção regular', semCredito:'sem crédito', presumido:'presumido', nid:'não identificado' };
+  const snapTxt = s => s ? COMP_GRUPOS.filter(([k])=>s.g[k] && (s.g[k].v>0.005||s.g[k].pct>0.00005)).map(([k])=>`${COMP_CURTO[k]} ${pcs(s.g[k].pct)} (${fmt(s.g[k].v)})`).join(' / ') + ` · total ${fmtR(s.total)}` : '';
+  const trilha = (c.trilha||[]).slice().reverse().map(t => `<li>${new Date(t.quando).toLocaleString('pt-BR')} · ${esc(t.usuario||'—')}${t.versao?' · v'+esc(t.versao):''} · ${t.evento ? esc(t.evento) : `${COMP_ROT[t.grupo]||esc(t.fornecedor||'')}: automático ${t.pctAuto!=null?pcs(t.pctAuto):esc(t.de||'')} → editado ${t.pctEditado!=null?pcs(t.pctEditado):esc(t.para||'')}${t.pctAuto!=null?' ('+((t.pctEditado-t.pctAuto)*100).toFixed(2).replace('.',',')+' p.p.)':''}${t.motivo?' · motivo: '+esc(t.motivo):''}`}${t.antes&&t.depois?`<div class="hint">antes: ${esc(snapTxt(t.antes))}<br>depois: ${esc(snapTxt(t.depois))}</div>`:''}</li>`).join('');
+  const autoAnt = (c.autoAnteriores||[]).length ? `<details style="margin-top:6px"><summary class="hint">Automáticos anteriores preservados (${c.autoAnteriores.length})</summary><ul class="hint">${c.autoAnteriores.slice().reverse().map(a=>`<li>${new Date(a.geradoEm).toLocaleString('pt-BR')} · v${esc(a.versao||'')} · ${esc(a.status||'')} · automático: ${esc(snapTxt(compSnap(a.auto)))}${a.final?'<br>final: '+esc(snapTxt(compSnap(a.final))):''}</li>`).join('')}</ul></details>` : '';
   const sensHtml = sens ? `<div style="margin-top:10px"><b>Sensibilidade dos créditos — ${sens.anoRef}</b>
     <table><thead><tr><th>Cenário</th><th class="num">Crédito IBS/CBS</th><th class="num">Híbrido</th><th class="num">Fora do Simples</th><th>Vencedor</th></tr></thead><tbody>
-    ${['inf','base','sup'].map(k=>{ const S = sens.ref[k]; return `<tr><td>${k==='inf'?'Limite inferior (só confirmados)':k==='base'?'Cenário-base (composição utilizada)':'Limite superior (hipótese mais favorável — nunca definitivo)'}</td><td class="num">${fmt(S.cred)}</td><td class="num">${fmt(S.hib)}</td><td class="num">${fmt(S.regular)}</td><td>${esc(S.melhorNome)}</td></tr>`; }).join('')}
+    ${['inf','base','sup'].map(k=>{ const S = sens.ref[k]; return `<tr><td>${k==='inf'?'Limite inferior — crédito CONFIRMADO (só fornecedores/composição confirmados pelo usuário)':k==='base'?'Cenário-base — crédito '+(c.status==='confirmada'?'CONFIRMADO':'ESTIMADO')+' (composição utilizada'+(c.status==='confirmada'?'':' — estimativa, não confirmada')+')':'Limite superior — crédito POTENCIAL (hipótese mais favorável — nunca definitivo)'}</td><td class="num">${fmt(S.cred)}</td><td class="num">${fmt(S.hib)}</td><td class="num">${fmt(S.regular)}</td><td>${esc(S.melhorNome)}</td></tr>`; }).join('')}
     </tbody></table><div class="hint">Margem do vencedor (2º − 1º): <b>${fmtR(sens.ref.margem)}</b> · variação do crédito (superior − inferior): <b>${fmtR(sens.ref.variacao)}</b> · pode inverter o vencedor? <b>${sens.inversao?'SIM':'NÃO'}</b></div>
     ${sens.inversao ? `<div class="hint" style="margin-top:6px;padding:8px 10px;border-left:4px solid #943126;background:#fdedec;color:#7b241c">⛔ <b>ALERTA CRÍTICO — A COMPOSIÇÃO DOS FORNECEDORES PODE ALTERAR O REGIME TRIBUTÁRIO VENCEDOR.</b> Confirme ${c.final.g.nid.v>0.005?'a parcela não identificada ('+fmtR(c.final.g.nid.v)+')':'os percentuais'} antes de concluir — anos afetados: ${sens.anosInversao.join(', ')}.</div>` : ''}</div>` : '';
   const confHtml = conf ? `<div style="margin-top:10px;padding:10px 12px;border-left:5px solid ${conf.cor};background:#fff"><b style="color:${conf.cor}">${conf.icone} NÍVEL DE CONFIABILIDADE DA ANÁLISE: ${conf.nivel}</b>${conf.motivos.length?`<div class="hint">${conf.motivos.map(esc).join(' · ')}</div>`:'<div class="hint">100% das compras classificadas, composição confirmada, nenhuma premissa crítica pendente, nenhuma divergência matemática.</div>'}${conf.naoConclusivo?'<div class="hint"><b>Sem "regime recomendado":</b> o parecer sai como "MELHOR RESULTADO DENTRO DAS PREMISSAS INFORMADAS — NÃO CONCLUSIVO".</div>':''}</div>` : '';
@@ -6529,7 +6600,7 @@ function compRender(){
     <tr style="font-weight:700;border-top:2px solid #1a5276"><td>TOTAL DOS PERCENTUAIS</td><td class="num">${pcs(compSomaPct(c.auto.g))}</td><td class="num" id="comp-tot-pct" style="color:${fecha?'#1e8449':'#943126'}">${pcs(somaPct)}${fecha?'':' ✗'}</td><td class="num">${fmt(c.auto.total)}</td><td class="num" id="comp-tot-val">${fmt(c.final.total)}</td><td></td></tr></tbody></table></div>
     <div class="hint">TOTAL DAS COMPRAS CLASSIFICADAS = ${fmtR(c.final.total - c.final.g.nid.v)} · TOTAL DAS COMPRAS NÃO CLASSIFICADAS = ${fmtR(c.final.g.nid.v)} <span id="comp-erro">${!fecha?'· <b style="color:#943126">ERRO — A composição dos fornecedores deve totalizar 100%.</b>':''}</span></div>
     <div class="toolbar" style="margin-top:8px;flex-wrap:wrap;gap:6px">
-      ${c.modo ? `<input id="comp-motivo" placeholder="justificativa (opcional)" style="width:260px"><button class="btn solid" onclick="compAplicarEdicao()">Aplicar edição</button><button class="btn" onclick="RF.comp.modo=null;compRender()">Cancelar</button>`
+      ${c.modo ? `<input id="comp-motivo" placeholder="justificativa (opcional)" style="width:260px"><button class="btn solid" onclick="compAplicarEdicao()">Aplicar edição</button><button class="btn" onclick="compCancelarEdicao()">Cancelar</button>`
                : `<button class="btn" onclick="compEditar('pct')">✏️ Editar composição — percentuais</button><button class="btn" onclick="compEditar('val')">✏️ Editar composição — valores</button>`}
       <button class="btn" onclick="compRestaurar()">↩ Restaurar classificação automática</button>
       <span style="flex:1"></span>
@@ -6538,7 +6609,7 @@ function compRender(){
       <button class="btn" onclick="compConfirmar(false)">NÃO — manter como estimativa</button>
     </div>
     ${fornHtml}${sensHtml}${confHtml}
-    ${trilha ? `<details style="margin-top:8px"><summary class="hint">Trilha de auditoria (${c.trilha.length})</summary><ul class="hint">${trilha}</ul></details>` : ''}
+    ${trilha ? `<details style="margin-top:8px"><summary class="hint">Histórico da composição — trilha de auditoria completa (${c.trilha.length} eventos)</summary><div style="max-height:260px;overflow-y:auto"><ul class="hint">${trilha}</ul></div></details>` : ''}${autoAnt}
     <div class="hint" style="margin-top:6px">Regras: regime regular e Simples com opção pelo regular → crédito pelo documento, IBS e CBS separados (LC 214/2025, arts. 47 e 48); Simples com IBS/CBS dentro do Simples → crédito limitado ao montante devido no Simples (art. 47, § 9º, II; Res. CGSN 190/2026, art. 58 — 1ª faixa do Anexo I por conservadorismo); sem crédito integral → zero; presumido → percentual informado; <b>não identificado → zero no cenário-base e integral só no limite superior</b>, nunca presumido como regime regular.</div>
   </div>`;
 }
@@ -7192,7 +7263,7 @@ function lacreRender(){
 //      bloco ANTIGO por cima do que a aba já tinha salvado.
 let RF_MARCO = '';   // retrato do bloco de Reforma como está GRAVADO no banco
 function rfLimpo(rf){ return { ...rf, _res:undefined, _forn:undefined, _vend:undefined,
-  _benefFonte:undefined, _benefDet:undefined, _benefOpcoes:undefined, _fornRows:undefined, _compUi:undefined }; }   // v7.91.0 · linhas de fornecedores e estado de tela não vão ao banco
+  _benefFonte:undefined, _benefDet:undefined, _benefOpcoes:undefined, _fornRows:undefined, _compUi:undefined, _compEditAntes:undefined }; }   // v7.91.0 · linhas de fornecedores e estado de tela não vão ao banco
 function rfMarco(rf){ try { return JSON.stringify(rfLimpo(rf)); } catch(e){ return ''; } }
 function rfPendente(){ return !!RF && !!RF.cnpj && rfMarco(RF) !== RF_MARCO; }
 
@@ -9404,8 +9475,11 @@ function compQuadrosHtml(C, L, compacto){
   const pcs = p => (p*100).toFixed(2).replace('.',',') + '%';
   const q = (L.q||{}), tot = (+q.cbs||0) + (+q.ibse||0) + (+q.ibsm||0), fC = tot>0 ? (+q.cbs||0)/tot : 0, fI = 1 - fC;   // rateio IBS × CBS pelas alíquotas do ano
   const g = comp && comp.final ? comp.final.g : null;
-  const credConf = g ? (g.regular.v + g.simplesRegular.v) * L.alq + g.simples.v * (((C.rfx||{}).credSimplesPct||0) > 0 ? C.rfx.credSimplesPct/100 : credSimplesArt58(L.ano)) : (C.semPerfil ? 0 : L.cred);
-  const credEst = g ? g.presumido.v * L.alq * ((+comp.presumidoPct||0)/100) : 0;
+  // v7.92.0 (P0-02) · confirmado = limite inferior (só o que o usuário confirmou); estimado = o que o
+  // cenário-base usa além disso (sugerido/alterado); potencial = só no limite superior. Nunca se rotula
+  // crédito sugerido como validado.
+  const credConf = L.sens ? L.sens.inf.cred : (comp && comp.status === 'confirmada' ? L.cred : 0);
+  const credEst = Math.max(0, L.cred - credConf);
   const credNao = L.sens ? (L.sens.sup.cred - L.cred) : 0;
   const st = compacto ? 'font-size:8.5pt' : '';
   const q1 = comp && g ? `<table class="${compacto?'pp-tab':''}" style="${st}"><thead><tr><th>Grupo</th><th class="num">% automático</th><th class="num">% final</th><th class="num">Compras (final)</th><th>Alterado?</th></tr></thead><tbody>
@@ -9415,16 +9489,16 @@ function compQuadrosHtml(C, L, compacto){
     : `<div class="hint">${C.semPerfil ? '<b style="color:#943126">Não foi possível determinar a composição dos fornecedores</b> — as compras de ' + fmtR((C.rfx&&C.rfx.contra&&C.rfx.contra.compras_nid)||0) + ' entram como NÃO IDENTIFICADAS (zero de crédito no cenário-base).' : 'Compras informadas diretamente na aba Reforma (regime regular ' + fmtR((C.rfx&&C.rfx.contra&&C.rfx.contra.compras_lrlp)||0) + ' · Simples ' + fmtR((C.rfx&&C.rfx.contra&&C.rfx.contra.compras_simples)||0) + ').'}</div>`;
   const q2 = `<table class="${compacto?'pp-tab':''}" style="${st}"><thead><tr><th></th><th class="num">IBS</th><th class="num">CBS</th><th class="num">Total</th></tr></thead><tbody>
       <tr><td>Débito</td><td class="num">${fmt(L.deb*fI)}</td><td class="num">${fmt(L.deb*fC)}</td><td class="num">${fmt(L.deb)}</td></tr>
-      <tr><td>Crédito confirmado</td><td class="num">${fmt(credConf*fI)}</td><td class="num">${fmt(credConf*fC)}</td><td class="num">${fmt(credConf)}</td></tr>
-      <tr><td>Crédito estimado (presumido/regra específica)</td><td class="num">${fmt(credEst*fI)}</td><td class="num">${fmt(credEst*fC)}</td><td class="num">${fmt(credEst)}</td></tr>
-      <tr><td>Crédito NÃO confirmado (fora do cenário-base)</td><td class="num">${fmt(credNao*fI)}</td><td class="num">${fmt(credNao*fC)}</td><td class="num">${fmt(credNao)}</td></tr>
+      <tr><td>Crédito CONFIRMADO pelo usuário (limite inferior)</td><td class="num">${fmt(credConf*fI)}</td><td class="num">${fmt(credConf*fC)}</td><td class="num">${fmt(credConf)}</td></tr>
+      <tr><td>Crédito ESTIMADO — sugerido/alterado, não confirmado (entra no cenário-base como estimativa)</td><td class="num">${fmt(credEst*fI)}</td><td class="num">${fmt(credEst*fC)}</td><td class="num">${fmt(credEst)}</td></tr>
+      <tr><td>Crédito POTENCIAL — NÃO confirmado (fora do cenário-base, só no limite superior)</td><td class="num">${fmt(credNao*fI)}</td><td class="num">${fmt(credNao*fC)}</td><td class="num">${fmt(credNao)}</td></tr>
       <tr style="font-weight:700"><td>Líquido (cenário-base)</td><td class="num">${fmt(L.liquido*fI)}</td><td class="num">${fmt(L.liquido*fC)}</td><td class="num">${fmt(L.liquido)}</td></tr></tbody></table>
-      <div class="hint">IBS e CBS apurados separadamente e sem compensação entre si (LC 214/2025, arts. 47 e 48); rateio pelas alíquotas do ano. Crédito confirmado = regime regular e Simples com opção pelo regular (documento) + Simples dentro do Simples (art. 47, § 9º, II — montante devido no Simples, art. 58 da Res. CGSN 190/2026).</div>`;
+      <div class="hint">IBS e CBS apurados separadamente e sem compensação entre si (LC 214/2025, arts. 47 e 48); rateio pelas alíquotas do ano. Regime regular e Simples com opção pelo regular → crédito pelo documento; Simples dentro do Simples → montante devido no Simples (art. 47, § 9º, II; art. 58 da Res. CGSN 190/2026). Só é <b>confirmado</b> o que o usuário confirmou (fornecedor a fornecedor ou a composição inteira); o restante do cenário-base é <b>estimativa</b>.</div>`;
   const R = sens && sens.porAno ? sens.porAno.find(x=>x.ano===L.ano) : null;
   const q3 = R ? `<table class="${compacto?'pp-tab':''}" style="${st}"><thead><tr><th>Cenário</th><th class="num">Crédito</th><th class="num">Híbrido</th><th class="num">Fora do Simples</th><th>Vencedor</th></tr></thead><tbody>
-      <tr><td>Limite inferior — só créditos confirmados</td><td class="num">${fmt(R.inf.cred)}</td><td class="num">${fmt(R.inf.hib)}</td><td class="num">${fmt(R.inf.regular)}</td><td>${esc(R.inf.melhorNome)}</td></tr>
-      <tr style="font-weight:700"><td>Cenário-base — composição utilizada</td><td class="num">${fmt(R.base.cred)}</td><td class="num">${fmt(R.base.hib)}</td><td class="num">${fmt(R.base.regular)}</td><td>${esc(R.base.melhorNome)}</td></tr>
-      <tr><td>Limite superior — hipótese mais favorável (nunca definitivo)</td><td class="num">${fmt(R.sup.cred)}</td><td class="num">${fmt(R.sup.hib)}</td><td class="num">${fmt(R.sup.regular)}</td><td>${esc(R.sup.melhorNome)}</td></tr></tbody></table>
+      <tr><td>Limite inferior — crédito CONFIRMADO pelo usuário</td><td class="num">${fmt(R.inf.cred)}</td><td class="num">${fmt(R.inf.hib)}</td><td class="num">${fmt(R.inf.regular)}</td><td>${esc(R.inf.melhorNome)}</td></tr>
+      <tr style="font-weight:700"><td>Cenário-base — composição utilizada${comp && comp.status==='confirmada' ? ' (confirmada)' : ' (ESTIMATIVA — não confirmada)'}</td><td class="num">${fmt(R.base.cred)}</td><td class="num">${fmt(R.base.hib)}</td><td class="num">${fmt(R.base.regular)}</td><td>${esc(R.base.melhorNome)}</td></tr>
+      <tr><td>Limite superior — crédito POTENCIAL, hipótese mais favorável (nunca definitivo)</td><td class="num">${fmt(R.sup.cred)}</td><td class="num">${fmt(R.sup.hib)}</td><td class="num">${fmt(R.sup.regular)}</td><td>${esc(R.sup.melhorNome)}</td></tr></tbody></table>
       <div class="hint">Diferença superior − inferior no crédito: <b>${fmtR(R.variacao)}</b> · margem do vencedor (2º − 1º): <b>${isFinite(R.margem)?fmtR(R.margem):'cenário único'}</b> · pode inverter o vencedor? <b>${R.inverte || R.inf.melhorK!==R.sup.melhorK ? 'SIM' : 'NÃO'}</b></div>` : '';
   const confHtml = conf ? `<div style="margin:6px 0;padding:6px 10px;border-left:5px solid ${conf.cor}"><b style="color:${conf.cor}">${conf.icone} NÍVEL DE CONFIABILIDADE DA ANÁLISE: ${conf.nivel}</b>${conf.motivos.length?' — <span class="hint">'+conf.motivos.map(esc).join(' · ')+'</span>':''}${sens && sens.inversao ? '<div style="color:#943126"><b>⛔ ALERTA CRÍTICO — A COMPOSIÇÃO DOS FORNECEDORES PODE ALTERAR O REGIME TRIBUTÁRIO VENCEDOR</b> (' + sens.anosInversao.join(', ') + ').</div>' : ''}</div>` : '';
   return `<div class="hint" style="margin-top:8px"><b>Composição dos fornecedores — ${L.ano}</b></div>${q1}<div class="hint" style="margin-top:6px"><b>Créditos IBS/CBS — ${L.ano}</b></div>${q2}${q3?`<div class="hint" style="margin-top:6px"><b>Sensibilidade — ${L.ano}</b></div>${q3}`:''}${confHtml}`;
