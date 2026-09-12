@@ -4914,7 +4914,51 @@ console.log('\n■ Integridade da interface');
       chk('5ad · linhas agregadas (CNPJ vazio) preservam cada uma o próprio status ao reconstruir', c2.forn[0].status === 'sugerido' && c2.forn[1].status === 'confirmado'); }
     chk('5ad · tela: botão de confirmação por fornecedor, histórico completo, COMP-01 e rótulos CONFIRMADO/ESTIMADO/POTENCIAL', /compConfirmarForn\(\$\{i\},/.test(html) && /Histórico da composição — trilha de auditoria completa/.test(html) && /compCancelarEdicao\(\)/.test(html) && /Crédito CONFIRMADO pelo usuário \(limite inferior\)/.test(html) && /Crédito ESTIMADO — sugerido\/alterado, não confirmado/.test(html));
     chk('5ad · lacre 453f7b32 intocado (só sensibilidade e composição mudaram)', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5ad · v7.92.0 · badge e changelog', /APP_VERSAO = '7\.92\.0'/.test(html) && /<b>v7\.92\.0<\/b><\/td><td>12\/09\/2026/.test(html) && /P0-01/.test(html) && /COMP-01/.test(html));
+    chk('5ad · v7.92.0 · badge e changelog', /APP_VERSAO = '7\.92\.[0-9]+'/.test(html) && /<b>v7\.92\.0<\/b><\/td><td>12\/09\/2026/.test(html) && /P0-01/.test(html) && /COMP-01/.test(html));
+  }
+
+
+  // ═══ 5ae · v7.92.1 — editor por valores (reauditoria de 12/09): os 11 critérios de aceite ═══
+  {
+    const compParseVal = vm.runInContext('compParseVal', ctx), compAutoDe = vm.runInContext('compAutoDe', ctx);
+    chk('5ae · entrada monetária: 106.236,92 · 106236,92 · 106236.92 · R$ 106.236,92 → 106236,92; texto → inválido (não zero)', compParseVal('106.236,92') === 106236.92 && compParseVal('106236,92') === 106236.92 && compParseVal('106236.92') === 106236.92 && compParseVal('R$ 106.236,92') === 106236.92 && compParseVal('abc') === null && compParseVal('12,3,4') === null && compParseVal('') === 0);
+    const FORN = []; for (let i = 0; i < 58; i++) FORN.push({ cnpj:'R'+i, nome:'REG '+i, valor: i < 57 ? 1795.66 : 104148.18 - 57*1795.66, classe:'normal', docs:1, fonte:'t' });
+    for (let i = 0; i < 28; i++) FORN.push({ cnpj:'S'+i, nome:'SN '+i, valor: i < 27 ? 2700.49 : 72913.36 - 27*2700.49, classe:'simples', docs:1, fonte:'t' });
+    vm.runInContext(`RF = rfNovo('18181818000118', 2026); RF._fornRows = ${JSON.stringify(FORN)}; AN = anNovo('18181818000118', 2026); AN.cfg.iss=.03; AN.receitas.a3_semret=Array(12).fill(120000); AN.folha.salarios=Array(12).fill(30000); AN.compras.semst=[2279.70,0,0,0,0,0,0,0,0,0,0,0]; AN._res = calcular(AN); rfCalcular();`, ctx);
+    const C = () => vm.runInContext('RF.comp', ctx), g = () => C().final.g, r2 = v => Math.round(v*100)/100;
+    vm.runInContext("compEditar('val')", ctx);
+    chk('5ae · (1) abrir o editor não altera nenhum valor', r2(g().regular.v) === 104148.18 && r2(g().simples.v) === 72913.36 && r2(C().final.total) === 177061.54 && C().modo === 'val');
+    const el = { value:'' };
+    vm.runInContext("compSetVal('regular','106.236,92')", ctx);
+    chk('5ae · (2) digitar 106.236,92 mantém o valor e o TOTAL FIXO em 177.061,54 (antes virava 179.150,28)', r2(g().regular.v) === 106236.92 && r2(C().final.total) === 177061.54 && Math.abs(g().regular.pct - 0.6) < 1e-6);
+    chk('5ae · com o 2º campo ainda no automático a validação acusa a diferença sem apagar nada', !vm.runInContext('compFechaVal(RF.comp)', ctx) && /devem fechar em/.test(vm.runInContext('compErroTxt(RF.comp)', ctx)) && r2(g().simples.v) === 72913.36);
+    vm.runInContext("compAplicarEdicao()", ctx);
+    chk('5ae · aplicar com valores que não fecham é BLOQUEADO (editor continua aberto)', C().modo === 'val' && r2(g().regular.v) === 106236.92);
+    vm.runInContext("compSetVal('simples','70.824,62')", ctx);
+    chk('5ae · (3)(4) 70.824,62 fecha o total em 177.061,54 e os percentuais 60,0000 / 40,0000 saem em tempo real', vm.runInContext('compFechaVal(RF.comp)', ctx) && Math.abs(g().simples.pct - 0.4) < 1e-6 && Math.abs(g().regular.pct - 0.6) < 1e-6 && vm.runInContext('compErroTxt(RF.comp)', ctx) === '');
+    vm.runInContext("compSetVal('regular','abc', __el)", Object.assign(ctx, { __el: el }));
+    chk('5ae · entrada inválida mantém o valor anterior, reescreve o campo e avisa', r2(g().regular.v) === 106236.92 && el.value === '106.236,92' && /valor inválido/.test(vm.runInContext('compErroTxt(RF.comp)', ctx)));
+    vm.runInContext("compAplicarEdicao()", ctx);
+    chk('5ae · entrada inválida pendente também bloqueia o Aplicar', C().modo === 'val');
+    vm.runInContext("compSetVal('regular','106236.92', __el)", ctx);
+    chk('5ae · ao sair do campo o valor é normalizado para 106.236,92', el.value === '106.236,92' && C()._valInvalido === null);
+    vm.runInContext("compAplicarEdicao()", ctx);
+    { const c = C(), L = vm.runInContext('RF._res.linhas', ctx).find(l=>l.ano===2033), S = vm.runInContext('RF._res.sens.ref', ctx);
+      chk('5ae · (5) aplicar: crédito estimado 31.053,05 e confirmado 0,00', Math.abs(L.cred - 31053.05) < 0.02 && S.inf.cred === 0 && Math.abs(S.base.cred - 31053.05) < 0.02, (L.cred).toFixed(2));
+      chk('5ae · (6) os dois grupos alterados manualmente, sem confirmação', c.status === 'sugerida' && c.editada === true && Math.abs(c.auto.g.regular.v - c.final.g.regular.v) > 0.005 && c.forn.every(f => f.status !== 'confirmado') && c.modo === null && c._valInvalido == null);
+      chk('5ae · histórico: evento único consolidado por aplicação, com antes/depois e modo valores', c.trilha.filter(t => t.tipo === 'edicao-aplicada').length === 1 && c.trilha.some(t => t.tipo === 'edicao-aplicada' && t.antes && t.depois && /valores/.test(t.evento))); }
+    vm.runInContext("compEditar('val'); compSetVal('regular','1'); compCancelarEdicao()", ctx);
+    { const c = C(); chk('5ae · (7) cancelar não registra nem aplica', r2(c.final.g.regular.v) === 106236.92 && c.modo === null && c.trilha.filter(t => t.tipo === 'edicao-aplicada').length === 1); }
+    vm.runInContext("compRestaurar()", ctx);
+    { const c = C(), L = vm.runInContext('RF._res.linhas', ctx).find(l=>l.ano===2033);
+      chk('5ae · (8) restaurar recupera 58,8203/41,1797, 104.148,18/72.913,36 e crédito 30.511,44', Math.abs(c.final.g.regular.pct - 0.588203) < 0.00005 && r2(c.final.g.regular.v) === 104148.18 && r2(c.final.g.simples.v) === 72913.36 && Math.abs(L.cred - 30511.44) < 0.02);
+      chk('5ae · (9) histórico guarda edição e restauração; automático original intacto', c.trilha.some(t=>t.tipo==='edicao-aplicada') && c.trilha.some(t=>t.tipo==='restaurada') && r2(c.auto.g.regular.v) === 104148.18); }
+    vm.runInContext("compEditar('val'); compSetVal('regular','106.236,92'); compSetVal('simples','70.824,62'); compAplicarEdicao(); rfCalcular(); rfCalcular();", ctx);
+    chk('5ae · (10) recalcular preserva a edição por valores (60/40) e o automático', Math.abs(g().regular.pct - 0.6) < 1e-6 && Math.abs(C().auto.g.regular.pct - 0.588203) < 0.00005);
+    vm.runInContext("compRestaurar(); rfCalcular();", ctx);
+    chk('5ae · (10) depois de restaurar e recalcular, preserva o automático restaurado', Math.abs(g().regular.pct - 0.588203) < 0.00005 && C().editada === false);
+    chk('5ae · (11) tela: oninput + onchange normalizador no editor por valores, total marcado como fixo', /oninput="compSetVal\('\$\{k\}',this\.value\)" onchange="compSetVal\('\$\{k\}',this\.value,this\)"/.test(html) && /\(fixo\)/.test(html) && /LACRE_HASH = '453f7b32'/.test(html));
+    chk('5ae · v7.92.1 · badge e changelog', /APP_VERSAO = '7\.92\.1'/.test(html) && /<b>v7\.92\.1<\/b><\/td><td>12\/09\/2026/.test(html) && /total fixo/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
