@@ -5002,7 +5002,37 @@ console.log('\n■ Integridade da interface');
     chk('5af · P0 · trocar de empresa/exercício (rfTrocar) limpa o editor', !vm.runInContext('RF._compEditAntes', ctx) && (!C() || C().modo === null));
     chk('5af · P0 · estrutura: compLimparEditor chamado em restaurar, cancelar, aplicar e rfTrocar', (html.match(/compLimparEditor\(/g)||[]).length >= 5 && /function compLimparEditor/.test(html) && !/'edicao-grupo'/.test(html));
     chk('5af · restrições: automático, crédito e lacre intocados', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5af · v7.92.2 · badge e changelog', /APP_VERSAO = '7\.92\.2'/.test(html) && /<b>v7\.92\.2<\/b><\/td><td>13\/09\/2026/.test(html) && /compLimparEditor/.test(html) && /uma ação = um evento/.test(html));
+    chk('5af · v7.92.2 · badge e changelog', /APP_VERSAO = '7\.92\.[2-9]'/.test(html) && /<b>v7\.92\.2<\/b><\/td><td>13\/09\/2026/.test(html) && /compLimparEditor/.test(html) && /uma ação = um evento/.test(html));
+  }
+
+
+  // ═══ 5ag · v7.92.3 — parecer de 13/09: RBT12 direto (interno × exportação), memória e PDF ═══
+  {
+    const massa = (direto, lanc, dirExp) => { const AN = vm.runInContext('anNovo("21212121000121",2026)', ctx); AN.cfg.iss=.05; AN.cfg.rbt12Direto=direto; AN.cfg.rbt12ExpDireto=dirExp||0; AN.cfg.rbt12Lanc=lanc; AN.cfg.rbt12ExpLanc=Array(12).fill(10000); AN.cfg.folha12Lanc=Array(12).fill(86800); AN.receitas.a3_semret=Array(12).fill(33066.67); AN.receitas.a3_exp=Array(12).fill(2989.58); AN.folha.salarios=Array(12).fill(86800); return AN; };
+    const fr = AN => +(g.calcular(AN, clone(AD), {...FD}).fatorR*100).toFixed(4);
+    const z = () => Array(12).fill(0), m12 = () => Array(12).fill(300000.000833);
+    chk('5ag · massa do parecer (direto 3.720.000,01 com exportação + exportação 120.000 nos 12 meses) → 27,1250%: o motor soma o que está em cada campo', fr(massa(3720000.01, z())) === 27.125);
+    chk('5ag · preenchimento correto (direto 3.600.000,01 interno + exportação 120.000) → 28,0000%', fr(massa(3600000.01, z())) === 28);
+    chk('5ag · direto em branco, 12 meses internos 3.600.000,01 + exportação 120.000 → 28,0000%', fr(massa(0, m12())) === 28);
+    chk('5ag · direto E 12 meses preenchidos: o direto prevalece (regra da tela)', fr(massa(3720000.01, m12())) === 27.125);
+    chk('5ag · campo novo: RBT12 direto de exportação prevalece sobre a coluna de exportação (3.600.000,01 + 120.000 direto → 28%)', (() => { const AN = massa(3600000.01, z(), 120000); AN.cfg.rbt12ExpLanc = Array(12).fill(50000); return fr(AN) === 28; })());
+    chk('5ag · anNovo tem rbt12ExpDireto e a Configuração grava o campo cf-rbtde', vm.runInContext('anNovo("1",2026).cfg.rbt12ExpDireto', ctx) === 0 && /rbt12ExpDireto: vNum\('cf-rbtde'/.test(html) && /id="cf-rbtde"/.test(html));
+    { const f = vm.runInContext('rbt12Formacao', ctx)({ rbt12Direto:3720000.01, rbt12Lanc:m12(), rbt12ExpLanc:Array(12).fill(10000) });
+      chk('5ag · rbt12Formacao: interno = direto, exportação = lançada, total 3.840.000,01, dupla entrada sinalizada', Math.abs(f.interno-3720000.01)<0.005 && Math.abs(f.exp-120000)<0.005 && Math.abs(f.total-3840000.01)<0.005 && f.duplo === true && f.duploExp === false && f.origemInt === 'direto'); }
+    { vm.runInContext(`AN = anNovo('21212121000121', 2026); AN.cfg.rbt12Direto = 3720000.01; AN.cfg.rbt12Lanc = ${JSON.stringify(m12())}; AN.cfg.rbt12ExpLanc = ${JSON.stringify(Array(12).fill(10000))}; AN.cfg.folha12Lanc = ${JSON.stringify(Array(12).fill(86800))}; AN.receitas.a3_semret = ${JSON.stringify(Array(12).fill(33066.67))}; AN.receitas.a3_exp = ${JSON.stringify(Array(12).fill(2989.58))}; AN.folha.salarios = ${JSON.stringify(Array(12).fill(86800))}; AN._res = calcular(AN);`, ctx);
+      const ver = vm.runInContext('anVerificar()', ctx);
+      chk('5ag · Verificar acusa a dupla entrada do RBT12 interno (observe) dizendo que o direto prevalece', ver.some(x => x.nivel === 'observe' && /RBT12 interno informado duas vezes/.test(x.texto) && /direto prevalece/.test(x.texto)));
+      const jan = vm.runInContext('rlConfJanelas(AN)', ctx);
+      chk('5ag · memória (formação das janelas) diz que o direto prevaleceu e mostra o denominador interno + exportação = total', /direto \(mercado interno\) informado: R\$ 3\.720\.000,01 — prevalece/.test(jan) && /dupla entrada/.test(jan) && /Denominador do Fator R = R\$ 3\.720\.000,01 \+ R\$ 120\.000,00 = R\$ 3\.840\.000,01/.test(jan));
+      const cfgHtml = vm.runInContext('cfgRbt12Aviso(AN.cfg)', ctx);
+      chk('5ag · Configuração mostra o aviso ⚠️ e a linha do denominador', /⚠️/.test(cfgHtml) && /o direto prevalece/.test(cfgHtml) && /= <b>R\$ 3\.840\.000,01<\/b>/.test(cfgHtml));
+      vm.runInContext("RL.dados = JSON.parse(JSON.stringify(AN)); RL.res = AN._res; document.getElementById('rl-conf-modo').value = 'mes'; document.getElementById('rl-conf-mes').value = '0';", ctx);
+      let mem = ''; try { mem = vm.runInContext('rlConferencia()', ctx); } catch(e){ mem = 'ERR:' + e.message; }
+      chk('5ag · memória de janeiro: RBT12 "direto informado" e Fator R com FS12 e RBT12r = interno + exportação', !/^ERR/.test(mem) && /RBT12 direto informado \(mercado interno\) — prevalece/.test(mem) && /RBT12r conjunta = interno R\$ 3\.720\.000,01 \+ exportação R\$ 120\.000,00 = R\$ 3\.840\.000,01/.test(mem) && /Total 12 meses/.test(mem), mem.slice(0,80)); }
+    chk('5ag · PDF: rótulo da memória quebra linha e as grades do bloco 0 saem em dois semestres', /table\.cf-mem td\.rot \{ white-space: normal/.test(html) && /Total 12 meses/.test(html) && /meio\(0,6,false\)\}\$\{meio\(6,12,true\)/.test(html));
+    chk('5ag · importar PGDAS-D zera também o direto de exportação', (html.match(/AN\.cfg\.rbt12Direto = 0; AN\.cfg\.rbt12ExpDireto = 0;/g)||[]).length >= 2);
+    chk('5ag · lacre 453f7b32 intocado (casos do lacre não têm rbt12ExpDireto)', /LACRE_HASH = '453f7b32'/.test(html));
+    chk('5ag · v7.92.3 · badge e changelog', /APP_VERSAO = '7\.92\.3'/.test(html) && /<b>v7\.92\.3<\/b><\/td><td>13\/09\/2026/.test(html) && /RBT12 direto — exportação/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
