@@ -5174,7 +5174,15 @@ console.log('\n■ Integridade da interface');
       const e3 = abrir('apresentacao_s'); const t3 = corpo();
       chk('5aj · apresentação simplificada: situação do Simples (transição) e nenhuma "folga" negativa', e3 === null && /permanece no regime até 31\/12\/2026/.test(t3) && !/folga de R\$ -/.test(t3) && !/-792\.8/.test(t3), e3 || ''); }
     chk('5aj · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5aj · v7.93.1 · badge e changelog', /APP_VERSAO = '7\.93\.1'/.test(html) && /<b>v7\.93\.1<\/b><\/td><td>13\/09\/2026/.test(html) && /snSituacaoQuadro/.test(html));
+    chk('5aj · v7.93.1 · badge e changelog', /APP_VERSAO = '7\.93\.[1-9]'/.test(html) && /<b>v7\.93\.1<\/b><\/td><td>13\/09\/2026/.test(html) && /snSituacaoQuadro/.test(html));
+  }
+
+
+  // ═══ 5ak · v7.93.2 — ressalva residual do reteste final: nota de centavos sob o "Resultado mês a mês" ═══
+  {
+    chk('5ak · a tabela mensal da Análise Atual recebe a mesma frase de totais dos relatórios', /\$id\('an-detalhe'\)\.innerHTML = h \+ notaTotais\(\);/.test(html) && (html.match(/notaTotais\(\)/g)||[]).length >= 3);
+    chk('5ak · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
+    chk('5ak · v7.93.2 · badge e changelog', /APP_VERSAO = '7\.93\.2'/.test(html) && /<b>v7\.93\.2<\/b><\/td><td>13\/09\/2026/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
