@@ -787,6 +787,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.92.2</b></td><td>13/09/2026</td><td><b>🛠️ Auditoria F01–F14 sobre a v7.92.1 — estado residual do editor (P0) e histórico multiplicado (P1).</b> <b>(P0)</b> O modo do editor, o sinalizador de valor inválido e o rascunho ficavam misturados no objeto da composição que é gravado com a análise: uma análise salva (ou autosalva) com o editor por valores aberto voltava do banco em modo edição e a mensagem "os valores devem fechar em R$ …" aparecia por cima da composição já restaurada. Correção: função única <code>compLimparEditor</code> (modo, erro de tela e retrato de antes da edição) chamada em Restaurar, Cancelar, Aplicar, troca de empresa/exercício e recarga da composição; o rascunho só sobrevive a um recálculo enquanto a edição está ativa na sessão; e <b>o rascunho nunca vai ao banco</b> — o que se grava é a composição vigente (a de antes de abrir o editor), sem modo nem mensagem, e o rascunho também não conta como pendência de gravação. Verificação e validação leem sempre a composição final vigente; a divergência real (COMP-01) continua bloqueante e nada é mascarado ajustando o último grupo. <b>(P1)</b> Uma aplicação de edição gerava um evento consolidado mais um por grupo alterado (3 registros para 60/40). Agora <b>uma ação = um evento</b>: o detalhe por grupo (automático × editado, em p.p.) vai dentro do evento "edição aplicada", ao lado de empresa, exercício, usuário, data/hora, motivo, origem, versão do motor e composição completa antes/depois. Edição recusada e Cancelar continuam sem evento. Fórmula do crédito, automático (104.148,18 / 72.913,36 / 177.061,54) e lacre 453f7b32 intocados. Suíte: bloco 5af com os dois testes de regressão do relatório.</td></tr>
                     <tr><td><b>v7.92.1</b></td><td>12/09/2026</td><td><b>🛠️ Editor da composição por valores — relatório de reauditoria de 12/09.</b> O roteiro do relatório (106.236,92 / 70.824,62 nos formatos 106.236,92 · 106236,92 · 106236.92) foi reproduzido em DOM real na v7.92.0 e <b>não apresentou a falha descrita</b> (campo mantido ao sair, 60/40, crédito 31.053,05, status alterado manualmente, evento único). Três melhorias reais do ciclo, alinhadas à orientação técnica: <b>(1) total fixo</b> — antes cada valor digitado redefinia o total como a soma dos grupos, o percentual intermediário saía contra um total ainda aberto (59,3% após o 1º campo) e a validação nunca falhava; agora o total é a soma dos fornecedores (P0-01), percentual = valor ÷ total, e os valores precisam <b>fechar no total</b> (tolerância R$ 0,01) para aplicar, com mensagem que mostra a diferença sem apagar o digitado; <b>(2) entrada validada</b> — texto não numérico mantinha <code>num()=0</code> e zerava o grupo em silêncio; agora mantém o valor anterior e avisa no card; <b>(3) tempo real</b> — percentuais atualizam a cada tecla (<code>oninput</code>) e, ao sair do campo, o valor é reescrito no formato 106.236,92. Cancelar segue descartando tudo. Fórmula do crédito, automático e lacre 453f7b32 intocados. Suíte: bloco 5ae com os 11 critérios de aceite.</td></tr>
                     <tr><td><b>v7.92.0</b></td><td>12/09/2026</td><td><b>🛠️ Composição dos fornecedores — relatório de auditoria de 12/09 (v7.91.1), P0-01, P0-02, P1-01 e P1-02.</b> <b>(P0-01) Denominador dos percentuais:</b> o total da composição vinha das compras de <i>mercadoria</i> da análise (na Artecon, R$ 2.279,70) enquanto os fornecedores consultados somavam R$ 177.061,54 (serviços tomados incluídos) — os percentuais saíam em 4.568% / 3.198% e a própria validação de 100% acusava erro. A <b>soma monetária dos fornecedores passa a ser a fonte de verdade</b>: total = máximo entre as compras da análise e essa soma; percentual = valor do grupo ÷ total; o excedente da análise não coberto pela consulta segue como não identificado. A edição por percentuais e por valores usa o mesmo total (60/40 → 106.236,92 / 70.824,62). O crédito monetário (104.148,18 × 27,91% + 72.913,36 × 1,98% = 30.511,44) já estava correto e não muda. <b>(P0-02) Limite inferior:</b> era rotulado "só confirmados" mas contava consulta da Receita e digitação como confirmadas. Agora só entra o que o usuário <b>confirmou</b> — a composição inteira (SIM) ou <b>fornecedor a fornecedor</b> (botão ✓ confirmar em cada linha da tabela); sugerido e alterado manualmente NÃO contam, e editar ou reclassificar retira a confirmação. Com tudo apenas sugerido o limite inferior é R$ 0,00 e o cenário-base fica rotulado <b>ESTIMADO</b>; conferência e parecer mostram crédito CONFIRMADO × ESTIMADO × POTENCIAL. Efeito prático: até confirmar a composição o teste de inversão tende a disparar e o parecer sai como "melhor resultado dentro das premissas informadas — não conclusivo"; a confirmação vira etapa do fluxo. <b>(P1-01) Restauração</b> devolve exatamente o automático (valores, percentuais, origem, confiança e status das linhas); <b>Cancelar</b> a edição descarta o que foi digitado (antes ficava aplicado). <b>(P1-02) Histórico:</b> evento único na trilha com empresa, exercício, usuário, data/hora, tipo, valores e percentuais antes/depois, motivo, origem e versão do motor, para edição, confirmação, confirmação por fornecedor, reclassificação, recálculo automático e restauração; a trilha aparece completa (não mais só os 8 últimos) e o automático anterior nunca é apagado — vai para "automáticos anteriores preservados". <b>Bloqueio:</b> composição ≠ 100% vira erro crítico <b>COMP-01</b> e impede parecer e apresentações (junto de SUB-01/MEM-01), sem travar o salvamento. Incidental: linhas agregadas (CNPJ vazio) casavam todas com a primeira ao reconstruir a tabela. Lacre 453f7b32 intocado (só sensibilidade e composição mudam). Suíte: bloco 5ad.</td></tr>
                     <tr><td><b>v7.91.1</b></td><td>11/09/2026</td><td><b>🛠️ Edição da composição era desfeita — dois defeitos da v7.91.0 corrigidos (achado dele ao editar 50/30/10/10/0/0).</b> (1) Sem consulta de fornecedores gravada, o "automático" era reconstruído a cada recálculo a partir das contrapartes — que a própria edição acabara de gravar. Resultado: "Simples com opção pelo regular" voltava para regime regular, "sem crédito" caía em "não identificado" e a composição voltava a "sugerida". Sem consultas, a composição existente passa a ser <b>preservada</b>; o automático só se reconstrói pelas consultas (e, sem edição nem confirmação, acompanha o total de compras da análise por reescala proporcional). (2) Cada campo redesenhava o card inteiro ao perder o foco; se o clique em "Aplicar edição" caía nesse instante, o botão era trocado e o clique se perdia. Durante a edição só os números calculados (valores, total, mensagem de 100%) são atualizados, em tempo real (<code>oninput</code>); o card só é redesenhado ao aplicar. Suíte: teste que reproduz a edição 50/30/10/10 com recálculo no meio.</td></tr>
@@ -5720,7 +5721,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.92.1';
+const APP_VERSAO = '7.92.2';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -6395,7 +6396,8 @@ function compAutoDe(rows, total, contraInformado){
 function compMontar(RF, T){
   const total = +(T && T.comprasRevenda) || 0;
   const { comp: auto, forn } = compAutoDe(RF._fornRows, total, RF.contra);
-  const prev = RF.comp && typeof RF.comp === 'object' ? RF.comp : null; if (prev) delete prev._valInvalido;
+  const prev = RF.comp && typeof RF.comp === 'object' ? RF.comp : null;
+  if (prev && !RF._compEditAntes) { prev.modo = null; prev._valInvalido = null; }   // v7.92.2 · veio do banco ou a edição já terminou: sem estado residual
   // v7.91.1 · sem consultas de fornecedores o "automático" vinha das contrapartes — que a própria edição
   // acabava de gravar — e a composição era refeita a cada recálculo, desfazendo a edição. Sem consultas,
   // a composição existente é preservada; só o total de compras da análise é acompanhado.
@@ -6492,9 +6494,15 @@ function compConfianca(comp, sens, critico){
   return { nivel, cor: nivel==='ALTO'?'#1e8449':nivel==='MÉDIO'?'#b9770e':'#943126', icone: nivel==='ALTO'?'✅':nivel==='MÉDIO'?'⚠️':'⛔', motivos: pend, rotulo: nivel, naoConclusivo: nivel === 'BAIXO' };
 }
 // ── edição ──
-function compEditar(modo){ if (!RF || !RF.comp) return; RF._compEditAntes = compClonar(RF.comp.final); RF.comp.modo = modo; compRender(); }
+// ══ v7.92.2 (auditoria F01–F14, P0) · ESTADO DO EDITOR É DE TELA, NÃO DA ANÁLISE ══════════════════
+// modo/_valInvalido/_compEditAntes viviam misturados no comp gravado: uma análise salva com o
+// editor aberto voltava do banco em modo edição, com a validação monetária do rascunho ("os valores
+// devem fechar em…") por cima da composição já restaurada. Uma única função limpa tudo, e é chamada
+// em Restaurar, Cancelar, Aplicar, troca de empresa/exercício e recarga da composição.
+function compLimparEditor(c){ c = c || (RF && RF.comp); if (RF) RF._compEditAntes = null; if (c) { c.modo = null; c._valInvalido = null; } }
+function compEditar(modo){ if (!RF || !RF.comp) return; RF._compEditAntes = compClonar(RF.comp.final); RF.comp.modo = modo; RF.comp._valInvalido = null; compRender(); }
 // v7.92.0 · cancelar devolve o que havia antes de abrir a edição (antes ficavam os valores já digitados)
-function compCancelarEdicao(){ const c = RF && RF.comp; if (!c) return; c._valInvalido = null; if (RF._compEditAntes) { c.final = compClonar(RF._compEditAntes); RF._compEditAntes = null; } c.modo = null; rfCalcular(); }
+function compCancelarEdicao(){ const c = RF && RF.comp; if (!c) return; if (RF._compEditAntes) c.final = compClonar(RF._compEditAntes); compLimparEditor(c); rfCalcular(); }
 function compSetPct(k, v){ const c = RF.comp; if (!c) return; const p = Math.max(0, num(v))/100; c.final.g[k].pct = p; c.final.g[k].v = Math.round(p * c.final.total*100)/100; c.editada = true; compRefresh(); }
 // ══ v7.92.1 · EDITOR POR VALORES: TOTAL FIXO, ENTRADA VALIDADA, TEMPO REAL ═══════════════════
 // O total da composição é a soma dos fornecedores (P0-01) e não muda ao digitar: percentual =
@@ -6547,13 +6555,14 @@ function compAplicarEdicao(){
   c._valInvalido = null;
   const motivo = ($id('comp-motivo') && $id('comp-motivo').value || '').trim();
   const antes = compSnap(RF._compEditAntes || c.auto), depois = compSnap(c.final);
-  for (const [k] of COMP_GRUPOS){ const a = c.auto.g[k], f = c.final.g[k];
-    if (Math.abs(a.pct - f.pct) > 0.00005 || Math.abs(a.v - f.v) > 0.005)
-      compEvento(c, 'edicao-grupo', { grupo:k, pctAuto:a.pct, pctEditado:f.pct, vAuto:a.v, vEditado:f.v, motivo, modo:c.modo }); }
-  compEvento(c, 'edicao-aplicada', { evento:'edição aplicada (' + (c.modo==='pct'?'percentuais':'valores') + ')' + (motivo?' · motivo: '+motivo:''), motivo, antes, depois });
+  // v7.92.2 (auditoria F01–F14, P1) · UMA ação = UM evento: o detalhe por grupo (automático × editado) vai
+  // dentro do evento consolidado, não como registros separados na lista principal
+  const grupos = []; for (const [k] of COMP_GRUPOS){ const a = c.auto.g[k], f = c.final.g[k];
+    if (Math.abs(a.pct - f.pct) > 0.00005 || Math.abs(a.v - f.v) > 0.005) grupos.push({ grupo:k, pctAuto:a.pct, pctEditado:f.pct, vAuto:a.v, vEditado:f.v }); }
+  compEvento(c, 'edicao-aplicada', { evento:'edição aplicada (' + (c.modo==='pct'?'percentuais':'valores') + ')' + (motivo?' · motivo: '+motivo:''), motivo, modo:c.modo, antes, depois, grupos });
   // v7.92.0 (P0-02) · edição = alteração manual, NÃO confirmação: a composição e as linhas perdem a confirmação
   c.forn.forEach(f => { if (f.status === 'confirmado') { f.status = f.grupo === f.grupoAuto ? 'sugerido' : 'alterado manualmente'; f.confirmadoEm = null; f.confirmadoPor = null; } });
-  RF._compEditAntes = null; c.modo = null; c.status = 'sugerida'; c.confirmadoEm = null; c.confirmadoPor = null; if (c.origem === 'sem-dados') c.origem = 'usuario';   // v7.91.1 · editada = informada pelo usuário
+  compLimparEditor(c); c.status = 'sugerida'; c.confirmadoEm = null; c.confirmadoPor = null; if (c.origem === 'sem-dados') c.origem = 'usuario';   // v7.91.1 · editada = informada pelo usuário
   rfCalcular();
 }
 function compConfirmar(sim){
@@ -6572,7 +6581,7 @@ function compRestaurar(){
   const antes = compSnap(c.final);
   // v7.92.0 (P1-01) · restaura EXATAMENTE o automático: valores, percentuais, origem, confiança e status;
   // a restauração é um evento novo — nunca elimina a trilha anterior
-  c.final = compClonar(c.auto); c.editada = false; c.status = 'sugerida'; c.confirmadoEm = null; c.confirmadoPor = null; c.modo = null; RF._compEditAntes = null;
+  c.final = compClonar(c.auto); c.editada = false; c.status = 'sugerida'; c.confirmadoEm = null; c.confirmadoPor = null; compLimparEditor(c);
   if (c.origemAuto) c.origem = c.origemAuto;
   c.forn.forEach(f => { f.grupo = f.grupoAuto; f.status = 'sugerido'; f.confirmadoEm = null; f.confirmadoPor = null; f.confianca = f.grupoAuto === 'nid' ? 'baixa' : 'alta'; });
   compEvento(c, 'restaurada', { evento:'RESTAURADA a classificação automática' + (antes ? ' (havia edição manual — trilha preservada)' : ''), antes, depois: compSnap(c.final) }); rfCalcular();
@@ -6605,7 +6614,7 @@ function compRender(){
   // v7.92.0 (P1-02) · histórico COMPLETO e consultável (todos os eventos, antes → depois, versão do motor)
   const COMP_CURTO = { regular:'regular', simples:'Simples dentro', simplesRegular:'Simples opção regular', semCredito:'sem crédito', presumido:'presumido', nid:'não identificado' };
   const snapTxt = s => s ? COMP_GRUPOS.filter(([k])=>s.g[k] && (s.g[k].v>0.005||s.g[k].pct>0.00005)).map(([k])=>`${COMP_CURTO[k]} ${pcs(s.g[k].pct)} (${fmt(s.g[k].v)})`).join(' / ') + ` · total ${fmtR(s.total)}` : '';
-  const trilha = (c.trilha||[]).slice().reverse().map(t => `<li>${new Date(t.quando).toLocaleString('pt-BR')} · ${esc(t.usuario||'—')}${t.versao?' · v'+esc(t.versao):''} · ${t.evento ? esc(t.evento) : `${COMP_ROT[t.grupo]||esc(t.fornecedor||'')}: automático ${t.pctAuto!=null?pcs(t.pctAuto):esc(t.de||'')} → editado ${t.pctEditado!=null?pcs(t.pctEditado):esc(t.para||'')}${t.pctAuto!=null?' ('+((t.pctEditado-t.pctAuto)*100).toFixed(2).replace('.',',')+' p.p.)':''}${t.motivo?' · motivo: '+esc(t.motivo):''}`}${t.antes&&t.depois?`<div class="hint">antes: ${esc(snapTxt(t.antes))}<br>depois: ${esc(snapTxt(t.depois))}</div>`:''}</li>`).join('');
+  const trilha = (c.trilha||[]).slice().reverse().map(t => `<li>${new Date(t.quando).toLocaleString('pt-BR')} · ${esc(t.usuario||'—')}${t.versao?' · v'+esc(t.versao):''} · ${t.evento ? esc(t.evento) : `${COMP_ROT[t.grupo]||esc(t.fornecedor||'')}: automático ${t.pctAuto!=null?pcs(t.pctAuto):esc(t.de||'')} → editado ${t.pctEditado!=null?pcs(t.pctEditado):esc(t.para||'')}${t.pctAuto!=null?' ('+((t.pctEditado-t.pctAuto)*100).toFixed(2).replace('.',',')+' p.p.)':''}${t.motivo?' · motivo: '+esc(t.motivo):''}`}${t.antes&&t.depois?`<div class="hint">antes: ${esc(snapTxt(t.antes))}<br>depois: ${esc(snapTxt(t.depois))}</div>`:''}${Array.isArray(t.grupos)&&t.grupos.length?`<div class="hint">${t.grupos.map(x=>`${COMP_ROT[x.grupo]||x.grupo}: ${pcs(x.pctAuto)} → ${pcs(x.pctEditado)} (${((x.pctEditado-x.pctAuto)*100).toFixed(2).replace('.',',')} p.p.)`).join(' · ')}</div>`:''}</li>`).join('');
   const autoAnt = (c.autoAnteriores||[]).length ? `<details style="margin-top:6px"><summary class="hint">Automáticos anteriores preservados (${c.autoAnteriores.length})</summary><ul class="hint">${c.autoAnteriores.slice().reverse().map(a=>`<li>${new Date(a.geradoEm).toLocaleString('pt-BR')} · v${esc(a.versao||'')} · ${esc(a.status||'')} · automático: ${esc(snapTxt(compSnap(a.auto)))}${a.final?'<br>final: '+esc(snapTxt(compSnap(a.final))):''}</li>`).join('')}</ul></details>` : '';
   const sensHtml = sens ? `<div style="margin-top:10px"><b>Sensibilidade dos créditos — ${sens.anoRef}</b>
     <table><thead><tr><th>Cenário</th><th class="num">Crédito IBS/CBS</th><th class="num">Híbrido</th><th class="num">Fora do Simples</th><th>Vencedor</th></tr></thead><tbody>
@@ -7281,8 +7290,11 @@ function lacreRender(){
 //  (2) salvar a análise, ou importar qualquer coisa (grava sozinho desde a v7.5.7), regravava o
 //      bloco ANTIGO por cima do que a aba já tinha salvado.
 let RF_MARCO = '';   // retrato do bloco de Reforma como está GRAVADO no banco
-function rfLimpo(rf){ return { ...rf, _res:undefined, _forn:undefined, _vend:undefined,
-  _benefFonte:undefined, _benefDet:undefined, _benefOpcoes:undefined, _fornRows:undefined, _compUi:undefined, _compEditAntes:undefined }; }   // v7.91.0 · linhas de fornecedores e estado de tela não vão ao banco
+function rfLimpo(rf){ const out = { ...rf, _res:undefined, _forn:undefined, _vend:undefined,
+  _benefFonte:undefined, _benefDet:undefined, _benefOpcoes:undefined, _fornRows:undefined, _compUi:undefined, _compEditAntes:undefined };
+  // v7.92.2 · o rascunho do editor nunca vai ao banco: grava a composição vigente (a de antes de abrir o editor) e sem modo/erro de tela
+  if (out.comp && typeof out.comp === 'object') { out.comp = { ...out.comp, modo:null, _valInvalido:undefined }; if (rf._compEditAntes && out.comp.modo === null && rf.comp && rf.comp.modo) out.comp.final = compClonar(rf._compEditAntes); }
+  return out; }   // v7.91.0 · linhas de fornecedores e estado de tela não vão ao banco
 function rfMarco(rf){ try { return JSON.stringify(rfLimpo(rf)); } catch(e){ return ''; } }
 function rfPendente(){ return !!RF && !!RF.cnpj && rfMarco(RF) !== RF_MARCO; }
 
@@ -7378,6 +7390,7 @@ function rfCalcular() {
 async function rfTrocar() {
   const cnpj = $id('rf-empresa').value, ano = +$id('rf-ano').value;
   empGlobalSet(cnpj, ano);
+  if (RF) compLimparEditor(RF.comp);   // v7.92.2 · trocar empresa/exercício descarta o rascunho do editor
   if (!cnpj) { RF = rfNovo('', ano); rfRenderBenef(); rfCalcular(); return; }
   // carrega análise (regime atual) da empresa para servir de base
   try {
