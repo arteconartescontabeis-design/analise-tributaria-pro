@@ -794,6 +794,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.93.1</b></td><td>13/09/2026</td><td><b>🧩 Reteste dos relatórios (13/09) — totais uniformes e redação das apresentações.</b> Motor e lacre <code>453f7b32</code> intocados. <b>(1) Conciliação do Simples estava errada</b> — a nota da v7.93.0 somava as linhas do detalhamento (DAS + trava) e comparava com o custo total do Simples (que inclui CPP fora do DAS e retenções): naturezas diferentes, não centavos. A nota de dois valores foi eliminada. <b>(2) Totais iguais em todos os relatórios</b> — a raiz era a v7.42.1: Comparativo, Consolidado e Registros somavam os meses <i>já arredondados</i> (<code>totExib</code>/<code>agrupar</code>), enquanto cartões, parecer, Reforma e lacre usam o motor; daí Simples 1.031.702,82 × ,81 e DAS ,94 × ,95. Como os cenários da Reforma estão sob o lacre e só conhecem o motor, a regra foi INVERTIDA: <b>o total do motor (precisão integral) é o valor principal em todo lugar</b> — <code>totExib</code> devolve <code>res.totais</code>, <code>agrupar</code> soma sem arredondar, e uma frase única (<code>notaTotais</code>) explica que a soma manual das parcelas exibidas pode diferir em centavos. Conferido com massa de centavos quebrados nos oito relatórios: um valor só por grandeza. <b>(3) Apresentações</b> — os dois textos "nenhuma compra informada na aba Reforma" (simplificada e completa) passam por <code>credComprasSituacao</code>, a mesma frase do parecer. <b>(4) Alerta truncado</b> — <code>apFrases</code> lia o ponto de milhar de "R$ 5.317.240,01" como fim de frase e imprimia "240,01 — acima de 90%…"; agora só quebra em ponto seguido de espaço. <b>(5) "Folga de R$ -792.820,00"</b> — acima do teto não há folga negativa: "receita interna superior ao teto do Simples em R$ 792.820,00" (premissas da completa e resumo da simplificada). <b>(6) Situação no Simples num quadro só</b> — <code>snSituacaoQuadro</code>: RBAA × teto, sublimite e impedimento de ICMS/ISS, receita interna do ano, excesso e efeito (permanência/exclusão) numa linha do parecer e nas premissas da apresentação completa. Suíte: bloco 5aj.</td></tr>
                     <tr><td><b>v7.93.0</b></td><td>13/09/2026</td><td><b>🧩 Pacote de consistência entre relatórios — relatório de divergências de 13/09 (7 + 8 achados, F01–F14 preservados).</b> Nenhuma alteração no motor; lacre <code>453f7b32</code> intocado. <b>(1) IBS × CBS nos quadros de créditos</b> — a linha anual nunca carregou <code>q</code>; com total 0 a CBS ficava zero e todo o débito/crédito/líquido caía na coluna IBS (2026: 55.928,20 no IBS; 2027: 464.330,81 no IBS). Agora o quadro lê as alíquotas do ano como o quadro de abertura: 2027 = CBS 459.289,22 + IBS 5.041,59 (rateio exato; o auditor arredondou para 459.289,21 + 5.041,59/60). <b>(2) "Sem compras" ≠ "compras não classificadas"</b> — <code>credComprasSituacao()</code> é a única fonte da frase para parecer, conferência, premissas, payload da IA e apresentações: "Foram informadas compras de R$ X, porém 100% permanece sem identificação do regime tributário dos fornecedores…". <b>(3) Situação no Simples</b> — <code>snSituacaoTexto()</code> deriva de <code>snElegibilidade</code> (excesso ≤ 20%: permanece até 31/12 e fica impedida no exercício seguinte, art. 3º, § 9º-A; &gt; 20%: exclusão no mês seguinte, § 9º; já acima desde o início: não elegível no ano). A variante do parecer deixou de olhar só o rbtMax; parecer, apresentações e cartão usam a mesma conclusão. <b>(4) Fator R na fronteira</b> — <code>frFronteira()</code>: a menos de 0,0001 p.p. de 28% o índice sai com 8 casas e a decisão explícita ("27,99999992% — abaixo da fronteira — Anexo V") no cartão da Análise, no Verificar, no parecer e nas apresentações; a média nunca generaliza o anexo: o texto nomeia os meses no Anexo V e os meses no Anexo III. <b>(5) Verificar consolidado</b> — <code>anConfigFaltas()</code> saiu do painel de Configuração e o botão Verificar passa a incorporar: faltas de configuração (13º, ISS, RBAA, RBT12 presumido) como <i>distorce o resultado</i>; dados atípicos, Fator R na fronteira, compras não classificadas/confiança BAIXA (parecer não conclusivo) e diferença tela × gravada como <i>observações</i>. Sem bloqueio de emissão (decisão de 13/09). <b>(6) 13º</b> — marcador de confirmação expressa "não houve pagamento de 13º no período" (<code>cfg.sem13Pago</code>) silencia a falta e fica registrado na memória. <b>(7) Falso "alterações não salvas"</b> — o comparador tela × gravada comparava o JSON cru do banco com a análise hidratada (com campos-padrão acrescentados) e acusava cfg, receitas, folha, compras, despesas e reforma sem nenhuma edição; agora compara as duas NORMALIZADAS (<code>anChaveCanonica</code>), com centavos arredondados e chaves vazias ignoradas. <b>(8) Centavos</b> — o total do motor (precisão integral) segue como valor principal em todos os relatórios; quando a soma dos meses/linhas exibidos difere, aparece a nota de conciliação com os dois valores e a diferença (<code>notaConciliacao</code>) sob os TOTAIS do Comparativo e do detalhamento tributo a tributo. <b>(9) "Margem do vencedor: R$ ∞"</b> — era o marcador interno de cenário único (Simples indisponível: só "Fora do Simples" concorre); painel, quadro de sensibilidade e payload dizem "não aplicável — cenário único" com o motivo. Suíte: bloco 5ai.</td></tr>
                     <tr><td><b>v7.92.4</b></td><td>13/09/2026</td><td><b>🛠️ Relatório de validação final da v7.92.3 — RBT12 direto que "reaparecia" após importar a planilha.</b> O auditor não apagou nada: o valor R$ 3.720.000,01 digitado no <b>RBT12 direto — mercado interno</b> na massa original ficou gravado na análise e a <b>importação do modelo (planilha)</b> preenchia os 12 meses sem zerar o campo direto — o direto prevalecia e o Fator R voltava a 27,1256%. O PGDAS-D e o Demonstrativo já zeravam os dois diretos ao trazer os 12 meses; a planilha não. Agora <b>anModeloAplicarLinhas</b> (extraída de anModeloImportar para ser testável) zera <code>rbt12Direto</code> e <code>rbt12ExpDireto</code> sempre que a planilha traz <code>cfg.rbt12Lanc</code> ou <code>cfg.rbt12ExpLanc</code> com algum mês informado, e o toast diz o que foi zerado. Planilha sem os 12 meses não mexe nos diretos. Sem bloqueio, sem escolha de fonte e sem evento de histórico (decisão de 13/09: o aviso da v7.92.3 permanece). A diferença de R$ 780,00 na base anual apontada no mesmo relatório é da massa de teste (base manual 5.917.475,00 × 12 meses 5.916.695,00 = 12 × 65,00), não do app. <b>Achado da suíte:</b> com a massa do auditor (RBT12r 3.720.000,01) o Fator R é 1.041.600 ÷ 3.720.000,01 = <b>27,99999992%</b> — abaixo de 28% pelo centavo — e o enquadramento correto é o <b>Anexo V</b>; a tela mostra 28,0000% arredondado, mas enquadra pelo valor sem arredondar e a memória imprime as 8 casas. Para o teste "28% exatos → Anexo III" a massa precisa de RBT12r 3.720.000,00 (ou folha 1.041.600,01). Motor e lacre <code>453f7b32</code> intocados. Suíte: bloco 5ah.</td></tr>
                     <tr><td><b>v7.92.3</b></td><td>13/09/2026</td><td><b>🛠️ Parecer de 13/09 (massa "teste integral") — RBT12 direto, memória e PDF da conferência.</b> <b>Fator R 27,1250% × 28%:</b> não havia dupla contagem no motor. O campo "RBT12 direto" sempre foi o RBT12 do <i>mercado interno</i>, e a exportação dos 12 meses tem lançamento próprio; a massa pôs o total com exportação (3.720.000,01) no direto e lançou os 120.000,00 também na exportação, e o motor somou o que estava em cada campo (3.840.000,01). O que a tela e a memória não diziam, passam a dizer: rótulo <b>"RBT12 direto — mercado interno (prevalece sobre os 12 meses)"</b>; campo novo <b>"RBT12 direto — exportação"</b> (<code>cfg.rbt12ExpDireto</code>, prevalece sobre a coluna de exportação; não herda entre anos; zerado ao importar PGDAS-D como o interno); <b>aviso na Configuração e no Verificar</b> quando os 12 meses e o direto estão ambos preenchidos com valores diferentes (o direto prevalece); linha "Denominador do Fator R = interno + exportação = total" na Configuração; na memória, a formação das janelas diz qual valor prevaleceu (antes imprimia "12 de 12 meses · 3.600.000,01" enquanto o motor usava o direto), a linha do RBT12 de janeiro diz "direto informado" e a linha do Fator R mostra FS12 e RBT12r = interno + exportação com os valores. <b>PDF:</b> (1) o rótulo da memória herdava <code>white-space:nowrap</code> e, com largura fixa de 24%, atravessava a coluna da fórmula ("Exportação — RBT12 e faixa próprias", "↳ Exportação — Serviços com Fator R (Anexo III ou V)", "(−) ICMS destacado — Tema 69") — agora quebra linha; (2) as grades de 12 meses do bloco 0 (14 colunas) estouravam o A4 e a coluna Total saía cortada — passam a sair em <b>dois semestres</b>, com o total anual no segundo. Não é regressão: a memória "só de janeiro" é o modo <b>mês</b> (padrão desde a v7.11.0); fevereiro a dezembro saem no modo <b>completo</b>. Créditos zerados = massa sem consulta de fornecedores (regra "não identificado = zero no cenário-base"). Motor: só a leitura do RBT12 de exportação ganha o campo direto; lacre 453f7b32 intocado. Suíte: bloco 5ag (os 4 preenchimentos: 27,1250% / 28,0000% / 28,0000% / 27,1250%).</td></tr>
@@ -4505,10 +4506,13 @@ const somaExib = (arr, sel) => (arr||[]).reduce((s,x)=>s + r2(sel?sel(x):x), 0);
 // arredondados de cada mês, usada na conferência para fechar com a coluna impressa) e res.totais
 // (soma sem arredondar, usada no comparativo e no consolidado). Mesmo dado, números diferentes
 // em relatórios diferentes — medido: R$ 0,01 a R$ 0,05. Agora TODO relatório soma por aqui.
-const NOTA_SOMA = 'Os totais somam os valores <b>já arredondados</b> de cada mês, para fechar com as colunas exibidas.';
-function totExib(res){ const M=(res&&res.meses)||[]; return {
-  receita: somaExib(M,x=>x.receita), das: somaExib(M,x=>x.das),
-  simples: somaExib(M,x=>x.simples.total), lp: somaExib(M,x=>x.lp.total), lr: somaExib(M,x=>x.lr.total) }; }
+const NOTA_SOMA = 'Os totais são os do <b>motor</b> (precisão integral) — o mesmo valor em todos os relatórios; a soma manual das parcelas exibidas, cada uma arredondada, pode diferir em centavos.';
+// v7.93.1 · REGRA ÚNICA INVERTIDA: o valor principal é o TOTAL DO MOTOR (res.totais, precisão integral), em todo
+// relatório, cartão e apresentação. A soma dos meses já arredondados (v7.42.1) fechava com a coluna impressa, mas
+// produzia um segundo número (R$ 0,01–0,02) contra o parecer, a Reforma e o lacre — que só conhecem o motor. Os
+// cenários da Reforma estão sob o lacre e não podem ler outra soma; então é o resto que se alinha a eles.
+function totExib(res){ const T=(res&&res.totais)||{}; return {
+  receita: +T.receita||0, das: +T.das||0, simples: +T.simples||0, lp: +T.lp||0, lr: +T.lr||0 }; }
 const z12 = () => Array(12).fill(0);
 
 function anNovo(cnpj, ano) {
@@ -4673,6 +4677,22 @@ function snSituacaoTexto(EL, ano){
   }
   return 'A receita bruta está dentro do limite de ' + teto + ' do Simples Nacional em ' + a + '.';
 }
+// v7.93.1 · QUADRO CONSOLIDADO da situação no Simples — RBAA × teto, sublimite/impedimento de ICMS-ISS, receita interna
+// do ano, excesso e efeito, numa sequência só, para o parecer e a apresentação completa. Antes cada pedaço saía num
+// trecho diferente (reteste de 13/09, item 6).
+function snSituacaoQuadro(D){
+  if (!D) return [];
+  const cfg = (RL && RL.dados && RL.dados.cfg) || {}, ano = +(RL && RL.dados && RL.dados.ano) || (D.EL && D.EL.ano) || new Date().getFullYear();
+  const EL = D.EL || null, teto = (EL && EL.teto) || SN_TETO_CHEIO;
+  const rbaa = +cfg.rbaa || 0, sub = D.subVig || 3600000;
+  const interno = Math.max(0, (+D.T.receita||0) - (+D.T.receitaExp||0));
+  const L = [];
+  if (rbaa > 0) L.push('Receita bruta do ano anterior (RBAA) de ' + fmtR(rbaa) + ' — ' + (rbaa > teto ? 'acima' : 'dentro') + ' do teto de ' + fmtR(teto) + ' do Simples Nacional' + (rbaa > sub ? ', e acima do sublimite de ' + fmtR(sub) + ': ICMS e ISS ficam fora do DAS no ano (LC 123/2006, art. 20, § 1º)' : ', e dentro do sublimite de ' + fmtR(sub) + ' — ICMS e ISS dentro do DAS') + '.');
+  else L.push('Receita bruta do ano anterior (RBAA) não informada; sublimite de ' + fmtR(sub) + '.');
+  L.push('Receita interna ' + (D.proj ? 'projetada' : 'apurada') + ' de ' + ano + ': ' + fmtR(interno) + (EL && EL.excesso != null && EL.estado !== 'elegivel' ? ' — excesso de ' + (EL.excesso*100).toFixed(1).replace('.', ',') + '% sobre o limite anual de ' + fmtR(teto) : ' — dentro do limite anual de ' + fmtR(teto)) + '.');
+  if (D.snTexto) L.push(D.snTexto);
+  return L;
+}
 function snSituacaoCurta(EL, ano){
   if (!EL) return '';
   const a = +ano || (typeof AN !== 'undefined' && AN ? +AN.ano : '');
@@ -4682,6 +4702,12 @@ function snSituacaoCurta(EL, ano){
 }
 // (4) Totais: o motor soma os meses com precisão integral; a tabela mostra cada mês arredondado. Quando a
 //     soma dos meses exibidos difere do total do motor, a diferença é declarada — nunca escondida.
+// v7.93.1 · o relatório de 13/09 (reteste) mostrou que imprimir a "soma dos exibidos" ao lado do total do motor cria
+// um segundo número — e, no Simples, comparava o DAS com o custo total. Os totais passaram a ser uniformes (agrupar
+// soma com precisão integral); a nota vira uma frase única, sem segundo valor.
+function notaTotais(){
+  return '<div class="hint" style="margin-top:4px">Totais com a precisão integral do motor — o mesmo valor em cartões, tabelas, parecer e apresentações. A soma manual das parcelas exibidas (cada uma arredondada a centavos) pode diferir em R$ 0,01 ou R$ 0,02; é arredondamento de exibição, não diferença de cálculo.</div>';
+}
 function notaConciliacao(itens){
   const r2 = v => Math.round((+v||0)*100)/100;
   const difs = [];
@@ -5625,7 +5651,7 @@ function anRecalcular() {
   let r;
   try { r = calcular(AN, PARAMS.anexos, folhaPercDaEmpresa()); } catch(e) { console.error(e); return; }
   AN._res = r;
-  const T = r.totais;
+  const T = Object.assign({}, r.totais, totExib(r));   // v7.93.1 · fórmula única de exibição (v7.42.1) também nos cartões da Análise
   anAvisoConfig();
   const EL = snElegibilidade(r, AN.cfg); AN._sn = EL;
   const snVale = EL.estado !== 'inelegivel';
@@ -5875,7 +5901,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.93.0';
+const APP_VERSAO = '7.93.1';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -9327,7 +9353,7 @@ function rlConsolidado(rot, n) {
     ${lin3('IPI', DT?DT.ipi:null, sLP('ipi'), sLR('ipi'))}
     ${lin3('ISS', DT?DT.iss:null, sLP('iss'), sLR('iss'))}
     <tr style="font-weight:700"><td class="rot">TOTAL ANUAL</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr>
-    <tr><td colspan="4" style="padding:0 6px">${notaConciliacao([['Simples', (RL.res.meses||[]).map(x=>x.simples.total), T.simples], ['Lucro Presumido', (RL.res.meses||[]).map(x=>x.lp.total), T.lp], ['Lucro Real', (RL.res.meses||[]).map(x=>x.lr.total), T.lr]])}</td></tr>
+    <tr><td colspan="4" style="padding:0 6px">${notaTotais()}</td></tr>
     <tr><td class="rot">% da receita bruta</td><td class="num">${T.receita?(T.simples/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${T.receita?(T.lp/T.receita*100).toFixed(2)+'%':'—'}</td><td class="num">${T.receita?(T.lr/T.receita*100).toFixed(2)+'%':'—'}</td></tr>
     </tbody></table>
     <div class="hint" style="margin-top:6px">Coluna do Simples: tributos embutidos no DAS pela repartição da LC 123 (Anexos I–V, por faixa). PIS×COFINS e ICMS×ISS distribuídos na proporção da repartição cheia em meses com ST, monofásico ou retenções. Na coluna do Simples, ISS e CPP incluem também as parcelas retidas na fonte e a CPP do Anexo IV devida fora do DAS (v7.1) — por isso os totais por tributo podem superar o DAS. <b>ISS retido</b> (LC 123, art. 21, § 4º): recolhido na fonte pelo tomador, <b>não compõe</b> os totais de nenhum regime desde a v7.23.0 — no Presumido e no Real, o ISS próprio também exclui as receitas com retenção. Lucro Presumido e Lucro Real <b>incluem o INSS patronal</b> sobre a folha (salários × (20% + RAT/FAP + terceiros) e pró-labore × 20%). <b>FGTS não considerado</b> em nenhum regime — encargo idêntico em todos e não alterado pela Reforma Tributária (v7.18.0).</div></div>`;
@@ -9407,7 +9433,9 @@ const PER_ROTULOS = { 1:['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','
   6:['1º Sem','2º Sem'], 12:['Ano'] };
 // v7.42.1 (Ponto 3): agrupa somando os valores JÁ ARREDONDADOS de cada mês — mesma regra do
 // somaExib. Antes, a coluna de período somava sem arredondar e divergia do total do relatório.
-const agrupar = (arr, n) => { const out=[]; for(let i=0;i<12;i+=n) out.push(arr.slice(i,i+n).reduce((a,b)=>a+r2(b),0)); return out; };
+// v7.93.1 · soma com precisão integral (antes somava cada mês já arredondado): as colunas de período e a coluna Total
+// do Consolidado e do Detalhamento passam a fechar com o total do motor — a regra única de exibição.
+const agrupar = (arr, n) => { const out=[]; for(let i=0;i<12;i+=n) out.push(arr.slice(i,i+n).reduce((a,b)=>a+(+b||0),0)); return out; };
 
 async function rlCarregar() {
   const cnpj = $id('rl-empresa').value, ano = +$id('rl-ano').value;
@@ -9768,7 +9796,7 @@ function parecerDados(){
   const PJ = projJanelaEfetiva(_cfgP);              //  janela do monitor de sublimite)
   const _B = rlBaseReforma();
   let PROJ = _B.proj, _res = _B.res, _reforma = _B.reforma;
-  const T = _res.totais, Mm = _res.meses;
+  const T = Object.assign({}, _res.totais, totExib(_res)), Mm = _res.meses;   // v7.93.1 · o parecer e as apresentações exibem os mesmos totais do Comparativo (fórmula única, v7.42.1)
   const MmReal = (RL.res && RL.res.meses) || Mm;      // veredito e janela lançada vêm do REALIZADO
   let cen = null; try { cen = calcCenariosReforma(_res, _reforma); } catch(e){ console.error('parecer/cenários', e); }
   const REF = (cen && cen.REF) || [];
@@ -10083,6 +10111,7 @@ function rlParecer(){
       <tr><td class="rot">${D.proj?'Projeção dos meses não lançados':'Crescimento considerado'}</td><td>${D.proj
         ? `Os ${D.proj.nProj}${D.proj.nProj===1?' mês sem lançamento foi estimado':' meses sem lançamento foram estimados'} pela <b>média ${projJanelaLabel(D.proj.janela)}</b> — receita, folha e compras na mesma janela — e calculados pelo mesmo motor de tributos dos meses reais. Janela definida ${D.proj.origem==='documento'?'neste documento':'na configuração da empresa'}${D.proj.janela!=='todos' && D.proj.janelaN>=D.proj.nReais?' — equivalente, neste caso, à média de todos os meses lançados':''}. Não há premissa de crescimento: a média projeta o ritmo observado, sem estimar aumento ou redução de faturamento.`
         : 'Nenhum — a projeção 2027–2033 replica a receita do período analisado, sem estimar aumento ou redução de faturamento. Refletir crescimento exige reprocessar a análise com premissas adicionais.'}</td></tr>
+      <tr><td class="rot">Situação no Simples Nacional</td><td>${snSituacaoQuadro(D).map(x=>esc(x)).join(' ')}</td></tr>
       ${D.frMed>0?`<tr><td class="rot">Fator R</td><td>${(frFronteira(D.fatorRMensal||[D.frMed])||{}).longo||''} (folha ÷ receita bruta, 12 meses rolantes; enquadramento mensal)</td></tr>`:''}
       ${premissaCred?`<tr><td class="rot">Créditos de IBS/CBS</td><td>${premissaCred}</td></tr>`:'<tr><td class="rot">Créditos de IBS/CBS</td><td>Estimados pelos fornecedores e compras informados na aba Reforma.</td></tr>'}
       ${D.L33?`<tr><td class="rot">Alíquota de referência (${D.anoRef})</td><td>${fmtP(D.L33.alq*100, 2)}% (CBS+IBS, Res. CGIBS nº 14/2026 — estimativa; a definitiva depende do cálculo do TCU homologado pelo Senado)</td></tr>`:''}
@@ -12182,7 +12211,8 @@ const AP_ATENCAO = [
 function apFrases(txt, n){
   const t = String(txt||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
   if (!t) return '';
-  const partes = t.match(/[^.!?]+[.!?]+(\s|$)/g) || [t];
+  // v7.93.1 · o ponto de milhar ("R$ 5.317.240,01") era lido como fim de frase e o alerta saía truncado ("240,01 — acima de 90%…")
+  const partes = t.match(/(?:[^.!?]|\.(?=\d))+[.!?]+(?:\s|$)/g) || [t];
   return partes.slice(0, n).join('').trim();
 }
 const apR0 = v => 'R$ ' + Math.round(+v||0).toLocaleString('pt-BR');
@@ -12234,7 +12264,9 @@ function apDados(){
   const ie = PARAMS.escritorio || {};
   const iaOk = !!(RL._ia && RL._ia.textos);
   const i0 = Math.max(0, D.sAnos.indexOf(D.anoRef));
-  return { D, TX, emp, L, alq, cl, cs, p58, credReg: cl*alq, credSimp: cs*p58, exp, interno, folga, das, dasTot, consumo,
+  const compras = credComprasSituacao(rfx, !!(D.cen && D.cen.semCreditos), !!(D.cen && D.cen.semPerfil));   // v7.93.1 · frase única também nas apresentações
+  const excesso = folga < 0 ? -folga : 0;   // v7.93.1 · acima do teto não há "folga negativa": há excesso
+  return { D, TX, emp, L, alq, cl, cs, p58, credReg: cl*alq, credSimp: cs*p58, exp, interno, folga, excesso, compras, das, dasTot, consumo,
     consumoPct: dasTot>0 ? consumo/dasTot*100 : 0, P, iaOk, i0,
     razao: esc(emp.razao_social || RL.dados.cnpj || ''), cnpj: fmtCNPJ(RL.dados.cnpj||''), anoBase: RL.dados.ano,
     receitaReal: (RL.res && RL.res.totais && +RL.res.totais.receita) || +D.T.receita || 0,
@@ -12312,7 +12344,7 @@ function apTelas(A, modo){
       ? resumo(`a empresa está acima do teto do Simples; a comparação real é entre Presumido e Real, e a Reforma encarece os dois.`, 'warn')
       : D.snEstado==='transicao'
       ? resumo(`${D.snTexto||''} A comparação de 2026 mantém o Simples; a partir do ano seguinte a escolha é entre Presumido e Real.`, 'warn')
-      : resumo(`a empresa paga ${apPct(D.T.receita?D.hojeAnual/D.T.receita*100:0)} da receita em imposto e tem folga de ${apMi(A.folga)} até o teto. ${A.P.V && A.P.V.pctPJ>50?'A pressão para mudar não vem do tamanho — vem dos clientes.':'Chega à Reforma sem pressão para sair do Simples.'}`, 'ok')}` });
+      : resumo(`a empresa paga ${apPct(D.T.receita?D.hojeAnual/D.T.receita*100:0)} da receita em imposto e ${A.folga>=0?'tem folga de '+apMi(A.folga)+' até o teto':'já supera o teto em '+apMi(A.excesso)}. ${A.P.V && A.P.V.pctPJ>50?'A pressão para mudar não vem do tamanho — vem dos clientes.':'Chega à Reforma sem pressão para sair do Simples.'}`, 'ok')}` });
 
   S.caminhosS = () => ({ html:`
     ${cab(`Os ${cam.length===2?'dois':'três'} caminhos possíveis e o custo de cada um até 2033`,`Esta tela mostra <b>quanto a empresa pagaria por ano em cada caminho</b>${D.variante==='acima'?'':', a partir de '+D.anoRef+', quando o Simples passa a oferecer três opções'}. Valores em moeda de hoje.`)}
@@ -12343,7 +12375,7 @@ function apTelas(A, modo){
       <div class="ap-cartao">
         <span class="ap-pill">De quem a empresa compra</span>
         <div class="ap-num m" style="margin:12px 0 4px">${A.L ? apR0(A.L.cred) : '—'}</div>
-        <div class="ap-rot">de crédito no ano${A.cl>0.005?' — '+apR0(A.cl)+' de compras do regime regular (crédito cheio)':''}${A.cs>0.005?(A.cl>0.005?' e ':' — ')+apR0(A.cs)+' de fornecedor do Simples/MEI ('+apPct(A.p58*100,2)+')':''}${(A.cl+A.cs)<=0.005?' — nenhuma compra informada na aba Reforma':''}</div>
+        <div class="ap-rot">de crédito no ano${A.cl>0.005?' — '+apR0(A.cl)+' de compras do regime regular (crédito cheio)':''}${A.cs>0.005?(A.cl>0.005?' e ':' — ')+apR0(A.cs)+' de fornecedor do Simples/MEI ('+apPct(A.p58*100,2)+')':''}${(A.cl+A.cs)<=0.005?' — '+esc(A.compras.texto):''}</div>
         ${C ? `<table class="ap-t mini" style="margin-top:10px">${C.top.slice(0,3).map(f=>`<tr><td>${f.nome}</td><td class="n">${f.enq}</td></tr>`).join('')}</table>` : ''}
         <p style="font-size:12.5px;margin:10px 0 0">Fornecedor do regime regular gera crédito cheio; do Simples, crédito pequeno; MEI e pessoa física, nenhum.</p>
       </div>
@@ -12414,7 +12446,7 @@ function apTelas(A, modo){
       <tr><th style="width:230px">Período dos dados</th><td>${D.proj ? `Lançamentos reais de ${D.janelaTxt}; ${D.proj.nProj} meses estimados pela média dos ${D.proj.janela==='todos'?'meses lançados':D.proj.janelaN+' últimos meses'}, calculados pelo mesmo motor.` : `Doze meses lançados de ${A.anoBase}; sem projeção.`}</td></tr>
       <tr><th>Crescimento</th><td>Nenhum. Os valores estão em moeda constante do ano-base.</td></tr>
       <tr><th>Fator R</th><td>${(frFronteira(D.fatorRMensal||[D.frMed])||{}).longo||''} (folha ÷ receita bruta dos últimos 12 meses; enquadramento mensal.)</td></tr>
-      <tr><th>Crédito de IBS/CBS</th><td>${A.cl>0.005?fmtR(A.cl)+' de compras do regime regular × '+apPct(A.alq*100,2)+' = '+fmtR(A.credReg)+'. ':''}${A.cs>0.005?fmtR(A.cs)+' de compras do Simples/MEI × '+apPct(A.p58*100,2)+' (art. 58, Res. CGSN 190/2026) = '+fmtR(A.credSimp)+'. ':''}${(A.cl+A.cs)<=0.005?'Nenhuma compra informada na aba Reforma: cenários sem crédito.':'Crédito total no ano de referência: '+fmtR(A.L?A.L.cred:0)+'.'}</td></tr>
+      <tr><th>Crédito de IBS/CBS</th><td>${A.cl>0.005?fmtR(A.cl)+' de compras do regime regular × '+apPct(A.alq*100,2)+' = '+fmtR(A.credReg)+'. ':''}${A.cs>0.005?fmtR(A.cs)+' de compras do Simples/MEI × '+apPct(A.p58*100,2)+' (art. 58, Res. CGSN 190/2026) = '+fmtR(A.credSimp)+'. ':''}${(A.cl+A.cs)<=0.005?esc(A.compras.texto):'Crédito total no ano de referência: '+fmtR(A.L?A.L.cred:0)+'.'}</td></tr>
       <tr><th>Alíquota de referência ${D.anoRef}</th><td>${apPct(A.alq*100,2)} (CBS + IBS, Res. CGIBS nº 14/2026). É estimativa: a definitiva depende do cálculo do TCU homologado pelo Senado.</td></tr>
       <tr><th>Transição do DAS</th><td>Novos Anexos I–V da Res. CGSN 190/2026: PIS/COFINS viram CBS em 2027; ICMS/ISS descem em degraus até 2033 e o IBS sobe na mesma medida.</td></tr>
       <tr><th>Split payment</th><td>Premissa conservadora: 100% do débito bruto retido no pagamento; custo financeiro a 15% ao ano sobre um mês retido.</td></tr>
@@ -12538,7 +12570,8 @@ function apTelas(A, modo){
     ${cab('Parecer e recomendação',`Esta tela mostra <b>a conclusão do estudo</b> para ${A.razao}, com os números que a sustentam.`)}
     <div class="ap-grade" style="grid-template-columns:1fr 1fr;gap:26px">
       <div style="font-size:14px;line-height:1.5">
-        <p style="margin:0 0 10px"><b>Situação:</b> carga anual de ${fmtR(D.hojeAnual)} no ${D.regimeHojeNome}, receita ${D.proj?'projetada':'apurada'} de ${fmtR(D.T.receita)}${D.variante==='acima'?'':', folga de '+fmtR(A.folga)+' até o teto'}.</p>
+        <p style="margin:0 0 10px"><b>Situação:</b> carga anual de ${fmtR(D.hojeAnual)} no ${D.regimeHojeNome}, receita ${D.proj?'projetada':'apurada'} de ${fmtR(D.T.receita)}${D.variante==='acima'?'':(A.folga>=0?', folga de '+fmtR(A.folga)+' até o teto':', receita interna superior ao teto do Simples em '+fmtR(A.excesso))}.</p>
+        <p style="margin:0 0 10px"><b>Simples Nacional:</b> ${snSituacaoQuadro(D).map(x=>esc(x)).join(' ')}</p>
         ${cam.length?`<p style="margin:0 0 10px"><b>Em ${D.anoRef}:</b> ${cam.map((c,k)=>`${c.nome.toLowerCase()} ${fmtR(c.serie[i0])}`).join('; ')}${A.L?` (IBS/CBS líquido de ${fmtR(A.L.liquido)})`:''}.</p>`:''}
         <p style="margin:0"><b>Caixa:</b> ${D.variante==='acima'?'':'fora do DAS, '}retenção de ${fmtR(D.split.fonteMes)} por mês em ${D.split.ano||2032}, custo financeiro de ${fmtR(D.split.custoAno)} ao ano.</p>
       </div>
@@ -12853,7 +12886,7 @@ function rlRegimes(rot, n) {
     ['ISS', null, somaLP('iss'), somaLR('iss')]];
   for (const [nm,a,b,c] of linhas) h += `<tr><td>${nm}</td><td class="num">${a==null?'—':fmt(a)}</td><td class="num">${b==null?'—':fmt(b)}</td><td class="num">${c==null?'—':fmt(c)}</td></tr>`;
   h += `<tr style="font-weight:700"><td>TOTAL</td><td class="num">${fmt(T.simples)}</td><td class="num">${fmt(T.lp)}</td><td class="num">${fmt(T.lr)}</td></tr></tbody></table>
-  ${notaConciliacao([['Simples', linhas.map(l=>l[1]), T.simples], ['Lucro Presumido', linhas.map(l=>l[2]), T.lp], ['Lucro Real', linhas.map(l=>l[3]), T.lr], ['DAS (meses)', M.map(x=>x.das), T.das]])}</div>
+  ${notaTotais()}</div>
   <div class="hint" style="margin-top:8px">Simples: DAS${RL.dados.receitas?.a4?.some(v=>v>0)?' — atenção: receitas do Anexo IV têm CPP fora do DAS':''}. Lucro Presumido e Lucro Real incluem o INSS patronal sobre a folha. <b>FGTS não considerado</b> — encargo idêntico em todos os regimes e não alterado pela Reforma Tributária. Valores simulados pelo motor validado contra a planilha de planejamento.</div></div>`;
 
   // ── v7.42.1 (Ponto 1) · MEMÓRIA ANUAL DE LP E LR, PARCELA A PARCELA ──────────────────────
