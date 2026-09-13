@@ -18,6 +18,13 @@ table.cf-mem { table-layout: fixed; width: 100%; }
 table.cf-mem td:nth-child(1) { width: 24%; }
 table.cf-mem td:nth-child(2) { width: 54%; overflow-wrap: anywhere; }
 table.cf-mem td:nth-child(3) { width: 22%; text-align: right; overflow-wrap: anywhere; }
+/* v7.92.3 · o rótulo herdava white-space:nowrap de .gtable .rot e, com a largura fixa de 24%, atravessava
+   a coluna da fórmula ("Exportação — RBT12 e faixa próprias", "(−) ICMS destacado — Tema 69"…). Quebra. */
+table.cf-mem td.rot { white-space: normal; overflow-wrap: anywhere; vertical-align: top; }
+/* v7.92.3 · grades de 12 meses do bloco 0 impressas em dois semestres — 14 colunas não cabem no A4 retrato */
+table.cf-grade { table-layout: fixed; width: 100%; font-size: 10px; }
+table.cf-grade td, table.cf-grade th { padding: 2px 3px; white-space: nowrap; overflow: hidden; }
+table.cf-grade td.rot { white-space: normal; overflow-wrap: anywhere; font-size: 10px; }
 
 :root{
   --primary:#1a5276; --primary-dark:#12405e; --primary-light:#2e86ab;
@@ -787,6 +794,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.92.3</b></td><td>13/09/2026</td><td><b>🛠️ Parecer de 13/09 (massa "teste integral") — RBT12 direto, memória e PDF da conferência.</b> <b>Fator R 27,1250% × 28%:</b> não havia dupla contagem no motor. O campo "RBT12 direto" sempre foi o RBT12 do <i>mercado interno</i>, e a exportação dos 12 meses tem lançamento próprio; a massa pôs o total com exportação (3.720.000,01) no direto e lançou os 120.000,00 também na exportação, e o motor somou o que estava em cada campo (3.840.000,01). O que a tela e a memória não diziam, passam a dizer: rótulo <b>"RBT12 direto — mercado interno (prevalece sobre os 12 meses)"</b>; campo novo <b>"RBT12 direto — exportação"</b> (<code>cfg.rbt12ExpDireto</code>, prevalece sobre a coluna de exportação; não herda entre anos; zerado ao importar PGDAS-D como o interno); <b>aviso na Configuração e no Verificar</b> quando os 12 meses e o direto estão ambos preenchidos com valores diferentes (o direto prevalece); linha "Denominador do Fator R = interno + exportação = total" na Configuração; na memória, a formação das janelas diz qual valor prevaleceu (antes imprimia "12 de 12 meses · 3.600.000,01" enquanto o motor usava o direto), a linha do RBT12 de janeiro diz "direto informado" e a linha do Fator R mostra FS12 e RBT12r = interno + exportação com os valores. <b>PDF:</b> (1) o rótulo da memória herdava <code>white-space:nowrap</code> e, com largura fixa de 24%, atravessava a coluna da fórmula ("Exportação — RBT12 e faixa próprias", "↳ Exportação — Serviços com Fator R (Anexo III ou V)", "(−) ICMS destacado — Tema 69") — agora quebra linha; (2) as grades de 12 meses do bloco 0 (14 colunas) estouravam o A4 e a coluna Total saía cortada — passam a sair em <b>dois semestres</b>, com o total anual no segundo. Não é regressão: a memória "só de janeiro" é o modo <b>mês</b> (padrão desde a v7.11.0); fevereiro a dezembro saem no modo <b>completo</b>. Créditos zerados = massa sem consulta de fornecedores (regra "não identificado = zero no cenário-base"). Motor: só a leitura do RBT12 de exportação ganha o campo direto; lacre 453f7b32 intocado. Suíte: bloco 5ag (os 4 preenchimentos: 27,1250% / 28,0000% / 28,0000% / 27,1250%).</td></tr>
                     <tr><td><b>v7.92.2</b></td><td>13/09/2026</td><td><b>🛠️ Auditoria F01–F14 sobre a v7.92.1 — estado residual do editor (P0) e histórico multiplicado (P1).</b> <b>(P0)</b> O modo do editor, o sinalizador de valor inválido e o rascunho ficavam misturados no objeto da composição que é gravado com a análise: uma análise salva (ou autosalva) com o editor por valores aberto voltava do banco em modo edição e a mensagem "os valores devem fechar em R$ …" aparecia por cima da composição já restaurada. Correção: função única <code>compLimparEditor</code> (modo, erro de tela e retrato de antes da edição) chamada em Restaurar, Cancelar, Aplicar, troca de empresa/exercício e recarga da composição; o rascunho só sobrevive a um recálculo enquanto a edição está ativa na sessão; e <b>o rascunho nunca vai ao banco</b> — o que se grava é a composição vigente (a de antes de abrir o editor), sem modo nem mensagem, e o rascunho também não conta como pendência de gravação. Verificação e validação leem sempre a composição final vigente; a divergência real (COMP-01) continua bloqueante e nada é mascarado ajustando o último grupo. <b>(P1)</b> Uma aplicação de edição gerava um evento consolidado mais um por grupo alterado (3 registros para 60/40). Agora <b>uma ação = um evento</b>: o detalhe por grupo (automático × editado, em p.p.) vai dentro do evento "edição aplicada", ao lado de empresa, exercício, usuário, data/hora, motivo, origem, versão do motor e composição completa antes/depois. Edição recusada e Cancelar continuam sem evento. Fórmula do crédito, automático (104.148,18 / 72.913,36 / 177.061,54) e lacre 453f7b32 intocados. Suíte: bloco 5af com os dois testes de regressão do relatório.</td></tr>
                     <tr><td><b>v7.92.1</b></td><td>12/09/2026</td><td><b>🛠️ Editor da composição por valores — relatório de reauditoria de 12/09.</b> O roteiro do relatório (106.236,92 / 70.824,62 nos formatos 106.236,92 · 106236,92 · 106236.92) foi reproduzido em DOM real na v7.92.0 e <b>não apresentou a falha descrita</b> (campo mantido ao sair, 60/40, crédito 31.053,05, status alterado manualmente, evento único). Três melhorias reais do ciclo, alinhadas à orientação técnica: <b>(1) total fixo</b> — antes cada valor digitado redefinia o total como a soma dos grupos, o percentual intermediário saía contra um total ainda aberto (59,3% após o 1º campo) e a validação nunca falhava; agora o total é a soma dos fornecedores (P0-01), percentual = valor ÷ total, e os valores precisam <b>fechar no total</b> (tolerância R$ 0,01) para aplicar, com mensagem que mostra a diferença sem apagar o digitado; <b>(2) entrada validada</b> — texto não numérico mantinha <code>num()=0</code> e zerava o grupo em silêncio; agora mantém o valor anterior e avisa no card; <b>(3) tempo real</b> — percentuais atualizam a cada tecla (<code>oninput</code>) e, ao sair do campo, o valor é reescrito no formato 106.236,92. Cancelar segue descartando tudo. Fórmula do crédito, automático e lacre 453f7b32 intocados. Suíte: bloco 5ae com os 11 critérios de aceite.</td></tr>
                     <tr><td><b>v7.92.0</b></td><td>12/09/2026</td><td><b>🛠️ Composição dos fornecedores — relatório de auditoria de 12/09 (v7.91.1), P0-01, P0-02, P1-01 e P1-02.</b> <b>(P0-01) Denominador dos percentuais:</b> o total da composição vinha das compras de <i>mercadoria</i> da análise (na Artecon, R$ 2.279,70) enquanto os fornecedores consultados somavam R$ 177.061,54 (serviços tomados incluídos) — os percentuais saíam em 4.568% / 3.198% e a própria validação de 100% acusava erro. A <b>soma monetária dos fornecedores passa a ser a fonte de verdade</b>: total = máximo entre as compras da análise e essa soma; percentual = valor do grupo ÷ total; o excedente da análise não coberto pela consulta segue como não identificado. A edição por percentuais e por valores usa o mesmo total (60/40 → 106.236,92 / 70.824,62). O crédito monetário (104.148,18 × 27,91% + 72.913,36 × 1,98% = 30.511,44) já estava correto e não muda. <b>(P0-02) Limite inferior:</b> era rotulado "só confirmados" mas contava consulta da Receita e digitação como confirmadas. Agora só entra o que o usuário <b>confirmou</b> — a composição inteira (SIM) ou <b>fornecedor a fornecedor</b> (botão ✓ confirmar em cada linha da tabela); sugerido e alterado manualmente NÃO contam, e editar ou reclassificar retira a confirmação. Com tudo apenas sugerido o limite inferior é R$ 0,00 e o cenário-base fica rotulado <b>ESTIMADO</b>; conferência e parecer mostram crédito CONFIRMADO × ESTIMADO × POTENCIAL. Efeito prático: até confirmar a composição o teste de inversão tende a disparar e o parecer sai como "melhor resultado dentro das premissas informadas — não conclusivo"; a confirmação vira etapa do fluxo. <b>(P1-01) Restauração</b> devolve exatamente o automático (valores, percentuais, origem, confiança e status das linhas); <b>Cancelar</b> a edição descarta o que foi digitado (antes ficava aplicado). <b>(P1-02) Histórico:</b> evento único na trilha com empresa, exercício, usuário, data/hora, tipo, valores e percentuais antes/depois, motivo, origem e versão do motor, para edição, confirmação, confirmação por fornecedor, reclassificação, recálculo automático e restauração; a trilha aparece completa (não mais só os 8 últimos) e o automático anterior nunca é apagado — vai para "automáticos anteriores preservados". <b>Bloqueio:</b> composição ≠ 100% vira erro crítico <b>COMP-01</b> e impede parecer e apresentações (junto de SUB-01/MEM-01), sem travar o salvamento. Incidental: linhas agregadas (CNPJ vazio) casavam todas com a primeira ao reconstruir a tabela. Lacre 453f7b32 intocado (só sensibilidade e composição mudam). Suíte: bloco 5ad.</td></tr>
@@ -3242,7 +3250,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
 
   const REPX = repEfetiva(anexos);   // v7.1: repartição efetiva acompanha os parâmetros editados
   const rbt12Cfg = S(cfg.rbt12Lanc), folha12Cfg = S(cfg.folha12Lanc);
-  const rbt12ExpCfg = S(cfg.rbt12ExpLanc || z12());
+  // v7.92.3 · exportação também aceita RBT12 direto (campo próprio) — o "RBT12 direto" sempre foi só do mercado interno
+  const rbt12ExpCfg = +cfg.rbt12ExpDireto > 0 ? +cfg.rbt12ExpDireto : S(cfg.rbt12ExpLanc || z12());
   out.fatorRMensal = [];
 
   const totalRec = m => K.reduce((s,k)=>s+R[k][m],0);          // mercado interno
@@ -4485,7 +4494,7 @@ const z12 = () => Array(12).fill(0);
 
 function anNovo(cnpj, ano) {
   return { cnpj: cnpj||'', ano: ano||new Date().getFullYear(),
-    cfg: { iss:0, icmsV:.12, icmsC:.12, ipiV:0, ipiC:0, rbt12Direto:0, rbt12Lanc:z12(), rbt12ExpLanc:z12(), folha12Lanc:z12(),
+    cfg: { iss:0, icmsV:.12, icmsC:.12, ipiV:0, ipiC:0, rbt12Direto:0, rbt12ExpDireto:0, rbt12Lanc:z12(), rbt12ExpLanc:z12(), folha12Lanc:z12(),
            lpBaseServ:.32, lpBaseCom:.08, lpBaseServCsll:0, lpBaseComCsll:.12, transpPresuncao:'cargas', icmsTranspV:0, transpCredPres:0, folhaPerc:{}, adicionalIR:'trimestral', sublimite:'auto',
            // v7.35.0 · período de apuração do Lucro Real (trimestral | anual | mensal-legado) e
            // saldos iniciais de prejuízo fiscal e base negativa de CSLL (independentes entre si)
@@ -4690,7 +4699,9 @@ function anRenderGrid() {
   const sec = AN_SECOES.find(s=>s.id===AN_TAB) || AN_SECOES[0];
   if (!sec) return;
   if (sec.id==='rbt12'){ const c = AN.cfg; $id('an-grid').innerHTML = `<div style="margin-top:18px"><b style="font-size:13px">RBT12 — receita e folha dos 12 meses anteriores</b>
-  <div class="hint">Preencha os 12 meses (o Fator R usa estes valores) ou informe o RBT12 direto: <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto?fmt(c.rbt12Direto):''}" onchange="anAplicarConfig(true)"></div>
+  <div class="hint">Preencha os 12 meses <b>ou</b> informe o RBT12 direto. <b>RBT12 direto — mercado interno</b> (sem exportação; prevalece sobre os 12 meses): <input style="width:150px;display:inline-block" id="cf-rbtd" value="${c.rbt12Direto?fmt(c.rbt12Direto):''}" onchange="anAplicarConfig(true)">
+    &nbsp; <b>RBT12 direto — exportação</b> (prevalece sobre a coluna de exportação): <input style="width:150px;display:inline-block" id="cf-rbtde" value="${c.rbt12ExpDireto?fmt(c.rbt12ExpDireto):''}" onchange="anAplicarConfig(true)"></div>
+  ${cfgRbt12Aviso(c)}
   <div class="hint" style="margin-top:8px">
     <b>Receita bruta do ano-calendário anterior (RBAA)</b>:
     <input style="width:150px;display:inline-block" id="cf-rbaa" value="${c.rbaa?fmt(c.rbaa):''}" onchange="anAplicarConfig(true)" placeholder="mercado interno">
@@ -4882,6 +4893,9 @@ function anVerificar(){
 
   if (serv > 0 && !(+c.iss)) add('distorce','Há receita de serviços e a alíquota de ISS está zerada.','config');
   if (merc > 0 && !(+c.icmsV)) add('distorce','Há venda de mercadorias e o % de ICMS sobre vendas está zerado.','config');
+  { const _f = rbt12Formacao(c);   // v7.92.3
+    if (_f.duplo) add('observe', `RBT12 interno informado duas vezes: 12 meses lançados (${fmtR(_f.s12)}) e direto (${fmtR(_f.dir)}) — o direto prevalece; confira se ele não inclui exportação.`, 'rbt12');
+    if (_f.duploExp) add('observe', `RBT12 de exportação informado duas vezes: 12 meses (${fmtR(_f.sExp)}) e direto (${fmtR(_f.dirExp)}) — o direto prevalece.`, 'rbt12'); }
   if (!(c.rbt12Lanc||[]).some(v=>+v>0) && !+c.rbt12Direto)
     add('distorce','RBT12 dos 12 meses anteriores em branco — a faixa do Simples começa na primeira.','analise:rbt12');
   if (serv > 0 && !folha && !(c.folha12Lanc||[]).some(v=>+v>0))
@@ -5350,7 +5364,7 @@ function anAplicarConfig(silencioso) {
     fap: vNum('cf-fap', _cfg.fap),
     projJanela: projJanelaNorm(vRaw('cf-proj',_cfg.projJanela)),          // v7.39.0
     anoRefParecer: parAnoRefNorm(vRaw('cf-anoref',_cfg.anoRefParecer)),   // v7.41.7
-    rbt12Direto: vNum('cf-rbtd',_cfg.rbt12Direto),
+    rbt12Direto: vNum('cf-rbtd',_cfg.rbt12Direto), rbt12ExpDireto: vNum('cf-rbtde',_cfg.rbt12ExpDireto),
     rbaa: vNum('cf-rbaa', _cfg.rbaa),                    // v7.70.0 · ano-calendário anterior
     rbaaExp: vNum('cf-rbaaexp', _cfg.rbaaExp),           // v7.80.0 · idem, mercado externo
     rbaaOutros: vNum('cf-rbaaoutros', _cfg.rbaaOutros),  // v7.87.0 · filiais, ano anterior
@@ -5648,7 +5662,7 @@ async function anTrocarEmpresa() {
 const CFG_HERDA = ['iss','icmsV','icmsC','ipiV','ipiC','icmsTranspV','transpCredPres','lpBaseServ',
   'lpBaseCom','lpBaseServCsll','lpBaseComCsll','transpPresuncao','folhaPerc','adicionalIR','sublimite',
   'travaNoDas','lrPeriodo','projJanela','anoRefParecer','credLRpct'];   // v7.89.0 · o % creditável é parâmetro da empresa, herda
-// NÃO se herda o que é do ano: rbt12Lanc, rbt12ExpLanc, folha12Lanc, rbt12Direto, lrPrejIrpj,
+// NÃO se herda o que é do ano: rbt12Lanc, rbt12ExpLanc, folha12Lanc, rbt12Direto, rbt12ExpDireto, lrPrejIrpj,
 // lrPrejCsll e snAntAcima — são apuração, não parâmetro.
 async function cfgHerdar(an, cnpj, ano){
   try {
@@ -5721,7 +5735,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.92.2';
+const APP_VERSAO = '7.92.3';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -7713,7 +7727,7 @@ async function pgdasAplicar() {
     const tabExp = {}; for (const pa of chaves) Object.assign(tabExp, PG_DADOS.meses[pa].rbtExpAnt||{});
     if (!Array.isArray(AN.cfg.rbt12ExpLanc)) AN.cfg.rbt12ExpLanc = z12();
     for (let i=0;i<12;i++) AN.cfg.rbt12ExpLanc[i] = tabExp[`${String(i+1).padStart(2,'0')}/${anoImp-1}`] || 0;
-    AN.cfg.rbt12Direto = 0;
+    AN.cfg.rbt12Direto = 0; AN.cfg.rbt12ExpDireto = 0;
   }
   // ══ v7.87.0 · RBAA lida do PGDAS-D SEMPRE sobrescreve a Configuração (decisão de 10/09/2026) ══
   // O dado que decide o impedimento de ICMS/ISS (LC 123/2006, art. 20, § 1º) vem da própria
@@ -8648,7 +8662,7 @@ async function demAplicar() {
   if ($id('dem-rbt').checked) { let c=0;
     for (let m=0;m<12;m++){ const r=DEM.rec[mesKey(antAno,m)], f=DEM.fol[mesKey(antAno,m)];
       if (r!=null){ AN.cfg.rbt12Lanc[m]=r; c++; } if (f!=null) AN.cfg.folha12Lanc[m]=f; }
-    AN.cfg.rbt12Direto = 0; msg.push(`Config ${antAno}: ${c} mês(es)`); }
+    AN.cfg.rbt12Direto = 0; AN.cfg.rbt12ExpDireto = 0; msg.push(`Config ${antAno}: ${c} mês(es)`); }
   if ($id('dem-fol').checked) { let c=0; const mm=[];
     for (let m=0;m<12;m++){ const v = DEM.fol[mesKey(ano,m)]; if (v!=null){ AN.folha.salarios[m]=v; mm.push(m); c++; } }
     anOrigemMarcar('folha.salarios', mm, 'M');             // v7.28.0
@@ -10707,6 +10721,25 @@ const CF = {
       <table class="gtable cf-mem"><tbody>${linhas.join('')}</tbody></table>`,
   pc: v => (v*100).toFixed(4).replace('.',',') + '%',
 };
+// ══ v7.92.3 · RBT12: interno × exportação × total, e o aviso quando os 12 meses e o direto estão os dois preenchidos ══
+// Parecer de 13/09: o campo "RBT12 direto" recebeu o total já com exportação (3.720.000,01) e a exportação foi
+// lançada também nos 12 meses → denominador do Fator R 3.840.000,01. O motor não soma nada duas vezes: soma o que
+// está em cada campo. A tela e a memória passam a dizer qual valor prevalece e a avisar a dupla entrada.
+function rbt12Formacao(c){
+  c = c || {}; const S = a => (a||[]).reduce((x,y)=>x+(+y||0),0);
+  const s12 = S(c.rbt12Lanc), sExp = S(c.rbt12ExpLanc), dir = +c.rbt12Direto||0, dirExp = +c.rbt12ExpDireto||0;
+  const interno = dir > 0 ? dir : s12, exp = dirExp > 0 ? dirExp : sExp;
+  return { interno, exp, total: interno + exp, s12, sExp, dir, dirExp,
+    origemInt: dir > 0 ? 'direto' : 'lançado', origemExp: dirExp > 0 ? 'direto' : 'lançado',
+    duplo: dir > 0 && s12 > 0.005 && Math.abs(dir - s12) > 0.005, duploExp: dirExp > 0 && sExp > 0.005 && Math.abs(dirExp - sExp) > 0.005 };
+}
+function cfgRbt12Aviso(c){
+  const f = rbt12Formacao(c); const av = [];
+  if (f.duplo) av.push(`<b>RBT12 interno:</b> os 12 meses lançados somam ${fmtR(f.s12)} e o campo direto traz ${fmtR(f.dir)} — <b>o direto prevalece</b>. Se o direto já inclui exportação, corrija: ele é só do mercado interno.`);
+  if (f.duploExp) av.push(`<b>RBT12 de exportação:</b> os 12 meses lançados somam ${fmtR(f.sExp)} e o campo direto traz ${fmtR(f.dirExp)} — <b>o direto prevalece</b>.`);
+  const res = `<div class="hint" style="margin-top:6px">Denominador do Fator R (Res. CGSN 140, art. 26): interno ${fmtR(f.interno)} (${f.origemInt}) + exportação ${fmtR(f.exp)} (${f.origemExp}) = <b>${fmtR(f.total)}</b>.</div>`;
+  return (av.length ? `<div class="hint" style="padding:8px 10px;border-left:4px solid var(--alerta,#b9770e);background:#fef6e7;color:#7e5109;margin-top:6px">⚠️ ${av.join('<br>')}</div>` : '') + res;
+}
 // ═══ v7.26.0: bloco "0. Dados de entrada" — os dados que originaram TODOS os cálculos ═══
 // v7.55.1 (item C) · o quadro das janelas de 12 meses no BLOCO 0 — mês vazio significa coisas
 // OPOSTAS conforme o tempo de atividade, e o papel de trabalho precisa dizer qual é o caso.
@@ -10737,6 +10770,9 @@ function rlConfJanelas(D){
   } else {
     resumo = `RBT12 formado por <b>${nR} de 12</b> meses lançados · ${fmtR(somaR)}.`;
   }
+  { const f = rbt12Formacao(c);   // v7.92.3 · interno × exportação × total, e o que prevaleceu
+    if (f.dir > 0) resumo += ` <b>RBT12 direto (mercado interno) informado: ${fmtR(f.dir)} — prevalece sobre os 12 meses lançados</b>${f.duplo?' (que somam '+fmtR(f.s12)+' — dupla entrada; confira se o direto não inclui exportação)':''}.`;
+    resumo += ` RBT12 de exportação: ${fmtR(f.exp)} (${f.origemExp === 'direto' ? 'direto informado' : '12 meses lançados'})${f.duploExp?' — dupla entrada, o direto prevalece':''}. <b>Denominador do Fator R = ${fmtR(f.interno)} + ${fmtR(f.exp)} = ${fmtR(f.total)}</b>.`; }
   return iniAvisoInvalido(c, D.ano)
     + `<div style="margin:14px 0 6px;font-weight:700;color:#1a5276;font-size:13px">Formação das janelas de 12 meses</div>
     <div class="hint" style="margin-bottom:6px">${resumo} Folha do Fator R: <b>${nF} de 12</b> meses lançados.</div>
@@ -10752,8 +10788,8 @@ function rlConfEntrada(){
     return c && ORIGEM_ROT[c] ? `<sup style="color:${ORIGEM_ROT[c][1]};font-weight:700" title="${ORIGEM_ROT[c][0]}">${c}</sup>` : ''; };
   const linha = (rot, arr, forte, path) => {
     const a = (arr||[]).map(v=>+v||0); const tot = a.reduce((x,y)=>x+y,0);
-    if (Math.abs(tot) < 0.005) return '';
-    return `<tr${forte?' style="font-weight:600"':''}><td class="rot">${rot}</td>${a.map((v,m)=>`<td class="num">${v?fmt(v):'—'}${path?ogSup(path,m):''}</td>`).join('')}<td class="num"><b>${fmt(tot)}</b></td></tr>`;
+    if (Math.abs(tot) < 0.005) return null;
+    return { rot, a, tot, forte, path };   // v7.92.3 · a grade monta as células (dois semestres)
   };
   // resumo por fonte + legenda (só das origens que aparecem nesta análise)
   const cont = {}; let comOrigem = 0, comValor = 0;
@@ -10762,11 +10798,15 @@ function rlConfEntrada(){
   const legenda = Object.keys(cont).length
     ? `<div class="hint" style="margin-top:6px"><b>Origem de cada valor</b> (letra ao lado do número): ${Object.entries(cont).sort((x,y)=>y[1]-x[1]).map(([c,n])=>`<span style="white-space:nowrap"><b style="color:${ORIGEM_ROT[c][1]}">${c}</b> ${ORIGEM_ROT[c][0]} (${n} célula${n>1?'s':''})</span>`).join(' · ')}${comValor>comOrigem?` · <span>células sem letra: lançadas antes da v7.28 — a origem passa a ser registrada daqui em diante</span>`:''}</div>`
     : `<div class="hint" style="margin-top:6px"><b>Origem de cada valor:</b> ainda não registrada nesta análise — os lançamentos são anteriores à v7.28. Reimporte ou edite os campos e a trilha passa a ser gravada célula a célula.</div>`;
+  // v7.92.3 · a grade de 12 meses + total (14 colunas) estourava a largura do A4 e o PDF cortava a coluna
+  // Total (div overflow:auto não rola no papel). Passa a sair em DOIS semestres, com o total anual no segundo.
   const grade = (titulo, linhas) => {
-    const corpo = linhas.filter(Boolean).join('');
-    if (!corpo) return '';
-    return `<div style="overflow:auto;margin:6px 0"><b style="font-size:12px">${titulo}</b>
-      <table class="gtable" style="font-size:11px"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m}</th>`).join('')}<th class="num">Total</th></tr></thead><tbody>${corpo}</tbody></table></div>`;
+    const rows = linhas.filter(Boolean);
+    if (!rows.length) return '';
+    const meio = (de, ate, comTotal) => `<table class="gtable cf-grade"><colgroup><col style="width:22%">${MESES.slice(de,ate).map(()=>'<col style="width:11%">').join('')}${comTotal?'<col style="width:12%">':''}</colgroup>
+      <thead><tr><th></th>${MESES.slice(de,ate).map(m=>`<th class="num">${m}</th>`).join('')}${comTotal?'<th class="num">Total 12 meses</th>':''}</tr></thead>
+      <tbody>${rows.map(r=>`<tr${r.forte?' style="font-weight:600"':''}><td class="rot">${r.rot}</td>${r.a.slice(de,ate).map((v,i)=>`<td class="num">${v?fmt(v):'—'}${r.path?ogSup(r.path,de+i):''}</td>`).join('')}${comTotal?`<td class="num"><b>${fmt(r.tot)}</b></td>`:''}</tr>`).join('')}</tbody></table>`;
+    return `<div style="margin:6px 0"><b style="font-size:12px">${titulo}</b>${meio(0,6,false)}${meio(6,12,true)}</div>`;
   };
   const R = D.receitas||{}, F = D.folha||{}, C = D.compras||{}, DE = D.despesas||{}, cfg = D.cfg||{};
   const rotBloco = k => (PG_BLOCOS.find(b=>b[0]===k)||[,k])[1];
@@ -10776,7 +10816,8 @@ function rlConfEntrada(){
     ['IPI vendas', CF.pc(+cfg.ipiV||0)], ['IPI compras', CF.pc(+cfg.ipiC||0)],
     ['Presunção serviços (LP)', CF.pc(+cfg.lpBaseServ||0)], ['Presunção comércio (LP)', CF.pc(+cfg.lpBaseCom||0)],
     ['Adicional de IRPJ', cfg.adicionalIR||'off'], ['Sublimite', cfg.sublimite||'auto'],
-    ['RBT12 direto', +cfg.rbt12Direto ? fmtR(+cfg.rbt12Direto) : '— (lançado mês a mês)'],
+    ['RBT12 direto — mercado interno', +cfg.rbt12Direto ? fmtR(+cfg.rbt12Direto) + ' (prevalece sobre os 12 meses)' : '— (lançado mês a mês)'],
+    ['RBT12 direto — exportação', +cfg.rbt12ExpDireto ? fmtR(+cfg.rbt12ExpDireto) + ' (prevalece sobre os 12 meses)' : '— (lançado mês a mês)'],
   ].map(([r,v])=>`<tr><td class="rot">${r}</td><td>${v}</td></tr>`).join('');
   const subst = [];
   if (D.icms && (D.icms.cred||D.icms.deb)) subst.push('ICMS substituído manualmente (crédito/débito informados na aba ICMS·IPI)');
@@ -10931,7 +10972,9 @@ function rlConferencia(){
         if (_dp != null) { const _dif = M.rbt12 - _dp;
           L.push(CF.lin('RBT12p declarada no PGDAS-D', Math.abs(_dif) < 0.02 ? 'confere com o motor ao centavo' : `motor ${fmtR(M.rbt12)} − declarada ${fmtR(_dp)} = ${fmtR(_dif)}${Math.abs(_dif)>0.02?' — <b>divergência</b>: confira a data de abertura e os meses anteriores lançados':''}`, fmtR(_dp))); } }
     } else {
-      L.push(CF.lin('RBT12 (mercado interno)', M.mesAtividade!=null && M.mesAtividade>12
+      L.push(CF.lin('RBT12 (mercado interno)', (m === 0 && +(D.cfg||{}).rbt12Direto > 0)
+        ? `RBT12 direto informado (mercado interno) — prevalece sobre os 12 meses lançados${(function(){ const f = rbt12Formacao(D.cfg); return f.duplo ? ' (que somam '+fmtR(f.s12)+')' : ''; })()}`
+        : M.mesAtividade!=null && M.mesAtividade>12
         ? '12 meses anteriores (13º mês de atividade em diante — acabou a proporcionalização)'
         : '12 meses anteriores lançados + meses já decorridos do ano', fmtR(M.rbt12)));
     }
@@ -11013,7 +11056,7 @@ function rlConferencia(){
         : CF.pc(_fr);
       L.push(CF.lin('Fator R (FS12 ÷ RBT12r)',
         `${_frTxt}${_frPerto ? ' <span class="hint">(8 casas — o fator está a menos de 0,0001 p.p. do limite)</span>' : ''} ${_frOk?'≥':'<'} 28% · FS12 = pró-labore + salários + FGTS + 13º pago + CPP efetivamente recolhida, `
-        + `dos 12 meses anteriores (Res. CGSN 140/2018, art. 26, § 1º); RBT12r conjunta — mercado interno + externo (art. 26)`
+        + `dos 12 meses anteriores (Res. CGSN 140/2018, art. 26, § 1º) = ${fmtR(_fr * ((M.rbt12||0) + (M.rbt12Exp||0)))}; RBT12r conjunta = interno ${fmtR(M.rbt12||0)} + exportação ${fmtR(M.rbt12Exp||0)} = ${fmtR((M.rbt12||0)+(M.rbt12Exp||0))} (art. 26)`
         + _destinoTxt,
         _destino));
     }
