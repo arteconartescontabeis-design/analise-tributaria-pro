@@ -794,6 +794,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.92.4</b></td><td>13/09/2026</td><td><b>🛠️ Relatório de validação final da v7.92.3 — RBT12 direto que "reaparecia" após importar a planilha.</b> O auditor não apagou nada: o valor R$ 3.720.000,01 digitado no <b>RBT12 direto — mercado interno</b> na massa original ficou gravado na análise e a <b>importação do modelo (planilha)</b> preenchia os 12 meses sem zerar o campo direto — o direto prevalecia e o Fator R voltava a 27,1256%. O PGDAS-D e o Demonstrativo já zeravam os dois diretos ao trazer os 12 meses; a planilha não. Agora <b>anModeloAplicarLinhas</b> (extraída de anModeloImportar para ser testável) zera <code>rbt12Direto</code> e <code>rbt12ExpDireto</code> sempre que a planilha traz <code>cfg.rbt12Lanc</code> ou <code>cfg.rbt12ExpLanc</code> com algum mês informado, e o toast diz o que foi zerado. Planilha sem os 12 meses não mexe nos diretos. Sem bloqueio, sem escolha de fonte e sem evento de histórico (decisão de 13/09: o aviso da v7.92.3 permanece). A diferença de R$ 780,00 na base anual apontada no mesmo relatório é da massa de teste (base manual 5.917.475,00 × 12 meses 5.916.695,00 = 12 × 65,00), não do app. <b>Achado da suíte:</b> com a massa do auditor (RBT12r 3.720.000,01) o Fator R é 1.041.600 ÷ 3.720.000,01 = <b>27,99999992%</b> — abaixo de 28% pelo centavo — e o enquadramento correto é o <b>Anexo V</b>; a tela mostra 28,0000% arredondado, mas enquadra pelo valor sem arredondar e a memória imprime as 8 casas. Para o teste "28% exatos → Anexo III" a massa precisa de RBT12r 3.720.000,00 (ou folha 1.041.600,01). Motor e lacre <code>453f7b32</code> intocados. Suíte: bloco 5ah.</td></tr>
                     <tr><td><b>v7.92.3</b></td><td>13/09/2026</td><td><b>🛠️ Parecer de 13/09 (massa "teste integral") — RBT12 direto, memória e PDF da conferência.</b> <b>Fator R 27,1250% × 28%:</b> não havia dupla contagem no motor. O campo "RBT12 direto" sempre foi o RBT12 do <i>mercado interno</i>, e a exportação dos 12 meses tem lançamento próprio; a massa pôs o total com exportação (3.720.000,01) no direto e lançou os 120.000,00 também na exportação, e o motor somou o que estava em cada campo (3.840.000,01). O que a tela e a memória não diziam, passam a dizer: rótulo <b>"RBT12 direto — mercado interno (prevalece sobre os 12 meses)"</b>; campo novo <b>"RBT12 direto — exportação"</b> (<code>cfg.rbt12ExpDireto</code>, prevalece sobre a coluna de exportação; não herda entre anos; zerado ao importar PGDAS-D como o interno); <b>aviso na Configuração e no Verificar</b> quando os 12 meses e o direto estão ambos preenchidos com valores diferentes (o direto prevalece); linha "Denominador do Fator R = interno + exportação = total" na Configuração; na memória, a formação das janelas diz qual valor prevaleceu (antes imprimia "12 de 12 meses · 3.600.000,01" enquanto o motor usava o direto), a linha do RBT12 de janeiro diz "direto informado" e a linha do Fator R mostra FS12 e RBT12r = interno + exportação com os valores. <b>PDF:</b> (1) o rótulo da memória herdava <code>white-space:nowrap</code> e, com largura fixa de 24%, atravessava a coluna da fórmula ("Exportação — RBT12 e faixa próprias", "↳ Exportação — Serviços com Fator R (Anexo III ou V)", "(−) ICMS destacado — Tema 69") — agora quebra linha; (2) as grades de 12 meses do bloco 0 (14 colunas) estouravam o A4 e a coluna Total saía cortada — passam a sair em <b>dois semestres</b>, com o total anual no segundo. Não é regressão: a memória "só de janeiro" é o modo <b>mês</b> (padrão desde a v7.11.0); fevereiro a dezembro saem no modo <b>completo</b>. Créditos zerados = massa sem consulta de fornecedores (regra "não identificado = zero no cenário-base"). Motor: só a leitura do RBT12 de exportação ganha o campo direto; lacre 453f7b32 intocado. Suíte: bloco 5ag (os 4 preenchimentos: 27,1250% / 28,0000% / 28,0000% / 27,1250%).</td></tr>
                     <tr><td><b>v7.92.2</b></td><td>13/09/2026</td><td><b>🛠️ Auditoria F01–F14 sobre a v7.92.1 — estado residual do editor (P0) e histórico multiplicado (P1).</b> <b>(P0)</b> O modo do editor, o sinalizador de valor inválido e o rascunho ficavam misturados no objeto da composição que é gravado com a análise: uma análise salva (ou autosalva) com o editor por valores aberto voltava do banco em modo edição e a mensagem "os valores devem fechar em R$ …" aparecia por cima da composição já restaurada. Correção: função única <code>compLimparEditor</code> (modo, erro de tela e retrato de antes da edição) chamada em Restaurar, Cancelar, Aplicar, troca de empresa/exercício e recarga da composição; o rascunho só sobrevive a um recálculo enquanto a edição está ativa na sessão; e <b>o rascunho nunca vai ao banco</b> — o que se grava é a composição vigente (a de antes de abrir o editor), sem modo nem mensagem, e o rascunho também não conta como pendência de gravação. Verificação e validação leem sempre a composição final vigente; a divergência real (COMP-01) continua bloqueante e nada é mascarado ajustando o último grupo. <b>(P1)</b> Uma aplicação de edição gerava um evento consolidado mais um por grupo alterado (3 registros para 60/40). Agora <b>uma ação = um evento</b>: o detalhe por grupo (automático × editado, em p.p.) vai dentro do evento "edição aplicada", ao lado de empresa, exercício, usuário, data/hora, motivo, origem, versão do motor e composição completa antes/depois. Edição recusada e Cancelar continuam sem evento. Fórmula do crédito, automático (104.148,18 / 72.913,36 / 177.061,54) e lacre 453f7b32 intocados. Suíte: bloco 5af com os dois testes de regressão do relatório.</td></tr>
                     <tr><td><b>v7.92.1</b></td><td>12/09/2026</td><td><b>🛠️ Editor da composição por valores — relatório de reauditoria de 12/09.</b> O roteiro do relatório (106.236,92 / 70.824,62 nos formatos 106.236,92 · 106236,92 · 106236.92) foi reproduzido em DOM real na v7.92.0 e <b>não apresentou a falha descrita</b> (campo mantido ao sair, 60/40, crédito 31.053,05, status alterado manualmente, evento único). Três melhorias reais do ciclo, alinhadas à orientação técnica: <b>(1) total fixo</b> — antes cada valor digitado redefinia o total como a soma dos grupos, o percentual intermediário saía contra um total ainda aberto (59,3% após o 1º campo) e a validação nunca falhava; agora o total é a soma dos fornecedores (P0-01), percentual = valor ÷ total, e os valores precisam <b>fechar no total</b> (tolerância R$ 0,01) para aplicar, com mensagem que mostra a diferença sem apagar o digitado; <b>(2) entrada validada</b> — texto não numérico mantinha <code>num()=0</code> e zerava o grupo em silêncio; agora mantém o valor anterior e avisa no card; <b>(3) tempo real</b> — percentuais atualizam a cada tecla (<code>oninput</code>) e, ao sair do campo, o valor é reescrito no formato 106.236,92. Cancelar segue descartando tudo. Fórmula do crédito, automático e lacre 453f7b32 intocados. Suíte: bloco 5ae com os 11 critérios de aceite.</td></tr>
@@ -2470,6 +2471,60 @@ async function folhaLerRelacao(input){
   anAplicado();
   toast(`Folha importada ✓ — ${ord.length} mês(es).${erros.length ? ' '+erros.length+' arquivo(s) com erro.' : ''}`);
 }
+// ══ v7.92.4 · a aplicação das linhas do modelo saiu de anModeloImportar para ser testável sem FileReader/XLSX ══
+// Quando a planilha traz os 12 meses do RBT12 (interno ou exportação), o RBT12 direto que estivesse gravado na
+// análise é ZERADO — mesma regra que o PGDAS-D e o Demonstrativo já seguiam. Antes, um valor direto de uma
+// análise anterior sobrevivia à importação e prevalecia sobre os 12 meses recém-importados (relatório de
+// validação da v7.92.3: campo com 3.720.000,01 + exportação nos 12 meses → 3.840.000,01 → Fator R 27,1256%).
+function anModeloAplicarLinhas(rows){
+  let aplicados = 0; const diretoZerado = [];
+  for (const r of rows){
+    const path = String(r[0]||'').trim();
+    if (!MODELO_LINHAS.some(([p])=>p===path)) continue;
+    // v7.55.1 (item P) · a data de início é TEXTO e precisa de leitura própria: `num()` a
+    // destruiria. Aceita AAAA-MM, AAAA/MM, MM/AAAA e a serial de data do próprio Excel.
+    if (path === 'cfg.inicioAtividade'){
+      const bruto = String(r[2] ?? r[1] ?? '').trim();
+      if (!bruto) continue;
+      let iso = '';
+      let q = bruto.match(/^(\d{4})[-\/](\d{1,2})/);
+      if (q) iso = q[1] + '-' + String(+q[2]).padStart(2,'0');
+      else if ((q = bruto.match(/^(\d{1,2})[-\/](\d{4})/))) iso = q[2] + '-' + String(+q[1]).padStart(2,'0');
+      else if (/^\d+(\.\d+)?$/.test(bruto)) {           // serial de data do Excel
+        const d = new Date(Date.UTC(1899,11,30) + Math.round(+bruto)*86400000);
+        if (!isNaN(d)) iso = d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2,'0');
+      }
+      if (iso){ AN.cfg.inicioAtividade = iso; aplicados++; }
+      continue;
+    }
+    const vals = Array.from({length:12},(_,m)=>num(String(r[2+m]??'')));
+    // ══ v7.88.0 (P0-03) · CÉLULA VAZIA NÃO É ZERO ══════════════════════════════════════
+    // Três estados: "não informado" (célula vazia → valor 0 e origem nula), "informado igual a
+    // zero" (célula com 0 → origem L) e "informado com valor". Antes os 12 meses recebiam L, o
+    // ano ficava "coberto" e a projeção deixava de rodar — meses vazios viravam receita zero.
+    const informados = Array.from({length:12},(_,m)=>m).filter(m => String(r[2+m]??'').trim() !== '');
+    if (path.startsWith('cfg.') && !/Lanc$/.test(path)) {
+      // linha de percentual em branco = "não mexer" (antes zerava a config)
+      const vazia = Array.from({length:12},(_,m)=>String(r[2+m]??'').trim()).every(x=>x==='');
+      if (vazia) continue;
+      const v = vals.find(x=>x>0)||0; AN.cfg[path.slice(4)] = v/100; aplicados++; continue; }
+    const { o, k } = anPath(AN, path);
+    if (/_pct$/.test(path)) { for (let m=0;m<12;m++) o[k][m] = vals[m]/100; }
+    else { for (let m=0;m<12;m++) o[k][m] = vals[m]; }
+    anOrigemMarcar(path, 'all', null);                 // v7.88.0: limpa antes — vazio = não informado
+    anOrigemMarcar(path, informados, 'L');             // v7.28.0: trilha de origem (só os informados)
+    aplicados++;
+  }
+  // v7.92.4 · os 12 meses vieram na planilha: a fonte passa a ser o histórico mensal
+  const vieramMeses = rows.some(r => { const p = String(r[0]||'').trim();
+    return (p === 'cfg.rbt12Lanc' || p === 'cfg.rbt12ExpLanc') && Array.from({length:12},(_,m)=>String(r[2+m]??'').trim()).some(x=>x!==''); });
+  if (vieramMeses) {
+    if (+AN.cfg.rbt12Direto > 0)    diretoZerado.push('RBT12 direto — mercado interno R$ ' + fmt(+AN.cfg.rbt12Direto));
+    if (+AN.cfg.rbt12ExpDireto > 0) diretoZerado.push('RBT12 direto — exportação R$ ' + fmt(+AN.cfg.rbt12ExpDireto));
+    AN.cfg.rbt12Direto = 0; AN.cfg.rbt12ExpDireto = 0;
+  }
+  return { aplicados, diretoZerado };
+}
 function anModeloImportar(inp){
   const f = inp.files && inp.files[0]; if (!f) return;
   const rd = new FileReader();
@@ -2483,46 +2538,9 @@ function anModeloImportar(inp){
       if (!confirm(temDados
             ? 'A análise aberta já tem lançamentos.\nImportar o modelo vai SOBRESCREVER os campos preenchidos na planilha, inclusive os percentuais da Config que vierem preenchidos no arquivo.\n\nContinuar?'
             : 'Importar o modelo vai preencher a análise aberta com os dados do arquivo.\n\nContinuar?')) { inp.value=''; return; }
-      let aplicados = 0;
-      for (const r of rows){
-        const path = String(r[0]||'').trim();
-        if (!MODELO_LINHAS.some(([p])=>p===path)) continue;
-        // v7.55.1 (item P) · a data de início é TEXTO e precisa de leitura própria: `num()` a
-        // destruiria. Aceita AAAA-MM, AAAA/MM, MM/AAAA e a serial de data do próprio Excel.
-        if (path === 'cfg.inicioAtividade'){
-          const bruto = String(r[2] ?? r[1] ?? '').trim();
-          if (!bruto) continue;
-          let iso = '';
-          let q = bruto.match(/^(\d{4})[-\/](\d{1,2})/);
-          if (q) iso = q[1] + '-' + String(+q[2]).padStart(2,'0');
-          else if ((q = bruto.match(/^(\d{1,2})[-\/](\d{4})/))) iso = q[2] + '-' + String(+q[1]).padStart(2,'0');
-          else if (/^\d+(\.\d+)?$/.test(bruto)) {           // serial de data do Excel
-            const d = new Date(Date.UTC(1899,11,30) + Math.round(+bruto)*86400000);
-            if (!isNaN(d)) iso = d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2,'0');
-          }
-          if (iso){ AN.cfg.inicioAtividade = iso; aplicados++; }
-          continue;
-        }
-        const vals = Array.from({length:12},(_,m)=>num(String(r[2+m]??'')));
-        // ══ v7.88.0 (P0-03) · CÉLULA VAZIA NÃO É ZERO ══════════════════════════════════════
-        // Três estados: "não informado" (célula vazia → valor 0 e origem nula), "informado igual a
-        // zero" (célula com 0 → origem L) e "informado com valor". Antes os 12 meses recebiam L, o
-        // ano ficava "coberto" e a projeção deixava de rodar — meses vazios viravam receita zero.
-        const informados = Array.from({length:12},(_,m)=>m).filter(m => String(r[2+m]??'').trim() !== '');
-        if (path.startsWith('cfg.') && !/Lanc$/.test(path)) {
-          // linha de percentual em branco = "não mexer" (antes zerava a config)
-          const vazia = Array.from({length:12},(_,m)=>String(r[2+m]??'').trim()).every(x=>x==='');
-          if (vazia) continue;
-          const v = vals.find(x=>x>0)||0; AN.cfg[path.slice(4)] = v/100; aplicados++; continue; }
-        const { o, k } = anPath(AN, path);
-        if (/_pct$/.test(path)) { for (let m=0;m<12;m++) o[k][m] = vals[m]/100; }
-        else { for (let m=0;m<12;m++) o[k][m] = vals[m]; }
-        anOrigemMarcar(path, 'all', null);                 // v7.88.0: limpa antes — vazio = não informado
-        anOrigemMarcar(path, informados, 'L');             // v7.28.0: trilha de origem (só os informados)
-        aplicados++;
-      }
+      const { aplicados, diretoZerado } = anModeloAplicarLinhas(rows);   // v7.92.4
       anRenderTabs(); anRenderConfig(); anRenderGrid(); anRecalcular();
-      toast(`Modelo importado ✓ — ${aplicados} linhas aplicadas. Confira a Config e salve a análise.`);
+      toast(`Modelo importado ✓ — ${aplicados} linhas aplicadas.` + (diretoZerado.length ? ` ${diretoZerado.join(' e ')} zerado(s): os 12 meses da planilha passam a ser a fonte do RBT12.` : '') + ' Confira a Config e salve a análise.');
       // faturamento importado acima do teto e sem os 12 meses anteriores lançados: classificar na hora
       const semLanc = !(AN.cfg.rbt12Lanc||[]).some(v=>+v>0);
       if (AN._sn && AN._sn.estado !== 'elegivel' && semLanc) snPerguntarAnterior(false);
@@ -5735,7 +5753,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.92.3';
+const APP_VERSAO = '7.92.4';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
