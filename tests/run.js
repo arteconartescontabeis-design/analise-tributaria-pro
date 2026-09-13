@@ -4779,7 +4779,7 @@ console.log('\n■ Integridade da interface');
       chk('5ac · aba Reforma monta a composição automática e governa as contrapartes', c0 && c0.status === 'sugerida' && c0.auto.g.regular.pct === 1 && Math.abs(vm.runInContext('RF.contra.compras_lrlp', ctx) - total) < 0.01);
       vm.runInContext("compEditar('pct'); compSetPct('regular', 60); compSetPct('simples', 40); RF.comp.trilha_len0 = RF.comp.trilha.length; compAplicarEdicao();", ctx);
       const c1 = vm.runInContext('RF.comp', ctx);
-      chk('5ac · edição de percentuais (60/40) recalcula os valores, grava a trilha automático × editado e as contrapartes', Math.abs(c1.final.g.regular.v - 0.6*total) < 0.01 && Math.abs(c1.final.g.simples.v - 0.4*total) < 0.01 && c1.editada === true && c1.trilha.length >= 2 && c1.trilha.some(t => t.grupo==='regular' && Math.abs(t.pctAuto-1)<1e-9 && Math.abs(t.pctEditado-0.6)<1e-9) && Math.abs(vm.runInContext('RF.contra.compras_simples', ctx) - 0.4*total) < 0.01, JSON.stringify(c1.trilha.slice(-1)).slice(0,120));
+      chk('5ac · edição de percentuais (60/40) recalcula os valores, grava a trilha automático × editado e as contrapartes', Math.abs(c1.final.g.regular.v - 0.6*total) < 0.01 && Math.abs(c1.final.g.simples.v - 0.4*total) < 0.01 && c1.editada === true && c1.trilha.length >= 1 && c1.trilha.some(t => t.tipo==='edicao-aplicada' && (t.grupos||[]).some(x => x.grupo==='regular' && Math.abs(x.pctAuto-1)<1e-9 && Math.abs(x.pctEditado-0.6)<1e-9)) && Math.abs(vm.runInContext('RF.contra.compras_simples', ctx) - 0.4*total) < 0.01, JSON.stringify(c1.trilha.slice(-1)).slice(0,120));
       chk('5ac · o automático original não é apagado pela edição', c1.auto.g.regular.pct === 1 && c1.auto.g.simples.pct === 0);
       vm.runInContext("compEditar('pct'); compSetPct('regular', 70); compAplicarEdicao();", ctx);
       chk('5ac · total ≠ 100% bloqueia a edição (ERRO — deve totalizar 100%)', vm.runInContext('RF.comp.modo', ctx) === 'pct');
@@ -4788,7 +4788,7 @@ console.log('\n■ Integridade da interface');
       chk('5ac · confirmação grava data/hora, usuário e status CONFIRMADA', c2.status === 'confirmada' && !!c2.confirmadoEm && c2.trilha.some(t => /CONFIRMADA/.test(t.evento||'')));
       vm.runInContext('compRestaurar()', ctx);
       const c3 = vm.runInContext('RF.comp', ctx);
-      chk('5ac · restaurar volta ao automático (100% regular), zera a confirmação e mantém a trilha da edição', c3.final.g.regular.pct === 1 && c3.editada === false && c3.status === 'sugerida' && c3.trilha.some(t => /RESTAURADA/.test(t.evento||'')) && c3.trilha.some(t => t.grupo==='regular'));
+      chk('5ac · restaurar volta ao automático (100% regular), zera a confirmação e mantém a trilha da edição', c3.final.g.regular.pct === 1 && c3.editada === false && c3.status === 'sugerida' && c3.trilha.some(t => /RESTAURADA/.test(t.evento||'')) && c3.trilha.some(t => (t.grupos||[]).some(x => x.grupo==='regular')));
       vm.runInContext("compEditar('val'); compSetVal('regular', 900000); compSetVal('nid', 300000); compAplicarEdicao();", ctx);
       const c4 = vm.runInContext('RF.comp', ctx);
       chk('5ac · edição por VALORES recalcula os percentuais (75% / 25%)', Math.abs(c4.final.g.regular.pct-0.75)<1e-9 && Math.abs(c4.final.g.nid.pct-0.25)<1e-9 && Math.abs(c4.final.total-1200000)<0.01); }
@@ -4958,7 +4958,51 @@ console.log('\n■ Integridade da interface');
     vm.runInContext("compRestaurar(); rfCalcular();", ctx);
     chk('5ae · (10) depois de restaurar e recalcular, preserva o automático restaurado', Math.abs(g().regular.pct - 0.588203) < 0.00005 && C().editada === false);
     chk('5ae · (11) tela: oninput + onchange normalizador no editor por valores, total marcado como fixo', /oninput="compSetVal\('\$\{k\}',this\.value\)" onchange="compSetVal\('\$\{k\}',this\.value,this\)"/.test(html) && /\(fixo\)/.test(html) && /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5ae · v7.92.1 · badge e changelog', /APP_VERSAO = '7\.92\.1'/.test(html) && /<b>v7\.92\.1<\/b><\/td><td>12\/09\/2026/.test(html) && /total fixo/.test(html));
+    chk('5ae · v7.92.1 · badge e changelog', /APP_VERSAO = '7\.92\.[1-9]'/.test(html) && /<b>v7\.92\.1<\/b><\/td><td>12\/09\/2026/.test(html) && /total fixo/.test(html));
+  }
+
+
+  // ═══ 5af · v7.92.2 — auditoria F01–F14: estado residual do editor (P0) e histórico único (P1) ═══
+  {
+    const FORN = []; for (let i = 0; i < 58; i++) FORN.push({ cnpj:'R'+i, nome:'REG '+i, valor: i < 57 ? 1795.66 : 104148.18 - 57*1795.66, classe:'normal', docs:1, fonte:'t' });
+    for (let i = 0; i < 28; i++) FORN.push({ cnpj:'S'+i, nome:'SN '+i, valor: i < 27 ? 2700.49 : 72913.36 - 27*2700.49, classe:'simples', docs:1, fonte:'t' });
+    const boot = cnpj => vm.runInContext(`RF = rfNovo('${cnpj}', 2026); RF._fornRows = ${JSON.stringify(FORN)}; AN = anNovo('${cnpj}', 2026); AN.cfg.iss=.03; AN.receitas.a3_semret=Array(12).fill(120000); AN.folha.salarios=Array(12).fill(30000); AN.compras.semst=[2279.70,0,0,0,0,0,0,0,0,0,0,0]; AN._res = calcular(AN); rfCalcular();`, ctx);
+    const C = () => vm.runInContext('RF.comp', ctx), cred33 = () => vm.runInContext('RF._res.linhas', ctx).find(l=>l.ano===2033).cred;
+    boot('19191919000119');
+    // ── P1 · trilha vazia → 60/40 → restaurar = exatamente 2 eventos ──
+    chk('5af · começa com trilha vazia', C().trilha.length === 0);
+    vm.runInContext("compEditar('pct'); compSetPct('regular', 60); compSetPct('simples', 40); compAplicarEdicao();", ctx);
+    { const c = C(), e = c.trilha[0];
+      chk('5af · P1 · aplicar 60/40 gera UM evento (antes: consolidado + 2 por grupo)', c.trilha.length === 1 && e.tipo === 'edicao-aplicada');
+      chk('5af · P1 · o evento traz empresa, exercício, usuário, data, motivo, origem, versão, antes/depois completos e o detalhe por grupo', e.empresa === '19191919000119' && e.exercicio === 2026 && 'usuario' in e && e.quando && 'motivo' in e && e.origem === 'consultas' && e.versao && e.antes && e.depois && Math.abs(e.antes.g.regular.pct - 0.588203) < 0.00005 && Math.abs(e.depois.g.regular.pct - 0.6) < 1e-9 && e.grupos.length === 2 && e.grupos.some(x => x.grupo==='simples' && Math.abs(x.pctEditado-0.4)<1e-9)); }
+    vm.runInContext("compEditar('val'); compSetVal('regular','1'); compAplicarEdicao();", ctx);
+    chk('5af · P1 · edição recusada (não fecha) não gera evento', C().trilha.length === 1 && C().modo === 'val');
+    vm.runInContext("compCancelarEdicao()", ctx);
+    chk('5af · P1 · Cancelar não gera evento e devolve a composição aplicada (60/40)', C().trilha.length === 1 && Math.abs(C().final.g.regular.pct - 0.6) < 1e-9);
+    vm.runInContext("compRestaurar()", ctx);
+    { const c = C();
+      chk('5af · P1 · restaurar: exatamente 2 eventos (edição + restauração), automático original intacto', c.trilha.length === 2 && c.trilha[1].tipo === 'restaurada' && c.trilha[1].antes && c.trilha[1].depois && Math.abs(c.auto.g.regular.v - 104148.18) < 0.005); }
+    // ── P0 · 50/30/10/10/0/0 → Recalcular → Restaurar → Verificar: sem estado residual ──
+    boot('20202020000120');
+    vm.runInContext("compEditar('pct'); compSetPct('regular',50); compSetPct('simples',30); compSetPct('simplesRegular',10); compSetPct('semCredito',10); compSetPct('presumido',0); compSetPct('nid',0); compAplicarEdicao(); rfCalcular();", ctx);
+    chk('5af · P0 · recálculo preserva a composição manual válida 50/30/10/10/0/0', Math.abs(C().final.g.regular.pct - 0.5) < 1e-9 && Math.abs(C().final.g.semCredito.pct - 0.1) < 1e-9 && C().modo === null);
+    // simula o estado residual da v7.92.1: rascunho por valores aberto, análise gravada e recarregada do banco
+    vm.runInContext("compEditar('val'); compSetVal('regular','1'); RF.comp._valInvalido = 'simples';", ctx);
+    const gravado = vm.runInContext("JSON.stringify(rfLimpo(RF).comp)", ctx);
+    { const gc = JSON.parse(gravado);
+      chk('5af · P0 · o rascunho NÃO vai ao banco: grava a composição vigente (50/30/…), sem modo nem erro de tela', gc.modo === null && gc._valInvalido === undefined && Math.abs(gc.final.g.regular.pct - 0.5) < 1e-9); }
+    vm.runInContext("compCancelarEdicao(); RF.comp.modo = 'val'; RF.comp._valInvalido = 'simples'; RF._compEditAntes = null; rfCalcular();", ctx);
+    chk('5af · P0 · comp recarregado com modo/erro residuais é limpo ao montar (edição não está ativa na sessão)', C().modo === null && !C()._valInvalido && vm.runInContext('compErroTxt(RF.comp)', ctx) === '');
+    vm.runInContext("compRestaurar(); rfCalcular(); rfVerificar();", ctx);   // rfVerificarMostrar = rfCalcular + rfVerificar (+ scroll do painel, sem DOM)
+    { const c = C();
+      chk('5af · P0 · teste de regressão do relatório: restaurar + Verificar → automático integral, sem mensagem de erro, crédito 30.511,44', Math.abs(c.final.g.regular.pct - 0.588203) < 0.00005 && Math.abs(c.final.g.simples.pct - 0.411797) < 0.00005 && Math.abs(c.final.total - 177061.54) < 0.005 && vm.runInContext('compErroTxt(RF.comp)', ctx) === '' && !/devem fechar|ERRO/.test(ctx.document.getElementById('rf-comp').innerHTML) && Math.abs(cred33() - 30511.44) < 0.02 && c.origem === 'consultas' && c.status === 'sugerida' && c.forn.every(f => f.status === 'sugerido') && vm.runInContext('RF._res.sens.ref.inf.cred', ctx) === 0, cred33().toFixed(2)); }
+    vm.runInContext("compEditar('val'); compSetVal('regular','106.236,92'); rfCalcular();", ctx);
+    chk('5af · P0 · recálculo com a edição ATIVA na sessão mantém o editor aberto (só o rascunho gravado é descartado)', C().modo === 'val' && Math.abs(C().final.g.regular.v - 106236.92) < 0.005);
+    vm.runInContext("document.getElementById('rf-empresa').value = ''; document.getElementById('rf-ano').value = '2026'; const _p = rfTrocar(); ", ctx);
+    chk('5af · P0 · trocar de empresa/exercício (rfTrocar) limpa o editor', !vm.runInContext('RF._compEditAntes', ctx) && (!C() || C().modo === null));
+    chk('5af · P0 · estrutura: compLimparEditor chamado em restaurar, cancelar, aplicar e rfTrocar', (html.match(/compLimparEditor\(/g)||[]).length >= 5 && /function compLimparEditor/.test(html) && !/'edicao-grupo'/.test(html));
+    chk('5af · restrições: automático, crédito e lacre intocados', /LACRE_HASH = '453f7b32'/.test(html));
+    chk('5af · v7.92.2 · badge e changelog', /APP_VERSAO = '7\.92\.2'/.test(html) && /<b>v7\.92\.2<\/b><\/td><td>13\/09\/2026/.test(html) && /compLimparEditor/.test(html) && /uma ação = um evento/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
