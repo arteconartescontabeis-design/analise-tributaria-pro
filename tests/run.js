@@ -1494,7 +1494,7 @@ console.log('\n■ Integridade da interface');
       !/rlConfDivergencias[\s\S]{0,400}rlBaseReforma/.test(html));
     // v7.56.3 · o relatório parte da análise GRAVADA; a tela pode estar à frente e isso era mudo.
     chk('v7.56.3 · rlCarregar compara a análise gravada com a aberta na tela',
-      /RL\.defasado = null;/.test(html) && /chave\(dados\) !== chave\(AN\)/.test(html));
+      /RL\.defasado = null;/.test(html) && /anChaveCanonica\(dados\) !== anChaveCanonica\(AN\)/.test(html));   // v7.93.0 · comparação canônica
     chk('v7.56.3 · a faixa de defasagem entra no topo de TODOS os relatórios',
       (html.match(/rlAvisoDefasado\(\)/g) || []).length >= 3
       && /function rlSalvarERecarregar\(\)/.test(html));
@@ -4914,7 +4914,7 @@ console.log('\n■ Integridade da interface');
       chk('5ad · linhas agregadas (CNPJ vazio) preservam cada uma o próprio status ao reconstruir', c2.forn[0].status === 'sugerido' && c2.forn[1].status === 'confirmado'); }
     chk('5ad · tela: botão de confirmação por fornecedor, histórico completo, COMP-01 e rótulos CONFIRMADO/ESTIMADO/POTENCIAL', /compConfirmarForn\(\$\{i\},/.test(html) && /Histórico da composição — trilha de auditoria completa/.test(html) && /compCancelarEdicao\(\)/.test(html) && /Crédito CONFIRMADO pelo usuário \(limite inferior\)/.test(html) && /Crédito ESTIMADO — sugerido\/alterado, não confirmado/.test(html));
     chk('5ad · lacre 453f7b32 intocado (só sensibilidade e composição mudaram)', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5ad · v7.92.0 · badge e changelog', /APP_VERSAO = '7\.92\.[0-9]+'/.test(html) && /<b>v7\.92\.0<\/b><\/td><td>12\/09\/2026/.test(html) && /P0-01/.test(html) && /COMP-01/.test(html));
+    chk('5ad · v7.92.0 · badge e changelog', /APP_VERSAO = '7\.9[2-9]\.\d+'/.test(html) && /<b>v7\.92\.0<\/b><\/td><td>12\/09\/2026/.test(html) && /P0-01/.test(html) && /COMP-01/.test(html));
   }
 
 
@@ -4958,7 +4958,7 @@ console.log('\n■ Integridade da interface');
     vm.runInContext("compRestaurar(); rfCalcular();", ctx);
     chk('5ae · (10) depois de restaurar e recalcular, preserva o automático restaurado', Math.abs(g().regular.pct - 0.588203) < 0.00005 && C().editada === false);
     chk('5ae · (11) tela: oninput + onchange normalizador no editor por valores, total marcado como fixo', /oninput="compSetVal\('\$\{k\}',this\.value\)" onchange="compSetVal\('\$\{k\}',this\.value,this\)"/.test(html) && /\(fixo\)/.test(html) && /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5ae · v7.92.1 · badge e changelog', /APP_VERSAO = '7\.92\.[1-9]'/.test(html) && /<b>v7\.92\.1<\/b><\/td><td>12\/09\/2026/.test(html) && /total fixo/.test(html));
+    chk('5ae · v7.92.1 · badge e changelog', /APP_VERSAO = '7\.9[2-9]\.\d+'/.test(html) && /<b>v7\.92\.1<\/b><\/td><td>12\/09\/2026/.test(html) && /total fixo/.test(html));
   }
 
 
@@ -5002,7 +5002,7 @@ console.log('\n■ Integridade da interface');
     chk('5af · P0 · trocar de empresa/exercício (rfTrocar) limpa o editor', !vm.runInContext('RF._compEditAntes', ctx) && (!C() || C().modo === null));
     chk('5af · P0 · estrutura: compLimparEditor chamado em restaurar, cancelar, aplicar e rfTrocar', (html.match(/compLimparEditor\(/g)||[]).length >= 5 && /function compLimparEditor/.test(html) && !/'edicao-grupo'/.test(html));
     chk('5af · restrições: automático, crédito e lacre intocados', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5af · v7.92.2 · badge e changelog', /APP_VERSAO = '7\.92\.[2-9]'/.test(html) && /<b>v7\.92\.2<\/b><\/td><td>13\/09\/2026/.test(html) && /compLimparEditor/.test(html) && /uma ação = um evento/.test(html));
+    chk('5af · v7.92.2 · badge e changelog', /APP_VERSAO = '7\.9[2-9]\.\d+'/.test(html) && /<b>v7\.92\.2<\/b><\/td><td>13\/09\/2026/.test(html) && /compLimparEditor/.test(html) && /uma ação = um evento/.test(html));
   }
 
 
@@ -5032,7 +5032,7 @@ console.log('\n■ Integridade da interface');
     chk('5ag · PDF: rótulo da memória quebra linha e as grades do bloco 0 saem em dois semestres', /table\.cf-mem td\.rot \{ white-space: normal/.test(html) && /Total 12 meses/.test(html) && /meio\(0,6,false\)\}\$\{meio\(6,12,true\)/.test(html));
     chk('5ag · importar PGDAS-D zera também o direto de exportação', (html.match(/AN\.cfg\.rbt12Direto = 0; AN\.cfg\.rbt12ExpDireto = 0;/g)||[]).length >= 2);
     chk('5ag · lacre 453f7b32 intocado (casos do lacre não têm rbt12ExpDireto)', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5ag · v7.92.3 · badge e changelog', /APP_VERSAO = '7\.92\.[3-9]'/.test(html) && /<b>v7\.92\.3<\/b><\/td><td>13\/09\/2026/.test(html) && /RBT12 direto — exportação/.test(html));
+    chk('5ag · v7.92.3 · badge e changelog', /APP_VERSAO = '7\.9[2-9]\.\d+'/.test(html) && /<b>v7\.92\.3<\/b><\/td><td>13\/09\/2026/.test(html) && /RBT12 direto — exportação/.test(html));
   }
 
 
@@ -5067,7 +5067,73 @@ console.log('\n■ Integridade da interface');
     chk('5ah · anModeloImportar delega em anModeloAplicarLinhas e o toast relata o zeramento', /const \{ aplicados, diretoZerado \} = anModeloAplicarLinhas\(rows\)/.test(html) && /zerado\(s\): os 12 meses da planilha passam a ser a fonte do RBT12/.test(html));
     chk('5ah · as três importações (PGDAS-D, Demonstrativo, planilha) zeram os dois diretos', (html.match(/AN\.cfg\.rbt12Direto = 0; AN\.cfg\.rbt12ExpDireto = 0;/g)||[]).length >= 3);
     chk('5ah · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5ah · v7.92.4 · badge e changelog', /APP_VERSAO = '7\.92\.4'/.test(html) && /<b>v7\.92\.4<\/b><\/td><td>13\/09\/2026/.test(html) && /anModeloAplicarLinhas/.test(html));
+    chk('5ah · v7.92.4 · badge e changelog', /APP_VERSAO = '7\.9[2-9]\.\d+'/.test(html) && /<b>v7\.92\.4<\/b><\/td><td>13\/09\/2026/.test(html) && /anModeloAplicarLinhas/.test(html));
+  }
+
+
+  // ═══ 5ai · v7.93.0 — pacote de consistência entre relatórios (divergências de 13/09) ═══
+  {
+    const run = c => vm.runInContext(c, ctx);
+    { const f = run('frFronteira')([0.27999999924731184, 0.3042]);
+      chk('5ai · frFronteira: mínimo 27,99999992% com 8 casas e decisão "abaixo da fronteira — Anexo V" no painel', /27,99999992%/.test(f.painel) && /abaixo da fronteira — Anexo V/.test(f.painel) && f.fronteira === true && f.mesesV.length === 1);
+      chk('5ai · frFronteira: a média NÃO generaliza o anexo — o texto nomeia os meses no V e os meses no III', /Entretanto, o enquadramento é mensal/.test(f.longo) && /Jan/.test(f.longo) && /Anexo V/.test(f.longo) && /Anexo III/.test(f.longo));
+      const g = run('frFronteira')([0.29, 0.31]); chk('5ai · frFronteira: todos ≥ 28% → texto único de Anexo III, 2 casas', /Anexo III/.test(g.longo) && !/Anexo V/.test(g.longo) && /29,00% a 31,00%/.test(g.painel));
+      const h = run('frFronteira')([0.28]); chk('5ai · frFronteira: 28% exatos → Anexo III (igual ou acima)', /igual ou acima de 28%/.test(h.longo) && /Anexo III/.test(h.longo)); }
+    { const c = run('credComprasSituacao')({contra:{compras_nid:2841600}}, true, true);
+      chk('5ai · compras não classificadas: "Foram informadas compras de R$ 2.841.600,00, porém 100% permanece sem identificação…"', c.caso === 'naoClassificadas' && /Foram informadas compras de R\$ 2\.841\.600,00, porém 100% permanece sem identificação do regime tributário dos fornecedores/.test(c.texto));
+      const d = run('credComprasSituacao')({contra:{}}, true, false);
+      chk('5ai · sem compras de verdade: "nenhuma compra informada", ausência de dado, não de direito', d.caso === 'semCompras' && /nenhuma compra informada/.test(d.texto) && /não por inexistência de direito/.test(d.texto));
+      chk('5ai · a frase única alimenta parecer, conferência, payload da IA e premissas', (html.match(/credComprasSituacao\(/g)||[]).length >= 7 && !/nenhuma aquisição informada — aba Reforma e Compras vazias/.test(html) && !/por <b>ausência de compras informadas<\/b>/.test(html)); }
+    { const t = run('snSituacaoTexto')({estado:'transicao', excesso:0.165, teto:4800000}, 2026);
+      chk('5ai · Simples em transição (excesso ≤ 20%): permanece até 31/12/2026 e fica impedida no exercício seguinte', /permanece no regime até 31\/12\/2026/.test(t) && /impedida de permanecer ou de optar no exercício seguinte/.test(t) && /16,5%/.test(t));
+      const u = run('snSituacaoTexto')({estado:'transicao', excesso:0.25, mesEstouro:9, teto:4800000}, 2026);
+      chk('5ai · excesso > 20%: exclusão no mês seguinte ao do excesso (§ 9º)', /mais de 20%/.test(u) && /mês seguinte/.test(u) && /setembro/.test(u));
+      const v = run('snSituacaoTexto')({estado:'inelegivel', excesso:0.45, teto:4800000, fonte:'lancamento'}, 2026);
+      chk('5ai · inelegível: "não pode optar pelo Simples Nacional em 2026", exercício nomeado', /não é elegível ao Simples Nacional em 2026/.test(v) && /não pode optar pelo Simples Nacional em 2026/.test(v));
+      chk('5ai · parecer e apresentações usam a conclusão única (snSituacaoTexto/snCurta) e a variante lê a elegibilidade', /const acima = _EL \? _EL\.estado === 'inelegivel'/.test(html) && /D\.snEstado==='transicao'/.test(html) && (html.match(/D\.snTexto/g)||[]).length >= 5); }
+    { const aliq = run('RF_ALIQ_DEFAULT');
+      const C = { comp:null, sens:null, confianca:null, rfx:{ aliq }, semPerfil:false, semCreditos:true };
+      const L = { ano:2027, deb:464330.81, cred:0, liquido:464330.81 };
+      const q = run('compQuadrosHtml')(C, L, false);
+      chk('5ai · quadro Créditos IBS/CBS 2027: débito rateado CBS 459.289,22 + IBS 5.041,59 (antes: tudo no IBS, CBS zero)', /459\.289,22/.test(q) && /5\.041,59/.test(q) && /464\.330,81/.test(q));
+      const L26 = { ano:2026, deb:55928.20, cred:0, liquido:55928.20 }; const q26 = run('compQuadrosHtml')(C, L26, false);
+      chk('5ai · 2026: CBS 0,9% e IBS 0,1% → CBS 50.335,38 + IBS 5.592,82', /50\.335,38/.test(q26) && /5\.592,82/.test(q26)); }
+    { const n = run('notaConciliacao')([['Simples', [0.005, 0.005, 1000.004], 1000.014]]);
+      chk('5ai · nota de conciliação aparece quando a soma dos exibidos difere do total do motor, com os dois valores e o Δ', /Conciliação de centavos/.test(n) && /soma dos valores exibidos/.test(n) && /total do motor/.test(n) && /Δ/.test(n));
+      chk('5ai · e não aparece quando fecham', run('notaConciliacao')([['x', [1, 2, 3], 6]]) === '');
+      chk('5ai · a nota está sob os TOTAIS do comparativo e do detalhamento tributo a tributo', (html.match(/notaConciliacao\(\[/g)||[]).length >= 2); }
+    { const AN = run(`AN = anNovo('23232323000123', 2026); AN.receitas.a3_semret = ${JSON.stringify(Array(12).fill(100000))}; AN.cfg.rbt12Lanc = ${JSON.stringify(Array(12).fill(100000))}; AN`);
+      const cru = JSON.parse(JSON.stringify({ cnpj:AN.cnpj, ano:AN.ano, cfg:{ iss:0, rbt12Lanc:Array(12).fill(100000) }, receitas:{ a3_semret:Array(12).fill(100000) }, folha:{}, compras:{}, despesas:{} }));
+      chk('5ai · comparador canônico: análise crua do banco × análise hidratada com os mesmos dados = IGUAIS (fim do falso "alterações não salvas")', run('anChaveCanonica')(cru) === run('anChaveCanonica')(AN) && run('anDifCanonica')(cru, AN).length === 0);
+      const ed = JSON.parse(JSON.stringify(cru)); ed.receitas.a3_semret[0] = 100001;
+      chk('5ai · e uma edição real ainda é detectada, apontando a seção', JSON.stringify(run('anDifCanonica')(ed, AN)) === '["receitas"]');
+      chk('5ai · rlCarregar e o aviso da tela usam o comparador canônico', /anChaveCanonica\(dados\) !== anChaveCanonica\(AN\)/.test(html) && /anChaveCanonica\(RL\.dados\) === anChaveCanonica\(AN\)/.test(html)); }
+    { run(`AN = anNovo('24242424000124', 2026); AN.cfg.iss = .05; AN.receitas.a3_semret = ${JSON.stringify(Array(12).fill(100000))}; AN.cfg.rbt12Lanc = ${JSON.stringify(Array(12).fill(100000))}; AN.folha.salarios = ${JSON.stringify(Array(12).fill(20000))}; AN.folha.prov13 = ${JSON.stringify(Array(12).fill(1666))}; AN._res = calcular(AN, JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), Object.assign({}, FOLHA_PERC_DEFAULT)); RL.dados = null;`);
+      const v1 = run('anVerificar()');
+      chk('5ai · Verificar consolida a falta do 13º como "distorce o resultado" (antes dizia "nenhuma inconsistência")', v1.some(x => x.nivel === 'distorce' && /13º efetivamente pago/.test(x.texto) && /Isso altera o cálculo/.test(x.texto)));
+      chk('5ai · o item consolidado não carrega o checkbox do painel', !v1.some(x => /<label/.test(x.texto)));
+      run('AN.cfg.sem13Pago = true'); const v2 = run('anVerificar()');
+      chk('5ai · confirmação expressa "não houve pagamento de 13º" silencia a falta no painel e no Verificar', !v2.some(x => /13º efetivamente pago/.test(x.texto)) && run('anConfigFaltas()').falta.every(f => !/13º efetivamente pago/.test(f)) && /sem13Pago/.test(html) && /confirmou expressamente que <b>não houve pagamento de 13º/.test(html));
+      chk('5ai · Verificar também acusa a diferença tela × gravada e o Fator R na fronteira (código presente)', /A análise <b>aberta<\/b> difere da <b>gravada<\/b>/.test(html) && /Fator R na fronteira de 28%: mínimo mensal/.test(html)); }
+    { // empresa em TRANSIÇÃO (excesso ≤ 20%): parecer e apresentações renderizam e dizem permanência + impedimento
+      const b = run('anNovo')('25252525000125', 2026);
+      for (const k of Object.keys(b.receitas)) b.receitas[k] = z();
+      b.cfg.iss = .05; b.cfg.rbaa = 4800000; b.cfg.rbt12Lanc = Array(12).fill(400000); b.receitas.a3_semret = Array(12).fill(466068.33); b.folha.salarios = Array(12).fill(86800);
+      const rb = g.calcular(clone(b), clone(AD), {...FD});
+      ctx.__tb = b; ctx.__trb = rb;
+      run('RL.dados = __tb; RL.res = __trb; AN = __tb; AN._res = __trb; RL.empresa = { razao_social:"Transição Ltda", regime:"Simples Nacional" };');
+      const abrir = tipo => { ctx.document.getElementById('rl-tipo').value = tipo; ctx.document.getElementById('rl-corpo').innerHTML = ''; let erro = null; try { run('rlRender()'); } catch(e){ erro = e.message; } return erro; };
+      const corpo = () => (ctx.document.getElementById('rl-corpo').innerHTML || '').replace(/<[^>]+>/g,' ');
+      const EL = run('snElegibilidade')(rb, b.cfg);
+      chk('5ai · massa de transição: elegibilidade = transicao com excesso ≤ 20%', EL.estado === 'transicao' && EL.excesso > 0.10 && EL.excesso <= 0.20, EL.estado + ' ' + (EL.excesso*100).toFixed(1));
+      for (const tipo of ['parecer','apresentacao_c','apresentacao_s']) { const e = abrir(tipo); const t = corpo();
+        chk(`5ai · "${tipo}" renderiza e diz que a empresa permanece no Simples em 2026 e fica impedida no exercício seguinte`, e === null && /permanece no regime até 31\/12\/2026/.test(t) && /impedida de permanecer ou de optar no exercício seguinte/.test(t) && !/não pode optar pelo Simples Nacional em 2026/.test(t), e || ''); }
+      { const e = abrir('apresentacao_c'); const t = corpo();
+        chk('5ai · apresentação completa: o Fator R vem de frFronteira (texto mensal), não de "Fator R de X%: acima de 28%"', e === null && /Fator R/.test(t) && !/acima de 28%, os serviços são tributados pelo Anexo III\./.test(t)); }
+    }
+    chk('5ai · "Margem do vencedor: R$ ∞" virou "não aplicável — cenário único" no painel, no quadro e no payload', (html.match(/não aplicável — cenário único/g)||[]).length >= 3 && /margemVencedorNota/.test(html));
+    chk('5ai · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
+    chk('5ai · v7.93.0 · badge e changelog', /APP_VERSAO = '7\.93\.0'/.test(html) && /<b>v7\.93\.0<\/b><\/td><td>13\/09\/2026/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
