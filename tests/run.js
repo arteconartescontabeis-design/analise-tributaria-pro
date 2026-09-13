@@ -5101,7 +5101,7 @@ console.log('\n■ Integridade da interface');
     { const n = run('notaConciliacao')([['Simples', [0.005, 0.005, 1000.004], 1000.014]]);
       chk('5ai · nota de conciliação aparece quando a soma dos exibidos difere do total do motor, com os dois valores e o Δ', /Conciliação de centavos/.test(n) && /soma dos valores exibidos/.test(n) && /total do motor/.test(n) && /Δ/.test(n));
       chk('5ai · e não aparece quando fecham', run('notaConciliacao')([['x', [1, 2, 3], 6]]) === '');
-      chk('5ai · a nota está sob os TOTAIS do comparativo e do detalhamento tributo a tributo', (html.match(/notaConciliacao\(\[/g)||[]).length >= 2); }
+      chk('5ai · a nota de totais está sob os TOTAIS do comparativo e do detalhamento tributo a tributo', (html.match(/notaTotais\(\)/g)||[]).length >= 2); }
     { const AN = run(`AN = anNovo('23232323000123', 2026); AN.receitas.a3_semret = ${JSON.stringify(Array(12).fill(100000))}; AN.cfg.rbt12Lanc = ${JSON.stringify(Array(12).fill(100000))}; AN`);
       const cru = JSON.parse(JSON.stringify({ cnpj:AN.cnpj, ano:AN.ano, cfg:{ iss:0, rbt12Lanc:Array(12).fill(100000) }, receitas:{ a3_semret:Array(12).fill(100000) }, folha:{}, compras:{}, despesas:{} }));
       chk('5ai · comparador canônico: análise crua do banco × análise hidratada com os mesmos dados = IGUAIS (fim do falso "alterações não salvas")', run('anChaveCanonica')(cru) === run('anChaveCanonica')(AN) && run('anDifCanonica')(cru, AN).length === 0);
@@ -5133,7 +5133,48 @@ console.log('\n■ Integridade da interface');
     }
     chk('5ai · "Margem do vencedor: R$ ∞" virou "não aplicável — cenário único" no painel, no quadro e no payload', (html.match(/não aplicável — cenário único/g)||[]).length >= 3 && /margemVencedorNota/.test(html));
     chk('5ai · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5ai · v7.93.0 · badge e changelog', /APP_VERSAO = '7\.93\.0'/.test(html) && /<b>v7\.93\.0<\/b><\/td><td>13\/09\/2026/.test(html));
+    chk('5ai · v7.93.0 · badge e changelog', /APP_VERSAO = '7\.93\.\d+'/.test(html) && /<b>v7\.93\.0<\/b><\/td><td>13\/09\/2026/.test(html));
+  }
+
+
+  // ═══ 5aj · v7.93.1 — reteste dos relatórios: totais uniformes, apresentações, apFrases, excesso, quadro do Simples ═══
+  {
+    const run = c => vm.runInContext(c, ctx);
+    chk('5aj · apFrases não quebra no ponto de milhar', run('apFrases')('RBT12 em R$ 5.317.240,01 — acima de 90% do teto do Simples (R$ 4,8 mi): monitorar o risco de exclusão. Outra frase.', 1) === 'RBT12 em R$ 5.317.240,01 — acima de 90% do teto do Simples (R$ 4,8 mi): monitorar o risco de exclusão.');
+    chk('5aj · totExib devolve os totais do motor (regra única invertida) e agrupar soma sem arredondar', (() => { const r = { totais:{ simples:1.005, lp:2, lr:3, das:4, receita:5 }, meses:[{simples:{total:0.501},lp:{total:1},lr:{total:1},das:2,receita:2},{simples:{total:0.504},lp:{total:1},lr:{total:2},das:2,receita:3}] }; const t = run('totExib')(r); return t.simples === 1.005 && Math.abs(run('agrupar')([0.501,0.504,0,0,0,0,0,0,0,0,0,0], 12)[0] - 1.005) < 1e-9; })());
+    chk('5aj · a nota de conciliação com dois valores saiu dos relatórios; ficou a frase única', !/notaConciliacao\(\[/.test(html) && (html.match(/notaTotais\(\)/g)||[]).length >= 2 && /Totais com a precisão integral do motor/.test(html));
+    chk('5aj · Comparativo, Consolidado, cartões da Análise, parecer e Reforma leem o mesmo total (totExib + res.totais)', /const T = Object\.assign\(\{\}, r\.totais, totExib\(r\)\);/.test(html) && /const T = Object\.assign\(\{\}, _res\.totais, totExib\(_res\)\)/.test(html) && /const T = res\.totais, meses = res\.meses;/.test(html));
+    // massa com centavos quebrados: um valor só por grandeza nos relatórios
+    { const b = run('anNovo')('27272727000127', 2026);
+      for (const k of Object.keys(b.receitas)) b.receitas[k] = z();
+      b.cfg.iss = .05; b.cfg.rbaa = 3600000; b.cfg.rbt12Lanc = Array(12).fill(300000); b.cfg.rbt12ExpLanc = Array(12).fill(10000); b.cfg.folha12Lanc = Array(12).fill(86800);
+      b.receitas.a5r = Array(12).fill(0).map((_,i)=>466068.33+i*0.37); b.receitas.a3_exp = Array(12).fill(10000); b.folha.salarios = Array(12).fill(86800.37); b.despesas.adm = Array(12).fill(10000.33); b.compras.semst = Array(12).fill(236800);
+      const rb = g.calcular(clone(b), clone(AD), {...FD}); ctx.__cb = b; ctx.__crb = rb;
+      run('RL.dados = __cb; RL.res = __crb; AN = __cb; AN._res = __crb; RL.empresa = { razao_social:"Centavos Ltda", regime:"Simples Nacional" }; RL.forn = null; RL._ia = null;');
+      const abrir = tipo => { ctx.document.getElementById('rl-tipo').value = tipo; ctx.document.getElementById('rl-per').value = '1'; ctx.document.getElementById('rl-corpo').innerHTML = ''; let erro = null; try { run('rlRender()'); } catch(e){ erro = e.message; } return erro; };
+      const corpo = () => (ctx.document.getElementById('rl-corpo').innerHTML || '').replace(/<[^>]+>/g,' ');
+      const fmt = run('fmt'); const T = run('RL.res.totais');
+      const variantes = (t, v) => { const pre = fmt(v).replace(/,\d\d$/, '').replace(/\./g,'\\.'); return [...new Set(t.match(new RegExp(pre + ',\\d\\d', 'g'))||[])]; };
+      for (const tipo of ['regimes','consolidado','parecer','apresentacao_c','registros']) { const e = abrir(tipo); const t = corpo();
+        const vs = variantes(t, T.simples), vd = variantes(t, T.das);
+        chk(`5aj · "${tipo}": Simples e DAS aparecem com UM valor só, o do motor`, e === null && vs.every(x => x === fmt(T.simples)) && vd.every(x => x === fmt(T.das)), e || (vs.join(',') + ' | ' + vd.join(','))); }
+      // quadro consolidado do Simples e "excesso" no lugar de folga negativa (massa em transição)
+      const c = run('anNovo')('28282828000128', 2026);
+      for (const k of Object.keys(c.receitas)) c.receitas[k] = z();
+      c.cfg.iss = .05; c.cfg.rbaa = 4800000; c.cfg.rbt12Lanc = Array(12).fill(400000); c.receitas.a3_semret = Array(12).fill(466068.33); c.folha.salarios = Array(12).fill(86800);
+      const rc = g.calcular(clone(c), clone(AD), {...FD}); ctx.__tc = c; ctx.__trc = rc;
+      run('RL.dados = __tc; RL.res = __trc; AN = __tc; AN._res = __trc; RL.empresa = { razao_social:"Transição Ltda", regime:"Simples Nacional" };');
+      const D = run('parecerDados()'); const q = run('snSituacaoQuadro')(D).join(' ');
+      chk('5aj · quadro consolidado do Simples: RBAA × teto, sublimite, receita interna, excesso e efeito no exercício seguinte', /RBAA\) de R\$ 4\.800\.000,00 — dentro do teto/.test(q) && /acima do sublimite de R\$ 3\.600\.000,00: ICMS e ISS ficam fora do DAS/.test(q) && /Receita interna .* de 2026: R\$ 5\.592\.819,96 — excesso de 16,5%/.test(q) && /permanece no regime até 31\/12\/2026/.test(q), q.slice(0,300));
+      const e1 = abrir('parecer'); const t1 = corpo();
+      chk('5aj · parecer traz a linha "Situação no Simples Nacional" com o quadro consolidado', e1 === null && /Situação no Simples Nacional/.test(t1) && /excesso de 16,5%/.test(t1) && /fora do DAS/.test(t1), e1 || '');
+      const e2 = abrir('apresentacao_c'); const t2 = corpo();
+      chk('5aj · apresentação completa: "receita interna superior ao teto do Simples em R$ 792.819,96" no lugar de folga negativa, e o quadro do Simples nas premissas', e2 === null && /receita interna superior ao teto do Simples em R\$ 792\.819,96/.test(t2) && !/folga de R\$ -/.test(t2) && /excesso de 16,5%/.test(t2), e2 || '');
+      chk('5aj · apresentação completa: crédito de IBS/CBS usa a frase única das compras', /compras/.test(t2) && !/Nenhuma compra informada na aba Reforma: cenários sem crédito/.test(t2) && /credComprasSituacao\(rfx, !!\(D\.cen && D\.cen\.semCreditos\)/.test(html));
+      const e3 = abrir('apresentacao_s'); const t3 = corpo();
+      chk('5aj · apresentação simplificada: situação do Simples (transição) e nenhuma "folga" negativa', e3 === null && /permanece no regime até 31\/12\/2026/.test(t3) && !/folga de R\$ -/.test(t3) && !/-792\.8/.test(t3), e3 || ''); }
+    chk('5aj · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
+    chk('5aj · v7.93.1 · badge e changelog', /APP_VERSAO = '7\.93\.1'/.test(html) && /<b>v7\.93\.1<\/b><\/td><td>13\/09\/2026/.test(html) && /snSituacaoQuadro/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
