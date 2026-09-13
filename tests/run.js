@@ -5032,7 +5032,42 @@ console.log('\n■ Integridade da interface');
     chk('5ag · PDF: rótulo da memória quebra linha e as grades do bloco 0 saem em dois semestres', /table\.cf-mem td\.rot \{ white-space: normal/.test(html) && /Total 12 meses/.test(html) && /meio\(0,6,false\)\}\$\{meio\(6,12,true\)/.test(html));
     chk('5ag · importar PGDAS-D zera também o direto de exportação', (html.match(/AN\.cfg\.rbt12Direto = 0; AN\.cfg\.rbt12ExpDireto = 0;/g)||[]).length >= 2);
     chk('5ag · lacre 453f7b32 intocado (casos do lacre não têm rbt12ExpDireto)', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5ag · v7.92.3 · badge e changelog', /APP_VERSAO = '7\.92\.3'/.test(html) && /<b>v7\.92\.3<\/b><\/td><td>13\/09\/2026/.test(html) && /RBT12 direto — exportação/.test(html));
+    chk('5ag · v7.92.3 · badge e changelog', /APP_VERSAO = '7\.92\.[3-9]'/.test(html) && /<b>v7\.92\.3<\/b><\/td><td>13\/09\/2026/.test(html) && /RBT12 direto — exportação/.test(html));
+  }
+
+
+  // ═══ 5ah · v7.92.4 — relatório de validação da v7.92.3: importar a planilha zera o RBT12 direto ═══
+  {
+    const m12 = () => [...Array(11).fill(300000), 300000.01], m12r = () => Array(12).fill(300000), exp12 = () => Array(12).fill(10000);   // m12 = massa do auditor (3.600.000,01); m12r = massa redonda (3.600.000,00)
+    const linha = (path, vals) => [path, '', ...vals];
+    const rowsCom = () => [linha('cfg.rbt12Lanc', m12()), linha('cfg.rbt12ExpLanc', exp12()), linha('cfg.folha12Lanc', Array(12).fill(86800))];
+    const rowsSem = () => [linha('receitas.a3_semret', Array(12).fill(100000))];
+    const prep = (direto, dirExp) => vm.runInContext(`AN = anNovo('21212121000121', 2026); AN.cfg.iss = .05; AN.cfg.rbt12Direto = ${direto}; AN.cfg.rbt12ExpDireto = ${dirExp}; AN`, ctx);
+    const aplicar = rows => vm.runInContext('anModeloAplicarLinhas', ctx)(rows);
+    const fr = AN => +(g.calcular(AN, clone(AD), {...FD}).fatorR*100).toFixed(4);
+    { const AN = prep(3720000.01, 0); const r = aplicar(rowsCom());
+      chk('5ah · massa do auditor: direto 3.720.000,01 gravado + planilha com os 12 meses → direto zerado', +AN.cfg.rbt12Direto === 0 && +AN.cfg.rbt12ExpDireto === 0 && r.aplicados === 3);
+      chk('5ah · o retorno diz o que foi zerado (toast)', r.diretoZerado.length === 1 && /mercado interno R\$ 3\.720\.000,01/.test(r.diretoZerado[0]));
+      const raw = g.calcular(AN, clone(AD), {...FD}).fatorR;
+      chk('5ah · T01 com a massa do auditor: RBT12r 3.720.000,01 → 1.041.600 ÷ 3.720.000,01 = 27,99999992% → Anexo V (o centavo decide; a tela mostra 28,0000% mas enquadra pelo valor sem arredondar)', fr(AN) === 28 && raw < .28 && Math.abs(raw - 0.2799999992) < 1e-9 && Math.abs(vm.runInContext('rbt12Formacao', ctx)(AN.cfg).total - 3720000.01) < 0.005); }
+    { const AN = prep(3720000.01, 0); aplicar([linha('cfg.rbt12Lanc', m12r()), linha('cfg.rbt12ExpLanc', exp12()), linha('cfg.folha12Lanc', Array(12).fill(86800))]);
+      chk('5ah · T01 com a massa corrigida: RBT12r 3.720.000,00 → 28,0000% exatos → Anexo III', fr(AN) === 28 && g.calcular(AN, clone(AD), {...FD}).fatorR >= .28); }
+    { const AN = prep(3600000.01, 120000); aplicar(rowsCom());
+      chk('5ah · os dois diretos (interno e exportação) são zerados juntos', +AN.cfg.rbt12Direto === 0 && +AN.cfg.rbt12ExpDireto === 0); }
+    { const AN = prep(3720000.01, 0); const r = aplicar(rowsSem());
+      chk('5ah · planilha SEM os 12 meses não mexe no direto', +AN.cfg.rbt12Direto === 3720000.01 && r.diretoZerado.length === 0 && r.aplicados === 1); }
+    { const AN = prep(3720000.01, 0); aplicar([linha('cfg.rbt12Lanc', Array(12).fill(''))]);
+      chk('5ah · linha do RBT12 toda vazia = não informado: direto preservado', +AN.cfg.rbt12Direto === 3720000.01); }
+    { const AN = prep(0, 0); const ver = (() => { aplicar(rowsCom()); return vm.runInContext('anVerificar()', ctx); })();
+      chk('5ah · T05 negativo: após importar com direto vazio o Verificar não acusa dupla entrada', !ver.some(x => /RBT12 interno informado duas vezes/.test(x.texto))); }
+    { const chkFr = (folha, esperado) => { const AN = prep(0, 0); aplicar([linha('cfg.rbt12Lanc', m12r()), linha('cfg.rbt12ExpLanc', exp12()), linha('cfg.folha12Lanc', Array(12).fill(folha))]); const raw = g.calcular(AN, clone(AD), {...FD}).fatorR; return fr(AN) === esperado && ((raw >= .28) === (esperado >= 28)); };   // enquadramento pelo valor sem arredondar
+      chk('5ah · T02 fronteira (RBT12r 3.720.000,00): folha 1.041.596,28 → 27,9999% e Anexo V', chkFr(1041596.28/12, 27.9999));
+      chk('5ah · T03 fronteira (RBT12r 3.720.000,00): folha 1.041.600,00 → 28,0000% e Anexo III', chkFr(86800, 28));
+      chk('5ah · T04 fronteira (RBT12r 3.720.000,00): folha 1.041.603,72 → 28,0001% e Anexo III', chkFr(1041603.72/12, 28.0001)); }
+    chk('5ah · anModeloImportar delega em anModeloAplicarLinhas e o toast relata o zeramento', /const \{ aplicados, diretoZerado \} = anModeloAplicarLinhas\(rows\)/.test(html) && /zerado\(s\): os 12 meses da planilha passam a ser a fonte do RBT12/.test(html));
+    chk('5ah · as três importações (PGDAS-D, Demonstrativo, planilha) zeram os dois diretos', (html.match(/AN\.cfg\.rbt12Direto = 0; AN\.cfg\.rbt12ExpDireto = 0;/g)||[]).length >= 3);
+    chk('5ah · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
+    chk('5ah · v7.92.4 · badge e changelog', /APP_VERSAO = '7\.92\.4'/.test(html) && /<b>v7\.92\.4<\/b><\/td><td>13\/09\/2026/.test(html) && /anModeloAplicarLinhas/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
