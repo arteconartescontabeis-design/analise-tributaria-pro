@@ -19,9 +19,35 @@ function blocos(html){
   B.prCarregar = faixa(/^async function prCarregar\(\)/, /^let EMP_EDIT/).txt;                   // prRestaurar, prCarregar
   B.reformaDefs = faixa(/^const RF_ANOS/, /^function prCgibs14/).txt;                   // RF_ANOS, RF_ALIQ_DEFAULT, RF_REDUCOES, RF_CONTRA, RF, rfNormalizar, rfNovo, prCgibs14, prRenderAliq
   B.reformaCalc = faixa(/^function rfContraEfetivo/, /^const QX_R2/).txt;                   // rfContraEfetivo, rfLinhaBase, cenDentro, calcCenariosReforma
+  // ── v1.4.0 · blocos que o motor da Reforma passou a exigir depois da v7.91.0 (composição de fornecedores) e da v7.93.0 (helpers de consistência) ──
+  B.consist  = faixa(/^\/\/ ══ v7\.93\.0 · HELPERS DE CONSISTÊNCIA/, /^\/\/ \(5\) Comparador tela × gravada/).txt;   // frFronteira, credComprasSituacao, snSituacao*, notaTotais, notaConciliacao
+  B.compModulo = faixa(/^const COMP_GRUPOS/, /^function compLimparEditor/).txt;              // COMP_*, compAutoDe, compMontar, compContraCenarios, compConfianca (sem o editor de tela)
   B.lacre    = faixa(/^const LACRE_CASOS/, /^let RF_MARCO/).txt;                            // LACRE_CASOS, LACRE_HASH, lacreHash, lacreRodar, lacreBoot, lacreRender
   B.ppDoc    = faixa(/^const PP_CAP/, /^async function rlCnpjRender/).txt;                  // PP_CAP, ppDocumento
   B.ppMedir  = faixa(/^const PP_RESERVA_MM/, /^async function parecerIA/).txt;             // ppEmpacotarDOM, ppMedirPaginas, ppTimbradoStatus, ppReguaRender
+  // ── v1.1.0 · RELATÓRIOS copiados do index (os mesmos da aba Relatórios do Análise Tributária Pro) ──
+  B.mesesRot = faixa(/^const MESES_ROT = /, /^const MODELO_TPL_PATHS/).txt;                  // MESES_ROT
+  B.triExp   = faixa(/^const TRI_EXP_CFOPS/, /^function triParse\(/).txt;                    // TRI_EXP_CFOPS (Resumo Estatístico)
+  B.origemRot = faixa(/^const ORIGEM_ROT/, /^function anOrigemMarcar/).txt;                  // ORIGEM_ROT (trilha de origem no bloco 0)
+  B.pgBlocos = faixa(/^const PG_BLOCOS/, /^let PG_DADOS/).txt;                               // PG_BLOCOS (rótulos dos blocos de receita)
+  B.rfConfExp = faixa(/^function rfConfereExportacao/, /^function rfAvisoExportacaoHtml/).txt; // rfConfereExportacao
+  B.rlEstado = faixa(/^let RL = \{/, /^async function rlCarregar/).txt;                      // RL, RL_CHARTS, PER_ROTULOS, agrupar
+  B.rlCharts = faixa(/^function rlLimparCharts/, /^\/\/ ═+ v7\.34\.0: página única do parecer/).txt; // rlLimparCharts, rlQuadroTribPgdas, rlChart, CORES
+  B.rlBaseReforma = faixa(/^function rlBaseReforma/, /^function parecerDados/).txt;          // rlBaseReforma (base única da Reforma)
+  B.rlCnpj   = faixa(/^async function rlCnpjRender/, /^\/\/ ═+ v6: RELATÓRIO CONSOLIDADO/).txt; // Resumo Estatístico
+  B.rlRfTrib = faixa(/^\/\/ ═+ Notas fiscais do período/, /^async function rlCtBuscar/).txt;   // CT_MIN, rlRfTribHtml, rlRfTribTrocar
+  B.conferencia = faixa(/^\/\/ ═+ Conferência de cálculos — memória/, /^async function rlSalvarERecarregar/).txt; // CF, rlConf*, rlStatusProj, rlCmpHtml, rlProjTrocar…
+  B.rlRegimes = faixa(/^function rlRegimes\(/, /^function rlRegistros\(/).txt;                // Comparativo de regimes (resumo anual + memória INSS/IRPJ/CSLL)
+  B.rlReforma = faixa(/^function refCenCard\(/, /^\/\/ ═+ DASHBOARD DE ANÁLISES/).txt;         // refCenCard, rlReforma (ano a ano + abertura IBS/CBS)
+  // ── v1.2.0 · os DEMAIS relatórios do index (parecer com IA, apresentações, consolidado, registros, produtos) ──
+  B.lrQuadro = faixa(/^function lrQuadroApuracao/, /^async function anTrocarEmpresa/).txt;      // lrQuadroApuracao (Consolidado analítico)
+  B.rlConsolidado = faixa(/^\/\/ ═+ v6: RELATÓRIO CONSOLIDADO/, /^\/\/ ═+ RELATÓRIOS ═/).txt;  // rlConsolidado
+  B.parecerPags = faixa(/^\/\/ ═+ v7\.34\.0: página única do parecer/, /^function rlBaseReforma/).txt; // parecerPag*, PARECER_TETO, fornComprasSimplesMEI, ppBaseIbsCbs, ppCredCompras, premissaCreditoIBS
+  B.parecer  = faixa(/^function parecerDados\(/, /^\/\/ ═+ Notas fiscais do período/).txt;      // parecerDados, ppEnqFicha, parecerTextosPadrao, rfConfirmarBaseManual, rlParecer
+  B.rlCt     = faixa(/^async function rlCtBuscar/, /^\/\/ ═+ v7\.40\.1 · SEÇÕES EMPACOTADAS/).txt; // rlCtBuscar, rlCtResumoIA, rlProdRender (Produtos × Reforma)
+  B.parecerIA = faixa(/^async function parecerIA/, /^\/\/ ═+ Conferência de cálculos — memória/).txt; // parecerIA (Edge Function gerar-parecer do ATP)
+  B.apresentacao = faixa(/^async function rlSalvarERecarregar/, /^function rlRender\(\) \{/).txt;  // AP_*, ap*, rlApresentacao, apPrintCss (rlSalvarERecarregar vem junto; nunca é chamado aqui)
+  B.rlRegistros = faixa(/^function rlRegistros\(/, /^function refCenCard\(/).txt;               // rlRegistros
   B.versao   = (html.match(/^const APP_VERSAO = '([^']+)';/m)||[])[1];
   B.lacreHash = (html.match(/^const LACRE_HASH = '([^']+)';/m)||[])[1];
   return B;
