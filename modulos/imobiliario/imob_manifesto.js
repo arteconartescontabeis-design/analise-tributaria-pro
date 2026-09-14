@@ -9,8 +9,9 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.2.1',
-    data: '25/08/2026',
+    versao: '1.3.0',
+    data: '14/09/2026',
+    cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
     motor: { nome: 'motorImob', versao: '1.2.0', contrato: 'calc-imob-1',
              ruleset: 'imob-2026.08.21', lacre: 'c287341e', regras: 29, homologadas: 28 },
@@ -19,6 +20,16 @@
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.3.0', data: '14/09/2026', texto:
+        'Prompt Mestre de melhorias (18 itens): invent\u00e1rio 2026 com data-base informada, data atual autom\u00e1tica e prazo '
+        + 'recalculado todo dia; mem\u00f3ria de c\u00e1lculo mostra as al\u00edquotas (padr\u00e3o, redu\u00e7\u00e3o e finais) em vez de R$ 0,00; '
+        + 'resultado da aliena\u00e7\u00e3o em 12 etapas com f\u00f3rmula; grau de certeza e premissas no topo do resultado; '
+        + 'edi\u00e7\u00e3o controlada de premissas com justificativa (original \u00d7 editado na mem\u00f3ria e nos relat\u00f3rios); '
+        + 'cadastro do im\u00f3vel ampliado com campos obrigat\u00f3rios/opcionais/condicionais; valida\u00e7\u00f5es antes de calcular; '
+        + 'loca\u00e7\u00e3o e permuta completas; guia comparativo dos regimes opcionais; comparativo lado a lado com proje\u00e7\u00f5es '
+        + 'mensal, anual e 2026-2033 e gr\u00e1fico; pessoa f\u00edsica com crit\u00e9rios e pend\u00eancias; relat\u00f3rios executivo, '
+        + 't\u00e9cnico e mem\u00f3ria; hist\u00f3rico com filtros, compara\u00e7\u00e3o de vers\u00f5es, duplicar e exportar; regras por assunto '
+        + 'com vig\u00eancia e impacto; 25 testes de aceite em tests/run_imob_ui.js. Motor intocado (lacre c287341e).' },
       { versao: '1.2.1', data: '25/08/2026', texto:
         'A trava da op\u00e7\u00e3o do art. 375 passa a congelar tamb\u00e9m QUEM escolheu e QUANDO — '
         + 'antes ela guardava apenas QUAL op\u00e7\u00e3o, e regravar a mesma escolha reescrevia autoria e '

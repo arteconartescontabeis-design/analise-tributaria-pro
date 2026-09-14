@@ -24,7 +24,7 @@
 (function (raiz) {
   'use strict';
 
-  var PERSIST_VERSAO = '1.1.0';
+  var PERSIST_VERSAO = '1.2.0';   // 1.2.0: listarCalculos com entrada/empresa/imóvel/usuário e filtros
   var M = raiz.MotorImob || (typeof require !== 'undefined' ? require('./motorImob.js') : null);
 
   var TABELAS = {
@@ -204,8 +204,14 @@
     listarCalculos: function (ctx) {
       var e = precisaEscritorio(ctx); if (e) return e;
       var q = TABELAS.calculos + '?select=id,calculado_em,request_id,nivel_confianca,hash_snapshot,'
-            + 'motor_versao,ruleset_versao,resultado&order=calculado_em.desc&limit=' + (ctx.limite || 50);
+            + 'motor_versao,ruleset_versao,resultado,entrada,empresa_id,imovel_id,calculado_por'
+            + '&order=calculado_em.desc&limit=' + (ctx.limite || 50);
       if (ctx.empresa_id) q += '&empresa_id=eq.' + ctx.empresa_id;
+      var f = ctx.filtros || {};
+      if (f.operacao && /^[a-z_]+$/.test(f.operacao)) q += '&entrada->>operacao=eq.' + f.operacao;
+      if (f.de  && /^\d{4}-\d{2}-\d{2}$/.test(f.de))  q += '&calculado_em=gte.' + f.de + 'T00:00:00';
+      if (f.ate && /^\d{4}-\d{2}-\d{2}$/.test(f.ate)) q += '&calculado_em=lte.' + f.ate + 'T23:59:59';
+      if (f.imovel_id) q += '&imovel_id=eq.' + f.imovel_id;
       return { metodo: 'GET', tabela: TABELAS.calculos, caminho: q };
     },
     movimentacoesDoImovel: function (imovelId) {
