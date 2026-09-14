@@ -1,4 +1,9 @@
-// ═══ Simulação de Incorporação — Edge Function "gerar-parecer-incorporacao" (v1.0) ═══
+// ═══ Simulação de Incorporação — Edge Function "gerar-parecer-incorporacao" (v1.3.0) ═══
+// v1.3.0 (13/09/2026): parecer remodelado para incorporação — além das 8 chaves da v1.0, a IA
+// devolve 11 chaves novas (executivo, ranking, antesDepois, carga, regimes, reformaDecisao,
+// conclTrib, conclFin, conclPatr, conclReforma, conclGlobal) a partir do bloco "decisao" do payload
+// (score 0-100, ranking dos cenários, por tributo, Reforma ano a ano). Toda chave ausente vira ""
+// e o app mantém o texto padrão daquela seção. Nada mais mudou em relação à v1.0.
 // Function PRÓPRIA do aplicativo Simulação de Incorporação. A "gerar-parecer" do Análise
 // Tributária Pro NÃO é alterada (decisão de 24/08: cada aplicativo tem a sua function).
 // Mesma estrutura da gerar-parecer v7.7: Verify JWT OFF no gateway (para o preflight CORS
@@ -94,17 +99,31 @@ REGRAS ABSOLUTAS:
 5. Não afirme que a incorporação "deve" ou "não deve" ser feita de forma absoluta: a recomendação é condicionada às premissas, aos dados disponíveis e à regulamentação vigente na data-base. Expressões proibidas: "com certeza", "sem dúvida", "definitivamente", "a melhor opção".
 6. Responda APENAS com JSON válido, sem markdown, sem crase, sem texto fora do JSON.
 
-Formato exato da resposta:
-{"textos":{"intro":"...","empresas":"...","premissas":"...","leitura":"...","reforma":"...","parecer1":"...","parecer2":"...","recomendacao":"..."}}
+7. Nunca escreva "economia negativa": quando o valor for desfavorável diga "acréscimo tributário". Nunca dê nota, score, ranking ou percentual que não esteja no JSON.
+8. Patrimônio e endividamento NÃO foram avaliados (o sistema não recebe balanço): trate como limitação em toda conclusão, e se decisao.incompleta for true diga "ANÁLISE INCOMPLETA" na conclusão global.
 
-Conteúdo de cada campo (1 parágrafo cada):
+Formato exato da resposta (19 chaves, todas obrigatórias):
+{"textos":{"intro":"...","empresas":"...","premissas":"...","leitura":"...","reforma":"...","parecer1":"...","parecer2":"...","recomendacao":"...","executivo":"...","ranking":"...","antesDepois":"...","carga":"...","regimes":"...","reformaDecisao":"...","conclTrib":"...","conclFin":"...","conclPatr":"...","conclReforma":"...","conclGlobal":"..."}}
+
+Conteúdo de cada campo (1 parágrafo cada; os 11 últimos usam o bloco "decisao" do JSON):
 - intro: o que é a simulação (incorporação de ${p.incorporadas.map((e: any) => String(e.nome)).join(", ")} por ${String(p.incorporadora.nome)}, ano-base ${p.ano}), por que a carga não é linear (progressividade do Simples, adicional de IRPJ, Reforma) e o que o documento compara.
 - empresas: retrato de cada empresa (receita, regime, carga) e da consolidada, citando os valores de empresas[] e consolidada.
 - premissas: as premissas listadas em premissas[] e notas[], com as palavras do sistema, em texto corrido.
 - leitura: leitura do delta nos três regimes (delta.simples, delta.lucroPresumido, delta.lucroReal), dizendo claramente o que é custo e o que é economia, e qual regime fica mais barato para a consolidada.
 - reforma: leitura de reformaAnoAAno com destaque para ${ANO_REF}: por dentro × híbrido × regime regular, consolidada contra a soma, e se o caminho por dentro está bloqueado em algum ano.
 - parecer1 e parecer2: o parecer técnico em dois parágrafos, com os porquês; incorporar os alertas.
-- recomendacao: UMA frase conclusiva, condicionada às premissas adotadas, aos dados disponíveis e à regulamentação vigente na data-base.${blocoAb}${blocoAl}${blocoRegras}`;
+- recomendacao: UMA frase conclusiva, condicionada às premissas adotadas, aos dados disponíveis e à regulamentação vigente na data-base.
+- executivo: parecer executivo — o score de atratividade (decisao.score de 0 a 100 e decisao.classificacao), como ele se compõe (decisao.dimensoes: nota, peso e leitura de cada dimensão; patrimônio e dívida fora por falta de dados) e os motivos listados em decisao.motivos.
+- ranking: leitura de decisao.cenarios na ordem em que vêm (1º é o melhor): nome, score, regime e tributos de cada cenário e por que o primeiro fica à frente; se houver só um cenário além do "separadas", diga isso.
+- antesDepois: decisao.separadas contra decisao.consolidada — tributos, regime, carga efetiva e Reforma acumulada; o que muda vem do cálculo sobre a soma (faixa, sublimite, adicional de IRPJ), não de receita nova.
+- carga: leitura de decisao.porTributo — quais tributos explicam a diferença entre separadas e consolidada, citando os valores.
+- regimes: decisao.consolidada.regimesPermitidos, o regime de menor carga da consolidada e, se decisao.resultadoLucroReal existir, o resultado após tributos e a margem no Lucro Real, consolidada contra separadas.
+- reformaDecisao: decisao.reformaAnoAAno — separadas × consolidada por ano e o acumulado; economiaOuAcrescimo positivo é ECONOMIA, negativo é ACRÉSCIMO tributário; diga se o sinal se mantém ou se inverte ao longo da transição.
+- conclTrib: conclusão tributária em 1 a 2 frases (tributos de hoje, custo ou economia anual, regime).
+- conclFin: conclusão financeira em 1 a 2 frases (resultado após tributos e margem no Lucro Real, se houver; senão diga que não há base para conclusão financeira).
+- conclPatr: conclusão patrimonial em 1 frase: não avaliada, o sistema não recebe balanço (ativo, passivo, patrimônio líquido, dívidas); sem ela a recomendação não é definitiva.
+- conclReforma: conclusão sobre a Reforma em 1 a 2 frases (acumulado da transição e estabilidade do sinal).
+- conclGlobal: UMA frase: cenário recomendado no que o sistema mede (tributos e Reforma), com score e classificação, e a ressalva de patrimônio/endividamento não avaliados (ou "STATUS: ANÁLISE INCOMPLETA" se decisao.incompleta for true).${blocoAb}${blocoAl}${blocoRegras}`;
 
     const user = "Dados da simulação (calculados pelo motor do sistema):\n" + JSON.stringify(p, null, 1);
     const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -139,7 +158,8 @@ Conteúdo de cada campo (1 parágrafo cada):
     }
     if (!obj) return json({ erro: "A IA não devolveu JSON válido e não foi possível reparar. Detalhe: " + limpo.slice(0, 160) }, 502);
     if (!obj?.textos) return json({ erro: "Resposta sem o campo textos." }, 502);
-    for (const k of ["intro","empresas","premissas","leitura","reforma","parecer1","parecer2","recomendacao"])
+    for (const k of ["intro","empresas","premissas","leitura","reforma","parecer1","parecer2","recomendacao",
+                     "executivo","ranking","antesDepois","carga","regimes","reformaDecisao","conclTrib","conclFin","conclPatr","conclReforma","conclGlobal"])
       if (typeof obj.textos[k] !== "string") obj.textos[k] = "";
     return json(obj, 200);
   } catch (e) {
