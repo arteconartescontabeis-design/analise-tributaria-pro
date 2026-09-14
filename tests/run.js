@@ -5178,11 +5178,30 @@ console.log('\n■ Integridade da interface');
   }
 
 
+  // ═══ 5al · v7.93.3 — comparador tela × gravada: bloco reforma canonizado (ordem de chaves do jsonb) ═══
+  {
+    const run = c => vm.runInContext(c, ctx);
+    const base = { cnpj:'23232323000123', ano:2026, cfg:{ iss:5 }, receitas:{ a3_semret:Array(12).fill(1000) }, folha:{}, compras:{}, despesas:{} };
+    // como a TELA monta: ordem do código + estado transitório do editor
+    const tela = { ...base, reforma:{ receita:5916695, credSimplesPct:0, contra:{ compras_lrlp:0, compras_simples:0 }, comp:{ final:{ regular:0.5, simples_dentro:0.3, nid:0.2 }, origem:'usuario', modo:'valores', _valInvalido:true }, _compUi:'usuario', _fornRows:[{ cnpj:'1', valor:10 }], _res:{ x:1 } } };
+    // como o BANCO devolve: jsonb reordena as chaves (curtas primeiro, depois alfabético) e só guarda o que rfLimpo deixou
+    const banco = JSON.parse(JSON.stringify({ ...base, reforma:{ comp:{ modo:null, final:{ nid:0.2, regular:0.5, simples_dentro:0.3 }, origem:'usuario' }, contra:{ compras_simples:0, compras_lrlp:0 }, receita:5916695, credSimplesPct:0 } }));
+    chk('5al · reforma com as mesmas chaves em ordem diferente (jsonb) e sem o estado de tela = IGUAL', run('anChaveCanonica')(banco) === run('anChaveCanonica')(tela) && run('anDifCanonica')(banco, tela).length === 0);
+    const ed = JSON.parse(JSON.stringify(banco)); ed.reforma.comp.final.regular = 0.6;
+    chk('5al · edição real na composição segue acusada, apontando "reforma"', JSON.stringify(run('anDifCanonica')(ed, tela)) === '["reforma"]');
+    const ed2 = JSON.parse(JSON.stringify(banco)); ed2.reforma.receita = 5916696;
+    chk('5al · edição real na receita da Reforma segue acusada', JSON.stringify(run('anDifCanonica')(ed2, tela)) === '["reforma"]');
+    chk('5al · reforma ausente dos dois lados = igual; presente só de um lado = diferente', run('anDifCanonica')(base, { ...base }).length === 0 && JSON.stringify(run('anDifCanonica')(base, tela)) === '["reforma"]');
+    chk('5al · anCanon usa anCanonReforma (rfLimpo + chaves ordenadas em profundidade)', /reforma:anCanonReforma\(o\.reforma\)/.test(html) && /function anCanonOrdenar/.test(html) && /function anCanonReforma/.test(html));
+    chk('5al · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
+    chk('5al · v7.93.3 · badge e changelog', /APP_VERSAO = '7\.93\.3'/.test(html) && /<b>v7\.93\.3<\/b><\/td><td>13\/09\/2026/.test(html));
+  }
+
   // ═══ 5ak · v7.93.2 — ressalva residual do reteste final: nota de centavos sob o "Resultado mês a mês" ═══
   {
     chk('5ak · a tabela mensal da Análise Atual recebe a mesma frase de totais dos relatórios', /\$id\('an-detalhe'\)\.innerHTML = h \+ notaTotais\(\);/.test(html) && (html.match(/notaTotais\(\)/g)||[]).length >= 3);
     chk('5ak · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5ak · v7.93.2 · badge e changelog', /APP_VERSAO = '7\.93\.2'/.test(html) && /<b>v7\.93\.2<\/b><\/td><td>13\/09\/2026/.test(html));
+    chk('5ak · v7.93.2 · badge e changelog', /APP_VERSAO = '7\.93\.[2-9]'/.test(html) && /<b>v7\.93\.2<\/b><\/td><td>13\/09\/2026/.test(html));
   }
 
   console.log(FALHAS.length ? `✗ ${FALHAS.length} FALHA(S): ${FALHAS.join(' · ')}` : `✓✓ SUÍTE COMPLETA: ${OK} verificações OK`);
