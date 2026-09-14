@@ -21,7 +21,7 @@ const src = f => fs.readFileSync(path.join(RAIZ, 'src', f), 'utf8');
 const lacre = B.lacre.replace(/'atp_lacre'/g, "'atp_lacre_inc'");
 if (lacre === B.lacre) throw new Error('bloco do lacre: chave atp_lacre não encontrada para renomear');
 
-const ORDEM = ['nucleo','dialogos','motor','params','helpers','normalizar','iniAtiv','folhaPerc','snEleg','prCarregar','reformaDefs','reformaCalc','ppDoc','ppMedir',
+const ORDEM = ['nucleo','dialogos','motor','params','helpers','normalizar','iniAtiv','folhaPerc','snEleg','prCarregar','reformaDefs','consist','compModulo','reformaCalc','ppDoc','ppMedir',   // v1.4.0: consist e compModulo entram ANTES do reformaCalc (calcCenariosReforma os chama)
   // v1.1.0 · relatórios do Análise Tributária Pro (copiados pelas mesmas âncoras; rlRender é PRÓPRIO do incorporação — src/incorporacao_app_4.js)
   'mesesRot','triExp','origemRot','pgBlocos','rfConfExp','rlEstado','rlCharts','rlBaseReforma','rlCnpj','rlRfTrib','conferencia','rlRegimes','rlReforma',
   // v1.2.0 · demais relatórios (parecer com IA, apresentações, consolidado analítico, registros, produtos × Reforma)

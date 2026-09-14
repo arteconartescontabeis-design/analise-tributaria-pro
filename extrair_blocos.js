@@ -19,6 +19,9 @@ function blocos(html){
   B.prCarregar = faixa(/^async function prCarregar\(\)/, /^let EMP_EDIT/).txt;                   // prRestaurar, prCarregar
   B.reformaDefs = faixa(/^const RF_ANOS/, /^function prCgibs14/).txt;                   // RF_ANOS, RF_ALIQ_DEFAULT, RF_REDUCOES, RF_CONTRA, RF, rfNormalizar, rfNovo, prCgibs14, prRenderAliq
   B.reformaCalc = faixa(/^function rfContraEfetivo/, /^const QX_R2/).txt;                   // rfContraEfetivo, rfLinhaBase, cenDentro, calcCenariosReforma
+  // ── v1.4.0 · blocos que o motor da Reforma passou a exigir depois da v7.91.0 (composição de fornecedores) e da v7.93.0 (helpers de consistência) ──
+  B.consist  = faixa(/^\/\/ ══ v7\.93\.0 · HELPERS DE CONSISTÊNCIA/, /^\/\/ \(5\) Comparador tela × gravada/).txt;   // frFronteira, credComprasSituacao, snSituacao*, notaTotais, notaConciliacao
+  B.compModulo = faixa(/^const COMP_GRUPOS/, /^function compLimparEditor/).txt;              // COMP_*, compAutoDe, compMontar, compContraCenarios, compConfianca (sem o editor de tela)
   B.lacre    = faixa(/^const LACRE_CASOS/, /^let RF_MARCO/).txt;                            // LACRE_CASOS, LACRE_HASH, lacreHash, lacreRodar, lacreBoot, lacreRender
   B.ppDoc    = faixa(/^const PP_CAP/, /^async function rlCnpjRender/).txt;                  // PP_CAP, ppDocumento
   B.ppMedir  = faixa(/^const PP_RESERVA_MM/, /^async function parecerIA/).txt;             // ppEmpacotarDOM, ppMedirPaginas, ppTimbradoStatus, ppReguaRender
