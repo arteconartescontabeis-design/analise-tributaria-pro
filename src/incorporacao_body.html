@@ -1,3 +1,10 @@
+<style>
+/* v1.1.0 · Relatórios lado a lado: uma coluna por empresa (Consolidada, Incorporadora, Incorporada…) */
+.inc-rl-lado{display:none;gap:16px;align-items:flex-start;overflow-x:auto;padding-bottom:8px}
+.inc-rl-col{flex:0 0 820px;min-width:820px;max-width:820px;border:1px solid var(--border);border-radius:10px;padding:10px;background:#fafbfc}
+.inc-rl-colcab{position:sticky;top:0;z-index:2;background:#fff;border-bottom:2px solid var(--primary-light);padding:6px 4px 8px;margin-bottom:8px;font-size:14px}
+@media print{ .inc-rl-lado{display:block!important;overflow:visible} .inc-rl-col{flex:none;min-width:0;max-width:none;border:0;padding:0;background:transparent;page-break-before:always;break-before:page} .inc-rl-col:first-child{page-break-before:auto;break-before:auto} .inc-rl-colcab{position:static} }
+</style>
 <!-- ══ LOGIN (mesmo Supabase, mesma sessão do Análise Tributária Pro) ══ -->
 <div id="auth-screen">
   <div class="auth-card">
@@ -17,6 +24,7 @@
     <div class="nav">
       <div class="nav-item active" data-page="sim" onclick="go('sim')">🏗️ <span>Simulação</span></div>
       <div class="nav-item" data-page="historico" onclick="go('historico')">🗂️ <span>Simulações gravadas</span></div>
+      <div class="nav-item" data-page="relatorios" onclick="go('relatorios')">📑 <span>Relatórios</span></div>
       <div class="nav-item" data-page="versoes" onclick="go('versoes')">🕘 <span>Versões</span></div>
       <div class="nav-item" onclick="location.href='index.html'">↩ <span>Análise Tributária Pro</span></div>
     </div>
@@ -74,7 +82,7 @@
 
       <div class="card" id="inc-card-parecer" style="display:none">
         <h3>4. Parecer de incorporação</h3>
-        <div id="rl-corpo"></div>
+        <div id="inc-parecer-dock"><div id="rl-corpo"></div></div>
       </div>
     </div>
 
@@ -82,6 +90,43 @@
     <div id="page-historico" style="display:none">
       <div class="page-title"><h1>Simulações gravadas</h1><span class="crumb">Reabrir mostra o resultado da época, sem recalcular</span></div>
       <div class="card"><div id="inc-hist"></div></div>
+    </div>
+
+    <!-- RELATÓRIOS (v1.1.0) — os MESMOS relatórios da aba Relatórios do Análise Tributária Pro, gerados para a
+         consolidada e para cada empresa isolada. As funções de relatório são COPIADAS do index pelo build; os ids
+         rl-* abaixo são os que essas funções procuram. O #rl-corpo é um só (vive no card do parecer e é MOVIDO para
+         cá quando esta página abre — ver incRlCorpoPara). -->
+    <div id="page-relatorios" style="display:none">
+      <div class="page-title"><h1>Relatórios</h1><span class="crumb">Consolidada e cada empresa isolada · parecer, conferência e apresentações remodelados para a incorporação</span></div>
+      <div class="card no-print"><div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
+        <div style="min-width:300px"><label>Relatório</label><select id="rl-tipo" onchange="rlRender()">
+          <option value="parecer_inc">Parecer de Incorporação — com IA</option>
+          <option value="conferencia">Conferência de cálculos — memória (Consolidada · Incorporadora · Incorporada)</option>
+          <option value="apresentacao_inc_s">Apresentação de Incorporação — simplificada (7 telas)</option>
+          <option value="apresentacao_inc_c">Apresentação de Incorporação — completa (15 telas)</option>
+        </select></div>
+        <div style="min-width:300px;flex:1;display:none" id="inc-rl-ent-wrap"><label>Empresa</label><select id="inc-rl-ent" onchange="rlRender()"><option value="todas">— calcule uma simulação —</option></select></div>
+        <div style="width:190px;display:none" id="rl-conf-modo-wrap"><label>Detalhe da conferência</label>
+          <select id="rl-conf-modo" onchange="rlRender()">
+            <option value="mes">Um mês (padrão)</option>
+            <option value="anual">Resumo anual</option>
+            <option value="completo">Completo — 12 meses</option>
+          </select></div>
+        <div style="width:110px;display:none" id="rl-conf-mes-wrap"><label>Mês</label><select id="rl-conf-mes" onchange="rlRender()"></select></div>
+        <div style="width:130px" id="rl-per-wrap"><label>Periodicidade</label><select id="rl-per" onchange="rlRender()">
+          <option value="1">Mensal</option><option value="2">Bimestral</option>
+          <option value="3" selected>Trimestral</option><option value="6">Semestral</option>
+          <option value="12">Anual</option>
+        </select></div>
+        <div style="align-self:flex-end"><button class="btn solid" onclick="window.print()" title="Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · Gráficos de segundo plano ligados. Conferência com 'Todas — lado a lado' imprime uma empresa por página; apresentação em paisagem.">🖨️ Imprimir / PDF</button></div>
+      </div>
+      <div style="display:none;margin-top:8px" id="rl-conf-anos-wrap"><label>Anos no demonstrativo da Reforma <span class="hint" style="font-weight:400">(memória de cálculo ano a ano)</span></label>
+        <div id="rl-conf-anos" style="display:flex;gap:2px;flex-wrap:wrap;align-items:center;padding:4px 0"></div></div>
+      <div id="rl-status-proj" class="rl-status" style="display:none"></div>
+      <div id="inc-rl-aviso" class="hint" style="margin-top:8px"></div></div>
+      <div id="rl-cab" style="display:none" class="card"><h2 id="rl-titulo" style="font-family:var(--display);color:var(--primary)"></h2><div class="hint" id="rl-sub"></div></div>
+      <div id="inc-rl-dock"></div>
+      <div id="inc-rl-lado" class="inc-rl-lado"></div>
     </div>
 
     <!-- VERSÕES -->
@@ -97,3 +142,4 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
+
