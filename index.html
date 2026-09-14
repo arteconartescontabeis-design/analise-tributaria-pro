@@ -797,6 +797,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.94.1</b></td><td>14/09/2026</td><td><b>🐞 Abertura do aplicativo com a análise ZERADA — corrigido; e a gravação passa a recusar substituir a análise gravada por uma em branco.</b> Sintoma relatado: ao entrar e ir a <b>Importar</b> ou <b>Configuração</b> a empresa aparecia com tudo zerado; trocar o ano e voltar fazia os dados aparecerem. Causa: o guard da v7.44.0 criava a análise em branco <i>já com o CNPJ e o ano</i> da empresa global, e a comparação seguinte ("empresa e ano diferem?") respondia que não — a carga do banco nunca era disparada; só a troca de ano (<code>gTrocar</code>) chamava <code>anTrocarEmpresa</code>. A aba Análise não sofria porque cria o objeto com CNPJ vazio. <b>Risco escondido:</b> essa análise vazia não tinha marca de versão, então importar um PGDAS-D nela e deixar a gravação automática correr passava pela guarda de conflito e <b>substituía a análise gravada</b> (folha, compras, despesas, configuração, Reforma) só pelo que veio do PDF. Correção: o objeto criado pela navegação é marcado como <code>_placeholder</code> e sempre dispara a carga do banco (Importar, Configuração e Análise); <code>anSalvar</code> recusa gravar um placeholder por cima de linha existente, com aviso; a marca não vai ao banco. Motor e lacre <code>22197ef1</code> intocados. Suíte: bloco 5ap.</td></tr>
                     <tr><td><b>v7.94.0</b></td><td>14/09/2026</td><td><b>⚖️ Empresa impedida pelo ano anterior (RBAA acima do sublimite): o ICMS e o ISS "por fora" passam a ser a MESMA apuração do Presumido e do Real — e a partilha do DAS deixa de mostrar tributo que não está na guia. LACRE RE-SELADO <code>453f7b32</code> → <code>22197ef1</code>.</b> Caso real (conferência "Artecon8", 14/09/2026, RBAA R$ 3.957.960,59): o DAS já saía sem ICMS/ISS (correto), mas o custo do regime somava um ICMS apurado por fórmula própria da v7.58.0 — <b>R$ 27.426,82</b> em janeiro — enquanto o Presumido e o Real, no mesmo mês, apuravam <b>R$ 27.547,45</b>; dois números para o mesmo tributo, e nenhum deles editável. <b>(1) Uma conta só.</b> Fora do Simples, o ICMS e o ISS seguem as normas gerais (LC 123/2006, art. 20, § 1º; Res. CGSN 140/2018, art. 12) — exatamente a conta gráfica que o motor já faz para o Presumido/Real: débito das saídas, crédito das entradas, Tema 69 e o que estiver <b>informado na aba ICMS·IPI</b> (débito/crédito lançados prevalecem sobre a estimativa). O impedido passa a ler <code>icmsPagar</code> e <code>iss</code>, os mesmos do LP/LR; saldo credor no mês não reduz a carga (zero a recolher). <b>Resultado: o ICMS do impedimento fica editável mês a mês pela aba ICMS·IPI</b>, e o Simples, o Presumido e o Real mostram o mesmo valor. <b>(2) Partilha.</b> No mês impedido a alíquota efetiva já perdia as parcelas de ICMS/ISS, mas a repartição por tributo ainda as alocava nas faixas 1ª–5ª (na 6ª é zero por tabela, e o defeito ficava invisível): a decomposição imprimia "ICMS 5.988,43 · ISS 1.687,67" dentro de um DAS que não os continha (agosto a dezembro do mesmo caso), comprimindo as parcelas federais, e os cenários da Reforma liam <code>dasIcmsIss</code> como se estivesse na guia. Agora <code>dasIcmsIss</code> é zero no mês impedido e o resíduo vai para IRPJ/CSLL/CPP/IPI. <b>(3) Memória.</b> As duas parcelas entravam no "Custo total do regime" sem linha própria — o quadro saltava de DAS 34.763,00 para 62.189,83 sem dizer por quê. Passam a ter linha ("ICMS apurado fora do Simples", com débito, crédito e origem informado × estimativa; idem ISS), e o rótulo do total nomeia o impedimento. <b>Lacre:</b> casos 1 e 2 idênticos ao centavo; o caso 3 (impedido de setembro a dezembro) muda de propósito — Simples do ano +R$ 13.440,00 (crédito das compras monofásicas e débito do Anexo I inteiro, como no LP/LR) e híbrido 2033 +R$ 12.523,60 (partilha do mês impedido). <b>Não alterado (aguarda decisão):</b> no Presumido e no Real o ICMS com crédito maior que o débito ainda entra <b>negativo</b> no total do mês (maio: −1.373,51; junho: −918,35 no mesmo caso) — a conta gráfica transporta saldo credor, como o IPI faz desde a v7.80.0; a mudança alcança os gabaritos da planilha e por isso fica para versão própria. Suíte: bloco 5ao.</td></tr>
                     <tr><td><b>v7.93.5</b></td><td>13/09/2026</td><td><b>🤖 O texto da IA e o documento passam a falar do MESMO ano — e o parecer ganha rastreio, tabela do plano e rodapé legal.</b> No PDF da Weeedo (v7.93.4 + Edge Function v7.8) o parágrafo da sensibilidade citou 1.765.212,64, 891.602,20, 61.308,91 e um crédito de 873.777,91 que não estavam em quadro nenhum — eram os valores de <b>2033</b> (<code>sens.ref</code> é fixado em 2033 no motor), enquanto o parecer imprime o quadro do <b>ano de referência</b> (2027). O payload da IA passa a levar a linha de <code>sens.porAno</code> do mesmo ano do quadro (<code>podeInverterVencedor</code> daquele ano, <code>podeInverterEmAlgumAno</code> à parte). Também vão a <code>situacaoSimples</code> (frase única da transição/impedimento, v7.93.0) e, de volta, a lista <code>__valoresSemOrigem</code> que a Edge Function v7.8 devolve — cada "R$" do texto da IA conferido contra os números do payload — exibida em vermelho na barra do parecer para o revisor. <b>Plano de ação</b> vira tabela (nº, quando, ação, o que fazer) e o rodapé recebe a <b>versão das premissas legais</b> da emissão (normas, tabela de alíquotas de referência, motor, lacre, data-base) — item P3 do parecer. Nenhum número muda; motor e lacre <code>453f7b32</code> intocados.</td></tr>
                     <tr><td><b>v7.93.4</b></td><td>13/09/2026</td><td><b>📄 Três correções do parecer, lidas no PDF real da v7.93.3 (Weeedo, 17 folhas — nenhuma estoura).</b> <b>(1) Análise sem dados — bloqueio brando (R6, decisão de 13/09):</b> um parecer gerado sobre análise sem receita lançada saía completo, com capa, quadros em R$ 0,00 e assinatura, sem nenhuma marca. Agora o documento monta com a tarja "⛔ ANÁLISE SEM DADOS" na primeira folha (<code>ppSemDados</code>/<code>ppTarjaSemDados</code>) e o botão "Gerar textos com IA" pede confirmação expressa antes de consumir cota. <b>(2) Subtítulos órfãos:</b> a régua mostrou "Créditos IBS/CBS — 2027" sozinho no pé da folha 11 e a linha de abertura da seção 5 no pé da folha 8, com o conteúdo na folha seguinte — a regra do empacotador só descia o <code>.pp-sec</code>. <code>ppEhEncabecamento</code> passa a descer o encabeçamento inteiro (cabeçalho, subtítulo em negrito e o hint curto que os acompanha), sempre deixando ao menos um bloco na folha. <b>(3) "Pode inverter o vencedor? SIM" com o mesmo vencedor nos três limites:</b> a regra da v7.91.0 decidia por <i>variação do crédito ≥ margem</i> (Weeedo 2027: 288.209,98 ≥ 43.052,14) e disparava o alerta crítico, enquanto o quadro de sensibilidade mostrava o híbrido vencendo no limite inferior, no base e no superior — o crédito de IBS/CBS entra igual no híbrido e no regime regular e não inverte um contra o outro. Agora <code>inverte</code> = vencedor diferente entre os limites, que é o que o quadro exibe; a comparação variação × margem segue impressa como atenção (<code>variacaoSuperaMargem</code>) e o nível de confiabilidade deixa de cair a BAIXO só por ela. Regra dentro de <code>calcCenariosReforma</code>, declarada: nenhum valor muda, só a flag; lacre <code>453f7b32</code> íntegro. Achado paralelo, fora desta versão: o texto da IA citou "R$ 873.777,91" que não existe em quadro nenhum — tratado na atualização da Edge Function (R3).</td></tr>
@@ -1220,18 +1221,25 @@ function go(page) {
       const alvo = EMP_GLOBAL.cnpj;
       gSincronizar('analise');
       const difere = alvo && (AN?.cnpj !== alvo || (EMP_GLOBAL.ano && +AN?.ano !== +EMP_GLOBAL.ano));
-      if (!difere) return;
+      if (!difere && !(AN && AN._placeholder && alvo)) return;   // v7.94.1 · placeholder nunca fica em tela
       empGlobalAplicar('an-empresa','an-ano');
       if ($id('an-empresa').value === alvo) anTrocarEmpresa();
     }); }
-  if (page==='importar' || page==='config') { if (!AN) AN = anNovo(EMP_GLOBAL.cnpj||'', EMP_GLOBAL.ano||+$id('an-ano').value);   // v7.44.0: a guarda do AN nulo vem ANTES do render — estava depois, e a Configuração estourava em branco
+  if (page==='importar' || page==='config') { if (!AN) { AN = anNovo(EMP_GLOBAL.cnpj||'', EMP_GLOBAL.ano||+$id('an-ano').value); AN._placeholder = true; }   // v7.44.0: a guarda do AN nulo vem ANTES do render — estava depois, e a Configuração e
+    // v7.94.1 · BUG DE ABERTURA: esse `anNovo` nascia JÁ com o CNPJ e o ano da empresa global, e a comparação
+    // logo abaixo (empresa e ano iguais → "não difere") concluía que não havia nada a carregar. Resultado: quem
+    // entrava no app e ia direto a Importar ou Configuração via uma análise ZERADA da empresa certa, e só ao
+    // trocar de ano e voltar (gTrocar → anTrocarEmpresa) o banco era lido. Pior: essa análise vazia tinha CNPJ,
+    // ano e nenhuma marca de versão (`_verEm`), então uma importação seguida de gravação automática passava
+    // pela guarda de conflito e SUBSTITUÍA a análise gravada. Agora o objeto recém-criado é marcado como
+    // `_placeholder` e sempre dispara a carga; e o anSalvar recusa gravar um placeholder por cima de linha existente.stourava em branco
     // v7.49.0 · a conferência comparava só o CNPJ. Mesma empresa em ANO diferente não recarregava:
     // a Configuração exibia e editava o ano ERRADO, e o Salvar gravava na linha desse outro ano —
     // por isso a alíquota "salvava" e não estava lá na volta. Agora compara empresa E ano, como o
     // ramo da Análise já fazia desde a v7.41.6.
     empCarregar().then(()=>{ empGlobalAplicar('an-empresa','an-ano');
       const _dif = EMP_GLOBAL.cnpj && (AN?.cnpj !== EMP_GLOBAL.cnpj || (EMP_GLOBAL.ano && +AN?.ano !== +EMP_GLOBAL.ano));
-      if (_dif) anTrocarEmpresa(); }); }
+      if (_dif || (AN && AN._placeholder && EMP_GLOBAL.cnpj)) anTrocarEmpresa(); }); }
   if (page==='config') anRenderConfig();
   if (page==='parametros') { prRender(); prRenderAliq(); }
   if (page==='reforma') { empCarregar().then(()=>{ const sel=$id('rf-empresa'), at=sel.value; sel.innerHTML=$id('an-empresa').innerHTML; sel.value=at||''; if (EMP_GLOBAL.cnpj) empGlobalAplicar('rf-empresa','rf-ano');
@@ -5849,6 +5857,7 @@ async function anTrocarEmpresa() {
       AN._fechadoPor = rows[0].fechado_por || ''; AN._fechadoEm = rows[0].fechado_em || null;
     }
   } catch { AN = anNovo(cnpj, ano); }
+  delete AN._placeholder;   // v7.94.1 · carregada (ou criada de propósito para empresa sem linha): deixa de ser placeholder
   AN_SUJO = false;
   anRenderTabs(); anRenderGrid(); anRecalcular();
   if (APP.page==='config') anRenderConfig();   // v7.44.0: a carga assíncrona redesenha também a Configuração — antes ela podia exibir padrões de fábrica sobre empresa com configuração salva
@@ -5935,7 +5944,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.94.0';
+const APP_VERSAO = '7.94.1';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -6008,6 +6017,11 @@ async function anSalvar() {
   try {
     const atual = await supa('GET','atp_analises',{ params:{ select:'atualizado_em', cnpj:`eq.${AN.cnpj}`, ano:`eq.${AN.ano}`, limit:'1' } });
     const remoto = atual && atual.length ? atual[0].atualizado_em : null;
+    // v7.94.1 · análise em branco criada pela navegação (nunca lida do banco) não pode substituir a gravada
+    if (remoto && AN._placeholder && !AN._verEm){
+      toast('Nada foi gravado: esta tela mostra uma análise em branco que NÃO foi carregada do banco. Selecione a empresa e o ano no topo (ou recarregue a página) e tente de novo.');
+      return false;
+    }
     if (remoto && AN._verEm && remoto !== AN._verEm){
       if (!confirm('Esta análise foi gravada por outra pessoa (ou em outra aba) depois que você a abriu.\n\n'
         + `Última gravação: ${new Date(remoto).toLocaleString('pt-BR')}.\n\n`
@@ -6022,7 +6036,7 @@ async function anSalvar() {
       + 'Salvar assim mesmo pode substituir o trabalho de outra pessoa. Continuar?')) return false;
   }
   const T = AN._res?.totais || {};
-  const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined, _verEm:undefined},
+  const body = [{ cnpj:AN.cnpj, ano:AN.ano, dados:{...AN, _res:undefined, _verEm:undefined, _placeholder:undefined},
     resumo:{ receita:T.receita, simples:T.simples, lp:T.lp, lr:T.lr, lrIncompleto: !!T.lrIncompleto }, atualizado_em:new Date().toISOString() }];
   try { await supa('POST','atp_analises?on_conflict=cnpj,ano',{ body }); AN_SUJO = false; AN._verEm = body[0].atualizado_em;
     await anHistGravar(body[0]);
