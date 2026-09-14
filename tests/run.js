@@ -5178,6 +5178,26 @@ console.log('\n■ Integridade da interface');
   }
 
 
+  // ═══ 5am · v7.93.4 — parecer: análise sem dados (R6 brando), encabeçamento não órfão, inversão = vencedor diferente ═══
+  {
+    const run = c => vm.runInContext(c, ctx);
+    chk('5am · ppSemDados: sem receita no ano → true; com receita → false', run('ppSemDados')({ totais:{ receita:0 } }) === true && run('ppSemDados')(null) === true && run('ppSemDados')({ totais:{ receita:1000 } }) === false);
+    chk('5am · a tarja "ANÁLISE SEM DADOS" existe e entra no documento antes do selo de origem dos textos', /ANÁLISE SEM DADOS/.test(run('ppTarjaSemDados')()) && /\$\{ppSemDados\(RL\.res\) \? ppTarjaSemDados\(\) : ''\}\$\{seloOrigem\}/.test(html));
+    chk('5am · gerar textos com IA sem dados pede confirmação expressa (bloqueio brando)', /ppSemDados\(RL\.res\) && !await dlgSimNao\('Análise sem dados'/.test(html));
+    // encabeçamento: objetos mínimos no lugar de DOM (a suíte não usa jsdom)
+    { const el = (cls, txt, kids, prev) => { const o = { classList:{ contains: c => cls.includes(c) }, textContent: txt, children: kids || [], firstElementChild: (kids||[])[0] || null, previousElementSibling: prev || null }; return o; };
+      const mi = { firstElementChild: null };
+      const sec = el(['pp-sec'], '5. Como fica a carga'); const hintSec = el(['hint'], 'Carga anual estimada, ano a ano.', [], sec);
+      const sub = el(['hint'], 'Créditos IBS/CBS — 2027', [{ tagName:'B', textContent:'Créditos IBS/CBS — 2027' }]);
+      const par = el(['pp-p'], 'texto longo'); const hintSolto = el(['hint'], 'nota qualquer', [], par);
+      const f = run('ppEhEncabecamento');
+      chk('5am · ppEhEncabecamento: pp-sec, subtítulo em negrito e hint logo após o pp-sec = encabeçamento; parágrafo e hint solto = não', f(sec, mi) && f(sub, mi) && f(hintSec, mi) && !f(par, mi) && !f(hintSolto, mi)); }
+    chk('5am · empacotador desce o encabeçamento inteiro, nunca a folha inteira', /while \(mi\.childNodes\.length > 1 && ppEhEncabecamento\(mi\.lastElementChild, mi\)\)/.test(html));
+    chk('5am · inversão = vencedor diferente entre os limites; variação × margem vira atenção (variacaoSuperaMargem)', /inverte: ri\.melhor\.k !== rb\.melhor\.k \|\| rs\.melhor\.k !== rb\.melhor\.k/.test(html) && /variacaoSuperaMargem: isFinite\(margem\)/.test(html) && (html.match(/o vencedor é o mesmo nos três limites/g)||[]).length >= 2);
+    chk('5am · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
+    chk('5am · v7.93.4 · badge e changelog', /APP_VERSAO = '7\.93\.4'/.test(html) && /<b>v7\.93\.4<\/b><\/td><td>13\/09\/2026/.test(html));
+  }
+
   // ═══ 5al · v7.93.3 — comparador tela × gravada: bloco reforma canonizado (ordem de chaves do jsonb) ═══
   {
     const run = c => vm.runInContext(c, ctx);
@@ -5194,7 +5214,7 @@ console.log('\n■ Integridade da interface');
     chk('5al · reforma ausente dos dois lados = igual; presente só de um lado = diferente', run('anDifCanonica')(base, { ...base }).length === 0 && JSON.stringify(run('anDifCanonica')(base, tela)) === '["reforma"]');
     chk('5al · anCanon usa anCanonReforma (rfLimpo + chaves ordenadas em profundidade)', /reforma:anCanonReforma\(o\.reforma\)/.test(html) && /function anCanonOrdenar/.test(html) && /function anCanonReforma/.test(html));
     chk('5al · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5al · v7.93.3 · badge e changelog', /APP_VERSAO = '7\.93\.3'/.test(html) && /<b>v7\.93\.3<\/b><\/td><td>13\/09\/2026/.test(html));
+    chk('5al · v7.93.3 · badge e changelog', /APP_VERSAO = '7\.93\.[3-9]'/.test(html) && /<b>v7\.93\.3<\/b><\/td><td>13\/09\/2026/.test(html));
   }
 
   // ═══ 5ak · v7.93.2 — ressalva residual do reteste final: nota de centavos sob o "Resultado mês a mês" ═══
