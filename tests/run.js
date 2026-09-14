@@ -5178,6 +5178,20 @@ console.log('\n■ Integridade da interface');
   }
 
 
+  // ═══ 5an · v7.93.5 — payload da IA no ano de referência, situacaoSimples, rastreio, plano em tabela, rodapé legal ═══
+  {
+    const run = c => vm.runInContext(c, ctx);
+    chk('5an · payload da IA: sensibilidade da linha de sens.porAno do ANO DE REFERÊNCIA (não mais sens.ref = 2033)', /sensibilidadeCreditos: \(function\(\)\{[^}]*\(S\.porAno\|\|\[\]\)\.find\(x => x\.ano === \(D\.anoRef\|\|2027\)\)/.test(html) && /podeInverterVencedor: !!R\.inverte, podeInverterEmAlgumAno: S\.inversao/.test(html));
+    chk('5an · payload da IA leva situacaoSimples (frase do sistema)', /situacaoSimples: D\.snTexto \|\| null,/.test(html));
+    chk('5an · RL._ia guarda __valoresSemOrigem e __reparado da Edge Function v7.8', /semOrigem: Array\.isArray\(data\.__valoresSemOrigem\)/.test(html) && /reparado: !!data\.__reparado/.test(html));
+    chk('5an · barra do parecer avisa (no-print) os valores sem origem', /Valores citados pela IA sem origem nos quadros/.test(html) && /\$\{avisoOrigem\}\$\{premissaCred/.test(html));
+    chk('5an · plano de ação em tabela (nº · quando · ação · o que fazer) e esqueleto da IA cobre as linhas', /<table class="pp-tab pp-plano-tab">/.test(html) && /<tr class="pp-passo-tr">/.test(html) && /#rl-corpo \.pp-passo-tr'\)/.test(html));
+    { const f = run('ppPremissasLegais')(); chk('5an · rodapé com a versão das premissas legais: normas, CGIBS 14/2026, motor e lacre', /LC 123\/2006/.test(f) && /190\/2026/.test(f) && /LC 214\/2025/.test(f) && /CGIBS nº 14\/2026/.test(f) && /lacre 453f7b32/.test(f) && /v7\.93\.5/.test(f)); }
+    chk('5an · a folha final do parecer imprime o rodapé legal', /\$\{ppPremissasLegais\(\)\}/.test(html));
+    chk('5an · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
+    chk('5an · v7.93.5 · badge e changelog', /APP_VERSAO = '7\.93\.5'/.test(html) && /<b>v7\.93\.5<\/b><\/td><td>13\/09\/2026/.test(html));
+  }
+
   // ═══ 5am · v7.93.4 — parecer: análise sem dados (R6 brando), encabeçamento não órfão, inversão = vencedor diferente ═══
   {
     const run = c => vm.runInContext(c, ctx);
@@ -5195,7 +5209,7 @@ console.log('\n■ Integridade da interface');
     chk('5am · empacotador desce o encabeçamento inteiro, nunca a folha inteira', /while \(mi\.childNodes\.length > 1 && ppEhEncabecamento\(mi\.lastElementChild, mi\)\)/.test(html));
     chk('5am · inversão = vencedor diferente entre os limites; variação × margem vira atenção (variacaoSuperaMargem)', /inverte: ri\.melhor\.k !== rb\.melhor\.k \|\| rs\.melhor\.k !== rb\.melhor\.k/.test(html) && /variacaoSuperaMargem: isFinite\(margem\)/.test(html) && (html.match(/o vencedor é o mesmo nos três limites/g)||[]).length >= 2);
     chk('5am · lacre 453f7b32 intocado', /LACRE_HASH = '453f7b32'/.test(html));
-    chk('5am · v7.93.4 · badge e changelog', /APP_VERSAO = '7\.93\.4'/.test(html) && /<b>v7\.93\.4<\/b><\/td><td>13\/09\/2026/.test(html));
+    chk('5am · v7.93.4 · badge e changelog', /APP_VERSAO = '7\.93\.[4-9]'/.test(html) && /<b>v7\.93\.4<\/b><\/td><td>13\/09\/2026/.test(html));
   }
 
   // ═══ 5al · v7.93.3 — comparador tela × gravada: bloco reforma canonizado (ordem de chaves do jsonb) ═══
