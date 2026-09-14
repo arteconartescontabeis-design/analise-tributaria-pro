@@ -1359,7 +1359,7 @@ console.log('\n■ Integridade da interface');
   // ═══ 5x · v7.44.0 — a Configuração nunca mais abre em branco ═══
   console.log('\n■ v7.44.0 — guarda do AN na tela de Configuração');
   {
-    const iGuarda = html.indexOf("if (page==='importar' || page==='config') { if (!AN) AN = anNovo(");
+    const iGuarda = html.indexOf("if (page==='importar' || page==='config') { if (!AN) { AN = anNovo(");   // v7.94.1 · placeholder
     const iRender = html.indexOf("if (page==='config') anRenderConfig();");
     chk('v7.44.0 · no go(), a guarda do AN nulo vem ANTES do anRenderConfig (era depois — Configuração em branco)',
       iGuarda > -1 && iRender > -1 && iGuarda < iRender);
@@ -2265,7 +2265,7 @@ console.log('\n■ Integridade da interface');
           vm.runInContext('rfPendente()',ctx)===false
           && !/Alterações da Reforma ainda não gravadas/.test(ctx.document.getElementById('rf-avisos').innerHTML||''));
         chk('v7.47.1 · B — anSalvar grava {...AN}: é o espelho que impede a reversão',
-          /dados:\{\.\.\.AN, _res:undefined, _verEm:undefined\}/.test(html)
+          /dados:\{\.\.\.AN, _res:undefined, _verEm:undefined(, _placeholder:undefined)?\}/.test(html)
           && /AN\.reforma = rfLimpo\(RF\)/.test(html));
         chk('v7.47.1 · B — a nota das análises de fornecedores voltou à tela (inalcançável desde a v7.44.1)',
           /_av\.innerHTML = [\s\S]{0,900}fornNotaHtml\(\)/.test(html) && /id="rf-avisos"/.test(html));
@@ -5178,6 +5178,15 @@ console.log('\n■ Integridade da interface');
   }
 
 
+  // ═══ 5ap · v7.94.1 — abertura com análise zerada: placeholder sempre carrega; anSalvar recusa gravar placeholder ═══
+  {
+    chk('5ap · go(importar/config): análise criada pela navegação é marcada _placeholder e dispara a carga', /AN = anNovo\(EMP_GLOBAL\.cnpj\|\|'', EMP_GLOBAL\.ano\|\|\+\$id\('an-ano'\)\.value\); AN\._placeholder = true;/.test(html) && /if \(_dif \|\| \(AN && AN\._placeholder && EMP_GLOBAL\.cnpj\)\) anTrocarEmpresa\(\);/.test(html));
+    chk('5ap · go(analise): placeholder também força a carga', /if \(!difere && !\(AN && AN\._placeholder && alvo\)\) return;/.test(html));
+    chk('5ap · anSalvar recusa gravar placeholder sobre linha existente e não persiste a marca', /if \(remoto && AN\._placeholder && !AN\._verEm\)\{/.test(html) && /_placeholder:undefined\}/.test(html));
+    chk('5ap · anTrocarEmpresa limpa a marca ao carregar', /delete AN\._placeholder;/.test(html));
+    chk('5ap · v7.94.1 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.94\.1'/.test(html) && /<b>v7\.94\.1<\/b><\/td><td>14\/09\/2026/.test(html) && /LACRE_HASH = '22197ef1'/.test(html));
+  }
+
   // ═══ 5ao · v7.94.0 — impedido pelo ano anterior: ICMS/ISS por fora = conta do LP/LR (aba ICMS·IPI prevalece); partilha sem ICMS/ISS ═══
   {
     const calc = vm.runInContext('calcular', ctx), anNovoF = vm.runInContext('anNovo', ctx);
@@ -5214,7 +5223,7 @@ console.log('\n■ Integridade da interface');
     chk('5ao · motor: impIcms lê icmsPagar e impIss lê iss (conta única) e dasIcmsIss zera no impedido', /const impIcms = _impedido \? Math\.max\(0, icmsPagar\) : 0;/.test(html) && /const impIss = _impedido \? Math\.max\(0, iss\) : 0;/.test(html) && /if \(_impedido\) dasIcmsIss = 0;/.test(html));
     { const l = vm.runInContext('lacreRodar()', ctx);
       chk('5ao · lacre RE-SELADO 453f7b32 → 22197ef1 e íntegro (casos 1 e 2 intactos: Simples 1.031.702,81 · 358.284,98 nos resumos)', l.ok === true && l.hash === '22197ef1' && /LACRE RE-SELADO <code>453f7b32<\/code> → <code>22197ef1<\/code>/.test(html), 'hash=' + l.hash); }
-    chk('5ao · v7.94.0 · badge e changelog', /APP_VERSAO = '7\.94\.0'/.test(html) && /<b>v7\.94\.0<\/b><\/td><td>14\/09\/2026/.test(html));
+    chk('5ao · v7.94.0 · badge e changelog', /APP_VERSAO = '7\.94\.\d+'/.test(html) && /<b>v7\.94\.0<\/b><\/td><td>14\/09\/2026/.test(html));
   }
 
   // ═══ 5an · v7.93.5 — payload da IA no ano de referência, situacaoSimples, rastreio, plano em tabela, rodapé legal ═══
