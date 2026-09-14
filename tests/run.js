@@ -5178,13 +5178,25 @@ console.log('\n■ Integridade da interface');
   }
 
 
+  // ═══ 5aq · v7.94.2 — aba ICMS·IPI: quadro apurado editável (débito/crédito de ICMS e IPI) ═══
+  {
+    chk('5aq · débito e crédito de ICMS e IPI são inputs no quadro apurado, gravando via anSet(...,\'nul\')', /ed\('Débito de ICMS', 'icms\.deb'/.test(html) && /ed\('Crédito de ICMS', 'icms\.cred'/.test(html) && /ed\('Débito de IPI', 'ipi\.deb'/.test(html) && /ed\('Crédito de IPI', 'ipi\.cred'/.test(html) && /onchange="anSet\('\$\{path\}',\$\{m\},this\.value,'nul'\);anRenderGrid\(\)"/.test(html));
+    chk('5aq · célula informada é destacada e apagar volta ao automático; linha "ICMS fora do Simples" quando impedida', /INFORMADO na aba ICMS·IPI — apague para voltar ao automático/.test(html) && /ICMS fora do Simples \(impedida\)/.test(html));
+    chk('5aq · "Restaurar automático" existe e zera as 4 séries', /function anIcmsRestaurar\(\)/.test(html) && /\['icms\.deb','icms\.cred','ipi\.deb','ipi\.cred'\]/.test(html));
+    { const calc = vm.runInContext('calcular', ctx), anNovoF = vm.runInContext('anNovo', ctx);
+      const i = anNovoF('11111111000191', 2026); i.cfg.rbaa = 3957960.59; i.cfg.rbt12Lanc = Array(12).fill(3957960.59/12); i.receitas.a1_semst[0] = 291799; i.compras.semst[0] = 62236.89;
+      const a = calc(i).meses[0]; i.icms.deb[0] = 30000; i.icms.cred[0] = 10000; const b = calc(i).meses[0];
+      chk('5aq · motor: valor informado prevalece na estimativa do LP/LR e no ICMS fora do Simples (20.000,00)', Math.abs(a.icmsPagar - 27547.45) < 0.01 && Math.abs(b.icmsPagar - 20000) < 0.01 && Math.abs(b.impIcms - 20000) < 0.01 && Math.abs(b.lp.icms - 20000) < 0.01); }
+    chk('5aq · v7.94.2 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.94\.2'/.test(html) && /<b>v7\.94\.2<\/b><\/td><td>14\/09\/2026/.test(html) && /LACRE_HASH = '22197ef1'/.test(html));
+  }
+
   // ═══ 5ap · v7.94.1 — abertura com análise zerada: placeholder sempre carrega; anSalvar recusa gravar placeholder ═══
   {
     chk('5ap · go(importar/config): análise criada pela navegação é marcada _placeholder e dispara a carga', /AN = anNovo\(EMP_GLOBAL\.cnpj\|\|'', EMP_GLOBAL\.ano\|\|\+\$id\('an-ano'\)\.value\); AN\._placeholder = true;/.test(html) && /if \(_dif \|\| \(AN && AN\._placeholder && EMP_GLOBAL\.cnpj\)\) anTrocarEmpresa\(\);/.test(html));
     chk('5ap · go(analise): placeholder também força a carga', /if \(!difere && !\(AN && AN\._placeholder && alvo\)\) return;/.test(html));
     chk('5ap · anSalvar recusa gravar placeholder sobre linha existente e não persiste a marca', /if \(remoto && AN\._placeholder && !AN\._verEm\)\{/.test(html) && /_placeholder:undefined\}/.test(html));
     chk('5ap · anTrocarEmpresa limpa a marca ao carregar', /delete AN\._placeholder;/.test(html));
-    chk('5ap · v7.94.1 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.94\.1'/.test(html) && /<b>v7\.94\.1<\/b><\/td><td>14\/09\/2026/.test(html) && /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5ap · v7.94.1 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.94\.[1-9]'/.test(html) && /<b>v7\.94\.1<\/b><\/td><td>14\/09\/2026/.test(html) && /LACRE_HASH = '22197ef1'/.test(html));
   }
 
   // ═══ 5ao · v7.94.0 — impedido pelo ano anterior: ICMS/ISS por fora = conta do LP/LR (aba ICMS·IPI prevalece); partilha sem ICMS/ISS ═══
