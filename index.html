@@ -794,6 +794,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.93.4</b></td><td>13/09/2026</td><td><b>📄 Três correções do parecer, lidas no PDF real da v7.93.3 (Weeedo, 17 folhas — nenhuma estoura).</b> <b>(1) Análise sem dados — bloqueio brando (R6, decisão de 13/09):</b> um parecer gerado sobre análise sem receita lançada saía completo, com capa, quadros em R$ 0,00 e assinatura, sem nenhuma marca. Agora o documento monta com a tarja "⛔ ANÁLISE SEM DADOS" na primeira folha (<code>ppSemDados</code>/<code>ppTarjaSemDados</code>) e o botão "Gerar textos com IA" pede confirmação expressa antes de consumir cota. <b>(2) Subtítulos órfãos:</b> a régua mostrou "Créditos IBS/CBS — 2027" sozinho no pé da folha 11 e a linha de abertura da seção 5 no pé da folha 8, com o conteúdo na folha seguinte — a regra do empacotador só descia o <code>.pp-sec</code>. <code>ppEhEncabecamento</code> passa a descer o encabeçamento inteiro (cabeçalho, subtítulo em negrito e o hint curto que os acompanha), sempre deixando ao menos um bloco na folha. <b>(3) "Pode inverter o vencedor? SIM" com o mesmo vencedor nos três limites:</b> a regra da v7.91.0 decidia por <i>variação do crédito ≥ margem</i> (Weeedo 2027: 288.209,98 ≥ 43.052,14) e disparava o alerta crítico, enquanto o quadro de sensibilidade mostrava o híbrido vencendo no limite inferior, no base e no superior — o crédito de IBS/CBS entra igual no híbrido e no regime regular e não inverte um contra o outro. Agora <code>inverte</code> = vencedor diferente entre os limites, que é o que o quadro exibe; a comparação variação × margem segue impressa como atenção (<code>variacaoSuperaMargem</code>) e o nível de confiabilidade deixa de cair a BAIXO só por ela. Regra dentro de <code>calcCenariosReforma</code>, declarada: nenhum valor muda, só a flag; lacre <code>453f7b32</code> íntegro. Achado paralelo, fora desta versão: o texto da IA citou "R$ 873.777,91" que não existe em quadro nenhum — tratado na atualização da Edge Function (R3).</td></tr>
                     <tr><td><b>v7.93.3</b></td><td>13/09/2026</td><td><b>🐛 Falso "Diferenças em: reforma" no aviso de defasagem dos Relatórios e no Verificar — mesmo depois de salvar.</b> Achado no fecho da v7.93.2, na empresa TESTE: o comparador tela × gravada da v7.93.0 canonizava cfg, receitas, folha, compras, despesas, ICMS e IPI, mas o bloco <code>reforma</code> entrava cru e era confrontado por <code>JSON.stringify</code>, que depende da <b>ordem das chaves</b>. O jsonb do Postgres reordena as chaves de tudo o que grava; a tela remonta <code>AN.reforma</code> por <code>rfLimpo(RF)</code> a cada recálculo, na ordem do código. Conteúdo idêntico, ordem diferente — e a faixa vermelha voltava assim que a aba Reforma era recalculada, mesmo com tudo salvo (bastava um F5 para ela sumir, porque aí o objeto da tela era o próprio do banco). Agora <code>anCanonReforma</code> aplica <code>rfLimpo</code> (estado de tela fora), ordena as chaves em profundidade e descarta <code>undefined</code> antes de comparar; edição real em qualquer campo da Reforma segue acusada. Correção só de validação: nenhum número muda; motor e lacre <code>453f7b32</code> intocados. Primeiro item das ressalvas técnicas do backlog pós-tag <code>v7.93.2-validada</code>.</td></tr>
                     <tr><td><b>v7.93.2</b></td><td>13/09/2026</td><td><b>✅ Reteste final da v7.93.1 — relatórios aprovados em 100%.</b> Única ressalva residual, de apresentação: na tabela "Resultado mês a mês" da Análise Atual a soma visual das parcelas mensais arredondadas difere em 1–2 centavos do total oficial (o do motor, com precisão integral). A mesma frase que já existe sob os TOTAIS do Comparativo e do Consolidado passa a sair também sob essa tabela (<code>notaTotais</code>). Nenhum número muda; motor e lacre <code>453f7b32</code> intocados. Com isso, F01–F14, RBT12/Fator R, IBS/CBS e a consistência dos relatórios estão aprovados pelo auditor; resta apenas o PDF da massa de fronteira (28% exatos → Anexo III) para o encerramento formal.</td></tr>
                     <tr><td><b>v7.93.1</b></td><td>13/09/2026</td><td><b>🧩 Reteste dos relatórios (13/09) — totais uniformes e redação das apresentações.</b> Motor e lacre <code>453f7b32</code> intocados. <b>(1) Conciliação do Simples estava errada</b> — a nota da v7.93.0 somava as linhas do detalhamento (DAS + trava) e comparava com o custo total do Simples (que inclui CPP fora do DAS e retenções): naturezas diferentes, não centavos. A nota de dois valores foi eliminada. <b>(2) Totais iguais em todos os relatórios</b> — a raiz era a v7.42.1: Comparativo, Consolidado e Registros somavam os meses <i>já arredondados</i> (<code>totExib</code>/<code>agrupar</code>), enquanto cartões, parecer, Reforma e lacre usam o motor; daí Simples 1.031.702,82 × ,81 e DAS ,94 × ,95. Como os cenários da Reforma estão sob o lacre e só conhecem o motor, a regra foi INVERTIDA: <b>o total do motor (precisão integral) é o valor principal em todo lugar</b> — <code>totExib</code> devolve <code>res.totais</code>, <code>agrupar</code> soma sem arredondar, e uma frase única (<code>notaTotais</code>) explica que a soma manual das parcelas exibidas pode diferir em centavos. Conferido com massa de centavos quebrados nos oito relatórios: um valor só por grandeza. <b>(3) Apresentações</b> — os dois textos "nenhuma compra informada na aba Reforma" (simplificada e completa) passam por <code>credComprasSituacao</code>, a mesma frase do parecer. <b>(4) Alerta truncado</b> — <code>apFrases</code> lia o ponto de milhar de "R$ 5.317.240,01" como fim de frase e imprimia "240,01 — acima de 90%…"; agora só quebra em ponto seguido de espaço. <b>(5) "Folga de R$ -792.820,00"</b> — acima do teto não há folga negativa: "receita interna superior ao teto do Simples em R$ 792.820,00" (premissas da completa e resumo da simplificada). <b>(6) Situação no Simples num quadro só</b> — <code>snSituacaoQuadro</code>: RBAA × teto, sublimite e impedimento de ICMS/ISS, receita interna do ano, excesso e efeito (permanência/exclusão) numa linha do parecer e nas premissas da apresentação completa. Suíte: bloco 5aj.</td></tr>
@@ -5919,7 +5920,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.93.3';
+const APP_VERSAO = '7.93.4';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -6817,7 +6818,7 @@ function compRender(){
   const sensHtml = sens ? `<div style="margin-top:10px"><b>Sensibilidade dos créditos — ${sens.anoRef}</b>
     <table><thead><tr><th>Cenário</th><th class="num">Crédito IBS/CBS</th><th class="num">Híbrido</th><th class="num">Fora do Simples</th><th>Vencedor</th></tr></thead><tbody>
     ${['inf','base','sup'].map(k=>{ const S = sens.ref[k]; return `<tr><td>${k==='inf'?'Limite inferior — crédito CONFIRMADO (só fornecedores/composição confirmados pelo usuário)':k==='base'?'Cenário-base — crédito '+(c.status==='confirmada'?'CONFIRMADO':'ESTIMADO')+' (composição utilizada'+(c.status==='confirmada'?'':' — estimativa, não confirmada')+')':'Limite superior — crédito POTENCIAL (hipótese mais favorável — nunca definitivo)'}</td><td class="num">${fmt(S.cred)}</td><td class="num">${fmt(S.hib)}</td><td class="num">${fmt(S.regular)}</td><td>${esc(S.melhorNome)}</td></tr>`; }).join('')}
-    </tbody></table><div class="hint">Margem do vencedor (2º − 1º): <b>${isFinite(sens.ref.margem)?fmtR(sens.ref.margem):'não aplicável — cenário único (Simples indisponível no ano: só "Fora do Simples" concorre; híbrido e por dentro são referência)'}</b> · variação do crédito (superior − inferior): <b>${fmtR(sens.ref.variacao)}</b> · pode inverter o vencedor? <b>${sens.inversao?'SIM':'NÃO'}</b></div>
+    </tbody></table><div class="hint">Margem do vencedor (2º − 1º): <b>${isFinite(sens.ref.margem)?fmtR(sens.ref.margem):'não aplicável — cenário único (Simples indisponível no ano: só "Fora do Simples" concorre; híbrido e por dentro são referência)'}</b> · variação do crédito (superior − inferior): <b>${fmtR(sens.ref.variacao)}</b> · pode inverter o vencedor? <b>${sens.inversao?'SIM':'NÃO'}</b>${!sens.inversao && sens.ref.variacaoSuperaMargem ? ' — a variação do crédito supera a margem, mas o vencedor é o mesmo nos três limites' : ''}</div>
     ${sens.inversao ? `<div class="hint" style="margin-top:6px;padding:8px 10px;border-left:4px solid #943126;background:#fdedec;color:#7b241c">⛔ <b>ALERTA CRÍTICO — A COMPOSIÇÃO DOS FORNECEDORES PODE ALTERAR O REGIME TRIBUTÁRIO VENCEDOR.</b> Confirme ${c.final.g.nid.v>0.005?'a parcela não identificada ('+fmtR(c.final.g.nid.v)+')':'os percentuais'} antes de concluir — anos afetados: ${sens.anosInversao.join(', ')}.</div>` : ''}</div>` : '';
   const confHtml = conf ? `<div style="margin-top:10px;padding:10px 12px;border-left:5px solid ${conf.cor};background:#fff"><b style="color:${conf.cor}">${conf.icone} NÍVEL DE CONFIABILIDADE DA ANÁLISE: ${conf.nivel}</b>${conf.motivos.length?`<div class="hint">${conf.motivos.map(esc).join(' · ')}</div>`:'<div class="hint">100% das compras classificadas, composição confirmada, nenhuma premissa crítica pendente, nenhuma divergência matemática.</div>'}${conf.naoConclusivo?'<div class="hint"><b>Sem "regime recomendado":</b> o parecer sai como "MELHOR RESULTADO DENTRO DAS PREMISSAS INFORMADAS — NÃO CONCLUSIVO".</div>':''}</div>` : '';
   el.innerHTML = `<div class="card"><h3>Composição dos fornecedores para crédito IBS/CBS</h3>
@@ -7214,16 +7215,22 @@ function calcCenariosReforma(res, reforma) {
   const semCreditos = REF.every(l=>l.cred<=0.005);
   // ══ v7.91.0 · SENSIBILIDADE, TESTE DE INVERSÃO E NÍVEL DE CONFIABILIDADE ═══════════════════
   // margem_vencedor = 2º − 1º (cenário-base); variacao_credito = crédito superior − inferior.
-  // variacao ≥ margem em qualquer ano projetado → a composição pode inverter o vencedor.
+  // v7.93.4 · a regra da v7.91.0 ("variacao ≥ margem → pode inverter") produzia contradição no papel: o quadro
+  // mostrava o MESMO vencedor nos três limites e o rodapé dizia "pode inverter? SIM" (Weeedo 2027: variação
+  // 288.209,98 ≥ margem 43.052,14, híbrido vencendo nas três linhas). O crédito de IBS/CBS entra igual no
+  // híbrido e no regime regular, então não inverte um contra o outro. Passa a valer o que o próprio quadro
+  // mostra: inverte = vencedor DIFERENTE entre inferior, base e superior. A comparação variação × margem
+  // continua exposta (variacaoSuperaMargem) como atenção, sem decidir o nível de confiabilidade sozinha.
   const _lrInc = !!T.lrIncompleto;
   const _rankDe = (l, S) => { const l2 = Object.assign({}, l, { hib: S.hib, regLP: S.regLP, regLR: S.regLR }); l2.regular = _lrInc ? S.regLP : Math.min(S.regLP, S.regLR); l2.regNome = l2.regular === S.regLP ? 'Presumido' : 'Real'; return cenRank(T, l2); };
   const _porAno = REF.filter(l => l.ano >= 2027).map(l => { const rb = _rankDe(l, l.sens.base), ri = _rankDe(l, l.sens.inf), rs = _rankDe(l, l.sens.sup);
     const margem = rb.segundo ? rb.segundo.v - rb.melhor.v : Infinity, variacao = l.sens.sup.cred - l.sens.inf.cred;
-    return { ano:l.ano, margem, variacao, inverte: isFinite(margem) && variacao >= margem - 0.005 && variacao > 0.005,
+    return { ano:l.ano, margem, variacao, variacaoSuperaMargem: isFinite(margem) && variacao >= margem - 0.005 && variacao > 0.005,
+      inverte: ri.melhor.k !== rb.melhor.k || rs.melhor.k !== rb.melhor.k,
       inf:{ cred:l.sens.inf.cred, hib:l.sens.inf.hib, regular:ri.regular, melhorNome:ri.melhor.nome, melhorK:ri.melhor.k },
       base:{ cred:l.sens.base.cred, hib:l.sens.base.hib, regular:rb.regular, melhorNome:rb.melhor.nome, melhorK:rb.melhor.k },
       sup:{ cred:l.sens.sup.cred, hib:l.sens.sup.hib, regular:rs.regular, melhorNome:rs.melhor.nome, melhorK:rs.melhor.k } }; });
-  const _anosInv = _porAno.filter(x => x.inverte || x.inf.melhorK !== x.sup.melhorK).map(x => x.ano);
+  const _anosInv = _porAno.filter(x => x.inverte).map(x => x.ano);
   const _ref = _porAno.find(x => x.ano === 2033) || _porAno[_porAno.length-1] || null;
   const sens = _ref ? { anoRef: _ref.ano, ref: Object.assign({}, _ref), porAno: _porAno, inversao: _anosInv.length > 0, anosInversao: _anosInv } : null;
   const hibNaoFechaArr = REF.filter(l => !l.hibConfere);
@@ -9729,7 +9736,7 @@ function compQuadrosHtml(C, L, compacto){
       <tr><td>Limite inferior — crédito CONFIRMADO pelo usuário</td><td class="num">${fmt(R.inf.cred)}</td><td class="num">${fmt(R.inf.hib)}</td><td class="num">${fmt(R.inf.regular)}</td><td>${esc(R.inf.melhorNome)}</td></tr>
       <tr style="font-weight:700"><td>Cenário-base — composição utilizada${comp && comp.status==='confirmada' ? ' (confirmada)' : ' (ESTIMATIVA — não confirmada)'}</td><td class="num">${fmt(R.base.cred)}</td><td class="num">${fmt(R.base.hib)}</td><td class="num">${fmt(R.base.regular)}</td><td>${esc(R.base.melhorNome)}</td></tr>
       <tr><td>Limite superior — crédito POTENCIAL, hipótese mais favorável (nunca definitivo)</td><td class="num">${fmt(R.sup.cred)}</td><td class="num">${fmt(R.sup.hib)}</td><td class="num">${fmt(R.sup.regular)}</td><td>${esc(R.sup.melhorNome)}</td></tr></tbody></table>
-      <div class="hint">Diferença superior − inferior no crédito: <b>${fmtR(R.variacao)}</b> · margem do vencedor (2º − 1º): <b>${isFinite(R.margem)?fmtR(R.margem):'não aplicável — cenário único (Simples indisponível no ano)'}</b> · pode inverter o vencedor? <b>${R.inverte || R.inf.melhorK!==R.sup.melhorK ? 'SIM' : 'NÃO'}</b></div>` : '';
+      <div class="hint">Diferença superior − inferior no crédito: <b>${fmtR(R.variacao)}</b> · margem do vencedor (2º − 1º): <b>${isFinite(R.margem)?fmtR(R.margem):'não aplicável — cenário único (Simples indisponível no ano)'}</b> · pode inverter o vencedor? <b>${R.inverte ? 'SIM' : 'NÃO'}</b>${!R.inverte && R.variacaoSuperaMargem ? ' — a variação do crédito supera a margem, mas o crédito de IBS/CBS entra igual no híbrido e no regime regular: o vencedor é o mesmo nos três limites' : ''}</div>` : '';
   const confHtml = conf ? `<div style="margin:6px 0;padding:6px 10px;border-left:5px solid ${conf.cor}"><b style="color:${conf.cor}">${conf.icone} NÍVEL DE CONFIABILIDADE DA ANÁLISE: ${conf.nivel}</b>${conf.motivos.length?' — <span class="hint">'+conf.motivos.map(esc).join(' · ')+'</span>':''}${sens && sens.inversao ? '<div style="color:#943126"><b>⛔ ALERTA CRÍTICO — A COMPOSIÇÃO DOS FORNECEDORES PODE ALTERAR O REGIME TRIBUTÁRIO VENCEDOR</b> (' + sens.anosInversao.join(', ') + ').</div>' : ''}</div>` : '';
   return `<div class="hint" style="margin-top:8px"><b>Composição dos fornecedores — ${L.ano}</b></div>${q1}<div class="hint" style="margin-top:6px"><b>Créditos IBS/CBS — ${L.ano}</b></div>${q2}${q3?`<div class="hint" style="margin-top:6px"><b>Sensibilidade — ${L.ano}</b></div>${q3}`:''}${confHtml}`;
 }
@@ -10024,6 +10031,13 @@ function rfConfirmarBaseManual(){
   if (ok) _baseManualOk = chave;
   return ok;
 }
+// v7.93.4 · R6 (decisão de 13/09: bloqueio BRANDO). Parecer de análise sem receita lançada saía completo — capa,
+// quadros zerados, assinatura — sem nenhuma marca de que não havia dado. O documento monta, mas declara em
+// destaque que não há receita no ano-base, e a geração de textos com IA pede confirmação antes de gastar cota.
+function ppSemDados(res){ const T = (res && res.totais) || {}; return !((+T.receita||0) > 0.005); }
+function ppTarjaSemDados(){
+  return `<div class="pp-alerta pp-semdados" style="border-left-color:#b3261e;background:#fdecea"><b>⛔ ANÁLISE SEM DADOS</b> — não há receita lançada no ano-base desta análise; todos os valores deste documento são R$ 0,00. Este parecer <b>não</b> deve ser entregue ao cliente: lance ou importe a receita do período (aba Análise Atual › Importar Dados) e gere o documento de novo.</div>`;
+}
 function rlParecer(){
   const D = parecerDados();
   const TX = Object.assign(parecerTextosPadrao(D), (RL._ia && RL._ia.textos) || {});
@@ -10085,7 +10099,7 @@ function rlParecer(){
   // ── PÁG: introdução + enquadramento (v7.38.3: separada do "caminho" — a combinada estourava e cortava o parágrafo final) ──
   h += `<div class="pp-page"><img class="pp-bg" src="timbrado.jpg" onerror="this.style.display='none'"><div class="pp-miolo">
     ${secao(1,'Introdução — o que muda e quando')}
-    ${seloOrigem}
+    ${ppSemDados(RL.res) ? ppTarjaSemDados() : ''}${seloOrigem}
     <p class="pp-p">${TX.intro}</p>
     <div class="pp-enq ${D.variante==='acima'?'pp-enq-v':''}"><b>Enquadramento:</b> ${TX.enquadramento}</div>
     ${ppEnqFicha(D)}
@@ -10536,6 +10550,18 @@ const PP_RESERVA_MM = 10;   // v7.41.8: era 6 — margem dobrada agora que a med
 // Redistribui os blocos já renderizados. Roda sobre o DOM vivo, ANTES de os gráficos serem
 // desenhados: por isso a altura de cada canvas vem da tabela de alturas de impressão (PP_CANVAS_MM),
 // e não da tela.
+// v7.93.4 · o que conta como encabeçamento (não pode fechar uma folha): cabeçalho de seção, subtítulo
+// (.hint cujo conteúdo é só um <b>) ou .hint curto imediatamente após um desses dois
+function ppEhEncabecamento(el, mi){
+  if (!el || !el.classList) return false;
+  if (el.classList.contains('pp-sec')) return true;
+  if (!el.classList.contains('hint')) return false;
+  const txt = (el.textContent || '').trim();
+  const soNegrito = el.children.length === 1 && el.firstElementChild.tagName === 'B' && (el.firstElementChild.textContent || '').trim() === txt;
+  if (soNegrito) return true;
+  const ant = el.previousElementSibling;
+  return txt.length <= 220 && !!ant && ant.classList && (ant.classList.contains('pp-sec') || ppEhEncabecamento(ant, mi) && ant !== mi.firstElementChild);
+}
 function ppEmpacotarDOM(corpo){
   try {
     // margem de segurança: a medição na tela e o traçado da impressão não são idênticos ao
@@ -10575,11 +10601,15 @@ function ppEmpacotarDOM(corpo){
       mi.appendChild(b);
       if (altura(mi) > LIM && mi.childNodes.length > 1){
         mi.removeChild(b);
-        // cabeçalho de seção nunca fica órfão no pé da folha: desce junto com o bloco seguinte
-        const ult = mi.lastElementChild;
-        const arrasta = (ult && ult.classList && ult.classList.contains('pp-sec')) ? mi.removeChild(ult) : null;
+        // cabeçalho de seção nunca fica órfão no pé da folha: desce junto com o bloco seguinte.
+        // v7.93.4 · a régua no PDF real da v7.93.3 mostrou dois órfãos que a regra não pegava: o
+        // subtítulo "Créditos IBS/CBS — 2027" (um .hint só com <b>) e a linha de abertura da seção 5
+        // (o .hint que segue o .pp-sec). Agora desce o ENCABEÇAMENTO inteiro: pp-sec, subtítulos e o
+        // hint curto que os acompanha — sempre deixando ao menos um bloco na folha.
+        const arrasta = [];
+        while (mi.childNodes.length > 1 && ppEhEncabecamento(mi.lastElementChild, mi)) arrasta.unshift(mi.removeChild(mi.lastElementChild));
         mi = novaFolha(); folhas++;
-        if (arrasta) mi.appendChild(arrasta);
+        for (const a of arrasta) mi.appendChild(a);
         mi.appendChild(b);
       }
     }
@@ -10705,6 +10735,8 @@ function ppReguaRender(){
 async function parecerIA(){
   { const _crit = subCritico(RL.res, (RL.dados||{}).cfg, (RL.dados||{}).ano);   // v7.87.0 (§13)
     if (_crit) { alert(_crit.titulo + '\n\n' + _crit.texto.replace(/<[^>]+>/g,'') ); return; } }
+  // v7.93.4 · R6 brando: sem receita lançada a IA só é chamada com confirmação expressa (a cota é consumida do mesmo jeito)
+  if (ppSemDados(RL.res) && !await dlgSimNao('Análise sem dados', 'Não há receita lançada no ano-base: todos os quadros deste parecer estão em R$ 0,00 e o texto da IA será escrito sobre valores zerados. A geração consome cota de IA. Gerar mesmo assim?', 'Gerar mesmo assim', 'Cancelar')) return;
   const btn = $id('pp-ia-btn'); if (btn){ btn.disabled = true; btn.textContent = '⏳ Gerando…'; }
   document.querySelectorAll('#rl-corpo .pp-p, #rl-corpo .pp-enq, #rl-corpo .pp-final, #rl-corpo .pp-passo').forEach(el=>el.classList.add('pp-skel'));
   try {
