@@ -5178,6 +5178,48 @@ console.log('\n■ Integridade da interface');
   }
 
 
+  // ═══ 5ar · v7.94.3 — trilha de alterações: todos os campos auditáveis (quem/quando/de → para) ═══
+  {
+    const r = c => vm.runInContext(c, ctx);
+    let e0 = null;
+    try {
+      r(`APP.user = { email:'auditor@artecon.cnt.br' }; AN = anNovo('11111111000191', 2026); AN.cfg.icmsV=.12; AN.cfg.icmsC=.12; audFotoBase(AN); APP.page='analise'; AN_TAB='receitas';`);
+      r(`anSet('receitas.a1_semst', 0, '100.000,00', ''); anSet('receitas.a1_semst', 0, '100.000,00', '');`);
+      const e1 = r(`AN.auditoria.map(e=>[e.acao,e.campo,e.mes,e.de,e.para,e.origemPara,e.por])`);
+      chk('5ar · digitar na grade gera 1 registro (de 0 para 100.000, origem D, usuário); repetir o mesmo valor não gera', e1.length === 1 && e1[0][0]==='digitado' && e1[0][1]==='receitas.a1_semst' && e1[0][2]===0 && e1[0][3]===0 && e1[0][4]===100000 && e1[0][5]==='D' && e1[0][6]==='auditor@artecon.cnt.br');
+      r(`anRepetir('receitas.a1_semst')`);
+      chk('5ar · ⇉ repetir gera 11 registros "repetido" com origem C', r(`AN.auditoria.length`) === 12 && r(`AN.auditoria.slice(1).every(e=>e.acao==='repetido' && e.origemPara==='C')`));
+      r(`AN.receitas.a1_semst[0] = 120000; AN.receitas.a1_semst[1] = 130000; anOrigemMarcar('receitas.a1_semst',[0,1],'P'); AN.compras.semst[0]=5000; anOrigemMarcar('compras.semst',[0],'P'); anAplicado();`);
+      const lote = r(`AN.auditoria[AN.auditoria.length-1]`);
+      chk('5ar · importação = 1 evento por lote (PGDAS-D) com as células sobrescritas e os valores anteriores', lote.acao==='importado' && lote.lote==='PGDAS-D' && lote.n===3 && lote.celulas[0].de===100000 && lote.celulas[0].para===120000 && lote.celulas[0].origemDe==='D' && lote.celulas[0].origemPara==='P' && lote.secoes.receitas===2 && lote.secoes.compras===1, JSON.stringify(lote.secoes));
+      r(`anRecalcular(); anSet('icms.deb', 0, '9.000,00', 'nul');`);
+      const ic = r(`AN.auditoria[AN.auditoria.length-1]`);
+      chk('5ar · aba ICMS·IPI: informar débito guarda a estimativa que valia (deAuto 14.400) e o novo valor', ic.acao==='digitado' && ic.campo==='icms.deb' && ic.de===null && ic.para===9000 && Math.abs(ic.deAuto-14400)<0.01, 'deAuto='+ic.deAuto);
+      r(`anSet('icms.deb', 0, '', 'nul');`);
+      chk('5ar · apagar a célula registra "apagado" (9.000 → automático)', r(`(e=>e.acao==='apagado' && e.de===9000 && e.para===null)(AN.auditoria[AN.auditoria.length-1])`));
+      r(`AN.icms.cred[2]=1; anIcmsRestaurar();`);
+      chk('5ar · "Restaurar automático" registra "restaurado" por célula', r(`(e=>e.acao==='restaurado' && e.campo==='icms.cred' && e.mes===2)(AN.auditoria[AN.auditoria.length-1])`));
+      r(`anSetCfg12('rbt12Lanc', 3, '50.000,00', null); anSetFolha13('prolabore13','1.000,00'); anSetInicioAtividade('2025-06');`);
+      const cfgs = r(`AN.auditoria.slice(-3).map(e=>[e.acao,e.campo,e.mes,e.de,e.para])`);
+      chk('5ar · 12 meses anteriores, 13º e início de atividade passam pelos setters auditados', cfgs[0][1]==='cfg.rbt12Lanc' && cfgs[0][2]===3 && cfgs[0][4]===50000 && cfgs[1][1]==='folha13.prolabore13' && cfgs[1][4]===1000 && cfgs[2][1]==='cfg.inicioAtividade' && cfgs[2][4]==='2025-06', JSON.stringify(cfgs));
+      r(`document.getElementById('cf-iss').value='3'; anAplicarConfig(true);`);
+      chk('5ar · Configuração: cada chave alterada vira registro (ISS 0 → 3%); chaves só preenchidas pelo padrão da tela não', r(`AN.auditoria.some(e=>e.acao==='config' && e.campo==='cfg.iss' && Math.abs(e.para-0.03)<1e-9)`) && !r(`AN.auditoria.some(e=>e.campo==='cfg.travaNoDas' || e.campo==='cfg.projJanela')`));
+      const n0 = r(`AN.auditoria.length`); r(`anSet('receitas.a1_semst', 1, '130.000,00', ''); anAplicado();`);
+      chk('5ar · valor igual e lote sem diferença não geram registro', r(`AN.auditoria.length`) === n0);
+      r(`anSet('receitas.a1_semst', 0, '150.000,00', '');`);
+      chk('5ar · digitar sobre valor importado marca origemDe P; Verificar aponta; quadro em âmbar', r(`(e=>e.origemDe==='P' && e.de===120000)(AN.auditoria[AN.auditoria.length-1])`) && r(`audResumo(AN).sobreImportado`)===1 && r(`anVerificar().some(x=>/manual\\(is\\) sobre valor/.test(x.texto))`) && r(`/sobre PGDAS-D/.test(audQuadroHtml(AN))`));
+      chk('5ar · normalizar preserva a trilha; comparador tela×gravada a ignora; anNovo já cria o array', r(`anNormalizar(JSON.parse(JSON.stringify(AN)), AN.cnpj, AN.ano).auditoria.length`) === r(`AN.auditoria.length`) && r(`(()=>{ const b = JSON.parse(JSON.stringify(AN)); b.auditoria=[]; return anDifCanonica(AN,b).length; })()`) === 0 && r(`Array.isArray(anNovo('x',2026).auditoria)`));
+      r(`anRenderGrid();`);
+      chk('5ar · tooltip da célula traz o último evento (quem/quando/de → para)', r(`/title="[^"]*(digitado|importado \\(PGDAS-D\\)) por auditor@artecon\\.cnt\\.br em [^"]* — de [^"]* para /.test(document.getElementById('an-grid').innerHTML)`));
+      r(`for (let i=0;i<510;i++) AN.auditoria.push({acao:'importado', lote:'x', n:1, celulas:[{campo:'receitas.a1_semst',mes:0,de:1,para:2}], em:new Date().toISOString()}); audCompactar(AN.auditoria);`);
+      chk('5ar · acima de 500 registros os lotes antigos perdem o detalhe (ficam os 20 últimos); manuais intactos', r(`AN.auditoria.filter(e=>e.compactado).length`) === 491 && r(`AN.auditoria.filter(e=>e.acao==='importado' && e.celulas).length`) === 20 && r(`AN.auditoria.filter(e=>e.acao!=='importado' && !e.celulas).every(e=>!e.compactado)`));
+    } catch(e){ e0 = e.message; }
+    chk('5ar · roteiro funcional sem exceção', e0 === null, e0 || '');
+    chk('5ar · Conferência bloco 0 chama audQuadroHtml; premissas do parecer citam a trilha; anTrocarEmpresa tira o retrato-base; anAplicado sincroniza o lote', /\$\{audQuadroHtml\(D\)\}/.test(html) && /audResumo\(RL\.dados\)/.test(html) && /audFotoBase\(AN\);\s*\/\/ v7\.94\.3/.test(html) && /audSincronizar\('importado', AUD_LOTE\)/.test(html));
+    chk('5ar · rfCalcular audita os 3 campos manuais da Reforma', /audCelula\('reforma\.'\+k, null, _audAntes\[k\], \+RF\[k\]\|\|0, 'reforma'\)/.test(html));
+    chk('5ar · v7.94.3 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.94\.[3-9]'/.test(html) && /<b>v7\.94\.3<\/b><\/td><td>15\/09\/2026/.test(html) && /LACRE_HASH = '22197ef1'/.test(html));
+  }
+
   // ═══ 5aq · v7.94.2 — aba ICMS·IPI: quadro apurado editável (débito/crédito de ICMS e IPI) ═══
   {
     chk('5aq · débito e crédito de ICMS e IPI são inputs no quadro apurado, gravando via anSet(...,\'nul\')', /ed\('Débito de ICMS', 'icms\.deb'/.test(html) && /ed\('Crédito de ICMS', 'icms\.cred'/.test(html) && /ed\('Débito de IPI', 'ipi\.deb'/.test(html) && /ed\('Crédito de IPI', 'ipi\.cred'/.test(html) && /onchange="anSet\('\$\{path\}',\$\{m\},this\.value,'nul'\);anRenderGrid\(\)"/.test(html));
@@ -5187,7 +5229,7 @@ console.log('\n■ Integridade da interface');
       const i = anNovoF('11111111000191', 2026); i.cfg.rbaa = 3957960.59; i.cfg.rbt12Lanc = Array(12).fill(3957960.59/12); i.receitas.a1_semst[0] = 291799; i.compras.semst[0] = 62236.89;
       const a = calc(i).meses[0]; i.icms.deb[0] = 30000; i.icms.cred[0] = 10000; const b = calc(i).meses[0];
       chk('5aq · motor: valor informado prevalece na estimativa do LP/LR e no ICMS fora do Simples (20.000,00)', Math.abs(a.icmsPagar - 27547.45) < 0.01 && Math.abs(b.icmsPagar - 20000) < 0.01 && Math.abs(b.impIcms - 20000) < 0.01 && Math.abs(b.lp.icms - 20000) < 0.01); }
-    chk('5aq · v7.94.2 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.94\.2'/.test(html) && /<b>v7\.94\.2<\/b><\/td><td>14\/09\/2026/.test(html) && /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5aq · v7.94.2 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.94\.[2-9]'/.test(html) && /<b>v7\.94\.2<\/b><\/td><td>14\/09\/2026/.test(html) && /LACRE_HASH = '22197ef1'/.test(html));
   }
 
   // ═══ 5ap · v7.94.1 — abertura com análise zerada: placeholder sempre carrega; anSalvar recusa gravar placeholder ═══
