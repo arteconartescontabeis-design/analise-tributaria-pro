@@ -8,7 +8,7 @@
  * ==========================================================================*/
 (function (raiz) {
   'use strict';
-  var VERSAO = '1.0.0';
+  var VERSAO = '1.1.0';   // 1.1.0: explicações simples, tabela de anos e relatório simplificado
 
   function r2(x) { return Math.round((+x + Number.EPSILON) * 100) / 100; }
   function r4(x) { return Math.round((+x + Number.EPSILON) * 10000) / 10000; }
@@ -26,6 +26,7 @@
   /* =========================================================================
      1. RESULTADO SEQUENCIAL DA ALIENAÇÃO (12 etapas com fórmula)
      ========================================================================= */
+  var SIMPLES_V = {1: "O preço combinado da venda. É o ponto de partida.", 2: "Desconto que representa o valor que o imóvel já tinha antes da Reforma (art. 375). Só entra até o limite do preço.", 3: "Desconto extra da lei para moradia: R$ 100 mil no residencial novo, R$ 30 mil no lote (art. 259). Vale uma vez por imóvel.", 4: "É sobre este valor que o imposto é calculado: preço menos os dois descontos.", 5: "Imposto estadual/municipal novo. A alíquota já vem com 50% de desconto.", 6: "Imposto federal novo (substitui PIS e COFINS). Também com 50% de desconto.", 7: "IBS/CBS pagos nas compras da empresa que você informou.", 8: "Só é possível abater até o valor do imposto devido; o resto fica guardado.", 9: "Créditos que sobraram e podem ser usados nos próximos meses.", 10: "IBS + CBS antes de abater os créditos.", 11: "O que efetivamente sai do caixa com esta venda.", 12: "Quanto o imposto representa do preço de venda. Serve para comparar com outros cenários."};
   function resultadoVenda(res, e, expl) {
     var lRaj = linha(res, 'Redutor de ajuste') || {}, lSoc = linha(res, 'Redutor social') || {};
     var lCre = linha(res, 'Créditos de IBS/CBS apropriados') || {};
@@ -49,10 +50,12 @@
       { n: 11, rotulo: 'Total líquido a recolher', valor: r2(res.total), formula: money(bruto) + ' − ' + money(credUsado), destaque: true, principal: true },
       { n: 12, rotulo: 'Carga efetiva sobre a operação', valor: null, texto: pct(res.aliquota_efetiva_sobre_operacao, 4), formula: money(res.total) + ' ÷ ' + money(valor) + ' × 100', destaque: true }
     ];
+    etapas.forEach(function (x) { x.simples = SIMPLES_V[x.n]; });
     if (res.ano_teste_2026) etapas.push({ n: 13, rotulo: 'Ano-teste 2026', valor: r2(res.total), texto: 'IBS 0,1% + CBS 0,9% sobre a base; ' + (res.total === 0 ? 'dispensado (art. 348, §1º)' : 'sem dispensa'), formula: 'base × 1%' });
     return etapas;
   }
 
+  var SIMPLES_L = {1: "Aluguel mensal vezes os meses (proporcional se o período for parcial).", 2: "IPTU, taxas e condomínio pagos pelo inquilino, com comprovante, não são receita sua.", 3: "Desconto de R$ 600 por mês, só no aluguel de moradia.", 4: "Valor sobre o qual o imposto é calculado.", 5: "Alíquota com 70% de desconto.", 6: "Alíquota com 70% de desconto.", 7: "Créditos abatidos, limitados ao imposto devido.", 8: "O que sai do caixa no período.", 9: "Percentual do aluguel que vira imposto.", 10: "Mesmo percentual projetado para 12 meses."};
   function resultadoLocacao(res, e, expl) {
     var loc = e.locacao || {}, meses = loc.meses || 1;
     var lExc = linha(res, 'Encargos do locatário excluídos da base') || {};
@@ -70,9 +73,10 @@
       { n: 8, rotulo: 'Total a recolher no período', valor: r2(res.total), formula: money(bruto) + ' − ' + money(res.creditos || 0), destaque: true, principal: true },
       { n: 9, rotulo: 'Carga efetiva mensal', valor: null, texto: pct(carga, 4), formula: 'total ÷ receita bruta × 100 (por mês: ' + money(res.total / meses) + ')', destaque: true },
       { n: 10, rotulo: 'Carga efetiva anual (12 meses, mesma base)', valor: null, texto: pct(carga, 4) + ' · ' + money(res.total / meses * 12) + '/ano', formula: 'total mensal × 12', destaque: true }
-    ];
+    ].map(function (x) { x.simples = SIMPLES_L[x.n]; return x; });
   }
 
+  var SIMPLES_P = {1: "Valor do imóvel que você entrega.", 2: "Valor do imóvel que você recebe.", 3: "Diferença entre os dois.", 4: "A troca em si não paga imposto.", 5: "Dinheiro que iguala os valores. É a única parte tributada.", 6: "Valor sobre o qual o imposto é calculado.", 7: "Alíquota com 50% de desconto.", 8: "Alíquota com 50% de desconto.", 9: "O que sai do caixa nesta permuta.", 10: "O desconto do imóvel entregue passa para o imóvel recebido.", 11: "Total dividido pelo número de unidades a receber."};
   function resultadoPermuta(res, e, expl, dados) {
     dados = dados || {};
     var dado = r2(e.valor_operacao), rec = r2(dados.valor_recebido || dado);
@@ -91,7 +95,8 @@
       { n: 9, rotulo: 'Total da operação (IBS + CBS)', valor: r2(res.total), formula: money(res.ibs) + ' + ' + money(res.cbs), destaque: true, principal: true },
       { n: 10, rotulo: 'Redutor de ajuste do imóvel recebido', valor: res.redutor_ajuste_recebido, formula: res.redutor_ajuste_recebido == null ? 'não apurado (ver notas)' : 'art. 360, §§ 7º e 8º' }
     ];
-    if (uni) et.push({ n: 11, rotulo: 'Resultado por unidade futura (' + uni + ' un.)', valor: r2(res.total / uni), formula: money(res.total) + ' ÷ ' + uni + ' · redutor por unidade ' + money((res.redutor_ajuste_recebido || 0) / uni) });
+    et.forEach(function (x) { x.simples = SIMPLES_P[x.n]; });
+    if (uni) et.push({ n: 11, simples: SIMPLES_P[11], rotulo: 'Resultado por unidade futura (' + uni + ' un.)', valor: r2(res.total / uni), formula: money(res.total) + ' ÷ ' + uni + ' · redutor por unidade ' + money((res.redutor_ajuste_recebido || 0) / uni) });
     return et;
   }
 
@@ -161,7 +166,7 @@
     return '<table><thead><tr><th style="width:26px">#</th><th>Etapa</th><th>Fórmula</th><th class="num">Valor</th></tr></thead><tbody>' +
       etapas.map(function (x) {
         return '<tr class="' + (x.principal ? 'destaque principal' : x.destaque ? 'destaque' : '') + '"><td>' + x.n + '</td><td>' + esc(x.rotulo) +
-          (x.extra ? '<div class="mini">' + esc(x.extra) + '</div>' : '') + '</td><td class="mini">' + esc(x.formula || '') + '</td><td class="num">' +
+          (x.extra ? '<div class="mini">' + esc(x.extra) + '</div>' : '') + '</td><td class="mini">' + esc(x.formula || '') + (x.simples ? '<br><i>' + esc(x.simples) + '</i>' : '') + '</td><td class="num">' +
           (x.texto != null ? esc(x.texto) : money(x.valor)) + '</td></tr>'; }).join('') + '</tbody></table>';
   }
   function premissasHTML(p) {
@@ -181,6 +186,42 @@
       'IRPJ e CSLL permanecem devidos e não estão incluídos nos valores de IBS/CBS. Este documento não substitui o parecer assinado pelo responsável técnico.</div></body></html>';
   }
 
+
+  /* Tabela "valor do imposto em cada ano" — recebe p.anos = [{ano, ibs, cbs, total, classificacao, ano_teste}] */
+  function anosHTML(anos) {
+    if (!anos || !anos.length) return '';
+    return '<h2>Quanto seria o imposto em cada ano (2026 a 2033)</h2><p class="mini">A Reforma entra aos poucos: 2026 é ano-teste (0,1% + 0,9%), a CBS começa em 2027 e o IBS sobe até 2033. A mesma operação, feita em anos diferentes, paga valores diferentes.</p>' +
+      '<table><thead><tr><th>Ano</th><th class="num">IBS</th><th class="num">CBS</th><th class="num">Imposto na operação</th><th>Alíquota</th></tr></thead><tbody>' +
+      anos.map(function (a) { return '<tr' + (a.ano === 2033 ? ' class="destaque"' : '') + '><td>' + a.ano + (a.ano_teste ? ' (ano-teste)' : '') + '</td><td class="num">' + pct(a.ibs, 2) + '</td><td class="num">' + pct(a.cbs, 2) + '</td><td class="num"><b>' + money(a.total) + '</b></td><td>' + esc(a.classificacao) + '</td></tr>'; }).join('') + '</tbody></table>';
+  }
+
+  /* RELATÓRIO SIMPLIFICADO — para o cliente sem conhecimento técnico */
+  function montarSimplificado(p) {
+    var res = p.res, e = p.entrada, im = p.imovel || e.imovel || {}, pes = p.empresa || {};
+    var op = { venda: 'venda', locacao: 'aluguel', permuta: 'permuta (troca)' }[e.operacao] || e.operacao;
+    var principal = (p.etapas || []).filter(function (x) { return x.principal; })[0];
+    var corpo = cabecalho(p, 'Resumo para o cliente — ' + op + ' de imóvel', 'Explicação em linguagem simples') +
+      '<div class="alerta">Este resumo usa as alíquotas de referência divulgadas pelo governo, que ainda podem mudar. Os valores são uma estimativa séria, não um valor definitivo de imposto.</div>' +
+      '<h2>1. De quem e de qual imóvel estamos falando</h2><div class="box">' +
+      '<b>' + esc(pes.nome || '—') + '</b>' + (pes.cnpj ? ' · ' + esc(pes.cnpj) : '') + (pes.tipo ? ' · ' + (pes.tipo === 'PF' ? 'pessoa física' : 'empresa') : '') +
+      '<br>Imóvel: <b>' + esc(im.codigo_interno || im.id || '—') + '</b>' + (im.endereco ? ' · ' + esc(im.endereco) : '') + (im.municipio ? ' · ' + esc(im.municipio) + (im.uf ? '/' + esc(im.uf) : '') : '') + (im.tipo ? ' · ' + esc(String(im.tipo).replace(/_/g, ' ')) : '') +
+      '<br>Operação: <b>' + esc(op) + '</b> em ' + dataBR(e.data_fato_gerador) + ' · valor ' + money(e.valor_operacao) + '</div>' +
+      '<h2>2. A resposta em uma linha</h2><div class="box"><div class="grid"><div><div class="mini">Valor da operação</div><div class="big">' + money(e.valor_operacao) + '</div></div>' +
+      '<div><div class="mini">Imposto novo (IBS + CBS)</div><div class="big">' + money(res.total) + '</div></div><div><div class="mini">Isso representa</div><div class="big">' + pct(res.aliquota_efetiva_sobre_operacao, 2) + '</div><div class="mini">do valor da operação</div></div></div></div>' +
+      (p.comparativo && p.comparativo.variacao != null ? '<div class="' + (p.comparativo.variacao > 0 ? 'alerta' : 'ok') + '">Comparando com o que se paga hoje (PIS, COFINS e ISS): ' + (p.comparativo.variacao > 0 ? 'a Reforma <b>aumenta</b>' : 'a Reforma <b>reduz</b>') + ' o imposto em <b>' + money(Math.abs(p.comparativo.variacao)) + '</b>. IRPJ e CSLL continuam iguais nos dois casos.</div>' : '') +
+      '<h2>3. Como chegamos a esse número</h2><table><thead><tr><th>Passo</th><th>O que é</th><th class="num">Valor</th></tr></thead><tbody>' +
+      (p.etapas || []).map(function (x) { return '<tr class="' + (x.principal ? 'destaque principal' : x.destaque ? 'destaque' : '') + '"><td>' + x.n + '. ' + esc(x.rotulo) + '</td><td class="mini">' + esc(x.simples || x.formula || '') + '</td><td class="num">' + (x.texto != null ? esc(x.texto) : money(x.valor)) + '</td></tr>'; }).join('') + '</tbody></table>' +
+      anosHTML(p.anos) +
+      '<h2>4. O que você precisa saber</h2><ul>' +
+      '<li><b>Não é o único imposto.</b> IRPJ e CSLL (impostos sobre o lucro) continuam existindo e não estão neste valor.</li>' +
+      '<li><b>O desconto do imóvel (redutor de ajuste) precisa ser escolhido até 31/12/2026.</b> Depois disso não há mais como aproveitá-lo. ' + (res.redutor_ajuste_usado ? 'Neste cálculo ele valeu ' + money(res.redutor_ajuste_usado) + ' de desconto na base.' : 'Neste cálculo não foi usado redutor.') + '</li>' +
+      '<li><b>As alíquotas ainda são estimativas.</b> O governo divulgou valores de referência (' + pct(p.expl && p.expl.ibs_padrao, 2) + ' IBS e ' + pct(p.expl && p.expl.cbs_padrao, 2) + ' CBS); a lei pode ajustá-los.</li>' +
+      ((p.premissas || []).some(function (x) { return x.editada; }) ? '<li><b>Este cálculo usa premissas alteradas manualmente</b> a seu pedido: ' + (p.premissas || []).filter(function (x) { return x.editada; }).map(function (x) { return esc(x.rotulo) + ' (' + esc(x.justificativa) + ')'; }).join('; ') + '.</li>' : '') +
+      (res.notas || []).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
+      '<h2>5. Próximos passos sugeridos</h2><p>' + esc(p.recomendacao || 'Confirmar os dados do imóvel (matrícula, valor de aquisição e valor de referência), formalizar a escolha do redutor de ajuste até 31/12/2026 e guardar a memória de cálculo completa, que acompanha este resumo.') + '</p>';
+    return envelope('Resumo para o cliente', corpo);
+  }
+
   /* p = { titulo_operacao, entrada, res, etapas, grau, premissas, coerencia,
            auditoria, comparativo, ruleset, motor, lacre, empresa, imovel,
            recomendacao, ressalvas } */
@@ -197,6 +238,7 @@
       '<div><div class="mini">IBS + CBS a recolher</div><div class="big">' + money(res.total) + '</div><div class="mini">IBS ' + money(res.ibs) + ' · CBS ' + money(res.cbs) + '</div></div>' +
       '<div><div class="mini">Carga efetiva</div><div class="big">' + pct(res.aliquota_efetiva_sobre_operacao, 4) + '</div></div></div></div>' +
       (econ != null ? '<div class="' + (econ > 0 ? 'alerta' : 'ok') + '">' + (econ > 0 ? 'Acréscimo' : 'Economia') + ' estimado(a) frente à tributação atual: <b>' + money(Math.abs(econ)) + '</b> (' + pct(Math.abs(p.comparativo.variacao_pct), 2) + ') — IRPJ/CSLL computados nos dois lados.</div>' : '') +
+      anosHTML(p.anos) +
       '<h2>4. Recomendação</h2><p>' + esc(p.recomendacao || (p.auditoria && p.auditoria.permite_conclusao_definitiva
         ? 'Os dados permitem conclusão no nível ' + p.auditoria.nivel_confianca + '. Recomenda-se formalizar a opção do art. 375 e conservar a memória de cálculo anexa.'
         : 'Há impedimentos à conclusão definitiva (ver ressalvas). Recomenda-se completar os dados apontados antes de qualquer decisão.')) + '</p>' +
@@ -213,6 +255,7 @@
       regras.map(function (r) { return '<tr><td><code>' + esc(r.id) + '</code></td><td>' + esc(r.nome || '') + '</td><td>' + esc(r.status || '') + '</td><td class="mini">' + r.fontes.map(esc).join('<br>') + '</td></tr>'; }).join('') + '</tbody></table>' +
       '<h2>3. Metodologia</h2><p>O motor determinístico <b>motorImob</b> aplica, na ordem: (i) valor da operação; (ii) redutor de ajuste do imóvel (arts. 257/258 da LC; 369 a 375 do RIBS/RCBS); (iii) redutor social (art. 259/260; 376 a 378); (iv) base de cálculo; (v) alíquotas reduzidas em 50% ou 70% (art. 261; 379); (vi) créditos limitados ao débito (arts. 47 a 57). Nenhum valor é estimado em silêncio: dado ausente bloqueia o cálculo.</p>' +
       '<h2>4. Cálculos</h2>' + tabelaEtapas(p.etapas || []) +
+      anosHTML(p.anos) +
       '<h2>5. Cenários</h2>' + (p.comparativo && p.comparativo.linhas ? '<table><thead><tr><th>Cenário</th><th class="num">Substituíveis</th><th class="num">Permanentes (IRPJ/CSLL)</th><th class="num">Total</th></tr></thead><tbody>' +
         p.comparativo.linhas.map(function (l) { return '<tr><td>' + esc(l.cenario) + '</td><td class="num">' + money(l.substituiveis) + '</td><td class="num">' + money(l.permanentes) + '</td><td class="num"><b>' + money(l.total) + '</b></td></tr>'; }).join('') + '</tbody></table>' : '<p class="mini">Comparativo não gerado nesta simulação.</p>') +
       '<h2>6. Fundamentos</h2><ul>' + fontes(res, p.regras).map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul>' +
@@ -329,7 +372,7 @@
 
   var API = { VERSAO: VERSAO, money: money, pct: pct, esc: esc, dataBR: dataBR,
               resultadoVenda: resultadoVenda, resultadoLocacao: resultadoLocacao, resultadoPermuta: resultadoPermuta,
-              coerencia: coerencia, montarExecutivo: montarExecutivo, montarTecnico: montarTecnico, montarMemoria: montarMemoria,
+              coerencia: coerencia, anosHTML: anosHTML, montarSimplificado: montarSimplificado, montarExecutivo: montarExecutivo, montarTecnico: montarTecnico, montarMemoria: montarMemoria,
               normalizarSimulacao: normalizarSimulacao, filtrarHistorico: filtrarHistorico, compararSimulacoes: compararSimulacoes,
               exportarCSV: exportarCSV, ITENS_COMP: ITENS_COMP };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;

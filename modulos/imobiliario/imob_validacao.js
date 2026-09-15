@@ -8,9 +8,16 @@
  * ==========================================================================*/
 (function (raiz) {
   'use strict';
-  var VERSAO = '1.0.0';
+  var VERSAO = '1.1.0';   // 1.1.0: aceita valores formatados em R$
 
-  function num(v) { if (v === '' || v == null) return null; var x = typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : NaN; }
+  function num(v) {
+    if (v === '' || v == null) return null;
+    if (typeof v === 'number') return isFinite(v) ? v : NaN;
+    var t = String(v).replace(/R\$|\s/g, '');
+    if (t === '' || t === '-') return null;
+    if (t.indexOf(',') >= 0) t = t.replace(/\./g, '').replace(',', '.');   // pt-BR: 1.234,56
+    var x = parseFloat(t); return isFinite(x) && /^-?\d*\.?\d+$/.test(t) ? x : NaN;
+  }
   function dataValida(s) {
     if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
     var d = new Date(s + 'T00:00:00Z'); return !isNaN(d) && d.toISOString().slice(0, 10) === s;

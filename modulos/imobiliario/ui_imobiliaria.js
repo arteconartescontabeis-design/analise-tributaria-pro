@@ -1,4 +1,4 @@
-/* --- UI da aba Análise Imobiliária — módulo v1.3.0 (13/09/2026) ---
+/* --- UI da aba Análise Imobiliária — módulo v1.4.0 (14/09/2026) ---
  * O motorImob (lacre c287341e) é consumido, nunca alterado. Tudo que muda
  * aqui é apresentação, validação, premissas, relatórios e histórico.      */
 (function(){
@@ -16,8 +16,24 @@ function ctxPara(operacao, extras){ return PR.montarCtx(PREM, operacao, extras);
 var CTX = ctxPara('venda');   // compatibilidade com trechos que leem CTX diretamente
 
 function $(id){ return document.getElementById(id); }
-function n(id){ var el = $(id); if (!el) return 0; var v = parseFloat(String(el.value).replace(',', '.')); return isFinite(v) ? v : 0; }
-function nOuNulo(id){ var el = $(id); if (!el || el.value === '') return null; var v = parseFloat(String(el.value).replace(',', '.')); return isFinite(v) ? v : null; }
+function parseNum(str){
+  var t = String(str == null ? '' : str).replace(/R\$|\s/g, '');
+  if (t === '') return null;
+  if (t.indexOf(',') >= 0) t = t.replace(/\./g, '').replace(',', '.');
+  var v = parseFloat(t); return isFinite(v) ? v : NaN;
+}
+function n(id){ var el = $(id); if (!el) return 0; var v = parseNum(el.value); return v == null || isNaN(v) ? 0 : v; }
+function nOuNulo(id){ var el = $(id); if (!el) return null; var v = parseNum(el.value); return v == null || isNaN(v) ? null : v; }
+/* campos monetários: mostram R$ 1.234,56 quando o usuário sai do campo e voltam ao número puro ao editar */
+function fmtMoneyInput(el){ var v = parseNum(el.value); if (v == null || isNaN(v)) { if (String(el.value).trim() !== '') return; el.value = ''; return; } el.dataset.num = v; el.value = 'R$ ' + money(v); }
+function ligarMoney(){
+  document.querySelectorAll('#page-imobiliaria input.money').forEach(function(el){
+    if (el.dataset.money) { fmtMoneyInput(el); return; } el.dataset.money = '1';
+    el.addEventListener('focus', function(){ var v = parseNum(el.value); if (v != null && !isNaN(v)) el.value = String(v).replace('.', ','); el.select && el.select(); });
+    el.addEventListener('blur', function(){ fmtMoneyInput(el); });
+    fmtMoneyInput(el);
+  });
+}
 function txt(id){ return (($(id)||{}).value || '').trim(); }
 var money = RL.money, pct = RL.pct, esc = RL.esc;
 function hojeISO(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
@@ -54,7 +70,7 @@ function mostrarValidacao(alvoId, v){
 }
 
 /* ---------- abas ---------- */
-var ABAS = ['imovel','inventario','venda','locacao','permuta','opcional','comparativo','pf','auditoria','historico','regras','premissas'];
+var ABAS = ['cadastro','memoria','imovel','inventario','venda','locacao','permuta','opcional','comparativo','pf','auditoria','historico','regras','premissas'];
 function abrirAba(k){
   document.querySelectorAll('#imob-tabs .tab').forEach(function(x){ x.classList.toggle('on', x.dataset.t === k); });
   ABAS.forEach(function(a){ var p = $('t-'+a); if (p) p.style.display = (a === k) ? '' : 'none'; });
@@ -65,6 +81,9 @@ function abrirAba(k){
     if (k === 'inventario') { atualizarDatasInventario(); imobInventario(); }
     if (k === 'opcional') { if (!$('o-campos').innerHTML) pintaOpc(); pintaGuiaOpc(); }
     if (k === 'premissas') pintaPremissas();
+    if (k === 'memoria') imobMemoriaAba();
+    if (k === 'cadastro') imobCadastroTipo();
+    if (k === 'opcional' || k === 'venda' || k === 'locacao' || k === 'permuta' || k === 'comparativo') ligarMoney();
   });
 }
 function ligarAbas(){
@@ -139,7 +158,7 @@ function imobBloqueio(res){
 function imobSequencial(titulo, etapas){
   return '<div class="card"><h2>' + titulo + '</h2><div class="seq">' + etapas.map(function(x){
     return '<div class="et' + (x.principal ? ' principal' : x.destaque ? ' destaque' : '') + '"><div class="n">' + x.n + '</div><div class="r">' + esc(x.rotulo) + '</div>' +
-      '<div class="v">' + (x.texto != null ? esc(x.texto) : money(x.valor)) + '</div><div class="f">' + esc(x.formula || '') + (x.extra ? '<br>' + esc(x.extra) : '') + '</div></div>'; }).join('') + '</div></div>';
+      '<div class="v">' + (x.texto != null ? esc(x.texto) : money(x.valor)) + '</div><div class="f">' + esc(x.formula || '') + (x.extra ? '<br>' + esc(x.extra) : '') + '</div>' + (x.simples ? '<div class="simples">' + esc(x.simples) + '</div>' : '') + '</div>'; }).join('') + '</div></div>';
 }
 
 /* ---------- cadastro do imóvel ---------- */
@@ -192,9 +211,10 @@ function calcRaj(){ acao(function(){
        '<button class="btn pri" style="margin-top:10px" onclick="gravarEscolha()">Gravar escolha</button> <button class="btn" style="margin-top:10px" onclick="imobSalvarImovel()">Salvar im&oacute;vel no banco</button></div>';
   h += '<div id="just-ok"></div>' + imobSelo() + '</div>';
   $('raj-out').innerHTML = h;
+  if (!RAJ.bloqueios.length) pintaFluxo(); else $('fluxo-out').innerHTML = '';
 }); }
 function escolher(i){
-  RAJ_ESCOLHA = i;
+  RAJ_ESCOLHA = i; pintaFluxo();
   RAJ.opcoes.forEach(function(_,k){ var el = $('opt'+k); if (el) el.classList.toggle('sel', k === i); });
   $('just').style.display = '';
 }
@@ -229,7 +249,7 @@ function registrarSimulacao(e, res, operacaoRotulo, extra){
   if (!res || res.status !== 'CALCULADO') return null;
   var lAlq = (res.linhas||[]).filter(function(l){ return l.ibs_reduzida != null; })[0] || {};
   var s = { id: 'sim-' + Date.now() + '-' + Math.random().toString(16).slice(2,6), quando: new Date().toISOString(), status: 'preliminar',
-    usuario: usuarioAtual(), empresa: (IMOVEL.empresa || (window.EMP_GLOBAL && EMP_GLOBAL.nome) || null),
+    usuario: usuarioAtual(), empresa: (PESSOA.nome || IMOVEL.empresa || (window.EMP_GLOBAL && EMP_GLOBAL.nome) || null),
     imovel: (e.imovel && (e.imovel.codigo_interno || e.imovel.id)) || null, operacao: e.operacao, rotulo: operacaoRotulo,
     entrada: e, resultado: { base: res.base, ibs: res.ibs, cbs: res.cbs, creditos: res.creditos, debito: res.debito, total: res.total,
       aliquota_efetiva_sobre_operacao: res.aliquota_efetiva_sobre_operacao, redutor_ajuste_usado: res.redutor_ajuste_usado,
@@ -241,6 +261,118 @@ function registrarSimulacao(e, res, operacaoRotulo, extra){
   return s;
 }
 var ULTIMO = { venda: null, locacao: null, permuta: null };
+
+
+/* ---------- cadastro da pessoa (PF ou PJ) ---------- */
+var PESSOA = {};
+try { var pz = localStorage.getItem('atp_imob_pessoa'); if (pz) PESSOA = JSON.parse(pz) || {}; } catch (e) {}
+function imobCadastroTipo(){
+  var pf = txt('cd-tipo') === 'PF';
+  if ($('cd-regime-box')) $('cd-regime-box').style.display = pf ? 'none' : '';
+  if ($('cd-obj-box')) $('cd-obj-box').style.display = pf ? 'none' : '';
+}
+function lerPessoa(){
+  PESSOA = { tipo: txt('cd-tipo'), nome: txt('cd-nome'), documento: txt('cd-doc').replace(/\D/g, ''), regime: txt('cd-tipo') === 'PF' ? null : txt('cd-regime'),
+             atividade_imobiliaria_no_objeto: txt('cd-tipo') === 'PF' ? null : txt('cd-obj') === '1', email: txt('cd-email'), telefone: txt('cd-fone'), municipio: txt('cd-mun') };
+  try { localStorage.setItem('atp_imob_pessoa', JSON.stringify(PESSOA)); } catch (e) {}
+  return PESSOA;
+}
+function docFormatado(d){ d = String(d || '').replace(/\D/g, ''); if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); if (d.length === 14) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5'); return d; }
+function imobSalvarCadastro(){ acao(function(){
+  var p = lerPessoa(), erros = [];
+  if (!p.nome) erros.push({ campo: 'cd-nome', msg: 'Informe o nome (pessoa física) ou a razão social (empresa).' });
+  if (p.tipo === 'PF' && p.documento.length !== 11) erros.push({ campo: 'cd-doc', msg: 'CPF deve ter 11 números.' });
+  if (p.tipo === 'PJ' && p.documento.length !== 14) erros.push({ campo: 'cd-doc', msg: 'CNPJ deve ter 14 números.' });
+  if (!mostrarValidacao('cd-valid', { ok: !erros.length, erros: erros, avisos: [] })) return;
+  if ($('i-emp') && !txt('i-emp')) $('i-emp').value = p.nome;
+  if ($('c-obj') && p.tipo === 'PJ') $('c-obj').value = p.atividade_imobiliaria_no_objeto ? '1' : '0';
+  $('cd-out').innerHTML = '<div class="card"><span class="passo-ok">&#10004; Passo 1 conclu&iacute;do</span> <b>' + esc(p.nome) + '</b> · ' + esc(docFormatado(p.documento)) + ' · ' + (p.tipo === 'PF' ? 'pessoa f&iacute;sica' : 'empresa no ' + esc({ presumido: 'Lucro Presumido', real: 'Lucro Real', simples: 'Simples Nacional' }[p.regime] || p.regime)) +
+    (p.tipo === 'PF' ? '<div class="ajuda" style="margin-top:10px">Pessoa f&iacute;sica: antes de calcular venda ou aluguel, confira na aba <b>Pessoa f&iacute;sica</b> se voc&ecirc; realmente &eacute; contribuinte. Na maioria dos casos, n&atilde;o &eacute; &mdash; e ent&atilde;o n&atilde;o h&aacute; IBS/CBS a pagar.</div>' : '') + '</div>';
+  abrirAba('imovel');
+}); }
+function imobLimparCadastro(){ ['cd-nome','cd-doc','cd-email','cd-fone','cd-mun'].forEach(function(id){ $(id).value = ''; }); $('cd-valid').innerHTML = ''; $('cd-out').innerHTML = ''; PESSOA = {}; try { localStorage.removeItem('atp_imob_pessoa'); } catch (e) {} }
+
+/* ---------- fluxo guiado: depois do imóvel, o que calcular? ---------- */
+var FLUXO_OPS = [
+  { op: 'venda', ic: '&#128176;', t: 'Vender o im&oacute;vel', d: 'IBS/CBS sobre o pre&ccedil;o menos os redutores, com 50% de desconto na al&iacute;quota.' },
+  { op: 'locacao', ic: '&#128273;', t: 'Alugar o im&oacute;vel', d: 'Imposto sobre o aluguel, com 70% de desconto e R$ 600/m&ecirc;s a menos no residencial.' },
+  { op: 'permuta', ic: '&#128260;', t: 'Trocar por outro im&oacute;vel', d: 'A troca n&atilde;o paga; s&oacute; a torna (dinheiro que iguala os valores).' },
+  { op: 'opcional', ic: '&#9878;&#65039;', t: 'Regimes opcionais', d: 'RET, loteamento e contratos antigos: percentual fixo sobre a receita.' },
+  { op: 'comparativo', ic: '&#128202;', t: 'Comparar hoje &times; Reforma', d: 'Quanto muda em rela&ccedil;&atilde;o a PIS/COFINS/ISS, ano a ano at&eacute; 2033.' },
+  { op: 'pf', ic: '&#128100;', t: 'Sou pessoa f&iacute;sica: preciso pagar?', d: 'Verifica os limites de aluguel e de vendas do art. 251.' }
+];
+function pintaFluxo(){
+  var alvo = $('fluxo-out'); if (!alvo) return;
+  var raj = rajEscolhido();
+  alvo.innerHTML = '<div class="card"><h2>Passo 3 &mdash; O que voc&ecirc; quer calcular com este im&oacute;vel?</h2>' +
+    '<div class="mini">Redutor de ajuste que ser&aacute; usado: <b>' + money(raj.valor) + '</b> (' + esc(raj.rotulo) + '). Os dados do im&oacute;vel j&aacute; v&atilde;o preenchidos; ao calcular, os relat&oacute;rios ficam dispon&iacute;veis.</div>' +
+    '<div class="fluxo">' + FLUXO_OPS.filter(function(o){ return o.op !== 'pf' || (PESSOA.tipo === 'PF'); }).map(function(o){ return '<div class="op" onclick="imobEscolherOperacao(\'' + o.op + '\')"><div class="ic">' + o.ic + '</div><b>' + o.t + '</b><div class="d">' + o.d + '</div></div>'; }).join('') + '</div></div>';
+}
+function rajEscolhido(){
+  if (!RAJ || !RAJ.opcoes) return { valor: n('v-raj'), rotulo: 'informado' };
+  if (RAJ_ESCOLHA !== null && RAJ.opcoes[RAJ_ESCOLHA] && RAJ.opcoes[RAJ_ESCOLHA].valor != null) return RAJ.opcoes[RAJ_ESCOLHA];
+  var disp = RAJ.opcoes.filter(function(o){ return o.valor != null; }).sort(function(a,b){ return b.valor - a.valor; });
+  return disp[0] ? { valor: disp[0].valor, rotulo: disp[0].rotulo + ' (maior op&ccedil;&atilde;o dispon&iacute;vel)' } : { valor: 0, rotulo: 'nenhuma op&ccedil;&atilde;o dispon&iacute;vel' };
+}
+function imobEscolherOperacao(op){ acao(function(){
+  var raj = rajEscolhido(), tipo = txt('i-tipo');
+  if (op === 'venda') { $('v-raj').value = raj.valor; $('v-tipo').value = tipo; if (!(n('v-val') > 0)) $('v-val').value = nOuNulo('i-ref') || nOuNulo('i-aq') || 0; }
+  if (op === 'permuta') { $('x-raj').value = raj.valor; if (!(n('x-val') > 0)) $('x-val').value = nOuNulo('i-ref') || nOuNulo('i-aq') || 0; }
+  if (op === 'comparativo') { $('c-raj').value = raj.valor; $('c-tipo').value = tipo === 'terreno' ? 'comercial' : tipo; if (PESSOA.tipo === 'PJ') $('c-obj').value = PESSOA.atividade_imobiliaria_no_objeto ? '1' : '0'; }
+  abrirAba(op); ligarMoney();
+  var f = { venda: calcVenda, locacao: calcLoc, permuta: calcPerm, comparativo: calcComp, pf: calcPF }[op];
+  if (f) f();
+  var t = $('t-' + op); if (t && t.scrollIntoView) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}); }
+
+/* ---------- valor do imposto em cada ano 2026-2033 ---------- */
+function calcularAnos(e, ctx){
+  var c = {}; for (var k in ctx) c[k] = ctx[k]; c.transicao = TRANSICAO;
+  var pr = M.projetarTransicao(e, c);
+  if (pr.status !== 'CALCULADO') return null;
+  return pr.anos.map(function(a){ return { ano: a.ano, ibs: TRANSICAO[a.ano].ibs, cbs: TRANSICAO[a.ano].cbs, classificacao: TRANSICAO[a.ano].classificacao, total: a.total, ano_teste: a.ano === 2026 }; });
+}
+function imobAnosHTML(anos, e){
+  if (!anos) return '';
+  var max = Math.max.apply(null, anos.map(function(a){ return a.total; }));
+  return '<div class="card"><h2>Quanto seria o imposto em cada ano (2026 a 2033)</h2><div class="ajuda">A Reforma entra em vigor aos poucos: 2026 &eacute; ano-teste (al&iacute;quota simb&oacute;lica de 1%), em 2027 entra a CBS e o IBS sobe todo ano at&eacute; 2033. Esta tabela mostra <b>a mesma opera&ccedil;&atilde;o</b> (' + money(e.valor_operacao) + ') feita em cada ano. O ano que voc&ecirc; informou define o valor do resultado acima.</div>' +
+    '<table class="anos"><thead><tr><th>Ano</th><th class="num">Al&iacute;quota IBS</th><th class="num">Al&iacute;quota CBS</th><th class="num">Imposto na opera&ccedil;&atilde;o</th><th>Situa&ccedil;&atilde;o da al&iacute;quota</th></tr></thead><tbody>' +
+    anos.map(function(a){ return '<tr' + (String(a.ano) === String(e.data_fato_gerador||'').slice(0,4) ? ' style="background:var(--info-bg)"' : '') + '><td>' + a.ano + (a.ano_teste ? ' <span class="badge b-info">ano-teste</span>' : '') + '</td><td class="num">' + pct(a.ibs,2) + '</td><td class="num">' + pct(a.cbs,2) + '</td><td class="num' + (a.total === max ? ' max' : '') + '"><b>' + money(a.total) + '</b></td><td><span class="badge ' + (a.classificacao === 'LEGAL' ? 'b-ok' : 'b-warn') + '">' + (a.classificacao === 'LEGAL' ? 'fixada em lei' : 'estimada') + '</span></td></tr>'; }).join('') +
+    '</tbody></table></div>';
+}
+function botoesRelatorio(op){
+  return '<div class="card"><h2>Relat&oacute;rios desta opera&ccedil;&atilde;o</h2><div class="mini">Cada bot&atilde;o abre o documento pronto para imprimir ou salvar em PDF.</div><div class="rel-botoes">' +
+    '<button class="btn pri" onclick="imobRelatorio(\'simplificado\',\'' + op + '\')">&#128203; Resumo para o cliente</button>' +
+    '<button class="btn" onclick="imobRelatorio(\'executivo\',\'' + op + '\')">&#128196; Relat&oacute;rio executivo</button>' +
+    '<button class="btn" onclick="imobRelatorio(\'tecnico\',\'' + op + '\')">&#128295; Relat&oacute;rio t&eacute;cnico</button>' +
+    '<button class="btn" onclick="imobRelatorio(\'memoria\',\'' + op + '\')">&#129518; Mem&oacute;ria de c&aacute;lculo</button>' +
+    '<button class="btn" onclick="abrirAba(\'memoria\')">Ver mem&oacute;ria na tela</button></div></div>';
+}
+
+/* ---------- aba memória de cálculo (com explicação para leigo) ---------- */
+var EXPLICA_LINHA = {
+  'Valor da operação': 'O preço combinado. Tudo parte daqui.',
+  'Redutor de ajuste': 'Desconto que representa o valor que o imóvel já tinha antes da Reforma (art. 375). Evita tributar o que foi construído no sistema antigo.',
+  'Redutor social': 'Desconto adicional para moradia (R$ 100 mil no residencial novo; R$ 30 mil no lote; R$ 600/mês no aluguel residencial).',
+  'Base de cálculo tributável': 'Valor sobre o qual o imposto incide: preço menos os descontos.',
+  'Encargos do locatário excluídos da base': 'IPTU, taxas e condomínio pagos pelo inquilino não são receita do locador.',
+  'Créditos de IBS/CBS apropriados': 'Imposto pago nas compras que pode ser abatido, até o limite do imposto devido.',
+  'Torna tributável': 'Na permuta, só a diferença em dinheiro paga imposto.'
+};
+var ULTIMA_OP = null;
+function imobMemoriaAba(){ acao(function(){
+  var u = ULTIMA_OP && ULTIMO[ULTIMA_OP];
+  if (!u) { $('mem-out').innerHTML = '<div class="card"><div class="info">Ainda n&atilde;o h&aacute; c&aacute;lculo nesta sess&atilde;o. Cadastre a pessoa e o im&oacute;vel e escolha uma opera&ccedil;&atilde;o &mdash; a mem&oacute;ria aparece aqui automaticamente.</div></div>'; return; }
+  var res = u.res, e = u.e, opRot = { venda: 'Venda', locacao: 'Loca&ccedil;&atilde;o', permuta: 'Permuta' }[ULTIMA_OP] || ULTIMA_OP;
+  var h = '<div class="card"><h2>' + opRot + ' de ' + money(e.valor_operacao) + ' em ' + RL.dataBR(e.data_fato_gerador) + '</h2>' +
+    '<div class="mini">' + (PESSOA.nome ? '<b>' + esc(PESSOA.nome) + '</b> · ' : '') + 'im&oacute;vel <b>' + esc((e.imovel||{}).codigo_interno || (e.imovel||{}).id || '—') + '</b> · calculado em ' + esc(new Date().toLocaleString('pt-BR')) + '</div>' +
+    '<table style="margin-top:10px"><thead><tr><th>#</th><th>Passo</th><th>Em palavras simples</th><th>F&oacute;rmula</th><th class="num">Valor</th></tr></thead><tbody>' +
+    res.linhas.map(function(l){ var ehAlq = l.ibs_reduzida != null;
+      var simples = ehAlq ? 'A al&iacute;quota cheia (' + pct(l.entrada.ibs_padrao,2) + ' + ' + pct(l.entrada.cbs_padrao,2) + ') tem desconto de ' + (ULTIMA_OP === 'locacao' ? '70' : '50') + '% para im&oacute;veis.' : /^IBS/.test(l.descricao) ? 'Base × al&iacute;quota reduzida do IBS.' : /^CBS/.test(l.descricao) ? 'Base × al&iacute;quota reduzida da CBS.' : /^Total/.test(l.descricao) ? 'IBS + CBS menos os cr&eacute;ditos: o que sai do caixa.' : /Ano-teste/.test(l.descricao) ? 'Em 2026 vale s&oacute; 1% de teste; se der at&eacute; R$ 0,00 &eacute; dispensado.' : (EXPLICA_LINHA[l.descricao] || '');
+      return '<tr><td class="mini">' + l.ordem + '</td><td><b>' + esc(l.descricao) + '</b><div class="fund">' + (l.fundamentos||[]).slice(0,2).map(esc).join('<br>') + '</div></td><td class="mini">' + simples + '</td><td class="mini">' + esc(l.formula||'') + '</td><td class="num">' + (ehAlq ? 'IBS <b>' + pct(l.ibs_reduzida,4) + '</b><br>CBS <b>' + pct(l.cbs_reduzida,4) + '</b>' : '<b>' + money(l.valor) + '</b>') + '</td></tr>'; }).join('') +
+    '</tbody></table></div>';
+  $('mem-out').innerHTML = h + imobSequencial('Resultado passo a passo', u.etapas) + (u.anos ? imobAnosHTML(u.anos, e) : '') + imobMemoria(res, ULTIMA_OP === 'locacao' ? 'locacao' : 'venda') + botoesRelatorio(ULTIMA_OP);
+}); }
 
 /* ---------- venda ---------- */
 function entradaVenda(){
@@ -265,8 +397,9 @@ function calcVenda(){ acao(function(){
       res.parcelas.map(function(p){ return '<tr><td>' + p.ordem + '</td><td class="num">' + money(p.pagamento) + '</td><td class="num">' + pct(p.proporcao,4) + '</td><td class="num">' + money(p.redutor_aplicado) +
         '</td><td class="num">' + money(p.base) + '</td><td class="num">' + money(p.ibs) + '</td><td class="num">' + money(p.cbs) + '</td><td class="num"><b>' + money(p.total) + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
   }
-  $('v-out').innerHTML = h + imobMemoria(res, 'venda');
-  ULTIMO.venda = { e: e, res: res, ctx: ctx, etapas: et };
+  var anos = calcularAnos(e, ctx);
+  $('v-out').innerHTML = h + imobAnosHTML(anos, e) + imobMemoria(res, 'venda') + botoesRelatorio('venda');
+  ULTIMO.venda = { e: e, res: res, ctx: ctx, etapas: et, anos: anos }; ULTIMA_OP = 'venda';
   registrarSimulacao(e, res, 'Venda');
 }); }
 
@@ -303,8 +436,9 @@ function calcLoc(){ acao(function(){
       h += '<div class="card"><div class="aviso">Compara&ccedil;&atilde;o n&atilde;o realizada: o cen&aacute;rio ' + esc(outra) + ' foi bloqueado pelo motor (' + esc(r2.mensagem) + ').</div></div>';
     }
   }
-  $('l-out').innerHTML = h + imobMemoria(res, 'locacao');
-  ULTIMO.locacao = { e: e, res: res, ctx: ctx, etapas: et };
+  var anos = calcularAnos(e, ctx);
+  $('l-out').innerHTML = h + imobAnosHTML(anos, e) + imobMemoria(res, 'locacao') + botoesRelatorio('locacao');
+  ULTIMO.locacao = { e: e, res: res, ctx: ctx, etapas: et, anos: anos }; ULTIMA_OP = 'locacao';
   registrarSimulacao(e, res, 'Loca&ccedil;&atilde;o');
 }); }
 
@@ -329,8 +463,9 @@ function calcPerm(){ acao(function(){
   if (txt('x-din') === '1') h += '<div class="card"><div class="aviso">Contrapresta&ccedil;&atilde;o em dinheiro al&eacute;m da torna: trate o valor como torna (art. 360, &sect;3&ordm;, I) &mdash; informe-o nos campos de torna para que seja tributado.</div></div>';
   if (n('x-cre') > 0) h += '<div class="card"><div class="info">Cr&eacute;ditos informados (' + money(n('x-cre')) + ') n&atilde;o foram abatidos: o motor n&atilde;o compensa cr&eacute;ditos na permuta &mdash; o aproveitamento se d&aacute; na apura&ccedil;&atilde;o peri&oacute;dica (arts. 47 a 57).</div></div>';
   if (txt('x-nome')) h += '<div class="card"><div class="mini">Contraparte: <b>' + esc(txt('x-nome')) + '</b> (' + esc(txt('x-parte')) + ')</div></div>';
-  $('x-out').innerHTML = h + imobMemoria(res, 'venda');
-  ULTIMO.permuta = { e: e, res: res, ctx: ctx, etapas: et };
+  var anos = calcularAnos(e, ctx);
+  $('x-out').innerHTML = h + imobAnosHTML(anos, e) + imobMemoria(res, 'venda') + botoesRelatorio('permuta');
+  ULTIMO.permuta = { e: e, res: res, ctx: ctx, etapas: et, anos: anos }; ULTIMA_OP = 'permuta';
   registrarSimulacao(e, res, 'Permuta');
 }); }
 
@@ -810,25 +945,34 @@ function rodarAuditoria(){ acao(function(){
   window.__PAC = pac; window.__RES = res; window.__E = e; window.__AU = au; window.__CTX = ctx;
   $('au-out').innerHTML = h;
 }); }
-function pacoteRelatorio(){
-  var e = entradaVenda(), ctx = ctxPara('venda'), res = M.calcular(e, ctx);
+function pacoteRelatorio(op){
+  op = op || 'venda';
+  var u = ULTIMO[op], opCtx = op === 'locacao' ? 'locacao' : 'venda';
+  var e, ctx, res, etapas, anos;
+  if (u) { e = u.e; ctx = u.ctx; res = u.res; etapas = u.etapas; anos = u.anos; }
+  else { e = entradaVenda(); ctx = ctxPara('venda'); res = M.calcular(e, ctx); }
   if (res.status === 'BLOQUEADO') return { erro: res };
-  var au = M.auditar(e, res, ctx), ex = PR.explicar(PREM, 'venda');
-  return { titulo_operacao: 'Alienação de bem imóvel', entrada: e, res: res, etapas: RL.resultadoVenda(res, e, ex), expl: ex,
+  var ex = PR.explicar(PREM, opCtx);
+  if (!etapas) etapas = RL.resultadoVenda(res, e, ex);
+  if (anos === undefined) anos = calcularAnos(e, ctx);
+  var au = M.auditar(e, res, ctx);
+  var pessoa = PESSOA.nome ? PESSOA : {};
+  return { titulo_operacao: { venda: 'Alienação de bem imóvel', locacao: 'Locação de bem imóvel', permuta: 'Permuta de bens imóveis' }[op] || op, entrada: e, res: res, etapas: etapas, anos: anos, expl: ex,
     grau: PR.grauCerteza(PREM, res, M.RULESET_VERSAO), premissas: PR.listar(PREM), coerencia: RL.coerencia(res, ex), auditoria: au,
     comparativo: ULTIMO.comparativo && ULTIMO.comparativo.cmp && ULTIMO.comparativo.cmp.status === 'CALCULADO' ? ULTIMO.comparativo.cmp : null,
     regras: M.REGRAS, ruleset: M.RULESET_VERSAO, motor: M.MOTOR_IMOB_VERSAO, lacre: M.LACRE_IMOB_HASH, app_versao: versaoApp(),
-    empresa: { nome: IMOVEL.empresa || (window.EMP_GLOBAL && EMP_GLOBAL.nome) || '', cnpj: (window.EMP_GLOBAL && EMP_GLOBAL.cnpj) || '' },
+    empresa: { nome: pessoa.nome || IMOVEL.empresa || (window.EMP_GLOBAL && EMP_GLOBAL.nome) || '', cnpj: pessoa.documento ? docFormatado(pessoa.documento) : ((window.EMP_GLOBAL && EMP_GLOBAL.cnpj) || ''), tipo: pessoa.tipo || null, regime: pessoa.regime || null },
     imovel: IMOVEL.codigo_interno ? IMOVEL : e.imovel, calculado_em: new Date().toISOString(),
     ressalvas: ['A alíquota de referência de IBS/CBS (Res. CGIBS 14/2026) é estimativa não vinculante.', 'IRPJ e CSLL permanecem devidos nos dois cenários e não integram os valores de IBS/CBS.', 'A opção do art. 375 é definitiva por imóvel e deve ser exercida até 31/12/2026.'] };
 }
-function imobRelatorio(tipo){ acao(function(){
-  var p = pacoteRelatorio();
-  if (p.erro) { $('au-out').innerHTML = imobBloqueio(p.erro); return; }
-  if (!p.coerencia.ok) { $('au-out').insertAdjacentHTML('afterbegin', '<div class="card"><div class="aviso err"><b>Relat&oacute;rio n&atilde;o emitido:</b> a confer&ecirc;ncia matem&aacute;tica apontou diverg&ecirc;ncia entre mem&oacute;ria e resultado.</div></div>'); return; }
-  var html = tipo === 'executivo' ? RL.montarExecutivo(p) : tipo === 'tecnico' ? RL.montarTecnico(p) : RL.montarMemoria(p);
+function imobRelatorio(tipo, op){ acao(function(){
+  var p = pacoteRelatorio(op);
+  var alvo = $(op === 'locacao' ? 'l-out' : op === 'permuta' ? 'x-out' : op === 'venda' ? 'v-out' : 'au-out') || $('au-out');
+  if (p.erro) { alvo.innerHTML = imobBloqueio(p.erro); return; }
+  if (!p.coerencia.ok) { alvo.insertAdjacentHTML('afterbegin', '<div class="card"><div class="aviso err"><b>Relat&oacute;rio n&atilde;o emitido:</b> a confer&ecirc;ncia matem&aacute;tica apontou diverg&ecirc;ncia entre mem&oacute;ria e resultado.</div></div>'); return; }
+  var html = tipo === 'executivo' ? RL.montarExecutivo(p) : tipo === 'tecnico' ? RL.montarTecnico(p) : tipo === 'simplificado' ? RL.montarSimplificado(p) : RL.montarMemoria(p);
   var w = window.open('', '_blank');
-  if (!w) { $('au-out').insertAdjacentHTML('afterbegin', '<div class="card"><div class="aviso">O navegador bloqueou a janela do relat&oacute;rio. Permita pop-ups para este site e tente de novo.</div></div>'); return; }
+  if (!w) { alvo.insertAdjacentHTML('afterbegin', '<div class="card"><div class="aviso">O navegador bloqueou a janela do relat&oacute;rio. Permita pop-ups para este site e tente de novo.</div></div>'); return; }
   w.document.open(); w.document.write(html); w.document.close();
   setTimeout(function(){ try { w.focus(); w.print(); } catch (e) {} }, 400);
 }); }
@@ -876,8 +1020,10 @@ function imobGerarParecer(){
   window.imobListarImoveis = imobListarImoveis; window.imobGerarParecer = imobGerarParecer; window.imobRelatorio = imobRelatorio;
   window.imobInventario = imobInventario; window.imobInventarioExemplo = imobInventarioExemplo;
   window.imobCompararSelecionados = imobCompararSelecionados; window.imobDuplicar = imobDuplicar; window.imobVerSim = imobVerSim; window.imobExportarHistorico = imobExportarHistorico;
+  window.imobSalvarCadastro = imobSalvarCadastro; window.imobLimparCadastro = imobLimparCadastro; window.imobCadastroTipo = imobCadastroTipo;
+  window.imobEscolherOperacao = imobEscolherOperacao; window.imobMemoriaAba = imobMemoriaAba;
   window.imobPremissaAplicar = imobPremissaAplicar; window.imobPremissaRestaurar = imobPremissaRestaurar;
-  window.__imobUI = { PREM: function(){ return PREM; }, ctxPara: ctxPara, entradaVenda: entradaVenda, entradaLocacao: entradaLocacao, registrarSimulacao: registrarSimulacao, sims: function(){ carregarSims(); return SIMS; } };
+  window.__imobUI = { PREM: function(){ return PREM; }, ctxPara: ctxPara, entradaVenda: entradaVenda, entradaLocacao: entradaLocacao, registrarSimulacao: registrarSimulacao, parseNum: parseNum, pessoa: function(){ return PESSOA; }, sims: function(){ carregarSims(); return SIMS; } };
 
   window.imobEntrar = function(){
     try {
@@ -891,8 +1037,13 @@ function imobGerarParecer(){
       try { ligarAbas(); } catch (e) { console.warn('[imob] abas:', e); }
       try { var im = localStorage.getItem('atp_imob_imovel'); if (im) { im = JSON.parse(im); var mapa = { 'i-cod':'codigo_interno','i-emp':'empresa','i-mat':'matricula','i-end':'endereco','i-mun':'municipio','i-uf':'uf','i-tipo':'tipo','i-lote':'lote_unidade_bloco','i-atot':'area_total','i-acon':'area_construida','i-frac':'fracao_ideal','i-sit':'situacao','i-daq':'data_aquisicao','i-dcon':'data_conclusao','i-aq':'valor_aquisicao','i-cst':'custos_construcao','i-ref':'valor_referencia','i-reforig':'valor_referencia_origem','i-refdata':'valor_referencia_data','i-fat':'fator_ate_2026','i-doc':'documentos','i-obs':'observacoes' };
         Object.keys(mapa).forEach(function(id){ var el = $(id); if (el && im[mapa[id]] != null) el.value = im[mapa[id]]; }); } } catch (e) {}
+      try { var mp = { 'cd-tipo':'tipo','cd-nome':'nome','cd-doc':'documento','cd-regime':'regime','cd-email':'email','cd-fone':'telefone','cd-mun':'municipio' };
+        Object.keys(mp).forEach(function(id){ var el = $(id); if (el && PESSOA[mp[id]] != null && PESSOA[mp[id]] !== '') el.value = PESSOA[mp[id]]; });
+        if ($('cd-obj') && PESSOA.atividade_imobiliaria_no_objeto != null) $('cd-obj').value = PESSOA.atividade_imobiliaria_no_objeto ? '1' : '0';
+        imobCadastroTipo(); } catch (e) { console.warn('[imob] cadastro:', e); }
       try { pintaOpc(); } catch (e) { console.warn('[imob] opcionais:', e); }
       try { atualizarDatasInventario(); } catch (e) { console.warn('[imob] inventário:', e); }
+      try { ligarMoney(); } catch (e) { console.warn('[imob] money:', e); }
       try { calcRaj(); } catch (e) { console.warn('[imob] redutor:', e); }
     }
   };

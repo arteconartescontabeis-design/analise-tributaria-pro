@@ -9,7 +9,7 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.3.0',
+    versao: '1.4.0',
     data: '14/09/2026',
     cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
@@ -20,6 +20,14 @@
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.4.0', data: '14/09/2026', texto:
+        'Fluxo guiado em 3 passos: (1) cadastro da pessoa (PF ou PJ, regime, objeto social), (2) im\u00f3vel e redutor, '
+        + '(3) escolha do que calcular (venda, loca\u00e7\u00e3o, permuta, opcionais, comparativo, PF) com os dados j\u00e1 preenchidos '
+        + 'e os relat\u00f3rios ao fim de cada resultado. Nova aba Mem\u00f3ria de c\u00e1lculo (linha a linha, em palavras simples). '
+        + 'Tabela "quanto seria o imposto em cada ano, 2026 a 2033" em venda, loca\u00e7\u00e3o e permuta e nos relat\u00f3rios. '
+        + 'Campos de valor formatados em R$ ao sair do campo. Textos explicativos para quem n\u00e3o \u00e9 da \u00e1rea em cada aba, '
+        + 'campo e etapa do resultado. Novo Resumo para o cliente (relat\u00f3rio simplificado); executivo, t\u00e9cnico e mem\u00f3ria '
+        + 'agora tamb\u00e9m para loca\u00e7\u00e3o e permuta. Motor intocado.' },
       { versao: '1.3.0', data: '14/09/2026', texto:
         'Prompt Mestre de melhorias (18 itens): invent\u00e1rio 2026 com data-base informada, data atual autom\u00e1tica e prazo '
         + 'recalculado todo dia; mem\u00f3ria de c\u00e1lculo mostra as al\u00edquotas (padr\u00e3o, redu\u00e7\u00e3o e finais) em vez de R$ 0,00; '

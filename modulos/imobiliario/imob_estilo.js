@@ -1,5 +1,5 @@
 /* ============================================================================
- * imob_estilo.js — o CSS PRÓPRIO do módulo Análise Imobiliária. v1.3.0
+ * imob_estilo.js — o CSS PRÓPRIO do módulo Análise Imobiliária. v1.4.0
  *
  * Toda classe usada na marcação ou gerada pela UI precisa ter regra aqui
  * (o teste run_imob_ui.js confere). Usa as variáveis do tema do índice.
@@ -107,6 +107,20 @@
     P + '.pr-row.editada td{background:#fdf3e3}',
     P + '.pr-row input{max-width:140px;text-align:right}',
     P + '.hist-sel{width:18px;height:18px;cursor:pointer}',
+    P + '.ajuda{background:#fbf7ef;border-left:4px solid var(--warn);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.6;margin:8px 0 14px}',
+    P + '.ajuda-campo{display:block;font-size:11px;color:var(--muted);line-height:1.4;margin-top:3px}',
+    P + 'input.money{text-align:right;font-variant-numeric:tabular-nums}',
+    P + '.fluxo{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}',
+    '@media(max-width:900px){' + P + '.fluxo{grid-template-columns:1fr}}',
+    P + '.fluxo .op{border:2px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;background:#fff;transition:all .15s}',
+    P + '.fluxo .op:hover{border-color:var(--primary);box-shadow:var(--shadow)}',
+    P + '.fluxo .op .ic{font-size:26px}' + P + '.fluxo .op b{display:block;margin:6px 0 4px;color:var(--primary);font-size:15px}',
+    P + '.fluxo .op .d{font-size:12px;color:var(--muted);line-height:1.5}',
+    P + '.anos td.num.max{color:var(--err);font-weight:700}',
+    P + '.rel-botoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}',
+    P + '.passo-ok{display:inline-block;background:var(--ok-bg);color:var(--ok);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-right:8px}',
+    P + '.simples{font-size:12px;color:var(--text);margin-top:6px;padding:6px 8px;background:#fff;border-radius:6px;border:1px dashed var(--border)}',
+    P + '.seq .et.principal .simples{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.35)}',
     P + '.chip{display:inline-block;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:2px 9px;margin:2px 4px 2px 0;color:var(--text)}'
   ].join('');
 
