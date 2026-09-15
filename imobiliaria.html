@@ -202,7 +202,7 @@ canvas{max-height:340px}
 <body>
 
 <!-- ══════════════════════════════════════════════════════════════════════
-     ÍNDICE PRÓPRIO DO MÓDULO ANÁLISE IMOBILIÁRIA — v1.2.0 · 22/08/2026
+     ÍNDICE PRÓPRIO DO MÓDULO ANÁLISE IMOBILIÁRIA — v1.4.1 · 15/09/2026
 
      Este arquivo é INDEPENDENTE do index.html do Análise Tributária Pro.
      Publicar um NÃO republica o outro. Mesmo Supabase, mesmo login, mesmo
@@ -238,6 +238,8 @@ canvas{max-height:340px}
   </div>
 
   <div class="main">
+    <!-- v1.4.1 · estado da sessão (escritório): carregando / sem vínculo / falha -->
+    <div id="sessao-aviso" style="display:none;margin-bottom:14px"></div>
     <!-- o módulo cria a própria página aqui dentro -->
     <div id="modulo-destino"></div>
 
@@ -258,9 +260,19 @@ const SUPA_KEY = 'sb_publishable_4eHrESOoQYRC7bR9rYKGBg_If2lOjnE';
 const SUPAFN_T = { ren: 10000, fn: 12000,
   porFn: { 'gerar-parecer': 150000, 'atualizar-classtrib': 90000 } };
 
-const APP = { token:null, user:null, page:'dashboard', tokenExp:0, papel:null, escritorioId:null };
+const APP = { token:null, user:null, page:'imob', tokenExp:0, papel:null, escritorioId:null, usuarioId:null,
+              // v1.4.1 · estado do escritório na sessão: deslogado | carregando | ok | sem_vinculo | falha
+              sessao:'deslogado' };
+// v1.4.1 · CAUSA RAIZ do "Sem escritório na sessão": `const` no script principal NÃO cria
+// propriedade em window, e o módulo (arquivo separado) lê `window.APP` — que era undefined.
+// A casca até carregava o escritório, mas o módulo nunca o enxergava. Publicado de propósito:
+window.APP = APP;
 
 const $id = id => document.getElementById(id);
+
+let SESS_RENOVANDO = null;   // single-flight: o refresh_token é ROTACIONADO — duas renovações simultâneas invalidariam a sessão
+                             // (v1.4.1: a casca copiada do Tributário tinha perdido esta declaração; garantirToken() estourava
+                             //  ReferenceError ao renovar o token e derrubava a consulta do escritório em silêncio)
 
 function sessaoGuardar(data){
   APP.token = data.access_token; APP.user = data.user || APP.user;
@@ -355,10 +367,15 @@ function toast(msg) {
 async function doLogout(){
   try { await fetch(SUPA_URL + '/auth/v1/logout', { method:'POST',
     headers:{ apikey:SUPA_KEY, authorization:'Bearer ' + (APP.token||'') } }); } catch(e){}
-  try { localStorage.removeItem('atp_sessao'); } catch(e){}
-  APP.token = null; APP.user = null;
+  // v1.4.1 · antes só 'atp_sessao' era removido: token e refresh ficavam no navegador e um F5
+  // reentrava sozinho com a sessão "encerrada". Agora a sessão é zerada por inteiro.
+  try { ['atp_sessao','atp_token','atp_refresh'].forEach(k => localStorage.removeItem(k)); } catch(e){}
+  sessaoZerar();
+  try { if (typeof imobSair === 'function') imobSair(); } catch(e){ console.warn('[imob] sair:', e); }
   $id('app').style.display = 'none';
   $id('auth-screen').style.display = 'flex';
+  $id('l-senha').value = ''; $id('login-err').textContent = '';
+  console.info('[sessão] encerrada pelo usuário');
 }
 
 /* ── navegação: só duas telas ──────────────────────────────────────────── */
@@ -406,41 +423,192 @@ function modInfoPintar(){
   alvo.innerHTML = h;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   v1.4.1 · SESSÃO E ESCRITÓRIO
+   O escritório vinculado ao usuário é carregado ANTES de o módulo entrar e
+   antes de qualquer consulta ou gravação. Nenhuma requisição do módulo sai
+   com escritório nulo: quem precisa do banco espera sessaoPronta().
+   Estados de APP.sessao:
+     carregando  → consulta em andamento (o módulo espera)
+     ok          → APP.escritorioId preenchido
+     sem_vinculo → usuário autenticado sem escritório (definitivo até o admin agir)
+     falha       → erro de rede/permissão após 3 tentativas (pode tentar de novo)
+     deslogado   → sem sessão
+   ══════════════════════════════════════════════════════════════════════════ */
+const SESSAO_MSG = {
+  carregando:  'Carregando os dados do seu escritório…',
+  sem_vinculo: 'Usuário autenticado, mas sem escritório vinculado. Procure o administrador.',
+  falha:       'Não foi possível carregar os dados do seu escritório. Verifique a conexão e tente novamente.',
+  deslogado:   'Sessão encerrada. Entre novamente para continuar.'
+};
+let SESSAO_PRONTA = null;      // promise da carga em andamento (single-flight)
+let SESSAO_REVALIDOU = 0;      // último instante em que a volta à aba revalidou a sessão
+
+function escritorioValido(v){
+  return (typeof v === 'number' && isFinite(v) && v > 0) ||
+         (typeof v === 'string' && v.trim() !== '' && v !== 'null' && v !== 'undefined');
+}
+function sessaoZerar(){
+  APP.token = null; APP.user = null; APP.tokenExp = 0; APP.papel = null;
+  APP.escritorioId = null; APP.usuarioId = null; APP.sessao = 'deslogado';
+  SESSAO_PRONTA = null; sessaoBanner();
+}
+const espera = ms => new Promise(r => setTimeout(r, ms));
+
+/* 1) quem é o usuário autenticado — confirmado no servidor, não só no token guardado */
+async function usuarioAutenticado(){
+  const pedir = () => fetch(`${SUPA_URL}/auth/v1/user`, { headers:{ apikey:SUPA_KEY, Authorization:'Bearer ' + APP.token } });
+  if (!APP.token) return null;
+  await garantirToken();
+  let r = await pedir();
+  if (r.status === 401 && await garantirToken(true)) r = await pedir();
+  if (r.status === 401 || r.status === 403) return null;                 // sessão inválida: volta ao login
+  if (!r.ok) throw new Error('auth ' + r.status);                          // transitório: tenta de novo
+  const u = await r.json();
+  return u && u.email ? u : null;
+}
+
+/* 2) o registro do usuário no cadastro do app (por e-mail, como no Tributário; tolera maiúsculas) */
+async function localizarUsuario(email){
+  const em = String(email || '').trim().toLowerCase();
+  if (!em) return null;
+  let rows = await supa('GET','atp_usuarios',{ params:{ select:'*', email:'eq.' + em, limit:'1' } });
+  if (!rows || !rows.length)
+    rows = await supa('GET','atp_usuarios',{ params:{ select:'*', email:'ilike.' + em, limit:'5' } });
+  rows = rows || [];
+  return rows.find(r => String(r.email || '').trim().toLowerCase() === em) || rows[0] || null;
+}
+
+/* 3) carrega o escritório para o estado global — 3 tentativas para erro transitório */
+async function carregarEscritorio(){
+  APP.sessao = 'carregando'; sessaoBanner();
+  let ultimo = null;
+  for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    try {
+      const u = await usuarioAutenticado();
+      if (!u) { console.info('[sessão] token inválido ou expirado — voltando ao login'); sessaoZerar(); return false; }
+      APP.user = u;
+      console.info('[sessão] usuário autenticado (id ' + String(u.id || '').slice(0, 8) + '…)');
+      const reg = await localizarUsuario(u.email);
+      const eid = reg ? reg.escritorio_id : null;
+      if (!escritorioValido(eid)) {
+        APP.escritorioId = null; APP.papel = (reg && reg.papel) || 'operador';
+        APP.usuarioId = reg && reg.id != null ? reg.id : null;
+        APP.sessao = 'sem_vinculo'; sessaoBanner();
+        console.info('[sessão] usuário ' + (reg ? 'cadastrado sem escritório vinculado' : 'sem registro no cadastro do app'));
+        return false;
+      }
+      APP.escritorioId = eid; APP.papel = reg.papel || 'operador';
+      APP.usuarioId = reg.id != null ? reg.id : null;
+      APP.sessao = 'ok'; sessaoBanner();
+      console.info('[sessão] escritório carregado (tentativa ' + tentativa + ', papel ' + APP.papel + ')');
+      return true;
+    } catch (e) {
+      ultimo = e;
+      console.warn('[sessão] falha ao carregar o escritório (tentativa ' + tentativa + '/3): ' + (e && e.message || e));
+      if (tentativa < 3) await espera(300 * tentativa * tentativa);
+    }
+  }
+  APP.escritorioId = null; APP.sessao = 'falha'; sessaoBanner();
+  return false;
+}
+
+/* 4) o contrato que o módulo usa: espera a carga e só resolve com escritório válido */
+function sessaoPronta(){
+  const decidir = () => escritorioValido(APP.escritorioId) && APP.sessao === 'ok'
+    ? Promise.resolve({ escritorio_id: APP.escritorioId, usuario_id: APP.usuarioId, usuario_uuid: APP.user && APP.user.id || null })
+    : Promise.reject({ codigo:'SEM_ESCRITORIO', estado: APP.sessao, erro: SESSAO_MSG[APP.sessao] || SESSAO_MSG.falha });
+  return SESSAO_PRONTA ? SESSAO_PRONTA.then(decidir, decidir) : decidir();
+}
+window.sessaoPronta = sessaoPronta;
+
+/* 5) tela: o aviso ao usuário, sem termos técnicos */
+function sessaoBanner(){
+  const el = $id('sessao-aviso'); if (!el) return;
+  const st = APP.sessao;
+  if (st === 'ok' || st === 'deslogado') { el.style.display = 'none'; el.innerHTML = ''; return; }
+  const cor = st === 'carregando' ? 'info' : 'aviso';
+  el.style.display = '';
+  el.innerHTML = '<div class="' + cor + '" style="' + (st === 'carregando'
+      ? 'background:#eaf2f8;border-left:4px solid #2e86ab;padding:10px 14px;border-radius:8px'
+      : 'background:#fdf2e9;border:1px solid #e67e22;border-left-width:4px;padding:12px 16px;border-radius:8px;color:#9c4a0f') + '">' +
+    '<b>' + esc(SESSAO_MSG[st]) + '</b>' +
+    (st === 'falha' ? ' <button class="btn" style="margin-left:10px" onclick="sessaoRecarregar()">Tentar novamente</button>' : '') +
+    (st === 'sem_vinculo' ? '<div class="hint" style="margin-top:4px">Os cálculos continuam disponíveis; gravação, carteira, histórico e relatórios do banco ficam desativados até o vínculo ser feito.</div>' : '') +
+    '</div>';
+}
+function sessaoAplicarNoModulo(){
+  try { if (typeof imobAtualizarContexto === 'function') imobAtualizarContexto(); } catch(e){ console.warn('[imob] contexto:', e); }
+}
+async function sessaoRecarregar(){
+  if (SESSAO_PRONTA) return SESSAO_PRONTA;
+  SESSAO_PRONTA = carregarEscritorio().finally(() => { SESSAO_PRONTA = null; });
+  const ok = await SESSAO_PRONTA;
+  if (APP.sessao === 'deslogado') { $id('app').style.display = 'none'; $id('auth-screen').style.display = 'flex'; return ok; }
+  sessaoAplicarNoModulo();
+  return ok;
+}
+/* 6) voltar à aba/janela ou trocar de aba do navegador: token e escritório são revalidados */
+async function sessaoRevalidar(){
+  if (!APP.token || SESSAO_PRONTA) return;
+  if (Date.now() - SESSAO_REVALIDOU < 10000) return;
+  SESSAO_REVALIDOU = Date.now();
+  const vale = await garantirToken();
+  if (!vale) { console.info('[sessão] não foi possível renovar a sessão ao retornar — voltando ao login'); sessaoZerar();
+    $id('app').style.display = 'none'; $id('auth-screen').style.display = 'flex'; $id('login-err').textContent = SESSAO_MSG.deslogado; return; }
+  if (APP.sessao !== 'ok') { console.info('[sessão] retorno à aplicação sem escritório carregado — recarregando'); await sessaoRecarregar(); }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') sessaoRevalidar(); });
+window.addEventListener('focus', () => sessaoRevalidar());
+
+/* o módulo é servido em arquivos separados, depois deste script: espera-o quando preciso */
+function moduloCarregado(){
+  return new Promise(res => {
+    if (typeof window.imobEntrar === 'function' || document.readyState === 'complete') return res();
+    window.addEventListener('load', () => res(), { once:true });
+  });
+}
+
 /* ── entrada ───────────────────────────────────────────────────────────── */
+let ENTRANDO = null;
 async function entrar(){
-  $id('auth-screen').style.display = 'none';
-  $id('app').style.display = 'block';
-  $id('user-email').textContent = (APP.user && APP.user.email) || '';
-  // o mesmo contexto que a aba usa dentro do app completo
-  try {
-    const u = await supa('GET','atp_usuarios',{ params:{ select:'papel,escritorio_id',
-      email: 'eq.' + ((APP.user && APP.user.email) || ''), limit:'1' } });
-    APP.papel = (u && u[0] && u[0].papel) || 'operador';
-    APP.escritorioId = (u && u[0] && u[0].escritorio_id) || null;
-  } catch(e) { APP.papel = 'operador'; APP.escritorioId = null; }
-  try { imobEntrar(); } catch(e){ console.warn('[imob]', e); }
-  modInfoPintar();
+  if (ENTRANDO) return ENTRANDO;
+  ENTRANDO = (async () => {
+    $id('auth-screen').style.display = 'none';
+    $id('app').style.display = 'block';
+    $id('user-email').textContent = (APP.user && APP.user.email) || '';
+    // 1º o escritório; só depois o módulo entra — é a ordem que evita a consulta às cegas
+    const ok = await sessaoRecarregar();
+    if (APP.sessao === 'deslogado') return false;
+    $id('user-email').textContent = (APP.user && APP.user.email) || '';
+    await moduloCarregado();
+    try { if (typeof imobEntrar === 'function') imobEntrar(); else console.warn('[imob] módulo não carregado'); }
+    catch(e){ console.warn('[imob]', e); }
+    modInfoPintar();
+    return ok;
+  })().finally(() => { ENTRANDO = null; });
+  return ENTRANDO;
 }
 
 (async () => {
-  if (await tentarSessao()) entrar();
+  if (await tentarSessao()) entrar();          // atualização da página / URL direta
   else $id('auth-screen').style.display = 'flex';
 })();
 </script>
 
 <!-- ── o módulo, servido à parte. Trocar qualquer um destes NÃO mexe
      nem neste arquivo nem no index.html do Tributário. ───────────────── -->
-  <script src="modulos/imobiliario/imob_manifesto.js"></script>
-  <script src="modulos/imobiliario/imob_estilo.js"></script>
-  <script src="modulos/imobiliario/imob_pagina.js"></script>
-  <script src="modulos/imobiliario/motorImob.js"></script>
-  <script src="modulos/imobiliario/persistenciaImob.js"></script>
-  <script src="modulos/imobiliario/parecerImobIA.js"></script>
-  <script src="modulos/imobiliario/nucleoRastreio.js"></script>
-  <script src="modulos/imobiliario/imob_premissas.js"></script>
-  <script src="modulos/imobiliario/imob_validacao.js"></script>
-  <script src="modulos/imobiliario/imob_relatorios.js"></script>
-  <script src="modulos/imobiliario/ui_imobiliaria.js"></script>
+  <script src="modulos/imobiliario/imob_manifesto.js?v=1.4.1"></script>
+  <script src="modulos/imobiliario/imob_estilo.js?v=1.4.1"></script>
+  <script src="modulos/imobiliario/imob_pagina.js?v=1.4.1"></script>
+  <script src="modulos/imobiliario/motorImob.js?v=1.4.1"></script>
+  <script src="modulos/imobiliario/persistenciaImob.js?v=1.4.1"></script>
+  <script src="modulos/imobiliario/parecerImobIA.js?v=1.4.1"></script>
+  <script src="modulos/imobiliario/nucleoRastreio.js?v=1.4.1"></script>
+  <script src="modulos/imobiliario/imob_premissas.js?v=1.4.1"></script>
+  <script src="modulos/imobiliario/imob_validacao.js?v=1.4.1"></script>
+  <script src="modulos/imobiliario/imob_relatorios.js?v=1.4.1"></script>
+  <script src="modulos/imobiliario/ui_imobiliaria.js?v=1.4.1"></script>
   <script>(function(){ var b=document.getElementById('mod-versao-badge'), i=(window.ModulosInfo||{}).imobiliario; if(b&&i) b.textContent='v'+i.versao; })();</script>
 
 </body>
