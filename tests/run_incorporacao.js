@@ -17,7 +17,9 @@
 //  11. (v1.3.0) relatórios: conferência por entidade (bate ao centavo com o quadro); camada de decisão
 //      (3 cenários, score explicável, ANÁLISE INCOMPLETA); parecer e apresentação DE INCORPORAÇÃO; snapshot;
 //  12. (v1.5.0) modelo único: Σ por tributo = total do regime; IBS+CBS = débito; classificação em 5 categorias;
-//      20 seções; 8 relatórios + todos; Excel; apresentações e snapshot lendo o modelo.
+//      20 seções; 8 relatórios + todos; Excel; apresentações e snapshot lendo o modelo;
+//  13. (v1.6.0) redesign: executivo gerencial em 9 páginas (cards, 5 gráficos, interpretações, semáforo, checklist),
+//      resumo executivo no parecer, técnicos em paisagem, relatórios pendentes, validações 25.1–25.9.
 //  Sai com código ≠ 0 em qualquer falha.
 // ════════════════════════════════════════════════════════════════════════════════════════
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -274,7 +276,7 @@ console.log('\n■ Relatórios: conferência (Consolidada · Incorporadora · In
   (async () => {
     erro = null; try { h = await roda('parecer_inc'); } catch(e){ erro = e.message; }
     chk('Parecer de Incorporação renderiza (capa + páginas)', !erro && /pp-capa/.test(h) && /pp-page/.test(h) && h.length > 20000, erro || (h.length + ' chars'));
-    chk('… com as 20 seções do Parecer Consolidado (v1.5.0)', ['1. Identificação das empresas','2. Objetivo e escopo','3. Resumo executivo','4. Painel de decisão','5. Comparação das empresas separadas','6. Comparação — empresas separadas × empresa consolidada','7. Comparação tributária por tributo','8. Comparação dos regimes tributários','9. Impacto da Reforma Tributária','10. Ranking dos cenários','11. Operações realizadas entre as empresas','12. Alertas e inconsistências','13. Conclusão tributária','14. Conclusão financeira','15. Conclusão patrimonial','16. Conclusão societária','17. Recomendação final','18. Premissas','19. Limitações','20. Memória resumida de cálculo'].every(t => h.includes(t)));
+    chk('… com as 20 seções do Parecer Consolidado (v1.5.0)', ['1. Identificação das empresas','2. Objetivo e escopo','3. Contexto e leitura analítica','4. Painel de decisão','5. Comparação das empresas separadas','6. Comparação — empresas separadas × empresa consolidada','7. Comparação tributária por tributo','8. Comparação dos regimes tributários','9. Impacto da Reforma Tributária','10. Ranking dos cenários','11. Operações realizadas entre as empresas','12. Alertas e inconsistências','13. Conclusão tributária','14. Conclusão financeira','15. Conclusão patrimonial','16. Conclusão societária','17. Recomendação final','18. Premissas','19. Limitações','20. Memória resumida de cálculo'].every(t => h.includes(t)));
     chk('… score e classificação (5 categorias) no painel e no ranking', h.includes(String(Math.round(sc.total)) + '<span') && h.includes(R('incModelo()').painel.classe.rot));
     chk('… totais da consolidada e das separadas no comparativo (ao centavo)', h.includes(fmtBR(S.consolidada.T.lp)) && h.includes(fmtBR(S.soma.lp)) && h.includes(fmtBR(S.consolidada.T.lr)));
     chk('… carga por tributo (IRPJ, CSLL, PIS, COFINS) no regime mais barato permitido', /IRPJ/.test(h) && /CSLL/.test(h) && /COFINS/.test(h));
@@ -375,7 +377,47 @@ console.log('\n■ Relatórios: conferência (Consolidada · Incorporadora · In
       const M2 = R('incModelo()');
       chk('snapshot reaberto: parecer consolidado e Reforma renderizam; classificação e totais iguais aos do resultado vivo', !e3 && M2.painel.classe.rot === M.painel.classe.rot && perto(M2.painel.econ, M.painel.econ) && /reaberta de simulação gravada/.test(M2.painel.situacao), e3 || '');
       R('INC').res = S; R('INC')._cen = null; R('INC')._modelo = null;
-      chk('badge e changelog v1.5.0 (versão visível + linha na aba Versões)', /INC_VERSAO = '1\.5\.0'/.test(jsInc) && /\['1\.5\.0','15\/09\/2026'/.test(jsInc) && /Parecer Consolidado de Incorporação/.test(jsInc));
+      chk('badge v1.6.0 e changelog v1.5.0 + v1.6.0 (versão visível + linhas na aba Versões)', /INC_VERSAO = '1\.6\.0'/.test(jsInc) && /\['1\.5\.0','15\/09\/2026'/.test(jsInc) && /\['1\.6\.0','15\/09\/2026'/.test(jsInc) && /Parecer Consolidado de Incorporação/.test(jsInc));
+      // ═══ 13. REDESIGN v1.6.0 — camada gerencial (executivo em 9 páginas, resumo executivo do parecer), gráficos, interpretações, semáforo, paisagem ═══
+      console.log('\n■ v1.6.0: redesign — executivo gerencial, gráficos, interpretações automáticas, semáforo, relatórios técnicos em paisagem');
+      {
+        const M = R('incModelo()'), G = R('incGruposTributo')(M), I = R('incInterp')(M), SEM = R('incSemaforo')(M), PT = R('incPontos')(M);
+        chk('formato único: -R$ 35.000,00 · R$ 1.234.567,89 · 12,34%', R('incRS')(-35000) === '-R$ 35.000,00' && R('incRS')(1234567.89) === 'R$ 1.234.567,89' && R('incPct')(0.1234) === '12,34%' && R('incSinalRS')(24000) === '+R$ 24.000,00');
+        chk('(25.1/25.2) grupos por tributo: Σ antes = carga atual do dashboard, Σ depois = carga após — os mesmos números da tabela técnica', perto(G.totA, CE.cen[0].ind.trib, 0.02) && perto(G.totD, CE.cen[1].ind.trib, 0.02) && perto(G.delta, CE.cen[1].ind.trib - CE.cen[0].ind.trib, 0.02), `${G.totA.toFixed(2)} → ${G.totD.toFixed(2)}`);
+        chk('(25.3) percentual da economia recalculado sobre a carga atual', I.antesDepois.includes(fmtBR(Math.abs(CE.cen[1].ind.trib - CE.cen[0].ind.trib))) && I.antesDepois.includes((Math.abs(CE.cen[1].ind.trib - CE.cen[0].ind.trib)/CE.cen[0].ind.trib*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + '%'));
+        chk('(25.6) interpretação nunca favorável com resultado negativo', CE.cen[1].ind.trib - CE.cen[0].ind.trib > 0.5 ? (/aumento/.test(I.antesDepois) && !/redução/.test(I.antesDepois) && !/economia/i.test(I.conclusao.split('.')[0])) : true);
+        chk('(25.4) acumulado 2027–2033 = soma dos anos; "vantajosa em toda a transição" coerente', perto(M.reforma.acumTotal, M.reforma.anos.reduce((s,a)=>s+a.delta,0)) && I.reformaMantem === (M.reforma.anos.every(a=>a.delta<=-0.5) ? 'SIM' : M.reforma.anos.every(a=>a.delta>=-0.5) ? 'NÃO' : 'PARCIALMENTE'));
+        chk('(25.5) ranking do executivo = mesmos scores e ordem do motor de decisão', M.ranking.every((r,i) => perto(r.score.total, CE.rank[i].score.total) && r.nome === CE.rank[i].nome));
+        chk('(25.7) semáforo: 6 dimensões; "não avaliado" nunca é vermelho; tributária segue o sinal da economia', SEM.length === 6 && SEM.filter(l=>/Não avaliada|Dados insuficientes/.test(l.rot)).every(l=>l.k==='na') && SEM[0].k === (CE.cen[1].ind.trib - CE.cen[0].ind.trib <= -0.5 ? 'ok' : CE.cen[1].ind.trib - CE.cen[0].ind.trib >= 0.5 ? 'err' : 'na'));
+        chk('pontos favoráveis/atenção só com dados reais (cada item cita um valor calculado ou um alerta do motor)', PT.at.length >= 1 && [...PT.fav, ...PT.at].every(t => /R\$|regime|Regime|não avaliados|teto|sublimite|inverte|Fator R|alerta|faixa|limite|bloqueado|Adicional/i.test(t)));
+        // executivo
+        R('incRelatorioRender')('rel_executivo'); const hx = corpoHtml();
+        chk('executivo: 9 páginas (capa + 8 assuntos, uma página cada) com 2 empresas', (hx.match(/class="pp-page/g)||[]).length === 9, (hx.match(/class="pp-page/g)||[]).length + ' págs');
+        chk('executivo: dashboard "Decisão da incorporação" com 12 cards (conclusão, cenário, regime, score, carga atual, após, economia, Reforma, riscos, pendências…)', /Decisão da incorporação/.test(hx) && ['conclusão','melhor cenário|cenário menos oneroso','regime indicado','score da operação','carga atual','após a incorporação','economia anual|acréscimo anual|diferença anual','2027–2033','riscos / alertas','pendências','regime não permitido','sentido inverso simulado'].every(t => new RegExp(t).test(hx)));
+        chk('executivo: 5 gráficos (antes×depois, regimes, cascata, Reforma, ranking) + interpretação após cada um', ['ex-ad-','ex-rg-','ex-wf-','ex-rf-','ex-rk-'].every(id => hx.includes('id="' + id)) && (hx.match(/<b>Leitura:<\/b>/g)||[]).length >= 6);
+        chk('(25.8) regime não permitido aparece como "NÃO PERMITIDO" e nunca como ★ melhor', S.consolidada.sn.estado !== 'elegivel' ? (/NÃO PERMITIDO/.test(hx) && !/Simples Nacional ★/.test(hx) && /Simples Nacional<\/td><td style="text-align:left">🔴/.test(hx)) : true);
+        chk('executivo: semáforo (🟢🟡🔴⚪ + texto), pontos favoráveis × atenção, checklist de 10 próximos passos, assinatura', /Visão geral da operação/.test(hx) && /Pontos favoráveis/.test(hx) && /Pontos de atenção/.test(hx) && (hx.match(/☐|☑/g)||[]).length >= 10 && /Próximos passos/.test(hx) && /Responsável técnico|CRC/.test(hx));
+        chk('executivo: sem tabelas técnicas largas (base/alíquota/fórmula ficam no técnico)', !/Alíq\. efetiva/.test(hx) && !/fórmula: /.test(hx) && !/Base \(cons\.\)/.test(hx));
+        chk('executivo: tabela curta por tributo (Antes/Depois/Diferença) com TOTAL = cargas do dashboard', /<th class="num">Antes<\/th><th class="num">Depois<\/th><th class="num">Diferença<\/th>/.test(hx) && hx.includes('TOTAL</td><td class="num">' + fmtBR(G.totA)));
+        chk('executivo: "Impacto tributário líquido" e "Impacto acumulado 2027–2033" em destaque', /Impacto tributário líquido: /.test(hx) && /Impacto acumulado 2027–2033: /.test(hx) && /vantajosa durante toda a transição: (SIM|NÃO|PARCIALMENTE)/.test(hx));
+        // parecer consolidado: resumo executivo antes da seção 1
+        R('incRelatorioRender')('parecer_inc'); const hp = corpoHtml();
+        chk('parecer consolidado: resumo executivo (3 páginas com dashboard, gráficos, semáforo) ANTES da seção 1; seção 3 renomeada (sem duplicidade)', hp.indexOf('Resumo executivo') < hp.indexOf('1. Identificação das empresas') && ['pc-ad-','pc-rg-','pc-rf-','pc-rk-'].every(id => hp.includes('id="' + id)) && /3\. Contexto e leitura analítica/.test(hp) && (hp.match(/Resumo executivo/g)||[]).length >= 3);
+        // técnicos em paisagem e blocos por tabela
+        R('incRelatorioRender')('rel_tributario'); const ht = corpoHtml();
+        chk('relatórios técnicos 2, 3 e 7 em A4 paisagem (página nomeada) com cabeçalho e numeração; memória mensal em blocos por tabela', /pp-page pp-land/.test(ht) && /pp-land-cab/.test(ht) && /página 1 de \d+/.test(ht) && /@page paisagem\{size:A4 landscape/.test(htmlInc) && /\.pp-page\.pp-land\{page:paisagem\}/.test(htmlInc) && (() => { R('incRelatorioRender')('rel_memoria'); return /pp-land/.test(corpoHtml()); })() && (() => { R('incRelatorioRender')('rel_reforma'); return /pp-land/.test(corpoHtml()); })());
+        chk('CSS de impressão: gráficos e linhas de tabela nunca divididos; título não fica órfão', /\.pp-chart\{page-break-inside:avoid/.test(htmlInc) && /\.pp-sec\{page-break-after:avoid/.test(htmlInc) && /\.pp-tab tr\{page-break-inside:avoid/.test(htmlInc));
+        // pendentes (item 12)
+        R('incRelatorioRender')('rel_patrimonial'); const hpa = corpoHtml(); R('incRelatorioRender')('rel_societaria'); const hso = corpoHtml(); R('incRelatorioRender')('rel_financeira'); const hfi = corpoHtml();
+        chk('relatórios 5 e 6: "Informações … pendentes" — dizem que a análise NÃO foi concluída e listam os documentos necessários', /Informações patrimoniais pendentes/.test(hpa) && /não foi concluída porque não foram fornecidas informações suficientes/.test(hpa) && /Balanço patrimonial/.test(hpa) && /Informações societárias e operacionais pendentes/.test(hso) && /Contratos com clientes/.test(hso));
+        chk('relatório 4: título "pendentes" só quando faltam custos; com custos, análise + o que ainda falta', M.temCustos ? (/Análise Financeira/.test(hfi) && /Informações financeiras ainda pendentes/.test(hfi)) : /Informações financeiras pendentes/.test(hfi));
+        // 3 empresas
+        { const E3 = ent([A, Bc, C3], 2025); const S3_ = g.__sim(E3); R('INC').res = S3_; R('INC').entradas = E3; R('INC')._cen = null; R('INC')._modelo = null;
+          let e4 = null, h3 = ''; try { R('incRelatorioRender')('rel_executivo'); h3 = corpoHtml(); R('incRelatorioRender')('rel_todos'); } catch(e){ e4 = e.message; }
+          chk('(25.9) executivo e "todos" funcionam com 3 empresas (sem sentido inverso)', !e4 && /3\+ empresas/.test(h3) && (h3.match(/class="pp-page/g)||[]).length >= 9, e4 || '');
+          R('INC').res = S; R('INC').entradas = E1; R('INC')._cen = null; R('INC')._modelo = null; }
+        chk('changelog v1.6.0 registra o redesign', /\['1\.6\.0','15\/09\/2026'/.test(jsInc) && /Redesign dos relatórios/.test(jsInc));
+      }
       chk('build com app_6 e o parecer antigo removido do app_5', /incorporacao_app_6\.js/.test(fs.readFileSync(path.join(RAIZ,'tools','build_incorporacao.js'),'utf8')) && !/PARECER DE INCORPORAÇÃO \(substitui o incParecerRender da v1\.0\)/.test(jsInc));
     }
     console.log(`\n${FALHAS.length ? '✗✗ FALHAS: ' + FALHAS.length : '✓✓ SUÍTE COMPLETA'}: ${OK} verificações OK${FALHAS.length ? ' · ' + FALHAS.join(' | ') : ''}`);
