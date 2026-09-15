@@ -797,6 +797,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.94.3</b></td><td>15/09/2026</td><td><b>🧾 Trilha de alterações — todos os campos auditáveis.</b> Cada alteração de dado de entrada passa a ficar registrada em <code>AN.auditoria</code> com usuário, data/hora, campo, mês, valor anterior, valor novo e origem: grade da Análise (Receitas, Folha, Compras, Despesas, 12 meses anteriores, 13º), aba ICMS·IPI (débito/crédito informados, apagados ou restaurados), Configuração, início de atividade, campos manuais da Reforma e cada importação (PGDAS-D, XML, balancete, Faturamento, Demonstrativo, planilha, fornecedores) como um evento por lote com as células sobrescritas e o que havia antes. Só grava quando o valor muda. A trilha viaja no JSON da análise (sem SQL) e entra no snapshot do fechamento. Onde aparece: quadro "Trilha de alterações" no bloco 0 da Conferência (linhas em âmbar = alteração manual sobre dado importado), tooltip da célula com o último evento, item no Verificar e resumo de uma linha nas premissas do parecer. Lotes antigos são compactados acima de 500 registros; alterações manuais nunca. Motor e lacre <code>22197ef1</code> intocados. Suíte: bloco 5ar.</td></tr>
                     <tr><td><b>v7.94.2</b></td><td>14/09/2026</td><td><b>✏️ Aba ICMS·IPI — o quadro apurado passou a ser EDITÁVEL.</b> Débito e crédito de ICMS e de IPI são campos mês a mês, já preenchidos com a estimativa do motor (cinza); o que for digitado fica destacado em azul e passa a valer no Lucro Presumido, no Lucro Real e — se a empresa estiver impedida pelo sublimite — no ICMS fora do Simples, tudo de uma vez (v7.94.0). Apagar a célula devolve o automático; "Restaurar automático" limpa todas as substituições. O quadro ganha a linha "ICMS fora do Simples (impedida)" quando houver impedimento e o cabeçalho diz qual conta está valendo. Antes, o apurado era só leitura e as linhas "substituir" ficavam em branco lá embaixo — o usuário não sabia que número estava valendo nem onde mexer. Motor e lacre <code>22197ef1</code> intocados. Suíte: bloco 5aq.</td></tr>
                     <tr><td><b>v7.94.1</b></td><td>14/09/2026</td><td><b>🐞 Abertura do aplicativo com a análise ZERADA — corrigido; e a gravação passa a recusar substituir a análise gravada por uma em branco.</b> Sintoma relatado: ao entrar e ir a <b>Importar</b> ou <b>Configuração</b> a empresa aparecia com tudo zerado; trocar o ano e voltar fazia os dados aparecerem. Causa: o guard da v7.44.0 criava a análise em branco <i>já com o CNPJ e o ano</i> da empresa global, e a comparação seguinte ("empresa e ano diferem?") respondia que não — a carga do banco nunca era disparada; só a troca de ano (<code>gTrocar</code>) chamava <code>anTrocarEmpresa</code>. A aba Análise não sofria porque cria o objeto com CNPJ vazio. <b>Risco escondido:</b> essa análise vazia não tinha marca de versão, então importar um PGDAS-D nela e deixar a gravação automática correr passava pela guarda de conflito e <b>substituía a análise gravada</b> (folha, compras, despesas, configuração, Reforma) só pelo que veio do PDF. Correção: o objeto criado pela navegação é marcado como <code>_placeholder</code> e sempre dispara a carga do banco (Importar, Configuração e Análise); <code>anSalvar</code> recusa gravar um placeholder por cima de linha existente, com aviso; a marca não vai ao banco. Motor e lacre <code>22197ef1</code> intocados. Suíte: bloco 5ap.</td></tr>
                     <tr><td><b>v7.94.0</b></td><td>14/09/2026</td><td><b>⚖️ Empresa impedida pelo ano anterior (RBAA acima do sublimite): o ICMS e o ISS "por fora" passam a ser a MESMA apuração do Presumido e do Real — e a partilha do DAS deixa de mostrar tributo que não está na guia. LACRE RE-SELADO <code>453f7b32</code> → <code>22197ef1</code>.</b> Caso real (conferência "Artecon8", 14/09/2026, RBAA R$ 3.957.960,59): o DAS já saía sem ICMS/ISS (correto), mas o custo do regime somava um ICMS apurado por fórmula própria da v7.58.0 — <b>R$ 27.426,82</b> em janeiro — enquanto o Presumido e o Real, no mesmo mês, apuravam <b>R$ 27.547,45</b>; dois números para o mesmo tributo, e nenhum deles editável. <b>(1) Uma conta só.</b> Fora do Simples, o ICMS e o ISS seguem as normas gerais (LC 123/2006, art. 20, § 1º; Res. CGSN 140/2018, art. 12) — exatamente a conta gráfica que o motor já faz para o Presumido/Real: débito das saídas, crédito das entradas, Tema 69 e o que estiver <b>informado na aba ICMS·IPI</b> (débito/crédito lançados prevalecem sobre a estimativa). O impedido passa a ler <code>icmsPagar</code> e <code>iss</code>, os mesmos do LP/LR; saldo credor no mês não reduz a carga (zero a recolher). <b>Resultado: o ICMS do impedimento fica editável mês a mês pela aba ICMS·IPI</b>, e o Simples, o Presumido e o Real mostram o mesmo valor. <b>(2) Partilha.</b> No mês impedido a alíquota efetiva já perdia as parcelas de ICMS/ISS, mas a repartição por tributo ainda as alocava nas faixas 1ª–5ª (na 6ª é zero por tabela, e o defeito ficava invisível): a decomposição imprimia "ICMS 5.988,43 · ISS 1.687,67" dentro de um DAS que não os continha (agosto a dezembro do mesmo caso), comprimindo as parcelas federais, e os cenários da Reforma liam <code>dasIcmsIss</code> como se estivesse na guia. Agora <code>dasIcmsIss</code> é zero no mês impedido e o resíduo vai para IRPJ/CSLL/CPP/IPI. <b>(3) Memória.</b> As duas parcelas entravam no "Custo total do regime" sem linha própria — o quadro saltava de DAS 34.763,00 para 62.189,83 sem dizer por quê. Passam a ter linha ("ICMS apurado fora do Simples", com débito, crédito e origem informado × estimativa; idem ISS), e o rótulo do total nomeia o impedimento. <b>Lacre:</b> casos 1 e 2 idênticos ao centavo; o caso 3 (impedido de setembro a dezembro) muda de propósito — Simples do ano +R$ 13.440,00 (crédito das compras monofásicas e débito do Anexo I inteiro, como no LP/LR) e híbrido 2033 +R$ 12.523,60 (partilha do mês impedido). <b>Não alterado (aguarda decisão):</b> no Presumido e no Real o ICMS com crédito maior que o débito ainda entra <b>negativo</b> no total do mês (maio: −1.373,51; junho: −918,35 no mesmo caso) — a conta gráfica transporta saldo credor, como o IPI faz desde a v7.80.0; a mudança alcança os gabaritos da planilha e por isso fica para versão própria. Suíte: bloco 5ao.</td></tr>
@@ -4492,6 +4493,8 @@ function anAplicado(){
     if (esc.length) alert('ATENÇÃO — os valores importados parecem estar fora de escala:\n\n'
       + esc.map(t => '• ' + t.replace(/<[^>]+>/g,'')).join('\n\n')
       + '\n\nOs dados foram aplicados. Confira a origem antes de calcular ou emitir documento.'); }
+  try { audSincronizar('importado', AUD_LOTE); } catch(e){ console.error('auditoria do lote', e); }   // v7.94.3 · depois do saneamento: o registro mostra o que ficou
+  AUD_LOTE = null;
   AN_SUJO = true; anRenderTabs(); anRenderGrid(); anRecalcular(); anSalvarAuto(); }
 // grava sozinho depois de importar; sem empresa definida não há onde gravar, e aí o aviso explica o porquê
 async function anSalvarAuto(){
@@ -4557,7 +4560,8 @@ function anNovo(cnpj, ano) {
     icms: { cred:Array(12).fill(null), deb:Array(12).fill(null), tema69:Array(12).fill(null), lei14592:Array(12).fill(null) },   // v7.89.0 · nota a nota
     ipi:  { cred:Array(12).fill(null), deb:Array(12).fill(null) },
     despesas: Object.fromEntries([...DESP_KEYS, ...CRED_LR_KEYS].map(k=>[k,z12()])),
-    origem: {} };                                          // v7.28.0: trilha de origem por campo×mês
+    origem: {},                                            // v7.28.0: trilha de origem por campo×mês
+    auditoria: [] };                                       // v7.94.3: trilha de alterações (quem/quando/de → para)
 }
 
 // ═══════════ ANÁLISE: DEFINIÇÃO DAS SEÇÕES/LINHAS ═══════════
@@ -4629,6 +4633,197 @@ function anOrigemMarcar(path, meses, cod){
   for (const m of (meses === 'all' ? [...Array(12).keys()] : meses)) AN.origem[path][+m] = cod || null;   // v7.88.0 · null = "não informado"
 }
 
+// ═══ v7.94.3 · TRILHA DE AUDITORIA POR CAMPO ═══════════════════════════════════════════════════
+// A trilha de origem (v7.28.0) diz DE ONDE veio cada célula, mas não QUEM alterou, QUANDO nem qual era
+// o valor anterior. Aqui cada alteração de dado de entrada vira um registro em AN.auditoria[] — viaja
+// no JSON da análise (sem SQL, sem tabela nova) e entra no snapshot do fechamento.
+//   { id, em, por, app, acao, campo, mes, de, para, origemDe, origemPara, lote, celulas[] }
+// Funis: anSet (grade + aba ICMS·IPI), anRepetir, anIcmsRestaurar, anAplicarConfig, anSetInicioAtividade,
+// anSetCfg12/anSetFolha13, rfCalcular (3 campos manuais da Reforma) e anAplicado (importações, 1 evento por
+// lote com as células sobrescritas e os valores anteriores). Só grava quando o valor MUDOU.
+const AUD_MAX = 500, AUD_ALERTA = 2000;          // acima de AUD_MAX os lotes antigos são compactados
+const AUD_IMPORT = 'PXBMFRL';                    // origens que vêm de arquivo
+const AUD_ROT = { digitado:'digitado', apagado:'apagado — volta ao automático', repetido:'repetido de janeiro (⇉)',
+  importado:'importado', restaurado:'restaurado ao automático', config:'Configuração', reforma:'aba Reforma' };
+const AUD_CFG_PADRAO = new Set(['cfg.travaNoDas','cfg.projJanela','cfg.anoRefParecer','cfg.lpBaseComCsll','cfg.lpBaseServCsll','cfg.transpPresuncao','cfg.icmsTranspV','cfg.transpCredPres','cfg.fap','cfg.ratBasico']);   // preenchidas pela própria tela com o padrão
+const AUD_RES = { 'icms.deb':'icmsDeb', 'icms.cred':'icmsCred', 'ipi.deb':'ipiDeb', 'ipi.cred':'ipiCred' };   // estimativa do motor por célula
+let AUD_FOTO = null;                              // retrato dos dados no último ponto de sincronização
+let AUD_LOTE = null;                              // rótulo do lote de importação em curso (opcional)
+function audLista(an){ an = an || AN; if (!an) return []; if (!Array.isArray(an.auditoria)) an.auditoria = []; return an.auditoria; }
+function audUsuario(){ try { return (APP && APP.user && APP.user.email) || ''; } catch(e){ return ''; } }
+function audIgual(a, b){
+  if (a == null && b == null) return true;
+  if (a == null || b == null) return false;
+  if (typeof a === 'number' || typeof b === 'number') return Math.abs((+a||0) - (+b||0)) < 0.005;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+// retrato plano da análise: campo×mês → valor (+ letra de origem); a Reforma fica fora (rfCalcular registra direto)
+function audMapa(an){
+  const M = {}, OG = {};
+  if (!an) return { M, OG };
+  for (const sec of ['receitas','folha','compras','despesas','icms','ipi'])
+    for (const [k, arr] of Object.entries(an[sec]||{})) if (Array.isArray(arr))
+      for (let m=0;m<12;m++){ const v = arr[m]; M[sec+'.'+k+'|'+m] = (v == null ? null : +v); }
+  for (const [k, v] of Object.entries(an.folha13||{})) M['folha13.'+k+'|'] = +v||0;
+  for (const [k, v] of Object.entries(an.cfg||{})){
+    if (k === 'rbaaOrigem' || k === 'rbaaPA' || k === 'inicioOrigem' || k === 'inicioPA') continue;   // selos, não dados
+    if (Array.isArray(v)) { for (let m=0;m<v.length && m<12;m++) M['cfg.'+k+'|'+m] = (v[m] == null ? null : +v[m]); }
+    else if (v && typeof v === 'object') M['cfg.'+k+'|'] = JSON.parse(JSON.stringify(v));
+    else M['cfg.'+k+'|'] = (v === undefined ? null : v);
+  }
+  const og = (an.origem && typeof an.origem === 'object' && !Array.isArray(an.origem)) ? an.origem : {};
+  for (const [pt, arr] of Object.entries(og)) if (Array.isArray(arr)) for (let m=0;m<12;m++) OG[pt+'|'+m] = arr[m] || null;
+  return { M, OG };
+}
+function audChave(an){ return an ? (an.cnpj||'') + '|' + (an.ano||'') : ''; }
+function audFotoBase(an){ an = an || AN; if (!an) { AUD_FOTO = null; return; } AUD_FOTO = { chave: audChave(an), ...audMapa(an) }; }
+function audFotoCelula(campo, mes, para, og){
+  if (!AUD_FOTO || !AN || AUD_FOTO.chave !== audChave(AN)) audFotoBase(AN);
+  if (!AUD_FOTO) return;
+  AUD_FOTO.M[campo + '|' + (mes == null ? '' : mes)] = (para == null ? null : (typeof para === 'object' ? JSON.parse(JSON.stringify(para)) : para));
+  if (og !== undefined && mes != null) AUD_FOTO.OG[campo + '|' + mes] = og || null;
+}
+function audEstimativa(campo, mes){
+  try { const f = AUD_RES[campo]; if (!f || mes == null || !AN || !AN._res) return null; const v = +AN._res.meses[mes][f]; return isFinite(v) ? v : null; } catch(e){ return null; }
+}
+function audRegistrar(ev){
+  if (!AN) return null;
+  const L = audLista(AN);
+  const reg = Object.assign({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), em: new Date().toISOString(), por: audUsuario(), app: APP_VERSAO }, ev);
+  L.push(reg); AN_SUJO = true; audCompactar(L); return reg;
+}
+// uma célula (grade, ICMS·IPI, RBT12, 13º, Config, Reforma) — só se mudou
+function audCelula(campo, mes, de, para, acao, extra){
+  if (!AN) return null;
+  if (audIgual(de, para)) { audFotoCelula(campo, mes, para, extra && extra.origemPara); return null; }
+  const ev = Object.assign({ acao, campo, mes: (mes == null ? null : +mes), de: (de === undefined ? null : de), para: (para === undefined ? null : para) }, extra || {});
+  if (ev.de == null && AUD_RES[campo]) ev.deAuto = audEstimativa(campo, mes);   // era estimativa: guarda o número que valia
+  const reg = audRegistrar(ev);
+  audFotoCelula(campo, mes, para, extra && extra.origemPara);
+  return reg;
+}
+// varredura completa contra o retrato: 1 evento por lote (importação) ou 1 por chave (Configuração)
+function audSincronizar(acao, lote){
+  if (!AN) return null;
+  const agora = audMapa(AN);
+  const base = (AUD_FOTO && AUD_FOTO.chave === audChave(AN)) ? AUD_FOTO : { chave: audChave(AN), ...audMapa(anNovo(AN.cnpj, AN.ano)) };
+  const dif = [];
+  for (const k of new Set([...Object.keys(base.M), ...Object.keys(agora.M)])){
+    const de = base.M[k] === undefined ? null : base.M[k], para = agora.M[k] === undefined ? null : agora.M[k];
+    if (audIgual(de, para)) continue;
+    const [campo, mm] = k.split('|'); const mes = mm === '' ? null : +mm;
+    dif.push({ campo, mes, de, para, origemDe: base.OG[k] || null, origemPara: agora.OG[k] || null });
+  }
+  AUD_FOTO = { chave: audChave(AN), ...agora };
+  if (!dif.length) return null;
+  if (acao === 'importado'){
+    const letras = [...new Set(dif.map(d => d.origemPara).filter(c => c && ORIGEM_ROT[c]))];
+    const rotulo = lote || (letras.length ? letras.map(c => ORIGEM_ROT[c][0]).join(' + ') : 'importação');
+    const porSecao = {}; for (const d of dif) { const sc = d.campo.split('.')[0]; porSecao[sc] = (porSecao[sc]||0) + 1; }
+    return audRegistrar({ acao:'importado', lote: rotulo, n: dif.length, secoes: porSecao, celulas: dif });
+  }
+  let ultimo = null;
+  for (const d of dif){
+    // chave que só passou a EXISTIR pela normalização da tela (padrão preenchido, nada digitado) não é alteração
+    if (acao !== 'importado' && d.de == null && AUD_CFG_PADRAO.has(d.campo)) { continue; }
+    ultimo = audRegistrar(Object.assign({ acao: acao || 'config' }, d));
+  }
+  return ultimo;
+}
+// tamanho: lotes antigos perdem o detalhe célula a célula (ficam rótulo, data, usuário e contagem); manual nunca
+function audCompactar(L){
+  if (!Array.isArray(L) || L.length <= AUD_MAX) return;
+  const lotes = L.map((e,i)=>e.acao==='importado' && Array.isArray(e.celulas) ? i : -1).filter(i=>i>=0);
+  for (const i of lotes.slice(0, Math.max(0, lotes.length - 20))) { const e = L[i]; e.compactado = true; delete e.celulas; }
+}
+// último evento de cada célula (para o tooltip da grade e o Verificar)
+function audIndice(an){
+  const idx = {};
+  for (const e of audLista(an)){
+    if (e.acao === 'importado') { for (const c of (e.celulas||[])) idx[c.campo + '|' + (c.mes==null?'':c.mes)] = Object.assign({}, e, c, { celulas:undefined }); }
+    else idx[e.campo + '|' + (e.mes==null?'':e.mes)] = e;
+  }
+  return idx;
+}
+function audRotulo(campo){
+  const [sec, k] = String(campo||'').split('.');
+  for (const S of AN_SECOES){ let grupo = '';
+    for (const L of (S.linhas||[])){
+      if (L.length === 1) { grupo = String(L[0]).split(' — ')[0].replace(/<[^>]+>/g,'').slice(0,34); continue; }
+      if (L[0] === campo) return (sec === 'receitas' && grupo ? grupo + ' · ' : '') + L[1] + (sec !== 'receitas' ? ' (' + S.nome.replace(/^\S+\s/,'') + ')' : '');
+    } }
+  const CFG = { iss:'ISS %', icmsV:'ICMS vendas %', icmsC:'ICMS compras %', ipiV:'IPI vendas %', ipiC:'IPI compras %', rbt12Lanc:'RBT12 · 12 meses anteriores (interno)', rbt12ExpLanc:'RBT12 · 12 meses anteriores (exportação)',
+    folha12Lanc:'Folha dos 12 meses anteriores', rbt12Direto:'RBT12 direto — interno', rbt12ExpDireto:'RBT12 direto — exportação', rbaa:'RBAA (ano anterior)', rbaaExp:'RBAA exportação', rbaaOutros:'RBAA filiais', rbaOutros:'RBA filiais (ano corrente)',
+    inicioAtividade:'Início de atividade', lpBaseServ:'Presunção serviços (LP)', lpBaseCom:'Presunção comércio (LP)', lpBaseServCsll:'Presunção serviços CSLL', lpBaseComCsll:'Presunção comércio CSLL', adicionalIR:'Adicional de IRPJ',
+    sublimite:'Sublimite', sublimiteValor:'Sublimite (valor próprio)', lrPeriodo:'Período do Lucro Real', lrPrejIrpj:'Prejuízo fiscal inicial', lrPrejCsll:'Base negativa CSLL inicial', projJanela:'Janela da projeção', anoRefParecer:'Ano de referência do parecer',
+    credLRpct:'% creditável no LR', folhaPerc:'Percentuais de folha', ratBasico:'RAT básico', fap:'FAP', travaNoDas:'Trava na guia', arredondaPorTributo:'Arredondar por tributo', frComposicao:'Composição do Fator R', dedIssRetido:'Deduz ISS retido', issRetidoNaCarga:'ISS retido na carga',
+    transpPresuncao:'Presunção transporte', icmsTranspV:'ICMS transporte %', transpCredPres:'Crédito presumido transporte', sem13Pago:'Sem pagamento de 13º' };
+  if (sec === 'cfg') return CFG[k] || ('Configuração · ' + k);
+  if (sec === 'folha13') return ({ prolabore13:'Pró-labore 13º', salarios13:'Proventos 13º', baseFgts13:'Base FGTS 13º' })[k] || k;
+  if (sec === 'reforma') return ({ receita:'Reforma · receita anual tributável', baseIS:'Reforma · base do Imposto Seletivo', credSimplesPct:'Reforma · % crédito s/ compras do Simples' })[k] || ('Reforma · ' + k);
+  if (sec === 'icms') return ({ deb:'Débito de ICMS', cred:'Crédito de ICMS', tema69:'ICMS destacado (Tema 69)', lei14592:'ICMS compras (Lei 14.592)' })[k] || campo;
+  if (sec === 'ipi') return ({ deb:'Débito de IPI', cred:'Crédito de IPI' })[k] || campo;
+  return campo;
+}
+function audFmtVal(campo, v, ev, lado){
+  if (v == null || v === '') { const est = ev && lado === 'de' ? ev.deAuto : null; return AUD_RES[campo] ? (est != null ? 'estimativa ' + fmt(est) : 'estimativa') : '—'; }
+  if (typeof v === 'object') return esc(JSON.stringify(v));
+  if (typeof v === 'boolean') return v ? 'sim' : 'não';
+  if (typeof v === 'string') return esc(v);
+  if (/\.(iss|icmsV|icmsC|ipiV|ipiC|icmsTranspV|transpCredPres|ratBasico|lpBase\w*)$/.test(campo) || /_pct$/.test(campo)) return (v*100).toFixed(4).replace(/0+$/,'').replace(/\.$/,'').replace('.',',') + '%';
+  return fmt(v);
+}
+function audQuando(iso){ try { return new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }); } catch(e){ return iso || ''; } }
+function audFrase(ev, campo){
+  if (!ev) return '';
+  campo = campo || ev.campo;
+  const quem = ev.por ? ' por ' + ev.por : '';
+  if (ev.acao === 'importado') return `${AUD_ROT.importado} (${ev.lote||'lote'})${quem} em ${audQuando(ev.em)} — de ${audFmtVal(campo, ev.de, ev, 'de')} para ${audFmtVal(campo, ev.para, ev, 'para')}`;
+  return `${AUD_ROT[ev.acao]||ev.acao}${quem} em ${audQuando(ev.em)} — de ${audFmtVal(campo, ev.de, ev, 'de')} para ${audFmtVal(campo, ev.para, ev, 'para')}`;
+}
+// resumo: quantas manuais, quantas manuais SOBRE valor importado, quantas importações
+function audResumo(an){
+  const L = audLista(an); const r = { total:L.length, manuais:0, sobreImportado:0, lotes:0, celulasImportadas:0 };
+  for (const e of L){
+    if (e.acao === 'importado') { r.lotes++; r.celulasImportadas += (+e.n || (e.celulas||[]).length); continue; }
+    r.manuais++; if (e.origemDe && AUD_IMPORT.includes(e.origemDe)) r.sobreImportado++;
+  }
+  return r;
+}
+// quadro da Conferência (bloco 0) — cronológico; lotes abrem em uma linha com as células sobrescritas
+function audQuadroHtml(an){
+  const L = audLista(an);
+  if (!L.length) return `<div style="margin-top:10px"><b style="font-size:12px">Trilha de alterações</b><div class="hint">Nenhuma alteração registrada nesta análise desde a v7.94.3 — lançamentos anteriores constam só na trilha de origem (letras acima).</div></div>`;
+  const r = audResumo(an);
+  const MS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const mesTx = m => m == null ? '—' : (MS[m] || m);
+  const rows = L.slice().sort((a,b)=>String(a.em).localeCompare(String(b.em))).map(e => {
+    if (e.acao === 'importado'){
+      const det = e.compactado ? `<span class="hint">detalhe compactado — ${e.n||0} célula(s)</span>`
+        : (e.celulas||[]).map(c => `${esc(audRotulo(c.campo))} ${mesTx(c.mes)}: ${audFmtVal(c.campo, c.de, c, 'de')} → ${audFmtVal(c.campo, c.para, c, 'para')}${c.origemDe === 'D' ? ' <b>(sobrescreveu valor digitado)</b>' : ''}`).join('<br>');
+      return `<tr style="background:#f4f8fb"><td>${audQuando(e.em)}</td><td>${esc(e.por||'—')}</td><td colspan="2"><b>Importação · ${esc(e.lote||'')}</b> — ${e.n||0} célula(s)</td><td colspan="2" style="font-size:10.5px">${det}</td><td>arquivo</td></tr>`;
+    }
+    const sobre = e.origemDe && AUD_IMPORT.includes(e.origemDe);
+    return `<tr${sobre?' style="background:#fef6e7"':''}><td>${audQuando(e.em)}</td><td>${esc(e.por||'—')}</td><td>${esc(audRotulo(e.campo))}</td><td class="num">${mesTx(e.mes)}</td><td class="num">${audFmtVal(e.campo, e.de, e, 'de')}</td><td class="num"><b>${audFmtVal(e.campo, e.para, e, 'para')}</b></td><td>${AUD_ROT[e.acao]||e.acao}${sobre ? ' <b>sobre ' + ORIGEM_ROT[e.origemDe][0] + '</b>' : ''}</td></tr>`;
+  }).join('');
+  return `<div style="margin-top:10px"><b style="font-size:12px">Trilha de alterações</b>
+    <div class="hint">${r.manuais} alteração(ões) manual(is)${r.sobreImportado ? `, <b>${r.sobreImportado} sobre valor importado</b>` : ''} · ${r.lotes} importação(ões) (${r.celulasImportadas} célula(s))${r.total > AUD_ALERTA ? ' · <b style="color:#943126">trilha muito extensa — considere fechar o exercício</b>' : ''}. Cada linha registra quem alterou, quando, o valor anterior e o novo; linhas em âmbar são alterações manuais sobre dado importado.</div>
+    <div style="overflow-x:auto;margin-top:6px"><table class="gtable" style="font-size:10.5px"><thead><tr><th>Quando</th><th>Usuário</th><th>Campo</th><th class="num">Mês</th><th class="num">De</th><th class="num">Para</th><th>Ação</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+// setters auditados para os campos que gravavam direto no cfg/folha13 pela própria tela
+function anSetCfg12(chave, m, val, el){
+  if (!AN) return;
+  if (!Array.isArray(AN.cfg[chave])) AN.cfg[chave] = z12();
+  const de = +AN.cfg[chave][m] || 0, para = num(val);
+  AN.cfg[chave][m] = para; if (el) el.value = para ? fmt(para) : '';
+  audCelula('cfg.' + chave, m, de, para, 'config'); AN_SUJO = true; anRecalcular();
+}
+function anSetFolha13(chave, val){
+  if (!AN) return; if (!AN.folha13) AN.folha13 = {};
+  const de = +AN.folha13[chave] || 0, para = num(val);
+  AN.folha13[chave] = para; audCelula('folha13.' + chave, null, de, para, 'digitado'); anRecalcular();
+}
+
 function anRenderTabs() {
   $id('an-tabs').innerHTML = AN_SECOES.map(s=>`<div class="an-tab ${AN_TAB===s.id?'on':''}" onclick="AN_TAB='${s.id}';anRenderTabs();anRenderGrid()">${s.nome}</div>`).join('');
 }
@@ -4638,11 +4833,13 @@ function anRepetir(path) {
   if (!AN) return;
   const { o, k } = anPath(AN, path);
   const v = o[k][0];
+  const _audAntes = o[k].slice(), _audOg = ((AN.origem||{})[path]||[]).slice();   // v7.94.3
   for (let m = 1; m < 12; m++) o[k][m] = v;
   // v7.51.0 (item E · decisão 8.1) · a cópia NÃO herda mais a origem de janeiro. Herdando 'P',
   // meses que nunca foram declarados apareciam como PGDAS-D e, pior, entravam em ORIG_IMPORTACAO:
   // o ultimoMesCoberto concluía que o ano estava coberto e a PROJEÇÃO DEIXAVA DE RODAR.
   anOrigemMarcar(path, [1,2,3,4,5,6,7,8,9,10,11], 'C');
+  for (let m = 1; m < 12; m++) audCelula(path, m, (_audAntes[m] == null ? null : +_audAntes[m]), (v == null ? null : +v), 'repetido', { origemDe:_audOg[m]||null, origemPara:'C' });   // v7.94.3
   anRenderGrid(); anRecalcular();
   toast('Valor de janeiro repetido nos 12 meses (origem: copiado — não conta como mês apurado).');
 }
@@ -4797,6 +4994,7 @@ function anNormalizar(d, cnpj, ano){
   out.cfg.folha12Lanc = a12(out.cfg.folha12Lanc);
   out.folha13 = { ...base.folha13, ...(d.folha13||{}) };
   out.origem = (d.origem && typeof d.origem === 'object' && !Array.isArray(d.origem)) ? d.origem : {};   // v7.28.0
+  out.auditoria = Array.isArray(d.auditoria) ? d.auditoria : [];                                          // v7.94.3
   for (const sec of ['icms','ipi']){                       // aqui null significa "automático" — não virar zero
     out[sec] = { ...base[sec], ...(d[sec]||{}) };
     for (const k of Object.keys(out[sec])){
@@ -4906,10 +5104,11 @@ function anRenderGrid() {
     — com <b>menos de 12 meses</b> de atividade o RBT12 é <b>proporcionalizado</b> (Res. CGSN 140/2018, art. 22, §§ 2º e 3º): a média mensal é anualizada. Em branco, o app usa a soma dos 12 meses anteriores.</div>
   <div id="cf-inicio-aviso">${iniAvisoInvalido(c, AN&&AN.ano)}${anAvisoInicioAtividade(c)}</div>
   <div style="overflow-x:auto;margin-top:8px"><table class="gtable"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m} (ant.)</th>`).join('')}</tr></thead><tbody>
-  <tr><td class="rot">Receita exportação</td>${MESES.map((_,m)=>`<td><input value="${(c.rbt12ExpLanc||[])[m]?fmt(c.rbt12ExpLanc[m]):''}" onchange="if(!AN.cfg.rbt12ExpLanc)AN.cfg.rbt12ExpLanc=z12();AN.cfg.rbt12ExpLanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
-  <tr><td class="rot">Receita</td>${MESES.map((_,m)=>`<td><input value="${c.rbt12Lanc[m]?fmt(c.rbt12Lanc[m]):''}" onchange="AN.cfg.rbt12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
-  <tr><td class="rot">Folha (Fator R)</td>${MESES.map((_,m)=>`<td><input value="${c.folha12Lanc[m]?fmt(c.folha12Lanc[m]):''}" onchange="AN.cfg.folha12Lanc[${m}]=num(this.value);this.value=num(this.value)?fmt(num(this.value)):'';anRecalcular()"></td>`).join('')}</tr>
+  <tr><td class="rot">Receita exportação</td>${MESES.map((_,m)=>`<td><input value="${(c.rbt12ExpLanc||[])[m]?fmt(c.rbt12ExpLanc[m]):''}" onchange="anSetCfg12('rbt12ExpLanc',${m},this.value,this)"></td>`).join('')}</tr>
+  <tr><td class="rot">Receita</td>${MESES.map((_,m)=>`<td><input value="${c.rbt12Lanc[m]?fmt(c.rbt12Lanc[m]):''}" onchange="anSetCfg12('rbt12Lanc',${m},this.value,this)"></td>`).join('')}</tr>
+  <tr><td class="rot">Folha (Fator R)</td>${MESES.map((_,m)=>`<td><input value="${c.folha12Lanc[m]?fmt(c.folha12Lanc[m]):''}" onchange="anSetCfg12('folha12Lanc',${m},this.value,this)"></td>`).join('')}</tr>
   </tbody></table></div></div>`; return; }
+  const _audIdx = audIndice(AN);   // v7.94.3 · último evento de cada célula no tooltip
   let h = '<table class="gtable"><thead><tr><th></th>' + MESES.map(m=>`<th class="num">${m}</th>`).join('') + '</tr></thead><tbody>';
   for (const L of sec.linhas) {
     if (L.length===1) { h += `<tr class="grupo"><td colspan="13">${L[0]}</td></tr>`; continue; }
@@ -4920,7 +5119,8 @@ function anRenderGrid() {
       const v = o[k][m];
       const shown = tipo==='nul' ? (v==null?'':fmt(v)) : (tipo==='pct' ? (v?String(+(v*100).toFixed(4)).replace('.',','):'') : (v?fmt(v):''));
       const _og = ((AN.origem||{})[path]||[])[m];
-      h += `<td><input inputmode="decimal" value="${shown}" title="${_og?('Origem: '+ORIGEM_ROT[_og][0]):''}" onchange="anSet('${path}',${m},this.value,'${tipo||''}');anRenderGrid()"></td>`;
+      const _ev = _audIdx[path+'|'+m];
+      h += `<td><input inputmode="decimal" value="${shown}" title="${_og?('Origem: '+ORIGEM_ROT[_og][0]):''}${_ev?(' · '+audFrase(_ev, path).replace(/"/g,"'")):''}" onchange="anSet('${path}',${m},this.value,'${tipo||''}');anRenderGrid()"></td>`;
     }
     h += '</tr>';
   }
@@ -4943,9 +5143,9 @@ function anRenderGrid() {
     h += `<div style="margin-top:14px;padding:12px;background:var(--info-bg);border-radius:10px">
       <b style="font-size:13px">13º salário (coluna extra de dezembro)</b>
       <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap">
-        <div><label>Pró-labore 13º</label><input style="width:140px" value="${f.prolabore13||''}" onchange="AN.folha13.prolabore13=num(this.value);anRecalcular()"></div>
-        <div><label>Proventos 13º</label><input style="width:140px" value="${f.salarios13||''}" onchange="AN.folha13.salarios13=num(this.value);anRecalcular()"></div>
-        <div><label>Base FGTS 13º</label><input style="width:140px" value="${f.baseFgts13||''}" onchange="AN.folha13.baseFgts13=num(this.value);anRecalcular()"></div>
+        <div><label>Pró-labore 13º</label><input style="width:140px" value="${f.prolabore13||''}" onchange="anSetFolha13('prolabore13',this.value)"></div>
+        <div><label>Proventos 13º</label><input style="width:140px" value="${f.salarios13||''}" onchange="anSetFolha13('salarios13',this.value)"></div>
+        <div><label>Base FGTS 13º</label><input style="width:140px" value="${f.baseFgts13||''}" onchange="anSetFolha13('baseFgts13',this.value)"></div>
       </div></div>`;
   }
   if (sec.id === 'impostos') h = anApuradoImpostos() + h;
@@ -4964,8 +5164,9 @@ function anApuradoImpostos(){
   // uma vez); apagar a célula devolve o automático. Antes o usuário via o apurado numa tabela só de leitura e
   // tinha de descer até "Crédito/Débito de ICMS (substituir)", em branco, sem saber que número estava valendo.
   const _inf = (path, m) => { const {o,k} = anPath(AN, path); return o[k] && o[k][m] != null; };
+  const _audIdx = audIndice(AN);   // v7.94.3
   const ed = (rot, path, f, dica) => `<tr><td class="rot" title="${dica||''}">${rot} <span class="hint">(editável)</span></td>`
-    + R.meses.map((M,m)=>`<td><input inputmode="decimal" value="${(+f(M))?fmt(f(M)):''}" style="${_inf(path,m)?'font-weight:700;color:#1a5276;background:#eef4fb':'color:#5b6770'}" title="${_inf(path,m)?'INFORMADO na aba ICMS·IPI — apague para voltar ao automático':'estimativa do motor — digite para substituir'}" onchange="anSet('${path}',${m},this.value,'nul');anRenderGrid()"></td>`).join('')
+    + R.meses.map((M,m)=>`<td><input inputmode="decimal" value="${(+f(M))?fmt(f(M)):''}" style="${_inf(path,m)?'font-weight:700;color:#1a5276;background:#eef4fb':'color:#5b6770'}" title="${_inf(path,m)?'INFORMADO na aba ICMS·IPI — apague para voltar ao automático':'estimativa do motor — digite para substituir'}${_audIdx[path+'|'+m]?(' · '+audFrase(_audIdx[path+'|'+m], path).replace(/"/g,"'")):''}" onchange="anSet('${path}',${m},this.value,'nul');anRenderGrid()"></td>`).join('')
     + `<td class="num"><b>${fmt(R.meses.reduce((s,M)=>s+(+f(M)||0),0))}</b></td></tr>`;
   const _impAno = R.meses.some(M=>M.impedido);
   const _nInf = ['icms.deb','icms.cred','ipi.deb','ipi.cred'].reduce((n,p)=>n + R.meses.filter((_,m)=>_inf(p,m)).length, 0);
@@ -4996,7 +5197,7 @@ function anApuradoImpostos(){
 function anIcmsRestaurar(){
   if (!AN) return;
   if (!confirm('Apagar todos os valores de débito/crédito de ICMS e IPI informados manualmente e voltar ao cálculo automático?')) return;
-  for (const path of ['icms.deb','icms.cred','ipi.deb','ipi.cred']){ const {o,k} = anPath(AN, path); if (o[k]) for (let m=0;m<12;m++) o[k][m] = null; }
+  for (const path of ['icms.deb','icms.cred','ipi.deb','ipi.cred']){ const {o,k} = anPath(AN, path); if (o[k]) for (let m=0;m<12;m++){ const _de = o[k][m]; o[k][m] = null; audCelula(path, m, (_de == null ? null : +_de), null, 'restaurado', { origemDe:((AN.origem||{})[path]||[])[m]||null }); } }   // v7.94.3
   AN_SUJO = true; anRecalcular(); anRenderGrid();
 }
 const num = s => { s = String(s??'').trim(); if (!s) return 0;
@@ -5064,6 +5265,7 @@ function faixaDoPath(path){
 function anSet(path, m, val, tipo) {
   AN_SUJO = true;
   const { o,k } = anPath(AN, path);
+  const _audDe = o[k][m] == null ? null : +o[k][m], _audOg = ((AN.origem||{})[path]||[])[m] || null;   // v7.94.3
   let _bruto = tipo==='pct' ? num(val)/100 : num(val);
   // v7.63.0 (A02/A03/A04): o valor impossível para aqui, não no meio do cálculo
   const _fx = faixaDoPath(path);
@@ -5075,6 +5277,7 @@ function anSet(path, m, val, tipo) {
   if (tipo==='nul') o[k][m] = String(val).trim()==='' ? null : _bruto;
   else o[k][m] = _bruto;
   anOrigemMarcar(path, [m], 'D');                          // v7.28.0: trilha de origem
+  audCelula(path, m, _audDe, (o[k][m] == null ? null : +o[k][m]), (tipo==='nul' && String(val).trim()==='') ? 'apagado' : 'digitado', { origemDe:_audOg, origemPara:'D' });   // v7.94.3
   anRecalcular();
 }
 
@@ -5147,6 +5350,11 @@ function anVerificar(){
         add('observe', 'Créditos de IBS/CBS não confirmados: ' + sit.texto + ' Enquanto a composição não for confirmada, o parecer da Reforma sai como NÃO CONCLUSIVO.', 'reforma'); }
       if (C && C.confianca && /BAIXA/i.test(String(C.confianca.nivel||''))) add('observe', 'Nível de confiabilidade da análise da Reforma: <b>' + C.confianca.nivel + '</b>' + (C.confianca.motivos && C.confianca.motivos.length ? ' — ' + C.confianca.motivos.join('; ') : '') + '. Parecer não conclusivo até a confirmação.', 'reforma'); }
   } catch(e){/* silêncio proposital (A10): um alerta consolidado de outra aba não pode derrubar o Verificar */}
+  try {   // v7.94.3 · alteração manual sobre valor importado é o que o auditor questiona primeiro
+    const _ar = audResumo(AN);
+    if (_ar.sobreImportado) add('observe', `${_ar.sobreImportado} alteração(ões) manual(is) sobre valor <b>importado</b> (PGDAS-D, XML, balancete…). A trilha de alterações (Conferência, bloco 0) registra quem, quando e de → para.`, 'analise:receitas');
+    if (_ar.total > AUD_ALERTA) add('observe', `Trilha de alterações com ${_ar.total} registros — considere fechar o exercício.`, 'analise:receitas');
+  } catch(e){/* silêncio proposital (A10) */}
   try {
     if (RL && RL.dados && RL.dados !== AN && RL.dados.cnpj === AN.cnpj && +RL.dados.ano === +AN.ano) {
       const dif = anDifCanonica(RL.dados, AN);
@@ -5541,8 +5749,10 @@ function anSetInicioAtividade(v){
     if (e1) e1.innerHTML = '<b style="color:#b3261e">→ ano incompleto ou fora de faixa — continue digitando</b>';
     return;
   }
+  const _audDe = String(AN.cfg.inicioAtividade||'');   // v7.94.3
   AN.cfg.inicioAtividade = t;
   AN_SUJO = true;
+  audCelula('cfg.inicioAtividade', null, _audDe, t, 'config');   // v7.94.3
   if (e1) e1.innerHTML = iniPorExtenso(AN.cfg.inicioAtividade);
   if (e2) e2.innerHTML = iniAvisoInvalido(AN.cfg, AN.ano) + anAvisoInicioAtividade(AN.cfg);
   // v7.56.9 · a chamada anterior era para uma função que não existe no aplicativo
@@ -5621,6 +5831,7 @@ function anAplicarConfig(silencioso) {
     if (Object.keys(o).length) AN.cfg.credLRpct = o; else delete AN.cfg.credLRpct; }
   if ($id('cf-lrprejir')) AN.cfg.lrPrejIrpj = Math.max(0, num($id('cf-lrprejir').value));
   if ($id('cf-lrprejcs')) AN.cfg.lrPrejCsll = Math.max(0, num($id('cf-lrprejcs').value));
+  audSincronizar('config');                            // v7.94.3 · cada chave alterada vira um registro (de → para)
   if (_avisosFx.length) toast(_avisosFx[0] + (_avisosFx.length>1 ? ` (e mais ${_avisosFx.length-1})` : ''));
   AN_SUJO = true;                       // sem isto a alteração sumia sem aviso ao trocar de módulo
   anRecalcular();
@@ -5881,6 +6092,7 @@ async function anTrocarEmpresa() {
     }
   } catch { AN = anNovo(cnpj, ano); }
   delete AN._placeholder;   // v7.94.1 · carregada (ou criada de propósito para empresa sem linha): deixa de ser placeholder
+  audFotoBase(AN);          // v7.94.3 · retrato do que veio do banco: a próxima importação compara contra isto
   AN_SUJO = false;
   anRenderTabs(); anRenderGrid(); anRecalcular();
   if (APP.page==='config') anRenderConfig();   // v7.44.0: a carga assíncrona redesenha também a Configuração — antes ela podia exibir padrões de fábrica sobre empresa com configuração salva
@@ -5967,7 +6179,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.94.2';
+const APP_VERSAO = '7.94.3';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -7557,8 +7769,10 @@ function rfPendente(){ return !!RF && !!RF.cnpj && rfMarco(RF) !== RF_MARCO; }
 
 function rfCalcular() {
   if (!RF) return;
+  const _audAntes = { receita:+RF.receita||0, baseIS:+RF.baseIS||0, credSimplesPct:+RF.credSimplesPct||0 };   // v7.94.3
   RF.receita = num($id('rf-receita').value);
   RF.baseIS = num($id('rf-baseis').value); RF.credSimplesPct = num($id('rf-credsimples').value);
+  if (AN && AN.cnpj === RF.cnpj && +AN.ano === +RF.ano) for (const k of ['receita','baseIS','credSimplesPct']) audCelula('reforma.'+k, null, _audAntes[k], +RF[k]||0, 'reforma');   // v7.94.3
   RF.compras = (RF.contra.compras_lrlp||0) + (RF.contra.compras_simples||0);
   $id('rf-compras').value = RF.compras ? fmt(RF.compras) : '';
   // v7.47.1: o que a tela mostra passa a viver dentro da análise na hora — assim anSalvar e
@@ -10093,7 +10307,9 @@ function ppTarjaSemDados(){
 // v7.93.5 · versão das premissas legais no rodapé — outro profissional precisa saber com QUAL base o documento foi
 // emitido: motor, lacre, normas e a tabela de alíquotas de referência, além da data-base
 function ppPremissasLegais(){
-  return `<div class="pp-notaia" style="margin-top:6px">Premissas legais desta emissão: LC 123/2006 (limite, sublimite e Fator R — arts. 3º, 13-A, 18, 19 e 20) · Res. CGSN nº 140/2018 (arts. 22, 24 e 26) e nº 190/2026 (Anexos I–V por vigência, art. 22-A, art. 40-D, art. 58) · EC 132/2023 e LC 214/2025 (IBS/CBS, art. 8º, art. 12 §2º V, arts. 47–58) · Lei 9.249/95 e 9.430/96 (Presumido) · Lei 9.065/95 (Real) · STF Tema 69 e Lei 14.592/2023 · alíquotas de referência Res. CGIBS nº 14/2026 (estimativa; definitivas pelo cálculo do TCU homologado pelo Senado). Motor Análise Tributária Pro v${APP_VERSAO} · lacre ${LACRE_HASH} · data-base ${new Date().toLocaleDateString('pt-BR')}.</div>`;
+  const _ar = (RL && RL.dados) ? audResumo(RL.dados) : null;   // v7.94.3
+  const _trilha = _ar ? ` · Dados de entrada: ${_ar.manuais} alteração(ões) manual(is)${_ar.sobreImportado ? ' (' + _ar.sobreImportado + ' sobre valor importado)' : ''} e ${_ar.lotes} importação(ões) registradas na trilha de alterações (Conferência, bloco 0).` : '';
+  return `<div class="pp-notaia" style="margin-top:6px">Premissas legais desta emissão: LC 123/2006 (limite, sublimite e Fator R — arts. 3º, 13-A, 18, 19 e 20) · Res. CGSN nº 140/2018 (arts. 22, 24 e 26) e nº 190/2026 (Anexos I–V por vigência, art. 22-A, art. 40-D, art. 58) · EC 132/2023 e LC 214/2025 (IBS/CBS, art. 8º, art. 12 §2º V, arts. 47–58) · Lei 9.249/95 e 9.430/96 (Presumido) · Lei 9.065/95 (Real) · STF Tema 69 e Lei 14.592/2023 · alíquotas de referência Res. CGIBS nº 14/2026 (estimativa; definitivas pelo cálculo do TCU homologado pelo Senado). Motor Análise Tributária Pro v${APP_VERSAO} · lacre ${LACRE_HASH} · data-base ${new Date().toLocaleDateString('pt-BR')}.${_trilha}</div>`;
 }
 function rlParecer(){
   const D = parecerDados();
@@ -11134,6 +11350,7 @@ function rlConfEntrada(){
     ${grade('Compras (R$/mês)', [linha('Revenda sem ST', C.semst, 0, 'compras.semst'), linha('Revenda com ST', C.comst, 0, 'compras.comst'), linha('Monofásicas', C.mono, 0, 'compras.mono'), linha('ST + Mono', C.comstMono, 0, 'compras.comstMono'), linha('Baixa estoque s/ ST (CMV)', C.baixaSemst, 0, 'compras.baixaSemst'), linha('Baixa c/ ST', C.baixaComst, 0, 'compras.baixaComst'), linha('Baixa mono', C.baixaMono, 0, 'compras.baixaMono'), linha('Base IPI crédito', C.baseIpiCred, 0, 'compras.baseIpiCred')])}
     ${grade('Despesas (R$/mês)', [linha('Administrativas', DE.adm, 0, 'despesas.adm'), linha('Vendas', DE.vendas, 0, 'despesas.vendas'), linha('Fiscais', DE.fiscais, 0, 'despesas.fiscais'), linha('Financeiras', DE.financeiras, 0, 'despesas.financeiras'), linha('Outras', DE.outras, 0, 'despesas.outras'), ...CRED_LR.map(([k,rot])=>linha(rot, DE[k], 0, 'despesas.'+k))])}
     ${rlConfJanelas(D)}
+    ${audQuadroHtml(D)}
   </div>`;
 }
 // v7.42.4 · A conferência mostrava os meses NÃO LANÇADOS zerados, enquanto o parecer — no mesmo
