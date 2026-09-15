@@ -1,6 +1,6 @@
 /* ===========================================================================
    PERSISTÊNCIA DO MÓDULO IMOBILIÁRIO — Análise Tributária Pro
-   persistenciaImob.js  ·  v1.0.0
+   persistenciaImob.js  ·  v1.2.1
    ---------------------------------------------------------------------------
    Duas camadas, de propósito:
 
@@ -24,7 +24,7 @@
 (function (raiz) {
   'use strict';
 
-  var PERSIST_VERSAO = '1.2.0';   // 1.2.0: listarCalculos com entrada/empresa/imóvel/usuário e filtros
+  var PERSIST_VERSAO = '1.2.1';   // 1.2.1: guarda de escritório aceita uuid e fala com o usuário · 1.2.0: listarCalculos com entrada/empresa/imóvel/usuário e filtros
   var M = raiz.MotorImob || (typeof require !== 'undefined' ? require('./motorImob.js') : null);
 
   var TABELAS = {
@@ -40,9 +40,15 @@
   var SO_INSERT = [TABELAS.calculos];
 
   function erro(msg, codigo) { return { erro: msg, codigo: codigo || 'REPO' }; }
+  // v1.2.1 — aceita id numérico (> 0) ou textual (uuid) e responde em linguagem de usuário:
+  // esta é a última barreira antes da rede, e a mensagem chega à tela.
+  function escritorioValido(v) {
+    return (typeof v === 'number' && isFinite(v) && v > 0) ||
+           (typeof v === 'string' && v.trim() !== '' && v !== 'null' && v !== 'undefined');
+  }
   function precisaEscritorio(ctx) {
-    return !ctx || !(ctx.escritorio_id > 0)
-      ? erro('escritorio_id ausente: a RLS do módulo isola por escritório e a gravação seria recusada.', 'SEM_TENANT')
+    return !ctx || !escritorioValido(ctx.escritorio_id)
+      ? erro('Sem escritório vinculado à sessão — nada foi gravado. Saia e entre novamente; se persistir, procure o administrador.', 'SEM_TENANT')
       : null;
   }
 

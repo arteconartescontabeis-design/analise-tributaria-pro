@@ -1,4 +1,4 @@
-/* --- UI da aba Análise Imobiliária — módulo v1.4.0 (14/09/2026) ---
+/* --- UI da aba Análise Imobiliária — módulo v1.4.1 (15/09/2026) ---
  * O motorImob (lacre c287341e) é consumido, nunca alterado. Tudo que muda
  * aqui é apresentação, validação, premissas, relatórios e histórico.      */
 (function(){
@@ -223,6 +223,9 @@ function gravarEscolha(){
   if (!j) { alvo.innerHTML = '<div class="aviso">A escolha do art. 375 exige justificativa gravada.</div>'; return; }
   if (RAJ_ESCOLHA === null || !RAJ || !RAJ.opcoes) { alvo.innerHTML = '<div class="aviso">Escolha uma das op&ccedil;&otilde;es antes de gravar.</div>'; return; }
   var o = RAJ.opcoes[RAJ_ESCOLHA];
+  imobComSessao(function(){ gravarEscolhaDB(alvo, o, j); }, function(m){ alvo.innerHTML = m; });
+}
+function gravarEscolhaDB(alvo, o, j){
   var sem = imobSemBanco(); if (sem) { alvo.innerHTML = sem; return; }
   if (!IMOB_IMOVEL_ID) {
     alvo.innerHTML = '<div class="aviso"><b>Im&oacute;vel ainda n&atilde;o gravado.</b> A escolha do art. 375 se prende a um im&oacute;vel: clique em <b>Salvar im&oacute;vel no banco</b> primeiro e depois grave a escolha. <b>Nada foi gravado agora.</b></div>';
@@ -748,11 +751,13 @@ function imobInventario(){ acao(function(){
     $('iv-out').innerHTML = h;
   }
   if (IMOB_CARTEIRA) { pintar(IMOB_CARTEIRA); return; }
-  var sem = imobSemBanco();
-  if (sem) { $('iv-out').innerHTML = '<div class="card">' + sem + '<div class="mini" style="margin-top:8px">Use "carteira de exemplo" para ver a tela funcionando.</div></div>'; return; }
+  var semCarteira = function(sem){ $('iv-out').innerHTML = '<div class="card">' + sem + '<div class="mini" style="margin-top:8px">Use "carteira de exemplo" para ver a tela funcionando.</div></div>'; };
   $('iv-out').innerHTML = '<div class="card"><div class="info">&#8987; Carregando a carteira&hellip;</div></div>';
-  imobDB.listarImoveis(imobCtxDB()).then(function(rows){ IMOB_CARTEIRA = rows || []; pintar(IMOB_CARTEIRA); })
-    .catch(function(e){ $('iv-out').innerHTML = '<div class="card">' + imobAvisoDB('Falha ao ler a carteira — ' + esc(e.erro||e)) + '</div>'; });
+  imobComSessao(function(){
+    var sem = imobSemBanco(); if (sem) { semCarteira(sem); return; }
+    imobDB.listarImoveis(imobCtxDB()).then(function(rows){ IMOB_CARTEIRA = rows || []; pintar(IMOB_CARTEIRA); })
+      .catch(function(e){ $('iv-out').innerHTML = '<div class="card">' + imobAvisoDB('Falha ao ler a carteira — ' + esc(e.erro||e)) + '</div>'; });
+  }, semCarteira);
 }); }
 
 /* ---------- persistência ligada à tela ---------- */
@@ -764,12 +769,47 @@ function imobCtxDB(extra){
   return c;
 }
 function imobAvisoDB(msg, tipo){ return '<div class="' + (tipo === 'ok' ? 'info' : 'aviso') + '">' + msg + '</div>'; }
+/* v1.4.1 — o contexto de banco é sempre lido do estado global da casca (APP) no momento do uso.
+ * Antes ele era copiado UMA vez, em imobEntrar(); se o escritório chegasse depois (ou fosse
+ * zerado no logout), a aba ficava com uma cópia velha. */
+function escritorioValidoUI(v){ return (typeof v === 'number' && isFinite(v) && v > 0) || (typeof v === 'string' && v.trim() !== '' && v !== 'null' && v !== 'undefined'); }
+function imobSincronizarContexto(){
+  if (!window.APP) return IMOB_CTX_DB;
+  IMOB_CTX_DB.escritorio_id = escritorioValidoUI(APP.escritorioId) ? APP.escritorioId : null;
+  IMOB_CTX_DB.usuario_uuid  = (APP.user && APP.user.id) || null;
+  IMOB_CTX_DB.usuario_id    = APP.usuarioId != null ? APP.usuarioId : null;
+  IMOB_CTX_DB.empresa_id    = (window.EMP_GLOBAL && EMP_GLOBAL.id) || null;
+  return IMOB_CTX_DB;
+}
+var MSG_SEM_VINCULO = 'Usuário autenticado, mas sem escritório vinculado. Procure o administrador.';
 function imobSemBanco(){
+  imobSincronizarContexto();
   if (IMOB_CTX_DB.escritorio_id) return null;
-  return imobAvisoDB('<b>Sem escrit&oacute;rio na sess&atilde;o.</b> A grava&ccedil;&atilde;o usa o isolamento por escrit&oacute;rio (RLS), e sem ele nenhuma requisi&ccedil;&atilde;o &eacute; montada &agrave;s cegas. Saia e entre novamente; se persistir, confira se o seu usu&aacute;rio tem <code>escritorio_id</code> em <code>atp_usuarios</code>. <b>Nada foi gravado.</b>');
+  var st = window.APP ? (APP.sessao || null) : 'fora';
+  var msg = st === 'sem_vinculo' ? MSG_SEM_VINCULO
+    : st === 'carregando' ? 'Aguarde: os dados do seu escritório ainda estão sendo carregados. Tente novamente em instantes.'
+    : st === 'falha' ? 'Não foi possível carregar os dados do seu escritório. Verifique a conexão e tente novamente.'
+    : st === 'fora' ? 'Fora do aplicativo não há sessão nem escritório: leitura e gravação ficam desativadas nesta prévia.'
+    : 'Sessão sem escritório identificado. Saia e entre novamente; se persistir, procure o administrador.';
+  return imobAvisoDB('<b>' + esc(msg) + '</b> Nada foi gravado.');
+}
+/* Toda operação de banco passa por aqui: espera o escritório da sessão (sessaoPronta() da casca)
+ * e só então executa. Sem a casca (prévia fora do app) executa direto e o imobSemBanco() barra. */
+function imobComSessao(fn, aoFalhar){
+  if (typeof window.sessaoPronta !== 'function') { imobSincronizarContexto(); fn(); return; }
+  carregando(true);
+  window.sessaoPronta().then(function(){ carregando(false); imobSincronizarContexto(); fn(); },
+    function(e){ carregando(false); imobSincronizarContexto();
+      var m = imobSemBanco() || imobAvisoDB('<b>' + esc((e && e.erro) || 'Sessão indisponível.') + '</b> Nada foi gravado.');
+      if (aoFalhar) aoFalhar(m); })
+    .catch(function(e){ console.error('[imob]', e); erroAba(e && e.message ? e.message : String(e)); });
 }
 function imobSalvarImovel(){
   var alvo = $('just-ok') || $('raj-out');
+  alvo.innerHTML = '<div class="info">&#8987; Verificando a sess&atilde;o&hellip;</div>';
+  imobComSessao(function(){ imobSalvarImovelDB(alvo); }, function(m){ alvo.innerHTML = m; });
+}
+function imobSalvarImovelDB(alvo){
   var sem = imobSemBanco(); if (sem) { alvo.innerHTML = sem; return; }
   var im = lerImovel();
   var reg = { codigo_interno: im.codigo_interno, tipo: im.tipo, matricula: im.matricula || null, endereco: im.endereco || null, municipio: im.municipio || null, uf: im.uf || null,
@@ -791,6 +831,9 @@ function imobSalvarImovel(){
 }
 function imobFinalizar(){
   var alvo = $('v-out');
+  imobComSessao(function(){ imobFinalizarDB(alvo); }, function(m){ alvo.insertAdjacentHTML('afterbegin', m); });
+}
+function imobFinalizarDB(alvo){
   var sem = imobSemBanco();
   var e = entradaVenda(), ctx = ctxPara('venda'), res = M.calcular(e, ctx);
   if (sem) { alvo.insertAdjacentHTML('afterbegin', sem); return; }
@@ -827,11 +870,16 @@ function pintarHistorico(lista){
   $('hi-out').innerHTML = h;
 }
 function imobHistorico(){ acao(function(){
-  carregarSims();
-  var f = filtrosHist(), local = RL.filtrarHistorico(SIMS, f);
-  var sem = imobSemBanco();
-  if (sem || f.status === 'preliminar') { pintarHistorico(local); if (sem && !SIMS.length) $('hi-out').innerHTML = '<div class="card">' + sem + '</div>'; return; }
+  var f = filtrosHist();
+  if (f.status === 'preliminar') { carregarSims(); pintarHistorico(RL.filtrarHistorico(SIMS, f)); return; }
   $('hi-out').innerHTML = '<div class="card"><div class="info">&#8987; Lendo os c&aacute;lculos gravados&hellip;</div></div>';
+  var soLocal = function(sem){ carregarSims(); var local = RL.filtrarHistorico(SIMS, f); pintarHistorico(local); if (!SIMS.length) $('hi-out').innerHTML = '<div class="card">' + sem + '</div>'; };
+  imobComSessao(function(){ imobHistoricoDB(f, soLocal); }, soLocal);
+}); }
+function imobHistoricoDB(f, soLocal){
+  carregarSims();
+  var local = RL.filtrarHistorico(SIMS, f);
+  var sem = imobSemBanco(); if (sem) { soLocal(sem); return; }
   imobDB.listarCalculos(imobCtxDB({ limite: 100, filtros: { operacao: f.operacao, de: f.de, ate: f.ate } }))
     .then(function(rows){
       var db = (rows || []).map(function(r){ return { id: r.id, quando: r.calculado_em, status: 'final', usuario: r.calculado_por, empresa: r.empresa_id, imovel: (r.entrada && r.entrada.imovel && (r.entrada.imovel.codigo_interno || r.entrada.imovel.id)) || r.imovel_id, entrada: r.entrada || {}, resultado: r.resultado || {}, nivel_confianca: r.nivel_confianca, hash_snapshot: r.hash_snapshot, motor_versao: r.motor_versao, ruleset_versao: r.ruleset_versao, premissas: r.entrada && r.entrada.premissas_editadas && r.entrada.premissas_editadas.length ? r.entrada.premissas_editadas : null }; });
@@ -839,7 +887,7 @@ function imobHistorico(){ acao(function(){
       pintarHistorico(RL.filtrarHistorico(db, f).concat(locais).sort(function(a,b){ return a.quando < b.quando ? 1 : -1; }));
     })
     .catch(function(e){ pintarHistorico(local); $('hi-out').insertAdjacentHTML('afterbegin', '<div class="card">' + imobAvisoDB('Falha ao ler o banco &mdash; ' + esc(e.erro||e) + '. Mostrando s&oacute; as simula&ccedil;&otilde;es locais.') + '</div>'); });
-}); }
+}
 function imobCompararSelecionados(){
   var sel = Array.prototype.slice.call(document.querySelectorAll('.hist-sel:checked')).map(function(c){ return +c.dataset.i; });
   if (sel.length !== 2) { $('hi-cmp').innerHTML = '<div class="card"><div class="aviso">Marque exatamente duas linhas para comparar.</div></div>'; return; }
@@ -871,8 +919,12 @@ function imobExportarHistorico(){
   var a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = 'analise_imobiliaria_historico_' + hojeISO() + '.csv'; document.body.appendChild(a); a.click(); a.remove();
 }
 function imobListarImoveis(){
-  var sem = imobSemBanco(); if (sem) { $('hi-out').innerHTML = '<div class="card">' + sem + '</div>'; return; }
   $('hi-out').innerHTML = '<div class="card"><div class="info">&#8987; Lendo os im&oacute;veis&hellip;</div></div>';
+  var semLista = function(sem){ $('hi-out').innerHTML = '<div class="card">' + sem + '</div>'; };
+  imobComSessao(function(){ imobListarImoveisDB(semLista); }, semLista);
+}
+function imobListarImoveisDB(semLista){
+  var sem = imobSemBanco(); if (sem) { semLista(sem); return; }
   imobDB.listarImoveis(imobCtxDB()).then(function(rows){ rows = rows || [];
       var f = txt('h-imo').toLowerCase(); if (f) rows = rows.filter(function(r){ return String(r.codigo_interno||'').toLowerCase().indexOf(f) >= 0; });
       $('hi-out').innerHTML = '<div class="card"><h2>' + rows.length + ' im&oacute;vel(is)</h2>' + (rows.length ? '<table><thead><tr><th>C&oacute;digo</th><th>Tipo</th><th>Matr&iacute;cula</th><th>Munic&iacute;pio</th><th>Op&ccedil;&atilde;o do art. 375</th><th class="num">Saldo do redutor</th></tr></thead><tbody>' +
@@ -1025,13 +1077,20 @@ function imobGerarParecer(){
   window.imobPremissaAplicar = imobPremissaAplicar; window.imobPremissaRestaurar = imobPremissaRestaurar;
   window.__imobUI = { PREM: function(){ return PREM; }, ctxPara: ctxPara, entradaVenda: entradaVenda, entradaLocacao: entradaLocacao, registrarSimulacao: registrarSimulacao, parseNum: parseNum, pessoa: function(){ return PESSOA; }, sims: function(){ carregarSims(); return SIMS; } };
 
+  /* v1.4.1 — a casca chama ao (re)carregar o escritório; e ao sair, para nada da sessão anterior sobrar */
+  window.imobAtualizarContexto = function(){
+    try { imobSincronizarContexto(); console.info('[imob] contexto de banco ' + (IMOB_CTX_DB.escritorio_id ? 'com escritório' : 'sem escritório')); }
+    catch (e) { console.warn('[imob] contexto:', e); }
+    return !!IMOB_CTX_DB.escritorio_id;
+  };
+  window.imobSair = function(){
+    IMOB_CTX_DB.escritorio_id = null; IMOB_CTX_DB.usuario_uuid = null; IMOB_CTX_DB.usuario_id = null; IMOB_CTX_DB.empresa_id = null;
+    IMOB_CARTEIRA = null; IMOB_IMOVEL_ID = null; HIST_LISTA = []; SIMS = [];
+    ['iv-out','hi-out','hi-cmp','just-ok'].forEach(function(id){ var el = $(id); if (el) el.innerHTML = ''; });
+    console.info('[imob] contexto de banco limpo ao sair');
+  };
   window.imobEntrar = function(){
-    try {
-      IMOB_CTX_DB.escritorio_id = (window.APP && APP.escritorioId) || null;
-      IMOB_CTX_DB.usuario_uuid  = (window.APP && APP.user && APP.user.id) || null;
-      IMOB_CTX_DB.usuario_id    = (window.APP && APP.usuarioId != null) ? APP.usuarioId : null;
-      IMOB_CTX_DB.empresa_id    = (window.EMP_GLOBAL && EMP_GLOBAL.id) || null;
-    } catch (e) { console.warn('[imob] contexto:', e); }
+    try { imobSincronizarContexto(); } catch (e) { console.warn('[imob] contexto:', e); }
     if (!window.__imobIniciado) {
       window.__imobIniciado = true;
       try { ligarAbas(); } catch (e) { console.warn('[imob] abas:', e); }

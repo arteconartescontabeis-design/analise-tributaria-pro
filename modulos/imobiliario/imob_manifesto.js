@@ -9,8 +9,8 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.4.0',
-    data: '14/09/2026',
+    versao: '1.4.1',
+    data: '15/09/2026',
     cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
     motor: { nome: 'motorImob', versao: '1.2.0', contrato: 'calc-imob-1',
@@ -20,6 +20,13 @@
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.4.1', data: '15/09/2026', texto:
+        'Corre\u00e7\u00e3o da sess\u00e3o: o escrit\u00f3rio vinculado ao usu\u00e1rio passa a ser carregado antes de o m\u00f3dulo entrar '
+        + 'e antes de qualquer consulta ou grava\u00e7\u00e3o (carteira, invent\u00e1rio, im\u00f3vel, hist\u00f3rico, relat\u00f3rios). '
+        + 'Fim da mensagem "Sem escrit\u00f3rio na sess\u00e3o" para usu\u00e1rio vinculado; usu\u00e1rio sem v\u00ednculo v\u00ea um aviso claro '
+        + '("procure o administrador"), sem termos t\u00e9cnicos. Fluxo revisto para login, atualiza\u00e7\u00e3o da p\u00e1gina, URL direta, '
+        + 'retorno \u00e0 aba e sair/entrar de novo (o Sair agora encerra a sess\u00e3o de verdade). Corrigida a renova\u00e7\u00e3o '
+        + 'autom\u00e1tica do token, que falhava por uma vari\u00e1vel n\u00e3o declarada na casca. C\u00e1lculos, regras e layout intocados.' },
       { versao: '1.4.0', data: '14/09/2026', texto:
         'Fluxo guiado em 3 passos: (1) cadastro da pessoa (PF ou PJ, regime, objeto social), (2) im\u00f3vel e redutor, '
         + '(3) escolha do que calcular (venda, loca\u00e7\u00e3o, permuta, opcionais, comparativo, PF) com os dados j\u00e1 preenchidos '
