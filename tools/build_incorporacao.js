@@ -37,6 +37,7 @@ const out = `<!DOCTYPE html>
 <title>Simulação de Incorporação — Artecon</title>
 <!-- GERADO por tools/build_incorporacao.js a partir do index.html v${B.versao} (lacre ${B.lacreHash}) em ${new Date().toISOString()}. NÃO EDITE À MÃO: edite src/ e rode o build. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
 ${B.css}
@@ -52,6 +53,7 @@ ${src('incorporacao_app_2.js')}
 ${src('incorporacao_app_3.js')}
 ${src('incorporacao_app_4.js')}
 ${src('incorporacao_app_5.js')}
+${src('incorporacao_app_6.js')}
 </script>
 </body>
 </html>

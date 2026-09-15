@@ -12,13 +12,22 @@
 //  Regra mantida: nada aqui altera o motor nem as análises; os relatórios da isolada saem da análise
 //  gravada, como no index; os da consolidada saem da análise consolidada que passou pelo mesmo motor.
 const INC_RL_TIPOS = {
-  parecer_inc:     'Parecer de Incorporação — com IA',
+  parecer_inc:     'Parecer Consolidado de Incorporação — com IA (20 seções)',
+  rel_executivo:   'Relatório 1 — Parecer Executivo',
+  rel_tributario:  'Relatório 2 — Comparativo Tributário Completo',
+  rel_reforma:     'Relatório 3 — Reforma Tributária',
+  rel_financeira:  'Relatório 4 — Análise Financeira',
+  rel_patrimonial: 'Relatório 5 — Análise Patrimonial e de Endividamento',
+  rel_societaria:  'Relatório 6 — Análise Societária e Operacional',
+  rel_memoria:     'Relatório 7 — Memória de Cálculo',
+  rel_riscos:      'Relatório 8 — Riscos, Pendências e Checklist',
+  rel_todos:       'Todos os relatórios — um PDF só',
   conferencia:     'Conferência de Cálculos — Memória (documento interno)',
   apresentacao_inc_s: 'Apresentação de Incorporação — simplificada (7 telas)',
   apresentacao_inc_c: 'Apresentação de Incorporação — completa (15 telas)',
 };
 // relatórios DA INCORPORAÇÃO (um documento para o conjunto): o seletor de empresa não se aplica
-const INC_RL_CONJUNTO = ['parecer_inc','apresentacao_inc_s','apresentacao_inc_c'];
+const INC_RL_CONJUNTO = ['parecer_inc','rel_executivo','rel_tributario','rel_reforma','rel_financeira','rel_patrimonial','rel_societaria','rel_memoria','rel_riscos','rel_todos','apresentacao_inc_s','apresentacao_inc_c'];
 
 function incRlCorpoPara(dockId){
   const c = $id('rl-corpo'), d = $id(dockId);
@@ -141,7 +150,7 @@ async function rlRender(){
   if (conjunto){
     lado.innerHTML = ''; lado.style.display = 'none'; cab.style.display = 'none'; esconde('rl-status-proj');
     aviso.innerHTML = `Documento da <b>incorporação</b> (isoladas × consolidada × cenários). Os textos com IA são gerados no parecer e valem para a apresentação.`;
-    if (tipo === 'parecer_inc') incParecerRender();
+    if (tipo === 'parecer_inc' || /^rel_/.test(tipo)) incRelatorioRender(tipo);   // v1.5.0: parecer consolidado e 8 relatórios (mesmo modelo)
     else incApresentar(tipo === 'apresentacao_inc_s' ? 'simplificada' : 'completa');
     corpo.style.display = '';
     return;

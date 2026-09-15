@@ -199,6 +199,10 @@ async function incParecerIA(){
         reformaAnoAAno: c2.ind.refAnos.map((x,i)=>({ ano:x.ano, separadas:sep.ind.refAnos[i].v, consolidada:x.v, economiaOuAcrescimo: sep.ind.refAnos[i].v - x.v })),
         cenarios: CE.rank.map(c=>({ cenario:c.nome, score:Math.round(c.score.total), classificacao:c.score.rot, tributos:c.ind.trib, regime:c.ind.regNome, reformaAcumulada:c.ind.refAcum })),
         patrimonioEDivida: 'SEM DADOS — não avaliados', leituraSinal: 'economiaOuAcrescimo positivo = economia; negativo = acréscimo tributário',
+        // v1.5.0: classificação em 5 categorias, pendências e regimes com resultado — o mesmo modelo dos relatórios
+        classificacao5: (() => { const M = incModelo(); return M ? { melhorCenario: M.painel.melhor, classificacao: M.painel.classe.rot, motivos: M.painel.classe.motivos, alertas: M.painel.nAlertas, dadosPendentes: M.pend.map(p => p.dim + ': ' + p.item),
+          regimesConsolidada: M.regimes.cons.linhas.map(l => ({ regime:l.nome, permitido:l.permitido, motivo:String(l.motivo||'').replace(/<[^>]+>/g,''), tributos:l.trib, resultadoAposTributos:l.resultado, margem:l.margem })),
+          reformaInicioVantagem: M.reforma.inicioVantagem ? M.reforma.inicioVantagem.ano : null, reformaInversao: M.reforma.inversao ? M.reforma.inversao.ano : null, recomendacaoPadrao: M.recomendacao } : null; })(),
       }; })(),
       regrasDeTexto: [
         'Use apenas os números do JSON; nunca calcule, some ou estime.',
@@ -207,6 +211,7 @@ async function incParecerIA(){
         'Prejuízo fiscal e base negativa de CSLL das incorporadas NÃO passam para a incorporadora (DL 2.341/87, art. 33) — se houver nota a respeito, repita-a.',
         'O RBT12 da consolidada é a SOMA dos RBT12; operações entre as empresas no ano anterior não foram abatidas — cite como limitação quando houver abatimentos.',
         'Não recomende a operação de forma absoluta: condicione às premissas, aos dados e à regulamentação vigente na data-base.',
+        'Use a classificação de decisao.classificacao5.classificacao (FAVORÁVEL, FAVORÁVEL COM RESSALVAS, NEUTRO, DESFAVORÁVEL ou ANÁLISE INCOMPLETA) e nunca escreva "recomendado" enquanto houver dados patrimoniais, financeiros ou societários pendentes.',
       ],
     };
     const r = await supaFn(INC_FN_IA, payload);

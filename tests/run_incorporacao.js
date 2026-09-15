@@ -15,7 +15,9 @@
 //   9. snapshot: o que se grava reexibe o mesmo quadro sem recalcular;
 //  10. tela: botões, tabela própria, Edge Function própria, badge e changelog;
 //  11. (v1.3.0) relatórios: conferência por entidade (bate ao centavo com o quadro); camada de decisão
-//      (3 cenários, score explicável, ANÁLISE INCOMPLETA); parecer e apresentação DE INCORPORAÇÃO; snapshot.
+//      (3 cenários, score explicável, ANÁLISE INCOMPLETA); parecer e apresentação DE INCORPORAÇÃO; snapshot;
+//  12. (v1.5.0) modelo único: Σ por tributo = total do regime; IBS+CBS = débito; classificação em 5 categorias;
+//      20 seções; 8 relatórios + todos; Excel; apresentações e snapshot lendo o modelo.
 //  Sai com código ≠ 0 em qualquer falha.
 // ════════════════════════════════════════════════════════════════════════════════════════
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -238,7 +240,7 @@ console.log('\n■ Relatórios: conferência (Consolidada · Incorporadora · In
   const E1 = ent([A, Bc], 2025); const S = g.__sim(E1); R('INC').res = S; R('INC').entradas = E1; R('INC')._cen = null;
   R('APP').page = 'relatorios';
   chk('menu e página de relatórios existem', /data-page="relatorios"/.test(htmlInc) && /id="page-relatorios"/.test(htmlInc) && /id="rl-tipo"/.test(htmlInc) && /id="inc-rl-lado"/.test(htmlInc));
-  chk('só os 3 relatórios (4 opções): parecer, conferência, apresentação simplificada e completa', ['parecer_inc','conferencia','apresentacao_inc_s','apresentacao_inc_c'].every(v => new RegExp('<option value="' + v + '"').test(htmlInc)) && ['regimes','consolidado','registros','reforma','cnpj','produtos','apresentacao_s','"parecer"'].every(v => !new RegExp('<option value=' + (v.startsWith('"')?v:'"'+v+'"')).test(htmlInc)));
+  chk('v1.5.0: parecer consolidado, 8 relatórios, todos, conferência e 2 apresentações no seletor (14 opções)', ['parecer_inc','rel_executivo','rel_tributario','rel_reforma','rel_financeira','rel_patrimonial','rel_societaria','rel_memoria','rel_riscos','rel_todos','conferencia','apresentacao_inc_s','apresentacao_inc_c'].every(v => new RegExp('<option value="' + v + '"').test(htmlInc)) && ['regimes','consolidado','registros','"reforma"','cnpj','produtos','apresentacao_s','"parecer"'].every(v => !new RegExp('<option value=' + (v.startsWith('"')?v:'"'+v+'"')).test(htmlInc)));
   chk('rlRender é PRÓPRIO do incorporação (não o do index)', /async function rlRender\(\)\{\s*\n\s*if \(APP\.page !== 'relatorios'\)/.test(jsInc) && !/^function rlRender\(\) \{/m.test(jsInc));
   chk('Chart.js carregado', /Chart\.js\/4\.4\.1\/chart\.umd\.min\.js/.test(htmlInc));
   const ents = R('incRlEntidades()');
@@ -262,9 +264,9 @@ console.log('\n■ Relatórios: conferência (Consolidada · Incorporadora · In
   const sc = CE.cen[1].score;
   chk('score 0–100 = Σ nota × peso (tributário 60 · Reforma 20 · estabilidade 20)', sc && sc.total >= 0 && sc.total <= 100 && perto(sc.total, Object.values(sc.dims).reduce((a,d)=>a+d.nota*d.peso,0)) && perto(Object.values(sc.dims).reduce((a,d)=>a+d.peso,0), 1));
   chk('score explicável: cada dimensão tem nota, peso, fórmula e leitura', Object.values(sc.dims).every(d => typeof d.nota === 'number' && d.formula && d.texto));
-  chk('classificação nas faixas do anexo', ['altamente favorável','favorável','moderadamente favorável','baixa atratividade','não recomendada'].includes(sc.rot));
+  chk('classificação nas faixas do anexo (score) e nas 5 categorias (v1.5.0)', ['altamente favorável','favorável','moderadamente favorável','baixa atratividade','não recomendada'].includes(sc.rot) && (() => { const M = R('incModelo()'); return M && ['FAVORÁVEL','FAVORÁVEL COM RESSALVAS','NEUTRO','DESFAVORÁVEL','ANÁLISE INCOMPLETA'].includes(M.painel.classe.rot); })());
   chk('com alertas de fronteira o status é ANÁLISE INCOMPLETA', S.alertas.length ? sc.incompleta === true : sc.incompleta === false);
-  chk('"acréscimo tributário", nunca "economia negativa" (nos textos gerados)', !/economia negativa/i.test(Object.values(sc.dims).map(d=>d.texto).join(' ') + Object.values(R('incTextosDecisao')(CE)).join(' ')) && /^(Economia|Acréscimo|Neutralidade) tributária/.test(sc.dims.tributario.texto));
+  chk('"acréscimo tributário", nunca "economia negativa" (nos textos gerados)', !/economia negativa/i.test(Object.values(sc.dims).map(d=>d.texto).join(' ') + Object.values(R('incTextosDecisao')(CE)).join(' ')) && /^(Economia tributária|Acréscimo tributário|Neutralidade tributária)/.test(sc.dims.tributario.texto));
   chk('ranking ordenado por score (maior primeiro), sem o cenário separadas', CE.rank.length === 2 && CE.rank[0].score.total >= CE.rank[1].score.total && CE.rank.every(c=>!c.sep));
   chk('patrimônio e dívida declarados sem dados nos motivos do score', sc.motivos.some(m => /Patrimônio e endividamento/.test(m)));
   // ── parecer de incorporação (documento do conjunto) ──
@@ -272,17 +274,17 @@ console.log('\n■ Relatórios: conferência (Consolidada · Incorporadora · In
   (async () => {
     erro = null; try { h = await roda('parecer_inc'); } catch(e){ erro = e.message; }
     chk('Parecer de Incorporação renderiza (capa + páginas)', !erro && /pp-capa/.test(h) && /pp-page/.test(h) && h.length > 20000, erro || (h.length + ' chars'));
-    chk('… com as 11 seções do anexo', ['1. Parecer executivo','2. Ranking dos cenários','3. Comparativo — antes × depois','4. Carga tributária consolidada','5. Comparativo por regime','6. Reforma Tributária — separadas × consolidada','7. Patrimônio e endividamento','8. Operações entre as empresas','10. Conclusões','11. Premissas e memória'].every(t => h.includes(t)));
-    chk('… score e classificação no executivo e no ranking', h.includes(String(Math.round(sc.total)) + '<span') && h.includes(sc.rot));
+    chk('… com as 20 seções do Parecer Consolidado (v1.5.0)', ['1. Identificação das empresas','2. Objetivo e escopo','3. Resumo executivo','4. Painel de decisão','5. Comparação das empresas separadas','6. Comparação — empresas separadas × empresa consolidada','7. Comparação tributária por tributo','8. Comparação dos regimes tributários','9. Impacto da Reforma Tributária','10. Ranking dos cenários','11. Operações realizadas entre as empresas','12. Alertas e inconsistências','13. Conclusão tributária','14. Conclusão financeira','15. Conclusão patrimonial','16. Conclusão societária','17. Recomendação final','18. Premissas','19. Limitações','20. Memória resumida de cálculo'].every(t => h.includes(t)));
+    chk('… score e classificação (5 categorias) no painel e no ranking', h.includes(String(Math.round(sc.total)) + '<span') && h.includes(R('incModelo()').painel.classe.rot));
     chk('… totais da consolidada e das separadas no comparativo (ao centavo)', h.includes(fmtBR(S.consolidada.T.lp)) && h.includes(fmtBR(S.soma.lp)) && h.includes(fmtBR(S.consolidada.T.lr)));
     chk('… carga por tributo (IRPJ, CSLL, PIS, COFINS) no regime mais barato permitido', /IRPJ/.test(h) && /CSLL/.test(h) && /COFINS/.test(h));
-    chk('… patrimônio e endividamento: "Sem dados"', /Sem dados\.<\/b> O sistema não recebe balanço/.test(h));
-    chk('… conclusões: tributária, financeira, patrimonial, Reforma, global', /Tributária<\/td>/.test(h) && /Financeira<\/td>/.test(h) && /Patrimonial<\/td>/.test(h) && /Reforma Tributária<\/td>/.test(h) && /Global<\/b>/.test(h));
-    chk('… memória de cálculo cita lacre do motor, fórmula do score e cenário 3', h.includes('lacre ' + S.motorLacre) && /Score: tributario/.test(h) && /Cenário 3 = mesma consolidação/.test(h));
+    chk('… patrimônio e societário: "Não avaliada por ausência de dados suficientes."', (h.match(/Não avaliada por ausência de dados suficientes\./g)||[]).length >= 2 && /sem dados de balanço no sistema/.test(h));
+    chk('… conclusões em 6 dimensões: tributária, financeira, patrimonial, societária, Reforma, global', /13\. Conclusão tributária/.test(h) && /14\. Conclusão financeira/.test(h) && /15\. Conclusão patrimonial/.test(h) && /16\. Conclusão societária/.test(h) && /Reforma Tributária<\/div>/.test(h) && /Conclusão global<\/div>/.test(h));
+    chk('… memória resumida cita lacre do motor, fórmula do score e identificador da análise', h.includes('lacre ' + S.motorLacre) && /score = Σ \(nota da dimensão × peso\)/.test(h) && /Identificador da análise/.test(h));
     chk('… aviso técnico do anexo (apoio à decisão, due diligence)', /due diligence/.test(h));
     chk('parecer da aba Simulação usa o mesmo render (um parecer só)', /incParecerRender\(\);/.test(jsInc) && (jsInc.match(/^function incParecerRender\(\)/gm)||[]).length === 1);
     chk('payload da IA leva o bloco "decisao" (score, cenários, por tributo, Reforma ano a ano, sem dados patrimoniais)', /decisao: \(\(\) => \{ const CE = incCenarios\(\)/.test(jsInc) && /patrimonioEDivida: 'SEM DADOS/.test(jsInc));
-    chk('Edge Function aceita as 11 chaves novas de texto', (() => { try { const t = fs.readFileSync(path.join(RAIZ,'supabase','functions','gerar-parecer-incorporacao','index.ts'),'utf8'); return ['executivo','ranking','antesDepois','carga','regimes','reformaDecisao','conclTrib','conclFin','conclPatr','conclReforma','conclGlobal'].every(k => t.includes('"'+k+'"')); } catch(e){ return true; } })());
+    chk('Edge Function aceita as 11 chaves da v1.3.0 e as 3 da v1.5.0', (() => { try { const t = fs.readFileSync(path.join(RAIZ,'supabase','functions','gerar-parecer-incorporacao','index.ts'),'utf8'); return ['executivo','ranking','antesDepois','carga','regimes','reformaDecisao','conclTrib','conclFin','conclPatr','conclReforma','conclGlobal','objetivo','conclSoc','recomendacaoCond'].every(k => t.includes('"'+k+'"')); } catch(e){ return true; } })());
     // ── apresentações ──
     erro = null; try { h = await roda('apresentacao_inc_s'); } catch(e){ erro = e.message; }
     chk('Apresentação simplificada: 7 telas (capa, pergunta, antes × depois, carga, Reforma, ranking, conclusão)', !erro && (h.match(/class="ap-slide"/g)||[]).length === 7 && /Vale a pena incorporar\?/.test(h) && /Ranking dos cenários/.test(h), erro || ((h.match(/class="ap-slide"/g)||[]).length + ' telas'));
@@ -316,6 +318,66 @@ console.log('\n■ Relatórios: conferência (Consolidada · Incorporadora · In
     R('INC').res = S; R('INC')._cen = null;
     chk('#rl-corpo é um só: parecer e relatórios o movem entre as páginas', (htmlInc.match(/id="rl-corpo"/g)||[]).length === 1 && /incRlCorpoPara\('inc-parecer-dock'\)/.test(jsInc) && /incRlCorpoPara\('inc-rl-dock'\)/.test(jsInc));
     chk('changelog v1.3.0 registra o remodelamento', /\['1\.3\.0'/.test(jsInc) && /remodelados para a incorporação/.test(jsInc));
+
+    // ═══ 12. RELATÓRIOS v1.5.0 — modelo único, classificação, 20 seções, 8 relatórios, todos, Excel ═══
+    console.log('\n■ v1.5.0: modelo único, classificação em 5 categorias, relatórios separados, geração conjunta e Excel');
+    {
+      R('INC').res = S; R('INC').entradas = E1; R('INC')._cen = null; R('INC')._modelo = null;
+      const M = R('incModelo()');
+      chk('incModelo(): totais idênticos ao motor (receita, Simples, LP, LR, Reforma ano a ano)', perto(M.cons.T.receita, S.consolidada.T.receita) && perto(M.cons.T.lp, S.consolidada.T.lp) && perto(M.cons.T.lr, S.consolidada.T.lr) && M.reforma.anos.every(a => perto(a.cons, CE.cen[1].ind.refAnos.find(x=>x.ano===a.ano).v)));
+      chk('modelo é cacheado (mesma simulação → mesmo objeto) e invalida ao trocar o resultado', R('incModelo()') === M);
+      for (const reg of ['simples','lp','lr']){
+        const T = M.tributos[reg], somaC = T.linhas.filter(l=>!l.info).reduce((s,l)=>s+l.cons,0), somaS = T.linhas.filter(l=>!l.info).reduce((s,l)=>s+l.soma,0);
+        chk(`por tributo (${reg}): Σ linhas = total do regime, consolidada e separadas, ao centavo`, perto(somaC, S.consolidada.T[reg], 0.02) && perto(somaS, S.soma[reg], 0.02), `${somaC.toFixed(2)} × ${S.consolidada.T[reg].toFixed(2)}`);
+        chk(`… (${reg}) cada linha tem base/alíquota/fórmula e Δ = consolidada − soma`, T.linhas.every(l => typeof l.formula === 'string' && l.formula.length > 10 && perto(l.delta, l.cons - l.soma)));
+        chk(`… (${reg}) Σ por empresa = T[reg] de cada isolada`, T.total.isos.every((v,i) => perto(v, S.empresas[i].T[reg])) && T.linhas.filter(l=>!l.info).reduce((s,l)=>s+l.isos[0],0).toFixed(2) === (+S.empresas[0].T[reg]).toFixed(2));
+      }
+      chk('Simples: DAS aberto por tributo (IRPJ, CSLL, PIS, COFINS, CPP, ICMS, ISS, IPI) pela partilha do motor', ['IRPJ','CSLL','PIS','COFINS','CPP','ICMS','ISS','IPI'].every(t => M.tributos.simples.linhas.some(l => l.tributo.startsWith(t) && /parcela do DAS/.test(l.tributo))));
+      chk('IBS + CBS = débito de cada ano; líquido = débito − crédito', M.reforma.anos.every(a => perto(a.ibs + a.cbs, a.deb) && perto(a.liq, a.deb - a.cred)));
+      chk('Reforma: Δ = consolidada − separadas, acumulado correto, início/inversão coerentes com a série', (() => { let ac = 0; return M.reforma.anos.every(a => { ac += a.delta; return perto(a.delta, a.cons - a.sep) && perto(a.acum, ac); }) && (M.reforma.inicioVantagem ? M.reforma.inicioVantagem.delta < -0.5 : M.reforma.anos.every(a => a.delta >= -0.5)); })());
+      chk('Reforma: nota de alíquotas projetadas presente', /alíquotas de IBS\/CBS projetadas/.test(M.reforma.nota));
+      chk('regimes: permitido/não permitido com motivo; não permitido nunca é o melhor', M.regimes.cons.linhas.every(l => l.permitido || l.motivo.length > 10) && (M.regimes.cons.menorTrib ? M.regimes.cons.linhas.find(l=>l.k===M.regimes.cons.menorTrib).permitido : true) && (M.regimes.cons.maiorRes ? M.regimes.cons.linhas.find(l=>l.k===M.regimes.cons.maiorRes).permitido : true));
+      chk('regimes: resultado após tributos no LR = base IRPJ/CSLL − IRPJ − CSLL − adicional (mesmo número do executivo)', perto(M.regimes.cons.linhas.find(l=>l.k==='lr').resultado, CE.cen[1].ind.resLR, 0.02));
+      chk('classificação: 5 categorias, dimensão pendente ⇒ nunca FAVORÁVEL pleno', ['FAVORÁVEL COM RESSALVAS','NEUTRO','DESFAVORÁVEL','ANÁLISE INCOMPLETA'].includes(M.painel.classe.rot) && M.pend.some(p => p.dim === 'patrimonial'));
+      { const fake = (total, rel, nAl, incompleta, critico) => R('incClassificar')({ score:{ total, dims:{ tributario:{ rel } }, incompleta, motivos: critico ? ['Dado crítico ausente ou motor defasado: conclusão bloqueada.'] : [] }, alertas: Array(nAl).fill({}) }, [{ dim:'patrimonial' }]);
+        chk('classificação sintética: <40 DESFAVORÁVEL · 40–59 NEUTRO · ≥60 com pendência COM RESSALVAS · crítico INCOMPLETA · |econ|<1% NEUTRO', fake(30,-0.05,0,false,false).k==='DES' && fake(50,0.03,0,false,false).k==='NEU' && fake(80,0.08,0,false,false).k==='RES' && fake(80,0.08,0,true,true).k==='INC' && fake(70,0.005,0,false,false).k==='NEU' && R('incClassificar')({ score:{ total:80, dims:{ tributario:{ rel:0.08 } }, incompleta:false, motivos:[] }, alertas:[] }, []).k==='FAV'); }
+      chk('nenhum "recomendado" na conclusão global, na recomendação e no painel', !/recomendad[oa]\b/i.test(M.conclusoes.global + ' ' + M.recomendacao) && /Com base exclusivamente nos dados tributários disponíveis|não há base para recomendar/.test(M.recomendacao));
+      chk('recomendação é condicionada (depende da validação …)', /depende da validação|não há base/.test(M.recomendacao));
+      chk('pendências contadas (patrimonial, financeira, societária) e alertas contados no painel', M.painel.nPend === M.pend.length && M.painel.nAlertas === S.alertas.length && ['patrimonial','financeira','societária'].every(d => M.pend.some(p => p.dim === d)));
+      chk('identificador da análise: nº da simulação gravada ou hash provisório', /^(sim-[0-9a-f]{8}|\d+)$/.test(M.ident.id));
+      chk('ranking: 1º = melhor score; separadas fora do ranking (referência); justificativa por linha', M.ranking[0].score.total >= (M.ranking[1] ? M.ranking[1].score.total : 0) && M.ranking.every(r => r.just.length > 20 && r.incorporadora && r.regime) && !M.ranking.some(r => /Manter as empresas/.test(r.nome)));
+      // renders
+      const tipos = ['parecer_inc','rel_executivo','rel_tributario','rel_reforma','rel_financeira','rel_patrimonial','rel_societaria','rel_memoria','rel_riscos','rel_todos'];
+      const H = {};
+      for (const t of tipos){ let err = null; try { R('incRelatorioRender')(t); H[t] = corpoHtml(); } catch(e){ err = e.message; } chk(`relatório ${t} renderiza sem exceção, sem "undefined"/"NaN"`, !err && H[t] && !/undefined|NaN/.test(H[t]) && /pp-page/.test(H[t]), err || ((H[t]||'').length + ' chars · ' + ((H[t]||'').match(/class="pp-page/g)||[]).length + ' págs')); }
+      chk('rel_todos = os 9 documentos em sequência (páginas ≥ soma das partes − capas)', (H.rel_todos.match(/class="pp-page/g)||[]).length >= tipos.slice(0,9).reduce((s,t)=>s+(H[t].match(/class="pp-page/g)||[]).length,0) - 2);
+      chk('todo relatório traz o mesmo total do regime mais barato da consolidada (mesmo modelo)', ['parecer_inc','rel_executivo','rel_tributario'].every(t => H[t].includes(fmtBR(CE.cen[1].ind.trib))));
+      chk('sinal único: legenda "Δ = consolidada − separadas" em parecer, tributário e Reforma', ['parecer_inc','rel_tributario','rel_reforma'].every(t => /Δ = consolidada − separadas/.test(H[t])));
+      chk('Reforma: IBS e CBS separados, ano de início e inversão, aviso de alíquotas projetadas', /<th class="num">IBS<\/th><th class="num">CBS<\/th>/.test(H.rel_reforma) && /ano em que a vantagem começa/.test(H.rel_reforma) && /ano em que o sinal inverte/.test(H.rel_reforma) && /alíquotas de IBS\/CBS projetadas/.test(H.rel_reforma));
+      chk('por tributo: base → alíquota → fórmula → A → B → separadas → consolidada → Δ → leitura → motivo', /Base \(cons\.\)<\/th><th class="num">Alíq\. efetiva<\/th>/.test(H.parecer_inc) && /motivo da diferença:/.test(H.parecer_inc) && /fórmula: /.test(H.parecer_inc) && /<th>Leitura<\/th>/.test(H.parecer_inc));
+      chk('financeira: frase-padrão quando faltam dados, tabela por regime quando há custos', S.consolidada.R.meses.some(m=>(m.custos||0)+(m.despTotal||0)>0) ? /Resultado por regime — consolidada/.test(H.rel_financeira) : /Análise financeira não concluída por ausência de dados suficientes/.test(H.rel_financeira));
+      chk('patrimonial e societária: estrutura + checklist com "Não avaliada por ausência de dados suficientes."', /Não avaliada por ausência de dados suficientes/.test(H.rel_patrimonial) && /Dívida líquida \/ EBITDA/.test(H.rel_patrimonial) && /Não avaliada por ausência de dados suficientes/.test(H.rel_societaria) && /Checklist operacional/.test(H.rel_societaria) && /art\. 1\.116/.test(H.rel_societaria));
+      chk('riscos: limite, sublimite, Fator R, prejuízos, operações, validações, documentos', ['Sublimite','Fator R','Prejuízos fiscais','Operações entre as empresas','Validações jurídicas e contábeis','Documentos necessários'].every(t => H.rel_riscos.includes(t)));
+      chk('memória: dados de entrada, regras, fórmulas, arredondamento, versão, data/hora, identificador', ['Dados de entrada e origem','Regras da consolidação','Fórmulas','Arredondamento','Identificador da análise','Data e hora da simulação'].every(t => H.rel_memoria.includes(t)));
+      chk('parecer da aba Simulação usa o mesmo render (um parecer só)', /incParecerRender\(\);/.test(jsInc) && (jsInc.match(/^function incParecerRender\(\)/gm)||[]).length === 1);
+      // Excel
+      const abas = R('incExcelAbas')(M, 'rel_todos');
+      chk('Excel: uma aba por seção (12 abas no conjunto), nomes ≤ 31 caracteres', abas.length === 12 && abas.every(a => a.nome.length <= 31 && a.aoa.length > 1));
+      chk('Excel: números como número — total LP da consolidada na aba Regimes bate ao centavo', (() => { const ab = abas.find(a => a.nome === 'Regimes'); const l = ab.aoa.find(r => r[0] === 'Lucro Presumido'); return l && typeof l[6] === 'number' && perto(l[6], S.consolidada.T.lp); })());
+      chk('Excel: aba por tributo soma o total do regime', (() => { const ab = abas.find(a => a.nome === 'Tributos Lucro Presumido'); const tot = ab.aoa.find(r => r[0] === 'Total'); return tot && perto(tot[8], S.consolidada.T.lp, 0.02); })());
+      chk('SheetJS carregado; botão Exportar Excel no seletor e na barra do documento', /cdnjs\.cloudflare\.com\/ajax\/libs\/xlsx\/0\.18\.5\/xlsx\.full\.min\.js/.test(htmlInc) && /incExcel\(document\.getElementById\('rl-tipo'\)\.value\)/.test(htmlInc) && /onclick="incExcel\('\$\{tipo\}'\)"/.test(jsInc));
+      // apresentações leem o modelo
+      let e2 = null, hA = ''; try { hA = await roda('apresentacao_inc_c'); } catch(e){ e2 = e.message; }
+      chk('apresentação completa (15 telas) lê o modelo: classificação em 5 categorias, pendências, societária e recomendação', !e2 && (hA.match(/class="ap-slide"/g)||[]).length === 15 && hA.includes(M.painel.classe.rot) && /pendência\(s\)/.test(hA) && /Societária/.test(hA) && /Recomendação/.test(hA), e2 || '');
+      // snapshot
+      const volta2 = R('incResDoSnapshot')(R('incSnapshot')()); R('INC').res = volta2; R('INC')._cen = null; R('INC')._modelo = null;
+      let e3 = null; try { R('incRelatorioRender')('parecer_inc'); R('incRelatorioRender')('rel_reforma'); } catch(e){ e3 = e.message; }
+      const M2 = R('incModelo()');
+      chk('snapshot reaberto: parecer consolidado e Reforma renderizam; classificação e totais iguais aos do resultado vivo', !e3 && M2.painel.classe.rot === M.painel.classe.rot && perto(M2.painel.econ, M.painel.econ) && /reaberta de simulação gravada/.test(M2.painel.situacao), e3 || '');
+      R('INC').res = S; R('INC')._cen = null; R('INC')._modelo = null;
+      chk('badge e changelog v1.5.0 (versão visível + linha na aba Versões)', /INC_VERSAO = '1\.5\.0'/.test(jsInc) && /\['1\.5\.0','15\/09\/2026'/.test(jsInc) && /Parecer Consolidado de Incorporação/.test(jsInc));
+      chk('build com app_6 e o parecer antigo removido do app_5', /incorporacao_app_6\.js/.test(fs.readFileSync(path.join(RAIZ,'tools','build_incorporacao.js'),'utf8')) && !/PARECER DE INCORPORAÇÃO \(substitui o incParecerRender da v1\.0\)/.test(jsInc));
+    }
     console.log(`\n${FALHAS.length ? '✗✗ FALHAS: ' + FALHAS.length : '✓✓ SUÍTE COMPLETA'}: ${OK} verificações OK${FALHAS.length ? ' · ' + FALHAS.join(' | ') : ''}`);
     process.exit(FALHAS.length ? 1 : 0);
   })();

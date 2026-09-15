@@ -97,10 +97,19 @@
          rl-* abaixo são os que essas funções procuram. O #rl-corpo é um só (vive no card do parecer e é MOVIDO para
          cá quando esta página abre — ver incRlCorpoPara). -->
     <div id="page-relatorios" style="display:none">
-      <div class="page-title"><h1>Relatórios</h1><span class="crumb">Consolidada e cada empresa isolada · parecer, conferência e apresentações remodelados para a incorporação</span></div>
+      <div class="page-title"><h1>Relatórios</h1><span class="crumb">Parecer Consolidado, 8 relatórios separados (individuais ou todos juntos), conferência, apresentações · PDF e Excel</span></div>
       <div class="card no-print"><div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
         <div style="min-width:300px"><label>Relatório</label><select id="rl-tipo" onchange="rlRender()">
-          <option value="parecer_inc">Parecer de Incorporação — com IA</option>
+          <option value="parecer_inc">Parecer Consolidado de Incorporação — com IA (20 seções)</option>
+          <option value="rel_executivo">Relatório 1 — Parecer Executivo (empresário e sócios)</option>
+          <option value="rel_tributario">Relatório 2 — Comparativo Tributário Completo (contador e fiscal)</option>
+          <option value="rel_reforma">Relatório 3 — Reforma Tributária (2027–2033)</option>
+          <option value="rel_financeira">Relatório 4 — Análise Financeira</option>
+          <option value="rel_patrimonial">Relatório 5 — Análise Patrimonial e de Endividamento</option>
+          <option value="rel_societaria">Relatório 6 — Análise Societária e Operacional</option>
+          <option value="rel_memoria">Relatório 7 — Memória de Cálculo</option>
+          <option value="rel_riscos">Relatório 8 — Riscos, Pendências e Checklist</option>
+          <option value="rel_todos">📚 Todos os relatórios — um PDF só</option>
           <option value="conferencia">Conferência de cálculos — memória (Consolidada · Incorporadora · Incorporada)</option>
           <option value="apresentacao_inc_s">Apresentação de Incorporação — simplificada (7 telas)</option>
           <option value="apresentacao_inc_c">Apresentação de Incorporação — completa (15 telas)</option>
@@ -118,7 +127,7 @@
           <option value="3" selected>Trimestral</option><option value="6">Semestral</option>
           <option value="12">Anual</option>
         </select></div>
-        <div style="align-self:flex-end"><button class="btn solid" onclick="window.print()" title="Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · Gráficos de segundo plano ligados. Conferência com 'Todas — lado a lado' imprime uma empresa por página; apresentação em paisagem.">🖨️ Imprimir / PDF</button></div>
+        <div style="align-self:flex-end;display:flex;gap:6px"><button class="btn" onclick="incExcel(document.getElementById('rl-tipo').value)" title="Planilha (.xlsx) com uma aba por seção do relatório em tela — os mesmos números do documento">📗 Exportar Excel</button><button class="btn solid" onclick="window.print()" title="Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · Gráficos de segundo plano ligados. Conferência com 'Todas — lado a lado' imprime uma empresa por página; apresentação em paisagem.">🖨️ Imprimir / PDF</button></div>
       </div>
       <div style="display:none;margin-top:8px" id="rl-conf-anos-wrap"><label>Anos no demonstrativo da Reforma <span class="hint" style="font-weight:400">(memória de cálculo ano a ano)</span></label>
         <div id="rl-conf-anos" style="display:flex;gap:2px;flex-wrap:wrap;align-items:center;padding:4px 0"></div></div>
