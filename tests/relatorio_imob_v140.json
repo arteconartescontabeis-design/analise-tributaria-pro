@@ -1,0 +1,418 @@
+{
+ "versao": "1.4.0",
+ "quando": "2026-09-14T20:03:33.427Z",
+ "total": 41,
+ "falhas": 0,
+ "testes": [
+  {
+   "n": "E2",
+   "teste": "todo onclick da marcação aponta para função exportada",
+   "dados": "imob_pagina.js",
+   "esperado": "todas definidas",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "E3",
+   "teste": "lacre do motor íntegro e versão do módulo 1.4.0 visível",
+   "dados": "lacreVerificar + ModulosInfo",
+   "esperado": "c287341e / 1.4.0",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "E4",
+   "teste": "14 abas e página injetada; nav lateral marca ativo",
+   "dados": "abrirAba",
+   "esperado": "aba on = venda",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 1,
+   "teste": "Venda com redutor de ajuste",
+   "dados": "venda 900.000; RAJ 400.000; res. novo; 2033",
+   "esperado": "base 400.000; IBS 37.400; CBS 18.420; total 55.820",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 2,
+   "teste": "Venda sem redutor",
+   "dados": "venda 900.000; RAJ 0; res. novo",
+   "esperado": "base 800.000 (só redutor social); total 111.640",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 3,
+   "teste": "Venda com créditos",
+   "dados": "venda 900.000; RAJ 400.000; créditos 10.000",
+   "esperado": "total 45.820; créditos aproveitados 10.000; saldo 0",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 4,
+   "teste": "Venda com créditos maiores que o débito",
+   "dados": "créditos 100.000 > débito 55.820",
+   "esperado": "aproveitados 55.820; saldo 44.180; total 0",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 5,
+   "teste": "Linha \"Alíquotas reduzidas\" mostra percentuais, não R$ 0,00",
+   "dados": "memória da venda",
+   "esperado": "IBS 9,3500% · CBS 4,6050%; sem \"0,00\" na linha",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 6,
+   "teste": "Aviso de simulação e premissas aparecem NO TOPO do resultado",
+   "dados": "v-out",
+   "esperado": "primeiro filho .grau com aviso e ruleset",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 7,
+   "teste": "Edição de premissa (IBS 20%) com justificativa recalcula e marca original × editado",
+   "dados": "ibs_padrao 20 + justificativa",
+   "esperado": "IBS 40.000 (400.000 × 10%); badge \"premissa editada\"; grau BAIXA",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "7b",
+   "teste": "Edição sem justificativa é recusada; restaurar volta ao padrão",
+   "dados": "cbs_padrao 10 sem justificativa",
+   "esperado": "recusa + IBS volta a 37.400",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "7c",
+   "teste": "Redução manual 60% via alíquota equivalente: memória = resultado",
+   "dados": "reducao_venda 60%",
+   "esperado": "IBS 400.000×7,48% = 29.920; coerência OK",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 8,
+   "teste": "Inventário sem data fixa: data atual automática e prazo até 31/12/2026",
+   "dados": "aba inventário",
+   "esperado": "iv-hoje = hoje; dias = diasAte(hoje, 2026-12-31)",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "8b",
+   "teste": "Inventário aceita data-base informada pelo usuário e a exibe",
+   "dados": "iv-base = 2026-09-01",
+   "esperado": "texto \"01/09/2026\" no resultado",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 9,
+   "teste": "Locação residencial",
+   "dados": "5.000/mês; 1 mês; encargos 180+850 com prova; 2033",
+   "esperado": "base 5.000−1.030−600 = 3.370; IBS 189,06 (5,61%); CBS 93,11 (2,763%); total 282,17",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 10,
+   "teste": "Locação não residencial",
+   "dados": "mesmos dados, finalidade não residencial",
+   "esperado": "sem redutor social: base 3.970; comparação mostra diferença 600",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 11,
+   "teste": "Locação com período parcial (15 dias)",
+   "dados": "dias 15; 1 mês; residencial",
+   "esperado": "receita 2.500; redutor social 300",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 12,
+   "teste": "Permuta sem torna",
+   "dados": "dado 1.000.000; recebido vazio; contribuinte",
+   "esperado": "base 0; total 0; parcela permuta 1.000.000",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 13,
+   "teste": "Permuta com torna recebida 200.000",
+   "dados": "dado 1.000.000; recebido 800.000; torna recebida 200.000",
+   "esperado": "base 200.000; IBS 18.700; CBS 9.210; total 27.910",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 14,
+   "teste": "Permuta por unidades futuras (4 un., fração 0,20)",
+   "dados": "unidades futuras sim; 4; fração 0,20; torna 200.000",
+   "esperado": "linha \"Resultado por unidade futura (4 un.)\" = 6.977,50",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 15,
+   "teste": "PF não contribuinte",
+   "dados": "receita 100.000; 2 imóveis; 0 alienações; fator 1,15",
+   "esperado": "NÃO CONTRIBUINTE + frase padrão",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 16,
+   "teste": "PF contribuinte (receita > limite e > 3 imóveis)",
+   "dados": "receita 300.000; 5 imóveis",
+   "esperado": "CONTRIBUINTE; inciso I atingido",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 17,
+   "teste": "Comparativo lado a lado com PIS/COFINS/ISS × IBS/CBS",
+   "dados": "venda 900.000; 3 meses; RAJ 400.000",
+   "esperado": "linhas PIS/COFINS, ISS/ICMS, IBS, CBS, Créditos, Total; IBS 37.400 no lado reforma",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 18,
+   "teste": "Projeções mensal, anual e 2026-2033 com gráfico",
+   "dados": "mesmo comparativo",
+   "esperado": "mensal = total/3; anual = ×12; 8 colunas no gráfico; 2026 = ano-teste",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 19,
+   "teste": "Regime opcional RET 2,08% e comparação com o regime comum",
+   "dados": "RET normal; 1.000.000; 2030; RAJ 600.000",
+   "esperado": "total 20.800; tabela opcional × comum; guia comparativa",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 20,
+   "teste": "Relatórios executivo, técnico e memória são gerados e coerentes",
+   "dados": "venda 900.000 / RAJ 400.000",
+   "esperado": "3 janelas com HTML; memória mostra 9,3500%; técnico lista premissas",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 21,
+   "teste": "Histórico local com filtros, comparação de duas simulações e CSV",
+   "dados": "simulações registradas nos testes anteriores",
+   "esperado": "lista ≥ 2; comparação marca \"Total devido\" alterado; CSV com cabeçalho",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 22,
+   "teste": "Cadastro do imóvel: classificação de campos e validação com correção",
+   "dados": "código vazio + valor negativo",
+   "esperado": "badges obrig./opc./cond.; erro no campo certo com orientação",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 23,
+   "teste": "Validação pré-cálculo na venda (valor zero, data inválida) bloqueia com orientação",
+   "dados": "valor 0; data 2033-02-30",
+   "esperado": "nenhum resultado; duas mensagens",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 24,
+   "teste": "Resultado da alienação em 12 etapas com fórmula, na ordem do Prompt",
+   "dados": "venda padrão",
+   "esperado": "12 etapas + carga efetiva 6,2022%",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": 25,
+   "teste": "Navegação: dados preservados ao trocar de módulo; erro capturado sem quebrar a tela",
+   "dados": "trocar abas; forçar exceção",
+   "esperado": "v-val continua 900.000; #imob-erro-aba exibe mensagem",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "X1",
+   "teste": "Persistência 1.2.0: listarCalculos aceita filtros e devolve entrada/empresa/imóvel/usuário",
+   "dados": "imobRepo.listarCalculos",
+   "esperado": "query PostgREST com filtros",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "X2",
+   "teste": "Finalizar sem escritório na sessão não grava e avisa",
+   "dados": "imobFinalizar com APP.escritorioId null",
+   "esperado": "aviso \"Nada foi gravado\"",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "N1",
+   "teste": "Campo de valor vira R$ ao sair e volta a número ao focar",
+   "dados": "v-val = 900000; blur; focus",
+   "esperado": "\"R$ 900.000,00\" / \"900000\" e n() lê os dois",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "N2",
+   "teste": "Cadastro PF/PJ: valida CNPJ, salva e avança para o imóvel; PF esconde regime",
+   "dados": "PJ com CNPJ de 14 dígitos",
+   "esperado": "passo 1 concluído + aba imóvel; PF oculta cd-regime-box",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "N3",
+   "teste": "Fluxo guiado: depois do redutor aparecem as opções e \"Vender\" preenche e calcula",
+   "dados": "calcRaj → imobEscolherOperacao(venda)",
+   "esperado": "v-raj = maior opção do art. 375; aba venda calculada",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "N4",
+   "teste": "Tabela 2026-2033 em venda, locação e permuta (8 anos; 2033 = resultado de 2033)",
+   "dados": "venda 900.000 / RAJ 400.000 / 2033",
+   "esperado": "8 linhas; 2033 = 55.820; 2026 ano-teste",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "N5",
+   "teste": "Explicações para leigos: ajuda por aba, por campo e \"em palavras simples\" nas etapas",
+   "dados": "DOM",
+   "esperado": "≥6 .ajuda, ≥25 .ajuda-campo, 12 .simples na venda",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "N6",
+   "teste": "Aba Memória de cálculo mostra o último cálculo com explicação simples e botões de relatório",
+   "dados": "após permuta",
+   "esperado": "linha a linha + \"Em palavras simples\" + 5 botões",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "N7",
+   "teste": "Resumo para o cliente e relatórios por operação (locação e permuta)",
+   "dados": "imobRelatorio(simplificado, locacao) etc.",
+   "esperado": "HTML com \"Resumo para o cliente\", nome do cadastro, tabela de anos",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "E1",
+   "teste": "toda classe realmente renderizada tem CSS no módulo ou no índice",
+   "dados": "DOM após os testes",
+   "esperado": "nenhuma classe órfã",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  }
+ ]
+}
