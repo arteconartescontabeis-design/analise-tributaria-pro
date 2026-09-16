@@ -323,7 +323,7 @@ const INC_SECOES = {
     return B;
   },
   regimes(M){
-    const D = M.regimes.cons, th = `<tr><th>Regime</th><th>Permitido?</th>${M.ents.map(e=>`<th class="num">${esc(e.nome)}</th>`).join('')}<th class="num">Separadas</th><th class="num">Consolidada</th><th class="num">Carga</th><th class="num">Resultado após tributos</th><th class="num">Margem</th><th class="num">Δ R$</th><th>Leitura</th></tr>`;
+    const D = M.regimes.cons, th = `<tr><th>Regime</th><th>Permitido?</th>${M.ents.map(e=>`<th class="num">${esc(e.nome)}</th>`).join('')}<th class="num">Separadas</th><th class="num">Consolidada</th><th class="num">Carga</th><th class="num">Resultado após tributos</th><th class="num">Margem</th><th class="num">Δ R$</th><th class="num">Δ %</th><th>Leitura</th></tr>`;   // v1.7.0: faltava o "Δ %" (11 cabeçalhos para 12 células — colunas desalinhadas)
     const linhas = D.linhas.map(l => ({ html:`<tr${l.k===D.menorTrib?' style="background:#eaf2f8"':''}><td class="rot">${l.nome}${l.k===D.menorTrib?' <span class="badge ok">menor tributo</span>':''}${l.k===D.maiorRes?' <span class="badge ok">maior resultado</span>':''}</td><td>${l.permitido ? 'sim' + (l.motivo ? '<div class="hint">' + l.motivo + '</div>' : '') : '<b style="color:var(--err)">Não permitido</b><div class="hint">' + esc(l.motivo) + '</div>'}</td>${M.ents.map(e=>incTd(e.T[l.k])).join('')}${incTd(M.R.soma[l.k])}<td class="num"><b>${fmt(l.trib)}</b></td><td class="num">${incFmtPct(l.carga)}</td><td class="num">${l.resultado != null ? fmt(l.resultado) : '<span class="hint">não medido</span>'}</td><td class="num">${l.margem != null ? incFmtPct(l.margem) : '—'}</td>${incDelta3(M.R.soma[l.k], l.trib)}</tr>`, custo:2 }));
     return [incSec(8,'Comparação dos regimes tributários — consolidada'), incHint(`Regimes permitidos: ${D.linhas.filter(l=>l.permitido).map(l=>l.nome).join(', ')}${D.linhas.some(l=>!l.permitido) ? ' · não permitidos: ' + D.linhas.filter(l=>!l.permitido).map(l=>l.nome).join(', ') : ''}. Melhor pelo menor tributo: <b>${D.menorTrib ? INC_REGIME_NOME[D.menorTrib] : '—'}</b> · melhor pelo maior resultado econômico: <b>${D.maiorRes ? INC_REGIME_NOME[D.maiorRes] : 'não medido (sem custos e despesas lançados)'}</b>. Resultado após tributos = receita + financeiras − custos − folha − despesas − tributos do regime (INSS patronal incluído; FGTS fora do total, como no motor). Cenário não permitido nunca é classificado como melhor. ${INC_LEG_SINAL}`),
       incTab(th, linhas, 0, 'font-size:11px'), incPar(M.TX.regimes), incPar(M.TX.leitura)];
@@ -399,17 +399,24 @@ function incAssinatura(){ const e = (typeof PARAMS !== 'undefined' && PARAMS.esc
 // ═══ DOCUMENTOS ═══
 // monta um documento paginado (capa opcional + páginas timbradas); devolve { html, apos[] }
 function incDocumento(M, opts){
-  const B = (opts.blocos||[]).filter(Boolean), pre = opts.paginas || [];        // v1.6.0: páginas forçadas (uma por assunto) antes dos blocos corridos
+  // v1.7.0: (1) toda tabela passa pelo limite de colunas da orientação (incTabAjustar — "Leitura" vira nota,
+  // colunas de detalhe saem no parecer, e o resto é dividido, nunca cortado); (2) o documento é envolto em
+  // .inc-doc[data-orient] para o empacotador por medida (incEmpacotar) e a impressão por grupo.
+  const orient = opts.paisagem ? 'paisagem' : 'retrato', ctx = { n:0 }, ajOpts = { descartar: opts.compacto ? INC_DESCARTAR_PARECER(M) : [] };
+  const aj = lista => lista.filter(Boolean).flatMap(b => b && b.linhas ? incTabAjustar(b, orient, ctx, ajOpts) : [b]);
+  const B = aj(opts.blocos||[]), pre = (opts.paginas || []).map(g => aj(g));        // v1.6.0: páginas forçadas (uma por assunto) antes dos blocos corridos
   const apos = [...pre.flat(), ...B].filter(b=>b&&b.apos).map(b=>b.apos);
   let h = opts.capa ? INC_SECOES.capa(M, opts.titulo, opts.sub) : '';
   if (!opts.capa && B.length) B.unshift({ html:`<h3 class="pp-sec" style="margin-top:0">${esc(opts.titulo)}</h3><div class="hint" style="margin-bottom:10px"><b>${esc(M.E[0].nome)}</b> · incorporação de ${esc(M.E.slice(1).map(e=>e.nome).join(', '))} · ano-base ${M.ident.ano} · análise ${esc(M.ident.id)} · ${new Date().toLocaleDateString('pt-BR')} · Artecon Artes Contábeis</div>`, custo:5 });
-  if (pre.length) h += opts.paisagem ? pre.map(g => incPaginasPaisagem(g)).join('') : incPaginas(pre);
-  if (B.length) h += opts.paisagem ? incPaginasPaisagem(B) : ppDocumento(B);
-  return { html: h, apos };
+  // v1.7.0: a primeira folha de cada página forçada leva .pp-fixa — o empacotador por medida respeita a quebra (uma página por assunto)
+  const fixa = html => html.replace(/<div class="pp-page( pp-land)?">/, '<div class="pp-page$1 pp-fixa">');
+  if (pre.length) h += pre.map(g => fixa(opts.paisagem ? incPaginasPaisagem(g) : ppDocumento(g.filter(Boolean)))).join('');
+  if (B.length) h += fixa(opts.paisagem ? incPaginasPaisagem(B) : ppDocumento(B));
+  return { html: `<div class="inc-doc" data-orient="${orient}" data-tipo="${esc(opts.tipo||'')}">${h}</div>`, apos };
 }
 const INC_DOCS = {
   // camada GERENCIAL
-  parecer_inc:   { titulo:'Parecer Consolidado de Incorporação', capa:true, ia:true, paginas: M => incResumoExecutivoPaginas(M), blocos: M => [...INC_SECOES.identificacao(M), ...INC_SECOES.objetivo(M), ...INC_SECOES.resumo(M), ...INC_SECOES.painel(M), ...INC_SECOES.separadas(M), ...INC_SECOES.antesDepois(M), ...INC_SECOES.tributos(M), ...INC_SECOES.regimes(M), ...INC_SECOES.reforma(M), ...INC_SECOES.ranking(M), ...INC_SECOES.operacoes(M), ...INC_SECOES.alertas(M), ...INC_SECOES.conclusoes(M), ...INC_SECOES.recomendacao(M), ...INC_SECOES.premissas(M), ...INC_SECOES.limitacoes(M), ...INC_SECOES.memoria(M)] },
+  parecer_inc:   { titulo:'Parecer Consolidado de Incorporação', capa:true, ia:true, compacto:true, paginas: M => incResumoExecutivoPaginas(M), blocos: M => [...INC_SECOES.identificacao(M), ...INC_SECOES.objetivo(M), ...INC_SECOES.resumo(M), ...INC_SECOES.painel(M), ...INC_SECOES.separadas(M), ...INC_SECOES.antesDepois(M), ...INC_SECOES.tributos(M), ...INC_SECOES.regimes(M), ...INC_SECOES.reforma(M), ...INC_SECOES.ranking(M), ...INC_SECOES.operacoes(M), ...INC_SECOES.alertas(M), ...INC_SECOES.conclusoes(M), ...INC_SECOES.recomendacao(M), ...INC_SECOES.premissas(M), ...INC_SECOES.limitacoes(M), ...INC_SECOES.memoria(M)] },
   rel_executivo: { titulo:'Relatório 1 — Parecer Executivo', sub:'para o empresário e os sócios · decisão da incorporação', capa:true, paginas: M => incExecutivoPaginas(M, 'ex'), blocos: () => [] },
   // camada TÉCNICA (A4 paisagem para as tabelas largas)
   rel_tributario:{ titulo:'Relatório 2 — Comparativo Tributário Completo', sub:'para o contador e o setor fiscal', capa:false, paisagem:true, blocos: M => [...INC_SECOES.separadas(M), ...INC_SECOES.antesDepois(M), ...INC_SECOES.tributos(M, ['simples','lp','lr'], true), ...INC_SECOES.regimes(M), incSec(9,'Memória mensal da consolidada'), ...incMemoriaBlocos(M.R), ...INC_SECOES.memoria(M)] },
@@ -417,7 +424,7 @@ const INC_DOCS = {
   rel_financeira:{ titulo: M => M.temCustos ? 'Relatório 4 — Análise Financeira' : 'Relatório 4 — Informações financeiras pendentes', capa:false, blocos: M => incRelFinanceiraBlocos(M) },
   rel_patrimonial:{ titulo:'Relatório 5 — Informações patrimoniais pendentes', capa:false, blocos: M => incRelPatrimonialBlocos(M) },
   rel_societaria:{ titulo:'Relatório 6 — Informações societárias e operacionais pendentes', capa:false, blocos: M => incRelSocietariaBlocos(M) },
-  rel_memoria:   { titulo:'Relatório 7 — Memória de Cálculo', capa:false, paisagem:true, blocos: M => [...INC_SECOES.memoria(M), ...INC_SECOES.premissas(M), ...INC_SECOES.operacoes(M), incSec(21,'Memória mensal da consolidada'), ...incMemoriaBlocos(M.R), incPar('A memória mês a mês de cada empresa isolada (RBT12, faixa, Fator R, DAS, LP, LR, demonstrativo da Reforma) está no relatório "Conferência de cálculos", com trilha de origem de cada dado de entrada.')] },
+  rel_memoria:   { titulo:'Relatório 7 — Memória de Cálculo', sub:'todos os cálculos detalhados: base → alíquota → fórmula → resultado', capa:false, paisagem:true, blocos: M => [incPar('Este relatório demonstra, com os números aplicados, cada cálculo que sustenta o parecer: dados de entrada (7.1), consolidação (7.2), Simples Nacional (7.3), Lucro Presumido (7.4), Lucro Real (7.5), Reforma Tributária (7.6), Δ e score (7.7) e a conciliação com os totais do parecer (7.8). Premissas e operações entre as empresas estão nas seções 18 e 11 do Parecer Consolidado; a memória mês a mês de cada empresa isolada, com trilha de origem por dado, está também no relatório "Conferência de cálculos".'), ...incMemoriaCompleta(M).blocos, ...INC_SECOES.memoria(M)] },
   rel_riscos:    { titulo:'Relatório 8 — Riscos, Pendências e Checklist', capa:false, blocos: M => incRelRiscosBlocos(M) },
 };
 function incVantagens(M){
@@ -518,19 +525,25 @@ function incMemoriaBlocos(R){
 const INC_REL_TIPOS_NOVOS = ['rel_executivo','rel_tributario','rel_reforma','rel_financeira','rel_patrimonial','rel_societaria','rel_memoria','rel_riscos','rel_todos'];
 function incFerramentas(M, tipo){
   const statusIA = INC._ia ? `🤖 Textos gerados pela IA em ${esc(INC._ia.quando)}.` : (INC._iaErro ? `⚠️ A geração com IA falhou (${esc(INC._iaErro)}) — textos padrão do sistema.` : 'Textos padrão do sistema — clique em "Gerar textos com IA".');
+  const dica = 'Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · Gráficos de segundo plano ligados';
+  const imprimir = tipo === 'rel_todos'
+    ? `<button class="btn" onclick="incImprimir('retrato')" title="${dica} · relatórios 1, 4, 5, 6 e 8 (A4 retrato)">🖨️ PDF gerencial (retrato)</button><button class="btn" onclick="incImprimir('paisagem')" title="${dica} · relatórios 2, 3 e 7 (A4 paisagem)">🖨️ PDF técnico (paisagem)</button>`
+    : `<button class="btn" onclick="window.print()" title="${dica}${INC_DOCS[tipo] && INC_DOCS[tipo].paisagem ? ' · A4 paisagem' : ' · A4 retrato'}">🖨️ Imprimir / PDF</button>`;
   return `<div class="card pp-tools"><div class="toolbar" style="align-items:center"><span class="hint">${statusIA}</span><span style="flex:1"></span>
-    <button class="btn" onclick="incExcel('${tipo}')" title="Planilha com uma aba por seção/relatório — os mesmos números do documento">📗 Exportar Excel</button>
-    <button class="btn" onclick="window.print()" title="Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · Gráficos de segundo plano ligados">🖨️ Imprimir / PDF</button>
+    <button class="btn" onclick="incExcel('${tipo}')" title="Planilha com uma aba por seção/relatório — os mesmos números do documento (Relatório 7: fórmulas de planilha)">📗 Exportar Excel</button>${imprimir}
     <button class="btn solid" id="pp-ia-btn" onclick="incParecerIA()">🤖 Gerar textos com IA</button></div><div id="pp-regua"></div></div>`;
 }
 function incRelatorioRender(tipo){
   const M = incModelo(); if (!M){ $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Sem simulação calculada</h2></div>'; return; }
   const tipos = tipo === 'rel_todos' ? Object.keys(INC_DOCS) : [tipo];
   let h = incFerramentas(M, tipo); const apos = [];
-  for (const t of tipos){ const d = INC_DOCS[t]; if (!d) continue; const doc = incDocumento(M, { titulo: typeof d.titulo === 'function' ? d.titulo(M) : d.titulo, sub:d.sub, capa:d.capa, paisagem:!!d.paisagem, paginas: d.paginas ? d.paginas(M) : null, blocos:d.blocos(M) }); h += doc.html; apos.push(...doc.apos); }
-  $id('rl-corpo').innerHTML = h;
+  for (const t of tipos){ const d = INC_DOCS[t]; if (!d) continue; const doc = incDocumento(M, { tipo:t, titulo: typeof d.titulo === 'function' ? d.titulo(M) : d.titulo, sub:d.sub, capa:d.capa, paisagem:!!d.paisagem, compacto:!!d.compacto, paginas: d.paginas ? d.paginas(M) : null, blocos:d.blocos(M) }); h += doc.html; apos.push(...doc.apos); }
+  // v1.7.0: orientação ÚNICA por documento (regra @page global — vale em qualquer navegador); "Todos" imprime por grupo
+  incPrintCss(tipo === 'rel_todos' ? null : (INC_DOCS[tipo] && INC_DOCS[tipo].paisagem ? 'paisagem' : 'retrato'));
+  const corpo = $id('rl-corpo'); corpo.innerHTML = h;
+  incEmpacotar(corpo);                                   // v1.7.0: repagina por MEDIÇÃO real antes de desenhar os gráficos
   apos.forEach(f => { try { f(); } catch(e){ console.error('relatório/gráfico', e); } });
-  setTimeout(() => { try { ppReguaRender(); } catch(e){ console.error('régua', e); } }, 350);
+  setTimeout(() => { try { incReguaRender(); } catch(e){ console.error('régua', e); } }, 350);
 }
 // o parecer da aba Simulação e o "Parecer Consolidado" da aba Relatórios são o MESMO render
 function incParecerRender(){ incRelatorioRender('parecer_inc'); }
@@ -552,7 +565,7 @@ function incExcelAbas(M, tipo){
   const premissas = () => incExcelAba('Premissas e memória', [cab, [], ['Premissas'], ...M.R.premissas.map(p=>[p]), [], ['Notas'], ...M.R.notas.map(p=>[p]), [], ['Operações abatidas'], ['Vendeu', 'Comprou', 'Natureza', 'Valor', 'Abatido receita', 'Abatido compras'], ...M.R.abatidos.map(a=>[a.deNome, a.paraNome, a.natureza, num(a.valor), num(a.abatidoRec), num(a.abatidoDest)])]);
   const memoria = () => { const Mm = M.cons.R.meses; return incExcelAba('Memória mensal', [['Mês', 'RBT12', 'Faixa', 'Fator R', 'Receita', 'DAS', 'Trava ICMS/ISS', 'Simples total', 'Presumido', 'Real', 'Base LR (IRPJ/CSLL)', 'Folha', 'INSS patronal'], ...Mm.map((x,i)=>[MESES[i], num(x.rbt12), x.faixa??'', num(x.fatorR), num(x.receita), num(x.das), num((x.subIcms||0)+(x.subIss||0)), num(x.simples.total), num(x.lp.total), num(x.lr.total), num(x.lr.baseIRCS), num(x.folhaTotal), num(x.inssPatr)])]); };
   const map = { parecer_inc:[painel, separadas, ()=>tributos(M.c2.ind.reg), regimes, reforma, ranking, alertas, conclusoes, premissas], rel_executivo:[painel, ranking, conclusoes], rel_tributario:[separadas, ()=>tributos('simples'), ()=>tributos('lp'), ()=>tributos('lr'), regimes, memoria], rel_reforma:[reforma],
-    rel_financeira:[regimes, separadas], rel_patrimonial:[alertas], rel_societaria:[alertas], rel_memoria:[premissas, memoria], rel_riscos:[alertas], rel_todos:[painel, separadas, ()=>tributos('simples'), ()=>tributos('lp'), ()=>tributos('lr'), regimes, reforma, ranking, alertas, conclusoes, premissas, memoria] };
+    rel_financeira:[regimes, separadas], rel_patrimonial:[alertas], rel_societaria:[alertas], rel_memoria:[premissas, ...incMemoriaCompleta(M).abas.map((a,i) => () => incExcelAba(('M' + (i+1) + ' ' + a.titulo).slice(0,31), a.aoa))], rel_riscos:[alertas], rel_todos:[painel, separadas, ()=>tributos('simples'), ()=>tributos('lp'), ()=>tributos('lr'), regimes, reforma, ranking, alertas, conclusoes, premissas, memoria] };
   for (const f of (map[tipo] || map.parecer_inc)) A.push(f());
   return A;
 }

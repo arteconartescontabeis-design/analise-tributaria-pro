@@ -18,6 +18,8 @@
 //      (3 cenários, score explicável, ANÁLISE INCOMPLETA); parecer e apresentação DE INCORPORAÇÃO; snapshot;
 //  12. (v1.5.0) modelo único: Σ por tributo = total do regime; IBS+CBS = débito; classificação em 5 categorias;
 //      20 seções; 8 relatórios + todos; Excel; apresentações e snapshot lendo o modelo;
+//  14. (v1.7.0) limite de colunas por orientação, notas, orientação única por documento, memória de cálculo completa (8 blocos)
+//      com conciliação ao centavo, Excel com fórmulas.
 //  13. (v1.6.0) redesign: executivo gerencial em 9 páginas (cards, 5 gráficos, interpretações, semáforo, checklist),
 //      resumo executivo no parecer, técnicos em paisagem, relatórios pendentes, validações 25.1–25.9.
 //  Sai com código ≠ 0 em qualquer falha.
@@ -377,7 +379,7 @@ console.log('\n■ Relatórios: conferência (Consolidada · Incorporadora · In
       const M2 = R('incModelo()');
       chk('snapshot reaberto: parecer consolidado e Reforma renderizam; classificação e totais iguais aos do resultado vivo', !e3 && M2.painel.classe.rot === M.painel.classe.rot && perto(M2.painel.econ, M.painel.econ) && /reaberta de simulação gravada/.test(M2.painel.situacao), e3 || '');
       R('INC').res = S; R('INC')._cen = null; R('INC')._modelo = null;
-      chk('badge v1.6.0 e changelog v1.5.0 + v1.6.0 (versão visível + linhas na aba Versões)', /INC_VERSAO = '1\.6\.0'/.test(jsInc) && /\['1\.5\.0','15\/09\/2026'/.test(jsInc) && /\['1\.6\.0','15\/09\/2026'/.test(jsInc) && /Parecer Consolidado de Incorporação/.test(jsInc));
+      chk('badge v1.7.0 e changelog v1.5.0 + v1.6.0 + v1.7.0 (versão visível + linhas na aba Versões)', /INC_VERSAO = '1\.7\.0'/.test(jsInc) && /\['1\.5\.0','15\/09\/2026'/.test(jsInc) && /\['1\.6\.0','15\/09\/2026'/.test(jsInc) && /\['1\.7\.0','16\/09\/2026'/.test(jsInc) && /Parecer Consolidado de Incorporação/.test(jsInc));
       // ═══ 13. REDESIGN v1.6.0 — camada gerencial (executivo em 9 páginas, resumo executivo do parecer), gráficos, interpretações, semáforo, paisagem ═══
       console.log('\n■ v1.6.0: redesign — executivo gerencial, gráficos, interpretações automáticas, semáforo, relatórios técnicos em paisagem');
       {
@@ -417,6 +419,36 @@ console.log('\n■ Relatórios: conferência (Consolidada · Incorporadora · In
           chk('(25.9) executivo e "todos" funcionam com 3 empresas (sem sentido inverso)', !e4 && /3\+ empresas/.test(h3) && (h3.match(/class="pp-page/g)||[]).length >= 9, e4 || '');
           R('INC').res = S; R('INC').entradas = E1; R('INC')._cen = null; R('INC')._modelo = null; }
         chk('changelog v1.6.0 registra o redesign', /\['1\.6\.0','15\/09\/2026'/.test(jsInc) && /Redesign dos relatórios/.test(jsInc));
+      }
+      // ═══ 14. v1.7.0 — layout que nunca corta (limite de colunas, notas, orientação única) e memória de cálculo completa ═══
+      console.log('\n■ v1.7.0: limite de colunas por orientação, notas numeradas, orientação única, memória completa e conciliação');
+      {
+        R('INC').res = S; R('INC').entradas = E1; R('INC')._cen = null; R('INC')._modelo = null;
+        const M = R('incModelo()');
+        const strip = h => String(h).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+        const ncols = tr => (tr.match(/<t[dh]\b[^>]*colspan="?(\d+)/g)||[]).reduce((s,x)=>s+(+x.match(/(\d+)$/)[1]),0) + (tr.match(/<t[dh]\b(?![^>]*colspan)/g)||[]).length;
+        const maxColsDoc = html => { let mx = 0, cabs = []; for (const t of html.matchAll(/<table class="pp-tab[^>]*>([\s\S]*?)<\/table>/g)){ const trs = t[1].match(/<tr[\s\S]*?<\/tr>/g)||[]; for (const tr of trs){ const n = ncols(tr); if (n > mx) mx = n; } } return mx; };
+        const docs = {}; for (const t of ['parecer_inc','rel_executivo','rel_tributario','rel_reforma','rel_memoria','rel_riscos','rel_financeira','rel_patrimonial','rel_societaria']){ R('incRelatorioRender')(t); docs[t] = corpoHtml(); }
+        const LIM = R('INC_COLS_MAX');
+        chk('limite de colunas: retrato ≤ 7 e paisagem ≤ 11 em TODAS as tabelas de todos os documentos', ['parecer_inc','rel_executivo','rel_riscos','rel_financeira','rel_patrimonial','rel_societaria'].every(t => maxColsDoc(docs[t]) <= LIM.retrato) && ['rel_tributario','rel_reforma','rel_memoria'].every(t => maxColsDoc(docs[t]) <= LIM.paisagem), Object.entries(docs).map(([k,h])=>k+':'+maxColsDoc(h)).join(' '));
+        chk('cada documento vai dentro de .inc-doc com a orientação (retrato/paisagem) — nunca as duas no mesmo documento', docs.parecer_inc.includes('class="inc-doc" data-orient="retrato"') && !docs.parecer_inc.includes('pp-land') && docs.rel_tributario.includes('data-orient="paisagem"') && !/<div class="pp-page">/.test(docs.rel_tributario));
+        chk('parecer compacto: "Leitura" virou notas numeradas e as colunas por empresa/base/alíquota saíram com aviso apontando os relatórios técnicos', /inc-notas/.test(docs.parecer_inc) && /<sup[^>]*>1<\/sup>/.test(docs.parecer_inc) && /Colunas resumidas neste quadro/.test(docs.parecer_inc) && /Relatório 2 — Comparativo Tributário Completo/.test(docs.parecer_inc));
+        chk('relatórios técnicos mantêm as colunas por empresa (abertura completa)', docs.rel_tributario.includes('<th class="num">' + A.nome + '</th>') && docs.rel_reforma.includes('<th class="num">' + Bc.nome + '</th>'));
+        chk('tabela de regimes: cabeçalho com o mesmo número de colunas das linhas (Δ % acrescentado)', (() => { const t = docs.rel_tributario.match(/<table class="pp-tab[^>]*style="font-size:11px"><thead>([\s\S]*?)<\/thead><tbody>([\s\S]*?)<\/table>/); if (!t) return false; const cab = ncols(t[1]); const rows = (t[2].match(/<tr[\s\S]*?<\/tr>/g)||[]).filter(r => !/colspan/.test(r)); return rows.length > 0 && rows.every(r => ncols(r) === cab); })());
+        chk('linhas de fórmula (colspan) acompanham a largura do quadro depois do ajuste', (() => { const cs = [...docs.parecer_inc.matchAll(/<tr><td colspan="(\d+)"[^>]*>fórmula:/g)].map(m=>+m[1]); return cs.length > 0 && cs.every(n => n <= LIM.retrato); })());
+        chk('apPrintCss desligado ao abrir o parecer da aba Simulação e ao renderizar qualquer relatório (orientação por documento via incPrintCss)', /apPrintCss\(false\);\s*\/\/ v1\.7\.0/.test(jsInc) && /function incPrintCss/.test(jsInc) && /incPrintCss\(tipo === 'rel_todos' \? null/.test(jsInc));
+        chk('"Todos" oferece dois PDFs (gerencial retrato · técnico paisagem)', (() => { R('incRelatorioRender')('rel_todos'); const h = corpoHtml(); return /incImprimir\('retrato'\)/.test(h) && /incImprimir\('paisagem'\)/.test(h) && (h.match(/class="inc-doc"/g)||[]).length === 9; })());
+        chk('empacotador por medida e régua de altura E largura existem e são chamados no render', /function incEmpacotarDoc/.test(jsInc) && /incEmpacotar\(corpo\)/.test(jsInc) && /function incReguaRender/.test(jsInc) && /largura/.test(jsInc.slice(jsInc.indexOf('function incMedirPaginas'), jsInc.indexOf('function incMedirPaginas') + 2000)));
+        // memória completa
+        const mem = strip(docs.rel_memoria);
+        chk('Relatório 7: 8 blocos (7.1 a 7.8) e as fórmulas escritas', ['7.1 Dados de entrada','7.2 Consolidação','7.3 Simples Nacional','7.4 Lucro Presumido','7.5 Lucro Real','7.6 Reforma Tributária','7.7 Δ por tributo e score','7.8 Conciliação'].every(t => mem.includes(t)) && /Parcela a deduzir/.test(mem) && /Efetiva recalculada/.test(mem) && /IRPJ 15 %/.test(mem) && /Adicional 10 %/.test(mem) && /média ponderada pela base/.test(mem));
+        chk('Relatório 7: premissas não se repetem (uma vez, na seção 18 do parecer; o relatório só referencia)', (mem.match(/Premissas/g)||[]).length < 4 && !/0\. Premissas/.test(mem));
+        const MC = R('incMemoriaCompleta')(M);
+        chk('memória recalcula a alíquota efetiva pela fórmula (RBT12 × nominal − dedução) ÷ RBT12 e bate com a do motor em todos os blocos base (fora do sublimite/limite)', (() => { let n = 0, ok = true; for (const e of [...M.ents, M.cons]) for (const m of e.R.meses) for (const b of (m.ins.blocos||[])){ if (!(+b.receita > 0) || !R('INC_BLOCO_BASE')(b.k) || m.impedido || +m.excLimite > 0 || +m.excSublimite > 0) continue; let ax = R('INC_ANEXO_DO_BLOCO')(b.k); if (ax === 'V' && m.fatorR >= 0.28) ax = 'III'; const T = R('ANEXOS_DEFAULT')[ax]; const rec = (m.rbt12 * T.aliq[m.faixa-1] - T.ded[m.faixa-1]) / m.rbt12; n++; if (Math.abs(rec - m.efb[b.k]) > 1e-9) ok = false; } return n > 20 && ok; })());
+        chk('conciliação ao centavo: Σ mensal da memória = totais do motor (Simples, LP e LR de cada empresa e da consolidada)', R('incMemoriaConfere')(M).ok, R('incMemoriaConfere')(M).itens.filter(x=>Math.abs(x.mem-x.motor)>0.015).map(x=>x.item).join('; '));
+        chk('… e Σ parcelas por bloco = Σ DAS em cada entidade', MC.conciliacao.filter(x=>/parcelas por bloco/.test(x.item)).every(x => Math.abs(x.mem - x.motor) <= 0.015));
+        chk('Excel do Relatório 7: uma aba por bloco, com fórmulas de planilha', (() => { const abas = R('incExcelAbas')(M, 'rel_memoria'); const comF = abas.filter(a => a.aoa.some(l => l.some(c => c && typeof c === 'object' && c.f))); return abas.length >= 20 && comF.length >= 8 && new Set(abas.map(a=>a.nome)).size === abas.length; })());
+        chk('motor intocado: lacre e totais iguais aos do bloco 1', S.motorLacre === R('LACRE_HASH') && perto(S.consolidada.T.lp, R('incSimular')(E1, { abatimentos:[] }).consolidada.T.lp));
       }
       chk('build com app_6 e o parecer antigo removido do app_5', /incorporacao_app_6\.js/.test(fs.readFileSync(path.join(RAIZ,'tools','build_incorporacao.js'),'utf8')) && !/PARECER DE INCORPORAÇÃO \(substitui o incParecerRender da v1\.0\)/.test(jsInc));
     }

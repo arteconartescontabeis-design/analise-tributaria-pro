@@ -151,6 +151,7 @@ async function incExcluir(id){
 function incParecerAbrir(){
   if (!INC.res){ toast('Calcule antes de gerar o parecer.'); return; }
   $id('inc-card-parecer').style.display = 'block';
+  if (typeof apPrintCss === 'function') apPrintCss(false);   // v1.7.0: a apresentação deixava o @page paisagem ligado → parecer retrato saía cortado
   incRlCorpoPara('inc-parecer-dock');            // v1.1.0: #rl-corpo é um só — volta do Relatórios para o parecer
   incParecerRender();
   $id('inc-card-parecer').scrollIntoView({ behavior:'smooth' });
