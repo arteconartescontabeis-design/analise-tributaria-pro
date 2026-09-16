@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simulação de Incorporação — Artecon</title>
-<!-- GERADO por tools/build_incorporacao.js a partir do index.html v7.94.3 (lacre 22197ef1) em 2026-09-16T00:25:45.521Z. NÃO EDITE À MÃO: edite src/ e rode o build. -->
+<!-- GERADO por tools/build_incorporacao.js a partir do index.html v7.94.3 (lacre 22197ef1) em 2026-09-16T01:20:21.141Z. NÃO EDITE À MÃO: edite src/ e rode o build. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -340,7 +340,10 @@ ul.ap-lista li{margin-bottom:7px}
 .pp-sec{page-break-after:avoid;break-after:avoid}
 .pp-tab tr{page-break-inside:avoid;break-inside:avoid}
 .inc-notas sup,.pp-tab sup{font-size:9px;line-height:0}
-.inc-doc .pp-tab td,.inc-doc .pp-tab th{word-break:break-word;overflow-wrap:anywhere}
+.inc-doc .pp-tab th.num{white-space:normal}
+.inc-doc .pp-tab td.num{white-space:nowrap}
+.inc-doc .pp-tab td.rot,.inc-doc .pp-tab td:first-child{min-width:28mm;white-space:normal;overflow-wrap:normal}
+.inc-doc .pp-tab td,.inc-doc .pp-tab th{overflow-wrap:break-word}
 .inc-doc .pp-miolo{overflow:hidden}
 .pp-page.pp-land{width:297mm;height:209mm!important;max-height:209mm;background:#fff}
 .pp-land .pp-miolo{padding:12mm 12mm 10mm 12mm}
@@ -7343,12 +7346,13 @@ function lacreRender(){
 //  motor lacrado, projeção, Reforma, lacre, papel timbrado). Tudo abaixo é do incorporação.
 //  Regra: as análises originais são só LIDAS; o motor é chamado, nunca alterado.
 // ═══════════════════════════════════════════════════════════════════════════════════════════
-const INC_VERSAO = '1.7.0';
+const INC_VERSAO = '1.7.1';
 const APP_VERSAO = 'INC ' + INC_VERSAO;             // usado pelo lacreBoot (chave própria no localStorage)
 const INC_TABELA = 'atp_incorporacoes';
 const INC_FN_IA  = 'gerar-parecer-incorporacao';
 const INC_ANOS_REF = [2027,2028,2029,2030,2031,2032,2033];
 const INC_CHANGELOG = [
+  ['1.7.1','16/09/2026','<b>🔧 Correção do PDF real da v1.7.0 (análise 4, 3 empresas).</b> Cabeçalhos com nome de empresa não quebravam linha (<code>.num{white-space:nowrap}</code>) e empurravam a tabela para fora da folha, enquanto a coluna do indicador encolhia a uma letra por linha; o empacotador media essas linhas altíssimas na tela e fechava folhas quase vazias. Agora: cabeçalhos quebram, números não, primeira coluna com largura mínima; empacotador só repagina se a folha na tela tiver a largura do papel; partes do quadro dividido equilibradas (sem parte de 1 coluna) e ranking sem "Reforma acum." no parecer; <b>snapshot reaberto</b> passa de novo pelo motor para as seções por tributo, regimes e memória (antes saíam zeradas — só "Total do regime"); rótulos curtos no gráfico Antes × Depois.'],
   ['1.7.0','16/09/2026','<b>📐 Relatórios que nunca cortam + memória de cálculo completa — Demonstrativo de 15/09.</b> Paginação por <b>medição real</b> no navegador (retrato e paisagem, tabelas quebram por linha com o cabeçalho repetido); <b>limite de colunas</b> por orientação (7 retrato · 11 paisagem): a coluna "Leitura" vira notas numeradas, o parecer mostra a versão compacta dos quadros largos (abertura completa nos Relatórios 2, 3 e 7) e o que ainda não cabe é dividido em partes; régua mede altura <b>e largura</b> de cada folha; orientação única por documento (vale em Firefox/Safari) e "Todos" em dois PDFs (gerencial retrato · técnico paisagem); corrigido o @page paisagem que ficava ligado ao voltar da apresentação ao parecer. <b>Relatório 7</b> refeito em 8 blocos (entradas, consolidação com a média ponderada aberta, Simples com nominal/parcela a deduzir/efetiva e partilha, Lucro Presumido, Lucro Real, Reforma ano a ano, Δ e score, conciliação ao centavo); Excel do Relatório 7 com fórmulas de planilha; premissas sem duplicação. Motor, lacre, Δ, classificação e score intocados. Suíte: bloco 14.'],
   ['1.6.0','15/09/2026','<b>🎨 Redesign dos relatórios — "Prompt Redesign" de 15/09.</b> Duas camadas: <b>gerencial</b> e <b>técnica</b>, lendo o mesmo modelo (motor, fórmulas, classificação e premissas intocados). <b>Relatório 1 — Parecer Executivo</b> refeito em 9 páginas na ordem <i>resultado → gráfico → interpretação → conclusão</i>: capa; <b>Decisão da incorporação</b> (12 cards: conclusão, cenário, regime, score, carga atual, após, economia anual e %, Reforma acumulada, riscos, pendências, regime não permitido, sentido inverso); Antes × Depois (gráfico de barras + tabela curta); Regimes (barras horizontais, "NÃO PERMITIDO" nunca é opção); <b>Economia por tributo</b> (cascata/waterfall 🟢🔴⚪ + tabela Antes/Depois/Diferença + impacto líquido); Reforma 2027–2033 (linhas separadas × consolidada, acumulado, ★ ano de maior vantagem, ponto de inversão, "vantajosa em toda a transição: SIM/NÃO"); Ranking (barras de score + tabela enxuta); <b>Semáforo</b> da operação (🟢🟡🔴⚪ — "não avaliado" nunca é negativo), pontos favoráveis × pontos de atenção só com o que os dados mostram, riscos e pendências; Conclusão final (operação, benefício, riscos, condições) + <b>checklist de próximos passos</b>. <b>Interpretação automática</b> após cada gráfico, escrita só com números calculados. <b>Parecer Consolidado</b> ganha um <b>Resumo executivo de 3 páginas</b> (dashboard, Antes × Depois, regimes, Reforma, ranking, semáforo) antes das 20 seções; a seção 3 vira "Contexto e leitura analítica" (sem duplicar o resumo). Relatórios 4, 5 e 6 passam a se chamar "Informações … pendentes" quando faltam dados, com a lista de documentos necessários. <b>Relatórios técnicos 2, 3 e 7 em A4 paisagem</b> (página nomeada, paginador próprio) para as tabelas largas; gráficos com tamanho fixo e nunca divididos entre páginas; títulos não ficam órfãos. Formato único: R$ 1.234.567,89 · -R$ 35.000,00 · 12,34%. Relatório 8 abre com o semáforo. Motor, modelo (incModelo), Edge Function e Excel inalterados.'],
   ['1.5.0','15/09/2026','<b>📑 Relatórios remodelados — "Prompt Mestre de 14/09" (plano aprovado em 15/09).</b> Um <b>modelo único</b> (<code>incModelo</code>) alimenta tudo: <b>Parecer Consolidado de Incorporação</b> com 20 seções (identificação, objetivo e escopo, resumo, <b>painel de decisão</b>, separadas, separadas × consolidada, <b>comparação por tributo com base → alíquota → fórmula → A → B → separadas → consolidada → Δ → leitura → motivo</b> — o DAS aberto em IRPJ/CSLL/PIS/COFINS/CPP/ICMS/ISS/IPI pela partilha do motor —, regimes com <b>resultado após tributos e margem</b> e "Não permitido — motivo", Reforma ano a ano com <b>IBS e CBS separados, Δ %, acumulado, ano em que a vantagem começa e ano em que inverte</b> e aviso de alíquotas projetadas, ranking com incorporadora/incorporada/regime/resultado/estabilidade e justificativa por linha, operações, alertas e inconsistências, conclusões em <b>seis dimensões</b> (tributária, financeira, patrimonial, <b>societária</b>, Reforma, global — "Não avaliada por ausência de dados suficientes." quando não há dados), <b>recomendação condicionada</b>, premissas, limitações, memória resumida com identificador da análise). <b>Classificação em 5 categorias</b> (FAVORÁVEL · FAVORÁVEL COM RESSALVAS · NEUTRO · DESFAVORÁVEL · ANÁLISE INCOMPLETA) sobre o mesmo score (limiares 40/60; dimensão pendente ⇒ no máximo COM RESSALVAS) — a palavra "recomendado" sai. <b>Sinal único</b>: Δ = consolidada − separadas em todo relatório (positivo = acréscimo, vermelho; negativo = economia, verde) com coluna "Leitura". <b>8 relatórios separados</b> (Executivo, Comparativo Tributário Completo, Reforma com sensibilidade do crédito e abertura por ente, Financeira, Patrimonial e Endividamento — estrutura e checklist, Societária e Operacional — checklist de providências, Memória de Cálculo, Riscos/Pendências/Checklist) e <b>"Todos os relatórios — um PDF só"</b>. <b>Exportação Excel</b> (SheetJS, uma aba por seção, números como número). Apresentações simplificada/completa passam a ler o modelo (classificação, pendências, societária, recomendação). Cenário 1 (separadas) sai da coluna de score e vira "referência". Motor intocado; arquivo regerado do index v7.94.2 (lacre <code>22197ef1</code>). Edge Function <code>gerar-parecer-incorporacao</code> ganha 3 chaves (objetivo, conclSoc, recomendacaoCond) e o bloco classificacao5 — republicar.'],
@@ -8669,8 +8673,13 @@ function incModelo(){
   CE.cen.forEach(c => { if (!c.sep) c.classe = incClassificar(c, pend); });
   sep.classe = { k:'REF', rot:'referência — situação atual', cls:'neutro', cor:'var(--muted)', motivos:[] };
   const TX = Object.assign(incTextosPadrao(R), incTextosDecisao(CE), (INC._ia && INC._ia.textos) || {});
-  const ents = E.map((e,i) => ({ chave:e.cnpj, nome:e.nome, rot: i===0?'Incorporadora':'Incorporada', cnpj:e.cnpj, regime:e.regime, R:e.R, T:e.T, sn:e.sn, cfg:(e.dados&&e.dados.cfg)||{}, P:e.P, ind: CE.iso[i].ind }));
-  const cons = { chave:'cons', nome:'CONSOLIDADA — ' + E.map(e=>e.nome).join(' + '), rot:'Consolidada', cnpj:E[0].cnpj, R:R.consolidada.R, T:R.consolidada.T, sn:R.consolidada.sn, cfg:(R.consolidada.dados&&R.consolidada.dados.cfg)||{}, ind:c2.ind };
+  // v1.7.1: snapshot reaberto guarda só totais por mês — para as seções por tributo, regimes e memória, a análise gravada passa de novo pelo motor (mesma regra da Conferência: incRlEntidades)
+  let regen = null; if (R._snapshot && INC.entradas){ try { regen = incRlEntidades(); } catch(e){ console.error('incModelo/snapshot', e); regen = null; } }
+  // isoladas: o mesmo caminho do incSimular (normaliza → projeta o ano incompleto → motor), porque a Conferência usa o resultado REAL (sem projeção)
+  const Rde = (i) => { if (!regen) return E[i].R; try { const ent = INC.entradas.empresas[i]; const d = anNormalizar(ent.dados, ent.cnpj, +R.ano); const janela = INC.entradas.janela || projJanelaEfetiva(d.cfg).v; let P = null; try { P = anProjetarAno(d, janela); } catch(err){ P = null; } const dp = P ? P.dados : d; return calcular(dp, PARAMS.anexos, folhaPercDaEmpresa(dp.cfg)); } catch(e){ console.error('incModelo/snapshot isolada', e); return E[i].R; } };
+  const RC = regen && regen.lista[0] && regen.lista[0].res && regen.lista[0].res.totais ? regen.lista[0].res : R.consolidada.R;
+  const ents = E.map((e,i) => ({ chave:e.cnpj, nome:e.nome, rot: i===0?'Incorporadora':'Incorporada', cnpj:e.cnpj, regime:e.regime, R:Rde(i), T:e.T, sn:e.sn, cfg:(e.dados&&e.dados.cfg)||{}, P:e.P, ind: CE.iso[i].ind }));
+  const cons = { chave:'cons', nome:'CONSOLIDADA — ' + E.map(e=>e.nome).join(' + '), rot:'Consolidada', cnpj:E[0].cnpj, R:RC, T:R.consolidada.T, sn:R.consolidada.sn, cfg:(R.consolidada.dados&&R.consolidada.dados.cfg)||{}, ind:c2.ind };
   // por tributo — nos três regimes, cada entidade
   const tributos = {};
   for (const reg of ['simples','lp','lr']){
@@ -9170,7 +9179,7 @@ const incEixoRS = { ticks:{ callback: v => 'R$ ' + incTick(v), font:{ size:10 } 
 const INC_TT = { callbacks:{ label: c => (c.dataset.label ? c.dataset.label + ': ' : '') + incRS(Array.isArray(c.raw) ? c.raw[1]-c.raw[0] : c.raw) } };
 function incGrAntesDepois(M, id, w=620, h=230){
   const G = incGruposTributo(M);
-  return incGrafico(id, w, h, { type:'bar', data:{ labels:[`Empresas separadas\n${M.ents.map(e=>e.nome).join(' + ')}`, `Após a incorporação\n${M.painel.melhorCurto}`], datasets:[{ label:'Tributos por ano', data:[M.sep.ind.trib, M.c2.ind.trib], backgroundColor:[INC_COR.cinza, incCorSinal(M.painel.econ)], borderRadius:6, barPercentage:.55 }] },
+  return incGrafico(id, w, h, { type:'bar', data:{ labels:['Empresas separadas', 'Após a incorporação'], datasets:[{ label:'Tributos por ano', data:[M.sep.ind.trib, M.c2.ind.trib], backgroundColor:[INC_COR.cinza, incCorSinal(M.painel.econ)], borderRadius:6, barPercentage:.55 }] },
     options:{ plugins:{ legend:{ display:false }, tooltip:INC_TT, title:{ display:true, text:`Tributos por ano: ${incRS(M.sep.ind.trib)} → ${incRS(M.c2.ind.trib)}  (${incSinalRS(M.painel.econ)} · ${incPct(M.sep.ind.trib>0.005?M.painel.econ/M.sep.ind.trib:0)})`, font:{ size:12 } } }, scales:{ y:Object.assign({ beginAtZero:true }, incEixoRS), x:{ ticks:{ font:{ size:11 } }, grid:{ display:false } } } } });
 }
 function incGrWaterfall(M, id, w=620, h=260){
@@ -9364,7 +9373,7 @@ function incTabAjustar(b, orient, ctx, opts){
   const desc = (opts && opts.descartar) || [];
   for (const re of desc){ if (cab.length <= MAX) break; for (let i = cab.length - 1; i >= 1 && cab.length > MAX; i--){ if (re.test(incTxt(cab[i].inner))){ omitidas.push(incTxt(cab[i].inner)); remover(i); } } }
   // 3) ainda larga → divide em partes, repetindo a primeira coluna (rótulo)
-  const partes = []; if (cab.length <= MAX) partes.push(cab.map((_,i)=>i)); else { const por = MAX - 1; for (let i = 1; i < cab.length; i += por) partes.push([0, ...cab.slice(i, i+por).map((_,j)=>i+j)]); }
+  const partes = []; if (cab.length <= MAX) partes.push(cab.map((_,i)=>i)); else { const nDados = cab.length - 1, nPartes = Math.ceil(nDados / (MAX - 1)), por = Math.ceil(nDados / nPartes); for (let i = 1; i < cab.length; i += por) partes.push([0, ...cab.slice(i, i+por).map((_,j)=>i+j)]); }   // partes equilibradas (nunca uma parte com 1 coluna)
   const out = [];
   partes.forEach((idx, p) => {
     const thead = incRowHtml(idx.map(i => cab[i]));
@@ -9376,7 +9385,7 @@ function incTabAjustar(b, orient, ctx, opts){
   if (notas.length) out.push({ html:`<div class="hint inc-notas" style="margin:-2px 0 8px;line-height:1.5">${notas.map(n => `${INC_SUP(n.n)} ${n.t}`).join('<br>')}</div>`, custo: Math.max(2, Math.ceil(notas.reduce((s,n)=>s+incTxt(n.t).length,0)/(orient==='paisagem'?170:110))) });
   return out;
 }
-const INC_DESCARTAR_PARECER = M => [...M.ents.map(e => new RegExp('^' + e.nome.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '$')), /^Base \(cons/i, /^Alíq/i, /^Margem$/i, /^Carga$/i, /^Acumul/i, /^Débito/i, /^Crédito$/i, /^IBS$/i, /^CBS$/i, /^Permitido/i, /^Estab/i, /^Resultado após/i, /^Tributos\/ano$/i];
+const INC_DESCARTAR_PARECER = M => [...M.ents.map(e => new RegExp('^' + e.nome.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '$')), /^Base \(cons/i, /^Alíq/i, /^Margem$/i, /^Carga$/i, /^Acumul/i, /^Débito/i, /^Crédito$/i, /^IBS$/i, /^CBS$/i, /^Permitido/i, /^Estab/i, /^Resultado após/i, /^Tributos\/ano$/i, /^Reforma acum/i];
 
 // ── (B) PAGINADOR POR MEDIÇÃO REAL ────────────────────────────────────────────────────────
 // Roda sobre o DOM já montado (antes de os gráficos serem desenhados — os canvas têm tamanho fixo).
@@ -9394,6 +9403,8 @@ function incEmpacotarDocInterno(doc){
   if (!pgs.length) return 0;
   const mm = ppMm2px(), LIM = (INC_FOLHA_MM[pais?'paisagem':'retrato'] - PP_RESERVA_MM) * mm;
   const primeira = pgs[0]; if (!primeira.offsetHeight) return 0;               // sem layout: nada a medir
+  // v1.7.1: só mede se a folha na tela tiver a largura do papel — noutra largura o texto quebra diferente e a medida sai errada
+  { const larg = primeira.getBoundingClientRect().width / mm, alvo = pais ? 297 : 210; if (larg > 0 && Math.abs(larg - alvo) > 3){ console.warn('incEmpacotar: folha com ' + larg.toFixed(0) + ' mm na tela (papel ' + alvo + ' mm) — repaginação pulada'); return 0; } }
   const blocos = [];
   for (const pg of pgs){ const mi = pg.querySelector('.pp-miolo'); if (!mi) continue; let primeiro = pg.classList.contains('pp-fixa'); while (mi.firstChild){ const b = mi.removeChild(mi.firstChild); if (primeiro && b.nodeType === 1){ b.__quebra = true; primeiro = false; } blocos.push(b); } }
   const modeloBg = primeira.querySelector('.pp-bg'), modeloCab = primeira.querySelector('.pp-land-cab');
