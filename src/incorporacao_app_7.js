@@ -45,7 +45,7 @@ function incTabAjustar(b, orient, ctx, opts){
   const desc = (opts && opts.descartar) || [];
   for (const re of desc){ if (cab.length <= MAX) break; for (let i = cab.length - 1; i >= 1 && cab.length > MAX; i--){ if (re.test(incTxt(cab[i].inner))){ omitidas.push(incTxt(cab[i].inner)); remover(i); } } }
   // 3) ainda larga → divide em partes, repetindo a primeira coluna (rótulo)
-  const partes = []; if (cab.length <= MAX) partes.push(cab.map((_,i)=>i)); else { const por = MAX - 1; for (let i = 1; i < cab.length; i += por) partes.push([0, ...cab.slice(i, i+por).map((_,j)=>i+j)]); }
+  const partes = []; if (cab.length <= MAX) partes.push(cab.map((_,i)=>i)); else { const nDados = cab.length - 1, nPartes = Math.ceil(nDados / (MAX - 1)), por = Math.ceil(nDados / nPartes); for (let i = 1; i < cab.length; i += por) partes.push([0, ...cab.slice(i, i+por).map((_,j)=>i+j)]); }   // partes equilibradas (nunca uma parte com 1 coluna)
   const out = [];
   partes.forEach((idx, p) => {
     const thead = incRowHtml(idx.map(i => cab[i]));
@@ -57,7 +57,7 @@ function incTabAjustar(b, orient, ctx, opts){
   if (notas.length) out.push({ html:`<div class="hint inc-notas" style="margin:-2px 0 8px;line-height:1.5">${notas.map(n => `${INC_SUP(n.n)} ${n.t}`).join('<br>')}</div>`, custo: Math.max(2, Math.ceil(notas.reduce((s,n)=>s+incTxt(n.t).length,0)/(orient==='paisagem'?170:110))) });
   return out;
 }
-const INC_DESCARTAR_PARECER = M => [...M.ents.map(e => new RegExp('^' + e.nome.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '$')), /^Base \(cons/i, /^Alíq/i, /^Margem$/i, /^Carga$/i, /^Acumul/i, /^Débito/i, /^Crédito$/i, /^IBS$/i, /^CBS$/i, /^Permitido/i, /^Estab/i, /^Resultado após/i, /^Tributos\/ano$/i];
+const INC_DESCARTAR_PARECER = M => [...M.ents.map(e => new RegExp('^' + e.nome.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '$')), /^Base \(cons/i, /^Alíq/i, /^Margem$/i, /^Carga$/i, /^Acumul/i, /^Débito/i, /^Crédito$/i, /^IBS$/i, /^CBS$/i, /^Permitido/i, /^Estab/i, /^Resultado após/i, /^Tributos\/ano$/i, /^Reforma acum/i];
 
 // ── (B) PAGINADOR POR MEDIÇÃO REAL ────────────────────────────────────────────────────────
 // Roda sobre o DOM já montado (antes de os gráficos serem desenhados — os canvas têm tamanho fixo).
@@ -75,6 +75,8 @@ function incEmpacotarDocInterno(doc){
   if (!pgs.length) return 0;
   const mm = ppMm2px(), LIM = (INC_FOLHA_MM[pais?'paisagem':'retrato'] - PP_RESERVA_MM) * mm;
   const primeira = pgs[0]; if (!primeira.offsetHeight) return 0;               // sem layout: nada a medir
+  // v1.7.1: só mede se a folha na tela tiver a largura do papel — noutra largura o texto quebra diferente e a medida sai errada
+  { const larg = primeira.getBoundingClientRect().width / mm, alvo = pais ? 297 : 210; if (larg > 0 && Math.abs(larg - alvo) > 3){ console.warn('incEmpacotar: folha com ' + larg.toFixed(0) + ' mm na tela (papel ' + alvo + ' mm) — repaginação pulada'); return 0; } }
   const blocos = [];
   for (const pg of pgs){ const mi = pg.querySelector('.pp-miolo'); if (!mi) continue; let primeiro = pg.classList.contains('pp-fixa'); while (mi.firstChild){ const b = mi.removeChild(mi.firstChild); if (primeiro && b.nodeType === 1){ b.__quebra = true; primeiro = false; } blocos.push(b); } }
   const modeloBg = primeira.querySelector('.pp-bg'), modeloCab = primeira.querySelector('.pp-land-cab');

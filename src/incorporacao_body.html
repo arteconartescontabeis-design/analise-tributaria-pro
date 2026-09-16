@@ -8,7 +8,10 @@
 .pp-sec{page-break-after:avoid;break-after:avoid}
 .pp-tab tr{page-break-inside:avoid;break-inside:avoid}
 .inc-notas sup,.pp-tab sup{font-size:9px;line-height:0}
-.inc-doc .pp-tab td,.inc-doc .pp-tab th{word-break:break-word;overflow-wrap:anywhere}
+.inc-doc .pp-tab th.num{white-space:normal}
+.inc-doc .pp-tab td.num{white-space:nowrap}
+.inc-doc .pp-tab td.rot,.inc-doc .pp-tab td:first-child{min-width:28mm;white-space:normal;overflow-wrap:normal}
+.inc-doc .pp-tab td,.inc-doc .pp-tab th{overflow-wrap:break-word}
 .inc-doc .pp-miolo{overflow:hidden}
 .pp-page.pp-land{width:297mm;height:209mm!important;max-height:209mm;background:#fff}
 .pp-land .pp-miolo{padding:12mm 12mm 10mm 12mm}

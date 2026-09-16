@@ -197,8 +197,13 @@ function incModelo(){
   CE.cen.forEach(c => { if (!c.sep) c.classe = incClassificar(c, pend); });
   sep.classe = { k:'REF', rot:'referência — situação atual', cls:'neutro', cor:'var(--muted)', motivos:[] };
   const TX = Object.assign(incTextosPadrao(R), incTextosDecisao(CE), (INC._ia && INC._ia.textos) || {});
-  const ents = E.map((e,i) => ({ chave:e.cnpj, nome:e.nome, rot: i===0?'Incorporadora':'Incorporada', cnpj:e.cnpj, regime:e.regime, R:e.R, T:e.T, sn:e.sn, cfg:(e.dados&&e.dados.cfg)||{}, P:e.P, ind: CE.iso[i].ind }));
-  const cons = { chave:'cons', nome:'CONSOLIDADA — ' + E.map(e=>e.nome).join(' + '), rot:'Consolidada', cnpj:E[0].cnpj, R:R.consolidada.R, T:R.consolidada.T, sn:R.consolidada.sn, cfg:(R.consolidada.dados&&R.consolidada.dados.cfg)||{}, ind:c2.ind };
+  // v1.7.1: snapshot reaberto guarda só totais por mês — para as seções por tributo, regimes e memória, a análise gravada passa de novo pelo motor (mesma regra da Conferência: incRlEntidades)
+  let regen = null; if (R._snapshot && INC.entradas){ try { regen = incRlEntidades(); } catch(e){ console.error('incModelo/snapshot', e); regen = null; } }
+  // isoladas: o mesmo caminho do incSimular (normaliza → projeta o ano incompleto → motor), porque a Conferência usa o resultado REAL (sem projeção)
+  const Rde = (i) => { if (!regen) return E[i].R; try { const ent = INC.entradas.empresas[i]; const d = anNormalizar(ent.dados, ent.cnpj, +R.ano); const janela = INC.entradas.janela || projJanelaEfetiva(d.cfg).v; let P = null; try { P = anProjetarAno(d, janela); } catch(err){ P = null; } const dp = P ? P.dados : d; return calcular(dp, PARAMS.anexos, folhaPercDaEmpresa(dp.cfg)); } catch(e){ console.error('incModelo/snapshot isolada', e); return E[i].R; } };
+  const RC = regen && regen.lista[0] && regen.lista[0].res && regen.lista[0].res.totais ? regen.lista[0].res : R.consolidada.R;
+  const ents = E.map((e,i) => ({ chave:e.cnpj, nome:e.nome, rot: i===0?'Incorporadora':'Incorporada', cnpj:e.cnpj, regime:e.regime, R:Rde(i), T:e.T, sn:e.sn, cfg:(e.dados&&e.dados.cfg)||{}, P:e.P, ind: CE.iso[i].ind }));
+  const cons = { chave:'cons', nome:'CONSOLIDADA — ' + E.map(e=>e.nome).join(' + '), rot:'Consolidada', cnpj:E[0].cnpj, R:RC, T:R.consolidada.T, sn:R.consolidada.sn, cfg:(R.consolidada.dados&&R.consolidada.dados.cfg)||{}, ind:c2.ind };
   // por tributo — nos três regimes, cada entidade
   const tributos = {};
   for (const reg of ['simples','lp','lr']){
@@ -698,7 +703,7 @@ const incEixoRS = { ticks:{ callback: v => 'R$ ' + incTick(v), font:{ size:10 } 
 const INC_TT = { callbacks:{ label: c => (c.dataset.label ? c.dataset.label + ': ' : '') + incRS(Array.isArray(c.raw) ? c.raw[1]-c.raw[0] : c.raw) } };
 function incGrAntesDepois(M, id, w=620, h=230){
   const G = incGruposTributo(M);
-  return incGrafico(id, w, h, { type:'bar', data:{ labels:[`Empresas separadas\n${M.ents.map(e=>e.nome).join(' + ')}`, `Após a incorporação\n${M.painel.melhorCurto}`], datasets:[{ label:'Tributos por ano', data:[M.sep.ind.trib, M.c2.ind.trib], backgroundColor:[INC_COR.cinza, incCorSinal(M.painel.econ)], borderRadius:6, barPercentage:.55 }] },
+  return incGrafico(id, w, h, { type:'bar', data:{ labels:['Empresas separadas', 'Após a incorporação'], datasets:[{ label:'Tributos por ano', data:[M.sep.ind.trib, M.c2.ind.trib], backgroundColor:[INC_COR.cinza, incCorSinal(M.painel.econ)], borderRadius:6, barPercentage:.55 }] },
     options:{ plugins:{ legend:{ display:false }, tooltip:INC_TT, title:{ display:true, text:`Tributos por ano: ${incRS(M.sep.ind.trib)} → ${incRS(M.c2.ind.trib)}  (${incSinalRS(M.painel.econ)} · ${incPct(M.sep.ind.trib>0.005?M.painel.econ/M.sep.ind.trib:0)})`, font:{ size:12 } } }, scales:{ y:Object.assign({ beginAtZero:true }, incEixoRS), x:{ ticks:{ font:{ size:11 } }, grid:{ display:false } } } } });
 }
 function incGrWaterfall(M, id, w=620, h=260){
