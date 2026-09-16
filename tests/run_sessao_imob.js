@@ -34,7 +34,7 @@ function titulo(t) { const l = '\n' + t; linhas.push(l); console.log(l); }
   let J = await abrirJanela(supa, null, con);
   ok(visivel(J.$('auth-screen')) && !visivel(J.$('app')), 'tela de login aparece; app oculto');
   ok(typeof J.w.sessaoPronta === 'function' && typeof J.w.imobEntrar === 'function', 'casca expõe sessaoPronta() e o módulo carregou (imobEntrar)');
-  ok(J.$('mod-versao-badge').textContent === 'v1.4.1', 'badge de versão v1.4.1 no menu', J.$('mod-versao-badge').textContent);
+  ok(J.$('mod-versao-badge').textContent === 'v1.5.0', 'badge de versão v1.5.0 no menu', J.$('mod-versao-badge').textContent);
 
   titulo('1. Login com usuário de teste (escritório 7)');
   const antesLogin = supa.log.length;

@@ -315,7 +315,7 @@ function rajEscolhido(){
   if (!RAJ || !RAJ.opcoes) return { valor: n('v-raj'), rotulo: 'informado' };
   if (RAJ_ESCOLHA !== null && RAJ.opcoes[RAJ_ESCOLHA] && RAJ.opcoes[RAJ_ESCOLHA].valor != null) return RAJ.opcoes[RAJ_ESCOLHA];
   var disp = RAJ.opcoes.filter(function(o){ return o.valor != null; }).sort(function(a,b){ return b.valor - a.valor; });
-  return disp[0] ? { valor: disp[0].valor, rotulo: disp[0].rotulo + ' (maior op&ccedil;&atilde;o dispon&iacute;vel)' } : { valor: 0, rotulo: 'nenhuma op&ccedil;&atilde;o dispon&iacute;vel' };
+  return disp[0] ? { valor: disp[0].valor, rotulo: disp[0].rotulo + ' (maior opção disponível)' } : { valor: 0, rotulo: 'nenhuma opção disponível' };
 }
 function imobEscolherOperacao(op){ acao(function(){
   var raj = rajEscolhido(), tipo = txt('i-tipo');

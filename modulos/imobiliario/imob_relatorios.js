@@ -129,8 +129,10 @@
     var lBase = linha(res, 'Base de cálculo tributável');
     if (lBase) c('base da memória = base do resultado', Math.abs(lBase.valor - res.base) <= tol, res.base, lBase.valor);
     if (Array.isArray(res.parcelas) && res.parcelas.length && typeof res.parcelas[0] === 'object') {
-      var sp = r2(res.parcelas.reduce(function (a, p) { return a + p.total; }, 0));
-      c('soma das parcelas = total', Math.abs(sp - res.total) <= tol, res.total, sp);
+      // v1.5.0 — as parcelas do motor são BRUTAS (antes dos créditos); a soma bate com o débito, não com o líquido.
+      // A comparação com res.total barrava, sem motivo, todo relatório de venda parcelada com créditos.
+      var sp = r2(res.parcelas.reduce(function (a, p) { return a + p.total; }, 0)), alvo = res.debito != null ? res.debito : res.total;
+      c('soma das parcelas = total bruto', Math.abs(sp - alvo) <= tol, alvo, sp);
     }
     return { ok: checks.every(function (x) { return x.ok; }), checks: checks };
   }
@@ -138,7 +140,7 @@
   /* =========================================================================
      3. RELATÓRIOS — HTML para impressão (A4, sem biblioteca)
      ========================================================================= */
-  var CSS = 'body{font-family:"DM Sans",Arial,sans-serif;color:#1f2d3d;font-size:12.5px;margin:0;padding:18mm 16mm}' +
+  var CSS = '.marca{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1a5276;padding-bottom:8px;margin-bottom:12px} .marca-txt{font-size:11px;color:#6b7a8d;text-align:right} ' + '.graf{margin:8px 0 14px;page-break-inside:avoid} .graf .mini{margin-bottom:4px;color:#6b7a8d;font-size:11px} .graf svg{max-width:100%}' + 'body{font-family:"DM Sans",Arial,sans-serif;color:#1f2d3d;font-size:12.5px;margin:0;padding:18mm 16mm}' +
     'h1{font-family:"Playfair Display",Georgia,serif;color:#1a5276;font-size:22px;margin:0 0 4px}' +
     'h2{font-family:"Playfair Display",Georgia,serif;color:#1a5276;font-size:15px;border-bottom:2px solid #d99a2b;padding-bottom:4px;margin:18px 0 8px;page-break-after:avoid}' +
     '.sub{color:#6b7a8d;font-size:11px;margin-bottom:14px}.box{border:1px solid #e3e8ee;border-radius:8px;padding:10px 12px;margin:8px 0;page-break-inside:avoid}' +
@@ -152,7 +154,9 @@
 
   function cabecalho(p, titulo, subtitulo) {
     var emp = p.empresa || {};
-    return '<h1>' + esc(titulo) + '</h1><div class="sub">' + esc(subtitulo || '') +
+    var r = typeof globalThis !== 'undefined' ? globalThis : window, marca = r.ImobMarca;
+    return (marca ? '<div class="marca">' + marca.img(44) + '<div class="marca-txt">' + esc(p.escritorio || marca.nome) + '</div></div>' : '') +
+      '<h1>' + esc(titulo) + '</h1><div class="sub">' + esc(subtitulo || '') +
       (emp.nome ? ' · <b>' + esc(emp.nome) + '</b>' + (emp.cnpj ? ' · CNPJ ' + esc(emp.cnpj) : '') : '') +
       ' · emitido em ' + esc(agora()) + ' · ' + esc(p.escritorio || 'Artecon Artes Contábeis') + '</div>';
   }
@@ -188,9 +192,26 @@
 
 
   /* Tabela "valor do imposto em cada ano" — recebe p.anos = [{ano, ibs, cbs, total, classificacao, ano_teste}] */
+  function G() { var r = typeof globalThis !== 'undefined' ? globalThis : window; return r.ImobGraficos || null; }
+  function anosParaGrafico(anos) { return (anos || []).map(function (a) { var s = (+a.ibs || 0) + (+a.cbs || 0); return { ano: a.ano, ano_teste: a.ano_teste, valor_total: +a.total || 0, valor_ibs: s ? (+a.total || 0) * (+a.ibs || 0) / s : 0, valor_cbs: s ? (+a.total || 0) * (+a.cbs || 0) / s : 0 }; }); }
+  /* v1.5.0 — gráficos de apresentação: composição da base, IBS × CBS e (se houver) comparativo */
+  function graficosHTML(p) {
+    var g = G(); if (!g) return '';
+    var res = p.res || {}, e = p.entrada || {};
+    var h = '';
+    var c1 = g.composicaoBase({ valor_operacao: e.valor_operacao, redutor_ajuste: res.redutor_ajuste_usado, redutor_social: res.redutor_social_usado, deducoes: res.deducoes, base: res.base });
+    var c2 = g.ibsCbs({ ibs: res.ibs, cbs: res.cbs, creditos: res.creditos, total: res.total, carga: pct(res.aliquota_efetiva_sobre_operacao, 2) });
+    if (c1) h += '<div class="graf"><div class="mini">Composição da base de cálculo</div>' + c1 + '</div>';
+    if (c2) h += '<div class="graf"><div class="mini">Imposto por tributo</div>' + c2 + '</div>';
+    var cl = p.comparativo && p.comparativo.linhas; if (cl && cl.length >= 2) h += '<div class="graf"><div class="mini">Hoje × Reforma (tributos substituíveis + IRPJ/CSLL)</div>' + g.comparativo({ hoje: cl[0].total, reforma: cl[1].total }) + '</div>';
+    return h ? '<h2>Em gráficos</h2>' + h : '';
+  }
+  function anosGraficoHTML(anos) { var g = G(); if (!g || !anos || !anos.length) return ''; var ano2033 = anos.filter(function (a) { return a.ano === 2033; })[0]; return '<div class="graf">' + g.anoAAno(anosParaGrafico(anos), { destacar: ano2033 ? 2033 : null }) + '</div>'; }
+
   function anosHTML(anos) {
     if (!anos || !anos.length) return '';
     return '<h2>Quanto seria o imposto em cada ano (2026 a 2033)</h2><p class="mini">A Reforma entra aos poucos: 2026 é ano-teste (0,1% + 0,9%), a CBS começa em 2027 e o IBS sobe até 2033. A mesma operação, feita em anos diferentes, paga valores diferentes.</p>' +
+      anosGraficoHTML(anos) +
       '<table><thead><tr><th>Ano</th><th class="num">IBS</th><th class="num">CBS</th><th class="num">Imposto na operação</th><th>Alíquota</th></tr></thead><tbody>' +
       anos.map(function (a) { return '<tr' + (a.ano === 2033 ? ' class="destaque"' : '') + '><td>' + a.ano + (a.ano_teste ? ' (ano-teste)' : '') + '</td><td class="num">' + pct(a.ibs, 2) + '</td><td class="num">' + pct(a.cbs, 2) + '</td><td class="num"><b>' + money(a.total) + '</b></td><td>' + esc(a.classificacao) + '</td></tr>'; }).join('') + '</tbody></table>';
   }
@@ -209,6 +230,7 @@
       '<h2>2. A resposta em uma linha</h2><div class="box"><div class="grid"><div><div class="mini">Valor da operação</div><div class="big">' + money(e.valor_operacao) + '</div></div>' +
       '<div><div class="mini">Imposto novo (IBS + CBS)</div><div class="big">' + money(res.total) + '</div></div><div><div class="mini">Isso representa</div><div class="big">' + pct(res.aliquota_efetiva_sobre_operacao, 2) + '</div><div class="mini">do valor da operação</div></div></div></div>' +
       (p.comparativo && p.comparativo.variacao != null ? '<div class="' + (p.comparativo.variacao > 0 ? 'alerta' : 'ok') + '">Comparando com o que se paga hoje (PIS, COFINS e ISS): ' + (p.comparativo.variacao > 0 ? 'a Reforma <b>aumenta</b>' : 'a Reforma <b>reduz</b>') + ' o imposto em <b>' + money(Math.abs(p.comparativo.variacao)) + '</b>. IRPJ e CSLL continuam iguais nos dois casos.</div>' : '') +
+      graficosHTML(p) +
       '<h2>3. Como chegamos a esse número</h2><table><thead><tr><th>Passo</th><th>O que é</th><th class="num">Valor</th></tr></thead><tbody>' +
       (p.etapas || []).map(function (x) { return '<tr class="' + (x.principal ? 'destaque principal' : x.destaque ? 'destaque' : '') + '"><td>' + x.n + '. ' + esc(x.rotulo) + '</td><td class="mini">' + esc(x.simples || x.formula || '') + '</td><td class="num">' + (x.texto != null ? esc(x.texto) : money(x.valor)) + '</td></tr>'; }).join('') + '</tbody></table>' +
       anosHTML(p.anos) +
@@ -238,7 +260,7 @@
       '<div><div class="mini">IBS + CBS a recolher</div><div class="big">' + money(res.total) + '</div><div class="mini">IBS ' + money(res.ibs) + ' · CBS ' + money(res.cbs) + '</div></div>' +
       '<div><div class="mini">Carga efetiva</div><div class="big">' + pct(res.aliquota_efetiva_sobre_operacao, 4) + '</div></div></div></div>' +
       (econ != null ? '<div class="' + (econ > 0 ? 'alerta' : 'ok') + '">' + (econ > 0 ? 'Acréscimo' : 'Economia') + ' estimado(a) frente à tributação atual: <b>' + money(Math.abs(econ)) + '</b> (' + pct(Math.abs(p.comparativo.variacao_pct), 2) + ') — IRPJ/CSLL computados nos dois lados.</div>' : '') +
-      anosHTML(p.anos) +
+      graficosHTML(p) + anosHTML(p.anos) +
       '<h2>4. Recomendação</h2><p>' + esc(p.recomendacao || (p.auditoria && p.auditoria.permite_conclusao_definitiva
         ? 'Os dados permitem conclusão no nível ' + p.auditoria.nivel_confianca + '. Recomenda-se formalizar a opção do art. 375 e conservar a memória de cálculo anexa.'
         : 'Há impedimentos à conclusão definitiva (ver ressalvas). Recomenda-se completar os dados apontados antes de qualquer decisão.')) + '</p>' +

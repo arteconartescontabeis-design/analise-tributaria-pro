@@ -9,8 +9,8 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.4.1',
-    data: '15/09/2026',
+    versao: '1.5.0',
+    data: '16/09/2026',
     cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
     motor: { nome: 'motorImob', versao: '1.2.0', contrato: 'calc-imob-1',
@@ -20,6 +20,15 @@
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.5.0', data: '16/09/2026', texto:
+        'Nova apresenta\u00e7\u00e3o. As telas do m\u00f3dulo passam para o menu da esquerda, em quatro grupos (Preparar, Calcular, Analisar, '
+        + 'Registros), com o passo 3 "O que calcular?" como item pr\u00f3prio. O resultado de cada opera\u00e7\u00e3o fica em uma tela s\u00f3: '
+        + 'n\u00famero final em destaque (total l\u00edquido a recolher), IBS, CBS, carga efetiva e cr\u00e9ditos, composi\u00e7\u00e3o da base em uma linha, '
+        + 'bot\u00f5es de relat\u00f3rio no cabe\u00e7alho e abas internas (Resumo, Gr\u00e1ficos, Etapas, Por parcela, Ano a ano, Mem\u00f3ria, Premissas). '
+        + 'Gr\u00e1ficos de apresenta\u00e7\u00e3o de valores (composi\u00e7\u00e3o da base, IBS \u00d7 CBS, hoje \u00d7 Reforma, imposto ano a ano) na tela e nos '
+        + 'relat\u00f3rios Resumo para o cliente e Executivo. Logotipo da Artecon no menu, no resultado e nos relat\u00f3rios. '
+        + 'Corre\u00e7\u00f5es: ajudas por campo reposicionadas no campo certo (23 estavam na c\u00e9lula errada); relat\u00f3rio de venda parcelada com '
+        + 'cr\u00e9ditos n\u00e3o era emitido (a confer\u00eancia comparava as parcelas brutas com o total l\u00edquido). Motor intocado (lacre c287341e).' },
       { versao: '1.4.1', data: '15/09/2026', texto:
         'Corre\u00e7\u00e3o da sess\u00e3o: o escrit\u00f3rio vinculado ao usu\u00e1rio passa a ser carregado antes de o m\u00f3dulo entrar '
         + 'e antes de qualquer consulta ou grava\u00e7\u00e3o (carteira, invent\u00e1rio, im\u00f3vel, hist\u00f3rico, relat\u00f3rios). '

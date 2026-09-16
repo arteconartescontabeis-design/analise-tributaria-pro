@@ -21,6 +21,7 @@ const H = require('./_harness_sessao.js');
   await entrar('teste.a@artecon.local', 'senha-a');
   await pg.evaluate(() => { abrirAba('inventario'); imobInventario(); }); await pg.waitForTimeout(400);
   await pg.screenshot({ path: path.join(OUT, '1_inventario_com_escritorio.png'), fullPage: false });
+  await pg.evaluate(() => { abrirAba('venda'); document.getElementById('v-val').value='650000'; document.getElementById('v-raj').value='300000'; document.getElementById('v-data').value='2027-06-15'; calcVenda(); window.scrollTo(0, document.getElementById('v-out').offsetTop-20); }); await pg.waitForTimeout(400); await pg.screenshot({ path: path.join(OUT, '5_venda_v150.png') });
   await pg.evaluate(() => { abrirAba('imovel'); document.getElementById('i-cod').value = 'TESTE-141'; document.getElementById('i-tipo').value = 'comercial'; document.getElementById('i-aq').value = '250000'; document.getElementById('i-ref').value = '300000'; document.getElementById('i-daq').value = '2020-05-10'; calcRaj(); imobSalvarImovel(); }); await pg.waitForTimeout(400);
   await pg.screenshot({ path: path.join(OUT, '2_imovel_gravado.png') });
   await pg.reload(); await pg.waitForFunction(() => window.APP && APP.sessao === 'ok'); await pg.waitForTimeout(150);
