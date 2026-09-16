@@ -202,7 +202,7 @@ canvas{max-height:340px}
 <body>
 
 <!-- ══════════════════════════════════════════════════════════════════════
-     ÍNDICE PRÓPRIO DO MÓDULO ANÁLISE IMOBILIÁRIA — v1.4.1 · 15/09/2026
+     ÍNDICE PRÓPRIO DO MÓDULO ANÁLISE IMOBILIÁRIA — v1.5.0 · 16/09/2026
 
      Este arquivo é INDEPENDENTE do index.html do Análise Tributária Pro.
      Publicar um NÃO republica o outro. Mesmo Supabase, mesmo login, mesmo
@@ -229,7 +229,7 @@ canvas{max-height:340px}
 
 <div id="app" style="display:none">
   <div class="sidebar">
-    <div class="brand"><b>🏢 Análise Imobiliária</b><br><span class="hint">Artecon &middot; <span id="mod-versao-badge">v?</span></span></div>
+    <div class="brand"><div id="marca-logo" style="background:#fff;border-radius:8px;padding:6px 10px;margin-bottom:8px;display:none"></div><b>🏢 Análise Imobiliária</b><br><span class="hint">Artecon &middot; <span id="mod-versao-badge">v?</span></span></div>
     <div class="nav-item active" data-p="imob" onclick="go('imob')">🏢 <span>Análise Imobiliária</span></div>
     <div class="nav-item" data-p="modulo" onclick="go('modulo')">🧩 <span>Sobre o módulo</span></div>
     <div class="nav-item" onclick="location.href='index.html'">↩ <span>Análise Tributária</span></div>
@@ -584,6 +584,8 @@ async function entrar(){
     await moduloCarregado();
     try { if (typeof imobEntrar === 'function') imobEntrar(); else console.warn('[imob] módulo não carregado'); }
     catch(e){ console.warn('[imob]', e); }
+    // v1.5.0 · apresentação: menu lateral, passo 3, resultado em uma tela, gráficos
+    try { if (window.ImobLayout) ImobLayout.aplicar({ menuLateral: true }); } catch(e){ console.warn('[imob] layout:', e); }
     modInfoPintar();
     return ok;
   })().finally(() => { ENTRANDO = null; });
@@ -598,18 +600,22 @@ async function entrar(){
 
 <!-- ── o módulo, servido à parte. Trocar qualquer um destes NÃO mexe
      nem neste arquivo nem no index.html do Tributário. ───────────────── -->
-  <script src="modulos/imobiliario/imob_manifesto.js?v=1.4.1"></script>
-  <script src="modulos/imobiliario/imob_estilo.js?v=1.4.1"></script>
-  <script src="modulos/imobiliario/imob_pagina.js?v=1.4.1"></script>
-  <script src="modulos/imobiliario/motorImob.js?v=1.4.1"></script>
-  <script src="modulos/imobiliario/persistenciaImob.js?v=1.4.1"></script>
-  <script src="modulos/imobiliario/parecerImobIA.js?v=1.4.1"></script>
-  <script src="modulos/imobiliario/nucleoRastreio.js?v=1.4.1"></script>
-  <script src="modulos/imobiliario/imob_premissas.js?v=1.4.1"></script>
-  <script src="modulos/imobiliario/imob_validacao.js?v=1.4.1"></script>
-  <script src="modulos/imobiliario/imob_relatorios.js?v=1.4.1"></script>
-  <script src="modulos/imobiliario/ui_imobiliaria.js?v=1.4.1"></script>
-  <script>(function(){ var b=document.getElementById('mod-versao-badge'), i=(window.ModulosInfo||{}).imobiliario; if(b&&i) b.textContent='v'+i.versao; })();</script>
+  <script src="modulos/imobiliario/imob_manifesto.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/imob_estilo.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/imob_pagina.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/motorImob.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/persistenciaImob.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/parecerImobIA.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/nucleoRastreio.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/imob_premissas.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/imob_validacao.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/imob_relatorios.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/imob_graficos.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/imob_marca.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/ui_imobiliaria.js?v=1.5.0"></script>
+  <script src="modulos/imobiliario/imob_layout.js?v=1.5.0"></script>
+  <script>(function(){ var b=document.getElementById('mod-versao-badge'), i=(window.ModulosInfo||{}).imobiliario; if(b&&i) b.textContent='v'+i.versao;
+    var l=document.getElementById('marca-logo'); if(l&&window.ImobMarca){ l.innerHTML=ImobMarca.img(34); l.style.display=''; } })();</script>
 
 </body>
 </html>
