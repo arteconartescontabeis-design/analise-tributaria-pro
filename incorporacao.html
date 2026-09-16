@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simulação de Incorporação — Artecon</title>
-<!-- GERADO por tools/build_incorporacao.js a partir do index.html v7.94.2 (lacre 22197ef1) em 2026-09-15T16:17:22.723Z. NÃO EDITE À MÃO: edite src/ e rode o build. -->
+<!-- GERADO por tools/build_incorporacao.js a partir do index.html v7.94.3 (lacre 22197ef1) em 2026-09-16T00:25:45.521Z. NÃO EDITE À MÃO: edite src/ e rode o build. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -339,6 +339,9 @@ ul.ap-lista li{margin-bottom:7px}
 .pp-chart{page-break-inside:avoid;break-inside:avoid}
 .pp-sec{page-break-after:avoid;break-after:avoid}
 .pp-tab tr{page-break-inside:avoid;break-inside:avoid}
+.inc-notas sup,.pp-tab sup{font-size:9px;line-height:0}
+.inc-doc .pp-tab td,.inc-doc .pp-tab th{word-break:break-word;overflow-wrap:anywhere}
+.inc-doc .pp-miolo{overflow:hidden}
 .pp-page.pp-land{width:297mm;height:209mm!important;max-height:209mm;background:#fff}
 .pp-land .pp-miolo{padding:12mm 12mm 10mm 12mm}
 .pp-land-cab{position:absolute;left:12mm;right:12mm;top:5mm;display:flex;justify-content:space-between;font-size:9.5px;color:#6b7a8d;border-bottom:1px solid #d99a2b;padding-bottom:2px;z-index:2}
@@ -2062,7 +2065,8 @@ function anNovo(cnpj, ano) {
     icms: { cred:Array(12).fill(null), deb:Array(12).fill(null), tema69:Array(12).fill(null), lei14592:Array(12).fill(null) },   // v7.89.0 · nota a nota
     ipi:  { cred:Array(12).fill(null), deb:Array(12).fill(null) },
     despesas: Object.fromEntries([...DESP_KEYS, ...CRED_LR_KEYS].map(k=>[k,z12()])),
-    origem: {} };                                          // v7.28.0: trilha de origem por campo×mês
+    origem: {},                                            // v7.28.0: trilha de origem por campo×mês
+    auditoria: [] };                                       // v7.94.3: trilha de alterações (quem/quando/de → para)
 }
 
 
@@ -2085,6 +2089,7 @@ function anNormalizar(d, cnpj, ano){
   out.cfg.folha12Lanc = a12(out.cfg.folha12Lanc);
   out.folha13 = { ...base.folha13, ...(d.folha13||{}) };
   out.origem = (d.origem && typeof d.origem === 'object' && !Array.isArray(d.origem)) ? d.origem : {};   // v7.28.0
+  out.auditoria = Array.isArray(d.auditoria) ? d.auditoria : [];                                          // v7.94.3
   for (const sec of ['icms','ipi']){                       // aqui null significa "automático" — não virar zero
     out[sec] = { ...base[sec], ...(d[sec]||{}) };
     for (const k of Object.keys(out[sec])){
@@ -2363,6 +2368,186 @@ function notaConciliacao(itens){
   if (!difs.length) return '';
   return '<div class="hint" style="margin-top:4px">Conciliação de centavos — ' + difs.join(' · ') + '. O valor principal em todos os relatórios é o total do motor (precisão integral); a diferença é o arredondamento de cada parcela exibida.</div>';
 }
+
+// ┌── copiado do index.html: bloco "auditoria" ──
+// ═══ v7.94.3 · TRILHA DE AUDITORIA POR CAMPO ═══════════════════════════════════════════════════
+// A trilha de origem (v7.28.0) diz DE ONDE veio cada célula, mas não QUEM alterou, QUANDO nem qual era
+// o valor anterior. Aqui cada alteração de dado de entrada vira um registro em AN.auditoria[] — viaja
+// no JSON da análise (sem SQL, sem tabela nova) e entra no snapshot do fechamento.
+//   { id, em, por, app, acao, campo, mes, de, para, origemDe, origemPara, lote, celulas[] }
+// Funis: anSet (grade + aba ICMS·IPI), anRepetir, anIcmsRestaurar, anAplicarConfig, anSetInicioAtividade,
+// anSetCfg12/anSetFolha13, rfCalcular (3 campos manuais da Reforma) e anAplicado (importações, 1 evento por
+// lote com as células sobrescritas e os valores anteriores). Só grava quando o valor MUDOU.
+const AUD_MAX = 500, AUD_ALERTA = 2000;          // acima de AUD_MAX os lotes antigos são compactados
+const AUD_IMPORT = 'PXBMFRL';                    // origens que vêm de arquivo
+const AUD_ROT = { digitado:'digitado', apagado:'apagado — volta ao automático', repetido:'repetido de janeiro (⇉)',
+  importado:'importado', restaurado:'restaurado ao automático', config:'Configuração', reforma:'aba Reforma' };
+const AUD_CFG_PADRAO = new Set(['cfg.travaNoDas','cfg.projJanela','cfg.anoRefParecer','cfg.lpBaseComCsll','cfg.lpBaseServCsll','cfg.transpPresuncao','cfg.icmsTranspV','cfg.transpCredPres','cfg.fap','cfg.ratBasico']);   // preenchidas pela própria tela com o padrão
+const AUD_RES = { 'icms.deb':'icmsDeb', 'icms.cred':'icmsCred', 'ipi.deb':'ipiDeb', 'ipi.cred':'ipiCred' };   // estimativa do motor por célula
+let AUD_FOTO = null;                              // retrato dos dados no último ponto de sincronização
+let AUD_LOTE = null;                              // rótulo do lote de importação em curso (opcional)
+function audLista(an){ an = an || AN; if (!an) return []; if (!Array.isArray(an.auditoria)) an.auditoria = []; return an.auditoria; }
+function audUsuario(){ try { return (APP && APP.user && APP.user.email) || ''; } catch(e){ return ''; } }
+function audIgual(a, b){
+  if (a == null && b == null) return true;
+  if (a == null || b == null) return false;
+  if (typeof a === 'number' || typeof b === 'number') return Math.abs((+a||0) - (+b||0)) < 0.005;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+// retrato plano da análise: campo×mês → valor (+ letra de origem); a Reforma fica fora (rfCalcular registra direto)
+function audMapa(an){
+  const M = {}, OG = {};
+  if (!an) return { M, OG };
+  for (const sec of ['receitas','folha','compras','despesas','icms','ipi'])
+    for (const [k, arr] of Object.entries(an[sec]||{})) if (Array.isArray(arr))
+      for (let m=0;m<12;m++){ const v = arr[m]; M[sec+'.'+k+'|'+m] = (v == null ? null : +v); }
+  for (const [k, v] of Object.entries(an.folha13||{})) M['folha13.'+k+'|'] = +v||0;
+  for (const [k, v] of Object.entries(an.cfg||{})){
+    if (k === 'rbaaOrigem' || k === 'rbaaPA' || k === 'inicioOrigem' || k === 'inicioPA') continue;   // selos, não dados
+    if (Array.isArray(v)) { for (let m=0;m<v.length && m<12;m++) M['cfg.'+k+'|'+m] = (v[m] == null ? null : +v[m]); }
+    else if (v && typeof v === 'object') M['cfg.'+k+'|'] = JSON.parse(JSON.stringify(v));
+    else M['cfg.'+k+'|'] = (v === undefined ? null : v);
+  }
+  const og = (an.origem && typeof an.origem === 'object' && !Array.isArray(an.origem)) ? an.origem : {};
+  for (const [pt, arr] of Object.entries(og)) if (Array.isArray(arr)) for (let m=0;m<12;m++) OG[pt+'|'+m] = arr[m] || null;
+  return { M, OG };
+}
+function audChave(an){ return an ? (an.cnpj||'') + '|' + (an.ano||'') : ''; }
+function audFotoBase(an){ an = an || AN; if (!an) { AUD_FOTO = null; return; } AUD_FOTO = { chave: audChave(an), ...audMapa(an) }; }
+function audFotoCelula(campo, mes, para, og){
+  if (!AUD_FOTO || !AN || AUD_FOTO.chave !== audChave(AN)) audFotoBase(AN);
+  if (!AUD_FOTO) return;
+  AUD_FOTO.M[campo + '|' + (mes == null ? '' : mes)] = (para == null ? null : (typeof para === 'object' ? JSON.parse(JSON.stringify(para)) : para));
+  if (og !== undefined && mes != null) AUD_FOTO.OG[campo + '|' + mes] = og || null;
+}
+function audEstimativa(campo, mes){
+  try { const f = AUD_RES[campo]; if (!f || mes == null || !AN || !AN._res) return null; const v = +AN._res.meses[mes][f]; return isFinite(v) ? v : null; } catch(e){ return null; }
+}
+function audRegistrar(ev){
+  if (!AN) return null;
+  const L = audLista(AN);
+  const reg = Object.assign({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), em: new Date().toISOString(), por: audUsuario(), app: APP_VERSAO }, ev);
+  L.push(reg); AN_SUJO = true; audCompactar(L); return reg;
+}
+// uma célula (grade, ICMS·IPI, RBT12, 13º, Config, Reforma) — só se mudou
+function audCelula(campo, mes, de, para, acao, extra){
+  if (!AN) return null;
+  if (audIgual(de, para)) { audFotoCelula(campo, mes, para, extra && extra.origemPara); return null; }
+  const ev = Object.assign({ acao, campo, mes: (mes == null ? null : +mes), de: (de === undefined ? null : de), para: (para === undefined ? null : para) }, extra || {});
+  if (ev.de == null && AUD_RES[campo]) ev.deAuto = audEstimativa(campo, mes);   // era estimativa: guarda o número que valia
+  const reg = audRegistrar(ev);
+  audFotoCelula(campo, mes, para, extra && extra.origemPara);
+  return reg;
+}
+// varredura completa contra o retrato: 1 evento por lote (importação) ou 1 por chave (Configuração)
+function audSincronizar(acao, lote){
+  if (!AN) return null;
+  const agora = audMapa(AN);
+  const base = (AUD_FOTO && AUD_FOTO.chave === audChave(AN)) ? AUD_FOTO : { chave: audChave(AN), ...audMapa(anNovo(AN.cnpj, AN.ano)) };
+  const dif = [];
+  for (const k of new Set([...Object.keys(base.M), ...Object.keys(agora.M)])){
+    const de = base.M[k] === undefined ? null : base.M[k], para = agora.M[k] === undefined ? null : agora.M[k];
+    if (audIgual(de, para)) continue;
+    const [campo, mm] = k.split('|'); const mes = mm === '' ? null : +mm;
+    dif.push({ campo, mes, de, para, origemDe: base.OG[k] || null, origemPara: agora.OG[k] || null });
+  }
+  AUD_FOTO = { chave: audChave(AN), ...agora };
+  if (!dif.length) return null;
+  if (acao === 'importado'){
+    const letras = [...new Set(dif.map(d => d.origemPara).filter(c => c && ORIGEM_ROT[c]))];
+    const rotulo = lote || (letras.length ? letras.map(c => ORIGEM_ROT[c][0]).join(' + ') : 'importação');
+    const porSecao = {}; for (const d of dif) { const sc = d.campo.split('.')[0]; porSecao[sc] = (porSecao[sc]||0) + 1; }
+    return audRegistrar({ acao:'importado', lote: rotulo, n: dif.length, secoes: porSecao, celulas: dif });
+  }
+  let ultimo = null;
+  for (const d of dif){
+    // chave que só passou a EXISTIR pela normalização da tela (padrão preenchido, nada digitado) não é alteração
+    if (acao !== 'importado' && d.de == null && AUD_CFG_PADRAO.has(d.campo)) { continue; }
+    ultimo = audRegistrar(Object.assign({ acao: acao || 'config' }, d));
+  }
+  return ultimo;
+}
+// tamanho: lotes antigos perdem o detalhe célula a célula (ficam rótulo, data, usuário e contagem); manual nunca
+function audCompactar(L){
+  if (!Array.isArray(L) || L.length <= AUD_MAX) return;
+  const lotes = L.map((e,i)=>e.acao==='importado' && Array.isArray(e.celulas) ? i : -1).filter(i=>i>=0);
+  for (const i of lotes.slice(0, Math.max(0, lotes.length - 20))) { const e = L[i]; e.compactado = true; delete e.celulas; }
+}
+// último evento de cada célula (para o tooltip da grade e o Verificar)
+function audIndice(an){
+  const idx = {};
+  for (const e of audLista(an)){
+    if (e.acao === 'importado') { for (const c of (e.celulas||[])) idx[c.campo + '|' + (c.mes==null?'':c.mes)] = Object.assign({}, e, c, { celulas:undefined }); }
+    else idx[e.campo + '|' + (e.mes==null?'':e.mes)] = e;
+  }
+  return idx;
+}
+function audRotulo(campo){
+  const [sec, k] = String(campo||'').split('.');
+  for (const S of AN_SECOES){ let grupo = '';
+    for (const L of (S.linhas||[])){
+      if (L.length === 1) { grupo = String(L[0]).split(' — ')[0].replace(/<[^>]+>/g,'').slice(0,34); continue; }
+      if (L[0] === campo) return (sec === 'receitas' && grupo ? grupo + ' · ' : '') + L[1] + (sec !== 'receitas' ? ' (' + S.nome.replace(/^\S+\s/,'') + ')' : '');
+    } }
+  const CFG = { iss:'ISS %', icmsV:'ICMS vendas %', icmsC:'ICMS compras %', ipiV:'IPI vendas %', ipiC:'IPI compras %', rbt12Lanc:'RBT12 · 12 meses anteriores (interno)', rbt12ExpLanc:'RBT12 · 12 meses anteriores (exportação)',
+    folha12Lanc:'Folha dos 12 meses anteriores', rbt12Direto:'RBT12 direto — interno', rbt12ExpDireto:'RBT12 direto — exportação', rbaa:'RBAA (ano anterior)', rbaaExp:'RBAA exportação', rbaaOutros:'RBAA filiais', rbaOutros:'RBA filiais (ano corrente)',
+    inicioAtividade:'Início de atividade', lpBaseServ:'Presunção serviços (LP)', lpBaseCom:'Presunção comércio (LP)', lpBaseServCsll:'Presunção serviços CSLL', lpBaseComCsll:'Presunção comércio CSLL', adicionalIR:'Adicional de IRPJ',
+    sublimite:'Sublimite', sublimiteValor:'Sublimite (valor próprio)', lrPeriodo:'Período do Lucro Real', lrPrejIrpj:'Prejuízo fiscal inicial', lrPrejCsll:'Base negativa CSLL inicial', projJanela:'Janela da projeção', anoRefParecer:'Ano de referência do parecer',
+    credLRpct:'% creditável no LR', folhaPerc:'Percentuais de folha', ratBasico:'RAT básico', fap:'FAP', travaNoDas:'Trava na guia', arredondaPorTributo:'Arredondar por tributo', frComposicao:'Composição do Fator R', dedIssRetido:'Deduz ISS retido', issRetidoNaCarga:'ISS retido na carga',
+    transpPresuncao:'Presunção transporte', icmsTranspV:'ICMS transporte %', transpCredPres:'Crédito presumido transporte', sem13Pago:'Sem pagamento de 13º' };
+  if (sec === 'cfg') return CFG[k] || ('Configuração · ' + k);
+  if (sec === 'folha13') return ({ prolabore13:'Pró-labore 13º', salarios13:'Proventos 13º', baseFgts13:'Base FGTS 13º' })[k] || k;
+  if (sec === 'reforma') return ({ receita:'Reforma · receita anual tributável', baseIS:'Reforma · base do Imposto Seletivo', credSimplesPct:'Reforma · % crédito s/ compras do Simples' })[k] || ('Reforma · ' + k);
+  if (sec === 'icms') return ({ deb:'Débito de ICMS', cred:'Crédito de ICMS', tema69:'ICMS destacado (Tema 69)', lei14592:'ICMS compras (Lei 14.592)' })[k] || campo;
+  if (sec === 'ipi') return ({ deb:'Débito de IPI', cred:'Crédito de IPI' })[k] || campo;
+  return campo;
+}
+function audFmtVal(campo, v, ev, lado){
+  if (v == null || v === '') { const est = ev && lado === 'de' ? ev.deAuto : null; return AUD_RES[campo] ? (est != null ? 'estimativa ' + fmt(est) : 'estimativa') : '—'; }
+  if (typeof v === 'object') return esc(JSON.stringify(v));
+  if (typeof v === 'boolean') return v ? 'sim' : 'não';
+  if (typeof v === 'string') return esc(v);
+  if (/\.(iss|icmsV|icmsC|ipiV|ipiC|icmsTranspV|transpCredPres|ratBasico|lpBase\w*)$/.test(campo) || /_pct$/.test(campo)) return (v*100).toFixed(4).replace(/0+$/,'').replace(/\.$/,'').replace('.',',') + '%';
+  return fmt(v);
+}
+function audQuando(iso){ try { return new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }); } catch(e){ return iso || ''; } }
+function audFrase(ev, campo){
+  if (!ev) return '';
+  campo = campo || ev.campo;
+  const quem = ev.por ? ' por ' + ev.por : '';
+  if (ev.acao === 'importado') return `${AUD_ROT.importado} (${ev.lote||'lote'})${quem} em ${audQuando(ev.em)} — de ${audFmtVal(campo, ev.de, ev, 'de')} para ${audFmtVal(campo, ev.para, ev, 'para')}`;
+  return `${AUD_ROT[ev.acao]||ev.acao}${quem} em ${audQuando(ev.em)} — de ${audFmtVal(campo, ev.de, ev, 'de')} para ${audFmtVal(campo, ev.para, ev, 'para')}`;
+}
+// resumo: quantas manuais, quantas manuais SOBRE valor importado, quantas importações
+function audResumo(an){
+  const L = audLista(an); const r = { total:L.length, manuais:0, sobreImportado:0, lotes:0, celulasImportadas:0 };
+  for (const e of L){
+    if (e.acao === 'importado') { r.lotes++; r.celulasImportadas += (+e.n || (e.celulas||[]).length); continue; }
+    r.manuais++; if (e.origemDe && AUD_IMPORT.includes(e.origemDe)) r.sobreImportado++;
+  }
+  return r;
+}
+// quadro da Conferência (bloco 0) — cronológico; lotes abrem em uma linha com as células sobrescritas
+function audQuadroHtml(an){
+  const L = audLista(an);
+  if (!L.length) return `<div style="margin-top:10px"><b style="font-size:12px">Trilha de alterações</b><div class="hint">Nenhuma alteração registrada nesta análise desde a v7.94.3 — lançamentos anteriores constam só na trilha de origem (letras acima).</div></div>`;
+  const r = audResumo(an);
+  const MS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const mesTx = m => m == null ? '—' : (MS[m] || m);
+  const rows = L.slice().sort((a,b)=>String(a.em).localeCompare(String(b.em))).map(e => {
+    if (e.acao === 'importado'){
+      const det = e.compactado ? `<span class="hint">detalhe compactado — ${e.n||0} célula(s)</span>`
+        : (e.celulas||[]).map(c => `${esc(audRotulo(c.campo))} ${mesTx(c.mes)}: ${audFmtVal(c.campo, c.de, c, 'de')} → ${audFmtVal(c.campo, c.para, c, 'para')}${c.origemDe === 'D' ? ' <b>(sobrescreveu valor digitado)</b>' : ''}`).join('<br>');
+      return `<tr style="background:#f4f8fb"><td>${audQuando(e.em)}</td><td>${esc(e.por||'—')}</td><td colspan="2"><b>Importação · ${esc(e.lote||'')}</b> — ${e.n||0} célula(s)</td><td colspan="2" style="font-size:10.5px">${det}</td><td>arquivo</td></tr>`;
+    }
+    const sobre = e.origemDe && AUD_IMPORT.includes(e.origemDe);
+    return `<tr${sobre?' style="background:#fef6e7"':''}><td>${audQuando(e.em)}</td><td>${esc(e.por||'—')}</td><td>${esc(audRotulo(e.campo))}</td><td class="num">${mesTx(e.mes)}</td><td class="num">${audFmtVal(e.campo, e.de, e, 'de')}</td><td class="num"><b>${audFmtVal(e.campo, e.para, e, 'para')}</b></td><td>${AUD_ROT[e.acao]||e.acao}${sobre ? ' <b>sobre ' + ORIGEM_ROT[e.origemDe][0] + '</b>' : ''}</td></tr>`;
+  }).join('');
+  return `<div style="margin-top:10px"><b style="font-size:12px">Trilha de alterações</b>
+    <div class="hint">${r.manuais} alteração(ões) manual(is)${r.sobreImportado ? `, <b>${r.sobreImportado} sobre valor importado</b>` : ''} · ${r.lotes} importação(ões) (${r.celulasImportadas} célula(s))${r.total > AUD_ALERTA ? ' · <b style="color:#943126">trilha muito extensa — considere fechar o exercício</b>' : ''}. Cada linha registra quem alterou, quando, o valor anterior e o novo; linhas em âmbar são alterações manuais sobre dado importado.</div>
+    <div style="overflow-x:auto;margin-top:6px"><table class="gtable" style="font-size:10.5px"><thead><tr><th>Quando</th><th>Usuário</th><th>Campo</th><th class="num">Mês</th><th class="num">De</th><th class="num">Para</th><th>Ação</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+// setters auditados para os campos que gravavam direto no cfg/folha13 pela própria tela
 
 // ┌── copiado do index.html: bloco "compModulo" ──
 const COMP_GRUPOS = [
@@ -3578,6 +3763,7 @@ function rlConfEntrada(){
     ${grade('Compras (R$/mês)', [linha('Revenda sem ST', C.semst, 0, 'compras.semst'), linha('Revenda com ST', C.comst, 0, 'compras.comst'), linha('Monofásicas', C.mono, 0, 'compras.mono'), linha('ST + Mono', C.comstMono, 0, 'compras.comstMono'), linha('Baixa estoque s/ ST (CMV)', C.baixaSemst, 0, 'compras.baixaSemst'), linha('Baixa c/ ST', C.baixaComst, 0, 'compras.baixaComst'), linha('Baixa mono', C.baixaMono, 0, 'compras.baixaMono'), linha('Base IPI crédito', C.baseIpiCred, 0, 'compras.baseIpiCred')])}
     ${grade('Despesas (R$/mês)', [linha('Administrativas', DE.adm, 0, 'despesas.adm'), linha('Vendas', DE.vendas, 0, 'despesas.vendas'), linha('Fiscais', DE.fiscais, 0, 'despesas.fiscais'), linha('Financeiras', DE.financeiras, 0, 'despesas.financeiras'), linha('Outras', DE.outras, 0, 'despesas.outras'), ...CRED_LR.map(([k,rot])=>linha(rot, DE[k], 0, 'despesas.'+k))])}
     ${rlConfJanelas(D)}
+    ${audQuadroHtml(D)}
   </div>`;
 }
 // v7.42.4 · A conferência mostrava os meses NÃO LANÇADOS zerados, enquanto o parecer — no mesmo
@@ -5888,7 +6074,9 @@ function ppTarjaSemDados(){
 // v7.93.5 · versão das premissas legais no rodapé — outro profissional precisa saber com QUAL base o documento foi
 // emitido: motor, lacre, normas e a tabela de alíquotas de referência, além da data-base
 function ppPremissasLegais(){
-  return `<div class="pp-notaia" style="margin-top:6px">Premissas legais desta emissão: LC 123/2006 (limite, sublimite e Fator R — arts. 3º, 13-A, 18, 19 e 20) · Res. CGSN nº 140/2018 (arts. 22, 24 e 26) e nº 190/2026 (Anexos I–V por vigência, art. 22-A, art. 40-D, art. 58) · EC 132/2023 e LC 214/2025 (IBS/CBS, art. 8º, art. 12 §2º V, arts. 47–58) · Lei 9.249/95 e 9.430/96 (Presumido) · Lei 9.065/95 (Real) · STF Tema 69 e Lei 14.592/2023 · alíquotas de referência Res. CGIBS nº 14/2026 (estimativa; definitivas pelo cálculo do TCU homologado pelo Senado). Motor Análise Tributária Pro v${APP_VERSAO} · lacre ${LACRE_HASH} · data-base ${new Date().toLocaleDateString('pt-BR')}.</div>`;
+  const _ar = (RL && RL.dados) ? audResumo(RL.dados) : null;   // v7.94.3
+  const _trilha = _ar ? ` · Dados de entrada: ${_ar.manuais} alteração(ões) manual(is)${_ar.sobreImportado ? ' (' + _ar.sobreImportado + ' sobre valor importado)' : ''} e ${_ar.lotes} importação(ões) registradas na trilha de alterações (Conferência, bloco 0).` : '';
+  return `<div class="pp-notaia" style="margin-top:6px">Premissas legais desta emissão: LC 123/2006 (limite, sublimite e Fator R — arts. 3º, 13-A, 18, 19 e 20) · Res. CGSN nº 140/2018 (arts. 22, 24 e 26) e nº 190/2026 (Anexos I–V por vigência, art. 22-A, art. 40-D, art. 58) · EC 132/2023 e LC 214/2025 (IBS/CBS, art. 8º, art. 12 §2º V, arts. 47–58) · Lei 9.249/95 e 9.430/96 (Presumido) · Lei 9.065/95 (Real) · STF Tema 69 e Lei 14.592/2023 · alíquotas de referência Res. CGIBS nº 14/2026 (estimativa; definitivas pelo cálculo do TCU homologado pelo Senado). Motor Análise Tributária Pro v${APP_VERSAO} · lacre ${LACRE_HASH} · data-base ${new Date().toLocaleDateString('pt-BR')}.${_trilha}</div>`;
 }
 function rlParecer(){
   const D = parecerDados();
@@ -7155,12 +7343,13 @@ function lacreRender(){
 //  motor lacrado, projeção, Reforma, lacre, papel timbrado). Tudo abaixo é do incorporação.
 //  Regra: as análises originais são só LIDAS; o motor é chamado, nunca alterado.
 // ═══════════════════════════════════════════════════════════════════════════════════════════
-const INC_VERSAO = '1.6.0';
+const INC_VERSAO = '1.7.0';
 const APP_VERSAO = 'INC ' + INC_VERSAO;             // usado pelo lacreBoot (chave própria no localStorage)
 const INC_TABELA = 'atp_incorporacoes';
 const INC_FN_IA  = 'gerar-parecer-incorporacao';
 const INC_ANOS_REF = [2027,2028,2029,2030,2031,2032,2033];
 const INC_CHANGELOG = [
+  ['1.7.0','16/09/2026','<b>📐 Relatórios que nunca cortam + memória de cálculo completa — Demonstrativo de 15/09.</b> Paginação por <b>medição real</b> no navegador (retrato e paisagem, tabelas quebram por linha com o cabeçalho repetido); <b>limite de colunas</b> por orientação (7 retrato · 11 paisagem): a coluna "Leitura" vira notas numeradas, o parecer mostra a versão compacta dos quadros largos (abertura completa nos Relatórios 2, 3 e 7) e o que ainda não cabe é dividido em partes; régua mede altura <b>e largura</b> de cada folha; orientação única por documento (vale em Firefox/Safari) e "Todos" em dois PDFs (gerencial retrato · técnico paisagem); corrigido o @page paisagem que ficava ligado ao voltar da apresentação ao parecer. <b>Relatório 7</b> refeito em 8 blocos (entradas, consolidação com a média ponderada aberta, Simples com nominal/parcela a deduzir/efetiva e partilha, Lucro Presumido, Lucro Real, Reforma ano a ano, Δ e score, conciliação ao centavo); Excel do Relatório 7 com fórmulas de planilha; premissas sem duplicação. Motor, lacre, Δ, classificação e score intocados. Suíte: bloco 14.'],
   ['1.6.0','15/09/2026','<b>🎨 Redesign dos relatórios — "Prompt Redesign" de 15/09.</b> Duas camadas: <b>gerencial</b> e <b>técnica</b>, lendo o mesmo modelo (motor, fórmulas, classificação e premissas intocados). <b>Relatório 1 — Parecer Executivo</b> refeito em 9 páginas na ordem <i>resultado → gráfico → interpretação → conclusão</i>: capa; <b>Decisão da incorporação</b> (12 cards: conclusão, cenário, regime, score, carga atual, após, economia anual e %, Reforma acumulada, riscos, pendências, regime não permitido, sentido inverso); Antes × Depois (gráfico de barras + tabela curta); Regimes (barras horizontais, "NÃO PERMITIDO" nunca é opção); <b>Economia por tributo</b> (cascata/waterfall 🟢🔴⚪ + tabela Antes/Depois/Diferença + impacto líquido); Reforma 2027–2033 (linhas separadas × consolidada, acumulado, ★ ano de maior vantagem, ponto de inversão, "vantajosa em toda a transição: SIM/NÃO"); Ranking (barras de score + tabela enxuta); <b>Semáforo</b> da operação (🟢🟡🔴⚪ — "não avaliado" nunca é negativo), pontos favoráveis × pontos de atenção só com o que os dados mostram, riscos e pendências; Conclusão final (operação, benefício, riscos, condições) + <b>checklist de próximos passos</b>. <b>Interpretação automática</b> após cada gráfico, escrita só com números calculados. <b>Parecer Consolidado</b> ganha um <b>Resumo executivo de 3 páginas</b> (dashboard, Antes × Depois, regimes, Reforma, ranking, semáforo) antes das 20 seções; a seção 3 vira "Contexto e leitura analítica" (sem duplicar o resumo). Relatórios 4, 5 e 6 passam a se chamar "Informações … pendentes" quando faltam dados, com a lista de documentos necessários. <b>Relatórios técnicos 2, 3 e 7 em A4 paisagem</b> (página nomeada, paginador próprio) para as tabelas largas; gráficos com tamanho fixo e nunca divididos entre páginas; títulos não ficam órfãos. Formato único: R$ 1.234.567,89 · -R$ 35.000,00 · 12,34%. Relatório 8 abre com o semáforo. Motor, modelo (incModelo), Edge Function e Excel inalterados.'],
   ['1.5.0','15/09/2026','<b>📑 Relatórios remodelados — "Prompt Mestre de 14/09" (plano aprovado em 15/09).</b> Um <b>modelo único</b> (<code>incModelo</code>) alimenta tudo: <b>Parecer Consolidado de Incorporação</b> com 20 seções (identificação, objetivo e escopo, resumo, <b>painel de decisão</b>, separadas, separadas × consolidada, <b>comparação por tributo com base → alíquota → fórmula → A → B → separadas → consolidada → Δ → leitura → motivo</b> — o DAS aberto em IRPJ/CSLL/PIS/COFINS/CPP/ICMS/ISS/IPI pela partilha do motor —, regimes com <b>resultado após tributos e margem</b> e "Não permitido — motivo", Reforma ano a ano com <b>IBS e CBS separados, Δ %, acumulado, ano em que a vantagem começa e ano em que inverte</b> e aviso de alíquotas projetadas, ranking com incorporadora/incorporada/regime/resultado/estabilidade e justificativa por linha, operações, alertas e inconsistências, conclusões em <b>seis dimensões</b> (tributária, financeira, patrimonial, <b>societária</b>, Reforma, global — "Não avaliada por ausência de dados suficientes." quando não há dados), <b>recomendação condicionada</b>, premissas, limitações, memória resumida com identificador da análise). <b>Classificação em 5 categorias</b> (FAVORÁVEL · FAVORÁVEL COM RESSALVAS · NEUTRO · DESFAVORÁVEL · ANÁLISE INCOMPLETA) sobre o mesmo score (limiares 40/60; dimensão pendente ⇒ no máximo COM RESSALVAS) — a palavra "recomendado" sai. <b>Sinal único</b>: Δ = consolidada − separadas em todo relatório (positivo = acréscimo, vermelho; negativo = economia, verde) com coluna "Leitura". <b>8 relatórios separados</b> (Executivo, Comparativo Tributário Completo, Reforma com sensibilidade do crédito e abertura por ente, Financeira, Patrimonial e Endividamento — estrutura e checklist, Societária e Operacional — checklist de providências, Memória de Cálculo, Riscos/Pendências/Checklist) e <b>"Todos os relatórios — um PDF só"</b>. <b>Exportação Excel</b> (SheetJS, uma aba por seção, números como número). Apresentações simplificada/completa passam a ler o modelo (classificação, pendências, societária, recomendação). Cenário 1 (separadas) sai da coluna de score e vira "referência". Motor intocado; arquivo regerado do index v7.94.2 (lacre <code>22197ef1</code>). Edge Function <code>gerar-parecer-incorporacao</code> ganha 3 chaves (objetivo, conclSoc, recomendacaoCond) e o bloco classificacao5 — republicar.'],
   ['1.4.0','13/09/2026','<b>🔄 Rebase do motor copiado: index v7.93.5 · lacre <code>453f7b32</code>.</b> O arquivo estava congelado na cópia do index v7.86.1 (lacre <code>2e1139e9</code>) enquanto o Análise Tributária Pro re-selou o motor três vezes (v7.88.0 → v7.90.0 → v7.91.0) e passou pela validação externa até a tag <code>v7.93.2-validada</code>; a suíte acusava 9 divergências e o CI ficou vermelho de 11/09 a 13/09 (passo marcado como não bloqueante até este rebase). O extrator ganhou dois blocos que o motor da Reforma passou a exigir: <code>consist</code> (helpers de consistência da v7.93.0 — Fator R na fronteira, frase única das compras, situação no Simples, notas de totais) e <code>compModulo</code> (composição de fornecedores da v7.91.0 — classificação automática, limites inferior/base/superior, confiança), inseridos antes de <code>reformaCalc</code>. O <code>body</code> da v1.3.0 volta a viver em <code>src/incorporacao_body.html</code> (o pacote anterior tinha sido descompactado na raiz do repositório). Regras novas que a consolidada herda do index sem mudança própria: art. 24 (parcela acima do limite com RBT12 travado), art. 24 I "b" (sublimite), teto de 5% do ISS em toda faixa, RBT12 direto interno/exportação, impedimento por RBAA, composição de fornecedores e sensibilidade do crédito. Fase 4 (mês da incorporação, cisão) segue no backlog.'],
@@ -7843,6 +8032,7 @@ async function incExcluir(id){
 function incParecerAbrir(){
   if (!INC.res){ toast('Calcule antes de gerar o parecer.'); return; }
   $id('inc-card-parecer').style.display = 'block';
+  if (typeof apPrintCss === 'function') apPrintCss(false);   // v1.7.0: a apresentação deixava o @page paisagem ligado → parecer retrato saía cortado
   incRlCorpoPara('inc-parecer-dock');            // v1.1.0: #rl-corpo é um só — volta do Relatórios para o parecer
   incParecerRender();
   $id('inc-card-parecer').scrollIntoView({ behavior:'smooth' });
@@ -8605,7 +8795,7 @@ const INC_SECOES = {
     return B;
   },
   regimes(M){
-    const D = M.regimes.cons, th = `<tr><th>Regime</th><th>Permitido?</th>${M.ents.map(e=>`<th class="num">${esc(e.nome)}</th>`).join('')}<th class="num">Separadas</th><th class="num">Consolidada</th><th class="num">Carga</th><th class="num">Resultado após tributos</th><th class="num">Margem</th><th class="num">Δ R$</th><th>Leitura</th></tr>`;
+    const D = M.regimes.cons, th = `<tr><th>Regime</th><th>Permitido?</th>${M.ents.map(e=>`<th class="num">${esc(e.nome)}</th>`).join('')}<th class="num">Separadas</th><th class="num">Consolidada</th><th class="num">Carga</th><th class="num">Resultado após tributos</th><th class="num">Margem</th><th class="num">Δ R$</th><th class="num">Δ %</th><th>Leitura</th></tr>`;   // v1.7.0: faltava o "Δ %" (11 cabeçalhos para 12 células — colunas desalinhadas)
     const linhas = D.linhas.map(l => ({ html:`<tr${l.k===D.menorTrib?' style="background:#eaf2f8"':''}><td class="rot">${l.nome}${l.k===D.menorTrib?' <span class="badge ok">menor tributo</span>':''}${l.k===D.maiorRes?' <span class="badge ok">maior resultado</span>':''}</td><td>${l.permitido ? 'sim' + (l.motivo ? '<div class="hint">' + l.motivo + '</div>' : '') : '<b style="color:var(--err)">Não permitido</b><div class="hint">' + esc(l.motivo) + '</div>'}</td>${M.ents.map(e=>incTd(e.T[l.k])).join('')}${incTd(M.R.soma[l.k])}<td class="num"><b>${fmt(l.trib)}</b></td><td class="num">${incFmtPct(l.carga)}</td><td class="num">${l.resultado != null ? fmt(l.resultado) : '<span class="hint">não medido</span>'}</td><td class="num">${l.margem != null ? incFmtPct(l.margem) : '—'}</td>${incDelta3(M.R.soma[l.k], l.trib)}</tr>`, custo:2 }));
     return [incSec(8,'Comparação dos regimes tributários — consolidada'), incHint(`Regimes permitidos: ${D.linhas.filter(l=>l.permitido).map(l=>l.nome).join(', ')}${D.linhas.some(l=>!l.permitido) ? ' · não permitidos: ' + D.linhas.filter(l=>!l.permitido).map(l=>l.nome).join(', ') : ''}. Melhor pelo menor tributo: <b>${D.menorTrib ? INC_REGIME_NOME[D.menorTrib] : '—'}</b> · melhor pelo maior resultado econômico: <b>${D.maiorRes ? INC_REGIME_NOME[D.maiorRes] : 'não medido (sem custos e despesas lançados)'}</b>. Resultado após tributos = receita + financeiras − custos − folha − despesas − tributos do regime (INSS patronal incluído; FGTS fora do total, como no motor). Cenário não permitido nunca é classificado como melhor. ${INC_LEG_SINAL}`),
       incTab(th, linhas, 0, 'font-size:11px'), incPar(M.TX.regimes), incPar(M.TX.leitura)];
@@ -8681,17 +8871,24 @@ function incAssinatura(){ const e = (typeof PARAMS !== 'undefined' && PARAMS.esc
 // ═══ DOCUMENTOS ═══
 // monta um documento paginado (capa opcional + páginas timbradas); devolve { html, apos[] }
 function incDocumento(M, opts){
-  const B = (opts.blocos||[]).filter(Boolean), pre = opts.paginas || [];        // v1.6.0: páginas forçadas (uma por assunto) antes dos blocos corridos
+  // v1.7.0: (1) toda tabela passa pelo limite de colunas da orientação (incTabAjustar — "Leitura" vira nota,
+  // colunas de detalhe saem no parecer, e o resto é dividido, nunca cortado); (2) o documento é envolto em
+  // .inc-doc[data-orient] para o empacotador por medida (incEmpacotar) e a impressão por grupo.
+  const orient = opts.paisagem ? 'paisagem' : 'retrato', ctx = { n:0 }, ajOpts = { descartar: opts.compacto ? INC_DESCARTAR_PARECER(M) : [] };
+  const aj = lista => lista.filter(Boolean).flatMap(b => b && b.linhas ? incTabAjustar(b, orient, ctx, ajOpts) : [b]);
+  const B = aj(opts.blocos||[]), pre = (opts.paginas || []).map(g => aj(g));        // v1.6.0: páginas forçadas (uma por assunto) antes dos blocos corridos
   const apos = [...pre.flat(), ...B].filter(b=>b&&b.apos).map(b=>b.apos);
   let h = opts.capa ? INC_SECOES.capa(M, opts.titulo, opts.sub) : '';
   if (!opts.capa && B.length) B.unshift({ html:`<h3 class="pp-sec" style="margin-top:0">${esc(opts.titulo)}</h3><div class="hint" style="margin-bottom:10px"><b>${esc(M.E[0].nome)}</b> · incorporação de ${esc(M.E.slice(1).map(e=>e.nome).join(', '))} · ano-base ${M.ident.ano} · análise ${esc(M.ident.id)} · ${new Date().toLocaleDateString('pt-BR')} · Artecon Artes Contábeis</div>`, custo:5 });
-  if (pre.length) h += opts.paisagem ? pre.map(g => incPaginasPaisagem(g)).join('') : incPaginas(pre);
-  if (B.length) h += opts.paisagem ? incPaginasPaisagem(B) : ppDocumento(B);
-  return { html: h, apos };
+  // v1.7.0: a primeira folha de cada página forçada leva .pp-fixa — o empacotador por medida respeita a quebra (uma página por assunto)
+  const fixa = html => html.replace(/<div class="pp-page( pp-land)?">/, '<div class="pp-page$1 pp-fixa">');
+  if (pre.length) h += pre.map(g => fixa(opts.paisagem ? incPaginasPaisagem(g) : ppDocumento(g.filter(Boolean)))).join('');
+  if (B.length) h += fixa(opts.paisagem ? incPaginasPaisagem(B) : ppDocumento(B));
+  return { html: `<div class="inc-doc" data-orient="${orient}" data-tipo="${esc(opts.tipo||'')}">${h}</div>`, apos };
 }
 const INC_DOCS = {
   // camada GERENCIAL
-  parecer_inc:   { titulo:'Parecer Consolidado de Incorporação', capa:true, ia:true, paginas: M => incResumoExecutivoPaginas(M), blocos: M => [...INC_SECOES.identificacao(M), ...INC_SECOES.objetivo(M), ...INC_SECOES.resumo(M), ...INC_SECOES.painel(M), ...INC_SECOES.separadas(M), ...INC_SECOES.antesDepois(M), ...INC_SECOES.tributos(M), ...INC_SECOES.regimes(M), ...INC_SECOES.reforma(M), ...INC_SECOES.ranking(M), ...INC_SECOES.operacoes(M), ...INC_SECOES.alertas(M), ...INC_SECOES.conclusoes(M), ...INC_SECOES.recomendacao(M), ...INC_SECOES.premissas(M), ...INC_SECOES.limitacoes(M), ...INC_SECOES.memoria(M)] },
+  parecer_inc:   { titulo:'Parecer Consolidado de Incorporação', capa:true, ia:true, compacto:true, paginas: M => incResumoExecutivoPaginas(M), blocos: M => [...INC_SECOES.identificacao(M), ...INC_SECOES.objetivo(M), ...INC_SECOES.resumo(M), ...INC_SECOES.painel(M), ...INC_SECOES.separadas(M), ...INC_SECOES.antesDepois(M), ...INC_SECOES.tributos(M), ...INC_SECOES.regimes(M), ...INC_SECOES.reforma(M), ...INC_SECOES.ranking(M), ...INC_SECOES.operacoes(M), ...INC_SECOES.alertas(M), ...INC_SECOES.conclusoes(M), ...INC_SECOES.recomendacao(M), ...INC_SECOES.premissas(M), ...INC_SECOES.limitacoes(M), ...INC_SECOES.memoria(M)] },
   rel_executivo: { titulo:'Relatório 1 — Parecer Executivo', sub:'para o empresário e os sócios · decisão da incorporação', capa:true, paginas: M => incExecutivoPaginas(M, 'ex'), blocos: () => [] },
   // camada TÉCNICA (A4 paisagem para as tabelas largas)
   rel_tributario:{ titulo:'Relatório 2 — Comparativo Tributário Completo', sub:'para o contador e o setor fiscal', capa:false, paisagem:true, blocos: M => [...INC_SECOES.separadas(M), ...INC_SECOES.antesDepois(M), ...INC_SECOES.tributos(M, ['simples','lp','lr'], true), ...INC_SECOES.regimes(M), incSec(9,'Memória mensal da consolidada'), ...incMemoriaBlocos(M.R), ...INC_SECOES.memoria(M)] },
@@ -8699,7 +8896,7 @@ const INC_DOCS = {
   rel_financeira:{ titulo: M => M.temCustos ? 'Relatório 4 — Análise Financeira' : 'Relatório 4 — Informações financeiras pendentes', capa:false, blocos: M => incRelFinanceiraBlocos(M) },
   rel_patrimonial:{ titulo:'Relatório 5 — Informações patrimoniais pendentes', capa:false, blocos: M => incRelPatrimonialBlocos(M) },
   rel_societaria:{ titulo:'Relatório 6 — Informações societárias e operacionais pendentes', capa:false, blocos: M => incRelSocietariaBlocos(M) },
-  rel_memoria:   { titulo:'Relatório 7 — Memória de Cálculo', capa:false, paisagem:true, blocos: M => [...INC_SECOES.memoria(M), ...INC_SECOES.premissas(M), ...INC_SECOES.operacoes(M), incSec(21,'Memória mensal da consolidada'), ...incMemoriaBlocos(M.R), incPar('A memória mês a mês de cada empresa isolada (RBT12, faixa, Fator R, DAS, LP, LR, demonstrativo da Reforma) está no relatório "Conferência de cálculos", com trilha de origem de cada dado de entrada.')] },
+  rel_memoria:   { titulo:'Relatório 7 — Memória de Cálculo', sub:'todos os cálculos detalhados: base → alíquota → fórmula → resultado', capa:false, paisagem:true, blocos: M => [incPar('Este relatório demonstra, com os números aplicados, cada cálculo que sustenta o parecer: dados de entrada (7.1), consolidação (7.2), Simples Nacional (7.3), Lucro Presumido (7.4), Lucro Real (7.5), Reforma Tributária (7.6), Δ e score (7.7) e a conciliação com os totais do parecer (7.8). Premissas e operações entre as empresas estão nas seções 18 e 11 do Parecer Consolidado; a memória mês a mês de cada empresa isolada, com trilha de origem por dado, está também no relatório "Conferência de cálculos".'), ...incMemoriaCompleta(M).blocos, ...INC_SECOES.memoria(M)] },
   rel_riscos:    { titulo:'Relatório 8 — Riscos, Pendências e Checklist', capa:false, blocos: M => incRelRiscosBlocos(M) },
 };
 function incVantagens(M){
@@ -8800,19 +8997,25 @@ function incMemoriaBlocos(R){
 const INC_REL_TIPOS_NOVOS = ['rel_executivo','rel_tributario','rel_reforma','rel_financeira','rel_patrimonial','rel_societaria','rel_memoria','rel_riscos','rel_todos'];
 function incFerramentas(M, tipo){
   const statusIA = INC._ia ? `🤖 Textos gerados pela IA em ${esc(INC._ia.quando)}.` : (INC._iaErro ? `⚠️ A geração com IA falhou (${esc(INC._iaErro)}) — textos padrão do sistema.` : 'Textos padrão do sistema — clique em "Gerar textos com IA".');
+  const dica = 'Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · Gráficos de segundo plano ligados';
+  const imprimir = tipo === 'rel_todos'
+    ? `<button class="btn" onclick="incImprimir('retrato')" title="${dica} · relatórios 1, 4, 5, 6 e 8 (A4 retrato)">🖨️ PDF gerencial (retrato)</button><button class="btn" onclick="incImprimir('paisagem')" title="${dica} · relatórios 2, 3 e 7 (A4 paisagem)">🖨️ PDF técnico (paisagem)</button>`
+    : `<button class="btn" onclick="window.print()" title="${dica}${INC_DOCS[tipo] && INC_DOCS[tipo].paisagem ? ' · A4 paisagem' : ' · A4 retrato'}">🖨️ Imprimir / PDF</button>`;
   return `<div class="card pp-tools"><div class="toolbar" style="align-items:center"><span class="hint">${statusIA}</span><span style="flex:1"></span>
-    <button class="btn" onclick="incExcel('${tipo}')" title="Planilha com uma aba por seção/relatório — os mesmos números do documento">📗 Exportar Excel</button>
-    <button class="btn" onclick="window.print()" title="Destino = Salvar como PDF · Margens = Nenhuma · Cabeçalhos e rodapés DESLIGADOS · Gráficos de segundo plano ligados">🖨️ Imprimir / PDF</button>
+    <button class="btn" onclick="incExcel('${tipo}')" title="Planilha com uma aba por seção/relatório — os mesmos números do documento (Relatório 7: fórmulas de planilha)">📗 Exportar Excel</button>${imprimir}
     <button class="btn solid" id="pp-ia-btn" onclick="incParecerIA()">🤖 Gerar textos com IA</button></div><div id="pp-regua"></div></div>`;
 }
 function incRelatorioRender(tipo){
   const M = incModelo(); if (!M){ $id('rl-corpo').innerHTML = '<div class="card placeholder"><h2>Sem simulação calculada</h2></div>'; return; }
   const tipos = tipo === 'rel_todos' ? Object.keys(INC_DOCS) : [tipo];
   let h = incFerramentas(M, tipo); const apos = [];
-  for (const t of tipos){ const d = INC_DOCS[t]; if (!d) continue; const doc = incDocumento(M, { titulo: typeof d.titulo === 'function' ? d.titulo(M) : d.titulo, sub:d.sub, capa:d.capa, paisagem:!!d.paisagem, paginas: d.paginas ? d.paginas(M) : null, blocos:d.blocos(M) }); h += doc.html; apos.push(...doc.apos); }
-  $id('rl-corpo').innerHTML = h;
+  for (const t of tipos){ const d = INC_DOCS[t]; if (!d) continue; const doc = incDocumento(M, { tipo:t, titulo: typeof d.titulo === 'function' ? d.titulo(M) : d.titulo, sub:d.sub, capa:d.capa, paisagem:!!d.paisagem, compacto:!!d.compacto, paginas: d.paginas ? d.paginas(M) : null, blocos:d.blocos(M) }); h += doc.html; apos.push(...doc.apos); }
+  // v1.7.0: orientação ÚNICA por documento (regra @page global — vale em qualquer navegador); "Todos" imprime por grupo
+  incPrintCss(tipo === 'rel_todos' ? null : (INC_DOCS[tipo] && INC_DOCS[tipo].paisagem ? 'paisagem' : 'retrato'));
+  const corpo = $id('rl-corpo'); corpo.innerHTML = h;
+  incEmpacotar(corpo);                                   // v1.7.0: repagina por MEDIÇÃO real antes de desenhar os gráficos
   apos.forEach(f => { try { f(); } catch(e){ console.error('relatório/gráfico', e); } });
-  setTimeout(() => { try { ppReguaRender(); } catch(e){ console.error('régua', e); } }, 350);
+  setTimeout(() => { try { incReguaRender(); } catch(e){ console.error('régua', e); } }, 350);
 }
 // o parecer da aba Simulação e o "Parecer Consolidado" da aba Relatórios são o MESMO render
 function incParecerRender(){ incRelatorioRender('parecer_inc'); }
@@ -8834,7 +9037,7 @@ function incExcelAbas(M, tipo){
   const premissas = () => incExcelAba('Premissas e memória', [cab, [], ['Premissas'], ...M.R.premissas.map(p=>[p]), [], ['Notas'], ...M.R.notas.map(p=>[p]), [], ['Operações abatidas'], ['Vendeu', 'Comprou', 'Natureza', 'Valor', 'Abatido receita', 'Abatido compras'], ...M.R.abatidos.map(a=>[a.deNome, a.paraNome, a.natureza, num(a.valor), num(a.abatidoRec), num(a.abatidoDest)])]);
   const memoria = () => { const Mm = M.cons.R.meses; return incExcelAba('Memória mensal', [['Mês', 'RBT12', 'Faixa', 'Fator R', 'Receita', 'DAS', 'Trava ICMS/ISS', 'Simples total', 'Presumido', 'Real', 'Base LR (IRPJ/CSLL)', 'Folha', 'INSS patronal'], ...Mm.map((x,i)=>[MESES[i], num(x.rbt12), x.faixa??'', num(x.fatorR), num(x.receita), num(x.das), num((x.subIcms||0)+(x.subIss||0)), num(x.simples.total), num(x.lp.total), num(x.lr.total), num(x.lr.baseIRCS), num(x.folhaTotal), num(x.inssPatr)])]); };
   const map = { parecer_inc:[painel, separadas, ()=>tributos(M.c2.ind.reg), regimes, reforma, ranking, alertas, conclusoes, premissas], rel_executivo:[painel, ranking, conclusoes], rel_tributario:[separadas, ()=>tributos('simples'), ()=>tributos('lp'), ()=>tributos('lr'), regimes, memoria], rel_reforma:[reforma],
-    rel_financeira:[regimes, separadas], rel_patrimonial:[alertas], rel_societaria:[alertas], rel_memoria:[premissas, memoria], rel_riscos:[alertas], rel_todos:[painel, separadas, ()=>tributos('simples'), ()=>tributos('lp'), ()=>tributos('lr'), regimes, reforma, ranking, alertas, conclusoes, premissas, memoria] };
+    rel_financeira:[regimes, separadas], rel_patrimonial:[alertas], rel_societaria:[alertas], rel_memoria:[premissas, ...incMemoriaCompleta(M).abas.map((a,i) => () => incExcelAba(('M' + (i+1) + ' ' + a.titulo).slice(0,31), a.aoa))], rel_riscos:[alertas], rel_todos:[painel, separadas, ()=>tributos('simples'), ()=>tributos('lp'), ()=>tributos('lr'), regimes, reforma, ranking, alertas, conclusoes, premissas, memoria] };
   for (const f of (map[tipo] || map.parecer_inc)) A.push(f());
   return A;
 }
@@ -9113,6 +9316,341 @@ function incPaginasPaisagem(blocos, cap){
   fecha();
   return pags.map((p, i) => `<div class="pp-page pp-land"><div class="pp-land-cab"><span>Artecon Artes Contábeis · Simulação de Incorporação</span><span>página ${i+1} de ${pags.length}</span></div><div class="pp-miolo">${p}</div></div>`).join('');
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// ══ v1.7.0 · LAYOUT QUE NUNCA CORTA + MEMÓRIA DE CÁLCULO COMPLETA (Demonstrativo de 15/09/2026) ══
+// ══ Nada do motor, do modelo (incModelo), das fórmulas de Δ, da classificação ou do score muda. ══
+// ══ (A) incTabAjustar — limite de colunas por orientação: "Leitura" vira notas numeradas, colunas ══
+// ══     de detalhe saem para os relatórios técnicos e, se ainda faltar espaço, a tabela é dividida ══
+// ══     em partes (nunca cortada). (B) incEmpacotar — paginador por MEDIÇÃO REAL no navegador,     ══
+// ══     retrato e paisagem, quebrando tabelas por linha com o cabeçalho repetido. (C) incRegua —   ══
+// ══     mede altura E largura de cada folha. (D) incPrintCss — orientação única por documento     ══
+// ══     (funciona em Firefox/Safari) e "Todos" em dois PDFs. (E) incMemoriaCompleta — 8 blocos.    ══
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+// ── (A) LIMITE DE COLUNAS ──────────────────────────────────────────────────────────────────
+const INC_COLS_MAX = { retrato:7, paisagem:11 };
+const INC_COL_NOTA = /^(leitura|explica|por qu|como foi|observa|motivo|justificativa)/i;
+const incTxt = h => String(h||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+// células de uma linha/cabeçalho: [{tag, attrs, inner, span}] — as tabelas do módulo não aninham tabelas
+function incCelulas(html){
+  const out = []; const re = /<t([dh])\b([^>]*)>([\s\S]*?)<\/t\1>/g; let m;
+  while ((m = re.exec(html))){ const sp = +((m[2].match(/colspan="?(\d+)/)||[])[1]) || 1; out.push({ tag:m[1], attrs:m[2], inner:m[3], span:sp }); }
+  return out;
+}
+const incCelHtml = c => `<t${c.tag}${c.attrs}>${c.inner}</t${c.tag}>`;
+const incRowHtml = cels => `<tr>${cels.map(incCelHtml).join('')}</tr>`;
+const INC_SUP = n => `<sup style="font-weight:600;color:#8c2f39">${n}</sup>`;
+// devolve uma lista de blocos (tabelas + notas) que cabem na orientação; ctx.n = contador de notas do documento
+function incTabAjustar(b, orient, ctx, opts){
+  if (!b || !b.linhas) return [b];
+  const MAX = (opts && opts.maxCols) || INC_COLS_MAX[orient] || INC_COLS_MAX.retrato;
+  const ths = incCelulas(b.thead); const nCols = ths.reduce((s,c)=>s+c.span,0);
+  if (!ths.length || nCols <= MAX) return [b];
+  ctx = ctx || { n:0 };
+  // cada "linha" do bloco pode trazer mais de um <tr> (ex.: linha de valores + linha de fórmula com colspan)
+  let cab = ths.map(c => ({ ...c }));
+  const rows = b.linhas.map(L => ({ L, segs: (String(L.html).match(/<tr[\s\S]*?<\/tr>/g) || [L.html]).map(seg => { const cs = incCelulas(seg); const n = cs.reduce((s,c)=>s+c.span,0); return { cs, span: n !== cab.length || cs.some(c=>c.span>1) }; }) }));
+  const notas = []; const omitidas = [];
+  const ajustaSpan = (c, delta) => { c.span = Math.max(1, c.span + delta); c.attrs = c.attrs.replace(/colspan="?\d+"?/, `colspan="${c.span}"`); };
+  const remover = idx => { cab.splice(idx, 1); for (const r of rows) for (const sg of r.segs){ if (sg.span){ const c = sg.cs.find(x=>x.span>1); if (c) ajustaSpan(c, -1); continue; } sg.cs.splice(idx, 1); } };
+  // 1) "Leitura" e afins viram notas numeradas abaixo da tabela
+  for (let i = cab.length - 1; i >= 0; i--){
+    if (!INC_COL_NOTA.test(incTxt(cab[i].inner))) continue;
+    for (const r of rows){ const sg = r.segs.find(x=>!x.span); if (!sg) continue; const t = incTxt(sg.cs[i].inner); if (t && t !== '—' && t !== '-'){ ctx.n++; notas.push({ n:ctx.n, t: sg.cs[i].inner }); sg.cs[0].inner += ' ' + INC_SUP(ctx.n); } }
+    remover(i);
+  }
+  // 2) colunas de detalhe que este documento dispensa (as completas ficam nos relatórios técnicos)
+  const desc = (opts && opts.descartar) || [];
+  for (const re of desc){ if (cab.length <= MAX) break; for (let i = cab.length - 1; i >= 1 && cab.length > MAX; i--){ if (re.test(incTxt(cab[i].inner))){ omitidas.push(incTxt(cab[i].inner)); remover(i); } } }
+  // 3) ainda larga → divide em partes, repetindo a primeira coluna (rótulo)
+  const partes = []; if (cab.length <= MAX) partes.push(cab.map((_,i)=>i)); else { const por = MAX - 1; for (let i = 1; i < cab.length; i += por) partes.push([0, ...cab.slice(i, i+por).map((_,j)=>i+j)]); }
+  const out = [];
+  partes.forEach((idx, p) => {
+    const thead = incRowHtml(idx.map(i => cab[i]));
+    const linhas = rows.map(r => { const html = r.segs.map(sg => { if (sg.span){ if (p > 0) return ''; const cs = sg.cs.map(c => ({ ...c })); const c = cs.find(x=>x.span>1); if (c) ajustaSpan(c, idx.length - cab.length); return incRowHtml(cs); } return incRowHtml(idx.map(i => sg.cs[i])); }).join(''); return html ? { html, custo: r.L.custo||1 } : null; }).filter(Boolean);
+    const fixo = p === 0 ? (b.htmlFixo||'') : `<div class="hint" style="margin:6px 0 -4px">continuação do quadro — parte ${p+1} de ${partes.length} (colunas ${incTxt(cab[idx[1]].inner)} … ${incTxt(cab[idx[idx.length-1]].inner)})</div>`;
+    out.push({ thead, linhas, custoFixo: p === 0 ? (b.custoFixo||0) : 1, htmlFixo: fixo, estilo: b.estilo });
+  });
+  if (omitidas.length) out.push({ html:`<div class="hint" style="margin:-2px 0 6px">Colunas resumidas neste quadro (${esc([...new Set(omitidas)].join(', '))}): a abertura completa está nos relatórios técnicos (Relatório 2 — Comparativo Tributário Completo, Relatório 3 — Reforma e Relatório 7 — Memória de Cálculo).</div>`, custo:2 });
+  if (notas.length) out.push({ html:`<div class="hint inc-notas" style="margin:-2px 0 8px;line-height:1.5">${notas.map(n => `${INC_SUP(n.n)} ${n.t}`).join('<br>')}</div>`, custo: Math.max(2, Math.ceil(notas.reduce((s,n)=>s+incTxt(n.t).length,0)/(orient==='paisagem'?170:110))) });
+  return out;
+}
+const INC_DESCARTAR_PARECER = M => [...M.ents.map(e => new RegExp('^' + e.nome.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '$')), /^Base \(cons/i, /^Alíq/i, /^Margem$/i, /^Carga$/i, /^Acumul/i, /^Débito/i, /^Crédito$/i, /^IBS$/i, /^CBS$/i, /^Permitido/i, /^Estab/i, /^Resultado após/i, /^Tributos\/ano$/i];
+
+// ── (B) PAGINADOR POR MEDIÇÃO REAL ────────────────────────────────────────────────────────
+// Roda sobre o DOM já montado (antes de os gráficos serem desenhados — os canvas têm tamanho fixo).
+// Redistribui os blocos de cada documento (.inc-doc) entre folhas novas da mesma orientação,
+// quebrando tabelas por linha (cabeçalho repetido) e nunca deixando cabeçalho de seção órfão.
+// Sem layout (ambiente de teste, aba oculta) não faz nada: a paginação por custo já colocada vale.
+const INC_FOLHA_MM = { retrato: 296, paisagem: 209 };
+function incEmpacotarDoc(doc){
+  const original = doc.innerHTML;                 // qualquer erro no meio do caminho restaura as folhas por custo
+  try { return incEmpacotarDocInterno(doc); } catch(e){ console.error('incEmpacotarDoc', e); doc.innerHTML = original; return 0; }
+}
+function incEmpacotarDocInterno(doc){
+  const pais = doc.dataset.orient === 'paisagem';
+  const pgs = Array.from(doc.querySelectorAll('.pp-page')).filter(p => !p.classList.contains('pp-capa'));
+  if (!pgs.length) return 0;
+  const mm = ppMm2px(), LIM = (INC_FOLHA_MM[pais?'paisagem':'retrato'] - PP_RESERVA_MM) * mm;
+  const primeira = pgs[0]; if (!primeira.offsetHeight) return 0;               // sem layout: nada a medir
+  const blocos = [];
+  for (const pg of pgs){ const mi = pg.querySelector('.pp-miolo'); if (!mi) continue; let primeiro = pg.classList.contains('pp-fixa'); while (mi.firstChild){ const b = mi.removeChild(mi.firstChild); if (primeiro && b.nodeType === 1){ b.__quebra = true; primeiro = false; } blocos.push(b); } }
+  const modeloBg = primeira.querySelector('.pp-bg'), modeloCab = primeira.querySelector('.pp-land-cab');
+  const folhas = [];
+  const novaFolha = () => {
+    const pg = document.createElement('div'); pg.className = pais ? 'pp-page pp-land' : 'pp-page';
+    if (pais){ const cab = modeloCab ? modeloCab.cloneNode(true) : document.createElement('div'); cab.className = 'pp-land-cab'; pg.appendChild(cab); }
+    else { let img; if (modeloBg){ img = modeloBg.cloneNode(true); img.style.display = ''; } else { img = document.createElement('img'); img.className = 'pp-bg'; img.src = 'timbrado.jpg'; img.onerror = function(){ this.style.display = 'none'; }; } pg.appendChild(img); }
+    const mi = document.createElement('div'); mi.className = 'pp-miolo'; pg.appendChild(mi);
+    primeira.parentNode.insertBefore(pg, primeira); folhas.push(pg); return mi;
+  };
+  const altura = mi => mi.offsetHeight;
+  let mi = novaFolha();
+  const fecharEAbrir = () => { const arrasta = []; while (mi.childNodes.length > 1 && ppEhEncabecamento(mi.lastElementChild, mi)) arrasta.unshift(mi.removeChild(mi.lastElementChild)); mi = novaFolha(); for (const a of arrasta) mi.appendChild(a); };
+  for (const b of blocos){
+    if (b.__quebra && mi.childNodes.length) mi = novaFolha();      // página forçada (uma por assunto): sempre começa folha nova
+    if (b.__quebra) mi.parentNode.classList.add('pp-fixa');
+    const ehTabela = b.nodeType === 1 && b.tagName === 'TABLE' && b.tBodies && b.tBodies[0];
+    if (ehTabela && b.tBodies[0].rows.length > 1){
+      // tabela quebrável: linha a linha, cabeçalho repetido em cada folha
+      const thead = b.tHead ? b.tHead.cloneNode(true) : null, linhas = Array.from(b.tBodies[0].rows), cls = b.className, estilo = b.getAttribute('style');
+      const novaTabela = () => { const t = document.createElement('table'); t.className = cls; if (estilo) t.setAttribute('style', estilo); if (thead) t.appendChild(thead.cloneNode(true)); const tb = document.createElement('tbody'); t.appendChild(tb); mi.appendChild(t); return tb; };
+      let tb = novaTabela(), nesta = 0;
+      if (altura(mi) > LIM && mi.childNodes.length > 1){ tb.parentNode.remove(); fecharEAbrir(); tb = novaTabela(); }
+      for (const tr of linhas){
+        tb.appendChild(tr);
+        if (altura(mi) > LIM && (nesta > 0 || mi.childNodes.length > 1)){
+          tb.removeChild(tr); if (nesta === 0) tb.parentNode.remove();
+          fecharEAbrir(); tb = novaTabela(); nesta = 0; tb.appendChild(tr);
+        }
+        nesta++;
+      }
+      continue;
+    }
+    mi.appendChild(b);
+    if (altura(mi) > LIM && mi.childNodes.length > 1){ mi.removeChild(b); fecharEAbrir(); mi.appendChild(b); }
+  }
+  for (const pg of pgs) pg.remove();
+  // numeração das folhas paisagem (o cabeçalho traz "página i de n")
+  if (pais) folhas.forEach((pg, i) => { const c = pg.querySelector('.pp-land-cab'); if (c) c.innerHTML = `<span>Artecon Artes Contábeis · Simulação de Incorporação</span><span>página ${i+1} de ${folhas.length}</span>`; });
+  return folhas.length;
+}
+function incEmpacotar(corpo){
+  let n = 0; corpo.querySelectorAll('.inc-doc').forEach(d => { n += incEmpacotarDoc(d) || 0; });
+  return n;
+}
+
+// ── (C) RÉGUA: altura E largura, nas duas orientações ──────────────────────────────────────
+function incMedirPaginas(corpo){
+  const mm = ppMm2px(), out = []; let n = 0;
+  corpo.querySelectorAll('.pp-page').forEach(pg => {
+    n++; const mi = pg.querySelector('.pp-miolo'); const pais = pg.classList.contains('pp-land');
+    if (!mi){ out.push({ n, capa:true, mm:0, excesso:0, largura:0 }); return; }
+    const folha = INC_FOLHA_MM[pais?'paisagem':'retrato'];
+    const alt = mi.offsetHeight / mm; let largura = 0;
+    mi.querySelectorAll('table, .pp-chart, div').forEach(el => { const w = el.scrollWidth || 0; if (w > mi.clientWidth + 2) largura = Math.max(largura, (w - mi.clientWidth) / mm); });
+    if (mi.scrollWidth > mi.clientWidth + 2) largura = Math.max(largura, (mi.scrollWidth - mi.clientWidth) / mm);
+    const sec = mi.querySelector('.pp-sec');
+    out.push({ n, pais, titulo: sec ? sec.textContent.trim().slice(0,52) : '(continuação)', mm: alt, excesso: alt - folha, largura });
+  });
+  return out;
+}
+function incReguaRender(){
+  const alvo = $id('pp-regua'), corpo = $id('rl-corpo'); if (!alvo || !corpo) return;
+  const med = incMedirPaginas(corpo); if (!med.length || !med.some(x=>x.mm>0)){ alvo.innerHTML = ''; return; }
+  const altura = med.filter(x => x.excesso > 0), larg = med.filter(x => x.largura > 0.5);
+  const detalhe = `<details style="margin-top:6px"><summary class="hint" style="cursor:pointer">ver a medida das ${med.length} folhas</summary><div class="hint" style="margin-top:4px;line-height:1.7">${med.map(x => x.capa ? `<b>pág. ${x.n}</b> Capa` : `<b>pág. ${x.n}</b> ${x.pais?'paisagem':'retrato'} · ${esc(x.titulo)} — ${x.mm.toFixed(0)} mm ${x.excesso>0?`<b style="color:#8c2f39">+${x.excesso.toFixed(0)} mm além</b>`:`(folga ${(-x.excesso).toFixed(0)} mm)`}${x.largura>0.5?` · <b style="color:#8c2f39">${x.largura.toFixed(0)} mm além da margem direita</b>`:''}`).join('<br>')}</div></details>`;
+  if (!altura.length && !larg.length) alvo.innerHTML = `<div class="hint" style="margin-top:6px">✅ <b>${med.length} folhas</b> medidas no navegador: todas dentro da área útil (altura e largura). ${detalhe}</div>`;
+  else alvo.innerHTML = `<div class="pp-alerta" style="margin:8px 0 0"><b>⚠️ ${altura.length + larg.length} folha(s) fora da área útil</b> — ${altura.map(x=>`pág. ${x.n} (+${x.excesso.toFixed(0)} mm de altura)`).concat(larg.map(x=>`pág. ${x.n} (${x.largura.toFixed(0)} mm além da largura)`)).join(', ')}. O conteúdo excedente sairia cortado no PDF: recalcule ou avise o desenvolvedor.${detalhe}</div>`;
+}
+
+// ── (D) ORIENTAÇÃO DE IMPRESSÃO POR DOCUMENTO ─────────────────────────────────────────────
+// Uma regra @page global por documento (retrato ou paisagem): vale em Chrome, Edge, Firefox e Safari.
+// "Todos" mostra tudo na tela e imprime em dois PDFs (gerencial retrato · técnico paisagem).
+function incPrintCss(orient){
+  let st = document.getElementById('inc-print-css'); if (st) st.remove();
+  if (typeof apPrintCss === 'function') apPrintCss(false);
+  if (!orient) return;
+  st = document.createElement('style'); st.id = 'inc-print-css';
+  st.textContent = `@media print{ @page{size:A4 ${orient==='paisagem'?'landscape':'portrait'};margin:0} ${orient==='paisagem'?'#rl-corpo{width:297mm!important}':'#rl-corpo{width:210mm!important}'} }`;
+  document.head.appendChild(st);
+}
+function incImprimir(grupo){
+  const corpo = $id('rl-corpo'); if (!corpo) return;
+  let st = document.getElementById('inc-print-grupo'); if (st) st.remove();
+  if (grupo){
+    incPrintCss(grupo);
+    st = document.createElement('style'); st.id = 'inc-print-grupo';
+    st.textContent = `@media print{ .inc-doc:not([data-orient="${grupo}"]){display:none!important} }`;
+    document.head.appendChild(st);
+    const limpar = () => { const s = document.getElementById('inc-print-grupo'); if (s) s.remove(); window.removeEventListener('afterprint', limpar); };
+    window.addEventListener('afterprint', limpar); setTimeout(limpar, 60000);
+  }
+  window.print();
+}
+
+// ── (E) MEMÓRIA DE CÁLCULO COMPLETA ───────────────────────────────────────────────────────
+// Só LÊ os intermediários que o motor já devolve (R.meses[].rbt12, faixa, efb, ins.blocos, dasTrib,
+// lp.*, lr.*, lrApur, T.anos, cen.REF/rfx) e apresenta base → alíquota → fórmula → resultado.
+// Tabelas nascem de um modelo de dados (incMT) que alimenta o HTML e o Excel (com fórmulas de planilha).
+const INC_MEM_MESES = () => (typeof MESES !== 'undefined' ? MESES : ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']);
+const INC_ANEXO_DO_BLOCO = k => /^a1/.test(k) ? 'I' : /^a2/.test(k) ? 'II' : /^a3/.test(k) ? 'III' : /^a4/.test(k) ? 'IV' : /^a5r/.test(k) ? 'V' : null;
+const INC_BLOCO_BASE = k => ['a1_semst','a2_semst','a3_semret','a4','a5r','a1_exp','a2_exp','a3_exp','a5r_exp'].includes(k);
+const incRotBloco = k => { const p = (typeof PG_BLOCOS !== 'undefined' ? PG_BLOCOS : []).find(x => x[0] === k); return p ? p[1] : k; };
+const incPctS = (v, d=2) => (v == null || isNaN(v)) ? '—' : fmtP(v*100, d) + '%';
+// modelo de tabela: cab = ['Mês', ...]; linhas = [[cel, cel…]] onde cel = número | string | {v, f} (f = fórmula com {r} = nº da linha na planilha)
+function incMT(titulo, cab, linhas, opts){
+  const o = opts || {}; const numCols = o.num || cab.map((_,i) => i > 0);
+  const cel = (c, i) => { const v = (c && typeof c === 'object' && 'v' in c) ? c.v : c; if (typeof v === 'number') return `<td class="num">${isNaN(v) ? '—' : (o.pct && o.pct[i] != null ? incPctS(v, o.pct[i] === true ? 2 : o.pct[i]) : fmt(v))}</td>`; return `<td${numCols[i]?' class="num"':''}>${v == null ? '—' : v}</td>`; };
+  const thead = `<tr>${cab.map((c,i) => `<th${numCols[i]?' class="num"':''}>${c}</th>`).join('')}</tr>`;
+  const rows = linhas.map(l => ({ html:`<tr>${l.map((c,i) => i === 0 ? `<td class="rot">${(c && typeof c === 'object' && 'v' in c) ? c.v : c}</td>` : cel(c, i)).join('')}</tr>`, custo:1 }));
+  const bl = [];
+  if (titulo) bl.push({ html:`<div class="hint" style="margin:10px 0 2px"><b>${titulo}</b></div>`, custo:1 });
+  if (o.antes) bl.push({ html:`<div class="hint" style="margin:0 0 4px">${o.antes}</div>`, custo: Math.max(1, Math.ceil(incTxt(o.antes).length/170)) });
+  bl.push({ thead, linhas: rows, custoFixo:0 });
+  if (o.depois) bl.push({ html:`<div class="hint" style="margin:-2px 0 8px">${o.depois}</div>`, custo: Math.max(1, Math.ceil(incTxt(o.depois).length/170)) });
+  // planilha: números como números, {v,f} vira fórmula
+  const aoa = [cab.map(c => incTxt(c)), ...linhas.map((l, r) => l.map(c => { if (c && typeof c === 'object' && 'v' in c){ if (c.f) return { t:'n', v: +c.v || 0, f: c.f.replace(/\{r\}/g, r + 2).replace(/^=/, '') }; return c.v; } return (typeof c === 'number' && isNaN(c)) ? '' : c; }))];
+  return { blocos: bl, aba: { titulo: incTxt(titulo), aoa } };
+}
+const incColL = i => String.fromCharCode(65 + i);   // 0 → A
+function incMemoriaCompleta(M){
+  const R = M.R, ents = M.ents, cons = M.cons, todos = [...ents, cons], MES = INC_MEM_MESES(), S = (arr, f) => arr.reduce((s,x)=>s+(+f(x)||0),0);
+  const B = [], ABAS = [], conc = [];
+  const add = t => { B.push(...t.blocos); ABAS.push(t.aba); };
+  const sec = (n, t) => B.push({ html:`<h3 class="pp-sec">${n} ${t}</h3>`, custo:2 });
+  const par = t => B.push({ html:`<p class="pp-p" style="font-size:12px">${t}</p>`, custo: Math.max(1, Math.ceil(incTxt(t).length/220)) });
+  const nomeEnt = e => e === cons ? 'Consolidada' : e.nome;
+  const origem = (e, i) => e.P ? (i <= e.P.ultimo ? 'lançado' : 'projetado') : 'lançado';
+
+  // 7.1 ENTRADAS
+  sec('7.1', 'Dados de entrada por empresa e mês (origem de cada valor)');
+  par('Cada linha traz o que entrou no motor para o mês: receita interna e de exportação, folha (salários + pró-labore), compras e despesas, com a alíquota de ISS/ICMS configurada. "projetado" = mês estimado pela projeção individual do ano incompleto, antes da soma.');
+  for (const e of todos){
+    const Mm = e.R.meses;
+    add(incMT(`Entradas — ${esc(nomeEnt(e))}`, ['Mês','Receita interna','Receita export.','Comércio','Serviços','Folha (sal.+pró-lab.)','Compras','Despesas','ISS cfg','ICMS venda cfg','Origem'],
+      Mm.map((m,i) => [MES[i], +m.recInt||0, +m.recExp||0, +m.recCom||0, +m.recServ||0, (+((m.ins&&m.ins.folha)||{}).salarios||0) + (+((m.ins&&m.ins.folha)||{}).prolabore||0), S(Object.values((m.ins&&m.ins.compras)||{}), v=>v), +m.despTotal||0, { v: +((m.ins||{}).issCfg)||0 }, { v: +((m.ins||{}).icmsCfg)||0 }, e === cons ? 'soma' : origem(e, i)])
+        .concat([['Total', S(Mm,m=>m.recInt), S(Mm,m=>m.recExp), S(Mm,m=>m.recCom), S(Mm,m=>m.recServ), S(Mm,m=>(+((m.ins&&m.ins.folha)||{}).salarios||0)+(+((m.ins&&m.ins.folha)||{}).prolabore||0)), S(Mm,m=>S(Object.values((m.ins&&m.ins.compras)||{}),v=>v)), S(Mm,m=>m.despTotal), '', '', '']]),
+      { pct:{ 8:true, 9:true }, num:[false,true,true,true,true,true,true,true,true,true,false] }));
+  }
+
+  // 7.2 CONSOLIDAÇÃO
+  sec('7.2', 'Consolidação — soma mês a mês, abatimentos e ponderação de ISS/ICMS');
+  par(`Consolidada = ${ents.map(e=>esc(e.nome)).join(' + ')} − operações entre as empresas abatidas, mês a mês. O RBT12 consolidado é a soma dos RBT12 (decisão de 01/09/2026). As colunas "Σ" e "Consolidada" devem coincidir quando não há abatimento no mês.`);
+  const somaMes = (f, i) => S(ents, e => f(e.R.meses[i]));
+    add(incMT('Receita interna: soma das empresas × consolidada', ['Mês', ...ents.map(e=>esc(e.nome)), 'Σ empresas', 'Consolidada (motor)', 'Abatido (Σ − consolidada)'],
+    cons.R.meses.map((m,i) => { const s = somaMes(x=>x.recInt, i), c = +m.recInt||0; return [MES[i], ...ents.map(e=>+e.R.meses[i].recInt||0), { v:s, f:`=SUM(B{r}:${incColL(ents.length)}{r})` }, c, { v: s - c, f:`=${incColL(ents.length+1)}{r}-${incColL(ents.length+2)}{r}` }]; })
+      .concat([['Total', ...ents.map(e=>S(e.R.meses,x=>x.recInt)), S(cons.R.meses,(m)=>somaMes(x=>x.recInt, cons.R.meses.indexOf(m))), S(cons.R.meses,m=>m.recInt), S(cons.R.meses,(m)=>somaMes(x=>x.recInt, cons.R.meses.indexOf(m)) - (+m.recInt||0))]]),
+    { depois: (R.abatidos||[]).length ? `Operações abatidas: ${R.abatidos.map(a => `${esc(a.vendeu||a.de||'')} → ${esc(a.comprou||a.para||'')} ${fmtR(+a.abatReceita||+a.valor||0)}`).join('; ')}.` : 'Nenhuma operação entre as empresas foi abatida nesta simulação (coluna "Abatido" = 0).' }));
+  add(incMT('RBT12: soma dos RBT12 das empresas × RBT12 da consolidada', ['Mês', ...ents.map(e=>esc(e.nome)), 'Σ RBT12', 'RBT12 consolidada (motor)', 'Faixa', 'Diferença'],
+    cons.R.meses.map((m,i) => { const s = S(ents, e=>e.R.meses[i].rbt12); return [MES[i], ...ents.map(e=>+e.R.meses[i].rbt12||0), { v:s, f:`=SUM(B{r}:${incColL(ents.length)}{r})` }, +m.rbt12||0, m.faixa != null ? String(m.faixa) : '—', { v: s - (+m.rbt12||0), f:`=${incColL(ents.length+1)}{r}-${incColL(ents.length+2)}{r}` }]; }),
+    { depois: 'Diferença ≠ 0 só quando há abatimento de receita intragrupo no período de 12 meses ou quando a incorporadora informou o RBT12 diretamente na Configuração.' }));
+  const pondera = (rot, chave, baseF, cfgKey) => { const linhas = ents.map(e => { const a = +(e.cfg||{})[cfgKey]||0, b = S(e.R.meses, baseF); return [esc(e.nome), { v:a }, b, { v:a*b, f:`=B{r}*C{r}` }]; }); const sb = S(linhas, l=>l[2]), sp = S(linhas, l=>l[3].v); const res = sb > 0 ? sp/sb : 0; const usado = +(cons.cfg||{})[cfgKey]||0;
+    return incMT(`${rot} da consolidada — média ponderada pela base`, ['Empresa', 'Alíquota', 'Base do ano (' + chave + ')', 'Alíquota × base'], linhas.concat([['Σ', '', sb, sp], ['Resultado = Σ(alíquota × base) ÷ Σ base', { v:res }, '', ''], ['Alíquota usada pelo motor na consolidada', { v:usado }, '', Math.abs(usado - res) < 0.00005 ? 'confere' : 'informada na Configuração da incorporadora (prevalece sobre a média)']]), { pct:{ 1:true }, num:[false,true,true,true] }); };
+  add(pondera('ISS', 'receita de serviços', m=>m.recServ, 'iss'));
+  add(pondera('ICMS de venda', 'receita de comércio', m=>m.recCom, 'icmsV'));
+  add(pondera('ICMS de compra', 'compras', m=>S(Object.values((m.ins&&m.ins.compras)||{}),v=>v), 'icmsC'));
+
+  // 7.3 SIMPLES
+  sec('7.3', 'Simples Nacional — alíquota efetiva por bloco, DAS e partilha por tributo');
+  par('Para cada mês e bloco de receita: alíquota nominal e parcela a deduzir da faixa (LC 123/2006, Anexos I a V), alíquota efetiva = (RBT12 × nominal − parcela a deduzir) ÷ RBT12 e parcela do DAS = receita do bloco × efetiva. Blocos com variante (ST, monofásico, retenção de ISS/INSS, comunicação/transporte) usam a efetiva que o motor aplica ao bloco; o mesmo vale para os meses marcados "(sublimite/limite)", em que o RBT12 é limitado ao teto e o ICMS/ISS sai da guia (LC 123, arts. 3º § 9º-A e 13-A; Res. CGSN 140, art. 24). Nesses casos a coluna "Efetiva recalculada" fica vazia e a conferência é feita pela parcela do DAS. Anexo V passa a III quando o Fator R ≥ 28 %.');
+  const AX = (typeof ANEXOS_DEFAULT !== 'undefined') ? ANEXOS_DEFAULT : {};
+  for (const e of todos){
+    const Mm = e.R.meses, L = []; let somaParc = 0, somaDas = 0;
+    Mm.forEach((m,i) => {
+      const bl = ((m.ins&&m.ins.blocos)||[]).concat((m.ins&&m.ins.blocosExp)||[]).filter(b => +b.receita > 0);
+      const fx = m.faixa, rb = +m.rbt12||0;
+      for (const b of bl){
+        let ax = INC_ANEXO_DO_BLOCO(b.k); if (ax === 'V' && m.fatorR != null && m.fatorR >= 0.28) ax = 'III';
+        const t = ax && AX[ax] && fx ? { nom: AX[ax].aliq[fx-1], ded: AX[ax].ded[fx-1] } : null;
+        const ef = +((m.efb||{})[b.k] ?? b.efetiva) || 0, parc = (+b.receita||0) * ef; somaParc += parc;
+        // acima do sublimite/limite (mês impedido) o motor limita o RBT12 ao teto e tira o ICMS/ISS da guia — a fórmula simples não se aplica
+        const simples = !m.impedido && !(+m.excLimite > 0) && !(+m.excSublimite > 0);
+        const recalc = (t && rb > 0 && INC_BLOCO_BASE(b.k) && simples) ? (rb * t.nom - t.ded) / rb : null;
+        L.push([`${MES[i]} · ${incRotBloco(b.k)}${simples ? '' : ' <span class="hint">(sublimite/limite)</span>'}`, rb, fx != null ? String(fx) : '—', m.fatorR != null ? { v:m.fatorR } : '—', ax || '—', +b.receita||0, t ? { v:t.nom } : '—', t ? t.ded : '—', recalc != null ? { v:recalc, f:`=IF(B{r}>0,(B{r}*G{r}-H{r})/B{r},0)` } : '', { v:ef }, { v:parc, f:`=F{r}*J{r}` }]);
+      }
+      somaDas += +m.das||0;
+      L.push([`<i>${MES[i]} — DAS do mês (motor)</i>`, '', '', '', '', +m.receita||0, '', '', '', '', +m.das||0]);
+    });
+    conc.push({ item:`Simples — Σ parcelas por bloco × Σ DAS (${nomeEnt(e)})`, mem:somaParc, motor:somaDas });
+    add(incMT(`Simples — ${esc(nomeEnt(e))}: alíquota efetiva e DAS por bloco`, ['Mês · bloco','RBT12','Faixa','Fator R','Anexo','Receita do bloco','Nominal','Parcela a deduzir','Efetiva recalculada','Efetiva (motor)','Parcela do DAS'], L,
+      { pct:{ 3:1, 6:2, 8:4, 9:4 }, num:[false,true,true,true,false,true,true,true,true,true,true], depois:`Σ parcelas por bloco = ${fmtR(somaParc)} · Σ DAS do motor = ${fmtR(somaDas)} · diferença ${fmtR(somaParc - somaDas)} (ISS/ICMS fora da guia por sublimite, trava da 5ª faixa e retenções são somados à parte, abaixo).` }));
+    add(incMT(`Simples — ${esc(nomeEnt(e))}: partilha do DAS por tributo e parcelas fora da guia`, ['Mês','PIS','COFINS','IRPJ','CSLL','CPP','ICMS','ISS','IPI','Σ partilha','DAS','ICMS/ISS fora (sublimite)','Simples total'],
+      Mm.map((m,i) => { const d = m.dasTrib||{}; const sp = S(['pis','cofins','irpj','csll','cpp','icms','iss','ipi'], k=>d[k]); return [MES[i], +d.pis||0, +d.cofins||0, +d.irpj||0, +d.csll||0, +d.cpp||0, +d.icms||0, +d.iss||0, +d.ipi||0, { v:sp, f:`=SUM(B{r}:I{r})` }, +m.das||0, (+m.subIcms||0)+(+m.subIss||0)+(+m.impIcms||0)+(+m.impIss||0), +((m.simples||{}).total)||0]; })
+        .concat([['Total', ...['pis','cofins','irpj','csll','cpp','icms','iss','ipi'].map(k=>S(Mm,m=>(m.dasTrib||{})[k])), S(Mm,m=>S(['pis','cofins','irpj','csll','cpp','icms','iss','ipi'],k=>(m.dasTrib||{})[k])), S(Mm,m=>m.das), S(Mm,m=>(+m.subIcms||0)+(+m.subIss||0)+(+m.impIcms||0)+(+m.impIss||0)), S(Mm,m=>(m.simples||{}).total)]]),
+      { depois:'Partilha pelos percentuais do Anexo e da faixa (LC 123, Anexos I–V; Res. CGSN 190/2026 a partir de 2027). "Simples total" = DAS + ICMS/ISS apurados fora da guia (sublimite/impedimento) + INSS patronal fora do DAS (Anexo IV) + FGTS não entra.' }));
+    conc.push({ item:`Simples — Σ "Simples total" mensal × total anual do motor (${nomeEnt(e)})`, mem:S(Mm,m=>(m.simples||{}).total), motor:+e.T.simples||0 });
+  }
+
+  // 7.4 LUCRO PRESUMIDO
+  sec('7.4', 'Lucro Presumido — presunção, IRPJ/CSLL, adicional, PIS/COFINS cumulativos e INSS patronal');
+  par('Base do IRPJ = receita de serviços × 32 % + receita de comércio/indústria × 8 % (transporte e receitas financeiras pelas presunções próprias); IRPJ = 15 % da base; adicional = 10 % da parte da base acumulada no período de apuração que exceder R$ 20.000 por mês (R$ 60.000 no trimestre); CSLL = 9 % sobre a base presumida de 12 %/32 %; PIS 0,65 % e COFINS 3 % sobre a receita bruta; INSS patronal = 20 % + RAT ajustado + terceiros sobre a folha, configurados na incorporadora.');
+  for (const e of todos){
+    const Mm = e.R.meses, lp = m => m.lp||{}, bc = m => (m.lp&&m.lp.baseComp)||{};
+    add(incMT(`Lucro Presumido — ${esc(nomeEnt(e))}: IRPJ e CSLL`, ['Mês','Receita','Serviços × 32 %','Comércio × 8 %','Base IRPJ','IRPJ 15 %','Base acum. período','Limite do período','Adicional 10 %','CSLL 9 %'],
+      Mm.map((m,i) => [MES[i], +m.receita||0, +bc(m).base32||0, +bc(m).base8||0, { v:+lp(m).baseAdic||0 }, { v:+lp(m).irpj||0, f:`=E{r}*0.15` }, +lp(m).baseAdicPer||0, +lp(m).limAdicPer||0, +lp(m).adicional||0, +lp(m).csll||0])
+        .concat([['Total', S(Mm,m=>m.receita), S(Mm,m=>bc(m).base32), S(Mm,m=>bc(m).base8), S(Mm,m=>lp(m).baseAdic), S(Mm,m=>lp(m).irpj), '', '', S(Mm,m=>lp(m).adicional), S(Mm,m=>lp(m).csll)]]),
+      { depois:'Base IRPJ inclui transporte/financeiras quando houver (por isso pode diferir da soma das duas colunas de presunção). Adicional = 10 % × (base acumulada do período − limite), lançado no mês de fechamento do período.' }));
+    add(incMT(`Lucro Presumido — ${esc(nomeEnt(e))}: demais tributos e total`, ['Mês','PIS 0,65 %','COFINS 3 %','INSS patronal','ICMS','IPI','ISS','FGTS (informativo)','Total LP'],
+      Mm.map((m,i) => [MES[i], { v:+lp(m).pis||0 }, { v:+lp(m).cofins||0 }, +lp(m).inssPatr||0, +lp(m).icms||0, +lp(m).ipi||0, +lp(m).iss||0, +lp(m).fgts||0, +lp(m).total||0])
+        .concat([['Total', S(Mm,m=>lp(m).pis), S(Mm,m=>lp(m).cofins), S(Mm,m=>lp(m).inssPatr), S(Mm,m=>lp(m).icms), S(Mm,m=>lp(m).ipi), S(Mm,m=>lp(m).iss), S(Mm,m=>lp(m).fgts), S(Mm,m=>lp(m).total)]]),
+      { depois:'Total LP = IRPJ + adicional + CSLL + PIS + COFINS + INSS patronal + ICMS + IPI + ISS (o FGTS é encargo da folha em qualquer regime e não entra na comparação).' }));
+    conc.push({ item:`Lucro Presumido — Σ mensal × total anual do motor (${nomeEnt(e)})`, mem:S(Mm,m=>lp(m).total), motor:+e.T.lp||0 });
+  }
+
+  // 7.5 LUCRO REAL
+  sec('7.5', 'Lucro Real — resultado, apuração por período, PIS/COFINS não cumulativos');
+  par('Base do IRPJ/CSLL = receita − custos − despesas dedutíveis − folha e encargos, apurada no período configurado (trimestral ou anual com estimativa), com compensação de prejuízo limitada a 30 %; IRPJ 15 % + adicional 10 % sobre o que exceder o limite do período; CSLL 9 %; PIS 1,65 % e COFINS 7,6 % sobre a receita, com créditos sobre os itens autorizados (insumos, energia, aluguéis PJ, depreciação etc.). Prejuízo fiscal das incorporadas não é aproveitado pela incorporadora (DL 2.341/87, art. 33).');
+  for (const e of todos){
+    const Mm = e.R.meses, lr = m => m.lr||{};
+    add(incMT(`Lucro Real — ${esc(nomeEnt(e))}: resultado mensal e PIS/COFINS`, ['Mês','Receita','Custos','Despesas','Folha total','Base IRPJ/CSLL do mês','PIS 1,65 %','COFINS 7,6 %','Créditos PIS/COFINS','INSS patronal','Total LR'],
+      Mm.map((m,i) => [MES[i], +m.receita||0, +m.custos||0, +m.despTotal||0, +m.folhaTotal||0, +lr(m).baseIRCS||0, +lr(m).pis||0, +lr(m).cofins||0, (+lr(m).credDesp||0), +lr(m).inssPatr||0, +lr(m).total||0])
+        .concat([['Total', S(Mm,m=>m.receita), S(Mm,m=>m.custos), S(Mm,m=>m.despTotal), S(Mm,m=>m.folhaTotal), S(Mm,m=>lr(m).baseIRCS), S(Mm,m=>lr(m).pis), S(Mm,m=>lr(m).cofins), S(Mm,m=>lr(m).credDesp), S(Mm,m=>lr(m).inssPatr), S(Mm,m=>lr(m).total)]]),
+      { depois:'PIS/COFINS já líquidos dos créditos do mês; saldo credor, quando houver, é transportado (colunas saldoCredorAnt/Fim do motor).' }));
+    const ap = (e.R.lrApur && e.R.lrApur.linhas) || [];
+    if (ap.length) add(incMT(`Lucro Real — ${esc(nomeEnt(e))}: apuração ${esc(e.R.lrApur.periodo||'')} do IRPJ/CSLL`, ['Período','Base do período','Prejuízo compensado (IRPJ)','Base IRPJ','IRPJ 15 %','Limite do adicional','Adicional 10 %','Base CSLL','CSLL 9 %','Total do período'],
+      ap.map(l => [esc(l.rot), +l.base||0, +l.usadoIrpj||0, { v:+l.baseIrpj||0 }, { v:+l.irpj||0, f:`=D{r}*0.15` }, +l.limAd||0, { v:+l.adicional||0, f:`=MAX(0,D{r}-F{r})*0.1` }, +l.baseCsll||0, { v:+l.csll||0, f:`=H{r}*0.09` }, +l.total||0])
+        .concat([['Total', S(ap,l=>l.base), S(ap,l=>l.usadoIrpj), S(ap,l=>l.baseIrpj), S(ap,l=>l.irpj), '', S(ap,l=>l.adicional), S(ap,l=>l.baseCsll), S(ap,l=>l.csll), S(ap,l=>l.total)]]),
+      { depois:'Base negativa no período = prejuízo do período (IRPJ e CSLL zerados), compensável nos períodos seguintes até 30 % da base.' }));
+    conc.push({ item:`Lucro Real — Σ mensal × total anual do motor (${nomeEnt(e)})`, mem:S(Mm,m=>lr(m).total), motor:+e.T.lr||0 });
+  }
+
+  // 7.6 REFORMA
+  sec('7.6', 'Reforma Tributária 2027–2033 — alíquotas de teste, débito, crédito e caminhos');
+  par('Para cada ano da transição: alíquota de CBS e de IBS (estadual e municipal) do ano, fração remanescente de PIS/COFINS e de ICMS/ISS, débito = base de receita × alíquota, crédito = compras/insumos com direito a crédito × alíquota, líquido = débito − crédito. Os três caminhos: "dentro" (Simples com IBS/CBS por dentro do DAS), "híbrido" (Simples com IBS/CBS por fora) e "regular" (Lucro Presumido ou Real, o mais barato).');
+  for (const e of todos){
+    const cen = e.R && e.cen ? e.cen : (e === cons ? R.consolidada.cen : (R.empresas.find(x=>x.cnpj===e.cnpj)||{}).cen);
+    const REF = (cen && cen.REF) || [], alq = (cen && cen.rfx && cen.rfx.aliq) || {};
+    if (!REF.length) continue;
+    add(incMT(`Reforma — ${esc(nomeEnt(e))}: alíquotas do ano`, ['Ano','CBS %','IBS estadual %','IBS municipal %','IS %','PIS/COFINS remanescente','ICMS/ISS remanescente','Alíquota aplicada (motor)'],
+      REF.map(r => { const a = alq[r.ano]||{}; return [String(r.ano), +a.cbs||0, +a.ibse||0, +a.ibsm||0, +a.is||0, { v:+a.remPisCof||0 }, { v:+a.remIcmsIss||0 }, { v:+r.alq||0 }]; }), { pct:{ 5:0, 6:0, 7:2 } }));
+    add(incMT(`Reforma — ${esc(nomeEnt(e))}: débito, crédito e carga por caminho`, ['Ano','Base (receita)','Débito IBS/CBS','Crédito','Líquido','Caminho dentro','Caminho híbrido','Caminho regular','Regime do regular','Simples bloqueado?'],
+      REF.map(r => [String(r.ano), +(cen.rfx&&cen.rfx.receita)||0, +r.deb||0, +r.cred||0, { v:+r.liquido||0, f:`=C{r}-D{r}` }, +r.dentro||0, +r.hib||0, +r.regular||0, esc(r.regNome||'—'), (e.T.anos&&e.T.anos[r.ano]&&e.T.anos[r.ano].snBloqueado) ? 'sim' : 'não']),
+      { num:[false,true,true,true,true,true,true,true,false,false], depois:'Base e crédito vêm da aba Reforma da análise gravada; sem essa aba o motor usa o fallback (receita e compras da própria análise) e marca o parecer como tal.' }));
+  }
+
+  // 7.7 Δ E SCORE
+  sec('7.7', 'Δ por tributo e score — com os números aplicados');
+  const regs = ['simples','lp','lr'].filter(k => M.tributos[k]);
+  for (const reg of regs){
+    const T = M.tributos[reg];
+    add(incMT(`Δ por tributo — ${INC_REGIME_NOME[reg]} (Δ = consolidada − Σ separadas)`, ['Tributo', ...ents.map(e=>esc(e.nome)), 'Σ separadas', 'Consolidada', 'Δ R$', 'Δ %'],
+      T.linhas.filter(l=>!l.info).map(l => [esc(l.tributo), ...l.isos.map(v=>+v||0), { v:+l.soma||0, f:`=SUM(B{r}:${incColL(ents.length)}{r})` }, +l.cons||0, { v:+l.delta||0, f:`=${incColL(ents.length+2)}{r}-${incColL(ents.length+1)}{r}` }, { v:+l.pct||0 }])
+        .concat([['Total', ...T.total.isos, T.total.soma, T.total.cons, T.total.cons - T.total.soma, { v: Math.abs(T.total.soma) > 0.005 ? (T.total.cons - T.total.soma)/Math.abs(T.total.soma) : 0 }]]), { pct:{ [ents.length+4]:2 } }));
+  }
+  const sc = M.melhor && M.melhor.score;
+  if (sc) add(incMT('Score do melhor cenário — nota × peso', ['Dimensão','Nota (0–100)','Peso','Nota × peso','Fórmula','Leitura'],
+    Object.entries(sc.dims).map(([k,d]) => [esc(k), { v:+d.nota||0 }, { v:+d.peso||0 }, { v:(+d.nota||0)*(+d.peso||0), f:`=B{r}*C{r}` }, esc(d.formula||''), esc(d.texto||'')]).concat([['Total', '', '', { v:+sc.total||0 }, 'Σ nota × peso', esc(M.painel.classe.rot)]]), { pct:{ 2:0 }, num:[false,true,true,true,false,false] }));
+
+  // 7.8 CONCILIAÇÃO
+  sec('7.8', 'Conciliação — memória × totais do parecer, ao centavo');
+  const concL = conc.map(c => [c.item, c.mem, c.motor, { v:c.mem - c.motor, f:`=B{r}-C{r}` }, Math.abs(c.mem - c.motor) <= 0.015 ? 'confere' : (/parcelas por bloco/.test(c.item) ? 'diferença = parcelas fora da guia (ver 7.3)' : 'DIVERGE — verificar')]);
+  add(incMT('Conciliação', ['Item','Σ memória','Total do motor (parecer)','Diferença','Situação'], concL, { num:[false,true,true,true,false] }));
+  return { blocos:B, abas:ABAS, conciliacao:conc };
+}
+// verificação usada pela suíte: todas as somas mensais fecham com os totais do motor
+function incMemoriaConfere(M){ const c = incMemoriaCompleta(M).conciliacao.filter(x => !/parcelas por bloco/.test(x.item)); return { ok: c.every(x => Math.abs(x.mem - x.motor) <= 0.015), itens: c }; }
 
 </script>
 </body>
