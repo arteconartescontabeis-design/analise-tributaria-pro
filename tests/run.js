@@ -308,8 +308,8 @@ console.log('\n■ Res. CGSN nº 190/2026 — partilha por vigência');
   // O caso é de serviços (sem ICMS), então o Tema 69 não altera estes números; a diferença é só o FGTS.
   // v7.91.0 · FIM DO PROXY: sem perfil de fornecedor as compras são NÃO IDENTIFICADAS — zero de crédito no
   // cenário-base. Os números de sempre (758.554,46 / 702.383,68) viram o LIMITE SUPERIOR da sensibilidade.
-  chk('gabarito de cenários 2033 (v7.18.0, sem FGTS) preservado como LIMITE SUPERIOR: híbrido 758.554,46 · fora 702.383,68; base sem crédito (não identificado)',
-    Math.abs(G33.sens.sup.hib - 758554.46) < 0.02 && Math.abs(G33.sens.sup.regLP - 702383.68) < 0.02 && G33.cred === 0 && G33.hib > G33.sens.sup.hib && CG.semPerfil === true,
+  chk('gabarito de cenários 2033 (v7.18.0, sem FGTS) como LIMITE SUPERIOR — v7.95.0: despesas creditáveis do caso 1 entram como NID, superior 588.923,55 · 532.752,77; base sem crédito (não identificado)',
+    Math.abs(G33.sens.sup.hib - 588923.55) < 0.02 && Math.abs(G33.sens.sup.regLP - 532752.77) < 0.02 && G33.cred === 0 && G33.hib > G33.sens.sup.hib && CG.semPerfil === true,
     `sup.hib=${G33.sens.sup.hib.toFixed(2)} base.hib=${G33.hib.toFixed(2)} reg=${G33.regular.toFixed(2)}`);
   chk('gabarito · trava do caso1 (comércio) invariante por vigência: ICMS×rem + IBS×(1−rem)',
     G33.p190 && Math.abs(G33.p190.trava - (rG.totais.sublimite||0)) < 0.02,
@@ -1163,8 +1163,8 @@ console.log('\n■ Integridade da interface');
     d5 && d5.mig27===9.11 && d5.mig28===8.8, dErr || (d5?`27=${d5.mig27} 28=${d5.mig28}`:'—'));
   const lc = await Promise.race([RES_LACRE, new Promise(r=>setTimeout(()=>r(null), 8000))]);
   const lErr = typeof lc==='string' ? lc : '';
-  chk('v7.30.0 · LACRE ÍNTEGRO: selo embutido confere com o motor desta entrega (192 números ao centavo) — mudou regra? RE-SELE',
-    lc && lc.r && lc.r.ok===true && lc.r.hash===vm.runInContext('LACRE_HASH',ctx) && lc.r.n===192,
+  chk('v7.30.0 · LACRE ÍNTEGRO: selo embutido confere com o motor desta entrega (256 números ao centavo, 4 casos desde a v7.95.1) — mudou regra? RE-SELE',
+    lc && lc.r && lc.r.ok===true && lc.r.hash===vm.runInContext('LACRE_HASH',ctx) && lc.r.n===256,
     lErr || (lc&&lc.r?`hash=${lc.r.hash} n=${lc.r.n}`:'timeout'));
   chk('v7.30.0 · lacre bate com os gabaritos pinados (caso1: LR 1.169.013,17 · 2033 híbrido 1.205.153,42 · regular 1.148.982,64 — base sem crédito desde a v7.91.0)',
     lc && lc.r && Math.abs(lc.r.resumo[0].lr-1169013.17)<0.01 && Math.abs(lc.r.resumo[0].h33-1205153.42)<0.01 && Math.abs(lc.r.resumo[0].r33-1148982.64)<0.01, lErr || (lc&&lc.r?`h33=${lc.r.resumo[0].h33.toFixed(2)} r33=${lc.r.resumo[0].r33.toFixed(2)}`:''));
@@ -2188,7 +2188,7 @@ console.log('\n■ Integridade da interface');
           /icmsTranspV:0, transpCredPres:0/.test(html));
       }
       chk('v7.48.0 · lacre RE-SELADO e registrado no changelog (mudança deliberada de regra)',
-        /const LACRE_HASH = '22197ef1';/.test(html) && /LACRE RE-SELADO/.test(html) && /e1a25234/.test(html));
+        /const LACRE_HASH = '8ab9c16a';/.test(html) && /LACRE RE-SELADO/.test(html) && /e1a25234/.test(html));
     }
 
     // ═══ v7.47.1 — o crédito das compras chega ao parecer e à memória de cálculo ═══
@@ -2824,7 +2824,7 @@ console.log('\n■ Integridade da interface');
     // ligar a opção numa empresa não move o selo nem os gabaritos.
     const lac = vm.runInContext('lacreRodar()', ctx);
     chk('v7.62.0 · M3 · o lacre 22197ef1 segue íntegro com a opção disponível',
-      lac && lac.ok === true && lac.hash === '22197ef1', 'hash=' + (lac && lac.hash));
+      lac && lac.ok === true && lac.hash === '8ab9c16a', 'hash=' + (lac && lac.hash));
     const casosLimpos = vm.runInContext('LACRE_CASOS', ctx)
       .every(c => !('arredondaPorTributo' in (c.inp.cfg||{})));
     chk('v7.62.0 · M3 · e os casos-gabarito seguem SEM a chave — é isso que os protege',
@@ -2854,17 +2854,18 @@ console.log('\n■ Integridade da interface');
     const rA = g.calcular(baseNova(100000), clone(AD), {...FD});
     chk('A01 · mês com receita e RBT12 zero NÃO apura DAS zero',
       rA.meses[0].das > 0, 'DAS jan = ' + rA.meses[0].das.toFixed(2));
-    chk('A01 · a presunção é a do 1º mês de atividade (receita × 12)',
-      Math.abs(rA.meses[0].rbt12 - 1200000) < 0.01 && rA.meses[0].rbt12Presumido === true,
-      'RBT12 jan = ' + rA.meses[0].rbt12);
-    chk('A01 · e ela vale para o mês, não para o ano: fevereiro volta ao dado real',
-      rA.meses[1].rbt12Presumido === false && Math.abs(rA.meses[1].rbt12 - 100000) < 0.01);
+    // v7.94.4 · a presunção receita × 12 SAIU: RBT12 zero com receita = 1ª faixa, alíquota nominal (PD = 0)
+    chk('A01 · v7.94.4 · RBT12 zero com receita → 1ª faixa, alíquota NOMINAL do anexo (100.000 × 6% = 6.000,00), mês marcado rbt12Zero',
+      rA.meses[0].rbt12 === 0 && rA.meses[0].rbt12Zero === true && rA.meses[0].faixa === 1 && Math.abs(rA.meses[0].das - 6000) < 0.01,
+      'RBT12 jan = ' + rA.meses[0].rbt12 + ' DAS ' + rA.meses[0].das.toFixed(2));
+    chk('A01 · e vale para o mês, não para o ano: fevereiro volta ao dado real',
+      rA.meses[1].rbt12Zero === false && Math.abs(rA.meses[1].rbt12 - 100000) < 0.01);
     const semRec = baseNova(0);
     const rA0 = g.calcular(semRec, clone(AD), {...FD});
-    chk('A01 · mês SEM receita não presume nada (a regra não inventa base)',
-      rA0.meses[0].rbt12Presumido === false && rA0.meses[0].das === 0);
-    chk('A01 · a presunção é DECLARADA nas divergências do papel de trabalho',
-      /RBT12 presumida \(v7\.63\.0\)/.test(html) && /art\. 22, § 2º/.test(html));
+    chk('A01 · mês SEM receita não marca nada (a regra não inventa base)',
+      rA0.meses[0].rbt12Zero === false && rA0.meses[0].das === 0);
+    chk('A01 · a regra é DECLARADA nas premissas do papel de trabalho',
+      /RBT12 zero com receita \(v7\.94\.4\)/.test(html) && /alíquota nominal/.test(html));
 
     // ── A02/A03/A04 · faixa de validação ──
     const fx2 = vm.runInContext('faixaAplicar', ctx);
@@ -2972,7 +2973,7 @@ console.log('\n■ Integridade da interface');
     // ── A rede continua de pé ──
     const lacA = vm.runInContext('lacreRodar()', ctx);
     chk('auditoria · nenhuma das 11 correções moveu o lacre',
-      lacA && lacA.ok === true && lacA.hash === '22197ef1', 'hash=' + (lacA && lacA.hash));   // v7.88.0 · re-selado
+      lacA && lacA.ok === true && lacA.hash === '8ab9c16a', 'hash=' + (lacA && lacA.hash));   // v7.88.0 · re-selado
   }
 
   // ═══ 6b. v7.64.0 · CONFRONTO COM O VERIFICADOR INDEPENDENTE ═══
@@ -3478,7 +3479,7 @@ console.log('\n■ Integridade da interface');
   {
     console.log('\n■ v7.74.0 — cobertura do caso 3 do lacre');
     const LC = vm.runInContext('LACRE_CASOS', ctx);
-    chk('v7.74.0 · o lacre tem três casos', LC.length === 3);
+    chk('v7.74.0 · o lacre tem três casos (v7.95.1: quatro)', LC.length >= 3);
     const c3 = LC[2] && LC[2].inp;
     chk('v7.74.0 · e os casos 1 e 2 seguem intocados (gabarito externo preservado)',
       Object.keys(LC[0].inp.receitas).filter(k=>LC[0].inp.receitas[k].some(v=>+v>0)).join() === 'a1_semst'
@@ -4574,9 +4575,9 @@ console.log('\n■ Integridade da interface');
       (() => { const r = g.calcular(mkImp(0,100000), clone(AD), {...FD}); return r._inp && !JSON.stringify(r).includes('"_inp"') && !Object.keys(r).includes('_inp'); })());
     chk('5z · lacre · casos 1 e 2 (sem impedimento) seguem idênticos nos números de sempre — que desde a v7.91.0 são o limite superior (crédito integral) do caso 1',
       (() => { const casos = vm.runInContext('LACRE_CASOS', ctx); const r = g.calcular(clone(casos[0].inp), clone(AD), {...FD});
-        const C = g.cen(r, null); const l = L(C,2033); return Math.abs(l.sens.sup.hib - 758554.46) < 0.01 && Math.abs(l.sens.sup.regLP - 702383.68) < 0.01
+        const C = g.cen(r, null); const l = L(C,2033); return Math.abs(l.sens.sup.hib - 588923.55) < 0.01 && Math.abs(l.sens.sup.regLP - 532752.77) < 0.01
           && Math.abs(l.dentro - r.totais.simples) < 0.01; })());
-    chk('5z · lacre · RE-SELADO c503dbd2 e registrado no changelog', /const LACRE_HASH = '22197ef1';/.test(html) && /LACRE RE-SELADO <code>2e1139e9<\/code> → <code>c503dbd2<\/code>/.test(html));
+    chk('5z · lacre · RE-SELADO c503dbd2 e registrado no changelog', /const LACRE_HASH = '8ab9c16a';/.test(html) && /LACRE RE-SELADO <code>2e1139e9<\/code> → <code>c503dbd2<\/code>/.test(html));
 
     // ── P0-03 · mês em branco ≠ zero ──
     { const dados = nova('88888888000188'); dados.receitas.a1_semst = [10000,10000,10000,10000,10000,10000,0,0,0,0,0,0];
@@ -4634,7 +4635,7 @@ console.log('\n■ Integridade da interface');
     chk('5aa · PGDAS-D · RBT12p em branco (empresa madura) NÃO captura os números da linha seguinte', r12p === null);
     chk('5aa · PGDAS-D · regime de apuração lido como informação (Competência)', reg && /Compet/.test(reg[1]));
     chk('5aa · PGDAS-D · as mesmas regexes estão no importador e os campos viajam no mês lido',
-      html.includes("Data de abertura no CNPJ\\s*:?\\s*(\\d{2})\\/(\\d{2})\\/(\\d{4})") && html.includes("ao PA proporcionalizada \\(RBT12p\\)") && /abertura, rbt12Decl, rbt12pDecl, regimeApur \}/.test(html));
+      html.includes("Data de abertura no CNPJ\\s*:?\\s*(\\d{2})\\/(\\d{2})\\/(\\d{4})") && html.includes("ao PA proporcionalizada \\(RBT12p\\)") && /abertura, rbt12Decl, rbt12pDecl, regimeApur, impedidoDecl \}/.test(html));
     chk('5aa · PGDAS-D · a data de abertura preenche "Início de atividade" SEMPRE, com origem e PA gravados',
       /AN\.cfg\.inicioAtividade = _ab; AN\.cfg\.inicioOrigem = 'P'; AN\.cfg\.inicioPA = _paAb;/.test(html) && /substitui \$\{_antesAb\} informado antes/.test(html));
     chk('5aa · PGDAS-D · editar a data à mão remove o selo P (comparação com o RETRATO de antes do funil — `_cfg` é a mesma referência de AN.cfg)',
@@ -4688,7 +4689,7 @@ console.log('\n■ Integridade da interface');
       (() => { const d = vm.runInContext('anNormalizar', ctx)({ cnpj:'11111111000111', ano:2026, icms:{cred:Array(12).fill(null)} }, '11111111000111', 2026);
         return Array.isArray(d.icms.tema69) && d.icms.tema69.every(v=>v===null) && Array.isArray(d.icms.lei14592); })());
     chk('5aa · conferência · declara nota a nota × estimativa nas três linhas', (html.match(/M\.tema69Informado \?/g)||[]).length >= 2 && /M\.lei14592Informado \?/.test(html));
-    chk('5aa · lacre íntegro (casos-gabarito sem os campos novos da v7.89.0)', (() => { const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '22197ef1'; })());
+    chk('5aa · lacre íntegro (casos-gabarito sem os campos novos da v7.89.0)', (() => { const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '8ab9c16a'; })());
     chk('5aa · v7.89.0 · changelog', /APP_VERSAO = '7\.(89|9[0-9])\.[0-9]+'/.test(html) && /<b>v7\.89\.0<\/b><\/td><td>11\/09\/2026/.test(html));
   }
 
@@ -4913,7 +4914,7 @@ console.log('\n■ Integridade da interface');
       const rf2 = { _fornRows: rows, contra:{}, comp: c1 }; const c2 = compMontar(rf2, { comprasRevenda: 0 });
       chk('5ad · linhas agregadas (CNPJ vazio) preservam cada uma o próprio status ao reconstruir', c2.forn[0].status === 'sugerido' && c2.forn[1].status === 'confirmado'); }
     chk('5ad · tela: botão de confirmação por fornecedor, histórico completo, COMP-01 e rótulos CONFIRMADO/ESTIMADO/POTENCIAL', /compConfirmarForn\(\$\{i\},/.test(html) && /Histórico da composição — trilha de auditoria completa/.test(html) && /compCancelarEdicao\(\)/.test(html) && /Crédito CONFIRMADO pelo usuário \(limite inferior\)/.test(html) && /Crédito ESTIMADO — sugerido\/alterado, não confirmado/.test(html));
-    chk('5ad · lacre 22197ef1 intocado (só sensibilidade e composição mudaram)', /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5ad · lacre 22197ef1 intocado (só sensibilidade e composição mudaram)', /LACRE_HASH = '8ab9c16a'/.test(html));
     chk('5ad · v7.92.0 · badge e changelog', /APP_VERSAO = '7\.9[2-9]\.\d+'/.test(html) && /<b>v7\.92\.0<\/b><\/td><td>12\/09\/2026/.test(html) && /P0-01/.test(html) && /COMP-01/.test(html));
   }
 
@@ -4957,7 +4958,7 @@ console.log('\n■ Integridade da interface');
     chk('5ae · (10) recalcular preserva a edição por valores (60/40) e o automático', Math.abs(g().regular.pct - 0.6) < 1e-6 && Math.abs(C().auto.g.regular.pct - 0.588203) < 0.00005);
     vm.runInContext("compRestaurar(); rfCalcular();", ctx);
     chk('5ae · (10) depois de restaurar e recalcular, preserva o automático restaurado', Math.abs(g().regular.pct - 0.588203) < 0.00005 && C().editada === false);
-    chk('5ae · (11) tela: oninput + onchange normalizador no editor por valores, total marcado como fixo', /oninput="compSetVal\('\$\{k\}',this\.value\)" onchange="compSetVal\('\$\{k\}',this\.value,this\)"/.test(html) && /\(fixo\)/.test(html) && /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5ae · (11) tela: oninput + onchange normalizador no editor por valores, total marcado como fixo', /oninput="compSetVal\('\$\{k\}',this\.value\)" onchange="compSetVal\('\$\{k\}',this\.value,this\)"/.test(html) && /\(fixo\)/.test(html) && /LACRE_HASH = '8ab9c16a'/.test(html));
     chk('5ae · v7.92.1 · badge e changelog', /APP_VERSAO = '7\.9[2-9]\.\d+'/.test(html) && /<b>v7\.92\.1<\/b><\/td><td>12\/09\/2026/.test(html) && /total fixo/.test(html));
   }
 
@@ -5001,7 +5002,7 @@ console.log('\n■ Integridade da interface');
     vm.runInContext("document.getElementById('rf-empresa').value = ''; document.getElementById('rf-ano').value = '2026'; const _p = rfTrocar(); ", ctx);
     chk('5af · P0 · trocar de empresa/exercício (rfTrocar) limpa o editor', !vm.runInContext('RF._compEditAntes', ctx) && (!C() || C().modo === null));
     chk('5af · P0 · estrutura: compLimparEditor chamado em restaurar, cancelar, aplicar e rfTrocar', (html.match(/compLimparEditor\(/g)||[]).length >= 5 && /function compLimparEditor/.test(html) && !/'edicao-grupo'/.test(html));
-    chk('5af · restrições: automático, crédito e lacre intocados', /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5af · restrições: automático, crédito e lacre intocados', /LACRE_HASH = '8ab9c16a'/.test(html));
     chk('5af · v7.92.2 · badge e changelog', /APP_VERSAO = '7\.9[2-9]\.\d+'/.test(html) && /<b>v7\.92\.2<\/b><\/td><td>13\/09\/2026/.test(html) && /compLimparEditor/.test(html) && /uma ação = um evento/.test(html));
   }
 
@@ -5031,7 +5032,7 @@ console.log('\n■ Integridade da interface');
       chk('5ag · memória de janeiro: RBT12 "direto informado" e Fator R com FS12 e RBT12r = interno + exportação', !/^ERR/.test(mem) && /RBT12 direto informado \(mercado interno\) — prevalece/.test(mem) && /RBT12r conjunta = interno R\$ 3\.720\.000,01 \+ exportação R\$ 120\.000,00 = R\$ 3\.840\.000,01/.test(mem) && /Total 12 meses/.test(mem), mem.slice(0,80)); }
     chk('5ag · PDF: rótulo da memória quebra linha e as grades do bloco 0 saem em dois semestres', /table\.cf-mem td\.rot \{ white-space: normal/.test(html) && /Total 12 meses/.test(html) && /meio\(0,6,false\)\}\$\{meio\(6,12,true\)/.test(html));
     chk('5ag · importar PGDAS-D zera também o direto de exportação', (html.match(/AN\.cfg\.rbt12Direto = 0; AN\.cfg\.rbt12ExpDireto = 0;/g)||[]).length >= 2);
-    chk('5ag · lacre 22197ef1 intocado (casos do lacre não têm rbt12ExpDireto)', /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5ag · lacre 22197ef1 intocado (casos do lacre não têm rbt12ExpDireto)', /LACRE_HASH = '8ab9c16a'/.test(html));
     chk('5ag · v7.92.3 · badge e changelog', /APP_VERSAO = '7\.9[2-9]\.\d+'/.test(html) && /<b>v7\.92\.3<\/b><\/td><td>13\/09\/2026/.test(html) && /RBT12 direto — exportação/.test(html));
   }
 
@@ -5066,7 +5067,7 @@ console.log('\n■ Integridade da interface');
       chk('5ah · T04 fronteira (RBT12r 3.720.000,00): folha 1.041.603,72 → 28,0001% e Anexo III', chkFr(1041603.72/12, 28.0001)); }
     chk('5ah · anModeloImportar delega em anModeloAplicarLinhas e o toast relata o zeramento', /const \{ aplicados, diretoZerado \} = anModeloAplicarLinhas\(rows\)/.test(html) && /zerado\(s\): os 12 meses da planilha passam a ser a fonte do RBT12/.test(html));
     chk('5ah · as três importações (PGDAS-D, Demonstrativo, planilha) zeram os dois diretos', (html.match(/AN\.cfg\.rbt12Direto = 0; AN\.cfg\.rbt12ExpDireto = 0;/g)||[]).length >= 3);
-    chk('5ah · lacre 22197ef1 intocado', /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5ah · lacre 22197ef1 intocado', /LACRE_HASH = '8ab9c16a'/.test(html));
     chk('5ah · v7.92.4 · badge e changelog', /APP_VERSAO = '7\.9[2-9]\.\d+'/.test(html) && /<b>v7\.92\.4<\/b><\/td><td>13\/09\/2026/.test(html) && /anModeloAplicarLinhas/.test(html));
   }
 
@@ -5132,7 +5133,7 @@ console.log('\n■ Integridade da interface');
         chk('5ai · apresentação completa: o Fator R vem de frFronteira (texto mensal), não de "Fator R de X%: acima de 28%"', e === null && /Fator R/.test(t) && !/acima de 28%, os serviços são tributados pelo Anexo III\./.test(t)); }
     }
     chk('5ai · "Margem do vencedor: R$ ∞" virou "não aplicável — cenário único" no painel, no quadro e no payload', (html.match(/não aplicável — cenário único/g)||[]).length >= 3 && /margemVencedorNota/.test(html));
-    chk('5ai · lacre 22197ef1 intocado', /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5ai · lacre 22197ef1 intocado', /LACRE_HASH = '8ab9c16a'/.test(html));
     chk('5ai · v7.93.0 · badge e changelog', /APP_VERSAO = '7\.9[3-9]\.\d+'/.test(html) && /<b>v7\.93\.0<\/b><\/td><td>13\/09\/2026/.test(html));
   }
 
@@ -5173,7 +5174,7 @@ console.log('\n■ Integridade da interface');
       chk('5aj · apresentação completa: crédito de IBS/CBS usa a frase única das compras', /compras/.test(t2) && !/Nenhuma compra informada na aba Reforma: cenários sem crédito/.test(t2) && /credComprasSituacao\(rfx, !!\(D\.cen && D\.cen\.semCreditos\)/.test(html));
       const e3 = abrir('apresentacao_s'); const t3 = corpo();
       chk('5aj · apresentação simplificada: situação do Simples (transição) e nenhuma "folga" negativa', e3 === null && /permanece no regime até 31\/12\/2026/.test(t3) && !/folga de R\$ -/.test(t3) && !/-792\.8/.test(t3), e3 || ''); }
-    chk('5aj · lacre 22197ef1 intocado', /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5aj · lacre 22197ef1 intocado', /LACRE_HASH = '8ab9c16a'/.test(html));
     chk('5aj · v7.93.1 · badge e changelog', /APP_VERSAO = '7\.9[3-9]\.\d+'/.test(html) && /<b>v7\.93\.1<\/b><\/td><td>13\/09\/2026/.test(html) && /snSituacaoQuadro/.test(html));
   }
 
@@ -5217,7 +5218,73 @@ console.log('\n■ Integridade da interface');
     chk('5ar · roteiro funcional sem exceção', e0 === null, e0 || '');
     chk('5ar · Conferência bloco 0 chama audQuadroHtml; premissas do parecer citam a trilha; anTrocarEmpresa tira o retrato-base; anAplicado sincroniza o lote', /\$\{audQuadroHtml\(D\)\}/.test(html) && /audResumo\(RL\.dados\)/.test(html) && /audFotoBase\(AN\);\s*\/\/ v7\.94\.3/.test(html) && /audSincronizar\('importado', AUD_LOTE\)/.test(html));
     chk('5ar · rfCalcular audita os 3 campos manuais da Reforma', /audCelula\('reforma\.'\+k, null, _audAntes\[k\], \+RF\[k\]\|\|0, 'reforma'\)/.test(html));
-    chk('5ar · v7.94.3 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.94\.[3-9]'/.test(html) && /<b>v7\.94\.3<\/b><\/td><td>15\/09\/2026/.test(html) && /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5ar · v7.94.3 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.9[4-9]\.\d+'/.test(html) && /<b>v7\.94\.3<\/b><\/td><td>15\/09\/2026/.test(html) && /LACRE_HASH = '8ab9c16a'/.test(html));
+  }
+
+  // ═══ 5au · v7.95.1 — caso 4 do lacre, INSS em três componentes, rateio da CPP do Anexo IV ═══
+  {
+    const casos = vm.runInContext('LACRE_CASOS', ctx);
+    chk('5au · o lacre tem QUATRO casos; o 4º é empresa nova com RBT12 zero, Anexo V e despesas creditáveis', casos.length === 4 && /Caso 4 — Empresa nova/.test(casos[3].nome) && casos[3].inp.cfg.inicioAtividade === '2026-02');
+    const r4 = g.calcular(clone(casos[3].inp), clone(AD), {...FD});
+    chk('5au · caso 4 · março: RBT12 zero → 1ª faixa, 15,50% nominal do Anexo V (5.711,54); abril proporcionalizado 221.091,90 (2ª faixa)', r4.meses[2].rbt12Zero === true && r4.meses[2].faixa === 1 && Math.abs(r4.meses[2].das - 5711.54) < 0.02 && Math.abs(r4.meses[3].rbt12 - 221091.90) < 0.02);
+    chk('5au · caso 4 · despesas creditáveis 81.000,00 entram como NID (crédito zero no base, integral no superior)', Math.abs(r4.totais.despCred - 81000) < 0.01 && (()=>{ r4._inp = clone(casos[3].inp); const C = vm.runInContext('calcCenariosReforma', ctx)(r4, null); const l = (C.linhas||C.REF).find(x=>x.ano===2033); return l.cred === 0 && l.sens.sup.cred > 0; })());
+    chk('5au · v7.95.1 · badge, changelog e lacre RE-SELADO ba7dcb90 → 8ab9c16a (casos 1-3 idênticos: LR 1.169.013,17 · 358.284,98 · 2.515.758,93)', /APP_VERSAO = '7\.95\.[1-9]'/.test(html) && /<b>v7\.95\.1<\/b><\/td><td>18\/09\/2026/.test(html) && (()=>{ const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '8ab9c16a' && l.resumo.length === 4 && Math.abs(l.resumo[0].lr - 1169013.17) < 0.01 && Math.abs(l.resumo[1].lr - 358284.98) < 0.01 && Math.abs(l.resumo[2].lr - 2515758.93) < 0.01; })());
+    chk('5au · memória: INSS patronal em três componentes (CPP + RAT/FAP + terceiros) e pró-labore sem RAT/terceiros; CPP do Anexo IV com o rateio declarado', /× \(CPP \$\{CF\.pc\(_fp\.patronalSalarios\)\} \+ RAT\/FAP/.test(html) && /art\. 22, III\)/.test(html) && /rateio da folha pela receita é PREMISSA declarada/.test(html));
+  }
+
+  // ═══ 5at · v7.95.0 — Reforma: base própria do híbrido (A2), despesas creditáveis (A1), procedência (A3), crédito B2B (A5) ═══
+  {
+    const calc = vm.runInContext('calcular', ctx), cenF = vm.runInContext('calcCenariosReforma', ctx), casos = vm.runInContext('LACRE_CASOS', ctx);
+    const roda = (i, rf) => { const inp = clone(casos[i].inp); const r = calc(inp, clone(AD), {...FD}); r._inp = inp; return cenF(r, rf||null); };
+    const linha = (C,a) => (C.linhas||C.REF).find(x=>x.ano===a);
+    const c1 = roda(0), c2 = roda(1), c3 = roda(2);
+    chk('5at · A2 · caso 1 (comércio) híbrido 2027 = 673.853,96 (+26.014,65): dedução pela parcela de ICMS do DAS, não pelo ICMS de 12% do regular', Math.abs(linha(c1,2027).hib - 673853.96) < 0.02 && Math.abs(linha(c1,2027).hibBase.ded - linha(c1,2027).p190.icmsIss) < 0.02 && linha(c1,2027).hibBase.dedRegular > linha(c1,2027).hibBase.ded);
+    chk('5at · A2 · caso 3 híbrido 2027 = 2.175.384,70 (+95.039,83); caso 2 (serviço, ISS 2%) 206.901,27 (−1.376,88)', Math.abs(linha(c3,2027).hib - 2175384.70) < 0.02 && Math.abs(linha(c2,2027).hib - 206901.27) < 0.02);
+    chk('5at · A2 · em 2033 a dedução é zero nos dois cenários (ICMS/ISS extintos) — híbrido 2033 do caso 1 inalterado (1.205.153,42)', Math.abs(linha(c1,2033).hib - 1205153.42) < 0.02 && linha(c1,2033).hibBase.ded === 0);
+    chk('5at · A2 · regime regular não muda (caso 1 2027 = 681.265,52) e o híbrido fecha ao centavo com a parcela 5 pela base própria', Math.abs(linha(c1,2027).regular - 681265.52) < 0.02 && linha(c1,2027).hibConfere === true && Math.abs(linha(c1,2027).hibParcelas.ibsCbsFora - linha(c1,2027).hibBase.liquido) < 0.005);
+    chk('5at · A2 · sensibilidade do híbrido usa a base própria (superior = híbrido − líquido próprio + líquido próprio com crédito integral)', (()=>{ const l = linha(c1,2027); return l.sens.sup.hib < l.hib && Math.abs(l.sens.base.hib - l.hib) < 0.005; })());
+    // A1 · despesas creditáveis
+    const r1 = calc(clone(casos[0].inp), clone(AD), {...FD});
+    chk('5at · A1 · T.despCred soma administrativas/vendas/outras + rubricas de aquisição do LR (caso 1 tem despesas; fiscais e financeiras ficam fora)', r1.totais.despCred > 0 && /DESP_CRED_KEYS = \['adm','vendas','outras','credInsumos','credEnergia','credAlugueisPJ','credArrendamento','credFretesVenda','credBenfeitorias'\]/.test(html));
+    chk('5at · A1 · sem composição, compras + despesas creditáveis viram NÃO IDENTIFICADAS: base sem crédito, superior com crédito integral sobre as duas', (()=>{ const l = linha(c1,2033); return l.cred === 0 && Math.abs(l.sens.sup.cred - (r1.totais.comprasRevenda + r1.totais.despCred) * l.alq) < 0.05; })());
+    chk('5at · A1 · compMontar: o total classificado pela composição = compras + despesas creditáveis', /const total = \(\+\(T && T\.comprasRevenda\) \|\| 0\) \+ \(\+\(T && T\.despCred\) \|\| 0\);/.test(html));
+    // A5 · crédito do cliente B2B
+    const cB = roda(0, { contra: { vendas_lrlp: 1000000, vendas_pf: 500000 } });
+    chk('5at · A5 · linha informativa: receita B2B × (alíquota − % de CBS/IBS embutido no DAS), presente de 2027 em diante e nula sem composição de clientes', (()=>{ const l = linha(cB,2033), l0 = linha(c1,2033); return l.b2bCredPerdido != null && Math.abs(l.b2bCredPerdido - 1000000*(l.alq - l.pctCbsIbsDas)) < 0.01 && l.b2bCredPerdido > 0 && l0.b2bCredPerdido === null && Math.abs(l.hib - l0.hib) < 0.005; })());
+    chk('5at · A5 · memória anual imprime a linha "(info) Crédito que o cliente B2B deixa de tomar" fora do ranking', /\(info\) Crédito que o cliente B2B deixa de tomar no "por dentro"/.test(html) && /fora do ranking/.test(html));
+    // A3 · procedência
+    chk('5at · A3 · procedência: quadro de alíquotas distingue lei × estimativa/projeção e declara o teto de 26,5% do art. 130 do ADCT', /Procedência \(v7\.95\.0\)/.test(html) && /teto de 26,5%/.test(html) && /art\. 130 do ADCT/.test(html));
+    chk('5at · v7.95.0 · badge, changelog e lacre RE-SELADO 22197ef1 → ba7dcb90 (regime atual intocado: LR caso 1 1.169.013,17)', /APP_VERSAO = '7\.95\.[0-9]'/.test(html) && /<b>v7\.95\.0<\/b><\/td><td>18\/09\/2026/.test(html) && /LACRE RE-SELADO <code>22197ef1<\/code> → <code>ba7dcb90<\/code>/.test(html) && /LACRE RE-SELADO <code>ba7dcb90<\/code> → <code>8ab9c16a<\/code>/.test(html) && (()=>{ const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '8ab9c16a' && Math.abs(l.resumo[0].lr - 1169013.17) < 0.01; })());
+  }
+
+  // ═══ 5as · v7.94.4 — RBT12 zero com receita = 1ª faixa, alíquota nominal (Sonne e Red Global, extratos reais) ═══
+  {
+    const calc = vm.runInContext('calcular', ctx), anNovoF = vm.runInContext('anNovo', ctx);
+    // Sonne (Anexo V/III pelo Fator R): jan/fev zero, 12 meses anteriores zero, folha só a partir de março
+    const so = anNovoF('62781063000180', 2026); so.cfg.iss = .05;
+    so.receitas.a5r[2] = 36848.65; so.receitas.a5r[3] = 30515.50; so.receitas.a5r[4] = 31904.89; so.receitas.a5r[5] = 32513.52;
+    so.folha.salarios[2] = 1436.09; so.folha.salarios[3] = 1436.09; so.folha.salarios[4] = 1436.08;
+    const S = calc(so);
+    chk('5as · Sonne mar/26: RBT12 zero → 1ª faixa, 15,50% nominal do Anexo V = 5.711,55 (PGDAS-D declarou 5.711,55; v7.94.3 dava 6.360,49)', S.meses[2].rbt12Zero === true && S.meses[2].faixa === 1 && Math.abs(S.meses[2].das - 5711.55) < 0.02);
+    chk('5as · Sonne jun/26 segue batendo: RBT12 = soma real dos meses anteriores, 5.039,60', Math.abs(S.meses[5].das - 5039.60) < 0.02 && !S.meses[5].rbt12Zero);
+    // Red Global (Anexo III): abertura fev/2026 → março é o 2º mês; RBT12p = 0 ÷ 1 × 12 = 0 (o extrato declara RBT12p 0,00)
+    const rd = anNovoF('64855939000110', 2026); rd.cfg.iss = .03; rd.cfg.inicioAtividade = '2026-02';
+    rd.receitas.a3_semret[2] = 63130.74; rd.receitas.a3_semret[4] = 2551.77; rd.receitas.a3_semret[5] = 164663.80;
+    const Rr = calc(rd);
+    chk('5as · Red mar/26: 2º mês de atividade com RBT12p zero → 6,00% nominal do Anexo III = 3.787,83 (declarado 3.787,83; antes 7.130,92)', Rr.meses[2].rbt12Zero === true && Math.abs(Rr.meses[2].das - 3787.83) < 0.02);
+    chk('5as · Red jun/26: RBT12p (0+63.130,74+0+2.551,77)÷4×12 = 197.047,53 → 2ª faixa, 10.620,61', Math.abs(Rr.meses[5].rbt12 - 197047.53) < 0.02 && Math.abs(Rr.meses[5].das - 10620.61) < 0.02);
+    // 1º mês de atividade continua receita × 12 (v7.52.0) — não é caso de RBT12 zero
+    const pm = anNovoF('64855939000110', 2026); pm.cfg.inicioAtividade = '2026-03'; pm.receitas.a3_semret[2] = 63130.74;
+    chk('5as · 1º mês de atividade preserva receita × 12 (757.568,88, 4ª faixa) e não é marcado como RBT12 zero', Math.abs(calc(pm).meses[2].rbt12 - 757568.88) < 0.02 && !calc(pm).meses[2].rbt12Zero);
+    // Fator R com RBT12r zero: folha nos 12 meses anteriores e receita zero → 28% (Anexo III)
+    const fr = anNovoF('62781063000180', 2026); fr.cfg.folha12Lanc = Array(12).fill(1000); fr.receitas.a5r[0] = 10000;
+    chk('5as · FS12 > 0 e RBT12r = 0 → fator r 28% → Anexo III a 6% nominal (600,00)', Math.abs(calc(fr).meses[0].das - 600) < 0.02 && calc(fr).fatorRMensal[0] >= .28);
+    // ISS retido no mês impedido pela alíquota municipal
+    const gi = anNovoF('72126907000102', 2026); gi.cfg.iss = .04; gi.cfg.rbaa = 3779392.13; gi.cfg.rbt12Lanc = Array(12).fill(3779392.13/12);
+    gi.receitas.a3_retiss[0] = 511199.29;
+    chk('5as · ISS retido no mês impedido = serviços × 4% municipal (20.447,97), não a trava de 5%', Math.abs(calc(gi).meses[0].simples.issRetido - 20447.97) < 0.02);
+    chk('5as · importador lê "Impedido de recolher ICMS/ISS no DAS" e nome de retificadora; conferência e Verificar têm as réguas', /impedidoDecl = _impL/.test(html) && /\(\\d\{4\}\)\(\\d\{2\}\)\\d\{3\}\\\.pdf\$/.test(html) && /Impedimento declarado no PGDAS-D/.test(html) && /RBT12 declarada no PGDAS-D/.test(html) && /Nenhum PGDAS-D importado/.test(html));
+    chk('5as · v7.94.4 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.9[4-9]\.\d+'/.test(html) && /<b>v7\.94\.4<\/b><\/td><td>17\/09\/2026/.test(html) && /LACRE_HASH = '8ab9c16a'/.test(html));
   }
 
   // ═══ 5aq · v7.94.2 — aba ICMS·IPI: quadro apurado editável (débito/crédito de ICMS e IPI) ═══
@@ -5229,7 +5296,7 @@ console.log('\n■ Integridade da interface');
       const i = anNovoF('11111111000191', 2026); i.cfg.rbaa = 3957960.59; i.cfg.rbt12Lanc = Array(12).fill(3957960.59/12); i.receitas.a1_semst[0] = 291799; i.compras.semst[0] = 62236.89;
       const a = calc(i).meses[0]; i.icms.deb[0] = 30000; i.icms.cred[0] = 10000; const b = calc(i).meses[0];
       chk('5aq · motor: valor informado prevalece na estimativa do LP/LR e no ICMS fora do Simples (20.000,00)', Math.abs(a.icmsPagar - 27547.45) < 0.01 && Math.abs(b.icmsPagar - 20000) < 0.01 && Math.abs(b.impIcms - 20000) < 0.01 && Math.abs(b.lp.icms - 20000) < 0.01); }
-    chk('5aq · v7.94.2 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.94\.[2-9]'/.test(html) && /<b>v7\.94\.2<\/b><\/td><td>14\/09\/2026/.test(html) && /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5aq · v7.94.2 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.9[4-9]\.\d+'/.test(html) && /<b>v7\.94\.2<\/b><\/td><td>14\/09\/2026/.test(html) && /LACRE_HASH = '8ab9c16a'/.test(html));
   }
 
   // ═══ 5ap · v7.94.1 — abertura com análise zerada: placeholder sempre carrega; anSalvar recusa gravar placeholder ═══
@@ -5238,7 +5305,7 @@ console.log('\n■ Integridade da interface');
     chk('5ap · go(analise): placeholder também força a carga', /if \(!difere && !\(AN && AN\._placeholder && alvo\)\) return;/.test(html));
     chk('5ap · anSalvar recusa gravar placeholder sobre linha existente e não persiste a marca', /if \(remoto && AN\._placeholder && !AN\._verEm\)\{/.test(html) && /_placeholder:undefined\}/.test(html));
     chk('5ap · anTrocarEmpresa limpa a marca ao carregar', /delete AN\._placeholder;/.test(html));
-    chk('5ap · v7.94.1 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.94\.[1-9]'/.test(html) && /<b>v7\.94\.1<\/b><\/td><td>14\/09\/2026/.test(html) && /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5ap · v7.94.1 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.9[4-9]\.\d+'/.test(html) && /<b>v7\.94\.1<\/b><\/td><td>14\/09\/2026/.test(html) && /LACRE_HASH = '8ab9c16a'/.test(html));
   }
 
   // ═══ 5ao · v7.94.0 — impedido pelo ano anterior: ICMS/ISS por fora = conta do LP/LR (aba ICMS·IPI prevalece); partilha sem ICMS/ISS ═══
@@ -5276,8 +5343,8 @@ console.log('\n■ Integridade da interface');
     chk('5ao · memória mensal: linhas "ICMS/ISS apurado fora do Simples" + rótulo do custo total nomeia o impedimento', /ICMS apurado fora do Simples/.test(html) && /ISS apurado fora do Simples/.test(html) && /DAS \+ ICMS\/ISS fora do Simples \+ retenções \+ CPP fora do DAS/.test(html));
     chk('5ao · motor: impIcms lê icmsPagar e impIss lê iss (conta única) e dasIcmsIss zera no impedido', /const impIcms = _impedido \? Math\.max\(0, icmsPagar\) : 0;/.test(html) && /const impIss = _impedido \? Math\.max\(0, iss\) : 0;/.test(html) && /if \(_impedido\) dasIcmsIss = 0;/.test(html));
     { const l = vm.runInContext('lacreRodar()', ctx);
-      chk('5ao · lacre RE-SELADO 453f7b32 → 22197ef1 e íntegro (casos 1 e 2 intactos: Simples 1.031.702,81 · 358.284,98 nos resumos)', l.ok === true && l.hash === '22197ef1' && /LACRE RE-SELADO <code>453f7b32<\/code> → <code>22197ef1<\/code>/.test(html), 'hash=' + l.hash); }
-    chk('5ao · v7.94.0 · badge e changelog', /APP_VERSAO = '7\.94\.\d+'/.test(html) && /<b>v7\.94\.0<\/b><\/td><td>14\/09\/2026/.test(html));
+      chk('5ao · lacre RE-SELADO 453f7b32 → 22197ef1 e íntegro (casos 1 e 2 intactos: Simples 1.031.702,81 · 358.284,98 nos resumos)', l.ok === true && l.hash === '8ab9c16a' && /LACRE RE-SELADO <code>453f7b32<\/code> → <code>22197ef1<\/code>/.test(html), 'hash=' + l.hash); }
+    chk('5ao · v7.94.0 · badge e changelog', /APP_VERSAO = '7\.9[4-9]\.\d+'/.test(html) && /<b>v7\.94\.0<\/b><\/td><td>14\/09\/2026/.test(html));
   }
 
   // ═══ 5an · v7.93.5 — payload da IA no ano de referência, situacaoSimples, rastreio, plano em tabela, rodapé legal ═══
@@ -5288,9 +5355,9 @@ console.log('\n■ Integridade da interface');
     chk('5an · RL._ia guarda __valoresSemOrigem e __reparado da Edge Function v7.8', /semOrigem: Array\.isArray\(data\.__valoresSemOrigem\)/.test(html) && /reparado: !!data\.__reparado/.test(html));
     chk('5an · barra do parecer avisa (no-print) os valores sem origem', /Valores citados pela IA sem origem nos quadros/.test(html) && /\$\{avisoOrigem\}\$\{premissaCred/.test(html));
     chk('5an · plano de ação em tabela (nº · quando · ação · o que fazer) e esqueleto da IA cobre as linhas', /<table class="pp-tab pp-plano-tab">/.test(html) && /<tr class="pp-passo-tr">/.test(html) && /#rl-corpo \.pp-passo-tr'\)/.test(html));
-    { const f = run('ppPremissasLegais')(); chk('5an · rodapé com a versão das premissas legais: normas, CGIBS 14/2026, motor e lacre', /LC 123\/2006/.test(f) && /190\/2026/.test(f) && /LC 214\/2025/.test(f) && /CGIBS nº 14\/2026/.test(f) && /lacre 22197ef1/.test(f) && /v7\.9[3-9]\.\d+/.test(f)); }
+    { const f = run('ppPremissasLegais')(); chk('5an · rodapé com a versão das premissas legais: normas, CGIBS 14/2026, motor e lacre', /LC 123\/2006/.test(f) && /190\/2026/.test(f) && /LC 214\/2025/.test(f) && /CGIBS nº 14\/2026/.test(f) && /lacre 8ab9c16a/.test(f) && /v7\.9[3-9]\.\d+/.test(f)); }
     chk('5an · a folha final do parecer imprime o rodapé legal', /\$\{ppPremissasLegais\(\)\}/.test(html));
-    chk('5an · lacre 22197ef1 intocado', /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5an · lacre 22197ef1 intocado', /LACRE_HASH = '8ab9c16a'/.test(html));
     chk('5an · v7.93.5 · badge e changelog', /APP_VERSAO = '7\.9[3-9]\.\d+'/.test(html) && /<b>v7\.93\.5<\/b><\/td><td>13\/09\/2026/.test(html));
   }
 
@@ -5310,7 +5377,7 @@ console.log('\n■ Integridade da interface');
       chk('5am · ppEhEncabecamento: pp-sec, subtítulo em negrito e hint logo após o pp-sec = encabeçamento; parágrafo e hint solto = não', f(sec, mi) && f(sub, mi) && f(hintSec, mi) && !f(par, mi) && !f(hintSolto, mi)); }
     chk('5am · empacotador desce o encabeçamento inteiro, nunca a folha inteira', /while \(mi\.childNodes\.length > 1 && ppEhEncabecamento\(mi\.lastElementChild, mi\)\)/.test(html));
     chk('5am · inversão = vencedor diferente entre os limites; variação × margem vira atenção (variacaoSuperaMargem)', /inverte: ri\.melhor\.k !== rb\.melhor\.k \|\| rs\.melhor\.k !== rb\.melhor\.k/.test(html) && /variacaoSuperaMargem: isFinite\(margem\)/.test(html) && (html.match(/o vencedor é o mesmo nos três limites/g)||[]).length >= 2);
-    chk('5am · lacre 22197ef1 intocado', /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5am · lacre 22197ef1 intocado', /LACRE_HASH = '8ab9c16a'/.test(html));
     chk('5am · v7.93.4 · badge e changelog', /APP_VERSAO = '7\.9[3-9]\.\d+'/.test(html) && /<b>v7\.93\.4<\/b><\/td><td>13\/09\/2026/.test(html));
   }
 
@@ -5329,14 +5396,14 @@ console.log('\n■ Integridade da interface');
     chk('5al · edição real na receita da Reforma segue acusada', JSON.stringify(run('anDifCanonica')(ed2, tela)) === '["reforma"]');
     chk('5al · reforma ausente dos dois lados = igual; presente só de um lado = diferente', run('anDifCanonica')(base, { ...base }).length === 0 && JSON.stringify(run('anDifCanonica')(base, tela)) === '["reforma"]');
     chk('5al · anCanon usa anCanonReforma (rfLimpo + chaves ordenadas em profundidade)', /reforma:anCanonReforma\(o\.reforma\)/.test(html) && /function anCanonOrdenar/.test(html) && /function anCanonReforma/.test(html));
-    chk('5al · lacre 22197ef1 intocado', /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5al · lacre 22197ef1 intocado', /LACRE_HASH = '8ab9c16a'/.test(html));
     chk('5al · v7.93.3 · badge e changelog', /APP_VERSAO = '7\.9[3-9]\.\d+'/.test(html) && /<b>v7\.93\.3<\/b><\/td><td>13\/09\/2026/.test(html));
   }
 
   // ═══ 5ak · v7.93.2 — ressalva residual do reteste final: nota de centavos sob o "Resultado mês a mês" ═══
   {
     chk('5ak · a tabela mensal da Análise Atual recebe a mesma frase de totais dos relatórios', /\$id\('an-detalhe'\)\.innerHTML = h \+ notaTotais\(\);/.test(html) && (html.match(/notaTotais\(\)/g)||[]).length >= 3);
-    chk('5ak · lacre 22197ef1 intocado', /LACRE_HASH = '22197ef1'/.test(html));
+    chk('5ak · lacre 22197ef1 intocado', /LACRE_HASH = '8ab9c16a'/.test(html));
     chk('5ak · v7.93.2 · badge e changelog', /APP_VERSAO = '7\.9[3-9]\.\d+'/.test(html) && /<b>v7\.93\.2<\/b><\/td><td>13\/09\/2026/.test(html));
   }
 
