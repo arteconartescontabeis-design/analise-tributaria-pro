@@ -138,6 +138,12 @@
     if (meses === null || isNaN(meses) || meses <= 0) erros.push(E('l-mes', 'Quantidade de meses deve ser um inteiro maior que zero.'));
     else if (meses !== Math.floor(meses)) erros.push(E('l-mes', 'Quantidade de meses deve ser um número inteiro (períodos parciais vão em "dias no mês").'));
     var prz = negativo(erros, 'l-prz', 'Prazo do contrato', f.prazo_dias);
+    // v1.6.2 — art. 253: prazo ≤ 90 dias em residencial exige classificação (e justificativa se for locação)
+    if (typeof prz === 'number' && prz > 0 && prz <= 90 && f.finalidade === 'residencial') {
+      if (['hospedagem', 'locacao_residencial'].indexOf(f.classificacao) < 0) erros.push(E('l-cls', 'Prazo de ' + prz + ' dias em imóvel residencial: escolha a classificação — hospedagem (regra de hotel) ou locação residencial (com justificativa).'));
+      else if (f.classificacao === 'locacao_residencial' && !String(f.justificativa || '').trim()) erros.push(E('l-just', 'Classificou como locação residencial com prazo curto: a justificativa é obrigatória (art. 253 aponta para hotelaria).'));
+      else if (f.classificacao === 'hospedagem') avisos.push(E('l-cls', 'Hospedagem: o cálculo será bloqueado e explicado — a operação segue as regras de hotelaria, fora deste módulo.'));
+    }
     var dias = negativo(erros, 'l-dias', 'Dias no mês', f.dias_no_mes);
     if (typeof dias === 'number' && dias > 31) erros.push(E('l-dias', 'Dias no mês não pode exceder 31. Para vários meses use o campo "meses".'));
     var area = negativo(erros, 'l-area', 'Fração de área residencial', f.fracao_area);
@@ -160,6 +166,18 @@
     var rec = negativo(erros, 'x-rec', 'Valor do imóvel recebido', f.valor_recebido);
     var tp = negativo(erros, 'x-tpaga', 'Torna paga', f.torna_paga);
     var tr = negativo(erros, 'x-trec', 'Torna recebida', f.torna_recebida);
+    // v1.6.2 — torna parcelada: cada parcela numérica > 0 e a soma fecha com a torna
+    if (String(f.torna_parcelas || '').trim()) {
+      var partes = String(f.torna_parcelas).split(';').map(function (x) { return x.trim(); }).filter(Boolean);
+      var vals = partes.map(num);
+      if (vals.some(function (v) { return v === null || isNaN(v) || v <= 0; })) erros.push(E('x-tparc', 'Parcelas da torna: use só números maiores que zero, separados por ";" (ex.: 100000; 100000; 100000).'));
+      else {
+        var tornaTot = (tp || 0) + (tr || 0), somaP = vals.reduce(function (a, b) { return a + b; }, 0);
+        if (vals.length < 2) avisos.push(E('x-tparc', 'Uma parcela só é torna à vista — o campo será ignorado.'));
+        if (tornaTot <= 0) erros.push(E('x-tparc', 'Há parcelas da torna mas nenhuma torna informada (paga ou recebida).'));
+        else if (Math.abs(somaP - tornaTot) > 0.02) erros.push(E('x-tparc', 'A soma das parcelas (' + somaP.toFixed(2) + ') não fecha com a torna (' + tornaTot.toFixed(2) + ').'));
+      }
+    }
     if (typeof tp === 'number' && typeof tr === 'number' && tp > 0 && tr > 0)
       erros.push(E('x-tpaga', 'Informe torna paga OU torna recebida, não as duas: na permuta a torna vai numa única direção.'));
     if (['contribuinte', 'nao_contribuinte'].indexOf(f.contraparte) < 0) erros.push(E('x-parte', 'Indique se a contraparte é contribuinte do regime regular.'));
@@ -203,6 +221,13 @@
     var me = num(f.meses);
     if (me === null || isNaN(me) || me <= 0) erros.push(E('c-me', 'Meses do período deve ser maior que zero.'));
     negativo(erros, 'c-raj', 'Redutor de ajuste', f.redutor);
+    // v1.6.2 — Lucro Presumido na venda só com objeto social e natureza confirmados (IMOB-LP-001 v2)
+    if ((rv || 0) > 0) {
+      if (['0', '1'].indexOf(String(f.objeto_social)) < 0) erros.push(E('c-obj', 'Confirme se a atividade imobiliária consta do objeto social.'));
+      else if (String(f.objeto_social) === '0') erros.push(E('c-obj', 'Fora do objeto social a venda é ganho de capital (Lei 9.430, art. 29) — o Lucro Presumido não se aplica; use o cálculo de ganho de capital.'));
+      if (['operacional', 'ativo_nao_circulante'].indexOf(f.natureza) < 0) erros.push(E('c-nat', 'Confirme a natureza da receita de venda: operacional (estoque) ou ativo não circulante.'));
+      else if (f.natureza === 'ativo_nao_circulante') erros.push(E('c-nat', 'Imóvel do ativo não circulante é ganho de capital (IN RFB 1.700, art. 215), não receita presumida de 8%/12%.'));
+    }
     if ((rs || 0) > 0 && !(num(f.iss) > 0)) avisos.push(E('c-iss', 'Há receita de serviços com ISS em 0% — confirme a alíquota do município.'));
     return saida(erros, avisos);
   }

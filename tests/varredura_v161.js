@@ -29,8 +29,8 @@ var ctx=M.transicaoPadrao? {aliquotas:{ibs:18.7,cbs:9.21,classificacao:'ESTIMADA
  ['justificativa objeto',{operacao:'locacao',data_fato_gerador:'2033-06-15',valor_operacao:5000,locacao:{finalidade:'residencial',meses:1,prazo_dias:10,classificacao_operacao:'locacao_residencial',justificativa_classificacao:{a:1}}}],
  ['aliquotas sem classificacao',{operacao:'venda',data_fato_gerador:'2033-06-15',valor_operacao:1e5,imovel:{tipo:'comercial'}}, {aliquotas:{ibs:18.7,cbs:9.21},parametros:{},indices:{}}]
 ].forEach(function(c){ try{ var x=M.calcular(c[1],c[2]||ctx); console.log(c[0]+':',x.status,(x.bloqueios||[]).map(function(b){return b.codigo;}).join(','),x.total); }catch(e){ erros.push('HOSTIL '+c[0]+': '+e.message); } });
-try{ var t=M.transicaoPadrao({aliquotas:{}}); console.log('transicaoPadrao sem alíquotas:',JSON.stringify(t[2027])); }catch(e){ erros.push('transicaoPadrao vazio: '+e.message); }
-try{ var t2=M.transicaoPadrao({aliquotas:{ibs:'x',cbs:null}}); console.log('transicaoPadrao hostil:',JSON.stringify(t2[2029])); }catch(e){ erros.push('transicaoPadrao hostil: '+e.message); }
+console.log('transicaoPadrao sem alíquotas:', M.transicaoPadrao({aliquotas:{}})===null?'null (ok)':'FALHOU');
+console.log('transicaoPadrao hostil:', M.transicaoPadrao({aliquotas:{ibs:'x',cbs:null}})===null?'null (ok)':'FALHOU');
 // 5. escada legada com classificacao LEGAL na linha (risco de o genérico rotular 2027 como lei)
 var leg={2026:{ibs:0.1,cbs:0.9,classificacao:'LEGAL'},2027:{ibs:0.1,cbs:9.11,classificacao:'LEGAL'},2033:{ibs:18.7,cbs:9.21,classificacao:'ESTIMADA'}};
 var pl=M.projetarTransicao({operacao:'venda',data_fato_gerador:'2033-06-15',valor_operacao:1e5,imovel:{tipo:'comercial'}},Object.assign({},ctx,{transicao:leg}));

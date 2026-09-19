@@ -1,4 +1,4 @@
-# Análise Imobiliária Pro — v1.6.0 / v1.6.1 · Relatório de implementação
+# Análise Imobiliária Pro — v1.6.0 / v1.6.1 / v1.6.2 · Relatório de implementação
 
 **Versão** 1.6.0 · **Data** 18/09/2026 · **Responsável** Cleiver (Artecon) / desenvolvimento com Claude · **Origem** "Prompt de Alteração do Aplicativo de Análise Imobiliária v1.5.0"
 **Motor** motorImob 1.2.0 → **1.3.0** · **Ruleset** imob-2026.08.21 → **imob-2026.09.18** · **Lacre** c287341e → **338c914d** (calculado após os testes; o anterior foi conferido íntegro antes de qualquer alteração)
@@ -78,3 +78,15 @@ Método: carga dos 14 scripts + layout em jsdom (`tests/varredura_v161.js`), flu
 | Contagem `homologadas` do manifesto (27) confere com o catálogo | conferido | — | varredura |
 
 Suítes finais: `run_imob_v160.js` **99/99** · `run_imob_ui.js` **48/48** · varredura sem erro.
+
+## 7. v1.6.2 (18/09/2026) — fecho das dívidas da 1.6.1 · motor 1.3.1 · lacre 338c914d inalterado (nenhuma fórmula mudou)
+
+| # | Arquivo / função | O que mudou | Teste |
+|---|---|---|---|
+| 1 | `imob_validacao.js` · `validarLocacao`, `validarPermuta`, `validarComparativo`; `ui_imobiliaria.js` passa os campos | Erro no próprio campo, antes de chamar o motor: `l-cls`/`l-just` (prazo ≤ 90 dias em residencial), `x-tparc` (parcelas numéricas > 0 e soma = torna), `c-obj`/`c-nat` (venda no comparativo). O motor continua bloqueando se chamado direto (defesa em profundidade). | V3, V8, V9, V10 |
+| 2 | `motorImob.js` · `pacoteParecer`, `promptParecer` | `bloco_05b_percentuais` (valor, categoria, fonte, vigência, versão); percentuais entram em `numeros_autorizados`; limitação "percentuais NÃO fixados em lei"; regra 7 do prompt: proibido chamar de legal/vigente o que não é LEGAL; **`confianca` e `tipo` no topo do pacote** — achado da varredura de 22/08 (o `pdfImob` lia daí e recebia undefined) | PAC (5) |
+| 3 | `motorImob.js` · `META`/`aplicarMeta`; `ui_imobiliaria.js` · `pintaRegras` | `data_consulta` por regra: 20/08 (Passo 0, texto da LC e dos regulamentos), 18/09 (arts. 344/347), 22/08 para LP/LR; `conferida_em_fonte_primaria=false` nas cinco regras do regime atual, com badge "fonte secundária — texto não relido" na tela | CAT (2), V11 |
+
+Suítes: `run_imob_v160.js` **106/106** · `run_imob_ui.js` **52/52** · `varredura_v161.js` 0 erros. Arquivos alterados nesta versão: motorImob.js, imob_validacao.js, ui_imobiliaria.js, imob_manifesto.js, imobiliaria.html.
+
+**Ainda sem tratar (fora do escopo destas três):** Edge Function sem o ramo `imobiliario` (o pacote já leva os percentuais, mas o servidor não os usa até o ramo existir); regras LP/LR seguem em fonte secundária — agora declaradas como tal; Parecer Técnico v2 (RET); escada 2029-2032 projeção; caso real do setor.

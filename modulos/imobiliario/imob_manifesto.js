@@ -9,11 +9,11 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.6.1',
+    versao: '1.6.2',
     data: '18/09/2026',
     cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
-    motor: { nome: 'motorImob', versao: '1.3.0', contrato: 'calc-imob-1',
+    motor: { nome: 'motorImob', versao: '1.3.1', contrato: 'calc-imob-1',
              ruleset: 'imob-2026.09.18', lacre: '338c914d', lacre_anterior: 'c287341e', regras: 29, homologadas: 27,
              nota: 'IMOB-TRA-001 reclassificada como proje\u00e7\u00e3o e IMOB-LR-001 segue em staging: regra baseada em premissa, estimativa ou proje\u00e7\u00e3o n\u00e3o \u00e9 homologada.' },
     base_legal: { dispositivos: 97, fontes: ['Decreto 12.955/2026', 'Resolu\u00e7\u00e3o CGIBS 6/2026',
@@ -21,6 +21,10 @@
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.6.2', data: '18/09/2026', texto:
+        'Fecho das d\u00edvidas da 1.6.1 (motor 1.3.1, lacre 338c914d inalterado \u2014 nenhuma f\u00f3rmula mudou). Valida\u00e7\u00e3o de formul\u00e1rio para os campos novos: classifica\u00e7\u00e3o/justificativa da loca\u00e7\u00e3o curta, parcelas da torna (n\u00fameros e soma) e objeto social/natureza no comparativo \u2014 o erro aparece no campo antes de chamar o motor. '
+        + 'Pacote do parecer com IA passa a levar os percentuais com categoria (bloco_05b), a limita\u00e7\u00e3o "percentuais n\u00e3o fixados em lei", a regra 7 do prompt (proibido chamar de legal o que n\u00e3o \u00e9) e confian\u00e7a/tipo no topo do pacote. '
+        + 'Cat\u00e1logo: data de consulta por regra (Passo 0 = 20/08; LP/LR = 22/08 em fonte secund\u00e1ria; transi\u00e7\u00e3o = 18/09) e marca "fonte secund\u00e1ria \u2014 texto n\u00e3o relido" nas regras do regime atual. Su\u00edtes: run_imob_v160 106/106 \u00b7 run_imob_ui 52/52.' },
       { versao: '1.6.1', data: '18/09/2026', texto:
         'Varredura de erros sobre a 1.6.0 (lacre 338c914d inalterado). Listas de pagamentos (venda e torna da permuta) com texto, negativo ou vazias passam a bloquear (E015) '
         + '\u2014 antes um valor n\u00e3o num\u00e9rico virava parcela de R$ 0 e todo o imposto ca\u00eda na \u00faltima parcela (defeito pr\u00e9-existente na venda, exposto pelo caso novo da permuta); justificativa da classifica\u00e7\u00e3o precisa ser texto (E016); '

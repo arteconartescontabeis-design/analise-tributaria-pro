@@ -437,7 +437,7 @@ function entradaLocacao(finalidade){
   return { operacao:'locacao', data_fato_gerador: txt('l-data'), valor_operacao: Math.round(mensal * meses * propDias * 100) / 100, locacao: loc, creditos: n('l-cre'), imovel: imovelParaEntrada() };
 }
 function calcLoc(){ acao(function(){
-  var v = VA.validarLocacao({ valor: txt('l-val'), finalidade: txt('l-fim'), meses: txt('l-mes'), prazo_dias: txt('l-prz'), dias_no_mes: txt('l-dias'), fracao_area: txt('l-area'),
+  var v = VA.validarLocacao({ valor: txt('l-val'), finalidade: txt('l-fim'), meses: txt('l-mes'), prazo_dias: txt('l-prz'), dias_no_mes: txt('l-dias'), fracao_area: txt('l-area'), classificacao: txt('l-cls'), justificativa: txt('l-just'),
     tributos: txt('l-trib'), condominio: txt('l-cond'), foro: txt('l-foro'), creditos: txt('l-cre'), data: txt('l-data') });
   if (!mostrarValidacao('l-valid', v)) { $('l-out').innerHTML = ''; return; }
   var e = entradaLocacao(), ctx = ctxPara('locacao'), res = M.calcular(e, ctx);
@@ -466,7 +466,7 @@ function calcLoc(){ acao(function(){
 
 /* ---------- permuta ---------- */
 function calcPerm(){ acao(function(){
-  var v = VA.validarPermuta({ valor_dado: txt('x-val'), valor_recebido: txt('x-rec'), torna_paga: txt('x-tpaga'), torna_recebida: txt('x-trec'), contraparte: txt('x-parte'),
+  var v = VA.validarPermuta({ valor_dado: txt('x-val'), valor_recebido: txt('x-rec'), torna_paga: txt('x-tpaga'), torna_recebida: txt('x-trec'), contraparte: txt('x-parte'), torna_parcelas: txt('x-tparc'),
     redutor: txt('x-raj'), creditos: txt('x-cre'), unidades: txt('x-nuni'), fracao_ideal: txt('x-fr'), unidades_futuras: txt('x-uni') === '1', data: txt('x-data') });
   if (!mostrarValidacao('x-valid', v)) { $('x-out').innerHTML = ''; return; }
   var tp = n('x-tpaga'), tr = n('x-trec');
@@ -571,7 +571,7 @@ function pintaRegras(){
     h += '<tr class="grp"><td colspan="6">' + esc(a[0]) + '</td></tr>';
     a[1].forEach(function(k){ var r = R[k]; if (!r) return; var vg = VIGENCIA[k] || ['a partir de 01/01/2027 (2026: ano-teste)', 'regime espec&iacute;fico'];
       var fo = (r.fonte_oficial || []).map(function(f){ return '<div>' + esc(f.norma) + (f.link ? ' <a href="' + esc(f.link) + '" target="_blank" rel="noopener">[oficial]</a>' : '') + '</div>'; }).join('');
-      h += '<tr><td><code>' + k + '</code><div class="mini">v' + r.versao + ' · ' + catBadge(String(r.categoria || r.nivel || '').toUpperCase()) + '</div></td><td>' + esc(r.nome) + (r.formula ? '<div class="mini"><b>F&oacute;rmula:</b> ' + esc(r.formula) + '</div>' : '') + (r.premissas && r.premissas.length ? '<div class="mini"><b>Premissas:</b> ' + r.premissas.map(esc).join('; ') + '</div>' : '') + (r.dependencias && r.dependencias.length ? '<div class="mini"><b>Depende de:</b> ' + r.dependencias.map(esc).join(', ') + '</div>' : '') + '</td><td class="fund">' + fo + '<div class="mini">consulta em ' + esc(r.data_consulta || '') + '</div>' + (r.alteracao_posterior ? '<div class="aviso" style="margin-top:4px">&#9888; ' + esc(r.alteracao_posterior) + '</div>' : '') + '</td>' +
+      h += '<tr><td><code>' + k + '</code><div class="mini">v' + r.versao + ' · ' + catBadge(String(r.categoria || r.nivel || '').toUpperCase()) + '</div></td><td>' + esc(r.nome) + (r.formula ? '<div class="mini"><b>F&oacute;rmula:</b> ' + esc(r.formula) + '</div>' : '') + (r.premissas && r.premissas.length ? '<div class="mini"><b>Premissas:</b> ' + r.premissas.map(esc).join('; ') + '</div>' : '') + (r.dependencias && r.dependencias.length ? '<div class="mini"><b>Depende de:</b> ' + r.dependencias.map(esc).join(', ') + '</div>' : '') + '</td><td class="fund">' + fo + '<div class="mini">consulta em ' + esc(r.data_consulta || '') + (r.conferida_em_fonte_primaria === false ? ' &middot; <span class="badge b-warn">fonte secund&aacute;ria &mdash; texto n&atilde;o relido</span>' : ' &middot; texto da norma') + '</div>' + (r.alteracao_posterior ? '<div class="aviso" style="margin-top:4px">&#9888; ' + esc(r.alteracao_posterior) + '</div>' : '') + '</td>' +
         '<td class="mini">' + esc(r.vigencia || vg[0]) + '</td><td><span class="badge ' + (r.status === 'homologada' || r.status === 'legal' ? 'b-ok' : r.status === 'bloqueada' ? 'b-err' : 'b-warn') + '">' + esc(r.status) + '</span></td><td class="mini">' + esc(r.impacto || IMPACTO[k] || '—') + '</td></tr>'; });
   });
   h += '</tbody></table><div class="info" style="margin-top:14px">Nenhuma regra vai a <b>ativa</b> antes da dupla aprova&ccedil;&atilde;o do Passo 6. A regra em <b>staging</b> (Lucro Real) &eacute; premissa declarada e sai rotulada como simula&ccedil;&atilde;o indicativa.</div>' + imobSelo();
@@ -655,7 +655,7 @@ function calcOpc(){ acao(function(){
    metade do legal). Agora vem do motor (transicaoPadrao) a partir das premissas vigentes, com categoria por ano e por tributo. */
 function escadaAtual(ctx){ return M.transicaoPadrao(ctx || ctxPara('venda')); }
 function calcComp(){ acao(function(){
-  var v = VA.validarComparativo({ receita_venda: txt('c-rv'), receita_locacao: txt('c-rl'), receita_servicos: txt('c-rs'), meses: txt('c-me'), redutor: txt('c-raj'), iss: txt('c-iss') });
+  var v = VA.validarComparativo({ receita_venda: txt('c-rv'), receita_locacao: txt('c-rl'), receita_servicos: txt('c-rs'), meses: txt('c-me'), redutor: txt('c-raj'), iss: txt('c-iss'), objeto_social: txt('c-obj'), natureza: txt('c-nat') });
   if (!mostrarValidacao('c-valid', v)) { $('c-out').innerHTML = ''; return; }
   var rv = n('c-rv'), rl = n('c-rl'), rs = n('c-rs'), meses = n('c-me') || 3;
   var c = ctxPara('venda'); c.transicao = escadaAtual(c); c.parametros.iss = n('c-iss');

@@ -20,7 +20,7 @@
 (function (raiz) {
   'use strict';
 
-  var MOTOR_IMOB_VERSAO = '1.3.0';
+  var MOTOR_IMOB_VERSAO = '1.3.1';
   var CONTRATO_VERSAO   = 'calc-imob-1';
   var RULESET_VERSAO    = 'imob-2026.09.18';
 
@@ -166,6 +166,14 @@
   var LINK_IN1700= 'http://normas.receita.fazenda.gov.br/sijut2consulta/link.action?idAto=81268';
   var LINK_COSIT = 'http://normas.receita.fazenda.gov.br/sijut2consulta/consulta.action';
   var DATA_CONSULTA = '2026-09-18';
+  // v1.3.1 — data em que cada regra foi conferida no texto da norma (não uma data única para todas)
+  var DATA_CONSULTA_POR_REGRA = {
+    'IMOB-TRA-001': '2026-09-18',                                    // arts. 344 e 347 relidos nesta rodada
+    'IMOB-LP-001': '2026-08-22', 'IMOB-LP-002': '2026-08-22', 'IMOB-LP-003': '2026-08-22', 'IMOB-LP-004': '2026-08-22',
+    'IMOB-LR-001': '2026-08-22'                                      // regime atual: fonte SECUNDÁRIA em 22/08 — nunca relido no texto
+  };
+  var FONTE_SECUNDARIA = ['IMOB-LP-001', 'IMOB-LP-002', 'IMOB-LP-003', 'IMOB-LP-004', 'IMOB-LR-001'];
+  var DATA_PASSO0 = '2026-08-20';                                    // LC 214 + RIBS/RCBS conferidos no literal (14/14)
   var VIG_IMOB = 'Regime específico de bens imóveis: a partir de 1º/01/2027 (2026 = ano-teste, art. 348, III, "b")';
   var META = {
     'IMOB-BASE-001': { categoria:'legal', formula:'base = valor da operação − redutor de ajuste − redutor social (nunca negativa)', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, arts. 251, 252 e 255', link:LINK_LC214},{norma:'Decreto 12.955/2026 (RIBS/RCBS), arts. 359, 360 e 364', link:LINK_RIBS}], dependencias:['IMOB-RAJ-001','IMOB-RSO-001'], impacto:'define a base de todas as alienações', alteracao_posterior:'LC 227/2026 alterou os arts. 260, 485 e 486 — não altera esta regra' },
@@ -204,7 +212,9 @@
       r.regra_id = id; r.codigo = id;
       r.categoria = m.categoria || r.nivel || 'legal';
       r.formula = m.formula || null; r.vigencia = m.vigencia || null;
-      r.fonte_oficial = m.fonte_oficial || []; r.data_consulta = DATA_CONSULTA;
+      r.fonte_oficial = m.fonte_oficial || [];
+      r.data_consulta = DATA_CONSULTA_POR_REGRA[id] || DATA_PASSO0;
+      r.conferida_em_fonte_primaria = FONTE_SECUNDARIA.indexOf(id) < 0;
       r.premissas = m.premissas || []; r.dependencias = m.dependencias || [];
       r.impacto = m.impacto || null; r.alteracao_posterior = m.alteracao_posterior || null;
       // item 1 do prompt: premissa/indicativa/projeção nunca ficam "homologada"
@@ -2222,6 +2232,10 @@
       extras.comparativo.linhas.forEach(function (l) { reg(l.substituiveis); reg(l.permanentes); reg(l.total); });
     if (extras.projecao && extras.projecao.anos)
       extras.projecao.anos.forEach(function (a) { reg(a.base); reg(a.total); reg(a.ibs_aliquota); reg(a.cbs_aliquota); });
+    // v1.3.1 — percentuais com categoria entram no pacote (a IA sabe o que é lei e o que é estimativa) e nos números autorizados
+    var percentuais = (res.percentuais || percentuaisDoResultado(e, ctx, res)).map(function (p) { reg(p.valor);
+      return { nome: p.nome, valor: p.valor, categoria: p.categoria, fonte: p.fonte, vigencia: p.vigencia, versao: p.versao, aplicada: p.aplicada !== false }; });
+    var naoLegais = percentuais.filter(function (p) { return p.aplicada && p.categoria !== 'LEGAL'; });
 
     var fontes = [];
     (res.regras_aplicadas || []).forEach(function (id) {
@@ -2242,6 +2256,7 @@
         var r = REGRAS[id] || {};
         return { regra_id: id, nome: r.nome, versao: r.versao, status: r.status,
                  origem: origemDaRegra(id, e), fontes: r.fontes }; }),
+      bloco_05b_percentuais: percentuais,
       bloco_06_memoria_de_calculo: memoria,
       bloco_07_situacao_atual_e_reforma: extras.comparativo || null,
       bloco_08_comparacoes: extras.projecao || null,
@@ -2262,8 +2277,12 @@
         .concat(res.notas || [])
         .concat(ctx.aliquotas && ctx.aliquotas.classificacao !== 'LEGAL'
           ? ['Alíquotas classificadas como ' + ctx.aliquotas.classificacao + ' — não vinculantes.'] : [])
+        .concat(naoLegais.length ? ['Percentuais NÃO fixados em lei usados no cálculo: ' + naoLegais.map(function (p) { return p.nome + ' ' + p.valor + '% (' + p.categoria.toLowerCase() + ')'; }).join('; ') + '.'] : [])
         .concat(aud.nivel_confianca !== 'ALTA' ? [aud.mensagem] : []),
       auditoria: { nivel_confianca: aud.nivel_confianca, por_severidade: aud.por_severidade },
+      // v1.3.1 — propagados no topo: o pdfImob e a Edge Function leem daqui (antes só vinham dentro de bloco_11/auditoria)
+      confianca: aud.nivel_confianca,
+      tipo: aud.permite_conclusao_definitiva ? (aud.nivel_confianca === 'ALTA' ? 'definitiva' : 'indicativa') : 'vedada',
       numeros_autorizados: num.filter(function (v, i, a) { return a.indexOf(v) === i; }),
       versoes: { motor: MOTOR_IMOB_VERSAO, ruleset: RULESET_VERSAO, contrato: CONTRATO_VERSAO,
                  lacre_imob: LACRE_IMOB_HASH }
@@ -2281,6 +2300,7 @@
       '4. Se bloco_11_conclusao.permitida for false, é PROIBIDO afirmar qual regime é mais vantajoso ou apresentar conclusão definitiva. Descreva o cálculo e liste os impedimentos.',
       '5. Não invente dispositivo legal. Use somente o que está em bloco_05 e bloco_12.',
       '6. Não omita bloco_09 (riscos) nem bloco_13 (limitações e premissas).',
+      '7. Todo percentual citado deve vir com a categoria de bloco_05b_percentuais (fixado em lei / estimativa / projeção / premissa). É PROIBIDO chamar de "alíquota legal" ou "vigente" um percentual cuja categoria não seja LEGAL.',
       '',
       'ESTRUTURA OBRIGATÓRIA, nesta ordem: objetivo e dados analisados; regime atual; operação; regras legais; memória de cálculo; situação atual e Reforma; comparações; riscos; recomendações; conclusão; fundamentação e legislação consultada; limitações e premissas.',
       '',

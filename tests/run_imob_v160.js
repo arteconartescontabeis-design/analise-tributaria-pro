@@ -137,6 +137,15 @@ var pl = M.projetarTransicao(B.CASOS['V01 venda à vista sem redutor'], Object.a
 ok(pl.anos[0].classificacao === 'LEGAL' && pl.anos[1].classificacao === 'ESTIMADA' && pl.anos[1].categoria_ibs === 'LEGAL' && pl.anos[1].categoria_cbs === 'ESTIMATIVA', 'VAR escada legada rotulada "LEGAL" em 2027 não herda o rótulo: categoria vem da regra do ano');
 ok(M.transicaoPadrao({ aliquotas: {} }) === null && M.transicaoPadrao({ aliquotas: { ibs: 'x', cbs: null } }) === null, 'VAR transicaoPadrao sem alíquota de referência devolve null (nada de escada com zeros)');
 ok(M.projetarTransicao(B.CASOS['V01 venda à vista sem redutor'], Object.assign({}, CTX, { transicao: null })).status === 'BLOQUEADO', 'VAR projeção com escada nula BLOQUEIA');
+// v1.6.2 — pacote do parecer e catálogo
+var pv = M.calcular(B.CASOS['V02 venda à vista com redutor'], CTX), pac = M.pacoteParecer(B.CASOS['V02 venda à vista com redutor'], pv, CTX, {});
+ok(Array.isArray(pac.bloco_05b_percentuais) && pac.bloco_05b_percentuais.length === 5 && pac.bloco_05b_percentuais.every(function (p) { return p.categoria; }), 'PAC bloco_05b_percentuais com categoria no pacote do parecer');
+ok(pac.numeros_autorizados.indexOf(9.35) >= 0 && pac.numeros_autorizados.indexOf(50) >= 0, 'PAC percentuais entram em numeros_autorizados (9,35 e 50)');
+ok(pac.confianca === 'MEDIA' && pac.tipo === 'indicativa', 'PAC confianca e tipo propagados no topo do pacote (achado antigo do pdfImob)');
+ok(pac.bloco_13_limitacoes_e_premissas.some(function (x) { return /NÃO fixados em lei/.test(x); }), 'PAC limitação lista os percentuais não legais');
+ok(/bloco_05b_percentuais/.test(M.promptParecer(pac)) && /PROIBIDO chamar de "alíquota legal"/.test(M.promptParecer(pac)), 'PAC prompt proíbe chamar de legal o que não é');
+ok(M.REGRAS['IMOB-BASE-001'].data_consulta === '2026-08-20' && M.REGRAS['IMOB-TRA-001'].data_consulta === '2026-09-18' && M.REGRAS['IMOB-LP-001'].data_consulta === '2026-08-22', 'CAT data de consulta por regra (Passo 0 / relidas hoje / fonte secundária)');
+ok(M.REGRAS['IMOB-LP-001'].conferida_em_fonte_primaria === false && M.REGRAS['IMOB-BASE-001'].conferida_em_fonte_primaria === true, 'CAT marca as regras nunca relidas no texto da norma');
 // Lacre
 var lv = M.lacreVerificar();
 ok(lv.integro === true, 'LACRE motor 1.3.0 íntegro (' + lv.hash_atual + ' = ' + lv.hash_homologado + ')');

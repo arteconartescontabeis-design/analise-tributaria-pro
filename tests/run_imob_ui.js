@@ -49,8 +49,8 @@ t('E2', 'todo onclick da marcação aponta para função exportada', 'imob_pagin
   var falt = Object.keys(f).filter(function (k) { return typeof w[k] !== 'function'; });
   return falt.length ? { ok: false, obtido: falt } : true;
 });
-t('E3', 'lacre do motor íntegro e versão do módulo 1.6.1 visível', 'lacreVerificar + ModulosInfo', '338c914d / 1.6.1', function () {
-  var v = M.lacreVerificar(); return v.integro && v.hash_atual === '338c914d' && M.MOTOR_IMOB_VERSAO === '1.3.0' && w.ModulosInfo.imobiliario.versao === '1.6.1' && w.ModulosInfo.imobiliario.changelog[0].versao === '1.6.1' && w.ModulosInfo.imobiliario.motor.lacre === '338c914d' ? true : { ok: false, obtido: v };
+t('E3', 'lacre do motor íntegro e versão do módulo 1.6.2 visível', 'lacreVerificar + ModulosInfo', '338c914d / 1.6.2', function () {
+  var v = M.lacreVerificar(); return v.integro && v.hash_atual === '338c914d' && M.MOTOR_IMOB_VERSAO === '1.3.1' && w.ModulosInfo.imobiliario.versao === '1.6.2' && w.ModulosInfo.imobiliario.changelog[0].versao === '1.6.2' && w.ModulosInfo.imobiliario.motor.lacre === '338c914d' ? true : { ok: false, obtido: v };
 });
 t('E4', '14 abas e página injetada; nav lateral marca ativo', 'abrirAba', 'aba on = venda', function () {
   w.abrirAba('venda'); var on = d.querySelectorAll('#imob-tabs .tab.on');
@@ -306,16 +306,20 @@ t('V1', 'Tabela 2026-2033: 2027 mostra IBS 0,10% legal e CBS estimada, nunca "fi
 t('V2', 'Memória mostra os percentuais com categoria, fonte, vigência e versão', 'após venda', 'tabela "Percentuais usados neste cálculo"', function () {
   var h = html_('v-out'); return h.indexOf('Percentuais usados neste c') > 0 && h.indexOf('LC 214/2025, art. 261, caput') > 0 && h.indexOf('imob-2026.09.18') > 0 ? true : { ok: false, obtido: h.slice(0, 200) };
 });
-t('V3', 'Locação ≤ 90 dias: sem classificação bloqueia pedindo a classificação; classificada e justificada calcula', 'l-prz 60', 'B005 → CALCULADO', function () {
+t('V3', 'Locação ≤ 90 dias: sem classificação o formulário barra (l-cls); classificada e justificada calcula e registra na memória', 'l-prz 60', 'erro l-cls → CALCULADO', function () {
   w.abrirAba('locacao'); set('l-val', 5000); set('l-fim', 'residencial'); set('l-mes', 2); set('l-prz', 60); set('l-cls', ''); set('l-just', ''); set('l-data', '2033-06-15'); w.calcLoc();
-  var h1 = html_('l-out'); set('l-cls', 'locacao_residencial'); set('l-just', 'contrato por prazo indeterminado'); w.calcLoc(); var h2 = html_('l-out');
+  var h1 = html_('l-valid') + html_('l-out'); set('l-cls', 'locacao_residencial'); set('l-just', 'contrato por prazo indeterminado'); w.calcLoc(); var h2 = html_('l-out');
   set('l-prz', ''); set('l-cls', ''); set('l-just', '');
-  return h1.indexOf('B005') > 0 && h2.indexOf('B005') < 0 && h2.indexOf('respons') > 0 ? true : { ok: false, obtido: [h1.indexOf('B005'), h2.indexOf('B005')] };
+  // o motor sozinho continua devolvendo B005 quando chamado sem classificação (defesa em profundidade)
+  var mb = M.calcular({ operacao: 'locacao', data_fato_gerador: '2033-06-15', valor_operacao: 10000, locacao: { finalidade: 'residencial', meses: 2, prazo_dias: 60 } }, { aliquotas: { ibs: 18.7, cbs: 9.21, classificacao: 'ESTIMADA' }, parametros: {}, indices: {} });
+  return h1.indexOf('classifica') > 0 && mb.bloqueios[0].codigo === 'B005' && h2.indexOf('respons') > 0 ? true : { ok: false, obtido: [h1.slice(0, 120), mb.bloqueios] };
 });
 t('V4', 'Comparativo sem confirmar objeto social/natureza não aplica Lucro Presumido', 'c-obj vazio', 'LP02/LP03 na tela', function () {
   w.abrirAba('comparativo'); set('c-rv', 900000); set('c-rl', 0); set('c-rs', 0); set('c-me', 3); set('c-obj', ''); set('c-nat', ''); set('c-raj', 400000); set('c-tipo', 'residencial_novo'); set('c-iss', 0); w.calcComp();
-  var h = html_('c-out'); set('c-obj', '1'); set('c-nat', 'operacional');
-  return h.indexOf('LP02') > 0 && h.indexOf('LP03') > 0 && h.indexOf('Lucro Presumido n') > 0 ? true : { ok: false, obtido: h.slice(0, 200) };
+  var h = html_('c-valid') + html_('c-out'); set('c-obj', '1'); set('c-nat', 'operacional');
+  // 1.6.2: a validação de formulário intercepta antes do motor (c-obj / c-nat); o motor continua bloqueando (LP02/LP03) se chamado direto
+  var lp = M.calcLucroPresumido({ receita_venda: 900000, atividade_imobiliaria_no_objeto: false, meses_periodo: 3 }, M.transicaoPadrao ? { aliquotas: { ibs: 18.7, cbs: 9.21, classificacao: 'ESTIMADA' }, parametros: {}, indices: {} } : {});
+  return h.indexOf('objeto social') > 0 && h.indexOf('natureza') > 0 && lp.bloqueios.some(function (b) { return b.codigo === 'LP02'; }) && lp.bloqueios.some(function (b) { return b.codigo === 'LP03'; }) ? true : { ok: false, obtido: h.slice(0, 200) };
 });
 t('V5', 'Permuta com torna parcelada: 3 parcelas somam o total', 'x-tparc 100000;100000;100000', 'Σ = total', function () {
   w.abrirAba('permuta'); set('x-val', 1000000); set('x-rec', 700000); set('x-parte', 'nao_contribuinte'); set('x-tpaga', 300000); set('x-trec', 0); set('x-raj', 400000); set('x-tparc', '100000;100000;100000'); set('x-data', '2033-06-15'); w.calcPerm();
@@ -330,6 +334,29 @@ t('V7', 'Relatório técnico traz aviso de simulação técnica, legenda dos val
   w.abrirAba('venda'); set('v-val', 900000); set('v-raj', 400000); set('v-tipo', 'residencial_novo'); set('v-data', '2033-06-15'); w.calcVenda(); w.imobRelatorio('tecnico', 'venda');
   var html = (w.__ultimaJanela && w.__ultimaJanela.document.documentElement.outerHTML) || '';
   return html.indexOf('Simulação técnica') > 0 && html.indexOf('Percentuais aplicados') > 0 && html.indexOf('rot-legal') > 0 ? true : { ok: false, obtido: html.slice(0, 120) };
+});
+
+/* ===== v1.6.2 — validação de formulário dos campos novos =========================== */
+t('V8', 'Formulário da locação: prazo curto residencial sem classificação → erro no campo l-cls, antes do motor', 'l-prz 30', 'erro em l-cls', function () {
+  var v = VA.validarLocacao({ valor: '5000', finalidade: 'residencial', meses: '1', prazo_dias: '30', classificacao: '', justificativa: '', data: '2033-06-15' });
+  var v2 = VA.validarLocacao({ valor: '5000', finalidade: 'residencial', meses: '1', prazo_dias: '30', classificacao: 'locacao_residencial', justificativa: '', data: '2033-06-15' });
+  var v3 = VA.validarLocacao({ valor: '5000', finalidade: 'nao_residencial', meses: '1', prazo_dias: '30', classificacao: '', justificativa: '', data: '2033-06-15' });
+  return v.erros.some(function (e) { return e.campo === 'l-cls'; }) && v2.erros.some(function (e) { return e.campo === 'l-just'; }) && !v3.erros.length ? true : { ok: false, obtido: [v.erros, v2.erros, v3.erros] };
+});
+t('V9', 'Formulário da permuta: parcelas da torna com texto ou soma errada → erro em x-tparc', 'x-tparc', 'erro em x-tparc', function () {
+  var a = VA.validarPermuta({ valor_dado: '1000000', valor_recebido: '700000', torna_paga: '300000', torna_recebida: '0', contraparte: 'nao_contribuinte', torna_parcelas: '100000; abc' });
+  var b = VA.validarPermuta({ valor_dado: '1000000', valor_recebido: '700000', torna_paga: '300000', torna_recebida: '0', contraparte: 'nao_contribuinte', torna_parcelas: '100000; 100000' });
+  var c = VA.validarPermuta({ valor_dado: '1000000', valor_recebido: '700000', torna_paga: '300000', torna_recebida: '0', contraparte: 'nao_contribuinte', torna_parcelas: '100000; 100000; 100000' });
+  return a.erros.some(function (e) { return e.campo === 'x-tparc'; }) && b.erros.some(function (e) { return /não fecha/.test(e.msg); }) && !c.erros.some(function (e) { return e.campo === 'x-tparc'; }) ? true : { ok: false, obtido: [a.erros, b.erros, c.erros] };
+});
+t('V10', 'Formulário do comparativo: venda sem objeto social/natureza confirmados → erros em c-obj e c-nat', 'c-obj vazio', 'erros', function () {
+  var a = VA.validarComparativo({ receita_venda: '900000', meses: '3', objeto_social: '', natureza: '' });
+  var b = VA.validarComparativo({ receita_venda: '900000', meses: '3', objeto_social: '1', natureza: 'ativo_nao_circulante' });
+  var c = VA.validarComparativo({ receita_venda: '0', receita_locacao: '120000', meses: '3', objeto_social: '', natureza: '' });
+  return a.erros.some(function (e) { return e.campo === 'c-obj'; }) && a.erros.some(function (e) { return e.campo === 'c-nat'; }) && b.erros.some(function (e) { return /ganho de capital/.test(e.msg); }) && !c.erros.length ? true : { ok: false, obtido: [a.erros, b.erros, c.erros] };
+});
+t('V11', 'Regras e fontes: regras de Lucro Presumido marcadas como fonte secundária, com a data própria', 'pintaRegras', 'badge fonte secundária', function () {
+  w.abrirAba('regras'); var h = html_('r-out'); return h.indexOf('fonte secund') > 0 && h.indexOf('consulta em 2026-08-22') > 0 && h.indexOf('consulta em 2026-08-20') > 0 ? true : { ok: false, obtido: h.slice(0, 100) };
 });
 
 console.log('\n' + (total - falhas) + '/' + total + ' testes OK — relatório em tests/relatorio_imob_v140.json');
