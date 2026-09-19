@@ -49,8 +49,8 @@ t('E2', 'todo onclick da marcação aponta para função exportada', 'imob_pagin
   var falt = Object.keys(f).filter(function (k) { return typeof w[k] !== 'function'; });
   return falt.length ? { ok: false, obtido: falt } : true;
 });
-t('E3', 'lacre do motor íntegro e versão do módulo 1.6.0 visível', 'lacreVerificar + ModulosInfo', '338c914d / 1.6.0', function () {
-  var v = M.lacreVerificar(); return v.integro && v.hash_atual === '338c914d' && M.MOTOR_IMOB_VERSAO === '1.3.0' && w.ModulosInfo.imobiliario.versao === '1.6.0' && w.ModulosInfo.imobiliario.changelog[0].versao === '1.6.0' && w.ModulosInfo.imobiliario.motor.lacre === '338c914d' ? true : { ok: false, obtido: v };
+t('E3', 'lacre do motor íntegro e versão do módulo 1.6.1 visível', 'lacreVerificar + ModulosInfo', '338c914d / 1.6.1', function () {
+  var v = M.lacreVerificar(); return v.integro && v.hash_atual === '338c914d' && M.MOTOR_IMOB_VERSAO === '1.3.0' && w.ModulosInfo.imobiliario.versao === '1.6.1' && w.ModulosInfo.imobiliario.changelog[0].versao === '1.6.1' && w.ModulosInfo.imobiliario.motor.lacre === '338c914d' ? true : { ok: false, obtido: v };
 });
 t('E4', '14 abas e página injetada; nav lateral marca ativo', 'abrirAba', 'aba on = venda', function () {
   w.abrirAba('venda'); var on = d.querySelectorAll('#imob-tabs .tab.on');

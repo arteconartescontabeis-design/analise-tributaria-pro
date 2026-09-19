@@ -9,7 +9,7 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.6.0',
+    versao: '1.6.1',
     data: '18/09/2026',
     cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
@@ -21,6 +21,11 @@
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.6.1', data: '18/09/2026', texto:
+        'Varredura de erros sobre a 1.6.0 (lacre 338c914d inalterado). Listas de pagamentos (venda e torna da permuta) com texto, negativo ou vazias passam a bloquear (E015) '
+        + '\u2014 antes um valor n\u00e3o num\u00e9rico virava parcela de R$ 0 e todo o imposto ca\u00eda na \u00faltima parcela (defeito pr\u00e9-existente na venda, exposto pelo caso novo da permuta); justificativa da classifica\u00e7\u00e3o precisa ser texto (E016); '
+        + 'escada 2026-2033 recebida de fora sem categoria por tributo n\u00e3o herda mais o r\u00f3tulo "LEGAL" da linha (a categoria vem da regra do ano); sem al\u00edquota de refer\u00eancia a escada n\u00e3o \u00e9 montada com zeros (a proje\u00e7\u00e3o bloqueia); '
+        + 'layout: cards de mesmo nome caem na mesma aba (a 1.6.0 abria duas abas "Premissas e alertas"). Su\u00edtes: run_imob_v160 99/99 · run_imob_ui 48/48.' },
       { versao: '1.6.0', data: '18/09/2026', texto:
         'Prompt de Altera\u00e7\u00e3o v1.5 \u2014 corre\u00e7\u00f5es de c\u00e1lculo e fundamenta\u00e7\u00e3o. MOTOR 1.3.0, ruleset imob-2026.09.18, novo lacre 338c914d (anterior c287341e). '
         + 'P0: todo percentual sai com categoria (fixada em lei, ato administrativo, premissa, estimativa, proje\u00e7\u00e3o, simula\u00e7\u00e3o), fonte, vig\u00eancia e vers\u00e3o, na tela, na mem\u00f3ria e nos relat\u00f3rios; '

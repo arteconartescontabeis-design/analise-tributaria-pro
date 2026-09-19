@@ -1,4 +1,4 @@
-# Análise Imobiliária Pro — v1.6.0 · Relatório de implementação
+# Análise Imobiliária Pro — v1.6.0 / v1.6.1 · Relatório de implementação
 
 **Versão** 1.6.0 · **Data** 18/09/2026 · **Responsável** Cleiver (Artecon) / desenvolvimento com Claude · **Origem** "Prompt de Alteração do Aplicativo de Análise Imobiliária v1.5.0"
 **Motor** motorImob 1.2.0 → **1.3.0** · **Ruleset** imob-2026.08.21 → **imob-2026.09.18** · **Lacre** c287341e → **338c914d** (calculado após os testes; o anterior foi conferido íntegro antes de qualquer alteração)
@@ -61,3 +61,20 @@ Reaproveitado do Passo 0 (já conferido em fonte primária, 14/14): arts. 251-26
 ## 5. Como conferir na tela
 
 Badge **v1.6.0** e a linha no changelog (tela Módulo); Venda → aba **Ano a ano**: 2027 com IBS 0,10% "fixada em lei" e CBS "estimativa"; aba **Premissas e alertas**: tabela "Percentuais usados neste cálculo"; Locação com prazo 60 dias → pede classificação; Comparativo sem confirmar objeto/natureza → "Lucro Presumido não aplicado"; Regras e fontes → links [oficial] e alerta LC 227; relatório técnico → aviso de simulação técnica e legenda.
+
+## 6. Varredura de erros (v1.6.1, 18/09/2026) — lacre 338c914d inalterado
+
+Método: carga dos 14 scripts + layout em jsdom (`tests/varredura_v161.js`), fluxos completos de venda, locação, permuta e comparativo, entradas hostis nos caminhos novos, emissão dos 12 relatórios (4 tipos × 3 operações) procurando `undefined`/`NaN`, inspeção das abas montadas pelo layout.
+
+| Achado | Gravidade | Correção | Teste |
+|---|---|---|---|
+| `torna_pagamentos` com texto/negativo virava parcelas de R$ 0 e **todo o imposto caía na última** — `naoNeg('100000')` devolvia a string. O mesmo defeito existia na venda (`pagamentos`) desde o 1.2.0, nunca exposto. | alta (número errado sem aviso) | `validar()` E015: lista vazia, não-array, texto ou negativo → bloqueio | VAR (3) |
+| Justificativa da classificação aceitava objeto (`[object Object]`) | baixa | E016 | VAR |
+| Escada 2026-2033 recebida de fora com `classificacao:'LEGAL'` na linha (formato do motor genérico) rotulava 2027 como lei | média | categoria derivada da regra do ano quando não há categoria por tributo | VAR + A-projeção |
+| `transicaoPadrao` sem alíquota de referência montava escada com CBS 0 e categoria "estimativa" | média | devolve `null`; a projeção bloqueia (T001) | VAR (2) |
+| Layout abria **duas abas "Premissas e alertas"** (card de percentuais + card de grau) | visual | `aba()` funde cards de mesmo nome | varredura |
+| Relatórios: falso positivo de `NaN` — está dentro do base64 do logotipo | — | nada | — |
+| Locação **não residencial** com prazo curto não pede classificação (art. 253 é só residencial) | conferido, correto | — | varredura |
+| Contagem `homologadas` do manifesto (27) confere com o catálogo | conferido | — | varredura |
+
+Suítes finais: `run_imob_v160.js` **99/99** · `run_imob_ui.js` **48/48** · varredura sem erro.

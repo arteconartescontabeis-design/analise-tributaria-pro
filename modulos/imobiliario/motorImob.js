@@ -244,6 +244,13 @@
     if (e.operacao === 'permuta' && e.permuta && ['contribuinte', 'nao_contribuinte'].indexOf(e.permuta.contraparte) < 0) b.push({ codigo: 'E012', msg: 'Permuta sem indicação do regime da contraparte (contribuinte / não contribuinte).' });
     if (e.operacao === 'loteamento' && !(e.loteamento && e.loteamento.registro_ate_2028 === true)) b.push({ codigo: 'E013', msg: 'Regime transitório do loteamento exige registro do parcelamento efetivado antes de 1º/01/2029 (art. 462, caput).' });
     if (e.operacao === 'locacao_transitoria' && !e.contrato) b.push({ codigo: 'E014', msg: 'Regime transitório de locação sem os dados do contrato (art. 463).' });
+    // v1.3.0 — listas de pagamentos só com números finitos ≥ 0 (texto ou negativo viraria parcela de R$ 0 com resíduo na última)
+    var listaPg = e.operacao === 'permuta' ? (e.permuta && e.permuta.torna_pagamentos) : e.pagamentos;
+    if (listaPg !== undefined && listaPg !== null) {
+      if (!Array.isArray(listaPg) || !listaPg.length) b.push({ codigo: 'E015', msg: 'Lista de pagamentos vazia ou inválida — informe os valores ou remova a lista.' });
+      else if (!listaPg.every(function (v) { return typeof v === 'number' && isFinite(v) && v >= 0; })) b.push({ codigo: 'E015', msg: 'Lista de pagamentos contém valor não numérico ou negativo — nenhuma parcela foi rateada.' });
+    }
+    if (e.operacao === 'locacao' && e.locacao && e.locacao.justificativa_classificacao !== undefined && typeof e.locacao.justificativa_classificacao !== 'string') b.push({ codigo: 'E016', msg: 'A justificativa da classificação precisa ser texto.' });
     return b;
   }
 
@@ -1043,6 +1050,7 @@
      Corrige a v1.2.0, que trazia IBS 0,05% em 2027-2028 (só uma das metades). */
   function transicaoPadrao(ctx) {
     var a = (ctx && ctx.aliquotas) || {}, cat = normCategoria(a.classificacao), fonteRef = a.fonte || 'Res. CGIBS 14/2026';
+    if (typeof a.ibs !== 'number' || typeof a.cbs !== 'number' || !isFinite(a.ibs) || !isFinite(a.cbs)) return null;   // sem referência não há escada — nada de zeros silenciosos
     var t = {};
     t[2026] = { ibs: 0.10, cbs: 0.90, categoria_ibs: 'LEGAL', categoria_cbs: 'LEGAL', fonte_ibs: 'LC 214/2025, art. 343', fonte_cbs: 'LC 214/2025, art. 346' };
     [2027, 2028].forEach(function (y) { t[y] = { ibs: 0.10, cbs: r4(naoNeg(a.cbs - 0.10)), categoria_ibs: 'LEGAL', categoria_cbs: cat,
@@ -1067,8 +1075,16 @@
       var e = JSON.parse(JSON.stringify(entrada));
       e.data_fato_gerador = a + '-06-30';
       var c = JSON.parse(JSON.stringify(ctx));
-      var catI = normCategoria(al.categoria_ibs || al.classificacao || ctx.aliquotas.classificacao);
-      var catC = normCategoria(al.categoria_cbs || al.classificacao || ctx.aliquotas.classificacao);
+      var catI, catC;
+      if (al.categoria_ibs || al.categoria_cbs) { catI = normCategoria(al.categoria_ibs); catC = normCategoria(al.categoria_cbs); }
+      else {
+        // escada legada (só ibs/cbs, talvez com "classificacao" na linha): a categoria vem da REGRA do ano, não do rótulo recebido
+        var catRef = normCategoria(ctx.aliquotas.classificacao);
+        if (a === 2026) { catI = al.ibs === 0.1 ? 'LEGAL' : catRef; catC = al.cbs === 0.9 ? 'LEGAL' : catRef; }
+        else if (a <= 2028) { catI = al.ibs === 0.1 ? 'LEGAL' : catRef; catC = catRef; }
+        else if (a <= 2032) { catI = 'PROJECAO'; catC = catRef; }
+        else { catI = catRef; catC = catRef; }
+      }
       // a linha só é LEGAL se IBS e CBS forem LEGAL — nunca "por atacado" (P0)
       var clsLinha = (catI === 'LEGAL' && catC === 'LEGAL') ? 'LEGAL' : 'ESTIMADA';
       c.aliquotas = { ibs: al.ibs, cbs: al.cbs, classificacao: clsLinha,

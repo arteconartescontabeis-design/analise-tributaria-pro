@@ -36,7 +36,7 @@ ok(JSON.stringify(M.calcGanhoCapital(B.F3.gc, CTX).total) === JSON.stringify(bas
 ok(M.calcLucroRealIndicativo(B.F3.lr, CTX).total === base.f3.lr.total, 'A-Lucro Real idêntico');
 var prjAntes = base.f3.transicao_V02, prjMesmaEscada = M.projetarTransicao(B.CASOS['V02 venda à vista com redutor'], CTX);
 ok(prjMesmaEscada.anos.every(function (a, i) { return a.total === prjAntes.anos[i].total; }), 'A-projeção com a MESMA escada: totais idênticos (só mudam categorias)');
-ok(prjMesmaEscada.anos.filter(function (a) { return a.classificacao === 'LEGAL'; }).length === 0, 'A-projeção: escada legada SEM categorias não ganha "LEGAL" em ano nenhum (antes a UI rotulava 2026-2028 como lei)');
+ok(prjMesmaEscada.anos.filter(function (a) { return a.classificacao === 'LEGAL'; }).map(function (a) { return a.ano; }).join() === '2026', 'A-projeção: escada legada SEM categorias → só 2026 é LEGAL, pela regra do ano (a UI antiga rotulava 2026-2028 como lei; e a legada traz IBS 0,05 em 2027, que não é o legal)');
 
 /* ===== (B) ITEM 7 ======================================================= */
 var CTXN = JSON.parse(JSON.stringify(CTX)); CTXN.transicao = M.transicaoPadrao(CTX);
@@ -127,6 +127,16 @@ ok(ids.every(function (id) { var r = M.REGRAS[id]; return !((r.categoria === 'pr
 ok(M.REGRAS['IMOB-TRA-001'].status === 'projecao' && M.REGRAS['IMOB-LP-001'].categoria === 'administrativa', 'FUND TRA-001 = projeção; LP-001 = administrativa');
 ok(M.REGRAS['IMOB-RSO-002'].alteracao_posterior && /LC 227/.test(M.REGRAS['IMOB-RSO-002'].alteracao_posterior), 'FUND alerta de alteração por norma posterior (art. 260, LC 227/2026)');
 ok(v.linhas.every(function (x) { return x.regra_id === null || (M.regra(x.regra_id) && M.regra(x.regra_id).fonte_oficial.length); }), 'FUND cada linha do resultado abre uma regra com fonte oficial');
+// Varredura v1.6.1
+ok(M.calcular({ operacao: 'permuta', data_fato_gerador: '2033-06-15', valor_operacao: 1e6, permuta: { contraparte: 'nao_contribuinte', torna: 300000, torna_paga_por: 'contribuinte', torna_pagamentos: ['a', null, -5, '100000'] } }, CTX).bloqueios[0].codigo === 'E015', 'VAR torna_pagamentos com texto/negativo → E015 (antes gerava parcela de R$ 0 com todo o imposto na última)');
+ok(M.calcular({ operacao: 'venda', data_fato_gerador: '2033-06-15', valor_operacao: 800000, imovel: { id: 'a', tipo: 'comercial' }, pagamentos: ['200000', 600000] }, CTX).bloqueios[0].codigo === 'E015', 'VAR pagamentos da venda com texto → E015 (defeito pré-existente no 1.2.0)');
+ok(M.calcular({ operacao: 'permuta', data_fato_gerador: '2033-06-15', valor_operacao: 1e6, permuta: { contraparte: 'nao_contribuinte', torna: 300000, torna_paga_por: 'contribuinte', torna_pagamentos: [] } }, CTX).bloqueios[0].codigo === 'E015', 'VAR lista de pagamentos vazia → E015');
+ok(M.calcular({ operacao: 'locacao', data_fato_gerador: '2033-06-15', valor_operacao: 5000, locacao: { finalidade: 'residencial', meses: 1, prazo_dias: 10, classificacao_operacao: 'locacao_residencial', justificativa_classificacao: { a: 1 } } }, CTX).bloqueios[0].codigo === 'E016', 'VAR justificativa que não é texto → E016');
+var leg = { 2026: { ibs: 0.1, cbs: 0.9, classificacao: 'LEGAL' }, 2027: { ibs: 0.1, cbs: 9.11, classificacao: 'LEGAL' }, 2033: { ibs: 18.7, cbs: 9.21 } };
+var pl = M.projetarTransicao(B.CASOS['V01 venda à vista sem redutor'], Object.assign({}, CTX, { transicao: leg }));
+ok(pl.anos[0].classificacao === 'LEGAL' && pl.anos[1].classificacao === 'ESTIMADA' && pl.anos[1].categoria_ibs === 'LEGAL' && pl.anos[1].categoria_cbs === 'ESTIMATIVA', 'VAR escada legada rotulada "LEGAL" em 2027 não herda o rótulo: categoria vem da regra do ano');
+ok(M.transicaoPadrao({ aliquotas: {} }) === null && M.transicaoPadrao({ aliquotas: { ibs: 'x', cbs: null } }) === null, 'VAR transicaoPadrao sem alíquota de referência devolve null (nada de escada com zeros)');
+ok(M.projetarTransicao(B.CASOS['V01 venda à vista sem redutor'], Object.assign({}, CTX, { transicao: null })).status === 'BLOQUEADO', 'VAR projeção com escada nula BLOQUEIA');
 // Lacre
 var lv = M.lacreVerificar();
 ok(lv.integro === true, 'LACRE motor 1.3.0 íntegro (' + lv.hash_atual + ' = ' + lv.hash_homologado + ')');

@@ -164,11 +164,13 @@
     /* ---- 2. abas internas ---- */
     var barra = document.createElement('div'); barra.className = 'res-abas';
     var panes = [];
+    var abasPorNome = {};
     function aba(nome, no, q) {
+      if (abasPorNome[nome]) { abasPorNome[nome].appendChild(no); return; }   // v1.6.0: mesmo nome → mesma aba (sem abas duplicadas)
       var a = document.createElement('div'); a.className = 'res-aba'; a.innerHTML = esc(nome) + (q ? '<span class="q">' + q + '</span>' : '');
       var p = document.createElement('div'); p.className = 'res-pane'; p.appendChild(no);
       a.onclick = function () { barra.querySelectorAll('.res-aba').forEach(function (x) { x.classList.remove('on'); }); res.querySelectorAll(':scope > .res-pane').forEach(function (x) { x.classList.remove('on'); }); a.classList.add('on'); p.classList.add('on'); };
-      barra.appendChild(a); panes.push(p);
+      barra.appendChild(a); panes.push(p); abasPorNome[nome] = p;
     }
     if (ets.length) {   // Resumo: tabela limpa das etapas, gerada do que já está na tela
       var t = document.createElement('table'); t.className = 'res-resumo';
@@ -285,5 +287,5 @@
     menuLateralDesfazer();
     pg.classList.remove('l2'); LIGADO = false; return true;
   }
-  raiz.ImobLayout = { VERSAO: '1.5.0', aplicar: aplicar, desfazer: desfazer, ligado: function () { return LIGADO; } };
+  raiz.ImobLayout = { VERSAO: '1.6.0', aplicar: aplicar, desfazer: desfazer, ligado: function () { return LIGADO; } };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
