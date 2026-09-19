@@ -67,12 +67,14 @@
     '@media(max-width:1100px){' + P + '.res-graficos{grid-template-columns:1fr}}',
     /* --- menu lateral: as abas do módulo listadas na barra da esquerda --- */
     '.sidebar{overflow-y:auto}',
-    '.sidebar #imob-tabs{display:block;margin:0 10px 8px;padding:0;background:transparent;border:0;box-shadow:none}',
-    '.sidebar #imob-tabs .tab{display:flex;align-items:center;gap:8px;padding:8px 12px 8px 26px;margin-bottom:2px;border-radius:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.8);border:0;white-space:normal;line-height:1.25}',
+    /* v1.6.3: as telas do módulo com o MESMO desenho dos itens do Análise Tributária Pro (.nav-item: 14px, 11px 14px, sem recuo) */
+    '.sidebar #imob-tabs{display:block;margin:0;padding:0;background:transparent;border:0;box-shadow:none}',
+    '.sidebar #imob-tabs .tab{display:flex;align-items:center;gap:10px;padding:11px 14px;margin-bottom:3px;border-radius:9px;font-size:14px;font-weight:400;color:rgba(255,255,255,.82);border:0;white-space:normal;line-height:1.25;transition:background .12s}',
     '.sidebar #imob-tabs .tab:hover{background:rgba(255,255,255,.09);color:#fff}',
     '.sidebar #imob-tabs .tab.on{background:rgba(255,255,255,.16);color:#fff;font-weight:600;box-shadow:none}',
-    '.sidebar #imob-tabs .tab-sep{font-size:9.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:rgba(255,255,255,.45);padding:10px 12px 4px 26px}',
-    '@media(max-width:960px){.sidebar #imob-tabs .tab{padding-left:12px;font-size:0}.sidebar #imob-tabs .tab-sep{display:none}}'
+    '.sidebar #imob-tabs .tab-sep{font-size:11px;font-weight:400;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.55);padding:12px 14px 4px}',
+    '.sidebar #nav-imob-inicio{display:none}',
+    '@media(max-width:960px){.sidebar #imob-tabs .tab{padding:11px 12px;font-size:0}.sidebar #imob-tabs .tab-sep{display:none}}'
   ].join('\n');
 
   function $(id) { return document.getElementById(id); }
@@ -244,13 +246,19 @@
     if (t3) t3.remove();
     if (ABRIR_ORIG) { raiz.abrirAba = ABRIR_ORIG; ABRIR_ORIG = null; }
   }
+  function badgeVersao() {
+    var b = $('imob-badge-versao'), info = (raiz.ModulosInfo || {}).imobiliario;
+    if (b && info) b.textContent = 'An\u00e1lise Imobili\u00e1ria Pro v' + info.versao;
+  }
   function menuLateral() {
+    badgeVersao();
     var tabs = $('imob-tabs'), side = document.querySelector('.sidebar'); if (!tabs || !side || TABS_POS) return;
     passo3Criar();
     var ancora = side.querySelector('.nav-item[data-p="imob"]') || side.querySelector('.nav-item');
     TABS_POS = { pai: tabs.parentNode, prox: tabs.nextSibling };
     SEPS.forEach(function (sp) { var t = tabs.querySelector('.tab[data-t="' + sp[0] + '"]'); if (t) { var d = document.createElement('div'); d.className = 'tab-sep'; d.textContent = sp[1]; tabs.insertBefore(d, t); } });
-    if (ancora && ancora.nextSibling) side.insertBefore(tabs, ancora.nextSibling); else side.appendChild(tabs);
+    var paiNav = ancora ? ancora.parentNode : side;   // v1.6.3: o item âncora vive dentro de .nav
+    if (ancora && ancora.nextSibling) paiNav.insertBefore(tabs, ancora.nextSibling); else paiNav.appendChild(tabs);
     // clicar numa tela do módulo estando em "Sobre o módulo" volta para a página do módulo
     tabs.addEventListener('click', function () { var d = $('modulo-destino'); if (d && d.style.display === 'none' && typeof raiz.go === 'function') raiz.go('imob'); }, true);
     if (ancora) ancora.onclick = function () { if (typeof raiz.go === 'function') raiz.go('imob'); };
@@ -287,5 +295,5 @@
     menuLateralDesfazer();
     pg.classList.remove('l2'); LIGADO = false; return true;
   }
-  raiz.ImobLayout = { VERSAO: '1.6.0', aplicar: aplicar, desfazer: desfazer, ligado: function () { return LIGADO; } };
+  raiz.ImobLayout = { VERSAO: '1.6.3', aplicar: aplicar, desfazer: desfazer, ligado: function () { return LIGADO; } };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -9,8 +9,8 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.6.2',
-    data: '18/09/2026',
+    versao: '1.6.3',
+    data: '19/09/2026',
     cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
     motor: { nome: 'motorImob', versao: '1.3.1', contrato: 'calc-imob-1',
@@ -21,6 +21,9 @@
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.6.3', data: '19/09/2026', texto:
+        'Layout igual ao do An\u00e1lise Tribut\u00e1ria Pro: marca da barra lateral no mesmo formato ("An\u00e1lise Imobili\u00e1ria Pro / ARTECON"), telas do m\u00f3dulo como itens de primeiro n\u00edvel com o mesmo desenho dos itens do ATP (sem recuo, 14px), '
+        + 'item "Vers\u00f5es" no lugar de "Sobre o m\u00f3dulo", t\u00edtulo da p\u00e1gina com o badge de vers\u00e3o \u00e0 direita como no dashboard do ATP. Motor, c\u00e1lculo, regras e relat\u00f3rios intocados (lacre 338c914d).' },
       { versao: '1.6.2', data: '18/09/2026', texto:
         'Fecho das d\u00edvidas da 1.6.1 (motor 1.3.1, lacre 338c914d inalterado \u2014 nenhuma f\u00f3rmula mudou). Valida\u00e7\u00e3o de formul\u00e1rio para os campos novos: classifica\u00e7\u00e3o/justificativa da loca\u00e7\u00e3o curta, parcelas da torna (n\u00fameros e soma) e objeto social/natureza no comparativo \u2014 o erro aparece no campo antes de chamar o motor. '
         + 'Pacote do parecer com IA passa a levar os percentuais com categoria (bloco_05b), a limita\u00e7\u00e3o "percentuais n\u00e3o fixados em lei", a regra 7 do prompt (proibido chamar de legal o que n\u00e3o \u00e9) e confian\u00e7a/tipo no topo do pacote. '

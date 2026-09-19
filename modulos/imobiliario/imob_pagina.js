@@ -7,9 +7,10 @@
   'use strict';
   var HTML = `<div id="page-imobiliaria" style="display:none">
 <div class="page-title">
-  <h1>&#127968; An&aacute;lise Imobili&aacute;ria</h1>
+  <h1>An&aacute;lise Imobili&aacute;ria</h1>
   <span class="crumb">Regime espec&iacute;fico de bens im&oacute;veis &middot; LC 214/2025 arts. 251-270 &middot; RIBS/RCBS arts. 359-390
     <span id="imob-carregando" class="carregando" style="display:none">&#8987; processando&hellip;</span></span>
+  <span class="badge ok" id="imob-badge-versao" style="margin-left:auto;font-size:13px">An&aacute;lise Imobili&aacute;ria Pro</span>
 </div>
 
 <div class="tabs" id="imob-tabs" role="tablist">
