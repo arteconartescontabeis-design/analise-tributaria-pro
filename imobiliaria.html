@@ -229,10 +229,13 @@ canvas{max-height:340px}
 
 <div id="app" style="display:none">
   <div class="sidebar">
-    <div class="brand"><div id="marca-logo" style="background:#fff;border-radius:8px;padding:6px 10px;margin-bottom:8px;display:none"></div><b>🏢 Análise Imobiliária</b><br><span class="hint">Artecon &middot; <span id="mod-versao-badge">v?</span></span></div>
-    <div class="nav-item active" data-p="imob" onclick="go('imob')">🏢 <span>Análise Imobiliária</span></div>
-    <div class="nav-item" data-p="modulo" onclick="go('modulo')">🧩 <span>Sobre o módulo</span></div>
-    <div class="nav-item" onclick="location.href='index.html'">↩ <span>Análise Tributária</span></div>
+    <!-- v1.6.3: barra idêntica à do Análise Tributária Pro — marca + itens de primeiro nível (as telas do módulo entram aqui pelo imob_layout) -->
+    <div class="brand">Análise Imobiliária Pro<small>Artecon</small><div id="marca-logo" style="display:none"></div><span id="mod-versao-badge" style="display:none">v?</span></div>
+    <div class="nav">
+    <div class="nav-item active" data-p="imob" onclick="go('imob')" id="nav-imob-inicio">🏠 <span>Início</span></div>
+    <div class="nav-item" data-p="modulo" onclick="go('modulo')">🕘 <span>Versões</span></div>
+    <div class="nav-item" onclick="location.href='index.html'">🏛️ <span>Análise Tributária ↗</span></div>
+    </div>
     <div class="foot"><span id="user-email"></span><br>
       <span class="sair" onclick="doLogout()">Sair</span></div>
   </div>
@@ -244,8 +247,8 @@ canvas{max-height:340px}
     <div id="modulo-destino"></div>
 
     <div id="page-modulo" style="display:none">
-      <div class="page-title"><h1>&#129513; Sobre o m&oacute;dulo</h1>
-        <span class="crumb">Vers&atilde;o, motor e hist&oacute;rico</span></div>
+      <div class="page-title"><h1>Vers&otilde;es</h1>
+        <span class="crumb">Vers&atilde;o do m&oacute;dulo, motor, lacre e hist&oacute;rico de altera&ccedil;&otilde;es</span></div>
       <div id="mod-lista"></div>
     </div>
   </div>
@@ -600,20 +603,20 @@ async function entrar(){
 
 <!-- ── o módulo, servido à parte. Trocar qualquer um destes NÃO mexe
      nem neste arquivo nem no index.html do Tributário. ───────────────── -->
-  <script src="modulos/imobiliario/imob_manifesto.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/imob_estilo.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/imob_pagina.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/motorImob.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/persistenciaImob.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/parecerImobIA.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/nucleoRastreio.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/imob_premissas.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/imob_validacao.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/imob_relatorios.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/imob_graficos.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/imob_marca.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/ui_imobiliaria.js?v=1.6.2"></script>
-  <script src="modulos/imobiliario/imob_layout.js?v=1.6.2"></script>
+  <script src="modulos/imobiliario/imob_manifesto.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/imob_estilo.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/imob_pagina.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/motorImob.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/persistenciaImob.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/parecerImobIA.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/nucleoRastreio.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/imob_premissas.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/imob_validacao.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/imob_relatorios.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/imob_graficos.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/imob_marca.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/ui_imobiliaria.js?v=1.6.3"></script>
+  <script src="modulos/imobiliario/imob_layout.js?v=1.6.3"></script>
   <script>(function(){ var b=document.getElementById('mod-versao-badge'), i=(window.ModulosInfo||{}).imobiliario; if(b&&i) b.textContent='v'+i.versao;
     var l=document.getElementById('marca-logo'); if(l&&window.ImobMarca){ l.innerHTML=ImobMarca.img(34); l.style.display=''; } })();</script>
 
