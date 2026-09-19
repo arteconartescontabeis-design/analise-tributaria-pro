@@ -5221,6 +5221,43 @@ console.log('\n■ Integridade da interface');
     chk('5ar · v7.94.3 · badge e changelog · lacre 22197ef1 intocado', /APP_VERSAO = '7\.9[4-9]\.\d+'/.test(html) && /<b>v7\.94\.3<\/b><\/td><td>15\/09\/2026/.test(html) && /LACRE_HASH = '8ab9c16a'/.test(html));
   }
 
+  // ═══ 5av · v7.95.2 — projeção da Reforma: a composição dos fornecedores (crédito) também escala pelo k ═══
+  {
+    const inp6 = mk({ a1_semst: Array.from({length:12},(_,i)=>i<6?100000:0) }, 1200000, { ano:2026 });
+    inp6.compras.semst = Array.from({length:12},(_,i)=>i<6?40000:0);
+    inp6.despesas.adm = Array.from({length:12},(_,i)=>i<6?5000:0);
+    inp6.origem = { 'receitas.a1_semst': Array.from({length:12},(_,i)=>i<6?'P':null) };   // jan–jun importados
+    ctx.__inp6 = inp6;
+    const o = vm.runInContext(`(()=>{
+      const _RL = { dados:RL.dados, res:RL.res, reforma:RL.reforma, empresa:RL.empresa }, _RF = RF;
+      try {
+        RL.dados = __inp6; RL.res = calcular(__inp6, PARAMS.anexos, folhaPercDaEmpresa(__inp6.cfg)); RL.res._inp = __inp6; RL.empresa = { regime:'simples' };
+        RF = rfNormalizar({}, '1', 2026); RF.receita = RL.res.totais.receita - RL.res.totais.receitaExp; RF._fornRows = [];
+        RF.comp = compMontar(RF, RL.res.totais);
+        for (const k of Object.keys(RF.comp.final.g)) { RF.comp.final.g[k].v = 0; RF.comp.final.g[k].pct = 0; }
+        RF.comp.final.g.regular.v = RF.comp.final.total; RF.comp.final.g.regular.pct = 1; RF.comp.status = 'confirmada'; RF.comp.editada = true;
+        RL.reforma = rfLimpo(RF);
+        const real = calcCenariosReforma(RL.res, RL.reforma), B = rlBaseReforma(), proj = calcCenariosReforma(B.res, B.reforma);
+        const l = (C,a) => C.REF.find(x=>x.ano===a);
+        // sem composição: NID puro, já vinha projetado dos totais do motor
+        const rfSem = rfLimpo(Object.assign(rfNormalizar({}, '1', 2026), { receita: RF.receita })); delete rfSem.comp;
+        const projSem = calcCenariosReforma(B.res, rfProjetar(rfSem, B.k));
+        // ano completo: rfProjetar com k = 1 devolve o mesmo objeto
+        const mesmo = rfProjetar(RL.reforma, 1) === RL.reforma;
+        return { k:B.k, totReal: RL.reforma.comp.final.total, totProj: B.reforma.comp.final.total, pctProj: B.reforma.comp.final.g.regular.pct,
+          statusProj: B.reforma.comp.status, marca: B.reforma.comp._projetadoK,
+          debR: l(real,2027).deb, credR: l(real,2027).cred, debP: l(proj,2027).deb, credP: l(proj,2027).cred, liqP: l(proj,2027).liquido,
+          supSemP: l(projSem,2027).sens ? 1 : 1, nidSem: (projSem.rfx.contra.compras_nid||0), mesmo,
+          origReal: RL.reforma.comp.final.total };
+      } finally { RL.dados=_RL.dados; RL.res=_RL.res; RL.reforma=_RL.reforma; RL.empresa=_RL.empresa; RF=_RF; }
+    })()`, ctx);
+    chk('5av · 6 meses importados → k = 2; a composição projetada dobra (270.000,00 → 540.000,00) e os percentuais ficam intactos', Math.abs(o.k - 2) < 1e-9 && Math.abs(o.totReal - 270000) < 0.01 && Math.abs(o.totProj - 540000) < 0.01 && o.pctProj === 1 && o.statusProj === 'confirmada' && o.marca === 2);
+    chk('5av · 2027: débito × k (45.865,80 → 91.731,60) E crédito × k (24.867,00 → 49.734,00) — antes o crédito ficava em 24.867,00', Math.abs(o.debR - 45865.80) < 0.02 && Math.abs(o.debP - 91731.60) < 0.02 && Math.abs(o.credR - 24867.00) < 0.02 && Math.abs(o.credP - 49734.00) < 0.02 && Math.abs(o.liqP - 41997.60) < 0.02);
+    chk('5av · sem composição o comportamento não muda: NID = (compras + despesas creditáveis) já projetados (540.000,00)', Math.abs(o.nidSem - 540000) < 0.01);
+    chk('5av · ano completo (k = 1) devolve a reforma original, sem cópia — nenhum documento se move', o.mesmo === true && Math.abs(o.origReal - 270000) < 0.01);
+    chk('5av · v7.95.2 · badge, changelog e lacre 8ab9c16a intocado', /APP_VERSAO = '7\.95\.[2-9]'/.test(html) && /<b>v7\.95\.2<\/b><\/td><td>18\/09\/2026/.test(html) && /LACRE_HASH = '8ab9c16a'/.test(html) && /r\.comp\._projetadoK = k/.test(html));
+  }
+
   // ═══ 5au · v7.95.1 — caso 4 do lacre, INSS em três componentes, rateio da CPP do Anexo IV ═══
   {
     const casos = vm.runInContext('LACRE_CASOS', ctx);
