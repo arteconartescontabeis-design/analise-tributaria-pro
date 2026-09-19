@@ -117,9 +117,31 @@ function fmtEntrada(k, v){
   if (typeof v !== 'number') return esc(String(v));
   return /aliquota|padrao|fator|proporcao|fracao|meses/.test(k) ? String(v).replace('.', ',') : money(v);
 }
+/* v1.6.0 — categorias de percentual (prompt v1.5, P0): rótulo e cor únicos em todo o módulo */
+var CAT_ROTULO = { LEGAL: ['fixada em lei', 'b-ok'], ADMINISTRATIVA: ['ato administrativo', 'b-info'], PREMISSA: ['premissa', 'b-warn'],
+  ESTIMATIVA: ['estimativa', 'b-warn'], PROJECAO: ['proje&ccedil;&atilde;o', 'b-warn'], SIMULACAO: ['simula&ccedil;&atilde;o do usu&aacute;rio', 'b-edit'], INFORMADO: ['informado', 'b-info'] };
+function catBadge(cat){ var c = CAT_ROTULO[cat] || ['estimativa', 'b-warn']; return '<span class="badge ' + c[1] + '" title="' + esc(cat || '') + '">' + c[0] + '</span>'; }
+function imobPercentuaisHTML(res){
+  if (!res || !Array.isArray(res.percentuais) || !res.percentuais.length) return '';
+  var NOME = { ibs_padrao: 'IBS padr&atilde;o', cbs_padrao: 'CBS padr&atilde;o', reducao_imobiliaria: 'Redu&ccedil;&atilde;o imobili&aacute;ria', ibs_final: 'IBS final', cbs_final: 'CBS final', ibs_teste_2026: 'IBS de teste 2026', cbs_teste_2026: 'CBS de teste 2026', regime_opcional: 'Regime opcional', ret: 'RET' };
+  return '<div class="card"><h2>Percentuais usados neste c&aacute;lculo</h2><div class="ajuda">Todo percentual mostra de onde veio: <b>fixada em lei</b> (texto legal), <b>estimativa</b> (Resolu&ccedil;&atilde;o CGIBS 14/2026, n&atilde;o vinculante), <b>proje&ccedil;&atilde;o</b> (derivada por hip&oacute;tese) ou <b>simula&ccedil;&atilde;o do usu&aacute;rio</b>. Nenhum percentual entra na conta sem origem.</div>' +
+    '<table><thead><tr><th>Percentual</th><th class="num">Valor</th><th>Categoria</th><th>Fonte</th><th>Vig&ecirc;ncia</th><th>Vers&atilde;o</th></tr></thead><tbody>' +
+    res.percentuais.map(function(p){ return '<tr' + (p.aplicada === false ? ' style="opacity:.6"' : '') + '><td><b>' + (NOME[p.nome] || esc(p.nome)) + '</b>' + (p.aplicada === false ? ' <span class="badge b-info">n&atilde;o aplicada em 2026</span>' : '') + '</td><td class="num">' + pct(p.valor, 4) + '</td><td>' + catBadge(p.categoria) + '</td><td class="mini">' + esc(p.fonte || '') + '</td><td class="mini">' + esc(p.vigencia || '') + '</td><td class="mini">' + esc(p.versao || '') + '</td></tr>'; }).join('') +
+    '</tbody></table></div>';
+}
+function imobParcelasHTML(res, titulo){
+  if (!(res.parcelas && typeof res.parcelas[0] === 'object')) return '';
+  var soma = res.parcelas.reduce(function(a, p){ return a + p.total; }, 0);
+  return '<div class="card"><h2>' + titulo + '</h2><table><thead><tr>' +
+    '<th>#</th><th class="num">Pagamento</th><th class="num">Propor&ccedil;&atilde;o</th><th class="num">Redutor aplicado</th><th class="num">Base</th><th class="num">IBS</th><th class="num">CBS</th><th class="num">Devido</th></tr></thead><tbody>' +
+    res.parcelas.map(function(p){ return '<tr><td>' + p.ordem + '</td><td class="num">' + money(p.pagamento) + '</td><td class="num">' + pct(p.proporcao,4) + '</td><td class="num">' + money(p.redutor_aplicado) +
+      '</td><td class="num">' + money(p.base) + '</td><td class="num">' + money(p.ibs) + '</td><td class="num">' + money(p.cbs) + '</td><td class="num"><b>' + money(p.total) + '</b></td></tr>'; }).join('') +
+    '<tr class="grp"><td colspan="7">Soma das parcelas (confere com o total: ' + (Math.round(soma * 100) / 100 === res.total ? 'sim' : 'N&Atilde;O') + ')</td><td class="num"><b>' + money(soma) + '</b></td></tr></tbody></table></div>';
+}
+function imobNotasHTML(res){ return (res.notas && res.notas.length) ? '<div class="card"><h2>Observa&ccedil;&otilde;es do motor</h2>' + res.notas.map(function(x){ return '<div class="info">' + esc(x) + '</div>'; }).join('') + '</div>' : ''; }
 function imobMemoria(res, operacao){
   var ex = PR.explicar(PREM, operacao || 'venda');
-  var h = '<div class="card"><h2>Mem&oacute;ria de c&aacute;lculo e fundamenta&ccedil;&atilde;o por linha</h2><table><thead><tr>' +
+  var h = imobPercentuaisHTML(res) + '<div class="card"><h2>Mem&oacute;ria de c&aacute;lculo e fundamenta&ccedil;&atilde;o por linha</h2><table><thead><tr>' +
     '<th style="width:26px">#</th><th>Linha</th><th>F&oacute;rmula</th><th class="num">Valor</th><th style="width:30%">Fundamento</th></tr></thead><tbody>';
   res.linhas.forEach(function(l){
     var st = l.regra_status === 'homologada' ? 'b-ok' : 'b-warn';
@@ -131,7 +153,7 @@ function imobMemoria(res, operacao){
       entradaTxt = 'IBS padr&atilde;o ' + pct(ex.ibs_padrao,2) + ' · CBS padr&atilde;o ' + pct(ex.cbs_padrao,2) + ' · redu&ccedil;&atilde;o ' + ex.reducao_pct + '%' +
         (ex.editadas.length && ex.reducao_pct !== l.ibs_reduzida ? '' : '') +
         (PR.alteradas(PREM).some(function(p){ return /reducao|padrao/.test(p.chave); }) ? ' <span class="badge b-edit">premissa editada — original: ' + pct(PR.CATALOGO.ibs_padrao.valor,2) + ' / ' + pct(PR.CATALOGO.cbs_padrao.valor,2) + ' com ' + (operacao === 'locacao' ? 70 : 50) + '%</span>' : '') +
-        ' · classifica&ccedil;&atilde;o ' + esc(l.classificacao);
+        ' · ' + catBadge(l.categoria || (l.classificacao === 'LEGAL' ? 'LEGAL' : 'ESTIMATIVA')) + ' · redu&ccedil;&atilde;o ' + catBadge('LEGAL');
     } else {
       valorCel = '<b>' + money(l.valor) + '</b>';
       entradaTxt = l.entrada ? Object.keys(l.entrada).map(function(k){ return k.replace(/_/g,' ') + ': ' + fmtEntrada(k, l.entrada[k]); }).join(' · ') : '';
@@ -330,18 +352,18 @@ function imobEscolherOperacao(op){ acao(function(){
 
 /* ---------- valor do imposto em cada ano 2026-2033 ---------- */
 function calcularAnos(e, ctx){
-  var c = {}; for (var k in ctx) c[k] = ctx[k]; c.transicao = TRANSICAO;
+  var c = {}; for (var k in ctx) c[k] = ctx[k]; c.transicao = M.transicaoPadrao(ctx);   // v1.6.0: escada do motor, com categoria por ano e por tributo
   var pr = M.projetarTransicao(e, c);
   if (pr.status !== 'CALCULADO') return null;
-  return pr.anos.map(function(a){ return { ano: a.ano, ibs: TRANSICAO[a.ano].ibs, cbs: TRANSICAO[a.ano].cbs, classificacao: TRANSICAO[a.ano].classificacao, total: a.total, ano_teste: a.ano === 2026 }; });
+  return pr.anos.map(function(a){ return { ano: a.ano, ibs: a.ibs_aliquota, cbs: a.cbs_aliquota, classificacao: a.classificacao, categoria_ibs: a.categoria_ibs, categoria_cbs: a.categoria_cbs, fonte_ibs: a.fonte_ibs, fonte_cbs: a.fonte_cbs, ibs_valor: a.ibs, cbs_valor: a.cbs, total: a.total, ano_teste: a.ano === 2026 }; });
 }
 function imobAnosHTML(anos, e){
   if (!anos) return '';
   var max = Math.max.apply(null, anos.map(function(a){ return a.total; }));
   return '<div class="card"><h2>Quanto seria o imposto em cada ano (2026 a 2033)</h2><div class="ajuda">A Reforma entra em vigor aos poucos: 2026 &eacute; ano-teste (al&iacute;quota simb&oacute;lica de 1%), em 2027 entra a CBS e o IBS sobe todo ano at&eacute; 2033. Esta tabela mostra <b>a mesma opera&ccedil;&atilde;o</b> (' + money(e.valor_operacao) + ') feita em cada ano. O ano que voc&ecirc; informou define o valor do resultado acima.</div>' +
-    '<table class="anos"><thead><tr><th>Ano</th><th class="num">Al&iacute;quota IBS</th><th class="num">Al&iacute;quota CBS</th><th class="num">Imposto na opera&ccedil;&atilde;o</th><th>Situa&ccedil;&atilde;o da al&iacute;quota</th></tr></thead><tbody>' +
-    anos.map(function(a){ return '<tr' + (String(a.ano) === String(e.data_fato_gerador||'').slice(0,4) ? ' style="background:var(--info-bg)"' : '') + '><td>' + a.ano + (a.ano_teste ? ' <span class="badge b-info">ano-teste</span>' : '') + '</td><td class="num">' + pct(a.ibs,2) + '</td><td class="num">' + pct(a.cbs,2) + '</td><td class="num' + (a.total === max ? ' max' : '') + '"><b>' + money(a.total) + '</b></td><td><span class="badge ' + (a.classificacao === 'LEGAL' ? 'b-ok' : 'b-warn') + '">' + (a.classificacao === 'LEGAL' ? 'fixada em lei' : 'estimada') + '</span></td></tr>'; }).join('') +
-    '</tbody></table></div>';
+    '<table class="anos"><thead><tr><th>Ano</th><th class="num">Al&iacute;quota IBS</th><th>Origem</th><th class="num">Al&iacute;quota CBS</th><th>Origem</th><th class="num">IBS</th><th class="num">CBS</th><th class="num">Total na opera&ccedil;&atilde;o</th></tr></thead><tbody>' +
+    anos.map(function(a){ return '<tr' + (String(a.ano) === String(e.data_fato_gerador||'').slice(0,4) ? ' style="background:var(--info-bg)"' : '') + '><td>' + a.ano + (a.ano_teste ? ' <span class="badge b-info">ano-teste</span>' : '') + '</td><td class="num">' + pct(a.ibs,2) + '</td><td title="' + esc(a.fonte_ibs||'') + '">' + catBadge(a.categoria_ibs) + '</td><td class="num">' + pct(a.cbs,2) + '</td><td title="' + esc(a.fonte_cbs||'') + '">' + catBadge(a.categoria_cbs) + '</td><td class="num">' + money(a.ibs_valor) + '</td><td class="num">' + money(a.cbs_valor) + '</td><td class="num' + (a.total === max ? ' max' : '') + '"><b>' + money(a.total) + '</b></td></tr>'; }).join('') +
+    '</tbody></table><div class="mini" style="margin-top:8px">S&oacute; 2026 est&aacute; integralmente fixado em lei. Em 2027-2028 o IBS &eacute; legal (0,05% estadual + 0,05% municipal, art. 344) e a CBS depende da al&iacute;quota de refer&ecirc;ncia (art. 347). De 2029 a 2032 o IBS &eacute; proje&ccedil;&atilde;o. Nenhuma linha desta tabela &eacute; lei vigente para o ano.</div></div>';
 }
 function botoesRelatorio(op){
   return '<div class="card"><h2>Relat&oacute;rios desta opera&ccedil;&atilde;o</h2><div class="mini">Cada bot&atilde;o abre o documento pronto para imprimir ou salvar em PDF.</div><div class="rel-botoes">' +
@@ -394,12 +416,7 @@ function calcVenda(){ acao(function(){
   var ex = PR.explicar(PREM, 'venda');
   var et = RL.resultadoVenda(res, e, ex);
   var h = imobGrau(res, 'venda') + imobSequencial('Resultado da aliena&ccedil;&atilde;o', et);
-  if (res.parcelas && typeof res.parcelas[0] === 'object') {
-    h += '<div class="card"><h2>IBS/CBS devidos em cada pagamento &mdash; art. 380</h2><table><thead><tr>' +
-      '<th>#</th><th class="num">Pagamento</th><th class="num">Propor&ccedil;&atilde;o</th><th class="num">Redutor aplicado</th><th class="num">Base</th><th class="num">IBS</th><th class="num">CBS</th><th class="num">Devido</th></tr></thead><tbody>' +
-      res.parcelas.map(function(p){ return '<tr><td>' + p.ordem + '</td><td class="num">' + money(p.pagamento) + '</td><td class="num">' + pct(p.proporcao,4) + '</td><td class="num">' + money(p.redutor_aplicado) +
-        '</td><td class="num">' + money(p.base) + '</td><td class="num">' + money(p.ibs) + '</td><td class="num">' + money(p.cbs) + '</td><td class="num"><b>' + money(p.total) + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
-  }
+  h += imobParcelasHTML(res, 'IBS/CBS devidos em cada pagamento &mdash; art. 380');
   var anos = calcularAnos(e, ctx);
   $('v-out').innerHTML = h + imobAnosHTML(anos, e) + imobMemoria(res, 'venda') + botoesRelatorio('venda');
   ULTIMO.venda = { e: e, res: res, ctx: ctx, etapas: et, anos: anos }; ULTIMA_OP = 'venda';
@@ -413,6 +430,8 @@ function entradaLocacao(finalidade){
   var loc = { finalidade: finalidade || txt('l-fim'), meses: meses, valor_mensal: mensal,
     encargos_locatario: { prova_pagamento: txt('l-prova') === '1', tributos_emolumentos: n('l-trib') * meses, condominio: n('l-cond') * meses, foro_taxa_ocupacao: n('l-foro') * meses } };
   if (n('l-prz') > 0) loc.prazo_dias = n('l-prz');
+  if (txt('l-cls')) loc.classificacao_operacao = txt('l-cls');            // v1.6.0 — IMOB-TEM-001 v2
+  if (txt('l-just')) loc.justificativa_classificacao = txt('l-just');
   if (n('l-dias') > 0) loc.dias_no_mes = n('l-dias');
   if (n('l-area') > 0) loc.fracao_area_residencial = n('l-area');
   return { operacao:'locacao', data_fato_gerador: txt('l-data'), valor_operacao: Math.round(mensal * meses * propDias * 100) / 100, locacao: loc, creditos: n('l-cre'), imovel: imovelParaEntrada() };
@@ -457,6 +476,9 @@ function calcPerm(){ acao(function(){
              contraparte_identificacao: txt('x-nome') || undefined, valor_imovel_recebido: nOuNulo('x-rec') || undefined,
              contraprestacao_dinheiro_alem_torna: txt('x-din') === '1', unidades_futuras: nOuNulo('x-nuni') || undefined };
   if (n('x-fr') > 0) pm.fracao_ideal = n('x-fr');
+  var tparc = txt('x-tparc').split(';').map(function(s){ var v = parseNum(s); return v == null || isNaN(v) ? null : v; }).filter(function(v){ return v !== null && v > 0; });
+  if (tparc.length > 1) pm.torna_pagamentos = tparc;                        // v1.6.0 — IMOB-PER-001 v2
+  if (txt('x-fin') === '1') pm.torna_financiada = true;
   var e = { operacao:'permuta', data_fato_gerador: txt('x-data'), valor_operacao: n('x-val'), permuta: pm, creditos: n('x-cre'), imovel: imovelParaEntrada() };
   var ctx = ctxPara('venda'), res = M.calcular(e, ctx);
   if (res.status === 'BLOQUEADO') { $('x-out').innerHTML = imobBloqueio(res); return; }
@@ -466,6 +488,7 @@ function calcPerm(){ acao(function(){
   if (txt('x-din') === '1') h += '<div class="card"><div class="aviso">Contrapresta&ccedil;&atilde;o em dinheiro al&eacute;m da torna: trate o valor como torna (art. 360, &sect;3&ordm;, I) &mdash; informe-o nos campos de torna para que seja tributado.</div></div>';
   if (n('x-cre') > 0) h += '<div class="card"><div class="info">Cr&eacute;ditos informados (' + money(n('x-cre')) + ') n&atilde;o foram abatidos: o motor n&atilde;o compensa cr&eacute;ditos na permuta &mdash; o aproveitamento se d&aacute; na apura&ccedil;&atilde;o peri&oacute;dica (arts. 47 a 57).</div></div>';
   if (txt('x-nome')) h += '<div class="card"><div class="mini">Contraparte: <b>' + esc(txt('x-nome')) + '</b> (' + esc(txt('x-parte')) + ')</div></div>';
+  h += imobParcelasHTML(res, 'IBS/CBS sobre a torna em cada pagamento &mdash; art. 380') + imobNotasHTML(res);
   var anos = calcularAnos(e, ctx);
   $('x-out').innerHTML = h + imobAnosHTML(anos, e) + imobMemoria(res, 'venda') + botoesRelatorio('permuta');
   ULTIMO.permuta = { e: e, res: res, ctx: ctx, etapas: et, anos: anos }; ULTIMA_OP = 'permuta';
@@ -542,12 +565,14 @@ var IMPACTO = {
 function pintaRegras(){
   var R = M.REGRAS, info = (window.ModulosInfo || {}).imobiliario || {};
   var h = '<div class="mini" style="margin-bottom:10px">Ruleset <b>' + esc(M.RULESET_VERSAO) + '</b> · motor ' + esc(M.MOTOR_IMOB_VERSAO) + ' · &uacute;ltima atualiza&ccedil;&atilde;o do m&oacute;dulo <b>' + esc(info.data || '—') + '</b> · lacre <code>' + esc(M.LACRE_IMOB_HASH) + '</code></div>' +
-    '<table><thead><tr><th>Regra</th><th>Descri&ccedil;&atilde;o resumida</th><th>Fundamento legal / artigo</th><th>Vig&ecirc;ncia</th><th>Status</th><th>Impacto no c&aacute;lculo</th></tr></thead><tbody>';
+    '<div class="ajuda">Cat&aacute;logo audit&aacute;vel (v1.6.0): cada regra traz c&oacute;digo, vers&atilde;o, f&oacute;rmula, fundamento com link oficial e data de consulta, vig&ecirc;ncia, status, premissas, depend&ecirc;ncias e impacto. Status poss&iacute;veis: homologada, legal, administrativa, premissa, indicativa, proje&ccedil;&atilde;o, staging, bloqueada &mdash; regra baseada em premissa, estimativa ou proje&ccedil;&atilde;o nunca &eacute; "homologada".</div>' +
+    '<table><thead><tr><th>Regra</th><th>Descri&ccedil;&atilde;o e f&oacute;rmula</th><th>Fundamento oficial</th><th>Vig&ecirc;ncia</th><th>Status</th><th>Impacto no c&aacute;lculo</th></tr></thead><tbody>';
   ASSUNTOS.forEach(function(a){
     h += '<tr class="grp"><td colspan="6">' + esc(a[0]) + '</td></tr>';
     a[1].forEach(function(k){ var r = R[k]; if (!r) return; var vg = VIGENCIA[k] || ['a partir de 01/01/2027 (2026: ano-teste)', 'regime espec&iacute;fico'];
-      h += '<tr><td><code>' + k + '</code><div class="mini">v' + r.versao + ' · ' + esc(r.nivel) + '</div></td><td>' + esc(r.nome) + '</td><td class="fund">' + r.fontes.map(esc).join('<br>') + '</td>' +
-        '<td class="mini">' + vg[0] + '<div>' + vg[1] + '</div></td><td><span class="badge ' + (r.status === 'homologada' ? 'b-ok' : 'b-warn') + '">' + esc(r.status) + '</span></td><td class="mini">' + (IMPACTO[k] || '—') + '</td></tr>'; });
+      var fo = (r.fonte_oficial || []).map(function(f){ return '<div>' + esc(f.norma) + (f.link ? ' <a href="' + esc(f.link) + '" target="_blank" rel="noopener">[oficial]</a>' : '') + '</div>'; }).join('');
+      h += '<tr><td><code>' + k + '</code><div class="mini">v' + r.versao + ' · ' + catBadge(String(r.categoria || r.nivel || '').toUpperCase()) + '</div></td><td>' + esc(r.nome) + (r.formula ? '<div class="mini"><b>F&oacute;rmula:</b> ' + esc(r.formula) + '</div>' : '') + (r.premissas && r.premissas.length ? '<div class="mini"><b>Premissas:</b> ' + r.premissas.map(esc).join('; ') + '</div>' : '') + (r.dependencias && r.dependencias.length ? '<div class="mini"><b>Depende de:</b> ' + r.dependencias.map(esc).join(', ') + '</div>' : '') + '</td><td class="fund">' + fo + '<div class="mini">consulta em ' + esc(r.data_consulta || '') + '</div>' + (r.alteracao_posterior ? '<div class="aviso" style="margin-top:4px">&#9888; ' + esc(r.alteracao_posterior) + '</div>' : '') + '</td>' +
+        '<td class="mini">' + esc(r.vigencia || vg[0]) + '</td><td><span class="badge ' + (r.status === 'homologada' || r.status === 'legal' ? 'b-ok' : r.status === 'bloqueada' ? 'b-err' : 'b-warn') + '">' + esc(r.status) + '</span></td><td class="mini">' + esc(r.impacto || IMPACTO[k] || '—') + '</td></tr>'; });
   });
   h += '</tbody></table><div class="info" style="margin-top:14px">Nenhuma regra vai a <b>ativa</b> antes da dupla aprova&ccedil;&atilde;o do Passo 6. A regra em <b>staging</b> (Lucro Real) &eacute; premissa declarada e sai rotulada como simula&ccedil;&atilde;o indicativa.</div>' + imobSelo();
   $('r-out').innerHTML = h;
@@ -626,18 +651,19 @@ function calcOpc(){ acao(function(){
 }); }
 
 /* ---------- comparativo e projeção ---------- */
-var TRANSICAO = { 2026:{ibs:0.1,cbs:0.9,classificacao:'LEGAL'}, 2027:{ibs:0.05,cbs:9.11,classificacao:'LEGAL'},
- 2028:{ibs:0.05,cbs:9.11,classificacao:'LEGAL'}, 2029:{ibs:1.87,cbs:9.21,classificacao:'ESTIMADA'},
- 2030:{ibs:3.74,cbs:9.21,classificacao:'ESTIMADA'}, 2031:{ibs:5.61,cbs:9.21,classificacao:'ESTIMADA'},
- 2032:{ibs:7.48,cbs:9.21,classificacao:'ESTIMADA'}, 2033:{ibs:18.70,cbs:9.21,classificacao:'ESTIMADA'} };
+/* v1.6.0: a escada 2026-2033 deixou de ser tabela fixa da interface (que rotulava 2027-2028 como "fixada em lei" e trazia IBS 0,05%,
+   metade do legal). Agora vem do motor (transicaoPadrao) a partir das premissas vigentes, com categoria por ano e por tributo. */
+function escadaAtual(ctx){ return M.transicaoPadrao(ctx || ctxPara('venda')); }
 function calcComp(){ acao(function(){
   var v = VA.validarComparativo({ receita_venda: txt('c-rv'), receita_locacao: txt('c-rl'), receita_servicos: txt('c-rs'), meses: txt('c-me'), redutor: txt('c-raj'), iss: txt('c-iss') });
   if (!mostrarValidacao('c-valid', v)) { $('c-out').innerHTML = ''; return; }
   var rv = n('c-rv'), rl = n('c-rl'), rs = n('c-rs'), meses = n('c-me') || 3;
-  var c = ctxPara('venda', { transicao: TRANSICAO }); c.parametros.iss = n('c-iss');
-  var cl = ctxPara('locacao');
-  var atual = M.calcLucroPresumido({ receita_venda: rv, receita_locacao: rl, receita_servicos: rs, atividade_imobiliaria_no_objeto: txt('c-obj')==='1', meses_periodo: meses }, c);
-  if (atual.status === 'BLOQUEADO') { $('c-out').innerHTML = '<div class="card">' + atual.bloqueios.map(function(b){ return '<div class="aviso err">' + esc(b.msg) + '</div>'; }).join('') + '</div>'; return; }
+  var c = ctxPara('venda'); c.transicao = escadaAtual(c); c.parametros.iss = n('c-iss');
+  var cl = ctxPara('locacao'); cl.transicao = c.transicao;
+  var TRANSICAO = c.transicao;
+  var dadosLP = { receita_venda: rv, receita_locacao: rl, receita_servicos: rs, atividade_imobiliaria_no_objeto: txt('c-obj')==='1', natureza_receita_venda: txt('c-nat') || undefined, meses_periodo: meses };
+  var atual = M.calcLucroPresumido(dadosLP, c);
+  if (atual.status === 'BLOQUEADO') { $('c-out').innerHTML = '<div class="card"><h2>Lucro Presumido n&atilde;o aplicado</h2>' + atual.bloqueios.map(function(b){ return '<div class="aviso err"><span class="badge b-err">' + esc(b.codigo) + '</span> ' + esc(b.msg) + (b.alternativa ? ' <span class="mini">(use: ' + esc(b.alternativa) + ')</span>' : '') + '</div>'; }).join('') + '<div class="mini" style="margin-top:8px">A presun&ccedil;&atilde;o de 8%/12% n&atilde;o &eacute; aplicada automaticamente: confirme o objeto social e a natureza da receita no formul&aacute;rio.</div></div>'; return; }
   var opV = rv > 0 ? { operacao:'venda', data_fato_gerador:'2033-06-30', valor_operacao: rv, imovel:{ id:'CMP', tipo: txt('c-tipo') }, redutor_ajuste_saldo: n('c-raj') } : null;
   var opL = rl > 0 ? { operacao:'locacao', data_fato_gerador:'2033-06-30', valor_operacao: rl, locacao:{ finalidade:'nao_residencial', meses: meses } } : null;
   var rV = opV ? M.calcular(opV, c) : null, rL = opL ? M.calcular(opL, cl) : null;
@@ -655,7 +681,7 @@ function calcComp(){ acao(function(){
     ['Total geral', atual.total, Math.round((totR + atual.tributos_permanentes) * 100) / 100, true]
   ];
   var cargaA = receita > 0 ? totA / receita * 100 : 0, cargaR = receita > 0 ? totR / receita * 100 : 0;
-  var cmpMotor = opV ? M.comparativoAtualXReforma({ atual: { receita_venda: rv, receita_locacao: rl, receita_servicos: rs, atividade_imobiliaria_no_objeto: txt('c-obj')==='1', meses_periodo: meses }, reforma: opV }, c) : null;
+  var cmpMotor = opV ? M.comparativoAtualXReforma({ atual: dadosLP, reforma: opV }, c) : null;
   var h = imobGrau(rV || rL || { confianca: { nivel: 'MEDIA' } }, 'venda') +
     '<div class="card"><h2>Comparativo lado a lado</h2><table><thead><tr><th>Item</th><th class="num">Regime atual (Lucro Presumido)</th><th class="num">Regime espec&iacute;fico (IBS/CBS)</th><th class="num">Diferen&ccedil;a</th></tr></thead><tbody>' +
     linhas.map(function(l){ return '<tr' + (l[3] ? ' class="grp"' : '') + '><td>' + l[0] + '</td><td class="num">' + money(l[1]) + '</td><td class="num">' + money(l[2]) + '</td><td class="num"><b>' + money(l[2] - l[1]) + '</b></td></tr>'; }).join('') +
@@ -671,7 +697,7 @@ function calcComp(){ acao(function(){
     var av = prjV && prjV.anos.filter(function(x){ return x.ano === a; })[0], al = prjL && prjL.anos.filter(function(x){ return x.ano === a; })[0];
     var tr = TRANSICAO[a], serv = rs * (tr.ibs + tr.cbs) * 0.5 / 100;
     var tot = (av ? av.total : 0) + (al ? al.total : 0) + serv;
-    anoTot.push({ ano: a, ibs: tr.ibs, cbs: tr.cbs, classificacao: tr.classificacao, periodo: Math.round(tot * 100) / 100, mensal: Math.round(tot / meses * 100) / 100, anual: Math.round(tot / meses * 12 * 100) / 100, ano_teste: a === 2026 });
+    anoTot.push({ ano: a, ibs: tr.ibs, cbs: tr.cbs, classificacao: tr.classificacao, categoria_ibs: tr.categoria_ibs, categoria_cbs: tr.categoria_cbs, periodo: Math.round(tot * 100) / 100, mensal: Math.round(tot / meses * 100) / 100, anual: Math.round(tot / meses * 12 * 100) / 100, ano_teste: a === 2026 });
   }
   var maxV = Math.max.apply(null, anoTot.map(function(x){ return x.anual; }).concat([totA / meses * 12, 1]));
   h += '<div class="card"><h2>Proje&ccedil;&otilde;es</h2><div class="seq">' +
@@ -682,8 +708,8 @@ function calcComp(){ acao(function(){
     '<h3 class="sec">Evolu&ccedil;&atilde;o 2026-2033 (base anualizada)</h3><div class="grafico">' +
     anoTot.map(function(x){ return '<div class="col"><span class="mini">' + money(x.anual) + '</span><div class="b' + (x.classificacao === 'LEGAL' ? '' : ' est') + '" style="height:' + Math.max(2, Math.round(x.anual / maxV * 130)) + 'px" title="' + x.ano + ': ' + money(x.anual) + '"></div><span class="lb">' + x.ano + '</span></div>'; }).join('') +
     '</div><div class="mini">Barras claras = al&iacute;quota estimada. Linha de refer&ecirc;ncia da tributa&ccedil;&atilde;o atual (PIS/COFINS/ISS anualizados): ' + money(totA / meses * 12) + '.</div>' +
-    '<table style="margin-top:10px"><thead><tr><th>Ano</th><th class="num">IBS</th><th class="num">CBS</th><th class="num">Per&iacute;odo</th><th class="num">Mensal</th><th class="num">Anual</th><th>Al&iacute;quota</th></tr></thead><tbody>' +
-    anoTot.map(function(x){ return '<tr><td>' + x.ano + (x.ano_teste ? ' <span class="badge b-info">ano-teste</span>' : '') + '</td><td class="num">' + pct(x.ibs,2) + '</td><td class="num">' + pct(x.cbs,2) + '</td><td class="num">' + money(x.periodo) + '</td><td class="num">' + money(x.mensal) + '</td><td class="num"><b>' + money(x.anual) + '</b></td><td><span class="badge ' + (x.classificacao === 'LEGAL' ? 'b-ok' : 'b-warn') + '">' + x.classificacao + '</span></td></tr>'; }).join('') +
+    '<table style="margin-top:10px"><thead><tr><th>Ano</th><th class="num">IBS</th><th>Origem</th><th class="num">CBS</th><th>Origem</th><th class="num">Per&iacute;odo</th><th class="num">Mensal</th><th class="num">Anual</th></tr></thead><tbody>' +
+    anoTot.map(function(x){ return '<tr><td>' + x.ano + (x.ano_teste ? ' <span class="badge b-info">ano-teste</span>' : '') + '</td><td class="num">' + pct(x.ibs,2) + '</td><td>' + catBadge(x.categoria_ibs) + '</td><td class="num">' + pct(x.cbs,2) + '</td><td>' + catBadge(x.categoria_cbs) + '</td><td class="num">' + money(x.periodo) + '</td><td class="num">' + money(x.mensal) + '</td><td class="num"><b>' + money(x.anual) + '</b></td></tr>'; }).join('') +
     '</tbody></table><div class="info" style="margin-top:12px">' + esc((prjV || prjL || {}).nota || '') + '</div></div>';
 
   if (opV) {

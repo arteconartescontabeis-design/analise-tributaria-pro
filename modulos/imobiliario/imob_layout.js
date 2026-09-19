@@ -92,6 +92,8 @@
     if (/Residencial/i.test(t)) return 'Residencial × não residencial';
     if (/Sensibilidade/i.test(t)) return 'Sensibilidade';
     if (/cada paga/i.test(t)) return 'Por parcela';
+    if (/^Percentuais usados/i.test(t)) return 'Premissas e alertas';   // v1.6.0 — origem de cada percentual
+    if (/^Observa/i.test(t)) return 'Etapas do cálculo';
     return t.length > 30 ? t.slice(0, 28) + '…' : t;
   }
   function qtd(card) { var t = card.querySelector('table'); if (t) return t.querySelectorAll('tbody tr').length; return card.querySelectorAll('.et').length || 0; }

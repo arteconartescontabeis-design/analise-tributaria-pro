@@ -140,7 +140,7 @@
   /* =========================================================================
      3. RELATÓRIOS — HTML para impressão (A4, sem biblioteca)
      ========================================================================= */
-  var CSS = '.marca{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1a5276;padding-bottom:8px;margin-bottom:12px} .marca-txt{font-size:11px;color:#6b7a8d;text-align:right} ' + '.graf{margin:8px 0 14px;page-break-inside:avoid} .graf .mini{margin-bottom:4px;color:#6b7a8d;font-size:11px} .graf svg{max-width:100%}' + 'body{font-family:"DM Sans",Arial,sans-serif;color:#1f2d3d;font-size:12.5px;margin:0;padding:18mm 16mm}' +
+  var CSS = '.rot{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;border:1px solid #999}.rot-legal{background:#e8f5e9;border-color:#2e7d32;color:#2e7d32}.rot-administrativa,.rot-informado{background:#e3f2fd;border-color:#1a5276;color:#1a5276}.rot-premissa,.rot-estimativa,.rot-projecao{background:#fff8e1;border-color:#b9770e;color:#b9770e}.rot-simulacao{background:#fdf3e3;border:1px dashed #b9770e;color:#b9770e}.marca{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1a5276;padding-bottom:8px;margin-bottom:12px} .marca-txt{font-size:11px;color:#6b7a8d;text-align:right} ' + '.graf{margin:8px 0 14px;page-break-inside:avoid} .graf .mini{margin-bottom:4px;color:#6b7a8d;font-size:11px} .graf svg{max-width:100%}' + 'body{font-family:"DM Sans",Arial,sans-serif;color:#1f2d3d;font-size:12.5px;margin:0;padding:18mm 16mm}' +
     'h1{font-family:"Playfair Display",Georgia,serif;color:#1a5276;font-size:22px;margin:0 0 4px}' +
     'h2{font-family:"Playfair Display",Georgia,serif;color:#1a5276;font-size:15px;border-bottom:2px solid #d99a2b;padding-bottom:4px;margin:18px 0 8px;page-break-after:avoid}' +
     '.sub{color:#6b7a8d;font-size:11px;margin-bottom:14px}.box{border:1px solid #e3e8ee;border-radius:8px;padding:10px 12px;margin:8px 0;page-break-inside:avoid}' +
@@ -160,9 +160,20 @@
       (emp.nome ? ' · <b>' + esc(emp.nome) + '</b>' + (emp.cnpj ? ' · CNPJ ' + esc(emp.cnpj) : '') : '') +
       ' · emitido em ' + esc(agora()) + ' · ' + esc(p.escritorio || 'Artecon Artes Contábeis') + '</div>';
   }
+  var CAT_TXT = { LEGAL: 'fixada em lei', ADMINISTRATIVA: 'ato administrativo', PREMISSA: 'premissa', ESTIMATIVA: 'estimativa', PROJECAO: 'projeção', SIMULACAO: 'simulação do usuário', INFORMADO: 'informado' };
+  function rotulo(cat) { return '<span class="rot rot-' + String(cat || 'ESTIMATIVA').toLowerCase() + '">' + (CAT_TXT[cat] || 'estimativa') + '</span>'; }
+  function percentuaisHTML(p) {
+    var lista = p.res && p.res.percentuais;
+    if (!Array.isArray(lista) || !lista.length) return '';
+    var NOME = { ibs_padrao: 'IBS padrão', cbs_padrao: 'CBS padrão', reducao_imobiliaria: 'Redução imobiliária', ibs_final: 'IBS final', cbs_final: 'CBS final', ibs_teste_2026: 'IBS de teste 2026', cbs_teste_2026: 'CBS de teste 2026', regime_opcional: 'Regime opcional', ret: 'RET' };
+    return '<h3>Percentuais aplicados e sua origem</h3><table><thead><tr><th>Percentual</th><th class="num">Valor</th><th>Origem</th><th>Fonte</th><th>Vigência</th></tr></thead><tbody>' +
+      lista.map(function (x) { return '<tr><td>' + (NOME[x.nome] || esc(x.nome)) + (x.aplicada === false ? ' <i>(não aplicada em 2026)</i>' : '') + '</td><td class="num">' + pct(x.valor, 4) + '</td><td>' + rotulo(x.categoria) + '</td><td class="mini">' + esc(x.fonte || '') + '</td><td class="mini">' + esc(x.vigencia || '') + '</td></tr>'; }).join('') + '</tbody></table>';
+  }
   function avisosHTML(p) {
     var g = p.grau || { avisos: [] };
-    return (g.avisos || []).map(function (a) { return '<div class="alerta">⚠️ ' + esc(a.msg) + '</div>'; }).join('') +
+    return '<div class="alerta">⚠️ <b>Simulação técnica.</b> Os valores deste documento dependem de validação documental, contábil e jurídica do caso concreto e não substituem parecer. Legenda dos valores: ' +
+      rotulo('LEGAL') + ' · ' + rotulo('INFORMADO') + ' · ' + rotulo('PREMISSA') + ' · ' + rotulo('ESTIMATIVA') + ' · ' + rotulo('PROJECAO') + '. IBS/CBS e IRPJ/CSLL são apresentados separadamente e nunca somados sem legenda; valores de anos diferentes ou de regimes diferentes não são misturados sem indicação.</div>' +
+      (g.avisos || []).map(function (a) { return '<div class="alerta">⚠️ ' + esc(a.msg) + '</div>'; }).join('') +
       '<div class="mini">Nível de confiança do resultado: <b>' + esc(g.nivel || (p.res.confianca && p.res.confianca.nivel) || '—') +
       '</b> · ruleset <code>' + esc(p.ruleset || '') + '</code> · motor ' + esc(p.motor || '') + ' · lacre ' + esc(p.lacre || '') + '</div>';
   }
@@ -271,7 +282,7 @@
   function montarTecnico(p) {
     var res = p.res, e = p.entrada;
     var regras = (res.regras_aplicadas || []).map(function (id) { var r = (p.regras || {})[id] || {}; return { id: id, nome: r.nome, status: r.status, fontes: r.fontes || [] }; });
-    var corpo = cabecalho(p, 'Relatório técnico — ' + (p.titulo_operacao || e.operacao), 'Premissas, regras, metodologia, cálculos e fundamentos') + avisosHTML(p) +
+    var corpo = cabecalho(p, 'Relatório técnico — ' + (p.titulo_operacao || e.operacao), 'Premissas, regras, metodologia, cálculos e fundamentos') + avisosHTML(p) + percentuaisHTML(p) +
       '<h2>1. Premissas</h2>' + premissasHTML(p) +
       '<h2>2. Regras utilizadas</h2><table><thead><tr><th>Regra</th><th>Nome</th><th>Status</th><th>Fontes</th></tr></thead><tbody>' +
       regras.map(function (r) { return '<tr><td><code>' + esc(r.id) + '</code></td><td>' + esc(r.nome || '') + '</td><td>' + esc(r.status || '') + '</td><td class="mini">' + r.fontes.map(esc).join('<br>') + '</td></tr>'; }).join('') + '</tbody></table>' +
@@ -301,7 +312,7 @@
 
   function montarMemoria(p) {
     var res = p.res, expl = p.expl || {};
-    var corpo = cabecalho(p, 'Memória de cálculo — ' + (p.titulo_operacao || p.entrada.operacao), 'Fórmula, valores, alíquotas, redutores, créditos, bases e fundamentos de cada linha') + avisosHTML(p) +
+    var corpo = cabecalho(p, 'Memória de cálculo — ' + (p.titulo_operacao || p.entrada.operacao), 'Fórmula, valores, alíquotas, redutores, créditos, bases e fundamentos de cada linha') + avisosHTML(p) + percentuaisHTML(p) +
       '<h2>Alíquotas</h2><table><tbody><tr><td>IBS padrão</td><td class="num">' + pct(expl.ibs_padrao, 2) + '</td><td>CBS padrão</td><td class="num">' + pct(expl.cbs_padrao, 2) + '</td></tr>' +
       '<tr><td>Redução aplicada</td><td class="num">' + pct(expl.reducao_pct, 0) + '</td><td>Combinada final</td><td class="num">' + pct(expl.combinada_final, 4) + '</td></tr>' +
       '<tr><td><b>IBS final</b></td><td class="num"><b>' + pct(expl.ibs_final, 4) + '</b></td><td><b>CBS final</b></td><td class="num"><b>' + pct(expl.cbs_final, 4) + '</b></td></tr></tbody></table>' +

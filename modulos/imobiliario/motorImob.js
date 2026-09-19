@@ -20,9 +20,9 @@
 (function (raiz) {
   'use strict';
 
-  var MOTOR_IMOB_VERSAO = '1.2.0';
+  var MOTOR_IMOB_VERSAO = '1.3.0';
   var CONTRATO_VERSAO   = 'calc-imob-1';
-  var RULESET_VERSAO    = 'imob-2026.08.21';
+  var RULESET_VERSAO    = 'imob-2026.09.18';
 
   /* =========================================================================
      1. POLÍTICA MATEMÁTICA ÚNICA (Passo 3 / Seção 14 do Prompt v5)
@@ -80,9 +80,16 @@
   /* =========================================================================
      2. CATÁLOGO DE REGRAS (espelho do que vai para atp_imob_regras)
      -------------------------------------------------------------------------
-     status: draft | staging | homologada | ativa | suspensa | revogada
-     Nenhuma regra nasce "ativa". A promoção depende de hash_fonte real do
-     Passo 0 + dupla aprovação do Passo 6.
+     status (v1.3.0, prompt v1.5 item 4): homologada | legal | administrativa |
+       premissa | indicativa | projecao | staging | bloqueada
+       - homologada: fórmula conferida em fonte primária E coberta por teste;
+       - legal / administrativa: natureza da fonte (lei ou ato/consulta da RFB);
+       - premissa / indicativa / projecao: NUNCA podem ser "homologada" — o
+         número depende de hipótese, estimativa ou projeção (item 1 do prompt);
+       - staging: em validação; bloqueada: não pode ser aplicada.
+     Cada regra carrega: codigo, versao, descricao (nome), formula, fundamento
+     (fontes + fonte_oficial com link e data_consulta), vigencia, status,
+     categoria, premissas, dependencias, impacto, alteracao_posterior.
      ========================================================================= */
   var REGRAS = {
     'IMOB-BASE-001': { nome: 'Base de cálculo da alienação', versao: 1, status: 'homologada',
@@ -97,7 +104,7 @@
       nivel: 'legal', fontes: ['LC 214/2025, art. 261, caput', 'RIBS art. 379, caput', 'RCBS art. 379, caput'] },
     'IMOB-ALQ-002': { nome: 'Redução de 70% — locação, cessão onerosa e arrendamento', versao: 1, status: 'homologada',
       nivel: 'legal', fontes: ['LC 214/2025, art. 261, parágrafo único', 'RIBS art. 379, parágrafo único', 'RCBS art. 379, parágrafo único'] },
-    'IMOB-TEM-001': { nome: 'Locação por temporada até 90 dias — regra de hotelaria', versao: 1, status: 'homologada',
+    'IMOB-TEM-001': { nome: 'Locação por temporada até 90 dias — regra de hotelaria (classificação obrigatória)', versao: 2, status: 'homologada',
       nivel: 'legal', fontes: ['LC 214/2025, arts. 253 e 281', 'RIBS art. 361 (remete ao art. 410)', 'RCBS art. 361 (remete ao art. 410)'] },
     'IMOB-RET-001': { nome: 'RET de transição — 2,08% (regime normal)', versao: 1, status: 'homologada',
       nivel: 'legal', fontes: ['LC 214/2025, art. 485, I', 'RIBS art. 461, I', 'RCBS art. 461, I'] },
@@ -124,7 +131,7 @@
         'LC 214/2025, art. 348, III, "b"', 'LC 214/2025, art. 348, §§ 1º e 2º'] },
     'IMOB-PF-001': { nome: 'Pessoa física — limites de enquadramento como contribuinte', versao: 1, status: 'homologada',
       nivel: 'legal', fontes: ['LC 214/2025, art. 251, §§ 1º a 6º', 'RIBS art. 382', 'RCBS art. 382'] },
-    'IMOB-PER-001': { nome: 'Permuta entre imóveis — não incidência, exceto sobre a torna', versao: 1, status: 'homologada',
+    'IMOB-PER-001': { nome: 'Permuta entre imóveis — não incidência, exceto sobre a torna (torna parcelada/financiada)', versao: 2, status: 'homologada',
       nivel: 'legal', fontes: ['LC 214/2025, art. 252, §3º', 'RIBS art. 360, §3º, I, e §4º', 'RCBS art. 360, §3º, I, e §4º'] },
     'IMOB-PER-002': { nome: 'Permuta — transferência do redutor de ajuste', versao: 1, status: 'homologada',
       nivel: 'legal', fontes: ['RIBS art. 360, §§ 5º, 7º e 8º', 'RCBS art. 360, §§ 5º, 7º e 8º'] },
@@ -132,7 +139,7 @@
       nivel: 'legal', fontes: ['LC 214/2025, art. 486', 'RIBS art. 462', 'RCBS art. 462'] },
     'IMOB-LOC-TR1': { nome: 'Locação — regime transitório de 3,65% para contratos antigos', versao: 1, status: 'homologada',
       nivel: 'legal', fontes: ['LC 214/2025, art. 487', 'RIBS art. 463', 'RCBS art. 463'] },
-    'IMOB-LP-001': { nome: 'Lucro Presumido — venda de imóveis (8% IRPJ / 12% CSLL)', versao: 1, status: 'homologada',
+    'IMOB-LP-001': { nome: 'Lucro Presumido — venda de imóveis (8% IRPJ / 12% CSLL) — exige objeto social e natureza operacional', versao: 2, status: 'homologada',
       nivel: 'administrativo', fontes: ['Lei 9.249/1995, arts. 15 e 20', 'IN RFB 1.700/2017, arts. 33 e 34',
         'SC COSIT 7/2021', 'SC COSIT 221/2024'] },
     'IMOB-LP-002': { nome: 'Lucro Presumido — locação de imóveis (32% IRPJ / 32% CSLL)', versao: 1, status: 'homologada',
@@ -143,13 +150,76 @@
       nivel: 'administrativo', fontes: ['Lei 9.430/1996, art. 29', 'IN RFB 1.700/2017, art. 215', 'SC COSIT 221/2024'] },
     'IMOB-LR-001': { nome: 'Lucro Real — simulação comparativa indicativa', versao: 1, status: 'staging',
       nivel: 'premissa', fontes: ['Lei 9.430/1996', 'Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)'] },
-    'IMOB-TRA-001': { nome: 'Projeção 2026-2033 — alíquotas vindas do motor genérico', versao: 1, status: 'homologada',
-      nivel: 'legal', fontes: ['LC 214/2025, arts. 343, 346 e 348', 'LC 214/2025, art. 125 do ADCT (escada IBS)'] }
+    'IMOB-TRA-001': { nome: 'Projeção 2026-2033 — categorias por ano e por tributo', versao: 2, status: 'projecao',
+      nivel: 'projecao', fontes: ['LC 214/2025, arts. 343, 344, 346, 347 e 348', 'ADCT, arts. 125 a 129 (EC 132/2023)', 'Resolução CGIBS 14/2026 (estimativa não vinculante)'] }
   };
+
+
+  /* ---- 2.1 Metadados auditáveis do catálogo (v1.3.0) ----------------------
+     Links oficiais consultados em 18/09/2026. Onde a consulta se apoiou em
+     fonte secundária isso está dito ("conferir_em") — não é aprovação. */
+  var LINK_LC214 = 'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm';
+  var LINK_RIBS  = 'https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2026/decreto/D12955.htm';
+  var LINK_9249  = 'https://www.planalto.gov.br/ccivil_03/leis/l9249.htm';
+  var LINK_9430  = 'https://www.planalto.gov.br/ccivil_03/leis/l9430.htm';
+  var LINK_9718  = 'https://www.planalto.gov.br/ccivil_03/leis/l9718compilada.htm';
+  var LINK_IN1700= 'http://normas.receita.fazenda.gov.br/sijut2consulta/link.action?idAto=81268';
+  var LINK_COSIT = 'http://normas.receita.fazenda.gov.br/sijut2consulta/consulta.action';
+  var DATA_CONSULTA = '2026-09-18';
+  var VIG_IMOB = 'Regime específico de bens imóveis: a partir de 1º/01/2027 (2026 = ano-teste, art. 348, III, "b")';
+  var META = {
+    'IMOB-BASE-001': { categoria:'legal', formula:'base = valor da operação − redutor de ajuste − redutor social (nunca negativa)', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, arts. 251, 252 e 255', link:LINK_LC214},{norma:'Decreto 12.955/2026 (RIBS/RCBS), arts. 359, 360 e 364', link:LINK_RIBS}], dependencias:['IMOB-RAJ-001','IMOB-RSO-001'], impacto:'define a base de todas as alienações', alteracao_posterior:'LC 227/2026 alterou os arts. 260, 485 e 486 — não altera esta regra' },
+    'IMOB-RAJ-001': { categoria:'legal', formula:'usado = min(saldo do redutor do imóvel; base); saldo remanescente = saldo − usado', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, arts. 257 e 258', link:LINK_LC214},{norma:'RIBS arts. 369 a 375', link:LINK_RIBS}], dependencias:['IMOB-RAJ-002'], impacto:'reduz a base da alienação; saldo é do imóvel, não do contribuinte', premissas:['leitura dinâmica × estática do redutor (art. 257 §4º) NÃO pacificada — ver holdingImob'] },
+    'IMOB-RSO-001': { categoria:'legal', formula:'usado = min(R$ 100.000 (residencial novo) ou R$ 30.000 (lote) × fator IPCA; base após redutor de ajuste); uma única vez por imóvel', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, art. 259', link:LINK_LC214},{norma:'RIBS arts. 376 a 378', link:LINK_RIBS}], dependencias:['IMOB-RAJ-001'], impacto:'reduz a base da alienação de residencial novo e lote residencial' },
+    'IMOB-RSO-002': { categoria:'legal', formula:'usado = min(R$ 600 × meses × fator IPCA; base) — só locação RESIDENCIAL', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, art. 260 (redação da LC 227/2026)', link:LINK_LC214},{norma:'RIBS art. 377', link:LINK_RIBS}], impacto:'reduz a base da locação residencial', alteracao_posterior:'art. 260 alterado pela LC 227/2026 — redação vigente aplicada' },
+    'IMOB-ALQ-001': { categoria:'legal', formula:'alíquota final = alíquota padrão × (1 − 50%)', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, art. 261, caput', link:LINK_LC214},{norma:'RIBS art. 379, caput', link:LINK_RIBS}], dependencias:['alíquota de referência (CGIBS/Senado)'], impacto:'todas as operações do capítulo de bens imóveis' },
+    'IMOB-ALQ-002': { categoria:'legal', formula:'alíquota final = alíquota padrão × (1 − 70%)', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, art. 261, parágrafo único', link:LINK_LC214},{norma:'RIBS art. 379, parágrafo único', link:LINK_RIBS}], dependencias:['alíquota de referência (CGIBS/Senado)'], impacto:'locação, cessão onerosa e arrendamento', premissas:['cessão onerosa de DIREITOS AQUISITIVOS: 50% ou 70% não pacificado — exige subtipo (mistaImob M-B04)'] },
+    'IMOB-TEM-001': { categoria:'legal', formula:'locação residencial ≤ 90 dias ininterruptos → regras de hotelaria (fora deste motor); classificação da operação obrigatória (v2)', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, arts. 253 e 281', link:LINK_LC214},{norma:'RIBS art. 361', link:LINK_RIBS}], impacto:'sem redutor social e sem redução de 70% quando é hotelaria; um dia muda o tributo em ~3,3×' },
+    'IMOB-RET-001': { categoria:'legal', formula:'IBS + CBS = receita mensal × 2,08% (patrimônio de afetação, incorporação submetida ao RET até 31/12/2028)', vigencia:'Fatos geradores de 2027 em diante enquanto durar a incorporação (art. 485)', fonte_oficial:[{norma:'LC 214/2025, art. 485, I (redação da LC 227/2026)', link:LINK_LC214},{norma:'RIBS art. 461, I', link:LINK_RIBS}], impacto:'substitui o regime específico; veda créditos e redutores', alteracao_posterior:'art. 485 alterado pela LC 227/2026 — redação vigente aplicada' },
+    'IMOB-RET-002': { categoria:'legal', formula:'IBS + CBS = receita mensal × 0,53% (interesse social)', vigencia:'idem IMOB-RET-001', fonte_oficial:[{norma:'LC 214/2025, art. 485, II', link:LINK_LC214},{norma:'RIBS art. 461, II', link:LINK_RIBS}], impacto:'substitui o regime específico' },
+    'IMOB-RET-003': { categoria:'legal', formula:'créditos = 0 e redutores = 0 no RET', vigencia:'idem IMOB-RET-001', fonte_oficial:[{norma:'LC 214/2025, art. 485, §§ 1º e 6º', link:LINK_LC214}], dependencias:['IMOB-RET-001','IMOB-RET-002'], impacto:'anula créditos e redutores informados' },
+    'IMOB-PAR-001': { categoria:'legal', formula:'redutor da parcela i = redutor total × (principal da parcela i ÷ valor total); IBS/CBS devidos em cada pagamento; Σ parcelas ≡ total (resíduo na última)', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, art. 262, §4º', link:LINK_LC214},{norma:'RIBS art. 380, §§ 4º a 6º', link:LINK_RIBS}], dependencias:['IMOB-RAJ-001','IMOB-RSO-001'], impacto:'distribui o tributo pelas parcelas sem alterar o total' },
+    'IMOB-BASE-002': { categoria:'legal', formula:'base da locação = aluguel − (tributos/emolumentos + condomínio + foro/taxa de ocupação, se suportados pelo locatário COM prova); benfeitorias não deduzem', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, art. 255', link:LINK_LC214},{norma:'RIBS art. 364, §§ 2º a 4º', link:LINK_RIBS}], impacto:'reduz a base da locação' },
+    'IMOB-RAJ-002': { categoria:'legal', formula:'valor inicial do redutor = opção do contribuinte entre aquisição atualizada e valor de referência (art. 258); em construção / adquirido após 2027: hipóteses próprias', vigencia:'Opção para imóveis existentes: até 31/12/2026', fonte_oficial:[{norma:'LC 214/2025, art. 258', link:LINK_LC214},{norma:'RIBS arts. 366 e 375', link:LINK_RIBS}], impacto:'fixa o redutor de todas as alienações futuras do imóvel' },
+    'IMOB-RSO-003': { categoria:'legal', formula:'redutor social × (dias ÷ dias do mês) e × fração de área residencial no imóvel misto', vigencia: VIG_IMOB, fonte_oficial:[{norma:'RIBS art. 377, parágrafo único, I, e art. 378', link:LINK_RIBS}], dependencias:['IMOB-RSO-002'], impacto:'proporcionaliza o redutor social' },
+    'IMOB-CRE-001': { categoria:'legal', formula:'crédito = min(créditos com débito anterior EXTINTO; débito apurado); excedente transportado', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, arts. 47, 48 e 57', link:LINK_LC214}], impacto:'abate o débito; nunca automático' },
+    'IMOB-CRE-002': { categoria:'legal', formula:'sem crédito em imune, isenta, diferimento e suspensão; alíquota zero MANTÉM crédito (art. 52)', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, arts. 49, 50 e 52', link:LINK_LC214}], impacto:'veda créditos' },
+    'IMOB-CRE-003': { categoria:'legal', formula:'prazo de 5 anos contado do 1º dia do período seguinte ao da apropriação (art. 54); ordem de utilização do art. 53', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, arts. 53 a 55', link:LINK_LC214}], impacto:'decadência dos créditos' },
+    'IMOB-2026-001': { categoria:'legal', formula:'2026: IBS = base × 0,1% e CBS = base × 0,9% sobre a base do regime específico; dispensado o recolhimento com as obrigações acessórias (art. 348, §1º); PIS/COFINS integrais (§2º)', vigencia:'Fatos geradores de 1º/01 a 31/12/2026', fonte_oficial:[{norma:'LC 214/2025, arts. 343, 346 e 348', link:LINK_LC214}], impacto:'ano-teste' },
+    'IMOB-PF-001': { categoria:'legal', formula:'PF contribuinte se ultrapassar os limites do art. 251 (receita/quantidade) — pendência impede conclusão', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, art. 251, §§ 1º a 6º', link:LINK_LC214},{norma:'RIBS art. 382', link:LINK_RIBS}], impacto:'decide se a PF é contribuinte' },
+    'IMOB-PER-001': { categoria:'legal', formula:'permuta: incidência = 0, exceto torna × alíquota reduzida em 50%; torna parcelada: IBS/CBS em cada pagamento (v2)', vigencia: VIG_IMOB, fonte_oficial:[{norma:'LC 214/2025, art. 252, §3º', link:LINK_LC214},{norma:'RIBS art. 360, §§ 3º e 4º, e art. 380', link:LINK_RIBS}], impacto:'afasta a incidência sobre o valor permutado' },
+    'IMOB-PER-002': { categoria:'legal', formula:'redutor do imóvel recebido = redutor do dado (contribuinte) / rateado pela fração ideal / acrescido da torna paga ou deduzido da torna recebida (não contribuinte), nunca negativo', vigencia: VIG_IMOB, fonte_oficial:[{norma:'RIBS art. 360, §§ 5º, 7º e 8º', link:LINK_RIBS}], dependencias:['IMOB-PER-001'], impacto:'transfere o redutor' },
+    'IMOB-LOT-001': { categoria:'legal', formula:'IBS + CBS = receita bruta × 3,65% (loteamento com registro até 2028), sem créditos', vigencia:'Enquanto durar o empreendimento registrado até 31/12/2028', fonte_oficial:[{norma:'LC 214/2025, art. 486 (redação da LC 227/2026)', link:LINK_LC214},{norma:'RIBS art. 462', link:LINK_RIBS}], impacto:'regime opcional', alteracao_posterior:'art. 486 alterado pela LC 227/2026' },
+    'IMOB-LOC-TR1': { categoria:'legal', formula:'IBS + CBS = receita × 3,65% para contratos firmados até 16/01/2025 (prazo determinado, data comprovada, registrados até 31/12/2025); pagamento definitivo', vigencia:'Até o fim do prazo do contrato (residencial) ou até 31/12/2028 (não residencial), art. 487', fonte_oficial:[{norma:'LC 214/2025, art. 487', link:LINK_LC214},{norma:'RIBS art. 463', link:LINK_RIBS}], impacto:'regime opcional' },
+    'IMOB-LP-001': { categoria:'administrativa', formula:'base IRPJ = venda × 8% (+ locação × 32% + serviços × 32%); base CSLL = venda × 12%; exige objeto social imobiliário E receita operacional (v2 bloqueia sem confirmação)', vigencia:'Regime atual (vigente)', fonte_oficial:[{norma:'Lei 9.249/1995, arts. 15 e 20', link:LINK_9249},{norma:'IN RFB 1.700/2017, arts. 33 e 34', link:LINK_IN1700},{norma:'SC COSIT 7/2021 e 221/2024', link:LINK_COSIT}], dependencias:['IMOB-LP-004'], impacto:'lado "hoje" do comparativo' },
+    'IMOB-LP-002': { categoria:'legal', formula:'base IRPJ e CSLL = locação × 32%', vigencia:'Regime atual (vigente)', fonte_oficial:[{norma:'Lei 9.249/1995, art. 15, §1º, III, "c", e art. 20', link:LINK_9249}], impacto:'lado "hoje" do comparativo' },
+    'IMOB-LP-003': { categoria:'legal', formula:'PIS = receita × 0,65%; COFINS = receita × 3% (cumulativo)', vigencia:'Até 31/12/2026 (extintos pela CBS em 2027)', fonte_oficial:[{norma:'Lei 9.718/1998, arts. 2º e 3º', link:LINK_9718}], impacto:'tributos substituídos' },
+    'IMOB-LP-004': { categoria:'administrativa', formula:'ganho = alienação − custo contábil; IRPJ 15% + adicional 10% + CSLL 9%; sem PIS/COFINS', vigencia:'Regime atual (vigente)', fonte_oficial:[{norma:'Lei 9.430/1996, art. 29', link:LINK_9430},{norma:'IN RFB 1.700/2017, art. 215', link:LINK_IN1700},{norma:'SC COSIT 221/2024', link:LINK_COSIT}], impacto:'venda de imóvel do ativo não circulante / fora do objeto' },
+    'IMOB-LR-001': { categoria:'indicativa', formula:'lucro = receita − custos − despesas − prejuízo (30%); IRPJ/CSLL; PIS/COFINS não cumulativos SEM os créditos reais', vigencia:'Regime atual (vigente) — simulação', fonte_oficial:[{norma:'Lei 9.430/1996; Leis 10.637/2002 e 10.833/2003', link:LINK_9430}], impacto:'INDICATIVO — depende da contabilidade e dos ajustes fiscais reais', premissas:['regime de PIS/COFINS da atividade imobiliária no LR não confirmado em fonte'] },
+    'IMOB-TRA-001': { categoria:'projecao', formula:'2026: 0,1%/0,9% (LEGAL); 2027-2028: IBS 0,05%+0,05% (LEGAL) e CBS = referência − 0,1 p.p. (categoria da referência); 2029-2032: IBS = referência × 10/20/30/40% (PROJEÇÃO linear — o Senado fixa a alíquota anual, art. 128 do ADCT); 2033: referência (ESTIMATIVA)', vigencia:'2026 a 2033', fonte_oficial:[{norma:'LC 214/2025, arts. 343, 344, 346, 347 e 348', link:LINK_LC214},{norma:'ADCT, arts. 125 a 129 (EC 132/2023)', link:'https://www.planalto.gov.br/ccivil_03/constituicao/Emendas/Emc/emc132.htm'},{norma:'Resolução CGIBS 14/2026 (18,70% + 9,21% — estimativa NÃO vinculante)', link:'https://www.gov.br/cgibs'}], impacto:'tabela ano a ano; NUNCA apresentar como lei vigente' }
+  };
+  (function aplicarMeta() {
+    for (var id in REGRAS) if (REGRAS.hasOwnProperty(id)) {
+      var m = META[id] || {}, r = REGRAS[id];
+      r.regra_id = id; r.codigo = id;
+      r.categoria = m.categoria || r.nivel || 'legal';
+      r.formula = m.formula || null; r.vigencia = m.vigencia || null;
+      r.fonte_oficial = m.fonte_oficial || []; r.data_consulta = DATA_CONSULTA;
+      r.premissas = m.premissas || []; r.dependencias = m.dependencias || [];
+      r.impacto = m.impacto || null; r.alteracao_posterior = m.alteracao_posterior || null;
+      // item 1 do prompt: premissa/indicativa/projeção nunca ficam "homologada"
+      if ((r.categoria === 'premissa' || r.categoria === 'indicativa' || r.categoria === 'projecao') && r.status === 'homologada') r.status = r.categoria;
+    }
+  })();
 
   function regra(id) {
     var r = REGRAS[id];
-    return r ? { regra_id: id, versao: r.versao, status: r.status, nivel: r.nivel, fontes: r.fontes.slice() } : null;
+    if (!r) return null;
+    // v1.3.0: devolve o catálogo auditável completo (item 4 do prompt v1.5)
+    return { regra_id: id, codigo: id, nome: r.nome, versao: r.versao, status: r.status, nivel: r.nivel, categoria: r.categoria,
+             fontes: r.fontes.slice(), formula: r.formula, fonte_oficial: (r.fonte_oficial || []).slice(), data_consulta: r.data_consulta,
+             vigencia: r.vigencia, premissas: (r.premissas || []).slice(), dependencias: (r.dependencias || []).slice(),
+             impacto: r.impacto, alteracao_posterior: r.alteracao_posterior };
   }
 
   /* =========================================================================
@@ -183,6 +253,38 @@
      4. NÚCLEO DE CÁLCULO
      ========================================================================= */
 
+  /* ---- 4.-1 CATEGORIAS DE PERCENTUAL (v1.3.0 — prompt v1.5, P0) ----------
+     Todo percentual que entra numa conta sai com categoria, fonte, vigência e
+     versão. Categorias: LEGAL (texto de lei) · ADMINISTRATIVA (ato/consulta da
+     RFB) · PREMISSA (hipótese declarada) · ESTIMATIVA (estimativa oficial não
+     vinculante, ex. CGIBS 14/2026) · PROJECAO (derivada por hipótese, ex. escada
+     2029-2032) · SIMULACAO (editado pelo usuário) · INFORMADO (dado do caso). */
+  var CATEGORIAS_PCT = ['LEGAL', 'ADMINISTRATIVA', 'PREMISSA', 'ESTIMATIVA', 'PROJECAO', 'SIMULACAO', 'INFORMADO'];
+  function normCategoria(c) {
+    c = String(c || '').toUpperCase().replace('Ç', 'C').replace('Ã', 'A');
+    if (c === 'ESTIMADA') return 'ESTIMATIVA';
+    return CATEGORIAS_PCT.indexOf(c) >= 0 ? c : 'ESTIMATIVA';
+  }
+  function pctInfo(nome, valor, categoria, fonte, vigencia, versao, extra) {
+    var o = { nome: nome, valor: r4(valor), categoria: normCategoria(categoria), fonte: fonte || null,
+              vigencia: vigencia || null, versao: versao || RULESET_VERSAO };
+    if (extra) for (var k in extra) if (extra.hasOwnProperty(k)) o[k] = extra[k];
+    return o;
+  }
+  function percentuaisAliquotas(ctx, tipoReducao) {
+    var a = ctx.aliquotas || {}, cat = normCategoria(a.classificacao), pct = tipoReducao === 70 ? 0.70 : 0.50;
+    var vigRef = a.vigencia || 'alíquota de referência (2033); nos anos anteriores vale a escada de transição (IMOB-TRA-001)';
+    var regRed = tipoReducao === 70 ? 'IMOB-ALQ-002' : 'IMOB-ALQ-001';
+    var fRed = tipoReducao === 70 ? 'LC 214/2025, art. 261, parágrafo único (locação, cessão onerosa e arrendamento)' : 'LC 214/2025, art. 261, caput';
+    var verRed = 'v' + ((REGRAS[regRed] || {}).versao || 1);
+    return [
+      pctInfo('ibs_padrao', a.ibs, cat, a.fonte || 'motor genérico do ATP', vigRef, a.versao),
+      pctInfo('cbs_padrao', a.cbs, cat, a.fonte || 'motor genérico do ATP', vigRef, a.versao),
+      pctInfo('reducao_imobiliaria', tipoReducao, 'LEGAL', fRed, VIG_IMOB, verRed, { regra_id: regRed }),
+      pctInfo('ibs_final', a.ibs * (1 - pct), cat, 'ibs_padrao × (1 − ' + tipoReducao + '%) — a categoria é a do padrão', vigRef, a.versao, { derivada: true }),
+      pctInfo('cbs_final', a.cbs * (1 - pct), cat, 'cbs_padrao × (1 − ' + tipoReducao + '%) — a categoria é a do padrão', vigRef, a.versao, { derivada: true })
+    ];
+  }
   // Alíquotas efetivas depois da redução do art. 261.
   function aliquotasReduzidas(ctx, tipoReducao) {
     var pct = tipoReducao === 70 ? 0.70 : 0.50;
@@ -191,8 +293,26 @@
       cbs: r4(ctx.aliquotas.cbs * (1 - pct)),
       reducao_pct: tipoReducao,
       classificacao: ctx.aliquotas.classificacao,
-      fonte_aliquota: ctx.aliquotas.fonte || 'motor genérico do ATP'
+      categoria: normCategoria(ctx.aliquotas.classificacao),
+      fonte_aliquota: ctx.aliquotas.fonte || 'motor genérico do ATP',
+      percentuais: percentuaisAliquotas(ctx, tipoReducao)
     };
+  }
+  // Percentuais efetivamente usados num resultado (para memória e relatórios).
+  function percentuaisDoResultado(e, ctx, res) {
+    var op = e.operacao, out = [];
+    if (op === 'venda' || op === 'permuta') out = percentuaisAliquotas(ctx, 50);
+    else if (op === 'locacao') out = percentuaisAliquotas(ctx, 70);
+    else if (op === 'loteamento') out = [pctInfo('regime_opcional', 3.65, 'LEGAL', 'LC 214/2025, art. 486', (REGRAS['IMOB-LOT-001'] || {}).vigencia, 'v' + (REGRAS['IMOB-LOT-001'] || {}).versao, { regra_id: 'IMOB-LOT-001' })];
+    else if (op === 'locacao_transitoria') out = [pctInfo('regime_opcional', 3.65, 'LEGAL', 'LC 214/2025, art. 487', (REGRAS['IMOB-LOC-TR1'] || {}).vigencia, 'v' + (REGRAS['IMOB-LOC-TR1'] || {}).versao, { regra_id: 'IMOB-LOC-TR1' })];
+    else if (op === 'ret') { var soc = e.ret && e.ret.modalidade === 'social';
+      out = [pctInfo('ret', soc ? 0.53 : 2.08, 'LEGAL', 'LC 214/2025, art. 485, ' + (soc ? 'II' : 'I'), (REGRAS['IMOB-RET-001'] || {}).vigencia, 'v' + (REGRAS['IMOB-RET-001'] || {}).versao, { regra_id: soc ? 'IMOB-RET-002' : 'IMOB-RET-001' })]; }
+    if (res && res.ano_teste_2026 === true) {
+      out = out.map(function (p) { p.aplicada = false; p.observacao = 'não aplicada em 2026 (ano-teste)'; return p; });
+      out.push(pctInfo('ibs_teste_2026', 0.1, 'LEGAL', 'LC 214/2025, art. 343', 'FG de 1º/01 a 31/12/2026', 'v' + (REGRAS['IMOB-2026-001'] || {}).versao, { regra_id: 'IMOB-2026-001', aplicada: true }));
+      out.push(pctInfo('cbs_teste_2026', 0.9, 'LEGAL', 'LC 214/2025, art. 346', 'FG de 1º/01 a 31/12/2026', 'v' + (REGRAS['IMOB-2026-001'] || {}).versao, { regra_id: 'IMOB-2026-001', aplicada: true }));
+    } else out = out.map(function (p) { if (p.aplicada === undefined) p.aplicada = true; return p; });
+    return out;
   }
 
   function linha(ordem, desc, formula, entrada, valor, regraId, extra) {
@@ -345,7 +465,7 @@
     var alq = aliquotasReduzidas(ctx, 50);
     L.push(linha(++ordem, 'Alíquotas reduzidas em 50%', 'alíquota padrão × (1 − 50%)',
       { ibs_padrao: r4(ctx.aliquotas.ibs), cbs_padrao: r4(ctx.aliquotas.cbs) }, 0, 'IMOB-ALQ-001',
-      { ibs_reduzida: alq.ibs, cbs_reduzida: alq.cbs, classificacao: alq.classificacao }));
+      { ibs_reduzida: alq.ibs, cbs_reduzida: alq.cbs, classificacao: alq.classificacao, categoria: alq.categoria, percentuais: alq.percentuais }));
 
     var ibs = base * alq.ibs / 100, cbs = base * alq.cbs / 100;
     L.push(linha(++ordem, 'IBS devido', 'base × alíquota IBS reduzida', { base: r2(base), aliquota: alq.ibs }, ibs, 'IMOB-ALQ-001'));
@@ -405,11 +525,27 @@
     var loc = e.locacao || {};
     L.push(linha(++ordem, 'Valor do aluguel no período', 'valor informado', null, valor, 'IMOB-BASE-001'));
 
-    // Temporada até 90 dias: sai do regime de bens imóveis (art. 253) -> bloqueio.
-    if (typeof loc.prazo_dias === 'number' && loc.prazo_dias > 0 && loc.prazo_dias <= 90 && loc.finalidade === 'residencial') {
-      return { bloqueio: { codigo: 'B001',
-        msg: 'Locação residencial de até 90 dias ininterruptos segue as regras de hotelaria (art. 253), fora deste motor: não se aplicam o redutor social do art. 260 nem a redução de 70% do art. 261, parágrafo único.',
-        regra_id: 'IMOB-TEM-001' } };
+    // Temporada até 90 dias (art. 253) — v2: o prazo sozinho NÃO decide. O motor
+    // exige a CLASSIFICAÇÃO da operação e explica a hotelaria; a escolha é do
+    // responsável técnico e fica registrada na memória.
+    var prazoCurto = typeof loc.prazo_dias === 'number' && loc.prazo_dias > 0 && loc.prazo_dias <= 90 && loc.finalidade === 'residencial';
+    if (prazoCurto) {
+      var cls = loc.classificacao_operacao;   // 'hospedagem' | 'locacao_residencial'
+      var expl = 'Art. 253 da LC 214/2025: a locação de imóvel RESIDENCIAL por período não superior a 90 dias ininterruptos segue as regras de HOTELARIA (arts. 281 e seguintes): sem redutor social do art. 260, sem a redução de 70% do art. 261, parágrafo único, e base pelo valor total. Com a mesma base, a diferença chega a ~3,3× (fica só a redução de 50% do caput).';
+      if (cls === 'hospedagem') {
+        return { bloqueio: { codigo: 'B001', regra_id: 'IMOB-TEM-001',
+          msg: 'Operação classificada como HOSPEDAGEM (temporada ≤ 90 dias): tributada pelas regras de hotelaria, fora deste motor. ' + expl } };
+      }
+      if (cls !== 'locacao_residencial') {
+        return { bloqueio: { codigo: 'B005', regra_id: 'IMOB-TEM-001',
+          msg: 'Prazo de ' + loc.prazo_dias + ' dias em locação residencial: informe a CLASSIFICAÇÃO da operação — "hospedagem" (regras de hotelaria) ou "locacao_residencial" (contrato que não se enquadra no art. 253, com justificativa). ' + expl,
+          como_corrigir: 'Preencha locacao.classificacao_operacao e, se for locação residencial, locacao.justificativa_classificacao (ex.: contrato por prazo indeterminado com período inicial curto; prorrogação contínua sem interrupção).' } };
+      }
+      if (!loc.justificativa_classificacao || !String(loc.justificativa_classificacao).trim()) {
+        return { bloqueio: { codigo: 'B006', regra_id: 'IMOB-TEM-001',
+          msg: 'Classificada como locação residencial com prazo ≤ 90 dias: a justificativa é obrigatória, porque a regra do art. 253 aponta para hotelaria.' } };
+      }
+      notas.push('Prazo de ' + loc.prazo_dias + ' dias classificado pelo responsável técnico como LOCAÇÃO RESIDENCIAL (não hospedagem). Justificativa: "' + String(loc.justificativa_classificacao).trim() + '". ' + expl + ' A classificação é decisão do responsável e consta desta memória (IMOB-TEM-001 v2).');
     }
 
     // Exclusões da base (art. 364, §§ 2º a 4º) — só com prova de pagamento pelo locatário.
@@ -464,7 +600,7 @@
     var alq = aliquotasReduzidas(ctx, 70);
     L.push(linha(++ordem, 'Alíquotas reduzidas em 70%', 'alíquota padrão × (1 − 70%)',
       { ibs_padrao: r4(ctx.aliquotas.ibs), cbs_padrao: r4(ctx.aliquotas.cbs) }, 0, 'IMOB-ALQ-002',
-      { ibs_reduzida: alq.ibs, cbs_reduzida: alq.cbs, classificacao: alq.classificacao }));
+      { ibs_reduzida: alq.ibs, cbs_reduzida: alq.cbs, classificacao: alq.classificacao, categoria: alq.categoria, percentuais: alq.percentuais }));
 
     var ibs = base * alq.ibs / 100, cbs = base * alq.cbs / 100;
     L.push(linha(++ordem, 'IBS devido', 'base × alíquota IBS reduzida', { base: r2(base), aliquota: alq.ibs }, ibs, 'IMOB-ALQ-002'));
@@ -569,8 +705,26 @@
     notas.push('Art. 360, §5º: o valor permutado NÃO entra no valor da operação para o cálculo do redutor de ajuste dos arts. 369 a 375.');
 
     var debito = somaExib([ibs, cbs]);
+    // v2 — torna paga em parcelas: IBS/CBS devidos em cada pagamento (art. 380,
+    // caput), na proporção do principal de cada parcela; Σ parcelas ≡ total.
+    var parcelasTorna = null;
+    if (Array.isArray(pm.torna_pagamentos) && pm.torna_pagamentos.length && torna > 0) {
+      var somaT = pm.torna_pagamentos.reduce(function (a, b) { return a + naoNeg(b); }, 0);
+      if (Math.abs(somaT - torna) > 0.02) notas.push('Atenção: a soma dos pagamentos da torna (' + r2(somaT) + ') não fecha com a torna (' + r2(torna) + ').');
+      parcelasTorna = []; var accI = 0, accC = 0;
+      for (var pt = 0; pt < pm.torna_pagamentos.length; pt++) {
+        var vt = naoNeg(pm.torna_pagamentos[pt]), propT = torna > 0 ? vt / torna : 0;
+        var ibsT = pt === pm.torna_pagamentos.length - 1 ? r2(ibs) - accI : r2(vt * alq.ibs / 100);
+        var cbsT = pt === pm.torna_pagamentos.length - 1 ? r2(cbs) - accC : r2(vt * alq.cbs / 100);
+        accI = r2(accI + ibsT); accC = r2(accC + cbsT);
+        parcelasTorna.push({ ordem: pt + 1, pagamento: r2(vt), proporcao: r4(propT * 100), redutor_aplicado: 0, base: r2(vt), ibs: r2(ibsT), cbs: r2(cbsT), total: r2(ibsT + cbsT) });
+      }
+      notas.push('Torna paga em ' + parcelasTorna.length + ' pagamentos: IBS/CBS devidos em cada um (art. 380, caput), proporcionalmente ao principal; só a torna é tributada — o valor permutado não gera parcela tributável (IMOB-PER-001 v2).');
+    } else if (pm.torna_financiada === true && torna > 0) {
+      notas.push('Torna quitada com recursos de financiamento: o alienante recebe de uma vez, logo a incidência é integral no recebimento (art. 380, caput); as prestações do financiamento são relação entre o adquirente e o agente financeiro, sem IBS/CBS neste regime (IMOB-PER-001 v2).');
+    }
     return { linhas: L, base: r2(torna), ibs: r2(ibs), cbs: r2(cbs), debito: debito,
-             creditos: 0, total: debito, parcelas: null,
+             creditos: 0, total: debito, parcelas: parcelasTorna,
              redutor_ajuste_recebido: rajRecebido === null ? null : r2(rajRecebido),
              aliquota_efetiva_sobre_operacao: e.valor_operacao > 0 ? r4(debito / e.valor_operacao * 100) : 0,
              notas: notas, regras_aplicadas: ['IMOB-PER-001', 'IMOB-PER-002', 'IMOB-ALQ-001'] };
@@ -726,8 +880,20 @@
     var meses  = d.meses_periodo > 0 ? d.meses_periodo : 3;
 
     if (rVenda + rLoc + rServ <= 0) bloq.push({ codigo: 'LP01', msg: 'Nenhuma receita informada para o Lucro Presumido.' });
-    if (rVenda > 0 && d.atividade_imobiliaria_no_objeto !== true) {
-      notas.push('ATENÇÃO: a presunção de 8%/12% na venda depende de a atividade imobiliária constar do objeto social e a receita ser operacional. Sem isso, a alienação é GANHO DE CAPITAL (art. 29 da Lei 9.430/1996) — use o cálculo de ganho de capital, não este.');
+    if (rVenda > 0) {
+      // v2 (prompt v1.5, P1): a presunção de 8%/12% NÃO é aplicada automaticamente.
+      // Exige confirmação expressa do objeto social E da natureza da receita.
+      var nat = d.natureza_receita_venda;   // 'operacional' | 'ativo_nao_circulante'
+      if (d.atividade_imobiliaria_no_objeto !== true) {
+        bloq.push({ codigo: 'LP02', msg: 'Receita de venda de imóveis sem confirmação de que a atividade imobiliária consta do OBJETO SOCIAL. Sem isso a alienação é GANHO DE CAPITAL (Lei 9.430/1996, art. 29; SC COSIT 221/2024) — use calcGanhoCapital.', alternativa: 'calcGanhoCapital', regra_id: 'IMOB-LP-001' });
+      }
+      if (nat !== 'operacional') {
+        bloq.push({ codigo: nat === 'ativo_nao_circulante' ? 'LP04' : 'LP03', regra_id: 'IMOB-LP-001',
+          msg: nat === 'ativo_nao_circulante'
+            ? 'Imóvel do ATIVO NÃO CIRCULANTE: a venda é ganho de capital (IN RFB 1.700/2017, art. 215), não receita presumida de 8%/12% — use calcGanhoCapital.'
+            : 'Confirme a NATUREZA da receita de venda: "operacional" (imóvel de estoque/circulante, objeto social) ou "ativo_nao_circulante" (ganho de capital). Sem a confirmação o Lucro Presumido não é aplicado.',
+          alternativa: 'calcGanhoCapital' });
+      }
     }
     if (bloq.length) return { status: 'BLOQUEADO', bloqueios: bloq, linhas: [] };
 
@@ -866,6 +1032,27 @@
      As alíquotas de cada ano VÊM do motor genérico (ctx.transicao). Este
      motor não constrói escada nem inventa percentual: se o ano não vier,
      ele bloqueia aquele ano em vez de estimar. */
+  /* Escada 2026-2033 com categoria POR ANO E POR TRIBUTO (v1.3.0, P0):
+     - 2026: 0,1% / 0,9% — LEGAL (arts. 343 e 346);
+     - 2027-2028: IBS 0,05% estadual + 0,05% municipal = 0,10% — LEGAL (art. 344);
+       CBS = referência − 0,1 p.p. (art. 347) — herda a categoria da referência;
+     - 2029-2032: IBS = referência × 10/20/30/40% — PROJEÇÃO (o ADCT reduz
+       ICMS/ISS a 9/10…6/10 e o Senado fixa o IBS anual; a escada linear é
+       hipótese); CBS = referência;
+     - 2033: referência (ESTIMATIVA enquanto a CGIBS 14/2026 não for fixada).
+     Corrige a v1.2.0, que trazia IBS 0,05% em 2027-2028 (só uma das metades). */
+  function transicaoPadrao(ctx) {
+    var a = (ctx && ctx.aliquotas) || {}, cat = normCategoria(a.classificacao), fonteRef = a.fonte || 'Res. CGIBS 14/2026';
+    var t = {};
+    t[2026] = { ibs: 0.10, cbs: 0.90, categoria_ibs: 'LEGAL', categoria_cbs: 'LEGAL', fonte_ibs: 'LC 214/2025, art. 343', fonte_cbs: 'LC 214/2025, art. 346' };
+    [2027, 2028].forEach(function (y) { t[y] = { ibs: 0.10, cbs: r4(naoNeg(a.cbs - 0.10)), categoria_ibs: 'LEGAL', categoria_cbs: cat,
+      fonte_ibs: 'LC 214/2025, art. 344 (0,05% estadual + 0,05% municipal)', fonte_cbs: 'LC 214/2025, art. 347 (referência − 0,1 p.p.); referência: ' + fonteRef }; });
+    [[2029, 0.1], [2030, 0.2], [2031, 0.3], [2032, 0.4]].forEach(function (par) { t[par[0]] = { ibs: r4(a.ibs * par[1]), cbs: r4(a.cbs), categoria_ibs: 'PROJECAO', categoria_cbs: cat,
+      fonte_ibs: 'ADCT, art. 128 (EC 132/2023): ICMS/ISS a ' + (10 - par[1] * 10) + '/10; IBS de referência × ' + (par[1] * 100) + '% é PROJEÇÃO linear — a alíquota anual é fixada pelo Senado', fonte_cbs: fonteRef }; });
+    t[2033] = { ibs: r4(a.ibs), cbs: r4(a.cbs), categoria_ibs: cat, categoria_cbs: cat, fonte_ibs: fonteRef, fonte_cbs: fonteRef };
+    for (var y in t) if (t.hasOwnProperty(y)) t[y].classificacao = (t[y].categoria_ibs === 'LEGAL' && t[y].categoria_cbs === 'LEGAL') ? 'LEGAL' : 'ESTIMADA';
+    return t;
+  }
   function projetarTransicao(entrada, ctx) {
     ctx = ctx || {};
     var tr = ctx.transicao;
@@ -880,18 +1067,23 @@
       var e = JSON.parse(JSON.stringify(entrada));
       e.data_fato_gerador = a + '-06-30';
       var c = JSON.parse(JSON.stringify(ctx));
-      c.aliquotas = { ibs: al.ibs, cbs: al.cbs,
-                      classificacao: al.classificacao || ctx.aliquotas.classificacao,
-                      fonte: al.fonte || 'motor genérico do ATP' };
+      var catI = normCategoria(al.categoria_ibs || al.classificacao || ctx.aliquotas.classificacao);
+      var catC = normCategoria(al.categoria_cbs || al.classificacao || ctx.aliquotas.classificacao);
+      // a linha só é LEGAL se IBS e CBS forem LEGAL — nunca "por atacado" (P0)
+      var clsLinha = (catI === 'LEGAL' && catC === 'LEGAL') ? 'LEGAL' : 'ESTIMADA';
+      c.aliquotas = { ibs: al.ibs, cbs: al.cbs, classificacao: clsLinha,
+                      fonte: al.fonte || al.fonte_ibs || 'motor genérico do ATP' };
       var r = calcular(e, c);
       anos.push({ ano: a, ibs_aliquota: r4(al.ibs), cbs_aliquota: r4(al.cbs),
-                  classificacao: c.aliquotas.classificacao,
-                  base: r.base, ibs: r.ibs, cbs: r.cbs, total: r.total,
+                  classificacao: clsLinha, categoria_ibs: catI, categoria_cbs: catC,
+                  fonte_ibs: al.fonte_ibs || al.fonte || null, fonte_cbs: al.fonte_cbs || al.fonte || null,
+                  categoria_linha: clsLinha === 'LEGAL' ? 'LEGAL' : (catI === 'PROJECAO' || catC === 'PROJECAO' ? 'PROJECAO' : (catI === 'LEGAL' ? catC : catI)),
+                  base: r.base, ibs: r.ibs, cbs: r.cbs, total: r.total, percentuais: r.percentuais,
                   status: r.status, ano_teste: r.ano_teste_2026 === true });
     }
     return { status: anos.length ? 'CALCULADO' : 'BLOQUEADO', anos: anos, anos_sem_aliquota: faltantes,
              regra_id: 'IMOB-TRA-001', fundamentos: (regra('IMOB-TRA-001') || {}).fontes,
-             nota: 'As alíquotas de cada ano são as do motor genérico já validado do Análise Tributária Pro. O módulo imobiliário aplica apenas as reduções e os redutores do regime específico.' };
+             nota: 'Cada ano mostra a categoria do IBS e da CBS separadamente. Só 2026 é integralmente fixado em lei; 2027-2028 têm o IBS legal (art. 344) e a CBS dependente da referência (art. 347); 2029-2032 são PROJEÇÃO; 2033 é a referência estimada. Nenhuma linha desta tabela pode ser apresentada como lei vigente.' };
   }
 
   /* ---- 4.9.5 Comparativo geral atual × Reforma -------------------------- */
@@ -2140,6 +2332,8 @@
     res.status = 'CALCULADO';
     res.bloqueios = [];
     res.confianca = nivelConfianca(entrada, ctx, res);
+    res.percentuais = percentuaisDoResultado(entrada, ctx, res);   // v1.3.0 — P0
+    res.carga_efetiva_pct = entrada.valor_operacao > 0 ? r4(res.total / entrada.valor_operacao * 100) : 0;
     res.carimbo = carimbo;
     return res;
   }
@@ -2176,7 +2370,12 @@
     { operacao: 'loteamento', data_fato_gerador: '2030-05-01', valor_operacao: 500000, loteamento: { registro_ate_2028: true } },
     { operacao: 'locacao_transitoria', data_fato_gerador: '2027-03-01', valor_operacao: 20000,
       contrato: { finalidade: 'nao_residencial', firmado_ate_16_01_2025: true, prazo_determinado: true,
-                  data_comprovada: true, registrado_ate_2025: true } }
+                  data_comprovada: true, registrado_ate_2025: true } },
+    // v1.3.0
+    { operacao: 'locacao', data_fato_gerador: '2033-06-15', valor_operacao: 6000, locacao: { finalidade: 'residencial', meses: 2, prazo_dias: 60,
+        classificacao_operacao: 'locacao_residencial', justificativa_classificacao: 'contrato por prazo indeterminado, período inicial de 60 dias' } },
+    { operacao: 'permuta', data_fato_gerador: '2033-06-15', valor_operacao: 1000000,
+      permuta: { contraparte: 'nao_contribuinte', torna: 300000, torna_paga_por: 'contribuinte', redutor_ajuste_dado: 400000, torna_pagamentos: [100000, 100000, 100000] } }
   ];
 
   function fnv1a(str) {
@@ -2190,13 +2389,11 @@
 
   var LACRE_IMOB_F3 = {
     lp: { receita_venda: 1000000, receita_locacao: 240000, receita_servicos: 60000,
-          atividade_imobiliaria_no_objeto: true, meses_periodo: 3 },
+          atividade_imobiliaria_no_objeto: true, natureza_receita_venda: 'operacional', meses_periodo: 3 },
     gc: { valor_alienacao: 800000, custo_contabil: 500000, meses_periodo: 3 },
     lr: { receita_total: 1000000, custos_dedutiveis: 600000, despesas_dedutiveis: 150000,
           prejuizo_acumulado: 200000, meses_periodo: 3 },
-    transicao: { 2026:{ibs:0.1,cbs:0.9}, 2027:{ibs:0.05,cbs:9.11}, 2028:{ibs:0.05,cbs:9.11},
-                 2029:{ibs:1.87,cbs:9.21}, 2030:{ibs:3.74,cbs:9.21}, 2031:{ibs:5.61,cbs:9.21},
-                 2032:{ibs:7.48,cbs:9.21}, 2033:{ibs:18.70,cbs:9.21} }
+    transicao: null   // preenchida em lacreVetor por transicaoPadrao(LACRE_IMOB_CTX) (v1.3.0)
   };
   function lacreVetor() {
     var v = [];
@@ -2217,7 +2414,7 @@
     v.push(gc.ganho, gc.total);
     var lr = calcLucroRealIndicativo(LACRE_IMOB_F3.lr, LACRE_IMOB_CTX);
     v.push(lr.lucro, lr.base, lr.irpj, lr.csll, lr.pis, lr.cofins, lr.total);
-    var ctxT = JSON.parse(JSON.stringify(LACRE_IMOB_CTX)); ctxT.transicao = LACRE_IMOB_F3.transicao;
+    var ctxT = JSON.parse(JSON.stringify(LACRE_IMOB_CTX)); ctxT.transicao = transicaoPadrao(LACRE_IMOB_CTX);
     var prj = projetarTransicao(LACRE_IMOB_CASOS[0], ctxT);
     for (var t = 0; t < prj.anos.length; t++) v.push(prj.anos[t].base, prj.anos[t].total);
     // Fase 4 — o veredito da auditoria também entra no selo, codificado em número
@@ -2234,7 +2431,7 @@
   }
   // Selo homologado desta versão do motor. Alterar qualquer fórmula muda este
   // valor e OBRIGA re-selar + registrar no changelog (a suíte quebra antes).
-  var LACRE_IMOB_HASH = 'c287341e';
+  var LACRE_IMOB_HASH = '338c914d';   // v1.3.0 (18/09/2026) — anterior: c287341e (1.2.0)
   function lacreVerificar() {
     var atual = lacreCalcular();
     return { hash_atual: atual, hash_homologado: LACRE_IMOB_HASH,
@@ -2249,6 +2446,8 @@
     r2: r2, r4: r4, somaExib: somaExib, naoNeg: naoNeg, aplicarRedutor: aplicarRedutor,
     atualizarPorIndice: atualizarPorIndice, ratearParcelas: ratearParcelas,
     aliquotasReduzidas: aliquotasReduzidas, rajValorInicial: rajValorInicial, pfEnquadramento: pfEnquadramento,
+    CATEGORIAS_PCT: CATEGORIAS_PCT, normCategoria: normCategoria, percentuaisAliquotas: percentuaisAliquotas,
+    percentuaisDoResultado: percentuaisDoResultado, transicaoPadrao: transicaoPadrao, META_REGRAS: META,
     compararRegimes: compararRegimes, calcLucroPresumido: calcLucroPresumido,
     calcGanhoCapital: calcGanhoCapital, calcLucroRealIndicativo: calcLucroRealIndicativo,
     projetarTransicao: projetarTransicao, comparativoAtualXReforma: comparativoAtualXReforma,

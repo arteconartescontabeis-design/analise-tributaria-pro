@@ -9,17 +9,26 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.5.0',
-    data: '16/09/2026',
+    versao: '1.6.0',
+    data: '18/09/2026',
     cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
-    motor: { nome: 'motorImob', versao: '1.2.0', contrato: 'calc-imob-1',
-             ruleset: 'imob-2026.08.21', lacre: 'c287341e', regras: 29, homologadas: 28 },
+    motor: { nome: 'motorImob', versao: '1.3.0', contrato: 'calc-imob-1',
+             ruleset: 'imob-2026.09.18', lacre: '338c914d', lacre_anterior: 'c287341e', regras: 29, homologadas: 27,
+             nota: 'IMOB-TRA-001 reclassificada como proje\u00e7\u00e3o e IMOB-LR-001 segue em staging: regra baseada em premissa, estimativa ou proje\u00e7\u00e3o n\u00e3o \u00e9 homologada.' },
     base_legal: { dispositivos: 97, fontes: ['Decreto 12.955/2026', 'Resolu\u00e7\u00e3o CGIBS 6/2026',
                                              'LC 214/2025 at\u00e9 a LC 227/2026'] },
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.6.0', data: '18/09/2026', texto:
+        'Prompt de Altera\u00e7\u00e3o v1.5 \u2014 corre\u00e7\u00f5es de c\u00e1lculo e fundamenta\u00e7\u00e3o. MOTOR 1.3.0, ruleset imob-2026.09.18, novo lacre 338c914d (anterior c287341e). '
+        + 'P0: todo percentual sai com categoria (fixada em lei, ato administrativo, premissa, estimativa, proje\u00e7\u00e3o, simula\u00e7\u00e3o), fonte, vig\u00eancia e vers\u00e3o, na tela, na mem\u00f3ria e nos relat\u00f3rios; '
+        + 'a tabela 2026-2033 deixou de ser fixa na interface e passou a vir do motor com categoria por ano E por tributo \u2014 corrigido o IBS de 2027-2028 (era 0,05%, s\u00f3 metade; \u00e9 0,10% = 0,05% estadual + 0,05% municipal, art. 344) e o r\u00f3tulo "fixada em lei" que 2027-2028 recebiam por atacado (a CBS desses anos depende da refer\u00eancia, art. 347); '
+        + 'IBS e CBS separados tamb\u00e9m na tabela ano a ano. P1: Lucro Presumido n\u00e3o aplica mais 8%/12% \u00e0 venda sem confirma\u00e7\u00e3o expressa do objeto social e da natureza da receita (im\u00f3vel do ativo n\u00e3o circulante \u00e9 ganho de capital); '
+        + 'permuta com torna parcelada (imposto em cada pagamento, art. 380) e com torna financiada; loca\u00e7\u00e3o de at\u00e9 90 dias n\u00e3o bloqueia mais s\u00f3 pelo prazo \u2014 exige a classifica\u00e7\u00e3o da opera\u00e7\u00e3o (hospedagem \u00d7 loca\u00e7\u00e3o residencial com justificativa) e explica a hotelaria. '
+        + 'Regras e fontes viraram cat\u00e1logo audit\u00e1vel (f\u00f3rmula, link oficial, data de consulta, vig\u00eancia, status ampliado, premissas, depend\u00eancias, impacto, alerta de altera\u00e7\u00e3o por norma posterior). '
+        + 'Relat\u00f3rios com aviso de simula\u00e7\u00e3o t\u00e9cnica, legenda dos valores e tabela dos percentuais aplicados. Nova su\u00edte tests/run_imob_v160.js (regress\u00e3o contra a sa\u00edda congelada do motor 1.2.0 + testes P0/P1 do item 7).' },
       { versao: '1.5.0', data: '16/09/2026', texto:
         'Nova apresenta\u00e7\u00e3o. As telas do m\u00f3dulo passam para o menu da esquerda, em quatro grupos (Preparar, Calcular, Analisar, '
         + 'Registros), com o passo 3 "O que calcular?" como item pr\u00f3prio. O resultado de cada opera\u00e7\u00e3o fica em uma tela s\u00f3: '

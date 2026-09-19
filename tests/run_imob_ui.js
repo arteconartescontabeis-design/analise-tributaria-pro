@@ -1,4 +1,4 @@
-/* tests/run_imob_ui.js — Análise Imobiliária Pro 1.4.0
+/* tests/run_imob_ui.js — Análise Imobiliária Pro 1.6.0 (origem: 1.4.0; E3 e o comparativo ajustados na 1.6.0)
  * Carrega o app inteiro (imobiliaria.html + módulos) num jsdom, roda os 25
  * testes de aceite do Prompt Mestre (item 17) e verificações estruturais.
  * Uso: npm i --no-save jsdom@24 && node tests/run_imob_ui.js
@@ -35,7 +35,7 @@ function t(num, nome, dados, esperado, fn) {
   catch (e) { err = e && e.stack ? e.stack.split('\n').slice(0, 2).join(' ') : String(e); }
   if (!ok) falhas++;
   registro.push({ n: num, teste: nome, dados: dados, esperado: esperado, obtido: err || obtido, divergencia: ok ? null : 'esperado ≠ obtido', correcao: ok ? null : 'ver código', status: ok ? 'OK' : 'FALHOU' });
-  console.log((ok ? '  ok ' : ' FAIL') + ' ' + num + ' ' + nome + (ok ? '' : ' → ' + (err || JSON.stringify(obtido))));
+console.log((ok ? '  ok ' : ' FAIL') + ' ' + num + ' ' + nome + (ok ? '' : ' → ' + (err || JSON.stringify(obtido))));
 }
 w.imobEntrar();
 w.localStorage.clear();   // testes começam sem premissas nem simulações salvas
@@ -49,8 +49,8 @@ t('E2', 'todo onclick da marcação aponta para função exportada', 'imob_pagin
   var falt = Object.keys(f).filter(function (k) { return typeof w[k] !== 'function'; });
   return falt.length ? { ok: false, obtido: falt } : true;
 });
-t('E3', 'lacre do motor íntegro e versão do módulo 1.4.0 visível', 'lacreVerificar + ModulosInfo', 'c287341e / 1.4.0', function () {
-  var v = M.lacreVerificar(); return v.integro && w.ModulosInfo.imobiliario.versao === '1.4.0' && w.ModulosInfo.imobiliario.changelog[0].versao === '1.4.0' ? true : { ok: false, obtido: v };
+t('E3', 'lacre do motor íntegro e versão do módulo 1.6.0 visível', 'lacreVerificar + ModulosInfo', '338c914d / 1.6.0', function () {
+  var v = M.lacreVerificar(); return v.integro && v.hash_atual === '338c914d' && M.MOTOR_IMOB_VERSAO === '1.3.0' && w.ModulosInfo.imobiliario.versao === '1.6.0' && w.ModulosInfo.imobiliario.changelog[0].versao === '1.6.0' && w.ModulosInfo.imobiliario.motor.lacre === '338c914d' ? true : { ok: false, obtido: v };
 });
 t('E4', '14 abas e página injetada; nav lateral marca ativo', 'abrirAba', 'aba on = venda', function () {
   w.abrirAba('venda'); var on = d.querySelectorAll('#imob-tabs .tab.on');
@@ -166,7 +166,7 @@ t(16, 'PF contribuinte (receita > limite e > 3 imóveis)', 'receita 300.000; 5 i
 });
 // 17 comparativo
 t(17, 'Comparativo lado a lado com PIS/COFINS/ISS × IBS/CBS', 'venda 900.000; 3 meses; RAJ 400.000', 'linhas PIS/COFINS, ISS/ICMS, IBS, CBS, Créditos, Total; IBS 37.400 no lado reforma', function () {
-  w.abrirAba('comparativo'); set('c-rv', 900000); set('c-rl', 0); set('c-rs', 0); set('c-me', 3); set('c-obj', '1'); set('c-raj', 400000); set('c-tipo', 'residencial_novo'); set('c-iss', 0); w.calcComp();
+  w.abrirAba('comparativo'); set('c-rv', 900000); set('c-rl', 0); set('c-rs', 0); set('c-me', 3); set('c-obj', '1'); set('c-nat', 'operacional'); set('c-raj', 400000); set('c-tipo', 'residencial_novo'); set('c-iss', 0); w.calcComp();
   var h = html_('c-out'); return ['PIS/COFINS', 'ISS/ICMS', '>IBS<', '>CBS<', 'Créditos', 'Total tributário', 'IRPJ + CSLL', 'Carga efetiva'].every(function (k) { return h.indexOf(k) > 0; }) && h.indexOf('37.400,00') > 0 ? true : { ok: false, obtido: h.slice(0, 200) };
 });
 // 18 projeção anual
@@ -296,5 +296,41 @@ t('E1', 'toda classe realmente renderizada tem CSS no módulo ou no índice', 'D
 
 /* ===== resultado ================================================================= */
 fs.writeFileSync(path.join(__dirname, 'relatorio_imob_v140.json'), JSON.stringify({ versao: w.ModulosInfo.imobiliario.versao, quando: new Date().toISOString(), total: total, falhas: falhas, testes: registro }, null, 1));
+/* ===== v1.6.0 — prompt v1.5 ====================================================== */
+t('V1', 'Tabela 2026-2033: 2027 mostra IBS 0,10% legal e CBS estimada, nunca "fixada em lei" por atacado', 'venda 900.000 → aba Ano a ano', 'IBS 0,10% + badges por tributo', function () {
+  w.abrirAba('venda'); set('v-val', 900000); set('v-raj', 400000); set('v-tipo', 'residencial_novo'); set('v-data', '2033-06-15'); w.calcVenda();
+  var h = html_('v-out'); var i = h.indexOf('<td>2027'); var linha = h.slice(i, h.indexOf('</tr>', i));
+  var cel = linha.match(/<td class="num">([^<]*)<\/td>/); // primeira célula numérica = alíquota IBS
+  return cel && cel[1] === '0,10%' && linha.indexOf('fixada em lei') > 0 && linha.indexOf('estimativa') > 0 ? true : { ok: false, obtido: linha.slice(0, 300) };
+});
+t('V2', 'Memória mostra os percentuais com categoria, fonte, vigência e versão', 'após venda', 'tabela "Percentuais usados neste cálculo"', function () {
+  var h = html_('v-out'); return h.indexOf('Percentuais usados neste c') > 0 && h.indexOf('LC 214/2025, art. 261, caput') > 0 && h.indexOf('imob-2026.09.18') > 0 ? true : { ok: false, obtido: h.slice(0, 200) };
+});
+t('V3', 'Locação ≤ 90 dias: sem classificação bloqueia pedindo a classificação; classificada e justificada calcula', 'l-prz 60', 'B005 → CALCULADO', function () {
+  w.abrirAba('locacao'); set('l-val', 5000); set('l-fim', 'residencial'); set('l-mes', 2); set('l-prz', 60); set('l-cls', ''); set('l-just', ''); set('l-data', '2033-06-15'); w.calcLoc();
+  var h1 = html_('l-out'); set('l-cls', 'locacao_residencial'); set('l-just', 'contrato por prazo indeterminado'); w.calcLoc(); var h2 = html_('l-out');
+  set('l-prz', ''); set('l-cls', ''); set('l-just', '');
+  return h1.indexOf('B005') > 0 && h2.indexOf('B005') < 0 && h2.indexOf('respons') > 0 ? true : { ok: false, obtido: [h1.indexOf('B005'), h2.indexOf('B005')] };
+});
+t('V4', 'Comparativo sem confirmar objeto social/natureza não aplica Lucro Presumido', 'c-obj vazio', 'LP02/LP03 na tela', function () {
+  w.abrirAba('comparativo'); set('c-rv', 900000); set('c-rl', 0); set('c-rs', 0); set('c-me', 3); set('c-obj', ''); set('c-nat', ''); set('c-raj', 400000); set('c-tipo', 'residencial_novo'); set('c-iss', 0); w.calcComp();
+  var h = html_('c-out'); set('c-obj', '1'); set('c-nat', 'operacional');
+  return h.indexOf('LP02') > 0 && h.indexOf('LP03') > 0 && h.indexOf('Lucro Presumido n') > 0 ? true : { ok: false, obtido: h.slice(0, 200) };
+});
+t('V5', 'Permuta com torna parcelada: 3 parcelas somam o total', 'x-tparc 100000;100000;100000', 'Σ = total', function () {
+  w.abrirAba('permuta'); set('x-val', 1000000); set('x-rec', 700000); set('x-parte', 'nao_contribuinte'); set('x-tpaga', 300000); set('x-trec', 0); set('x-raj', 400000); set('x-tparc', '100000;100000;100000'); set('x-data', '2033-06-15'); w.calcPerm();
+  var h = html_('x-out'); set('x-tparc', '');
+  var m = h.match(/Torna paga em (\d+) pagamentos/);
+  return m && m[1] === '3' && h.indexOf('confere com o total: sim') > 0 ? true : { ok: false, obtido: h.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 400) };
+});
+t('V6', 'Regras e fontes: catálogo com link oficial, data de consulta e alerta de alteração posterior', 'pintaRegras', '[oficial] + consulta em 2026-09-18', function () {
+  w.abrirAba('regras'); var h = html_('r-out'); return h.indexOf('[oficial]') > 0 && h.indexOf('consulta em 2026-09-18') > 0 && h.indexOf('LC 227') > 0 && h.indexOf('proje') > 0 ? true : { ok: false, obtido: h.slice(0, 200) };
+});
+t('V7', 'Relatório técnico traz aviso de simulação técnica, legenda dos valores e percentuais aplicados', 'imobRelatorio tecnico venda', 'Simulação técnica + Percentuais aplicados', function () {
+  w.abrirAba('venda'); set('v-val', 900000); set('v-raj', 400000); set('v-tipo', 'residencial_novo'); set('v-data', '2033-06-15'); w.calcVenda(); w.imobRelatorio('tecnico', 'venda');
+  var html = (w.__ultimaJanela && w.__ultimaJanela.document.documentElement.outerHTML) || '';
+  return html.indexOf('Simulação técnica') > 0 && html.indexOf('Percentuais aplicados') > 0 && html.indexOf('rot-legal') > 0 ? true : { ok: false, obtido: html.slice(0, 120) };
+});
+
 console.log('\n' + (total - falhas) + '/' + total + ' testes OK — relatório em tests/relatorio_imob_v140.json');
 process.exit(falhas ? 1 : 0);   // o timer diário do inventário manteria o processo vivo

@@ -1,0 +1,2476 @@
+{
+ "motor": "1.2.0",
+ "lacre": {
+  "hash_atual": "c287341e",
+  "hash_homologado": "c287341e",
+  "integro": true,
+  "motor_versao": "1.2.0"
+ },
+ "casos": {
+  "V01 venda à vista sem redutor": {
+   "status": "CALCULADO",
+   "base": 500000,
+   "ibs": 46750,
+   "cbs": 23025,
+   "debito": 69775,
+   "creditos": 0,
+   "total": 69775,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor da operação",
+     500000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor de ajuste",
+     0,
+     "IMOB-RAJ-001"
+    ],
+    [
+     3,
+     "Base de cálculo tributável",
+     500000,
+     "IMOB-BASE-001"
+    ],
+    [
+     4,
+     "Alíquotas reduzidas em 50%",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     5,
+     "IBS devido",
+     46750,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "CBS devida",
+     23025,
+     "IMOB-ALQ-001"
+    ],
+    [
+     7,
+     "Créditos de IBS/CBS apropriados",
+     0,
+     "IMOB-CRE-001"
+    ]
+   ]
+  },
+  "V02 venda à vista com redutor": {
+   "status": "CALCULADO",
+   "base": 400000,
+   "ibs": 37400,
+   "cbs": 18420,
+   "debito": 55820,
+   "creditos": 0,
+   "total": 55820,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor da operação",
+     900000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor de ajuste",
+     -400000,
+     "IMOB-RAJ-001"
+    ],
+    [
+     3,
+     "Redutor social",
+     -100000,
+     "IMOB-RSO-001"
+    ],
+    [
+     4,
+     "Base de cálculo tributável",
+     400000,
+     "IMOB-BASE-001"
+    ],
+    [
+     5,
+     "Alíquotas reduzidas em 50%",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "IBS devido",
+     37400,
+     "IMOB-ALQ-001"
+    ],
+    [
+     7,
+     "CBS devida",
+     18420,
+     "IMOB-ALQ-001"
+    ],
+    [
+     8,
+     "Créditos de IBS/CBS apropriados",
+     0,
+     "IMOB-CRE-001"
+    ]
+   ]
+  },
+  "V03 venda parcelada 3 pagamentos": {
+   "status": "CALCULADO",
+   "base": 400000,
+   "ibs": 37400,
+   "cbs": 18420,
+   "debito": 55820,
+   "creditos": 0,
+   "total": 55820,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": [
+    {
+     "ordem": 1,
+     "pagamento": 200000,
+     "proporcao": 25,
+     "redutor_aplicado": 100000,
+     "base": 100000,
+     "ibs": 9350,
+     "cbs": 4605,
+     "total": 13955
+    },
+    {
+     "ordem": 2,
+     "pagamento": 100000,
+     "proporcao": 12.5,
+     "redutor_aplicado": 50000,
+     "base": 50000,
+     "ibs": 4675,
+     "cbs": 2302.5,
+     "total": 6977.5
+    },
+    {
+     "ordem": 3,
+     "pagamento": 500000,
+     "proporcao": 62.5,
+     "redutor_aplicado": 250000,
+     "base": 250000,
+     "ibs": 23375,
+     "cbs": 11512.5,
+     "total": 34887.5
+    }
+   ],
+   "linhas": [
+    [
+     1,
+     "Valor da operação",
+     800000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor de ajuste",
+     -300000,
+     "IMOB-RAJ-001"
+    ],
+    [
+     3,
+     "Redutor social",
+     -100000,
+     "IMOB-RSO-001"
+    ],
+    [
+     4,
+     "Base de cálculo tributável",
+     400000,
+     "IMOB-BASE-001"
+    ],
+    [
+     5,
+     "Alíquotas reduzidas em 50%",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "IBS devido",
+     37400,
+     "IMOB-ALQ-001"
+    ],
+    [
+     7,
+     "CBS devida",
+     18420,
+     "IMOB-ALQ-001"
+    ],
+    [
+     8,
+     "Créditos de IBS/CBS apropriados",
+     0,
+     "IMOB-CRE-001"
+    ]
+   ]
+  },
+  "V04 venda parcelada 7 iguais": {
+   "status": "CALCULADO",
+   "base": 333333.33,
+   "ibs": 31166.67,
+   "cbs": 15350,
+   "debito": 46516.67,
+   "creditos": 0,
+   "total": 46516.67,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": [
+    6645.24,
+    6645.24,
+    6645.24,
+    6645.24,
+    6645.24,
+    6645.24,
+    6645.23
+   ],
+   "linhas": [
+    [
+     1,
+     "Valor da operação",
+     333333.33,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor de ajuste",
+     0,
+     "IMOB-RAJ-001"
+    ],
+    [
+     3,
+     "Base de cálculo tributável",
+     333333.33,
+     "IMOB-BASE-001"
+    ],
+    [
+     4,
+     "Alíquotas reduzidas em 50%",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     5,
+     "IBS devido",
+     31166.67,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "CBS devida",
+     15350,
+     "IMOB-ALQ-001"
+    ],
+    [
+     7,
+     "Créditos de IBS/CBS apropriados",
+     0,
+     "IMOB-CRE-001"
+    ]
+   ]
+  },
+  "V05 venda lote residencial": {
+   "status": "CALCULADO",
+   "base": 120000,
+   "ibs": 11220,
+   "cbs": 5526,
+   "debito": 16746,
+   "creditos": 0,
+   "total": 16746,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor da operação",
+     150000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor de ajuste",
+     0,
+     "IMOB-RAJ-001"
+    ],
+    [
+     3,
+     "Redutor social",
+     -30000,
+     "IMOB-RSO-001"
+    ],
+    [
+     4,
+     "Base de cálculo tributável",
+     120000,
+     "IMOB-BASE-001"
+    ],
+    [
+     5,
+     "Alíquotas reduzidas em 50%",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "IBS devido",
+     11220,
+     "IMOB-ALQ-001"
+    ],
+    [
+     7,
+     "CBS devida",
+     5526,
+     "IMOB-ALQ-001"
+    ],
+    [
+     8,
+     "Créditos de IBS/CBS apropriados",
+     0,
+     "IMOB-CRE-001"
+    ]
+   ]
+  },
+  "V06 venda com créditos": {
+   "status": "CALCULADO",
+   "base": 380000,
+   "ibs": 35530,
+   "cbs": 17499,
+   "debito": 53029,
+   "creditos": 5000,
+   "total": 48029,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor da operação",
+     500000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor de ajuste",
+     -120000,
+     "IMOB-RAJ-001"
+    ],
+    [
+     3,
+     "Base de cálculo tributável",
+     380000,
+     "IMOB-BASE-001"
+    ],
+    [
+     4,
+     "Alíquotas reduzidas em 50%",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     5,
+     "IBS devido",
+     35530,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "CBS devida",
+     17499,
+     "IMOB-ALQ-001"
+    ],
+    [
+     7,
+     "Créditos de IBS/CBS apropriados",
+     -5000,
+     "IMOB-CRE-001"
+    ]
+   ]
+  },
+  "V07 venda social já utilizado": {
+   "status": "CALCULADO",
+   "base": 400000,
+   "ibs": 37400,
+   "cbs": 18420,
+   "debito": 55820,
+   "creditos": 0,
+   "total": 55820,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor da operação",
+     400000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor de ajuste",
+     0,
+     "IMOB-RAJ-001"
+    ],
+    [
+     3,
+     "Redutor social",
+     0,
+     "IMOB-RSO-001"
+    ],
+    [
+     4,
+     "Base de cálculo tributável",
+     400000,
+     "IMOB-BASE-001"
+    ],
+    [
+     5,
+     "Alíquotas reduzidas em 50%",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "IBS devido",
+     37400,
+     "IMOB-ALQ-001"
+    ],
+    [
+     7,
+     "CBS devida",
+     18420,
+     "IMOB-ALQ-001"
+    ],
+    [
+     8,
+     "Créditos de IBS/CBS apropriados",
+     0,
+     "IMOB-CRE-001"
+    ]
+   ]
+  },
+  "V08 venda ano-teste 2026": {
+   "status": "CALCULADO",
+   "base": 500000,
+   "ibs": 0,
+   "cbs": 0,
+   "debito": 0,
+   "creditos": 0,
+   "total": 0,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor da operação",
+     500000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor de ajuste",
+     0,
+     "IMOB-RAJ-001"
+    ],
+    [
+     3,
+     "Base de cálculo tributável",
+     500000,
+     "IMOB-BASE-001"
+    ],
+    [
+     4,
+     "Alíquotas reduzidas em 50%",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     5,
+     "IBS devido",
+     46750,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "CBS devida",
+     23025,
+     "IMOB-ALQ-001"
+    ],
+    [
+     7,
+     "Créditos de IBS/CBS apropriados",
+     0,
+     "IMOB-CRE-001"
+    ],
+    [
+     8,
+     "IBS/CBS de teste de 2026",
+     0,
+     "IMOB-2026-001"
+    ]
+   ]
+  },
+  "V09 venda redutor > base": {
+   "status": "CALCULADO",
+   "base": 0,
+   "ibs": 0,
+   "cbs": 0,
+   "debito": 0,
+   "creditos": 0,
+   "total": 0,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor da operação",
+     100000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor de ajuste",
+     -100000,
+     "IMOB-RAJ-001"
+    ],
+    [
+     3,
+     "Base de cálculo tributável",
+     0,
+     "IMOB-BASE-001"
+    ],
+    [
+     4,
+     "Alíquotas reduzidas em 50%",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     5,
+     "IBS devido",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "CBS devida",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     7,
+     "Créditos de IBS/CBS apropriados",
+     0,
+     "IMOB-CRE-001"
+    ]
+   ]
+  },
+  "L01 residencial 1 mês": {
+   "status": "CALCULADO",
+   "base": 1400,
+   "ibs": 78.54,
+   "cbs": 38.68,
+   "debito": 117.22,
+   "creditos": 0,
+   "total": 117.22,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor do aluguel no período",
+     2000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor social da locação residencial",
+     -600,
+     "IMOB-RSO-002"
+    ],
+    [
+     3,
+     "Base de cálculo tributável",
+     1400,
+     "IMOB-BASE-001"
+    ],
+    [
+     4,
+     "Alíquotas reduzidas em 70%",
+     0,
+     "IMOB-ALQ-002"
+    ],
+    [
+     5,
+     "IBS devido",
+     78.54,
+     "IMOB-ALQ-002"
+    ],
+    [
+     6,
+     "CBS devida",
+     38.68,
+     "IMOB-ALQ-002"
+    ]
+   ]
+  },
+  "L02 comercial 1 mês": {
+   "status": "CALCULADO",
+   "base": 10000,
+   "ibs": 561,
+   "cbs": 276.3,
+   "debito": 837.3,
+   "creditos": 0,
+   "total": 837.3,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor do aluguel no período",
+     10000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Base de cálculo tributável",
+     10000,
+     "IMOB-BASE-001"
+    ],
+    [
+     3,
+     "Alíquotas reduzidas em 70%",
+     0,
+     "IMOB-ALQ-002"
+    ],
+    [
+     4,
+     "IBS devido",
+     561,
+     "IMOB-ALQ-002"
+    ],
+    [
+     5,
+     "CBS devida",
+     276.3,
+     "IMOB-ALQ-002"
+    ]
+   ]
+  },
+  "L03 residencial com encargos": {
+   "status": "CALCULADO",
+   "base": 3370,
+   "ibs": 189.06,
+   "cbs": 93.11,
+   "debito": 282.17,
+   "creditos": 0,
+   "total": 282.17,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor do aluguel no período",
+     5000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Encargos do locatário excluídos da base",
+     -1030,
+     "IMOB-BASE-002"
+    ],
+    [
+     3,
+     "Redutor social da locação residencial",
+     -600,
+     "IMOB-RSO-002"
+    ],
+    [
+     4,
+     "Base de cálculo tributável",
+     3370,
+     "IMOB-BASE-001"
+    ],
+    [
+     5,
+     "Alíquotas reduzidas em 70%",
+     0,
+     "IMOB-ALQ-002"
+    ],
+    [
+     6,
+     "IBS devido",
+     189.06,
+     "IMOB-ALQ-002"
+    ],
+    [
+     7,
+     "CBS devida",
+     93.11,
+     "IMOB-ALQ-002"
+    ]
+   ]
+  },
+  "L04 encargos sem prova": {
+   "status": "CALCULADO",
+   "base": 4400,
+   "ibs": 246.84,
+   "cbs": 121.57,
+   "debito": 368.41,
+   "creditos": 0,
+   "total": 368.41,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor do aluguel no período",
+     5000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor social da locação residencial",
+     -600,
+     "IMOB-RSO-002"
+    ],
+    [
+     3,
+     "Base de cálculo tributável",
+     4400,
+     "IMOB-BASE-001"
+    ],
+    [
+     4,
+     "Alíquotas reduzidas em 70%",
+     0,
+     "IMOB-ALQ-002"
+    ],
+    [
+     5,
+     "IBS devido",
+     246.84,
+     "IMOB-ALQ-002"
+    ],
+    [
+     6,
+     "CBS devida",
+     121.57,
+     "IMOB-ALQ-002"
+    ]
+   ]
+  },
+  "L05 misto e período parcial": {
+   "status": "CALCULADO",
+   "base": 2784,
+   "ibs": 156.18,
+   "cbs": 76.92,
+   "debito": 233.1,
+   "creditos": 0,
+   "total": 233.1,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor do aluguel no período",
+     3000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor social da locação residencial",
+     -216,
+     "IMOB-RSO-002"
+    ],
+    [
+     3,
+     "Base de cálculo tributável",
+     2784,
+     "IMOB-BASE-001"
+    ],
+    [
+     4,
+     "Alíquotas reduzidas em 70%",
+     0,
+     "IMOB-ALQ-002"
+    ],
+    [
+     5,
+     "IBS devido",
+     156.18,
+     "IMOB-ALQ-002"
+    ],
+    [
+     6,
+     "CBS devida",
+     76.92,
+     "IMOB-ALQ-002"
+    ]
+   ]
+  },
+  "L06 residencial 12 meses": {
+   "status": "CALCULADO",
+   "base": 28800,
+   "ibs": 1615.68,
+   "cbs": 795.74,
+   "debito": 2411.42,
+   "creditos": 0,
+   "total": 2411.42,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor do aluguel no período",
+     36000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor social da locação residencial",
+     -7200,
+     "IMOB-RSO-002"
+    ],
+    [
+     3,
+     "Base de cálculo tributável",
+     28800,
+     "IMOB-BASE-001"
+    ],
+    [
+     4,
+     "Alíquotas reduzidas em 70%",
+     0,
+     "IMOB-ALQ-002"
+    ],
+    [
+     5,
+     "IBS devido",
+     1615.68,
+     "IMOB-ALQ-002"
+    ],
+    [
+     6,
+     "CBS devida",
+     795.74,
+     "IMOB-ALQ-002"
+    ]
+   ]
+  },
+  "L07 temporada 90 dias residencial": {
+   "status": "BLOQUEADO",
+   "total": null,
+   "bloqueios": [
+    "B001"
+   ],
+   "linhas": []
+  },
+  "L08 temporada 91 dias residencial": {
+   "status": "CALCULADO",
+   "base": 8200,
+   "ibs": 460.02,
+   "cbs": 226.57,
+   "debito": 686.59,
+   "creditos": 0,
+   "total": 686.59,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor do aluguel no período",
+     10000,
+     "IMOB-BASE-001"
+    ],
+    [
+     2,
+     "Redutor social da locação residencial",
+     -1800,
+     "IMOB-RSO-002"
+    ],
+    [
+     3,
+     "Base de cálculo tributável",
+     8200,
+     "IMOB-BASE-001"
+    ],
+    [
+     4,
+     "Alíquotas reduzidas em 70%",
+     0,
+     "IMOB-ALQ-002"
+    ],
+    [
+     5,
+     "IBS devido",
+     460.02,
+     "IMOB-ALQ-002"
+    ],
+    [
+     6,
+     "CBS devida",
+     226.57,
+     "IMOB-ALQ-002"
+    ]
+   ]
+  },
+  "L09 contrato antigo 3,65%": {
+   "status": "CALCULADO",
+   "base": 20000,
+   "ibs": null,
+   "cbs": null,
+   "debito": 730,
+   "creditos": 0,
+   "total": 730,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Receita bruta recebida da locação",
+     20000,
+     "IMOB-LOC-TR1"
+    ],
+    [
+     2,
+     "IBS + CBS pelo regime opcional",
+     730,
+     "IMOB-LOC-TR1"
+    ]
+   ]
+  },
+  "L10 contrato antigo sem registro": {
+   "status": "BLOQUEADO",
+   "total": null,
+   "bloqueios": [
+    "B003"
+   ],
+   "linhas": []
+  },
+  "P01 permuta sem torna": {
+   "status": "CALCULADO",
+   "base": 0,
+   "ibs": 0,
+   "cbs": 0,
+   "debito": 0,
+   "creditos": 0,
+   "total": 0,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor do imóvel dado em permuta",
+     1000000,
+     "IMOB-PER-001"
+    ],
+    [
+     2,
+     "Permuta entre bens imóveis — não incidência",
+     0,
+     "IMOB-PER-001"
+    ],
+    [
+     3,
+     "Torna — base tributável",
+     0,
+     "IMOB-PER-001"
+    ],
+    [
+     4,
+     "IBS sobre a torna",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     5,
+     "CBS sobre a torna",
+     0,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "Redutor de ajuste do imóvel recebido",
+     400000,
+     "IMOB-PER-002"
+    ]
+   ]
+  },
+  "P02 permuta com torna": {
+   "status": "CALCULADO",
+   "base": 200000,
+   "ibs": 18700,
+   "cbs": 9210,
+   "debito": 27910,
+   "creditos": 0,
+   "total": 27910,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor do imóvel dado em permuta",
+     1000000,
+     "IMOB-PER-001"
+    ],
+    [
+     2,
+     "Permuta entre bens imóveis — não incidência",
+     0,
+     "IMOB-PER-001"
+    ],
+    [
+     3,
+     "Torna — base tributável",
+     200000,
+     "IMOB-PER-001"
+    ],
+    [
+     4,
+     "IBS sobre a torna",
+     18700,
+     "IMOB-ALQ-001"
+    ],
+    [
+     5,
+     "CBS sobre a torna",
+     9210,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "Redutor de ajuste do imóvel recebido",
+     600000,
+     "IMOB-PER-002"
+    ]
+   ]
+  },
+  "P03 permuta torna recebida": {
+   "status": "CALCULADO",
+   "base": 150000,
+   "ibs": 14025,
+   "cbs": 6907.5,
+   "debito": 20932.5,
+   "creditos": 0,
+   "total": 20932.5,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Valor do imóvel dado em permuta",
+     1000000,
+     "IMOB-PER-001"
+    ],
+    [
+     2,
+     "Permuta entre bens imóveis — não incidência",
+     0,
+     "IMOB-PER-001"
+    ],
+    [
+     3,
+     "Torna — base tributável",
+     150000,
+     "IMOB-PER-001"
+    ],
+    [
+     4,
+     "IBS sobre a torna",
+     14025,
+     "IMOB-ALQ-001"
+    ],
+    [
+     5,
+     "CBS sobre a torna",
+     6907.5,
+     "IMOB-ALQ-001"
+    ],
+    [
+     6,
+     "Redutor de ajuste do imóvel recebido",
+     400000,
+     "IMOB-PER-002"
+    ]
+   ]
+  },
+  "P04 permuta dados incompletos": {
+   "status": "BLOQUEADO",
+   "total": null,
+   "bloqueios": [
+    "E012"
+   ],
+   "linhas": []
+  },
+  "R01 RET normal 2,08%": {
+   "status": "CALCULADO",
+   "base": 250000,
+   "ibs": null,
+   "cbs": null,
+   "debito": 5200,
+   "creditos": 0,
+   "total": 5200,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Receita mensal recebida",
+     250000,
+     "IMOB-RET-001"
+    ],
+    [
+     2,
+     "IBS + CBS pelo RET de transição",
+     5200,
+     "IMOB-RET-001"
+    ]
+   ]
+  },
+  "R02 RET social 0,53%": {
+   "status": "CALCULADO",
+   "base": 250000,
+   "ibs": null,
+   "cbs": null,
+   "debito": 1325,
+   "creditos": 0,
+   "total": 1325,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Receita mensal recebida",
+     250000,
+     "IMOB-RET-002"
+    ],
+    [
+     2,
+     "IBS + CBS pelo RET de transição",
+     1325,
+     "IMOB-RET-002"
+    ]
+   ]
+  },
+  "R03 RET sem afetação": {
+   "status": "BLOQUEADO",
+   "total": null,
+   "bloqueios": [
+    "E010"
+   ],
+   "linhas": []
+  },
+  "R04 loteamento 3,65%": {
+   "status": "CALCULADO",
+   "base": 500000,
+   "ibs": null,
+   "cbs": null,
+   "debito": 18250,
+   "creditos": 0,
+   "total": 18250,
+   "confianca": "MEDIA",
+   "bloqueios": [],
+   "parcelas": null,
+   "linhas": [
+    [
+     1,
+     "Receita bruta recebida do parcelamento do solo",
+     500000,
+     "IMOB-LOT-001"
+    ],
+    [
+     2,
+     "IBS + CBS pelo regime opcional",
+     18250,
+     "IMOB-LOT-001"
+    ]
+   ]
+  },
+  "R05 loteamento sem registro": {
+   "status": "BLOQUEADO",
+   "total": null,
+   "bloqueios": [
+    "E013"
+   ],
+   "linhas": []
+  }
+ },
+ "f3": {
+  "lp_objeto_sim": {
+   "status": "CALCULADO",
+   "regime": "Lucro Presumido",
+   "linhas": [
+    {
+     "ordem": 1,
+     "descricao": "Base presumida do IRPJ",
+     "formula": "venda × 8% + locação × 32% + serviços × 32%",
+     "entrada": {
+      "receita_venda": 1000000,
+      "receita_locacao": 240000,
+      "receita_servicos": 60000
+     },
+     "valor": 176000,
+     "regra_id": "IMOB-LP-001",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.249/1995, arts. 15 e 20",
+      "IN RFB 1.700/2017, arts. 33 e 34",
+      "SC COSIT 7/2021",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 2,
+     "descricao": "Base presumida da CSLL",
+     "formula": "venda × 12% + locação × 32% + serviços × 32%",
+     "entrada": null,
+     "valor": 216000,
+     "regra_id": "IMOB-LP-001",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.249/1995, arts. 15 e 20",
+      "IN RFB 1.700/2017, arts. 33 e 34",
+      "SC COSIT 7/2021",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 3,
+     "descricao": "IRPJ",
+     "formula": "base presumida × 15%",
+     "entrada": {
+      "base": 176000
+     },
+     "valor": 26400,
+     "regra_id": "IMOB-LP-001",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.249/1995, arts. 15 e 20",
+      "IN RFB 1.700/2017, arts. 33 e 34",
+      "SC COSIT 7/2021",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 4,
+     "descricao": "Adicional de IRPJ",
+     "formula": "10% sobre o que exceder R$ 20.000 por mês do período",
+     "entrada": {
+      "limite_do_periodo": 60000,
+      "meses": 3
+     },
+     "valor": 11600,
+     "regra_id": "IMOB-LP-001",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.249/1995, arts. 15 e 20",
+      "IN RFB 1.700/2017, arts. 33 e 34",
+      "SC COSIT 7/2021",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 5,
+     "descricao": "CSLL",
+     "formula": "base presumida × 9%",
+     "entrada": {
+      "base": 216000
+     },
+     "valor": 19440,
+     "regra_id": "IMOB-LP-001",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.249/1995, arts. 15 e 20",
+      "IN RFB 1.700/2017, arts. 33 e 34",
+      "SC COSIT 7/2021",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 6,
+     "descricao": "PIS cumulativo",
+     "formula": "receita bruta × 0.65%",
+     "entrada": {
+      "receita": 1300000
+     },
+     "valor": 8450,
+     "regra_id": "IMOB-LP-003",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "legal",
+     "fundamentos": [
+      "Lei 9.718/1998, arts. 2º e 3º",
+      "SC COSIT 7/2021"
+     ]
+    },
+    {
+     "ordem": 7,
+     "descricao": "COFINS cumulativa",
+     "formula": "receita bruta × 3%",
+     "entrada": {
+      "receita": 1300000
+     },
+     "valor": 39000,
+     "regra_id": "IMOB-LP-003",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "legal",
+     "fundamentos": [
+      "Lei 9.718/1998, arts. 2º e 3º",
+      "SC COSIT 7/2021"
+     ]
+    },
+    {
+     "ordem": 8,
+     "descricao": "ISS sobre administração e intermediação",
+     "formula": "receita de serviços × 0%",
+     "entrada": {
+      "receita_servicos": 60000,
+      "aliquota": 0
+     },
+     "valor": 0,
+     "regra_id": "IMOB-LP-003",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "legal",
+     "fundamentos": [
+      "Lei 9.718/1998, arts. 2º e 3º",
+      "SC COSIT 7/2021"
+     ],
+     "observacao": "A locação de imóvel próprio NÃO sofre ISS (Súmula Vinculante 31). Administração, intermediação e construção civil sofrem."
+    }
+   ],
+   "notas": [
+    "ISS parametrizado em 0% com receita de serviços informada — confirmar a alíquota do município antes de usar o comparativo."
+   ],
+   "receita_total": 1300000,
+   "irpj": 26400,
+   "adicional": 11600,
+   "csll": 19440,
+   "pis": 8450,
+   "cofins": 39000,
+   "iss": 0,
+   "tributos_substituidos": 47450,
+   "tributos_permanentes": 57440,
+   "total": 104890,
+   "carga_sobre_receita": 8.0685,
+   "regras_aplicadas": [
+    "IMOB-LP-001",
+    "IMOB-LP-002",
+    "IMOB-LP-003"
+   ]
+  },
+  "lp_objeto_nao": {
+   "status": "CALCULADO",
+   "regime": "Lucro Presumido",
+   "linhas": [
+    {
+     "ordem": 1,
+     "descricao": "Base presumida do IRPJ",
+     "formula": "venda × 8% + locação × 32% + serviços × 32%",
+     "entrada": {
+      "receita_venda": 1000000,
+      "receita_locacao": 0,
+      "receita_servicos": 0
+     },
+     "valor": 80000,
+     "regra_id": "IMOB-LP-001",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.249/1995, arts. 15 e 20",
+      "IN RFB 1.700/2017, arts. 33 e 34",
+      "SC COSIT 7/2021",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 2,
+     "descricao": "Base presumida da CSLL",
+     "formula": "venda × 12% + locação × 32% + serviços × 32%",
+     "entrada": null,
+     "valor": 120000,
+     "regra_id": "IMOB-LP-001",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.249/1995, arts. 15 e 20",
+      "IN RFB 1.700/2017, arts. 33 e 34",
+      "SC COSIT 7/2021",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 3,
+     "descricao": "IRPJ",
+     "formula": "base presumida × 15%",
+     "entrada": {
+      "base": 80000
+     },
+     "valor": 12000,
+     "regra_id": "IMOB-LP-001",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.249/1995, arts. 15 e 20",
+      "IN RFB 1.700/2017, arts. 33 e 34",
+      "SC COSIT 7/2021",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 4,
+     "descricao": "Adicional de IRPJ",
+     "formula": "10% sobre o que exceder R$ 20.000 por mês do período",
+     "entrada": {
+      "limite_do_periodo": 60000,
+      "meses": 3
+     },
+     "valor": 2000,
+     "regra_id": "IMOB-LP-001",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.249/1995, arts. 15 e 20",
+      "IN RFB 1.700/2017, arts. 33 e 34",
+      "SC COSIT 7/2021",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 5,
+     "descricao": "CSLL",
+     "formula": "base presumida × 9%",
+     "entrada": {
+      "base": 120000
+     },
+     "valor": 10800,
+     "regra_id": "IMOB-LP-001",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.249/1995, arts. 15 e 20",
+      "IN RFB 1.700/2017, arts. 33 e 34",
+      "SC COSIT 7/2021",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 6,
+     "descricao": "PIS cumulativo",
+     "formula": "receita bruta × 0.65%",
+     "entrada": {
+      "receita": 1000000
+     },
+     "valor": 6500,
+     "regra_id": "IMOB-LP-003",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "legal",
+     "fundamentos": [
+      "Lei 9.718/1998, arts. 2º e 3º",
+      "SC COSIT 7/2021"
+     ]
+    },
+    {
+     "ordem": 7,
+     "descricao": "COFINS cumulativa",
+     "formula": "receita bruta × 3%",
+     "entrada": {
+      "receita": 1000000
+     },
+     "valor": 30000,
+     "regra_id": "IMOB-LP-003",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "legal",
+     "fundamentos": [
+      "Lei 9.718/1998, arts. 2º e 3º",
+      "SC COSIT 7/2021"
+     ]
+    }
+   ],
+   "notas": [
+    "ATENÇÃO: a presunção de 8%/12% na venda depende de a atividade imobiliária constar do objeto social e a receita ser operacional. Sem isso, a alienação é GANHO DE CAPITAL (art. 29 da Lei 9.430/1996) — use o cálculo de ganho de capital, não este."
+   ],
+   "receita_total": 1000000,
+   "irpj": 12000,
+   "adicional": 2000,
+   "csll": 10800,
+   "pis": 6500,
+   "cofins": 30000,
+   "iss": 0,
+   "tributos_substituidos": 36500,
+   "tributos_permanentes": 24800,
+   "total": 61300,
+   "carga_sobre_receita": 6.13,
+   "regras_aplicadas": [
+    "IMOB-LP-001",
+    "IMOB-LP-002",
+    "IMOB-LP-003"
+   ]
+  },
+  "gc": {
+   "status": "CALCULADO",
+   "regime": "Ganho de capital",
+   "linhas": [
+    {
+     "ordem": 1,
+     "descricao": "Valor da alienação",
+     "formula": "valor informado",
+     "entrada": null,
+     "valor": 800000,
+     "regra_id": "IMOB-LP-004",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.430/1996, art. 29",
+      "IN RFB 1.700/2017, art. 215",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 2,
+     "descricao": "Custo contábil (líquido de depreciação)",
+     "formula": "valor informado",
+     "entrada": null,
+     "valor": -500000,
+     "regra_id": "IMOB-LP-004",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.430/1996, art. 29",
+      "IN RFB 1.700/2017, art. 215",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 3,
+     "descricao": "Ganho de capital",
+     "formula": "alienação − custo, nunca negativo",
+     "entrada": null,
+     "valor": 300000,
+     "regra_id": "IMOB-LP-004",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.430/1996, art. 29",
+      "IN RFB 1.700/2017, art. 215",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 4,
+     "descricao": "IRPJ sobre o ganho",
+     "formula": "ganho × 15%",
+     "entrada": null,
+     "valor": 45000,
+     "regra_id": "IMOB-LP-004",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.430/1996, art. 29",
+      "IN RFB 1.700/2017, art. 215",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 5,
+     "descricao": "Adicional de IRPJ",
+     "formula": "10% sobre o excedente do limite",
+     "entrada": null,
+     "valor": 24000,
+     "regra_id": "IMOB-LP-004",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.430/1996, art. 29",
+      "IN RFB 1.700/2017, art. 215",
+      "SC COSIT 221/2024"
+     ]
+    },
+    {
+     "ordem": 6,
+     "descricao": "CSLL sobre o ganho",
+     "formula": "ganho × 9%",
+     "entrada": null,
+     "valor": 27000,
+     "regra_id": "IMOB-LP-004",
+     "regra_versao": 1,
+     "regra_status": "homologada",
+     "nivel_interpretacao": "administrativo",
+     "fundamentos": [
+      "Lei 9.430/1996, art. 29",
+      "IN RFB 1.700/2017, art. 215",
+      "SC COSIT 221/2024"
+     ]
+    }
+   ],
+   "ganho": 300000,
+   "irpj": 45000,
+   "adicional": 24000,
+   "csll": 27000,
+   "pis": 0,
+   "cofins": 0,
+   "iss": 0,
+   "tributos_substituidos": 0,
+   "tributos_permanentes": 96000,
+   "total": 96000,
+   "notas": [
+    "Não há PIS/COFINS sobre ganho de capital (SC COSIT 221/2024).",
+    "Como não há receita bruta operacional, também não há base de IBS/CBS pelo regime específico — confirmar o enquadramento antes de comparar com a Reforma."
+   ],
+   "regras_aplicadas": [
+    "IMOB-LP-004"
+   ]
+  },
+  "lr": {
+   "status": "CALCULADO",
+   "regime": "Lucro Real (simulação indicativa)",
+   "linhas": [
+    {
+     "ordem": 1,
+     "descricao": "Receita total",
+     "formula": "valor informado",
+     "entrada": null,
+     "valor": 1000000,
+     "regra_id": "IMOB-LR-001",
+     "regra_versao": 1,
+     "regra_status": "staging",
+     "nivel_interpretacao": "premissa",
+     "fundamentos": [
+      "Lei 9.430/1996",
+      "Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)"
+     ]
+    },
+    {
+     "ordem": 2,
+     "descricao": "Custos dedutíveis",
+     "formula": "valor informado",
+     "entrada": null,
+     "valor": -600000,
+     "regra_id": "IMOB-LR-001",
+     "regra_versao": 1,
+     "regra_status": "staging",
+     "nivel_interpretacao": "premissa",
+     "fundamentos": [
+      "Lei 9.430/1996",
+      "Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)"
+     ]
+    },
+    {
+     "ordem": 3,
+     "descricao": "Despesas dedutíveis",
+     "formula": "valor informado",
+     "entrada": null,
+     "valor": -150000,
+     "regra_id": "IMOB-LR-001",
+     "regra_versao": 1,
+     "regra_status": "staging",
+     "nivel_interpretacao": "premissa",
+     "fundamentos": [
+      "Lei 9.430/1996",
+      "Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)"
+     ]
+    },
+    {
+     "ordem": 4,
+     "descricao": "Lucro antes da compensação",
+     "formula": "receita − custos − despesas",
+     "entrada": null,
+     "valor": 250000,
+     "regra_id": "IMOB-LR-001",
+     "regra_versao": 1,
+     "regra_status": "staging",
+     "nivel_interpretacao": "premissa",
+     "fundamentos": [
+      "Lei 9.430/1996",
+      "Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)"
+     ]
+    },
+    {
+     "ordem": 5,
+     "descricao": "Prejuízo compensado",
+     "formula": "limitado a 30% do lucro do período",
+     "entrada": {
+      "saldo_anterior": 200000
+     },
+     "valor": -75000,
+     "regra_id": "IMOB-LR-001",
+     "regra_versao": 1,
+     "regra_status": "staging",
+     "nivel_interpretacao": "premissa",
+     "fundamentos": [
+      "Lei 9.430/1996",
+      "Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)"
+     ]
+    },
+    {
+     "ordem": 6,
+     "descricao": "Base de cálculo",
+     "formula": "lucro − compensação, nunca negativa",
+     "entrada": null,
+     "valor": 175000,
+     "regra_id": "IMOB-LR-001",
+     "regra_versao": 1,
+     "regra_status": "staging",
+     "nivel_interpretacao": "premissa",
+     "fundamentos": [
+      "Lei 9.430/1996",
+      "Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)"
+     ]
+    },
+    {
+     "ordem": 7,
+     "descricao": "IRPJ",
+     "formula": "base × 15%",
+     "entrada": null,
+     "valor": 26250,
+     "regra_id": "IMOB-LR-001",
+     "regra_versao": 1,
+     "regra_status": "staging",
+     "nivel_interpretacao": "premissa",
+     "fundamentos": [
+      "Lei 9.430/1996",
+      "Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)"
+     ]
+    },
+    {
+     "ordem": 8,
+     "descricao": "Adicional de IRPJ",
+     "formula": "10% sobre o excedente do limite",
+     "entrada": null,
+     "valor": 11500,
+     "regra_id": "IMOB-LR-001",
+     "regra_versao": 1,
+     "regra_status": "staging",
+     "nivel_interpretacao": "premissa",
+     "fundamentos": [
+      "Lei 9.430/1996",
+      "Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)"
+     ]
+    },
+    {
+     "ordem": 9,
+     "descricao": "CSLL",
+     "formula": "base × 9%",
+     "entrada": null,
+     "valor": 15750,
+     "regra_id": "IMOB-LR-001",
+     "regra_versao": 1,
+     "regra_status": "staging",
+     "nivel_interpretacao": "premissa",
+     "fundamentos": [
+      "Lei 9.430/1996",
+      "Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)"
+     ]
+    },
+    {
+     "ordem": 10,
+     "descricao": "PIS (cumulativo)",
+     "formula": "base × 0.65%",
+     "entrada": {
+      "base": 1000000
+     },
+     "valor": 6500,
+     "regra_id": "IMOB-LR-001",
+     "regra_versao": 1,
+     "regra_status": "staging",
+     "nivel_interpretacao": "premissa",
+     "fundamentos": [
+      "Lei 9.430/1996",
+      "Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)"
+     ]
+    },
+    {
+     "ordem": 11,
+     "descricao": "COFINS (cumulativo)",
+     "formula": "base × 3%",
+     "entrada": {
+      "base": 1000000
+     },
+     "valor": 30000,
+     "regra_id": "IMOB-LR-001",
+     "regra_versao": 1,
+     "regra_status": "staging",
+     "nivel_interpretacao": "premissa",
+     "fundamentos": [
+      "Lei 9.430/1996",
+      "Leis 10.637/2002 e 10.833/2003 (regime a confirmar por atividade)"
+     ]
+    }
+   ],
+   "notas": [
+    "SIMULAÇÃO COMPARATIVA INDICATIVA — LUCRO REAL. Este resultado não substitui apuração completa.",
+    "PREMISSA DECLARADA: regime cumulativo de PIS/COFINS."
+   ],
+   "rotulo_obrigatorio": "SIMULAÇÃO COMPARATIVA INDICATIVA — LUCRO REAL",
+   "dados_minimos_ok": true,
+   "faltando": [],
+   "lucro": 250000,
+   "base": 175000,
+   "irpj": 26250,
+   "adicional": 11500,
+   "csll": 15750,
+   "pis": 6500,
+   "cofins": 30000,
+   "iss": 0,
+   "tributos_substituidos": 36500,
+   "tributos_permanentes": 53500,
+   "total": 90000,
+   "confianca": "MEDIA",
+   "regras_aplicadas": [
+    "IMOB-LR-001"
+   ]
+  },
+  "transicao_V02": {
+   "status": "CALCULADO",
+   "anos": [
+    {
+     "ano": 2026,
+     "ibs_aliquota": 0.1,
+     "cbs_aliquota": 0.9,
+     "classificacao": "ESTIMADA",
+     "base": 400000,
+     "ibs": 0,
+     "cbs": 0,
+     "total": 0,
+     "status": "CALCULADO",
+     "ano_teste": true
+    },
+    {
+     "ano": 2027,
+     "ibs_aliquota": 0.05,
+     "cbs_aliquota": 9.11,
+     "classificacao": "ESTIMADA",
+     "base": 400000,
+     "ibs": 100,
+     "cbs": 18220,
+     "total": 18320,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2028,
+     "ibs_aliquota": 0.05,
+     "cbs_aliquota": 9.11,
+     "classificacao": "ESTIMADA",
+     "base": 400000,
+     "ibs": 100,
+     "cbs": 18220,
+     "total": 18320,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2029,
+     "ibs_aliquota": 1.87,
+     "cbs_aliquota": 9.21,
+     "classificacao": "ESTIMADA",
+     "base": 400000,
+     "ibs": 3740,
+     "cbs": 18420,
+     "total": 22160,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2030,
+     "ibs_aliquota": 3.74,
+     "cbs_aliquota": 9.21,
+     "classificacao": "ESTIMADA",
+     "base": 400000,
+     "ibs": 7480,
+     "cbs": 18420,
+     "total": 25900,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2031,
+     "ibs_aliquota": 5.61,
+     "cbs_aliquota": 9.21,
+     "classificacao": "ESTIMADA",
+     "base": 400000,
+     "ibs": 11220,
+     "cbs": 18420,
+     "total": 29640,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2032,
+     "ibs_aliquota": 7.48,
+     "cbs_aliquota": 9.21,
+     "classificacao": "ESTIMADA",
+     "base": 400000,
+     "ibs": 14960,
+     "cbs": 18420,
+     "total": 33380,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2033,
+     "ibs_aliquota": 18.7,
+     "cbs_aliquota": 9.21,
+     "classificacao": "ESTIMADA",
+     "base": 400000,
+     "ibs": 37400,
+     "cbs": 18420,
+     "total": 55820,
+     "status": "CALCULADO",
+     "ano_teste": false
+    }
+   ],
+   "anos_sem_aliquota": [],
+   "regra_id": "IMOB-TRA-001",
+   "fundamentos": [
+    "LC 214/2025, arts. 343, 346 e 348",
+    "LC 214/2025, art. 125 do ADCT (escada IBS)"
+   ],
+   "nota": "As alíquotas de cada ano são as do motor genérico já validado do Análise Tributária Pro. O módulo imobiliário aplica apenas as reduções e os redutores do regime específico."
+  },
+  "transicao_L01": {
+   "status": "CALCULADO",
+   "anos": [
+    {
+     "ano": 2026,
+     "ibs_aliquota": 0.1,
+     "cbs_aliquota": 0.9,
+     "classificacao": "ESTIMADA",
+     "base": 1400,
+     "ibs": 0,
+     "cbs": 0,
+     "total": 0,
+     "status": "CALCULADO",
+     "ano_teste": true
+    },
+    {
+     "ano": 2027,
+     "ibs_aliquota": 0.05,
+     "cbs_aliquota": 9.11,
+     "classificacao": "ESTIMADA",
+     "base": 1400,
+     "ibs": 0.21,
+     "cbs": 38.26,
+     "total": 38.47,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2028,
+     "ibs_aliquota": 0.05,
+     "cbs_aliquota": 9.11,
+     "classificacao": "ESTIMADA",
+     "base": 1400,
+     "ibs": 0.21,
+     "cbs": 38.26,
+     "total": 38.47,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2029,
+     "ibs_aliquota": 1.87,
+     "cbs_aliquota": 9.21,
+     "classificacao": "ESTIMADA",
+     "base": 1400,
+     "ibs": 7.85,
+     "cbs": 38.68,
+     "total": 46.53,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2030,
+     "ibs_aliquota": 3.74,
+     "cbs_aliquota": 9.21,
+     "classificacao": "ESTIMADA",
+     "base": 1400,
+     "ibs": 15.71,
+     "cbs": 38.68,
+     "total": 54.39,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2031,
+     "ibs_aliquota": 5.61,
+     "cbs_aliquota": 9.21,
+     "classificacao": "ESTIMADA",
+     "base": 1400,
+     "ibs": 23.56,
+     "cbs": 38.68,
+     "total": 62.24,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2032,
+     "ibs_aliquota": 7.48,
+     "cbs_aliquota": 9.21,
+     "classificacao": "ESTIMADA",
+     "base": 1400,
+     "ibs": 31.42,
+     "cbs": 38.68,
+     "total": 70.1,
+     "status": "CALCULADO",
+     "ano_teste": false
+    },
+    {
+     "ano": 2033,
+     "ibs_aliquota": 18.7,
+     "cbs_aliquota": 9.21,
+     "classificacao": "ESTIMADA",
+     "base": 1400,
+     "ibs": 78.54,
+     "cbs": 38.68,
+     "total": 117.22,
+     "status": "CALCULADO",
+     "ano_teste": false
+    }
+   ],
+   "anos_sem_aliquota": [],
+   "regra_id": "IMOB-TRA-001",
+   "fundamentos": [
+    "LC 214/2025, arts. 343, 346 e 348",
+    "LC 214/2025, art. 125 do ADCT (escada IBS)"
+   ],
+   "nota": "As alíquotas de cada ano são as do motor genérico já validado do Análise Tributária Pro. O módulo imobiliário aplica apenas as reduções e os redutores do regime específico."
+  },
+  "comparativo": {
+   "status": "CALCULADO",
+   "linhas": [
+    {
+     "cenario": "Lucro Presumido — hoje",
+     "substituiveis": 47450,
+     "permanentes": 57440,
+     "total": 104890
+    },
+    {
+     "cenario": "Lucro Presumido + IBS/CBS do regime específico",
+     "substituiveis": 55820,
+     "permanentes": 57440,
+     "total": 113260
+    }
+   ],
+   "variacao": 8370,
+   "variacao_pct": 7.9798,
+   "presumido": {
+    "status": "CALCULADO",
+    "regime": "Lucro Presumido",
+    "linhas": [
+     {
+      "ordem": 1,
+      "descricao": "Base presumida do IRPJ",
+      "formula": "venda × 8% + locação × 32% + serviços × 32%",
+      "entrada": {
+       "receita_venda": 1000000,
+       "receita_locacao": 240000,
+       "receita_servicos": 60000
+      },
+      "valor": 176000,
+      "regra_id": "IMOB-LP-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "administrativo",
+      "fundamentos": [
+       "Lei 9.249/1995, arts. 15 e 20",
+       "IN RFB 1.700/2017, arts. 33 e 34",
+       "SC COSIT 7/2021",
+       "SC COSIT 221/2024"
+      ]
+     },
+     {
+      "ordem": 2,
+      "descricao": "Base presumida da CSLL",
+      "formula": "venda × 12% + locação × 32% + serviços × 32%",
+      "entrada": null,
+      "valor": 216000,
+      "regra_id": "IMOB-LP-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "administrativo",
+      "fundamentos": [
+       "Lei 9.249/1995, arts. 15 e 20",
+       "IN RFB 1.700/2017, arts. 33 e 34",
+       "SC COSIT 7/2021",
+       "SC COSIT 221/2024"
+      ]
+     },
+     {
+      "ordem": 3,
+      "descricao": "IRPJ",
+      "formula": "base presumida × 15%",
+      "entrada": {
+       "base": 176000
+      },
+      "valor": 26400,
+      "regra_id": "IMOB-LP-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "administrativo",
+      "fundamentos": [
+       "Lei 9.249/1995, arts. 15 e 20",
+       "IN RFB 1.700/2017, arts. 33 e 34",
+       "SC COSIT 7/2021",
+       "SC COSIT 221/2024"
+      ]
+     },
+     {
+      "ordem": 4,
+      "descricao": "Adicional de IRPJ",
+      "formula": "10% sobre o que exceder R$ 20.000 por mês do período",
+      "entrada": {
+       "limite_do_periodo": 60000,
+       "meses": 3
+      },
+      "valor": 11600,
+      "regra_id": "IMOB-LP-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "administrativo",
+      "fundamentos": [
+       "Lei 9.249/1995, arts. 15 e 20",
+       "IN RFB 1.700/2017, arts. 33 e 34",
+       "SC COSIT 7/2021",
+       "SC COSIT 221/2024"
+      ]
+     },
+     {
+      "ordem": 5,
+      "descricao": "CSLL",
+      "formula": "base presumida × 9%",
+      "entrada": {
+       "base": 216000
+      },
+      "valor": 19440,
+      "regra_id": "IMOB-LP-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "administrativo",
+      "fundamentos": [
+       "Lei 9.249/1995, arts. 15 e 20",
+       "IN RFB 1.700/2017, arts. 33 e 34",
+       "SC COSIT 7/2021",
+       "SC COSIT 221/2024"
+      ]
+     },
+     {
+      "ordem": 6,
+      "descricao": "PIS cumulativo",
+      "formula": "receita bruta × 0.65%",
+      "entrada": {
+       "receita": 1300000
+      },
+      "valor": 8450,
+      "regra_id": "IMOB-LP-003",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "legal",
+      "fundamentos": [
+       "Lei 9.718/1998, arts. 2º e 3º",
+       "SC COSIT 7/2021"
+      ]
+     },
+     {
+      "ordem": 7,
+      "descricao": "COFINS cumulativa",
+      "formula": "receita bruta × 3%",
+      "entrada": {
+       "receita": 1300000
+      },
+      "valor": 39000,
+      "regra_id": "IMOB-LP-003",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "legal",
+      "fundamentos": [
+       "Lei 9.718/1998, arts. 2º e 3º",
+       "SC COSIT 7/2021"
+      ]
+     },
+     {
+      "ordem": 8,
+      "descricao": "ISS sobre administração e intermediação",
+      "formula": "receita de serviços × 0%",
+      "entrada": {
+       "receita_servicos": 60000,
+       "aliquota": 0
+      },
+      "valor": 0,
+      "regra_id": "IMOB-LP-003",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "legal",
+      "fundamentos": [
+       "Lei 9.718/1998, arts. 2º e 3º",
+       "SC COSIT 7/2021"
+      ],
+      "observacao": "A locação de imóvel próprio NÃO sofre ISS (Súmula Vinculante 31). Administração, intermediação e construção civil sofrem."
+     }
+    ],
+    "notas": [
+     "ISS parametrizado em 0% com receita de serviços informada — confirmar a alíquota do município antes de usar o comparativo."
+    ],
+    "receita_total": 1300000,
+    "irpj": 26400,
+    "adicional": 11600,
+    "csll": 19440,
+    "pis": 8450,
+    "cofins": 39000,
+    "iss": 0,
+    "tributos_substituidos": 47450,
+    "tributos_permanentes": 57440,
+    "total": 104890,
+    "carga_sobre_receita": 8.0685,
+    "regras_aplicadas": [
+     "IMOB-LP-001",
+     "IMOB-LP-002",
+     "IMOB-LP-003"
+    ]
+   },
+   "real": null,
+   "reforma": {
+    "linhas": [
+     {
+      "ordem": 1,
+      "descricao": "Valor da operação",
+      "formula": "valor informado",
+      "entrada": null,
+      "valor": 900000,
+      "regra_id": "IMOB-BASE-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "legal",
+      "fundamentos": [
+       "LC 214/2025, arts. 251, 252 e 255",
+       "RIBS art. 359, 360 e 364",
+       "RCBS art. 359, 360 e 364"
+      ]
+     },
+     {
+      "ordem": 2,
+      "descricao": "Redutor de ajuste",
+      "formula": "min(saldo do imóvel; base)",
+      "entrada": {
+       "saldo_disponivel": 400000
+      },
+      "valor": -400000,
+      "regra_id": "IMOB-RAJ-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "legal",
+      "fundamentos": [
+       "LC 214/2025, arts. 257 e 258",
+       "RIBS arts. 369 a 375",
+       "RCBS arts. 369 a 375"
+      ],
+      "saldo_remanescente": 0
+     },
+     {
+      "ordem": 3,
+      "descricao": "Redutor social",
+      "formula": "min(valor atualizado; base após redutor de ajuste)",
+      "entrada": {
+       "valor_original": 100000,
+       "fator_ipca": 1,
+       "competencia_indice": "2026-01",
+       "valor_atualizado": 100000
+      },
+      "valor": -100000,
+      "regra_id": "IMOB-RSO-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "legal",
+      "fundamentos": [
+       "LC 214/2025, art. 259",
+       "RIBS arts. 376 a 378",
+       "RCBS arts. 376 a 378"
+      ]
+     },
+     {
+      "ordem": 4,
+      "descricao": "Base de cálculo tributável",
+      "formula": "valor − redutor de ajuste − redutor social",
+      "entrada": null,
+      "valor": 400000,
+      "regra_id": "IMOB-BASE-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "legal",
+      "fundamentos": [
+       "LC 214/2025, arts. 251, 252 e 255",
+       "RIBS art. 359, 360 e 364",
+       "RCBS art. 359, 360 e 364"
+      ]
+     },
+     {
+      "ordem": 5,
+      "descricao": "Alíquotas reduzidas em 50%",
+      "formula": "alíquota padrão × (1 − 50%)",
+      "entrada": {
+       "ibs_padrao": 18.7,
+       "cbs_padrao": 9.21
+      },
+      "valor": 0,
+      "regra_id": "IMOB-ALQ-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "legal",
+      "fundamentos": [
+       "LC 214/2025, art. 261, caput",
+       "RIBS art. 379, caput",
+       "RCBS art. 379, caput"
+      ],
+      "ibs_reduzida": 9.35,
+      "cbs_reduzida": 4.605,
+      "classificacao": "ESTIMADA"
+     },
+     {
+      "ordem": 6,
+      "descricao": "IBS devido",
+      "formula": "base × alíquota IBS reduzida",
+      "entrada": {
+       "base": 400000,
+       "aliquota": 9.35
+      },
+      "valor": 37400,
+      "regra_id": "IMOB-ALQ-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "legal",
+      "fundamentos": [
+       "LC 214/2025, art. 261, caput",
+       "RIBS art. 379, caput",
+       "RCBS art. 379, caput"
+      ]
+     },
+     {
+      "ordem": 7,
+      "descricao": "CBS devida",
+      "formula": "base × alíquota CBS reduzida",
+      "entrada": {
+       "base": 400000,
+       "aliquota": 4.605
+      },
+      "valor": 18420,
+      "regra_id": "IMOB-ALQ-001",
+      "regra_versao": 1,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "legal",
+      "fundamentos": [
+       "LC 214/2025, art. 261, caput",
+       "RIBS art. 379, caput",
+       "RCBS art. 379, caput"
+      ]
+     },
+     {
+      "ordem": 8,
+      "descricao": "Créditos de IBS/CBS apropriados",
+      "formula": "min(créditos informados; débito apurado)",
+      "entrada": {
+       "creditos_informados": 0
+      },
+      "valor": 0,
+      "regra_id": "IMOB-CRE-001",
+      "regra_versao": 2,
+      "regra_status": "homologada",
+      "nivel_interpretacao": "legal",
+      "fundamentos": [
+       "LC 214/2025, art. 47, caput e §1º",
+       "LC 214/2025, art. 48",
+       "LC 214/2025, art. 57"
+      ],
+      "credito_a_transportar": 0
+     }
+    ],
+    "base": 400000,
+    "ibs": 37400,
+    "cbs": 18420,
+    "debito": 55820,
+    "creditos": 0,
+    "total": 55820,
+    "parcelas": null,
+    "aliquota_efetiva_sobre_operacao": 6.2022,
+    "redutor_ajuste_usado": 400000,
+    "redutor_ajuste_saldo": 0,
+    "redutor_social_usado": 100000,
+    "notas": [],
+    "regras_aplicadas": [
+     "IMOB-BASE-001",
+     "IMOB-RAJ-001",
+     "IMOB-RSO-001",
+     "IMOB-ALQ-001"
+    ],
+    "status": "CALCULADO",
+    "bloqueios": [],
+    "confianca": {
+     "nivel": "MEDIA",
+     "motivos": [
+      "alíquota estimada",
+      "regras ainda não ativas (Fase 0)"
+     ]
+    },
+    "carimbo": {
+     "motor_versao": "1.2.0",
+     "contrato_versao": "calc-imob-1",
+     "ruleset_versao": "imob-2026.08.21"
+    }
+   },
+   "premissa": "IRPJ e CSLL permanecem nos dois cenários e foram computados dos dois lados. O que muda é a troca de PIS, COFINS e ISS por IBS e CBS.",
+   "ressalva": "A comparação usa as alíquotas classificadas como ESTIMADA. Enquanto a alíquota de referência não for fixada em norma, nenhuma conclusão sobre \"regime mais vantajoso\" pode ser apresentada com confiança alta."
+  }
+ }
+}

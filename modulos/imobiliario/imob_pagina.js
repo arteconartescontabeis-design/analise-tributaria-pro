@@ -162,13 +162,17 @@
 
 <!-- ========================= LOCA&Ccedil;&Atilde;O ========================= -->
 <div id="t-locacao" style="display:none">
- <div class="card"><h2>Aluguel (loca&ccedil;&atilde;o)</h2><div class="ajuda"><b>Como funciona:</b> o imposto incide sobre o aluguel recebido, descontando o que o inquilino paga de IPTU/condom&iacute;nio (com comprovante) e, no aluguel residencial, R$ 600 por m&ecirc;s. A al&iacute;quota tem <b>70% de desconto</b>. Aluguel de temporada (at&eacute; 90 dias) segue a regra de hotel e n&atilde;o entra aqui.</div>
+ <div class="card"><h2>Aluguel (loca&ccedil;&atilde;o)</h2><div class="ajuda"><b>Como funciona:</b> o imposto incide sobre o aluguel recebido, descontando o que o inquilino paga de IPTU/condom&iacute;nio (com comprovante) e, no aluguel residencial, R$ 600 por m&ecirc;s. A al&iacute;quota tem <b>70% de desconto</b>. Aluguel residencial de temporada (at&eacute; 90 dias seguidos) segue a regra de hotel; se o prazo for curto, o sistema pede que voc&ecirc; classifique a opera&ccedil;&atilde;o antes de calcular.</div>
   <div class="grid g4">
    <div><label>Valor mensal do aluguel</label><input id="l-val" class="money" inputmode="decimal" value="5000"><small class="ajuda-campo">Aluguel mensal combinado.</small></div>
    <div><label>Finalidade</label><select id="l-fim">
      <option value="residencial">Residencial</option><option value="nao_residencial">N&atilde;o residencial</option></select><small class="ajuda-campo">Aluguel residencial tem desconto extra de R$ 600/m&ecirc;s e a redu&ccedil;&atilde;o &eacute; de 70% nos dois casos.</small></div>
    <div><label>Quantidade de meses</label><input id="l-mes" type="number" min="1" step="1" value="1"></div>
-   <div><label>Prazo do contrato (dias)</label><input id="l-prz" type="number" min="0" placeholder="vazio = longo prazo"></div>
+   <div><label>Prazo do contrato (dias)</label><input id="l-prz" type="number" min="0" placeholder="vazio = longo prazo"><small class="ajuda-campo">At&eacute; 90 dias em im&oacute;vel residencial: informe a classifica&ccedil;&atilde;o abaixo.</small></div>
+  </div>
+  <div class="grid g4" style="margin-top:14px" id="l-cls-wrap">
+   <div><label>Classifica&ccedil;&atilde;o (prazo &le; 90 dias)</label><select id="l-cls"><option value="">&mdash; escolher &mdash;</option><option value="hospedagem">Hospedagem / temporada (regra de hotel)</option><option value="locacao_residencial">Loca&ccedil;&atilde;o residencial (n&atilde;o &eacute; temporada)</option></select><small class="ajuda-campo">Art. 253: loca&ccedil;&atilde;o residencial de at&eacute; 90 dias ininterruptos &eacute; tratada como hotelaria (sem R$ 600 e sem os 70%). A escolha &eacute; do respons&aacute;vel e fica na mem&oacute;ria.</small></div>
+   <div style="grid-column:span 3"><label>Justificativa da classifica&ccedil;&atilde;o</label><input id="l-just" type="text" placeholder="ex.: contrato por prazo indeterminado com per&iacute;odo inicial de 60 dias; prorroga&ccedil;&atilde;o cont&iacute;nua sem interrup&ccedil;&atilde;o"><small class="ajuda-campo">Obrigat&oacute;ria quando classificar como loca&ccedil;&atilde;o residencial com prazo curto.</small></div>
   </div>
   <div class="grid g4" style="margin-top:14px">
    <div><label>Tributos e emolumentos (m&ecirc;s)</label><input id="l-trib" class="money" inputmode="decimal" value="180"><small class="ajuda-campo">IPTU, taxas e emolumentos pagos pelo inquilino: saem da base se houver comprovante.</small></div>
@@ -207,6 +211,10 @@
    <div><label>Torna RECEBIDA por mim</label><input id="x-trec" class="money" inputmode="decimal" value="0"><small class="ajuda-campo">Dinheiro que voc&ecirc; RECEBE para igualar os valores. S&oacute; a torna paga imposto.</small></div>
    <div><label>Redutor de ajuste do im&oacute;vel dado</label><input id="x-raj" class="money" inputmode="decimal" value="400000"></div>
    <div><label>Cr&eacute;ditos de IBS/CBS</label><input id="x-cre" class="money" inputmode="decimal" value="0"></div>
+  </div>
+  <div class="grid g4" style="margin-top:14px">
+   <div style="grid-column:span 2"><label>Torna paga em parcelas? (valores separados por ;)</label><input id="x-tparc" type="text" placeholder="ex.: 100000; 100000; 100000"><small class="ajuda-campo">Se a torna for paga aos poucos, o imposto &eacute; devido em cada pagamento (art. 380). A soma deve fechar com a torna.</small></div>
+   <div><label>Torna quitada com financiamento?</label><select id="x-fin"><option value="0">N&atilde;o</option><option value="1">Sim</option></select><small class="ajuda-campo">Com financiamento o vendedor recebe de uma vez: imposto integral no recebimento.</small></div>
   </div>
   <div class="grid g4" style="margin-top:14px">
    <div><label>Unidades futuras a receber?</label><select id="x-uni"><option value="0">N&atilde;o</option><option value="1">Sim</option></select></div>
@@ -254,7 +262,8 @@
    <div><label>Meses do per&iacute;odo</label><input id="c-me" type="number" min="1" value="3"><small class="ajuda-campo">Quantos meses a receita informada cobre.</small></div>
   </div>
   <div class="grid g4" style="margin-top:14px">
-   <div><label>Atividade imobili&aacute;ria no objeto social?</label><select id="c-obj"><option value="1">Sim</option><option value="0">N&atilde;o</option></select></div>
+   <div><label>Atividade imobili&aacute;ria no objeto social?</label><select id="c-obj"><option value="">&mdash; confirmar &mdash;</option><option value="1">Sim</option><option value="0">N&atilde;o</option></select><small class="ajuda-campo">Sem confirma&ccedil;&atilde;o o Lucro Presumido n&atilde;o &eacute; aplicado &agrave; venda.</small></div>
+   <div><label>Natureza da receita de venda</label><select id="c-nat"><option value="">&mdash; confirmar &mdash;</option><option value="operacional">Operacional (im&oacute;vel de estoque)</option><option value="ativo_nao_circulante">Ativo n&atilde;o circulante (ganho de capital)</option></select><small class="ajuda-campo">Im&oacute;vel do ativo n&atilde;o circulante &eacute; ganho de capital, n&atilde;o 8%/12%.</small></div>
    <div><label>Redutor de ajuste dispon&iacute;vel</label><input id="c-raj" class="money" inputmode="decimal" value="400000"></div>
    <div><label>Tipo do im&oacute;vel</label><select id="c-tipo">
      <option value="residencial_novo">Residencial novo</option><option value="comercial">Comercial</option>
