@@ -797,6 +797,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.99.0</b></td><td>07/10/2026</td><td><b>⚖️ LC 224/2025 — acréscimo de 10% nos percentuais de presunção do Lucro Presumido sobre a receita bruta acima de R$ 5 milhões no ano (R$ 1,25 milhão por trimestre). LACRE RE-SELADO <code>8ab9c16a</code> → <code>0a257d66</code>: casos 1 (2025), 2 e 4 (abaixo do limite) idênticos ao centavo; caso 3 (2026, R$ 7,97 mi) LP 1.720.823,72 → 1.733.585,77 (IRPJ +5.550,37, adicional +3.700,25, CSLL +3.511,44); LR, DAS e Reforma "dentro/híbrido" intactos.</b> <b>(1) A regra</b> (art. 4º da LC 224/2025; IN RFB 2.305/2025, alterada pela IN 2.306/2026): o acréscimo é <b>relativo</b> — 8% → 8,8%, 16% → 17,6%, 32% → 35,2%; CSLL 12% → 13,2% e 32% → 35,2% — e incide só sobre a parcela da receita bruta (de atividades, inclusive exportação; sem financeiras) que ultrapassa o limite. Vigência: IRPJ desde 1º/01/2026 e CSLL desde 1º/04/2026 (noventena). <b>(2) Como o motor aplica</b>: por trimestre, limite de R$ 1,25 mi <b>acumulado</b> no ano (o que sobra de um trimestre compensa nos seguintes; o 4º fecha a conta anual — a variação do excedente acumulado pode ser negativa e devolve acréscimo cobrado antes); acréscimo na base = excedente × 10% × presunção média ponderada do trimestre (equivale ao rateio proporcional por atividade); entra no 3º mês do trimestre, antes do adicional (que também sobe). Empresa que começou no ano tem o limite proporcional aos trimestres de atividade (início de atividade da Configuração). <b>(3) Chave na Configuração</b> — "LC 224/2025 — presunção +10%": <i>Aplicar</i> (padrão) ou <i>Não aplicar (liminar / decisão judicial)</i>; herdada entre anos como parâmetro da empresa (<code>cfg.lc224 === false</code>). As ADIs 7920, 7936, 7944 e 7982 estão pendentes no STF. <b>(4) Onde aparece</b>: memória mensal (linha da base do IRPJ e da CSLL com excedente, limite acumulado, presunção média e fonte), memória anual, premissas (parâmetro próprio), Verificar (aviso quando aplicada ou desligada), regra de texto para a IA do parecer e <code>res.lc224 / T.lc224</code> (trimestre a trimestre). Ano-base anterior a 2026 não muda. Suíte: bloco 5az.</td></tr>
                     <tr><td><b>v7.98.0</b></td><td>07/10/2026</td><td><b>✍️ ISS, PIS e COFINS passam a aceitar valor informado, e toda substituição de valor apurado exige MOTIVO. Até aqui só ICMS e IPI podiam ser substituídos (aba ICMS·IPI); ISS, PIS e COFINS eram sempre fórmula × alíquota. Lacre <code>8ab9c16a</code> INTOCADO.</b> <b>(1) Campos novos</b> — <code>trib.iss</code>, <code>trib.pisLP</code>, <code>trib.cofinsLP</code>, <code>trib.pisLR</code>, <code>trib.cofinsLR</code> (null = automático), editáveis no quadro apurado da aba ICMS·IPI. PIS/COFINS são separados por regime porque o Presumido é cumulativo (0,65%/3%) e o Real não cumulativo (1,65%/7,6%). O ISS informado vale no LP, no LR e no mês impedido do Simples; o PIS/COFINS do Real informado entra na base do lucro (despesa dedutível), antes do IRPJ/CSLL. <b>(2) Motivo obrigatório</b> — ao substituir um valor apurado (ICMS, IPI, ISS, PIS, COFINS) o app pede o motivo (mínimo 5 caracteres); sem ele a alteração não é aplicada. O motivo fica no evento da trilha de alterações (<code>auditoria[].motivo</code>) com usuário, data e hora, junto do valor apurado que valia (<code>deAuto</code>) e do valor novo. Apagar a célula (volta ao automático) e "Restaurar automático" não pedem motivo — a ação é autoexplicativa e também fica registrada. <b>(3) Onde aparece</b> — memória mensal do LP e do LR: a parcela sai como <i>valor informado manualmente — apurado pelo motor R$ X · motivo · quem · quando</i>; memória anual: aviso com a contagem de células substituídas; Trilha de alterações: coluna Ação mostra o motivo; dica da célula: idem. "Restaurar automático" passa a limpar também ISS/PIS/COFINS. Suíte: bloco 5ay.</td></tr>
                     <tr><td><b>v7.97.0</b></td><td>07/10/2026</td><td><b>🔴 ICMS: compra de MEI e de optante do Simples não gera crédito. O crédito do Presumido e do Real era estimado sobre TODAS as compras sem ST (× % ICMS de compras), como se todo fornecedor destacasse ICMS. A optante do Simples não destaca (LC 123/2006, art. 23, caput) e o MEI nunca transfere crédito; a optante só transfere o que INFORMA na NF-e (art. 23, § 1º — CSOSN 101/201, mercadoria para revenda ou industrialização, limitado ao ICMS devido por ela). Lacre <code>8ab9c16a</code> INTOCADO (sem os campos novos, nada muda).</b> <b>(1) Campo novo na aba Compras</b> — <code>compras.simplesMei</code>, "De fornecedores MEI / Simples (dentro das compras sem ST)": parcela das compras sem ST + monofásicas vinda de optantes. Sai da base do crédito de ICMS e da exclusão da Lei 14.592/2023 (não há ICMS "incidente na aquisição" para excluir do crédito de PIS/COFINS no Real). Nunca excede a base (o Verificar avisa). <b>(2) Crédito informado por optante</b> — <code>icms.credSimples</code>, nota a nota, na aba ICMS·IPI: o que a optante destacou na NF-e, somado ao crédito. Em branco = zero. <b>(3) Preenchimento pelos fornecedores</b> — botão 🏷️ na aba ICMS·IPI lê a classificação já gravada (triagem de compras por CFOP ou Totais de entrada) e rateia o total de MEI + Simples proporcionalmente às compras sem ST lançadas, com trilha de origem R e evento na auditoria. <b>(4) Onde aparece:</b> quadro apurado (compras sem ST, parcela MEI/Simples, base do crédito, crédito informado), memória mensal do LP e do LR (inclusive a linha da Lei 14.592), memória anual e <code>T.comprasSimplesMei / credSimplesInf</code>. O valor de crédito informado manualmente (aba ICMS·IPI) continua prevalecendo sobre tudo. Suíte: bloco 5ax.</td></tr>
                     <tr><td><b>v7.96.0</b></td><td>07/10/2026</td><td><b>🔴 ICMS: saldo credor não é tributo negativo. Quando o crédito das compras superava o débito das vendas, o ICMS do mês saía NEGATIVO em lp.icms/lr.icms e entrava assim no total do Presumido e do Real — abatendo IRPJ, CSLL, PIS e COFINS, como se o Fisco devolvesse a diferença no mês. Lacre <code>8ab9c16a</code> INTOCADO (nenhum caso selado tem mês com crédito maior que o débito).</b> <b>(1) Conta gráfica do ICMS</b> (LC 87/96, arts. 24 e 25), na mesma estrutura do PIS/COFINS (v7.20.0) e do IPI (v7.80.0): débito − crédito − saldo anterior = <b>a recolher</b>, nunca negativo; o que exceder vira <b>saldo credor a transportar</b> e abate o ICMS dos meses seguintes. <code>icmsPagar</code> segue sendo o líquido do mês e continua formando o lucro do Real (o crédito é ICMS a recuperar: reduz o custo da mercadoria mesmo quando vira saldo) — só o desembolso muda. <b>(2) Saldo credor em 1º/jan</b>: campo novo na Configuração (<code>cfg.icmsSaldoIni</code>) para o saldo trazido de 31/12 do ano anterior; em branco = zero, e análise antiga segue byte a byte igual. <b>(3) Onde aparece:</b> aba ICMS·IPI (líquido, saldo anterior, a recolher, saldo a transportar), memória mensal do LP e do LR, memória anual (saldo em 1º/jan e em 31/12), registros do relatório, carga de consumo da Reforma e <code>T.icmsLiquido / icmsRecolhido / icmsSaldoIni / icmsSaldoFim</code>. O ICMS do mês impedido do Simples (<code>impIcms</code>) não muda: zero no mês de saldo credor, como decidido na v7.94.0. Suíte: bloco 5aw.</td></tr>
@@ -4029,7 +4030,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
              + (cfg.issRetidoNaCarga === true ? issRetLPLR : 0)
              + ((receita>0 && (R.a4[m]+R.a4_retiss[m])>0) ? inssPatr*((R.a4[m]+R.a4_retiss[m])/receita) : 0) },   // v7.18.0: sem FGTS · v7.23.0: ISS retido fora por padrão
       lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsRecolher, ipi:ipiPagar, iss, fgts,
-            baseAdic: base32+base8, basePC:_baseLPliq, basePCbruta:basePisCofLP,
+            baseAdic: base32+base8, baseCsll: baseCsllServ+base12, basePC:_baseLPliq, basePCbruta:basePisCofLP,   // v7.99.0 · baseCsll para a LC 224
       // v7.75.0 (parecer do Teste 12, achado 7) · OS COMPONENTES DA BASE PRESUMIDA VIAJAM COM O
       // RESULTADO. A memória remontava a base a partir de recCom/recServ, que agrupam de outro
       // modo: o transporte de cargas presume 8% no cálculo e aparecia dentro de "serviços × 32%"
@@ -4055,6 +4056,52 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         + (_M && _M.simples ? (+_M.simples.cppRetida||0) + (+_M.simples.inssPatrForaDAS||0) : 0))); }
   }
 
+  // ══ v7.99.0 · LC 224/2025, art. 4º — ACRÉSCIMO DE 10% NOS PERCENTUAIS DE PRESUNÇÃO ══════════════
+  // A parcela da receita bruta que ultrapassa R$ 5 milhões no ano-calendário tem os percentuais de
+  // presunção do IRPJ e da CSLL acrescidos em 10% (relativo: 8% → 8,8%, 16% → 17,6%, 32% → 35,2%;
+  // CSLL 12% → 13,2%, 32% → 35,2%). Regulamentação: IN RFB 2.305/2025, alterada pela IN 2.306/2026 —
+  // o limite anual se distribui em R$ 1,25 milhão por trimestre, ACUMULADO no ano (o que sobrar de um
+  // trimestre compensa nos seguintes; o 4º fecha a conta anual), e o acréscimo é proporcional à
+  // receita de cada atividade. Vigência: IRPJ desde 1º/01/2026; CSLL desde 1º/04/2026 (noventena).
+  // Empresa que começou no ano tem o limite proporcional aos trimestres de atividade.
+  // IMPLEMENTAÇÃO: por trimestre, excedente = (receita acumulada − limite acumulado)+, e o acréscimo
+  // do trimestre é a VARIAÇÃO desse excedente (pode ser negativa: é o ajuste do que foi cobrado a
+  // mais em trimestre anterior, dentro do próprio ano). O acréscimo na base = excedente × 10% ×
+  // presunção MÉDIA PONDERADA do trimestre (base de presunção ÷ receita), que equivale ao rateio por
+  // atividade. Entra no 3º mês do trimestre, ANTES do adicional (que também sobe), e só no Presumido.
+  // Receita bruta = receita de atividades (inclui exportação), sem financeiras (DL 1.598/77, art. 12).
+  // cfg.lc224 === false desliga (liminar — ADIs 7920, 7936, 7944 e 7982 pendentes no STF); ano < 2026 não aplica.
+  {
+    const _anoBase = +(inp.ano || cfg.ano) || 0;
+    const _aplica = cfg.lc224 !== false && _anoBase >= 2026;
+    const LC224_LIM_TRI = 1250000;
+    const _q0 = (_iniAbs !== null && _iniAbs >= 0) ? Math.floor(_iniAbs/3) : 0;   // 1º trimestre de atividade no ano
+    const _q0IR = _q0, _q0CS = Math.max(_q0, _anoBase === 2026 ? 1 : 0);          // CSLL só a partir de abr/2026
+    let _excAcIR = 0, _excAcCS = 0, _recAcIR = 0, _recAcCS = 0;
+    out.lc224 = { aplica: _aplica, ano: _anoBase, limiteTrimestre: LC224_LIM_TRI, inicioTrimestre: _q0, desligado: cfg.lc224 === false,
+                  trimestres: [], excIR: 0, excCS: 0, addBaseIR: 0, addBaseCS: 0, irpj: 0, csll: 0 };
+    for (let t=0; t<4; t++){
+      const ms = out.meses.slice(t*3, t*3+3), M3 = ms[ms.length-1];
+      const rec = S(ms.map(x => x.lp.baseComp ? (x.lp.baseComp.serv + x.lp.baseComp.com) : 0));
+      const baseIR = S(ms.map(x => x.lp.baseAdic - (x.lp.baseComp ? x.lp.baseComp.fin : 0)));
+      const baseCS = S(ms.map(x => (x.lp.baseCsll||0) - (x.lp.baseComp ? x.lp.baseComp.fin : 0)));
+      const pesoIR = rec > 0 ? baseIR/rec : 0, pesoCS = rec > 0 ? baseCS/rec : 0;   // presunção média ponderada
+      let excIR = 0, excCS = 0, limIR = 0, limCS = 0;
+      const aIR = _aplica && t >= _q0IR, aCS = _aplica && t >= _q0CS;
+      if (aIR){ _recAcIR += rec; limIR = LC224_LIM_TRI*(t - _q0IR + 1); const ea = Math.max(0, _recAcIR - limIR); excIR = ea - _excAcIR; _excAcIR = ea; }
+      if (aCS){ _recAcCS += rec; limCS = LC224_LIM_TRI*(t - _q0CS + 1); const ea = Math.max(0, _recAcCS - limCS); excCS = ea - _excAcCS; _excAcCS = ea; }
+      const addIR = excIR*0.10*pesoIR, addCS = excCS*0.10*pesoCS;
+      const reg = { t, rec, aplicaIR: aIR, aplicaCS: aCS, recAcumIR: _recAcIR, limAcumIR: limIR, excIR, pesoIR, addBaseIR: addIR, irpj: addIR*.15,
+                    recAcumCS: _recAcCS, limAcumCS: limCS, excCS, pesoCS, addBaseCS: addCS, csll: addCS*.09 };
+      out.lc224.trimestres.push(reg);
+      if (Math.abs(addIR) > 1e-9 || Math.abs(addCS) > 1e-9){
+        M3.lp.baseAdic += addIR; M3.lp.irpj += addIR*.15; M3.lp.csll += addCS*.09;
+        M3.lp.lc224 = reg;
+        out.lc224.excIR += excIR; out.lc224.excCS += excCS; out.lc224.addBaseIR += addIR; out.lc224.addBaseCS += addCS;
+        out.lc224.irpj += addIR*.15; out.lc224.csll += addCS*.09;
+      }
+    }
+  }
   // Adicional de IRPJ do PRESUMIDO (modo: off | mensal | trimestral)
   // v7.35.0: o Lucro Real saiu daqui — passou a ter período de apuração próprio (ver lrApurar).
   const modo = cfg.adicionalIR || 'off';
@@ -4105,6 +4152,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     icmsLiquido: S(out.meses.map(x=>x.icmsPagar)), icmsRecolhido: S(out.meses.map(x=>x.icmsRecolher)),
     icmsSaldoIni: out.icmsSaldoIni || 0, icmsSaldoFim: saldoCredorICMS,
     comprasSimplesMei: S(out.meses.map(x=>x.comprasSimplesMei||0)), credSimplesInf: S(out.meses.map(x=>x.credSimplesInf||0)),   // v7.97.0
+    lc224: out.lc224 || null,   // v7.99.0 · acréscimo da LC 224/2025 no ano (trimestre a trimestre)
   };
   // ══ v7.88.0 (P1-01) · LUCRO REAL SEM CMV/ESTOQUES = SIMULAÇÃO INCOMPLETA ═══════════════════
   // Com receita de comércio/indústria e NENHUM custo de mercadoria lançado (baixa de estoque nas
@@ -4881,7 +4929,8 @@ function audRotulo(campo){
     inicioAtividade:'Início de atividade', lpBaseServ:'Presunção serviços (LP)', lpBaseCom:'Presunção comércio (LP)', lpBaseServCsll:'Presunção serviços CSLL', lpBaseComCsll:'Presunção comércio CSLL', adicionalIR:'Adicional de IRPJ',
     sublimite:'Sublimite', sublimiteValor:'Sublimite (valor próprio)', lrPeriodo:'Período do Lucro Real', lrPrejIrpj:'Prejuízo fiscal inicial', lrPrejCsll:'Base negativa CSLL inicial', projJanela:'Janela da projeção', anoRefParecer:'Ano de referência do parecer',
     credLRpct:'% creditável no LR', folhaPerc:'Percentuais de folha', ratBasico:'RAT básico', fap:'FAP', travaNoDas:'Trava na guia', arredondaPorTributo:'Arredondar por tributo', frComposicao:'Composição do Fator R', dedIssRetido:'Deduz ISS retido', issRetidoNaCarga:'ISS retido na carga',
-    transpPresuncao:'Presunção transporte', icmsTranspV:'ICMS transporte %', transpCredPres:'Crédito presumido transporte', sem13Pago:'Sem pagamento de 13º' };
+    transpPresuncao:'Presunção transporte', icmsTranspV:'ICMS transporte %', transpCredPres:'Crédito presumido transporte', sem13Pago:'Sem pagamento de 13º',
+    icmsSaldoIni:'Saldo credor de ICMS em 1º/jan', lc224:'LC 224/2025 — presunção +10% (aplicar?)' };
   if (sec === 'cfg') return CFG[k] || ('Configuração · ' + k);
   if (sec === 'folha13') return ({ prolabore13:'Pró-labore 13º', salarios13:'Proventos 13º', baseFgts13:'Base FGTS 13º' })[k] || k;
   if (sec === 'reforma') return ({ receita:'Reforma · receita anual tributável', baseIS:'Reforma · base do Imposto Seletivo', credSimplesPct:'Reforma · % crédito s/ compras do Simples' })[k] || ('Reforma · ' + k);
@@ -5543,6 +5592,11 @@ function anVerificar(){
   }
   if (Object.keys(c.folhaPerc||{}).length)
     add('observe','Esta empresa usa percentuais de folha próprios, diferentes do padrão do aplicativo.','config');
+  // v7.99.0 · LC 224/2025 aplicada ou desligada — o parecer tem de declarar
+  { const _lc = AN._res && AN._res.lc224;
+    if (_lc && _lc.desligado && +AN.ano >= 2026) add('observe','LC 224/2025 NÃO aplicada por opção da empresa (liminar / decisão judicial): o Presumido sai sem o acréscimo de 10% na presunção acima de R$ 1,25 mi/trimestre. Confirme a vigência da decisão.','config');
+    else if (_lc && _lc.aplica && (Math.abs(_lc.addBaseIR) > 0.005 || Math.abs(_lc.addBaseCS) > 0.005))
+      add('observe',`LC 224/2025 aplicada: receita acima de R$ 1,25 mi/trimestre → acréscimo de ${fmtR(_lc.irpj + _lc.csll)} em IRPJ/CSLL do Presumido no ano (sem contar o adicional). As ADIs 7920, 7936, 7944 e 7982 estão pendentes no STF — se a empresa obtiver liminar, desligue na Configuração.`,'config'); }
   // ══ v7.93.0 · CONSOLIDAÇÃO: o Verificar passa a ler os alertas das outras abas ══════════════════
   try {
     const cf = anConfigFaltas();
@@ -5829,6 +5883,9 @@ function anRenderConfig() {
     <div><label>Presunção do transporte (LP) <span class="hint">(v7.48.0)</span></label><select id="cf-transp" onchange="anAplicarConfig(true)" title="Transporte de CARGAS presume 8% no IRPJ, como o comércio; transporte de PASSAGEIROS presume 16% (Lei 9.249/95, art. 15, §1º, II, 'a'). A CSLL é 12% nos dois casos. Vale para as receitas dos blocos de Comunicação/Transporte."><option value="cargas" ${String(c.transpPresuncao||'cargas')!=='passageiros'?'selected':''}>Cargas — IRPJ 8%</option><option value="passageiros" ${String(c.transpPresuncao)==='passageiros'?'selected':''}>Passageiros — IRPJ 16%</option></select></div>
     <div><label>Base IRPJ comércio (LP)</label><select id="cf-bcom" onchange="anAplicarConfig(true)"><option value="0.08" ${c.lpBaseCom==.08?'selected':''}>8%</option><option value="0.16" ${c.lpBaseCom==.16?'selected':''}>16%</option></select></div>
     <div><label>Adicional de IRPJ</label><select id="cf-adic" onchange="anAplicarConfig(true)"><option value="trimestral" ${c.adicionalIR=='trimestral'?'selected':''}>Trimestral</option><option value="mensal" ${c.adicionalIR=='mensal'?'selected':''}>Mensal (estimativa)</option><option value="off" ${c.adicionalIR=='off'?'selected':''}>Não calcular</option></select></div>
+    <div><label>LC 224/2025 — presunção +10% <span class="hint">(v7.99.0)</span></label><select id="cf-lc224" onchange="anAplicarConfig(true)" title="LC 224/2025, art. 4º: a parcela da receita bruta acima de R$ 5 milhões no ano (R$ 1,25 milhão por trimestre, acumulado) tem os percentuais de presunção do IRPJ e da CSLL acrescidos em 10% (32% → 35,2%; 8% → 8,8%; CSLL 12% → 13,2%). IRPJ desde jan/2026, CSLL desde abr/2026 (IN RFB 2.305/2025 e 2.306/2026). Desligue só se a empresa tiver liminar ou decisão judicial — as ADIs 7920, 7936, 7944 e 7982 ainda não foram julgadas pelo STF.">
+      <option value="sim" ${c.lc224===false?'':'selected'}>Aplicar (regra em vigor desde 2026)</option>
+      <option value="nao" ${c.lc224===false?'selected':''}>Não aplicar (liminar / decisão judicial)</option></select></div>
     <div><label>Sublimite ICMS/ISS (R$ 3,6 mi)</label><select id="cf-sublim" onchange="anAplicarConfig(true)"><option value="auto" ${(c.sublimite||'auto')=='auto'?'selected':''}>Aplicar trava da 5ª faixa</option><option value="off" ${c.sublimite=='off'?'selected':''}>Não aplicar</option></select></div>
     <div><label>Trava da 5ª faixa na guia <span class="hint">(v7.36.0)</span></label><select id="cf-travadas" onchange="anAplicarConfig(true)"><option value="sim" ${c.travaNoDas===false?'':'selected'}>Dentro do DAS (PGDAS-D)</option><option value="nao" ${c.travaNoDas===false?'selected':''}>Fora do DAS — legado</option></select></div>
     <div><label>ISS retido na carga do regime <span class="hint">(v7.79.0)</span></label><select id="cf-issretcarga" onchange="anAplicarConfig(true)" title="O ISS retido pelo tomador é imposto suportado na operação: a empresa recebe líquido. Contá-lo na carga mede o custo econômico; não contá-lo mede o desembolso próprio.">
@@ -6021,8 +6078,10 @@ function anAplicarConfig(silencioso) {
     rbaaOutros: vNum('cf-rbaaoutros', _cfg.rbaaOutros),  // v7.87.0 · filiais, ano anterior
     rbaOutros: vNum('cf-rbaoutros', _cfg.rbaOutros),     // v7.87.0 · filiais, ano corrente
     inicioAtividade: (vRaw('cf-inicio', _cfg.inicioAtividade||'')||'').trim(),   // v7.52.0
-    icmsSaldoIni: vNum('cf-icmssaldo', _cfg.icmsSaldoIni) });   // v7.96.0 · saldo credor de ICMS trazido do ano anterior
+    icmsSaldoIni: vNum('cf-icmssaldo', _cfg.icmsSaldoIni),   // v7.96.0 · saldo credor de ICMS trazido do ano anterior
+    lc224: (vRaw('cf-lc224', _cfg.lc224===false?'nao':'sim') || 'sim') !== 'nao' });   // v7.99.0 · false = liminar
   if (!(+AN.cfg.icmsSaldoIni > 0)) delete AN.cfg.icmsSaldoIni;   // v7.96.0: em branco = zero, e a chave não ocupa espaço
+  if (AN.cfg.lc224 !== false) delete AN.cfg.lc224;              // v7.99.0: ausente = aplica (padrão legal); só a exceção é gravada
   // v7.35.0 · período de apuração do Lucro Real e saldos de prejuízo (podem não existir em telas antigas)
   if (AN.cfg.arredondaPorTributo !== true) delete AN.cfg.arredondaPorTributo;   // v7.62.0: ausente ≠ false
   if (!(+AN.cfg.rbaa > 0)) delete AN.cfg.rbaa;                       // v7.70.0: em branco = não informada
@@ -6315,9 +6374,16 @@ async function anTrocarEmpresa() {
 // e tudo era redigitado na virada. Agora o ano novo HERDA os parâmetros do ano mais recente da
 // mesma empresa e declara de onde vieram; alterar um ano específico segue sendo manual, e a
 // alteração NÃO volta para trás (parecer já emitido não pode mudar sozinho — trava da v7.26.0).
+// v7.99.0 · frase da LC 224/2025 para a IA do parecer (regrasDeTexto) — só números do próprio resultado
+function lc224Regra(lc){
+  return 'LC 224/2025 (art. 4º; IN RFB 2.305/2025 e 2.306/2026): a parcela da receita bruta acima de R$ 1,25 milhão por trimestre (R$ 5 milhões no ano, acumulado) tem os percentuais de presunção do IRPJ e da CSLL do Lucro Presumido acrescidos em 10% (ex.: 32% → 35,2%; 8% → 8,8%; CSLL 12% → 13,2%); IRPJ desde jan/2026 e CSLL desde abr/2026. Nesta análise o acréscimo foi de '
+    + fmtR((+lc.irpj||0) + (+lc.csll||0)) + ' em IRPJ e CSLL do Presumido no ano (sem contar o adicional) sobre um excedente de ' + fmtR(+lc.excIR||0)
+    + '. Cite a regra ao explicar a carga do Presumido, sem recalcular, e não a apresente como definitiva: as ADIs 7920, 7936, 7944 e 7982 estão pendentes no STF.';
+}
 const CFG_HERDA = ['iss','icmsV','icmsC','ipiV','ipiC','icmsTranspV','transpCredPres','lpBaseServ',
   'lpBaseCom','lpBaseServCsll','lpBaseComCsll','transpPresuncao','folhaPerc','adicionalIR','sublimite',
-  'travaNoDas','lrPeriodo','projJanela','anoRefParecer','credLRpct'];   // v7.89.0 · o % creditável é parâmetro da empresa, herda
+  'travaNoDas','lrPeriodo','projJanela','anoRefParecer','credLRpct',
+  'lc224'];   // v7.89.0 · o % creditável é parâmetro da empresa, herda · v7.99.0 · liminar da LC 224 também é da empresa
 // NÃO se herda o que é do ano: rbt12Lanc, rbt12ExpLanc, folha12Lanc, rbt12Direto, rbt12ExpDireto, lrPrejIrpj,
 // lrPrejCsll e snAntAcima — são apuração, não parâmetro.
 async function cfgHerdar(an, cnpj, ano){
@@ -6391,7 +6457,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.98.0';
+const APP_VERSAO = '7.99.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -7791,6 +7857,9 @@ function qxWb(D, R){
   pushP('lpCom','Presunção IRPJ — comércio', D.cfg.lpBaseCom, 'Configuração da empresa');
   pushP('lpServ','Presunção IRPJ — serviços', D.cfg.lpBaseServ, 'Configuração da empresa');
   pushP('lpComCsll','Presunção CSLL — comércio', D.cfg.lpBaseComCsll==null?.12:D.cfg.lpBaseComCsll, 'Configuração da empresa');
+  // v7.99.0 · LC 224/2025: acréscimo relativo de 10% na presunção sobre a receita acima de R$ 1,25 mi/trimestre (acumulado)
+  pushP('lc224','Acréscimo na presunção acima de R$ 1,25 mi/trimestre (IRPJ jan/2026, CSLL abr/2026)', D.cfg.lc224===false ? 0 : 0.10,
+    'LC 224/2025, art. 4º; IN RFB 2.305/2025 e 2.306/2026' + (D.cfg.lc224===false ? ' — NÃO aplicada por opção da empresa (liminar / decisão judicial)' : (+D.ano >= 2026 ? '' : ' — ano-base anterior a 2026: não se aplica')));
   pushP('pisLP','PIS cumulativo', 0.0065, 'Lei 9.718/98');
   pushP('cofLP','COFINS cumulativo', 0.03, 'Lei 9.718/98');
   pushP('pisLR','PIS não cumulativo', 0.0165, 'Lei 10.637/2002');
@@ -7932,7 +8001,7 @@ const LACRE_CASOS = [
   // v7.95.1 · Caso 4 — Empresa nova (início fev/2026): março com RBT12p zero → 1ª faixa nominal (v7.94.4), Anexo V pelo Fator R,
   // despesas creditáveis (aluguel PJ, energia, administrativas) sem composição → NID (v7.95.0). Cobre o que os casos 1-3 não cobriam.
   { nome:'Caso 4 — Empresa nova (RBT12 zero, Anexo V, despesas creditáveis)', inp: {"cnpj": "44444444000199", "ano": 2026, "cfg": {"iss": 0.05, "icmsV": 0, "icmsC": 0, "ipiV": 0, "ipiC": 0, "rbt12Direto": 0, "rbt12Lanc": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "rbt12ExpLanc": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "folha12Lanc": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "lpBaseServ": 0.32, "lpBaseCom": 0.08, "lpBaseServCsll": 0, "lpBaseComCsll": 0.12, "transpPresuncao": "cargas", "icmsTranspV": 0, "transpCredPres": 0, "folhaPerc": {}, "adicionalIR": "trimestral", "sublimite": "auto", "lrPeriodo": "trimestral", "lrPrejIrpj": 0, "lrPrejCsll": 0, "inicioAtividade": "2026-02"}, "receitas": {"a5r": [0, 0, 36848.65, 30515.5, 31904.89, 32513.52, 34000, 34000, 34000, 34000, 34000, 34000]}, "folha": {"prolabore": [0, 0, 1600, 1600, 1600, 1600, 1600, 1600, 1600, 1600, 1600, 1600], "salarios": [0, 0, 1436.09, 1436.09, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08], "baseFgts": [0, 0, 1436.09, 1436.09, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08], "prov13": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "provFerias": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "folha13": {"prolabore13": 0, "salarios13": 0, "baseFgts13": 0}, "compras": {}, "icms": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "ipi": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "despesas": {"adm": [0, 0, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000], "vendas": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "fiscais": [0, 0, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300], "financeiras": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "outras": [0, 0, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200], "credAlugueisPJ": [0, 0, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500], "credEnergia": [0, 0, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400]}, "origem": {}} }];
-const LACRE_HASH = '8ab9c16a';   // v7.95.1 — RE-SELADO: entra o CASO 4 (empresa nova, RBT12 zero, Anexo V, despesas creditáveis); casos 1-3 idênticos ao centavo. Anterior: ba7dcb90 (v7.95.0). // v7.95.0 — RE-SELADO: base própria do híbrido (dedução do ICMS/ISS da partilha) e despesas creditáveis na composição; casos 1, 2 e 3 mudam no híbrido 2027-2032 e no limite superior. Anterior: 22197ef1 (v7.94.0). // v7.94.0 — RE-SELADO: ICMS/ISS do período impedido pela mesma conta gráfica do Presumido/Real (aba ICMS·IPI prevalece) e partilha sem ICMS/ISS no mês impedido; casos 1 e 2 intactos, caso 3 muda. Anterior: 453f7b32 (v7.91.0). // v7.48.0 — RE-SELADO: o ICMS destacado passou a sair da base do IBS/CBS (LC 214, art. 12, §2º, V) e o transporte passou a gerar débito de ICMS no LP/LR. Anterior: e1a25234 (v7.45.0); antes fa39eefb (v7.35.0)
+const LACRE_HASH = '0a257d66';   // v7.99.0 — RE-SELADO: LC 224/2025, art. 4º — acréscimo de 10% na presunção do IRPJ/CSLL do Presumido sobre a receita acima de R$ 1,25 mi/trimestre (acumulado no ano; IRPJ desde jan/2026, CSLL desde abr/2026; IN RFB 2.305/2025 e 2.306/2026). Casos 1 (2025), 2 e 4 (abaixo do limite) idênticos ao centavo; caso 3 (2026, 7,97 mi) LP 1.720.823,72 → 1.733.585,77 (IRPJ +5.550,37, adicional +3.700,25, CSLL +3.511,44); LR, DAS e Reforma "dentro/híbrido" intactos. Anterior: 8ab9c16a (v7.95.1). // v7.95.1 — RE-SELADO: entra o CASO 4 (empresa nova, RBT12 zero, Anexo V, despesas creditáveis); casos 1-3 idênticos ao centavo. Anterior: ba7dcb90 (v7.95.0). // v7.95.0 — RE-SELADO: base própria do híbrido (dedução do ICMS/ISS da partilha) e despesas creditáveis na composição; casos 1, 2 e 3 mudam no híbrido 2027-2032 e no limite superior. Anterior: 22197ef1 (v7.94.0). // v7.94.0 — RE-SELADO: ICMS/ISS do período impedido pela mesma conta gráfica do Presumido/Real (aba ICMS·IPI prevalece) e partilha sem ICMS/ISS no mês impedido; casos 1 e 2 intactos, caso 3 muda. Anterior: 453f7b32 (v7.91.0). // v7.48.0 — RE-SELADO: o ICMS destacado passou a sair da base do IBS/CBS (LC 214, art. 12, §2º, V) e o transporte passou a gerar débito de ICMS no LP/LR. Anterior: e1a25234 (v7.45.0); antes fa39eefb (v7.35.0)
 function lacreHash(str){ let h = 0x811c9dc5;
   for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   return h.toString(16).padStart(8,'0'); }
@@ -11377,6 +11446,9 @@ async function parecerIA(){
         'Ao citar o RBT12, dizer se é realizado ou projetado, conforme os campos rbt12MaxBase e rbt12MaxProjetadoBase.',
         'A base do IBS/CBS NÃO é a receita cheia: ISS e ICMS destacado saem dela (campo baseIbsCbs). Nunca descreva o débito como receita × alíquota.',
         'Nunca afirme que não há crédito de IBS/CBS quando creditoSobreCompras.creditoTotalNoAnoDeReferencia for maior que zero.',
+        // v7.99.0 · LC 224/2025 — a IA precisa saber por que o Presumido subiu (ou por que não subiu)
+        ...((RL.res && RL.res.lc224 && RL.res.lc224.aplica && Math.abs(RL.res.lc224.addBaseIR) > 0.005) ? [lc224Regra(RL.res.lc224)]
+           : ((RL.res && RL.res.lc224 && RL.res.lc224.desligado) ? ['LC 224/2025 NÃO aplicada nesta análise por opção da empresa (liminar / decisão judicial): o Lucro Presumido está SEM o acréscimo de 10% na presunção acima de R$ 1,25 milhão por trimestre — mencione essa ressalva ao tratar do Presumido e não a apresente como regra geral.'] : [])),
         // v7.56.0
         'Se inicioAtividade existir, o teto e o sublimite do ano NÃO são R$ 4,8 mi e R$ 3,6 mi: use os proporcionais informados e diga que são proporcionais aos meses de atividade.',
         'Se inicioAtividade.rbt12Proporcionalizada for verdadeiro, o RBT12 citado é uma MÉDIA ANUALIZADA, não a soma do faturado — a empresa pode cair em faixa acima do que efetivamente faturou, e isso deve ser explicado.',
@@ -11930,6 +12002,12 @@ function rlConferencia(){
     const _infTx = (k, auto) => { const ev = audMotivoCelula(D, 'trib.' + k, m);
       return `<b>valor informado manualmente</b> — apurado pelo motor ${fmtR(auto||0)}`
         + (ev && ev.motivo ? ` · motivo: ${esc(ev.motivo)}` : '') + (ev && ev.por ? ` · ${esc(ev.por)} em ${audQuando(ev.em)}` : ''); };
+    // v7.99.0 · LC 224/2025: o 3º mês do trimestre carrega o acréscimo de 10% na presunção sobre o excedente acumulado
+    const _lc = P.lc224 || null;
+    const _lc224Tx = (qual) => { if (!_lc) return '';
+      const add = qual === 'IR' ? _lc.addBaseIR : _lc.addBaseCS, exc = qual === 'IR' ? _lc.excIR : _lc.excCS, peso = qual === 'IR' ? _lc.pesoIR : _lc.pesoCS, lim = qual === 'IR' ? _lc.limAcumIR : _lc.limAcumCS, rac = qual === 'IR' ? _lc.recAcumIR : _lc.recAcumCS;
+      if (!(Math.abs(add) > 0.005)) return '';
+      return ` ${add > 0 ? '+' : '−'} <b>acréscimo LC 224/2025</b> ${fmtR(Math.abs(add))} <span class="hint">(${exc < 0 ? 'ajuste: ' : ''}excedente ${exc < 0 ? '−' : ''}${fmtR(Math.abs(exc))} da receita acumulada ${fmtR(rac)} sobre o limite acumulado ${fmtR(lim)} × 10% × presunção média ${CF.pc(peso)} — LC 224/2025, art. 4º; IN RFB 2.305/2025 e 2.306/2026; ${qual === 'IR' ? 'IRPJ desde jan/2026' : 'CSLL desde abr/2026'})</span>`; };
     const LPl = [
       CF.lin('Base PIS/COFINS (bruta)', `receita ${fmtR(M.receita)} − revenda monofásica ${fmtR(_monoEx)} − exportação ${fmtR(M.recExp||0)}`, fmtR(P.basePCbruta||0)),
       CF.lin('(−) ICMS destacado — Tema 69', M.tema69Informado ? '<b>nota a nota</b> — vICMS das NF-e do mês (XML) ou valor informado na aba ICMS·IPI (STF, RE 574.706)' : `<b>estimativa</b>: (revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706) — importe os XMLs de saída para o valor nota a nota`, fmtR(M.icmsDestacadoPC||0)),
@@ -11960,14 +12038,14 @@ function rlConferencia(){
           `transporte de <b>passageiros</b> ${fmtR(_b.transp)} × 16% <span class="hint">(Lei 9.249/95, art. 15, § 1º, II, "a" — parcela à parte, com presunção própria)</span>`);
         if (_b.fin > 0.005) _p.push(`receitas financeiras ${fmtR(_b.fin)} <b>integrais</b> (Lei 9.430/96, art. 25, II)`);
         return _p.join(' + ');
-      })(), fmtR(P.baseAdic||0)),
+      })() + _lc224Tx('IR'), fmtR(P.baseAdic||0)),
       CF.lin('IRPJ', `${fmtR(P.baseAdic||0)} × 15%`, fmtR(P.irpj)),
       ...(P.adicional>0.005?[CF.lin('Adicional de IRPJ',
         // v7.51.0 (item G) · a linha do LR já imprimia os valores; esta dizia só a regra.
         (P.baseAdicPer!=null && P.limAdicPer!=null)
           ? `(${fmtR(P.baseAdicPer)} − ${fmtR(P.limAdicPer)}) × 10% — base do período de apuração`
           : `parcela da base do período acima do limite × 10%`, fmtR(P.adicional))]:[]),
-      CF.lin('CSLL','bases próprias de comércio e serviços × 9%', fmtR(P.csll)),
+      CF.lin('CSLL', 'bases próprias de comércio e serviços × 9%' + (_lc && Math.abs(_lc.addBaseCS) > 0.005 ? ` <span class="hint">(base ${fmtR((P.baseCsll||0) + _lc.addBaseCS)})</span>` : '') + _lc224Tx('CS'), fmtR(P.csll)),
       // v7.96.0 · o ICMS é conta gráfica: crédito maior que o débito não é tributo negativo, é saldo
       // credor transportado. A memória demonstra as parcelas, como já fazia com PIS/COFINS e IPI.
       ...(((M.icmsSaldoAnt||0) > 0.005) ? [CF.lin('(−) Saldo credor de ICMS do mês anterior',
@@ -13581,12 +13659,16 @@ function rlRegimes(rot, n) {
     ${ln('Base PIS/COFINS (final)', fmt(P.basePCb)+' − '+fmt(icmsDest), P.basePC, true)}
     ${ln('PIS', fmt(P.basePC)+' × 0,65%', P.pis)}
     ${ln('COFINS', fmt(P.basePC)+' × 3,00%', P.cofins)}
-    ${ln('<b>Base de presunção — IRPJ e CSLL</b>', 'comércio '+fmt(recCom)+' × '+pc(+cfg.lpBaseCom||0)+' + serviços '+fmt(recServ)+' × '+pc(+cfg.lpBaseServ||0), P.baseAdic, true)}
+    ${ln('<b>Base de presunção — IRPJ e CSLL</b>', 'comércio '+fmt(recCom)+' × '+pc(+cfg.lpBaseCom||0)+' + serviços '+fmt(recServ)+' × '+pc(+cfg.lpBaseServ||0)
+        + ((T.lc224 && Math.abs(T.lc224.addBaseIR) > 0.005) ? ' + <b>acréscimo LC 224/2025</b> '+fmt(T.lc224.addBaseIR)+' (10% da presunção sobre a receita acima de R$ 1,25 mi/trimestre, acumulado no ano — excedente '+fmt(T.lc224.excIR)+')' : ''), P.baseAdic, true)}
+    ${(T.lc224 && T.lc224.aplica && !(Math.abs(T.lc224.addBaseIR) > 0.005)) ? ln('&nbsp;&nbsp;↳ LC 224/2025', 'receita bruta dentro de R$ 1,25 mi por trimestre (acumulado) — sem acréscimo na presunção', null) : ''}
+    ${(T.lc224 && T.lc224.desligado) ? ln('&nbsp;&nbsp;↳ LC 224/2025', '<b>NÃO aplicada por opção da empresa</b> (liminar / decisão judicial informada na Configuração)', null) : ''}
     ${ln('&nbsp;&nbsp;↳ IRPJ', fmt(P.baseAdic)+' × 15%', P.irpj)}
     ${ln('&nbsp;&nbsp;↳ Adicional de IRPJ', 'parcela da base que excede R$ '+fmt(_limAdic)+' '+_perAdic+' × 10%'
         + (P.adic<=0.005 ? ' — base '+_perAdic+' abaixo do limite, sem adicional' : ''), P.adic)}
     ${ln('&nbsp;&nbsp;↳ CSLL', fmt(P.baseAdic)+' × 9%'
-        + (Math.abs((+cfg.lpBaseComCsll||.12)-(+cfg.lpBaseCom||0))>1e-9 ? ' — presunção própria de CSLL no comércio: '+pc(+cfg.lpBaseComCsll||.12) : ''), P.csll)}
+        + (Math.abs((+cfg.lpBaseComCsll||.12)-(+cfg.lpBaseCom||0))>1e-9 ? ' — presunção própria de CSLL no comércio: '+pc(+cfg.lpBaseComCsll||.12) : '')
+        + ((T.lc224 && Math.abs(T.lc224.addBaseCS) > 0.005) ? ' — inclui acréscimo LC 224/2025 na base da CSLL: '+fmt(T.lc224.addBaseCS)+' (CSLL desde abr/2026; excedente '+fmt(T.lc224.excCS)+')' : ''), P.csll)}
     ${P.iss>0.005?ln('ISS','serviços sem retenção × '+pc(+cfg.iss||0), P.iss):''}
     ${P.icms>0.005?ln('ICMS a recolher','conta gráfica: débito − crédito − saldo credor transportado, mês a mês, nunca negativo (LC 87/96, arts. 24 e 25)', P.icms):''}
     ${(T.icmsSaldoIni||0)>0.005?ln('&nbsp;&nbsp;↳ saldo credor de ICMS em 1º/jan','informado na Configuração — abate o débito dos primeiros meses', T.icmsSaldoIni):''}
