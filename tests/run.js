@@ -35,7 +35,7 @@ const doc = { getElementById:id=>els[id]||(els[id]=mkEl()), querySelector:()=>mk
 const ctx = { document:doc, window:{ addEventListener(){}, print(){} },
   localStorage:{getItem:()=>null,setItem(){},removeItem(){}}, sessionStorage:{getItem:()=>null,setItem(){}},
   fetch:async()=>({ok:true,json:async()=>({}),text:async()=>''}), navigator:{}, console:{...console,log(){},error(){}},
-  setTimeout, clearTimeout, alert(){}, confirm:()=>true, URL, atob:s=>s, btoa:s=>s, AbortController, AbortSignal };
+  setTimeout, clearTimeout, alert(){}, confirm:()=>true, prompt:()=>'ajuste de teste automatizado', URL, atob:s=>s, btoa:s=>s, AbortController, AbortSignal };   // v7.98.0 · prompt = motivo das substituições manuais
 ctx.window.document = doc; vm.createContext(ctx);
 try { vm.runInContext(js, ctx); } catch(e) { /* init sem DOM real */ }
 
@@ -5258,6 +5258,54 @@ console.log('\n■ Integridade da interface');
     chk('5av · v7.95.2 · badge, changelog e lacre 8ab9c16a intocado', /APP_VERSAO = '7\.9[5-9]\.\d+'/.test(html) && /<b>v7\.95\.2<\/b><\/td><td>18\/09\/2026/.test(html) && /LACRE_HASH = '8ab9c16a'/.test(html) && /r\.comp\._projetadoK = k/.test(html));
   }
 
+  // ═══ 5ay · v7.98.0 — ISS, PIS e COFINS informados manualmente, com motivo obrigatório ═══
+  {
+    const rec = { a3_semret: Array(12).fill(100000) };     // serviços: ISS 5% = 5.000/mês; LP PIS 650 / COFINS 3.000
+    const A = mk(rec, 1200000);
+    const rA = g.calcular(A, clone(AD), {...FD}), a0 = rA.meses[0];
+    const B = clone(A); B.trib = { iss:Array(12).fill(null), pisLP:Array(12).fill(null), cofinsLP:Array(12).fill(null), pisLR:Array(12).fill(null), cofinsLR:Array(12).fill(null) };
+    B.trib.iss[0] = 1234; B.trib.pisLP[0] = 100; B.trib.cofinsLP[0] = 200; B.trib.pisLR[0] = 300; B.trib.cofinsLR[0] = 400;
+    const rB = g.calcular(B, clone(AD), {...FD}), b0 = rB.meses[0];
+    chk('5ay · ISS informado (1.234) substitui o apurado (5.000) no LP e no LR; o apurado viaja em issAuto',
+      Math.abs(b0.iss-1234)<0.001 && Math.abs(b0.lp.iss-1234)<0.001 && Math.abs(b0.lr.iss-1234)<0.001 && Math.abs(b0.issAuto-5000)<0.01 && Math.abs(a0.iss-5000)<0.01 && b0.tribInformado.iss===true);
+    chk('5ay · PIS/COFINS do Presumido informados (100/200) substituem 650/3.000 e o total do LP reflete a diferença',
+      Math.abs(b0.lp.pis-100)<0.001 && Math.abs(b0.lp.cofins-200)<0.001 && Math.abs(b0.pisLPAuto-650)<0.01 && Math.abs(b0.cofinsLPAuto-3000)<0.01
+      && Math.abs((a0.lp.total-b0.lp.total) - ((5000-1234)+(650-100)+(3000-200)))<0.01, 'Δtotal='+(a0.lp.total-b0.lp.total).toFixed(2));
+    chk('5ay · PIS/COFINS do Real informados (300/400) substituem o apurado e ENTRAM na base do lucro',
+      Math.abs(b0.lr.pis-300)<0.001 && Math.abs(b0.lr.cofins-400)<0.001
+      && Math.abs((b0.lr.baseIRCS - a0.lr.baseIRCS) - ((a0.lr.pis-300)+(a0.lr.cofins-400)+(5000-1234)))<0.01, 'Δbase='+(b0.lr.baseIRCS-a0.lr.baseIRCS).toFixed(2));
+    chk('5ay · fevereiro (sem valor informado) segue automático nos dois regimes', rB.meses[1].tribInformado.iss===false && Math.abs(rB.meses[1].iss-5000)<0.01 && Math.abs(rB.meses[1].lp.pis-650)<0.01);
+    chk('5ay · análise antiga (sem trib) calcula igual a antes', Math.abs(a0.lp.total - rA.meses[1].lp.total) < 0.01 && Object.values(a0.tribInformado).every(v=>v===false));
+    chk('5ay · anNovo traz trib.{iss,pisLP,cofinsLP,pisLR,cofinsLR} nulos e anNormalizar completa análise antiga sem perder o informado',
+      (()=>{ const n = g.anNovo('1',2026); const v = g.anNormalizar({ cnpj:'1', ano:2026, receitas:{}, icms:{ deb:[1] } }, '1', 2026);
+        return ['iss','pisLP','cofinsLP','pisLR','cofinsLR'].every(k=>Array.isArray(n.trib[k]) && n.trib[k].every(x=>x===null) && Array.isArray(v.trib[k]) && v.trib[k].length===12 && v.trib[k].every(x=>x===null)) && v.icms.deb[0]===1 && v.icms.deb[1]===null; })());
+    // motivo obrigatório via anSet (o prompt do sandbox devolve "ajuste de teste automatizado")
+    const r = c => vm.runInContext(c, ctx);
+    r(`prompt = () => 'ajuste de teste automatizado';`);   // blocos anteriores (admin-senha) trocam o prompt do sandbox
+    r(`APP.user = { email:'auditor@artecon.cnt.br' }; AN = anNovo('22222222000191', 2026); AN.cfg.iss=.05; AN.receitas.a3_semret = Array(12).fill(100000); audFotoBase(AN); anRecalcular();`);
+    r(`anSet('trib.iss', 0, '1.234,00', 'nul');`);
+    const ev = r(`AN.auditoria[AN.auditoria.length-1]`);
+    chk('5ay · informar ISS pela aba grava evento com MOTIVO, o apurado que valia (deAuto 5.000) e o valor novo',
+      ev.acao==='digitado' && ev.campo==='trib.iss' && ev.mes===0 && ev.motivo==='ajuste de teste automatizado' && Math.abs(ev.deAuto-5000)<0.01 && ev.para===1234 && r(`AN.trib.iss[0]`)===1234, 'motivo=' + ev.motivo + ' deAuto=' + ev.deAuto);
+    r(`prompt = () => '';`);
+    const antes = r(`AN.auditoria.length`);
+    r(`anSet('trib.iss', 1, '999', 'nul');`);
+    chk('5ay · sem motivo (vazio ou cancelado) a alteração NÃO é aplicada nem registrada', r(`AN.trib.iss[1]`)===null && r(`AN.auditoria.length`)===antes);
+    r(`prompt = () => 'ajuste de teste automatizado';`);
+    r(`anSet('trib.iss', 0, '', 'nul');`);
+    chk('5ay · apagar devolve o automático e registra "apagado" sem exigir motivo', r(`AN.trib.iss[0]`)===null && r(`(e=>e.acao==='apagado' && e.de===1234 && e.para===null)(AN.auditoria[AN.auditoria.length-1])`));
+    r(`AN.trib.pisLP[3]=1; AN.icms.deb[2]=5; anIcmsRestaurar();`);
+    chk('5ay · "Restaurar automático" limpa também ISS/PIS/COFINS informados', r(`AN.trib.pisLP[3]===null && AN.icms.deb[2]===null && AN.auditoria.slice(-2).every(e=>e.acao==='restaurado')`));
+    chk('5ay · aba ICMS·IPI: ISS, PIS e COFINS (LP e LR) editáveis; AUD_RES guarda o apurado por célula; ICMS/IPI também pedem motivo',
+      /ed\('ISS', 'trib\.iss'/.test(html) && /ed\('PIS — Lucro Presumido', 'trib\.pisLP'/.test(html) && /ed\('COFINS — Lucro Real', 'trib\.cofinsLR'/.test(html)
+      && /'trib\.iss':'issAuto'/.test(html) && /'trib\.cofinsLR':'cofinsLRAuto'/.test(html) && /AN_OVERRIDE_MOTIVO = new Set\(\['icms\.deb','icms\.cred','ipi\.deb','ipi\.cred','trib\.iss'/.test(html));
+    chk('5ay · memória mensal marca "valor informado manualmente" com o apurado e o motivo; trilha e dica exibem o motivo; memória anual conta as células',
+      /valor informado manualmente<\/b> — apurado pelo motor/.test(html) && /function audMotivoCelula/.test(html) && /motivo: ' \+ esc\(e\.motivo\)/.test(html) && /ev\.motivo \? ' · motivo: ' \+ esc\(ev\.motivo\)/.test(html) && /Valores informados manualmente/.test(html));
+    { const l = vm.runInContext('lacreRodar()', ctx);
+      chk('5ay · lacre 8ab9c16a INTOCADO — nenhum caso selado tem valor informado', l.ok === true && l.hash === '8ab9c16a'); }
+    chk('5ay · v7.98.0 · badge e changelog', /APP_VERSAO = '7\.9[8-9]\.\d+'/.test(html) && /<b>v7\.98\.0<\/b><\/td><td>07\/10\/2026/.test(html));
+  }
+
   // ═══ 5ax · v7.97.0 — compra de MEI/Simples não gera crédito de ICMS ═══
   {
     const rec = { a1_semst: Array(12).fill(100000) };          // débito 17.000/mês
@@ -5424,7 +5472,7 @@ console.log('\n■ Integridade da interface');
   {
     chk('5aq · débito e crédito de ICMS e IPI são inputs no quadro apurado, gravando via anSet(...,\'nul\')', /ed\('Débito de ICMS', 'icms\.deb'/.test(html) && /ed\('Crédito de ICMS', 'icms\.cred'/.test(html) && /ed\('Débito de IPI', 'ipi\.deb'/.test(html) && /ed\('Crédito de IPI', 'ipi\.cred'/.test(html) && /onchange="anSet\('\$\{path\}',\$\{m\},this\.value,'nul'\);anRenderGrid\(\)"/.test(html));
     chk('5aq · célula informada é destacada e apagar volta ao automático; linha "ICMS fora do Simples" quando impedida', /INFORMADO na aba ICMS·IPI — apague para voltar ao automático/.test(html) && /ICMS fora do Simples \(impedida\)/.test(html));
-    chk('5aq · "Restaurar automático" existe e zera as 4 séries', /function anIcmsRestaurar\(\)/.test(html) && /\['icms\.deb','icms\.cred','ipi\.deb','ipi\.cred'\]/.test(html));
+    chk('5aq · "Restaurar automático" existe e zera as 4 séries (v7.98.0: as 9, via AN_OVERRIDE_PATHS)', /function anIcmsRestaurar\(\)/.test(html) && (/\['icms\.deb','icms\.cred','ipi\.deb','ipi\.cred'\]/.test(html) || /for \(const path of AN_OVERRIDE_PATHS\)/.test(html)));
     { const calc = vm.runInContext('calcular', ctx), anNovoF = vm.runInContext('anNovo', ctx);
       const i = anNovoF('11111111000191', 2026); i.cfg.rbaa = 3957960.59; i.cfg.rbt12Lanc = Array(12).fill(3957960.59/12); i.receitas.a1_semst[0] = 291799; i.compras.semst[0] = 62236.89;
       const a = calc(i).meses[0]; i.icms.deb[0] = 30000; i.icms.cred[0] = 10000; const b = calc(i).meses[0];

@@ -797,6 +797,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.98.0</b></td><td>07/10/2026</td><td><b>✍️ ISS, PIS e COFINS passam a aceitar valor informado, e toda substituição de valor apurado exige MOTIVO. Até aqui só ICMS e IPI podiam ser substituídos (aba ICMS·IPI); ISS, PIS e COFINS eram sempre fórmula × alíquota. Lacre <code>8ab9c16a</code> INTOCADO.</b> <b>(1) Campos novos</b> — <code>trib.iss</code>, <code>trib.pisLP</code>, <code>trib.cofinsLP</code>, <code>trib.pisLR</code>, <code>trib.cofinsLR</code> (null = automático), editáveis no quadro apurado da aba ICMS·IPI. PIS/COFINS são separados por regime porque o Presumido é cumulativo (0,65%/3%) e o Real não cumulativo (1,65%/7,6%). O ISS informado vale no LP, no LR e no mês impedido do Simples; o PIS/COFINS do Real informado entra na base do lucro (despesa dedutível), antes do IRPJ/CSLL. <b>(2) Motivo obrigatório</b> — ao substituir um valor apurado (ICMS, IPI, ISS, PIS, COFINS) o app pede o motivo (mínimo 5 caracteres); sem ele a alteração não é aplicada. O motivo fica no evento da trilha de alterações (<code>auditoria[].motivo</code>) com usuário, data e hora, junto do valor apurado que valia (<code>deAuto</code>) e do valor novo. Apagar a célula (volta ao automático) e "Restaurar automático" não pedem motivo — a ação é autoexplicativa e também fica registrada. <b>(3) Onde aparece</b> — memória mensal do LP e do LR: a parcela sai como <i>valor informado manualmente — apurado pelo motor R$ X · motivo · quem · quando</i>; memória anual: aviso com a contagem de células substituídas; Trilha de alterações: coluna Ação mostra o motivo; dica da célula: idem. "Restaurar automático" passa a limpar também ISS/PIS/COFINS. Suíte: bloco 5ay.</td></tr>
                     <tr><td><b>v7.97.0</b></td><td>07/10/2026</td><td><b>🔴 ICMS: compra de MEI e de optante do Simples não gera crédito. O crédito do Presumido e do Real era estimado sobre TODAS as compras sem ST (× % ICMS de compras), como se todo fornecedor destacasse ICMS. A optante do Simples não destaca (LC 123/2006, art. 23, caput) e o MEI nunca transfere crédito; a optante só transfere o que INFORMA na NF-e (art. 23, § 1º — CSOSN 101/201, mercadoria para revenda ou industrialização, limitado ao ICMS devido por ela). Lacre <code>8ab9c16a</code> INTOCADO (sem os campos novos, nada muda).</b> <b>(1) Campo novo na aba Compras</b> — <code>compras.simplesMei</code>, "De fornecedores MEI / Simples (dentro das compras sem ST)": parcela das compras sem ST + monofásicas vinda de optantes. Sai da base do crédito de ICMS e da exclusão da Lei 14.592/2023 (não há ICMS "incidente na aquisição" para excluir do crédito de PIS/COFINS no Real). Nunca excede a base (o Verificar avisa). <b>(2) Crédito informado por optante</b> — <code>icms.credSimples</code>, nota a nota, na aba ICMS·IPI: o que a optante destacou na NF-e, somado ao crédito. Em branco = zero. <b>(3) Preenchimento pelos fornecedores</b> — botão 🏷️ na aba ICMS·IPI lê a classificação já gravada (triagem de compras por CFOP ou Totais de entrada) e rateia o total de MEI + Simples proporcionalmente às compras sem ST lançadas, com trilha de origem R e evento na auditoria. <b>(4) Onde aparece:</b> quadro apurado (compras sem ST, parcela MEI/Simples, base do crédito, crédito informado), memória mensal do LP e do LR (inclusive a linha da Lei 14.592), memória anual e <code>T.comprasSimplesMei / credSimplesInf</code>. O valor de crédito informado manualmente (aba ICMS·IPI) continua prevalecendo sobre tudo. Suíte: bloco 5ax.</td></tr>
                     <tr><td><b>v7.96.0</b></td><td>07/10/2026</td><td><b>🔴 ICMS: saldo credor não é tributo negativo. Quando o crédito das compras superava o débito das vendas, o ICMS do mês saía NEGATIVO em lp.icms/lr.icms e entrava assim no total do Presumido e do Real — abatendo IRPJ, CSLL, PIS e COFINS, como se o Fisco devolvesse a diferença no mês. Lacre <code>8ab9c16a</code> INTOCADO (nenhum caso selado tem mês com crédito maior que o débito).</b> <b>(1) Conta gráfica do ICMS</b> (LC 87/96, arts. 24 e 25), na mesma estrutura do PIS/COFINS (v7.20.0) e do IPI (v7.80.0): débito − crédito − saldo anterior = <b>a recolher</b>, nunca negativo; o que exceder vira <b>saldo credor a transportar</b> e abate o ICMS dos meses seguintes. <code>icmsPagar</code> segue sendo o líquido do mês e continua formando o lucro do Real (o crédito é ICMS a recuperar: reduz o custo da mercadoria mesmo quando vira saldo) — só o desembolso muda. <b>(2) Saldo credor em 1º/jan</b>: campo novo na Configuração (<code>cfg.icmsSaldoIni</code>) para o saldo trazido de 31/12 do ano anterior; em branco = zero, e análise antiga segue byte a byte igual. <b>(3) Onde aparece:</b> aba ICMS·IPI (líquido, saldo anterior, a recolher, saldo a transportar), memória mensal do LP e do LR, memória anual (saldo em 1º/jan e em 31/12), registros do relatório, carga de consumo da Reforma e <code>T.icmsLiquido / icmsRecolhido / icmsSaldoIni / icmsSaldoFim</code>. O ICMS do mês impedido do Simples (<code>impIcms</code>) não muda: zero no mês de saldo credor, como decidido na v7.94.0. Suíte: bloco 5aw.</td></tr>
                     <tr><td><b>v7.95.2</b></td><td>18/09/2026</td><td><b>🔴 REFORMA: o crédito de IBS/CBS não era projetado. Com o ano incompleto, o parecer, a conferência e o relatório Reforma escalavam a receita (débito) para o ano cheio, mas o crédito ficava no valor do período lançado. Lacre <code>8ab9c16a</code> INTOCADO.</b> <b>(1) Causa.</b> Desde a v7.91.0 o crédito vem da <b>composição dos fornecedores</b> (<code>comp.final</code>), não das contrapartes; a projeção (<code>rfProjetar</code>, fator k) escalava receita, compras, contrapartes e parcelas com benefício, mas não a composição — e <code>rfContraEfetivo</code> sobrescreve as contrapartes pelos valores da composição, sem o k. Efeito medido em sandbox (6 meses importados, composição 100% regime regular, k = 2): débito 2027 45.865,80 → 91.731,60 (certo), crédito 24.867,00 → 24.867,00 (errado; correto 49.734,00), líquido 66.864,60 em vez de 41.997,60; híbrido e regime regular carregavam a mesma distorção. Análise sem composição (não identificado puro) não era afetada, porque ali a base do crédito já vinha projetada dos totais do motor. <b>(2) Correção.</b> A composição passa a ser projetada junto: total, parcela não classificada e valores por grupo (final e automático) e o valor de cada fornecedor são multiplicados por k; percentuais, status, confirmações e trilha não mudam. O limite inferior da sensibilidade (só confirmados) e o superior acompanham. <b>(3) Fora do lacre.</b> A projeção monta a análise antes de <code>calcular()</code> e os quatro casos-gabarito têm doze meses; nenhuma regra de apuração muda. Aba Reforma da tela segue sobre o realizado (é o editor). Suíte: bloco 5av (crédito × k, percentuais intactos, sem composição igual ao anterior, ano completo intocado).</td></tr>
@@ -3870,7 +3871,18 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // de exportação (a3_exp, a5r_exp), de modo que o ISS do Presumido e do Real JÁ não incidia sobre
     // serviço exportado — a não incidência da LC 116/2003, art. 2º, I, já estava atendida nos três
     // regimes. A hipótese levantada no relatório era falsa; fica o teste travando o comportamento.
-    const iss = (serv - R.a3_retiss[m] - R.a3_retissinss[m] - R.a4_retiss[m])*cfg.iss;
+    // ══ v7.98.0 · ISS, PIS E COFINS INFORMADOS MANUALMENTE ══════════════════════════════════════
+    // Até aqui só ICMS e IPI aceitavam valor informado (aba ICMS·IPI). ISS, PIS e COFINS eram sempre
+    // fórmula × alíquota — sem como refletir uma apuração real que a fórmula não alcança (base de
+    // cálculo própria do município, receita com alíquota diferenciada, crédito extemporâneo). O valor
+    // informado em inp.trib.<campo>[m] SUBSTITUI o apurado (null = automático); o apurado continua
+    // calculado e viaja no resultado (*Auto) para a memória declarar o que foi substituído. A
+    // substituição exige MOTIVO (anSet → trilha de alterações) e entra ANTES da base do Lucro Real,
+    // porque PIS, COFINS e ISS são despesa dedutível — o lucro tem de refletir o valor que vale.
+    const _tribInf = k => (inp.trib && inp.trib[k] && inp.trib[k][m] != null) ? Math.max(0, +inp.trib[k][m]) : null;
+    const issAuto = (serv - R.a3_retiss[m] - R.a3_retissinss[m] - R.a4_retiss[m])*cfg.iss;
+    const _issInf = _tribInf('iss');
+    const iss = _issInf != null ? _issInf : issAuto;
 
     // ── LUCRO PRESUMIDO ──
     // v7.1 (A3): revenda monofásica tem alíquota zero de PIS/COFINS também no cumulativo —
@@ -3890,8 +3902,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
                           : (R.a1_semst[m]+R.a1_red[m]+R.a2_semst[m]+R.a2_red[m])*cfg.icmsV
                           + R.comtransp[m]*icmsVTransp;
     const _baseLPliq = Math.max(0, basePisCofLP - icmsDestacadoPC);   // exclusão nunca negativa a base
-    const lp_pis = _baseLPliq*.0065;
-    const lp_cof = _baseLPliq*.03;
+    const lp_pisAuto = _baseLPliq*.0065, lp_cofAuto = _baseLPliq*.03;
+    const _pisLPInf = _tribInf('pisLP'), _cofLPInf = _tribInf('cofinsLP');   // v7.98.0 · informado vence
+    const lp_pis = _pisLPInf != null ? _pisLPInf : lp_pisAuto;
+    const lp_cof = _cofLPInf != null ? _cofLPInf : lp_cofAuto;
     const servIR = serv + R.a3_exp[m] + R.a5r_exp[m];        // v7.55.3: a5r_exp entrava no Simples e
                                                             // ficava FORA daqui — exportação é imune a
                                                             // PIS/COFINS/ICMS/ISS,
@@ -3926,8 +3940,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const _liq0 = basePisCofLR - icmsDestacadoPC - _saldoAnt;
     const _baseLRliq = Math.max(0, _liq0);
     saldoCredorPC = Math.max(0, -_liq0);
-    const lr_pis = _baseLRliq*.0165 + R.fin[m]*.0065;
-    const lr_cof = _baseLRliq*.076  + R.fin[m]*.04;
+    const lr_pisAuto = _baseLRliq*.0165 + R.fin[m]*.0065, lr_cofAuto = _baseLRliq*.076  + R.fin[m]*.04;
+    const _pisLRInf = _tribInf('pisLR'), _cofLRInf = _tribInf('cofinsLR');   // v7.98.0 · informado vence (antes da base do lucro)
+    const lr_pis = _pisLRInf != null ? _pisLRInf : lr_pisAuto;
+    const lr_cof = _cofLRInf != null ? _cofLRInf : lr_cofAuto;
     // v7.96.0 · a base do Real continua com o ICMS LÍQUIDO (débito − crédito), não com o "a recolher":
     // o débito reduz a receita e o crédito sai do custo da mercadoria (ICMS a recuperar) — a conta
     // gráfica muda o desembolso, não o lucro. Ver nota em `icmsRecolher`.
@@ -3985,6 +4001,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       icmsRecolher, icmsSaldoAnt: _icmsSaldoAnt, icmsSaldoFim: saldoCredorICMS,
       // v7.97.0 · compras de MEI/Simples fora da base do crédito e crédito informado nas NF de optantes (art. 23, § 1º)
       comprasSimplesMei: _cSimples, credSimplesInf: _credSimplesInf, credIcmsBase: C.semst[m]+C.mono[m]-_cSimples,
+      // v7.98.0 · apurado pelo motor × informado manualmente (ISS, PIS e COFINS)
+      issAuto, pisLPAuto: lp_pisAuto, cofinsLPAuto: lp_cofAuto, pisLRAuto: lr_pisAuto, cofinsLRAuto: lr_cofAuto,
+      tribInformado: { iss: _issInf != null, pisLP: _pisLPInf != null, cofinsLP: _cofLPInf != null, pisLR: _pisLRInf != null, cofinsLR: _cofLRInf != null },
       tema69Informado: _t69Inf, lei14592Informado: _l14Inf,   // v7.89.0 · origem do valor (nota a nota × estimativa)
       // v7.23.0: ISS retido deixa de ser RECOMPOSTO no total (recolhido na fonte pelo tomador,
       // LC 123, art. 21, §4º — não é desembolso em guia da empresa); campo mantido como informativo.
@@ -4644,6 +4663,9 @@ function anNovo(cnpj, ano) {
     icms: { cred:Array(12).fill(null), deb:Array(12).fill(null), tema69:Array(12).fill(null), lei14592:Array(12).fill(null),
             credSimples:Array(12).fill(null) },   // v7.89.0 · nota a nota · v7.97.0 · crédito informado por optante (art. 23, § 1º)
     ipi:  { cred:Array(12).fill(null), deb:Array(12).fill(null) },
+    // v7.98.0 · valores INFORMADOS de ISS, PIS e COFINS (null = automático). PIS/COFINS separados por regime:
+    // no Presumido são cumulativos (0,65% / 3%), no Real não cumulativos (1,65% / 7,6%) — um valor não serve ao outro.
+    trib: { iss:Array(12).fill(null), pisLP:Array(12).fill(null), cofinsLP:Array(12).fill(null), pisLR:Array(12).fill(null), cofinsLR:Array(12).fill(null) },
     despesas: Object.fromEntries([...DESP_KEYS, ...CRED_LR_KEYS].map(k=>[k,z12()])),
     origem: {},                                            // v7.28.0: trilha de origem por campo×mês
     auditoria: [] };                                       // v7.94.3: trilha de alterações (quem/quando/de → para)
@@ -4735,7 +4757,20 @@ const AUD_IMPORT = 'PXBMFRL';                    // origens que vêm de arquivo
 const AUD_ROT = { digitado:'digitado', apagado:'apagado — volta ao automático', repetido:'repetido de janeiro (⇉)',
   importado:'importado', restaurado:'restaurado ao automático', config:'Configuração', reforma:'aba Reforma' };
 const AUD_CFG_PADRAO = new Set(['cfg.travaNoDas','cfg.projJanela','cfg.anoRefParecer','cfg.lpBaseComCsll','cfg.lpBaseServCsll','cfg.transpPresuncao','cfg.icmsTranspV','cfg.transpCredPres','cfg.fap','cfg.ratBasico']);   // preenchidas pela própria tela com o padrão
-const AUD_RES = { 'icms.deb':'icmsDeb', 'icms.cred':'icmsCred', 'ipi.deb':'ipiDeb', 'ipi.cred':'ipiCred' };   // estimativa do motor por célula
+const AUD_RES = { 'icms.deb':'icmsDeb', 'icms.cred':'icmsCred', 'ipi.deb':'ipiDeb', 'ipi.cred':'ipiCred',
+  'trib.iss':'issAuto', 'trib.pisLP':'pisLPAuto', 'trib.cofinsLP':'cofinsLPAuto', 'trib.pisLR':'pisLRAuto', 'trib.cofinsLR':'cofinsLRAuto' };   // estimativa do motor por célula (v7.98.0: trib)
+// v7.98.0 · substituir um valor APURADO exige motivo — fica na trilha com usuário, data e hora
+const AN_OVERRIDE_MOTIVO = new Set(['icms.deb','icms.cred','ipi.deb','ipi.cred','trib.iss','trib.pisLP','trib.cofinsLP','trib.pisLR','trib.cofinsLR']);
+const AN_OVERRIDE_PATHS = [...AN_OVERRIDE_MOTIVO];
+function anMotivoPedir(rotulo, de, para){
+  const pedir = (typeof prompt === 'function') ? prompt : null;
+  if (!pedir) return null;
+  const r = pedir('Motivo da alteração manual — ' + rotulo + '\n' + (de == null ? 'valor apurado pelo motor' : 'de ' + fmt(de)) + ' → ' + fmt(para)
+    + '\n\nObrigatório (mínimo 5 caracteres). Fica registrado na trilha de alterações, com usuário, data e hora.', '');
+  if (r == null) return null;
+  const mtv = String(r).trim();
+  return mtv.length >= 5 ? mtv.slice(0, 300) : null;
+}
 let AUD_FOTO = null;                              // retrato dos dados no último ponto de sincronização
 let AUD_LOTE = null;                              // rótulo do lote de importação em curso (opcional)
 function audLista(an){ an = an || AN; if (!an) return []; if (!Array.isArray(an.auditoria)) an.auditoria = []; return an.auditoria; }
@@ -4750,7 +4785,7 @@ function audIgual(a, b){
 function audMapa(an){
   const M = {}, OG = {};
   if (!an) return { M, OG };
-  for (const sec of ['receitas','folha','compras','despesas','icms','ipi'])
+  for (const sec of ['receitas','folha','compras','despesas','icms','ipi','trib'])
     for (const [k, arr] of Object.entries(an[sec]||{})) if (Array.isArray(arr))
       for (let m=0;m<12;m++){ const v = arr[m]; M[sec+'.'+k+'|'+m] = (v == null ? null : +v); }
   for (const [k, v] of Object.entries(an.folha13||{})) M['folha13.'+k+'|'] = +v||0;
@@ -4852,7 +4887,13 @@ function audRotulo(campo){
   if (sec === 'reforma') return ({ receita:'Reforma · receita anual tributável', baseIS:'Reforma · base do Imposto Seletivo', credSimplesPct:'Reforma · % crédito s/ compras do Simples' })[k] || ('Reforma · ' + k);
   if (sec === 'icms') return ({ deb:'Débito de ICMS', cred:'Crédito de ICMS', tema69:'ICMS destacado (Tema 69)', lei14592:'ICMS compras (Lei 14.592)' })[k] || campo;
   if (sec === 'ipi') return ({ deb:'Débito de IPI', cred:'Crédito de IPI' })[k] || campo;
+  if (sec === 'trib') return ({ iss:'ISS (valor informado)', pisLP:'PIS — Lucro Presumido (valor informado)', cofinsLP:'COFINS — Lucro Presumido (valor informado)', pisLR:'PIS — Lucro Real (valor informado)', cofinsLR:'COFINS — Lucro Real (valor informado)' })[k] || campo;   // v7.98.0
   return campo;
+}
+// v7.98.0 · último evento com motivo de uma célula (para a memória declarar POR QUE o valor foi substituído)
+function audMotivoCelula(an, campo, mes){
+  const L = audLista(an); for (let i = L.length-1; i >= 0; i--){ const e = L[i]; if (e.campo === campo && (e.mes == null ? '' : e.mes) === (mes == null ? '' : mes) && e.acao !== 'importado') return e; }
+  return null;
 }
 function audFmtVal(campo, v, ev, lado){
   if (v == null || v === '') { const est = ev && lado === 'de' ? ev.deAuto : null; return AUD_RES[campo] ? (est != null ? 'estimativa ' + fmt(est) : 'estimativa') : '—'; }
@@ -4868,7 +4909,7 @@ function audFrase(ev, campo){
   campo = campo || ev.campo;
   const quem = ev.por ? ' por ' + ev.por : '';
   if (ev.acao === 'importado') return `${AUD_ROT.importado} (${ev.lote||'lote'})${quem} em ${audQuando(ev.em)} — de ${audFmtVal(campo, ev.de, ev, 'de')} para ${audFmtVal(campo, ev.para, ev, 'para')}`;
-  return `${AUD_ROT[ev.acao]||ev.acao}${quem} em ${audQuando(ev.em)} — de ${audFmtVal(campo, ev.de, ev, 'de')} para ${audFmtVal(campo, ev.para, ev, 'para')}`;
+  return `${AUD_ROT[ev.acao]||ev.acao}${quem} em ${audQuando(ev.em)} — de ${audFmtVal(campo, ev.de, ev, 'de')} para ${audFmtVal(campo, ev.para, ev, 'para')}${ev.motivo ? ' · motivo: ' + esc(ev.motivo) : ''}`;
 }
 // resumo: quantas manuais, quantas manuais SOBRE valor importado, quantas importações
 function audResumo(an){
@@ -4893,7 +4934,7 @@ function audQuadroHtml(an){
       return `<tr style="background:#f4f8fb"><td>${audQuando(e.em)}</td><td>${esc(e.por||'—')}</td><td colspan="2"><b>Importação · ${esc(e.lote||'')}</b> — ${e.n||0} célula(s)</td><td colspan="2" style="font-size:10.5px">${det}</td><td>arquivo</td></tr>`;
     }
     const sobre = e.origemDe && AUD_IMPORT.includes(e.origemDe);
-    return `<tr${sobre?' style="background:#fef6e7"':''}><td>${audQuando(e.em)}</td><td>${esc(e.por||'—')}</td><td>${esc(audRotulo(e.campo))}</td><td class="num">${mesTx(e.mes)}</td><td class="num">${audFmtVal(e.campo, e.de, e, 'de')}</td><td class="num"><b>${audFmtVal(e.campo, e.para, e, 'para')}</b></td><td>${AUD_ROT[e.acao]||e.acao}${sobre ? ' <b>sobre ' + ORIGEM_ROT[e.origemDe][0] + '</b>' : ''}</td></tr>`;
+    return `<tr${sobre?' style="background:#fef6e7"':''}><td>${audQuando(e.em)}</td><td>${esc(e.por||'—')}</td><td>${esc(audRotulo(e.campo))}</td><td class="num">${mesTx(e.mes)}</td><td class="num">${audFmtVal(e.campo, e.de, e, 'de')}</td><td class="num"><b>${audFmtVal(e.campo, e.para, e, 'para')}</b></td><td>${AUD_ROT[e.acao]||e.acao}${sobre ? ' <b>sobre ' + ORIGEM_ROT[e.origemDe][0] + '</b>' : ''}${e.motivo ? '<br><span class="hint">motivo: ' + esc(e.motivo) + '</span>' : ''}</td></tr>`;
   }).join('');
   return `<div style="margin-top:10px"><b style="font-size:12px">Trilha de alterações</b>
     <div class="hint">${r.manuais} alteração(ões) manual(is)${r.sobreImportado ? `, <b>${r.sobreImportado} sobre valor importado</b>` : ''} · ${r.lotes} importação(ões) (${r.celulasImportadas} célula(s))${r.total > AUD_ALERTA ? ' · <b style="color:#943126">trilha muito extensa — considere fechar o exercício</b>' : ''}. Cada linha registra quem alterou, quando, o valor anterior e o novo; linhas em âmbar são alterações manuais sobre dado importado.</div>
@@ -5084,7 +5125,7 @@ function anNormalizar(d, cnpj, ano){
   out.folha13 = { ...base.folha13, ...(d.folha13||{}) };
   out.origem = (d.origem && typeof d.origem === 'object' && !Array.isArray(d.origem)) ? d.origem : {};   // v7.28.0
   out.auditoria = Array.isArray(d.auditoria) ? d.auditoria : [];                                          // v7.94.3
-  for (const sec of ['icms','ipi']){                       // aqui null significa "automático" — não virar zero
+  for (const sec of ['icms','ipi','trib']){                // aqui null significa "automático" — não virar zero (v7.98.0: trib)
     out[sec] = { ...base[sec], ...(d[sec]||{}) };
     for (const k of Object.keys(out[sec])){
       const v = out[sec][k];
@@ -5252,14 +5293,15 @@ function anApuradoImpostos(){
   // digitado vira o valor informado (aba ICMS·IPI prevalece sobre a estimativa, Simples impedido, LP e LR de
   // uma vez); apagar a célula devolve o automático. Antes o usuário via o apurado numa tabela só de leitura e
   // tinha de descer até "Crédito/Débito de ICMS (substituir)", em branco, sem saber que número estava valendo.
-  const _inf = (path, m) => { const {o,k} = anPath(AN, path); return o[k] && o[k][m] != null; };
+  const _inf = (path, m) => { const {o,k} = anPath(AN, path); return !!(o && o[k] && o[k][m] != null); };
   const _audIdx = audIndice(AN);   // v7.94.3
   const ed = (rot, path, f, dica) => `<tr><td class="rot" title="${dica||''}">${rot} <span class="hint">(editável)</span></td>`
     + R.meses.map((M,m)=>`<td><input inputmode="decimal" value="${(+f(M))?fmt(f(M)):''}" style="${_inf(path,m)?'font-weight:700;color:#1a5276;background:#eef4fb':'color:#5b6770'}" title="${_inf(path,m)?'INFORMADO na aba ICMS·IPI — apague para voltar ao automático':'estimativa do motor — digite para substituir'}${_audIdx[path+'|'+m]?(' · '+audFrase(_audIdx[path+'|'+m], path).replace(/"/g,"'")):''}" onchange="anSet('${path}',${m},this.value,'nul');anRenderGrid()"></td>`).join('')
     + `<td class="num"><b>${fmt(R.meses.reduce((s,M)=>s+(+f(M)||0),0))}</b></td></tr>`;
   const _impAno = R.meses.some(M=>M.impedido);
-  const _nInf = ['icms.deb','icms.cred','ipi.deb','ipi.cred'].reduce((n,p)=>n + R.meses.filter((_,m)=>_inf(p,m)).length, 0);
-  return `<div style="margin-bottom:22px"><b style="font-size:13px">ICMS, IPI e ISS apurados pelo aplicativo</b>
+  const _nInf = AN_OVERRIDE_PATHS.reduce((n,p)=>n + R.meses.filter((_,m)=>_inf(p,m)).length, 0);
+  return `<div style="margin-bottom:22px"><b style="font-size:13px">ICMS, IPI, ISS, PIS e COFINS apurados pelo aplicativo</b>
+    <div class="hint" style="margin-top:4px"><b>v7.98.0 · toda substituição de valor apurado pede o MOTIVO</b> (mínimo 5 caracteres) e fica na trilha de alterações com usuário, data e hora; a memória de cálculo marca a parcela como "valor informado manualmente" e mostra o apurado que foi substituído.</div>
     <div class="hint">Valores calculados a partir das receitas, das compras e dos percentuais da Configuração
       (ICMS vendas ${(+c.icmsV*100).toFixed(2).replace('.',',')}%, compras ${(+c.icmsC*100).toFixed(2).replace('.',',')}%).
       <b>Débito e crédito são editáveis aqui mesmo:</b> o que você digitar (destacado em azul) passa a valer no Lucro Presumido, no Lucro Real e, se a empresa estiver impedida, no ICMS fora do Simples; apague a célula para voltar ao automático.
@@ -5286,15 +5328,19 @@ function anApuradoImpostos(){
         ${ed('Débito de IPI', 'ipi.deb', M=>M.ipiDeb, 'Saídas industriais × % IPI — ou o valor informado')}
         ${ed('Crédito de IPI', 'ipi.cred', M=>M.ipiCred, 'Base p/ crédito × % IPI de compras — ou o valor informado')}
         ${lin('IPI a pagar', M=>M.ipiPagar)}
-        ${lin('ISS', M=>M.iss, 'Serviços × alíquota do município')}
+        ${ed('ISS', 'trib.iss', M=>M.iss, 'Serviços sem retenção × alíquota do município — ou o valor informado (vale no LP, no LR e no mês impedido do Simples)')}
+        ${ed('PIS — Lucro Presumido', 'trib.pisLP', M=>M.lp.pis, 'Base cumulativa × 0,65% — ou o valor informado')}
+        ${ed('COFINS — Lucro Presumido', 'trib.cofinsLP', M=>M.lp.cofins, 'Base cumulativa × 3,00% — ou o valor informado')}
+        ${ed('PIS — Lucro Real', 'trib.pisLR', M=>M.lr.pis, 'Base não cumulativa × 1,65% + financeiras × 0,65% — ou o valor informado (entra na base do lucro)')}
+        ${ed('COFINS — Lucro Real', 'trib.cofinsLR', M=>M.lr.cofins, 'Base não cumulativa × 7,60% + financeiras × 4,00% — ou o valor informado (entra na base do lucro)')}
       </tbody></table></div></div>`;
 }
 
 // v7.94.2 · limpa todas as substituições manuais de ICMS/IPI (débito/crédito) — volta ao automático
 function anIcmsRestaurar(){
   if (!AN) return;
-  if (!confirm('Apagar todos os valores de débito/crédito de ICMS e IPI informados manualmente e voltar ao cálculo automático?')) return;
-  for (const path of ['icms.deb','icms.cred','ipi.deb','ipi.cred']){ const {o,k} = anPath(AN, path); if (o[k]) for (let m=0;m<12;m++){ const _de = o[k][m]; o[k][m] = null; audCelula(path, m, (_de == null ? null : +_de), null, 'restaurado', { origemDe:((AN.origem||{})[path]||[])[m]||null }); } }   // v7.94.3
+  if (!confirm('Apagar todos os valores informados manualmente (débito/crédito de ICMS e IPI, ISS, PIS e COFINS) e voltar ao cálculo automático?')) return;
+  for (const path of AN_OVERRIDE_PATHS){ const {o,k} = anPath(AN, path); if (o && o[k]) for (let m=0;m<12;m++){ const _de = o[k][m]; if (_de == null) continue; o[k][m] = null; audCelula(path, m, +_de, null, 'restaurado', { origemDe:((AN.origem||{})[path]||[])[m]||null }); } }   // v7.98.0: inclui trib.* v7.94.3
   AN_SUJO = true; anRecalcular(); anRenderGrid();
 }
 // ═══ v7.97.0 · COMPRAS DE MEI/SIMPLES PELA CLASSIFICAÇÃO DOS FORNECEDORES ═══════════════════════
@@ -5417,10 +5463,17 @@ function anSet(path, m, val, tipo) {
     if (r.aviso) toast(r.aviso);
     _bruto = r.v;
   }
-  if (tipo==='nul') o[k][m] = String(val).trim()==='' ? null : _bruto;
-  else o[k][m] = _bruto;
+  const _novo = (tipo==='nul' && String(val).trim()==='') ? null : _bruto;
+  // v7.98.0 · substituir um valor APURADO (ICMS, IPI, ISS, PIS, COFINS) exige motivo — sem ele, nada muda
+  const _extra = { origemDe:_audOg, origemPara:'D' };
+  if (AN_OVERRIDE_MOTIVO.has(path) && _novo != null && !audIgual(_audDe, _novo)){
+    const _mtv = anMotivoPedir(audRotulo(path) + ' · ' + MESES[m], _audDe == null ? audEstimativa(path, m) : _audDe, _novo);
+    if (!_mtv){ toast('Alteração NÃO aplicada: o motivo é obrigatório para substituir um valor apurado (mínimo 5 caracteres).'); return; }
+    _extra.motivo = _mtv;
+  }
+  o[k][m] = _novo;
   anOrigemMarcar(path, [m], 'D');                          // v7.28.0: trilha de origem
-  audCelula(path, m, _audDe, (o[k][m] == null ? null : +o[k][m]), (tipo==='nul' && String(val).trim()==='') ? 'apagado' : 'digitado', { origemDe:_audOg, origemPara:'D' });   // v7.94.3
+  audCelula(path, m, _audDe, (o[k][m] == null ? null : +o[k][m]), (tipo==='nul' && String(val).trim()==='') ? 'apagado' : 'digitado', _extra);   // v7.94.3 · v7.98.0: motivo
   anRecalcular();
 }
 
@@ -6338,7 +6391,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.97.0';
+const APP_VERSAO = '7.98.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -11872,12 +11925,17 @@ function rlConferencia(){
         + ((M.credSimplesInf||0) > 0.005 ? `; + ${fmtR(M.credSimplesInf)} de crédito informado nas NF de optantes (art. 23, § 1º)` : '')
         + ((M.credPresTransp||0) > 0.005 ? `; + crédito presumido do transporte ${fmtR(M.credPresTransp)}` : '') + ')</span>'
       : '';
+    // v7.98.0 · parcela substituída por valor informado: a memória diz o que valia, quem mudou e por quê
+    const _ti = M.tribInformado || {};
+    const _infTx = (k, auto) => { const ev = audMotivoCelula(D, 'trib.' + k, m);
+      return `<b>valor informado manualmente</b> — apurado pelo motor ${fmtR(auto||0)}`
+        + (ev && ev.motivo ? ` · motivo: ${esc(ev.motivo)}` : '') + (ev && ev.por ? ` · ${esc(ev.por)} em ${audQuando(ev.em)}` : ''); };
     const LPl = [
       CF.lin('Base PIS/COFINS (bruta)', `receita ${fmtR(M.receita)} − revenda monofásica ${fmtR(_monoEx)} − exportação ${fmtR(M.recExp||0)}`, fmtR(P.basePCbruta||0)),
       CF.lin('(−) ICMS destacado — Tema 69', M.tema69Informado ? '<b>nota a nota</b> — vICMS das NF-e do mês (XML) ou valor informado na aba ICMS·IPI (STF, RE 574.706)' : `<b>estimativa</b>: (revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706) — importe os XMLs de saída para o valor nota a nota`, fmtR(M.icmsDestacadoPC||0)),
       CF.lin('Base PIS/COFINS (final)', `${fmtR(P.basePCbruta||0)} − ${fmtR(M.icmsDestacadoPC||0)}`, fmtR(P.basePC||0)),
-      CF.lin('PIS', `${fmtR(P.basePC||0)} × 0,65%`, fmtR(P.pis)),
-      CF.lin('COFINS', `${fmtR(P.basePC||0)} × 3,00%`, fmtR(P.cofins)),
+      CF.lin('PIS', _ti.pisLP ? _infTx('pisLP', M.pisLPAuto) : `${fmtR(P.basePC||0)} × 0,65%`, fmtR(P.pis)),
+      CF.lin('COFINS', _ti.cofinsLP ? _infTx('cofinsLP', M.cofinsLPAuto) : `${fmtR(P.basePC||0)} × 3,00%`, fmtR(P.cofins)),
       CF.lin('Base IRPJ', (() => {
         // v7.75.0 · o texto passa a usar os componentes que o MOTOR usou, na mesma agregação
         const _b = P.baseComp;
@@ -11940,7 +11998,7 @@ function rlConferencia(){
         fmtR(P.ipi||0)),
       ...(((M.ipiSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de IPI a transportar',
         'abate o débito do mês seguinte — não reduz a carga deste mês', fmtR(M.ipiSaldoFim||0))] : []),
-      CF.lin('ISS', `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(P.iss)),
+      CF.lin('ISS', _ti.iss ? _infTx('iss', M.issAuto) : `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(P.iss)),
       CF.lin('INSS patronal', `salários ${fmtR(_sal)} × (CPP ${CF.pc(_fp.patronalSalarios)} + RAT/FAP ${CF.pc(_fp.rat)} + terceiros ${CF.pc(_fp.terceiros)} = ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)}) + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)} (sem RAT e terceiros — Lei 8.212/91, art. 22, III)${m===11?' + 13º':''} · percentuais da empresa ou padrão de fábrica (v7.95.1)`, fmtR(P.inssPatr)),
       CF.lin('<b>Total do Lucro Presumido</b>','soma das parcelas acima (FGTS não considerado)', fmtR(P.total)),
     ];
@@ -11966,8 +12024,8 @@ function rlConferencia(){
       ...(((LR.saldoCredorFim||0) > 0.005) ? [CF.lin('Saldo credor a transportar',
         'excesso de crédito sobre a base — reduz a base do mês seguinte, não gera tributo negativo',
         fmtR(LR.saldoCredorFim||0))] : []),
-      CF.lin('PIS', `${fmtR(LR.basePC||0)} × 1,65% + financeiras ${fmtR(_fin)} × 0,65%`, fmtR(LR.pis)),
-      CF.lin('COFINS', `${fmtR(LR.basePC||0)} × 7,60% + financeiras ${fmtR(_fin)} × 4,00%`, fmtR(LR.cofins)),
+      CF.lin('PIS', _ti.pisLR ? _infTx('pisLR', M.pisLRAuto) : `${fmtR(LR.basePC||0)} × 1,65% + financeiras ${fmtR(_fin)} × 0,65%`, fmtR(LR.pis)),
+      CF.lin('COFINS', _ti.cofinsLR ? _infTx('cofinsLR', M.cofinsLRAuto) : `${fmtR(LR.basePC||0)} × 7,60% + financeiras ${fmtR(_fin)} × 4,00%`, fmtR(LR.cofins)),
       CF.lin('Lucro do mês (base IRPJ/CSLL)', `receita ${fmtR(M.receita)} + financeiras ${fmtR(_fin)} − custos ${fmtR(M.custos)} − folha ${fmtR(M.folhaTotal)} − despesas ${fmtR(M.despTotal)} − INSS patronal ${fmtR(M.inssPatr)} − PIS/COFINS ${fmtR(LR.pis+LR.cofins)} − ICMS ${fmtR(M.icmsPagar)} − IPI ${fmtR(M.ipiPagar)} − ISS ${fmtR(M.iss)}`, fmtR(LR.baseIRCS)),
       ...lrLinhasConfMes(m, LR, R),
       // v7.96.0 · mesma conta gráfica do ICMS no Lucro Real (o lucro acima usou o LÍQUIDO; a guia usa o a recolher)
@@ -11995,7 +12053,7 @@ function rlConferencia(){
         fmtR(LR.ipi||0)),
       ...(((M.ipiSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de IPI a transportar',
         'abate o débito do mês seguinte', fmtR(M.ipiSaldoFim||0))] : []),
-      CF.lin('ISS', `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(LR.iss)),
+      CF.lin('ISS', _ti.iss ? _infTx('iss', M.issAuto) : `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(LR.iss)),
       CF.lin('INSS patronal', `salários ${fmtR(_sal)} × (CPP ${CF.pc(_fp.patronalSalarios)} + RAT/FAP ${CF.pc(_fp.rat)} + terceiros ${CF.pc(_fp.terceiros)} = ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)}) + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)} (sem RAT e terceiros — Lei 8.212/91, art. 22, III)${m===11?' + 13º':''} · percentuais da empresa ou padrão de fábrica (v7.95.1)`, fmtR(LR.inssPatr)),
       CF.lin('<b>Total do Lucro Real</b>','soma das parcelas acima (FGTS não considerado)', fmtR(LR.total)),
     ];
@@ -13491,6 +13549,9 @@ function rlRegimes(rot, n) {
     const baseCred = compras - icmsCompPC + credLR + credDesp;
     const baseDeb  = LRt.basePCb + baseCred;                  // receitas tributadas, antes do crédito
     const saldoFim = (M[11] && M[11].lr && M[11].lr.saldoCredorFim) || 0;
+    // v7.98.0 · células de ISS/PIS/COFINS substituídas por valor informado no ano
+    const _nTribInf = M.reduce((n,x)=>n + Object.values(x.tribInformado||{}).filter(Boolean).length, 0);
+    const _lnTribInf = (regime) => _nTribInf ? ln('⚠️ Valores informados manualmente', `${_nTribInf} célula(s) de ISS/PIS/COFINS substituída(s) por valor informado na aba ICMS·IPI (${regime}) — motivo, usuário e data na Trilha de alterações (Conferência › bloco 0); a memória mensal marca cada parcela`, null) : '';
     const clamp = M.filter(x => (x.lr.saldoCredorFim||0) > 0.005);
     const CRPCcfg = Object.assign({adm:0,vendas:0,fiscais:0,financeiras:0,outras:0}, cfg.credLRpct||{});
     // v7.43.0 · o percentual do INSS patronal era IMPRESSO FIXO como 28,96% nesta memória, enquanto
@@ -13539,6 +13600,7 @@ function rlRegimes(rot, n) {
         +' × '+pcx(_FP.patronalProLabore)+' — contribuinte individual: sem RAT e sem Terceiros (art. 22, III, da Lei 8.212/91)',
         (_proAno+_pro13)*_FP.patronalProLabore)}
     ${!_temSal?ln('&nbsp;&nbsp;↳ observação','não há salários lançados — todo o INSS patronal vem do pró-labore, e os percentuais de RAT e Terceiros não afetam este cálculo', null):''}
+    ${_lnTribInf('vale no LP e no LR')}
     ${ln('<b>TOTAL — Lucro Presumido</b>','soma das parcelas acima (FGTS não considerado)', T.lp, true)}
     </tbody></table></div><div class="hint" style="margin-top:6px">${NOTA_SOMA}</div></div>
 
