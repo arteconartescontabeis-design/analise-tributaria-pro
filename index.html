@@ -797,6 +797,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.96.0</b></td><td>07/10/2026</td><td><b>🔴 ICMS: saldo credor não é tributo negativo. Quando o crédito das compras superava o débito das vendas, o ICMS do mês saía NEGATIVO em lp.icms/lr.icms e entrava assim no total do Presumido e do Real — abatendo IRPJ, CSLL, PIS e COFINS, como se o Fisco devolvesse a diferença no mês. Lacre <code>8ab9c16a</code> INTOCADO (nenhum caso selado tem mês com crédito maior que o débito).</b> <b>(1) Conta gráfica do ICMS</b> (LC 87/96, arts. 24 e 25), na mesma estrutura do PIS/COFINS (v7.20.0) e do IPI (v7.80.0): débito − crédito − saldo anterior = <b>a recolher</b>, nunca negativo; o que exceder vira <b>saldo credor a transportar</b> e abate o ICMS dos meses seguintes. <code>icmsPagar</code> segue sendo o líquido do mês e continua formando o lucro do Real (o crédito é ICMS a recuperar: reduz o custo da mercadoria mesmo quando vira saldo) — só o desembolso muda. <b>(2) Saldo credor em 1º/jan</b>: campo novo na Configuração (<code>cfg.icmsSaldoIni</code>) para o saldo trazido de 31/12 do ano anterior; em branco = zero, e análise antiga segue byte a byte igual. <b>(3) Onde aparece:</b> aba ICMS·IPI (líquido, saldo anterior, a recolher, saldo a transportar), memória mensal do LP e do LR, memória anual (saldo em 1º/jan e em 31/12), registros do relatório, carga de consumo da Reforma e <code>T.icmsLiquido / icmsRecolhido / icmsSaldoIni / icmsSaldoFim</code>. O ICMS do mês impedido do Simples (<code>impIcms</code>) não muda: zero no mês de saldo credor, como decidido na v7.94.0. Suíte: bloco 5aw.</td></tr>
                     <tr><td><b>v7.95.2</b></td><td>18/09/2026</td><td><b>🔴 REFORMA: o crédito de IBS/CBS não era projetado. Com o ano incompleto, o parecer, a conferência e o relatório Reforma escalavam a receita (débito) para o ano cheio, mas o crédito ficava no valor do período lançado. Lacre <code>8ab9c16a</code> INTOCADO.</b> <b>(1) Causa.</b> Desde a v7.91.0 o crédito vem da <b>composição dos fornecedores</b> (<code>comp.final</code>), não das contrapartes; a projeção (<code>rfProjetar</code>, fator k) escalava receita, compras, contrapartes e parcelas com benefício, mas não a composição — e <code>rfContraEfetivo</code> sobrescreve as contrapartes pelos valores da composição, sem o k. Efeito medido em sandbox (6 meses importados, composição 100% regime regular, k = 2): débito 2027 45.865,80 → 91.731,60 (certo), crédito 24.867,00 → 24.867,00 (errado; correto 49.734,00), líquido 66.864,60 em vez de 41.997,60; híbrido e regime regular carregavam a mesma distorção. Análise sem composição (não identificado puro) não era afetada, porque ali a base do crédito já vinha projetada dos totais do motor. <b>(2) Correção.</b> A composição passa a ser projetada junto: total, parcela não classificada e valores por grupo (final e automático) e o valor de cada fornecedor são multiplicados por k; percentuais, status, confirmações e trilha não mudam. O limite inferior da sensibilidade (só confirmados) e o superior acompanham. <b>(3) Fora do lacre.</b> A projeção monta a análise antes de <code>calcular()</code> e os quatro casos-gabarito têm doze meses; nenhuma regra de apuração muda. Aba Reforma da tela segue sobre o realizado (é o editor). Suíte: bloco 5av (crédito × k, percentuais intactos, sem composição igual ao anterior, ano completo intocado).</td></tr>
                     <tr><td><b>v7.95.1</b></td><td>18/09/2026</td><td><b>🔒 Pacote de instalação única (v7.94.4 + v7.95.0 + este fecho): CASO 4 no lacre, INSS patronal em três componentes e o rateio da CPP do Anexo IV declarado. LACRE RE-SELADO <code>ba7dcb90</code> → <code>8ab9c16a</code> — casos 1, 2 e 3 idênticos ao centavo; só ENTRA o caso 4.</b> <b>(1) Caso 4 — Empresa nova (RBT12 zero, Anexo V, despesas creditáveis).</b> Início de atividade em fev/2026, receita de serviço sujeita ao Fator R a partir de março, folha pequena, despesas administrativas, aluguel de PJ e energia lançadas, sem composição de fornecedores. Cobre o que os casos 1-3 não cobriam: março com RBT12p zero → 1ª faixa com alíquota nominal do Anexo V (15,50% → DAS 5.711,54, o caso Sonne da v7.94.4); abril proporcionalizado (36.848,65 ÷ 1 × 12 = 221.091,90, 2ª faixa); despesas creditáveis (81.000,00) como NÃO IDENTIFICADAS — zero no cenário-base, integrais no limite superior (v7.95.0). Selados: DAS, LP e LR mensais, totais e os três cenários da Reforma de 2026 a 2033. <b>(2) INSS patronal demonstrado em três componentes</b> (achado 4 da auditoria de 17/09): a memória do Presumido e do Real passa a imprimir CPP + RAT/FAP + terceiros separados, com o pró-labore sem RAT e sem terceiros (Lei 8.212/91, art. 22, III) — os percentuais já eram parametrizáveis por empresa (RAT básico × FAP e terceiros), o que faltava era a conta à vista. <b>(3) CPP do Anexo IV — rateio declarado</b> (achado 3): a linha passa a dizer que a base é a FOLHA (INSS patronal do mês) e que a participação da receita do Anexo IV é o critério de rateio para empresa com mais de um anexo — premissa declarada, porque a folha própria do Anexo IV não é segregada. Nenhum número muda em (2) e (3). Suíte: bloco 5au.</td></tr>
                     <tr><td><b>v7.95.0</b></td><td>18/09/2026</td><td><b>⚖️ REFORMA — revisão técnica da aba (17/09/2026): base própria do híbrido, despesas no crédito de IBS/CBS, procedência das alíquotas e o crédito que o cliente B2B perde. LACRE RE-SELADO <code>22197ef1</code> → <code>ba7dcb90</code>.</b> <b>(A2) Base do híbrido.</b> A dedução de ICMS/ISS da base do IBS/CBS (LC 214/2025, art. 12, § 2º, V) era a MESMA nos dois cenários — ISS do Presumido e ICMS destacado —, mas no híbrido o ICMS e o ISS continuam <b>dentro do DAS</b> (Res. CGSN 190/2026, art. 22-A só retira CBS/IBS): o que incide na operação é a parcela da partilha do ano, com remanescente e trava. Agora o híbrido deduz essa parcela (<code>hibBase</code>) e o regular segue com lpIss + icmsDeb. Efeito nos gabaritos (2027): caso 1 híbrido <b>+26.014,65</b>, caso 3 <b>+95.039,83</b>, caso 2 <b>−1.376,88</b>; em 2033 zero (ICMS/ISS extintos). A memória imprime a base própria na parcela 5 e a sensibilidade do híbrido usa a mesma base. <b>(A1) Despesas creditáveis.</b> A não cumulatividade da LC 214 é ampla (arts. 47-57): aluguel de PJ, energia, serviços tomados, fretes, manutenção creditam. As despesas já lançadas (administrativas, com vendas, outras e as rubricas de crédito do LR que são aquisição — insumos, energia, aluguéis, arrendamento, fretes, benfeitorias) passam a compor o total que a <b>composição de fornecedores</b> classifica (<code>T.despCred</code>); fiscais, financeiras, vale-transporte, devoluções e depreciação ficam fora. Com composição confirmada, o crédito entra no cenário-base; sem composição, fica <b>não identificado</b> — zero no base, integral só no limite superior — e o parecer sai não conclusivo. Os limites superiores dos gabaritos mudam (caso 1, 2033: híbrido 758.554,46 → 588.923,55; regular 702.383,68 → 532.752,77). <b>(A3) Procedência das alíquotas.</b> 2026 e o IBS de 0,1% de 2027-28 são lei; CBS 9,11%/9,21% e IBS até 18,70% são estimativa/projeção — o quadro de alíquotas e a memória anual passam a dizer isso e a declarar que os 27,91% de 2033 superam o teto de 26,5% do art. 130 do ADCT (avaliação em 2031), mantidos por conservadorismo. <b>(A5) Crédito do cliente B2B.</b> Quem permanece 100% no Simples transfere ao comprador só a parcela de CBS/IBS do DAS (LC 214, art. 47, § 9º). Linha informativa por ano na memória: receita B2B × (alíquota − % embutido no DAS), <b>fora do ranking</b>, quando a aba traz vendas a PJ. <b>Premissas declaradas:</b> preço ao cliente mantido (IBS/CBS por fora sobre a receita histórica); fornecedor optante em híbrido tratado como optante comum (art. 58); split payment 100%/15% a.a. segue premissa conservadora. Regime atual intocado: gabaritos 754/754. Suíte: bloco 5at.</td></tr>
@@ -3290,6 +3291,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   let saldoCredorPC = 0;
   // v7.80.0 (auditoria do Teste 16, achado 3) · conta gráfica do IPI, como a de PIS/COFINS
   let saldoCredorIPI = 0;
+  // v7.96.0 · conta gráfica do ICMS. O saldo credor de 31/12 do ano anterior é parâmetro do ANO
+  // (cfg.icmsSaldoIni, Configuração) — ausente = zero, e análise antiga segue byte a byte igual.
+  let saldoCredorICMS = Math.max(0, +(cfg.icmsSaldoIni) || 0);
+  out.icmsSaldoIni = saldoCredorICMS;
 
   const REPX = repEfetiva(anexos);   // v7.1: repartição efetiva acompanha os parâmetros editados
   const rbt12Cfg = S(cfg.rbt12Lanc), folha12Cfg = S(cfg.folha12Lanc);
@@ -3804,6 +3809,19 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // substituto. O crédito (compras sem ST) já vinha certo e não muda. Override manual continua vencendo.
     const icmsDeb  = inp.icms?.deb?.[m]  != null ? +inp.icms.deb[m]  : (R.a1_semst[m]+R.a1_red[m]+R.a1_mono[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m])*cfg.icmsV + R.comtransp[m]*icmsVTransp;
     const icmsPagar = icmsDeb - icmsCred;
+    // ══ v7.96.0 · ICMS NEGATIVO NÃO É TRIBUTO, É SALDO CREDOR ═══════════════════════════════
+    // `icmsPagar` (débito − crédito) ia direto para lp.icms/lr.icms e, quando o crédito superava o
+    // débito, o NEGATIVO entrava no total do regime e ABATIA IRPJ, CSLL, PIS e COFINS — como se o
+    // Fisco devolvesse a diferença no mês. O ICMS é conta gráfica (LC 87/96, arts. 24 e 25): o que
+    // exceder é saldo credor, transportado para abater o débito dos meses seguintes. Mesma
+    // estrutura do PIS/COFINS (v7.20.0) e do IPI (v7.80.0): saldo anterior, valor a recolher
+    // (nunca negativo) e saldo a transportar. `icmsPagar` continua sendo o LÍQUIDO do mês, porque
+    // é ele que reduz o lucro do Real (o crédito das entradas é ICMS a recuperar, ativo — reduz o
+    // custo da mercadoria mesmo quando vira saldo credor); só o "a recolher" muda.
+    const _icmsSaldoAnt = saldoCredorICMS;
+    const _icmsLiq = icmsPagar - _icmsSaldoAnt;
+    const icmsRecolher = Math.max(0, _icmsLiq);
+    saldoCredorICMS = Math.max(0, -_icmsLiq);
     const ipiCred = inp.ipi?.cred?.[m] != null ? +inp.ipi.cred[m] : C.baseIpiCred[m]*cfg.ipiC;
     // v7.66.0 (parecer do Teste 6, achado 3.3; e do Teste 5) · O IPI INCIDE NA SAÍDA DO
     // ESTABELECIMENTO INDUSTRIAL OU EQUIPARADO (CTN, art. 46, II; RIPI, art. 35) — não na revenda
@@ -3896,6 +3914,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     saldoCredorPC = Math.max(0, -_liq0);
     const lr_pis = _baseLRliq*.0165 + R.fin[m]*.0065;
     const lr_cof = _baseLRliq*.076  + R.fin[m]*.04;
+    // v7.96.0 · a base do Real continua com o ICMS LÍQUIDO (débito − crédito), não com o "a recolher":
+    // o débito reduz a receita e o crédito sai do custo da mercadoria (ICMS a recuperar) — a conta
+    // gráfica muda o desembolso, não o lucro. Ver nota em `icmsRecolher`.
     const baseIRCS = receita + R.fin[m] - custos - folhaTotal - despTotal - inssPatr - lr_pis - lr_cof - icmsPagar - ipiPagar - iss;
     const lr_csll = baseIRCS>0 ? baseIRCS*.09 : 0;
     const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
@@ -3946,6 +3967,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       somaAntProp: _somaAntProp,
       dasExp, faixaExp: fxE+1, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasAx, trv190, dasTrib: dt, recCom, recServ, recTransp,
       fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, credPresTransp, icmsVTransp, issRetLPLR, ipiPagar, iss, custos, despTotal, icmsDestacadoPC, icmsComprasPC,
+      // v7.96.0 · conta gráfica do ICMS: `icmsPagar` é o líquido do mês; `icmsRecolher` é o que vai na guia
+      icmsRecolher, icmsSaldoAnt: _icmsSaldoAnt, icmsSaldoFim: saldoCredorICMS,
       tema69Informado: _t69Inf, lei14592Informado: _l14Inf,   // v7.89.0 · origem do valor (nota a nota × estimativa)
       // v7.23.0: ISS retido deixa de ser RECOMPOSTO no total (recolhido na fonte pelo tomador,
       // LC 123, art. 21, §4º — não é desembolso em guia da empresa); campo mantido como informativo.
@@ -3970,7 +3993,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         total: das + subIcms + subIss + cppRetida + impIcms + impIss
              + (cfg.issRetidoNaCarga === true ? issRetLPLR : 0)
              + ((receita>0 && (R.a4[m]+R.a4_retiss[m])>0) ? inssPatr*((R.a4[m]+R.a4_retiss[m])/receita) : 0) },   // v7.18.0: sem FGTS · v7.23.0: ISS retido fora por padrão
-      lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
+      lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsRecolher, ipi:ipiPagar, iss, fgts,
             baseAdic: base32+base8, basePC:_baseLPliq, basePCbruta:basePisCofLP,
       // v7.75.0 (parecer do Teste 12, achado 7) · OS COMPONENTES DA BASE PRESUMIDA VIAJAM COM O
       // RESULTADO. A memória remontava a base a partir de recCom/recServ, que agrupam de outro
@@ -3982,7 +4005,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
                   transp: transpIR, transpModo: String(cfg.transpPresuncao||'cargas'),
                   fin: R.fin[m], expCom: R.a1_exp[m]+R.a2_exp[m], expServ: R.a3_exp[m]+R.a5r_exp[m],
                   base32, base8 } },
-      lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
+      lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsRecolher, ipi:ipiPagar, iss, fgts,
             baseIRCS, basePC:_baseLRliq, basePCbruta:basePisCofLR, credCsll: baseIRCS<0 ? baseIRCS*.09 : 0, credIrpj: baseIRCS<0 ? baseIRCS*.15 : 0,
             credDesp: credDespMes(m), saldoCredorAnt: _saldoAnt, saldoCredorFim: saldoCredorPC,
             credItens: Object.fromEntries(CRED_LR_KEYS.map(k=>[k, D[k][m]])) },
@@ -4043,6 +4066,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     despCred: S(out.meses.map((_,i)=>DESP_CRED_KEYS.reduce((t,k)=>t+(+((D[k]||[])[i])||0),0))),
     dasTrib: ['pis','cofins','irpj','csll','cpp','icms','iss','ipi'].reduce((o,t)=>(o[t]=S(out.meses.map(x=>x.dasTrib?x.dasTrib[t]:0)),o),{}),
     dedIssRetido: cfg.dedIssRetido === true,   // v7.69.0 · a opção viaja com o resultado
+    // v7.96.0 · conta gráfica do ICMS no ano: líquido (débito − crédito), recolhido e saldo em 31/12
+    icmsLiquido: S(out.meses.map(x=>x.icmsPagar)), icmsRecolhido: S(out.meses.map(x=>x.icmsRecolher)),
+    icmsSaldoIni: out.icmsSaldoIni || 0, icmsSaldoFim: saldoCredorICMS,
   };
   // ══ v7.88.0 (P1-01) · LUCRO REAL SEM CMV/ESTOQUES = SIMULAÇÃO INCOMPLETA ═══════════════════
   // Com receita de comércio/indústria e NENHUM custo de mercadoria lançado (baixa de estoque nas
@@ -5224,7 +5250,10 @@ function anApuradoImpostos(){
         ${lin('Base de débito (vendas)', M=>M.icmsDeb && +c.icmsV ? M.icmsDeb/+c.icmsV : 0, 'Receitas de revenda e indústria sem ST')}
         ${ed('Débito de ICMS', 'icms.deb', M=>M.icmsDeb, 'Saídas tributadas × % ICMS de vendas — ou o valor informado')}
         ${ed('Crédito de ICMS', 'icms.cred', M=>M.icmsCred, 'Compras sem ST × % ICMS de compras — ou o valor informado')}
-        ${lin('ICMS a pagar (LP e LR)', M=>M.icmsPagar, 'Débito menos crédito; negativo = crédito acumulado')}
+        ${lin('ICMS líquido do mês (débito − crédito)', M=>M.icmsPagar, 'Negativo = o crédito do mês superou o débito; vira saldo credor, não tributo negativo')}
+        ${R.meses.some(M=>(M.icmsSaldoAnt||0) > 0.005) ? lin('(−) Saldo credor de ICMS do mês anterior', M=>M.icmsSaldoAnt, 'Crédito transportado — abate o débito deste mês (LC 87/96, arts. 24 e 25)') : ''}
+        ${lin('ICMS a recolher (LP e LR)', M=>M.icmsRecolher != null ? M.icmsRecolher : Math.max(0, M.icmsPagar||0), 'Débito − crédito − saldo anterior; nunca negativo (conta gráfica, v7.96.0)')}
+        ${R.meses.some(M=>(M.icmsSaldoFim||0) > 0.005) ? lin('Saldo credor de ICMS a transportar', M=>M.icmsSaldoFim, 'Não reduz a carga deste mês — abate o ICMS dos meses seguintes') : ''}
         ${_impAno ? lin('ICMS fora do Simples (impedida)', M=>M.impIcms, 'LC 123, art. 20, § 1º — mesma conta do LP/LR, nunca negativo') : ''}
         ${lin('ICMS dentro do DAS (Simples)', M=>M.dasTrib?.icms||0, 'Parcela de ICMS embutida na guia do Simples')}
         ${ed('Débito de IPI', 'ipi.deb', M=>M.ipiDeb, 'Saídas industriais × % IPI — ou o valor informado')}
@@ -5658,6 +5687,7 @@ function anRenderConfig() {
   let h = avisoHerda + `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
     ${pc('cf-iss','% ISS',c.iss)} ${pc('cf-icmsv','% ICMS vendas',c.icmsV)} ${pc('cf-icmsc','% ICMS compras',c.icmsC)} ${pc('cf-icmstr','% ICMS transporte',c.icmsTranspV)} ${pc('cf-credpres','% crédito presumido transp.',c.transpCredPres)}
     ${pc('cf-ipiv','% IPI vendas',c.ipiV)} ${pc('cf-ipic','% IPI compras',c.ipiC)}
+    <div><label>Saldo credor de ICMS em 1º/jan <span class="hint">(v7.96.0)</span></label><input id="cf-icmssaldo" value="${+c.icmsSaldoIni||''}" style="width:130px" placeholder="0,00" title="Saldo credor de ICMS trazido de 31/12 do ano anterior (conta gráfica). Abate o débito dos primeiros meses do Presumido/Real. Em branco = zero." onchange="anAplicarConfig(true)"></div>
     <div><label>Base IRPJ serviços (LP)</label><select id="cf-bserv" onchange="anAplicarConfig(true)"><option value="0.32" ${c.lpBaseServ==.32?'selected':''}>32%</option><option value="0.16" ${c.lpBaseServ==.16?'selected':''}>16%</option><option value="0.08" ${c.lpBaseServ==.08?'selected':''}>8%</option></select></div>
     <div><label>Base CSLL comércio (LP)</label><select id="cf-bcomcsll" onchange="anAplicarConfig(true)" title="Presunção da CSLL sobre revenda e indústria — 12% na regra geral (art. 20 da Lei 9.249/95).">
       <option value="0.12" ${(+c.lpBaseComCsll||.12)==.12?'selected':''}>12%</option>
@@ -5858,7 +5888,9 @@ function anAplicarConfig(silencioso) {
     rbaaExp: vNum('cf-rbaaexp', _cfg.rbaaExp),           // v7.80.0 · idem, mercado externo
     rbaaOutros: vNum('cf-rbaaoutros', _cfg.rbaaOutros),  // v7.87.0 · filiais, ano anterior
     rbaOutros: vNum('cf-rbaoutros', _cfg.rbaOutros),     // v7.87.0 · filiais, ano corrente
-    inicioAtividade: (vRaw('cf-inicio', _cfg.inicioAtividade||'')||'').trim() });   // v7.52.0
+    inicioAtividade: (vRaw('cf-inicio', _cfg.inicioAtividade||'')||'').trim(),   // v7.52.0
+    icmsSaldoIni: vNum('cf-icmssaldo', _cfg.icmsSaldoIni) });   // v7.96.0 · saldo credor de ICMS trazido do ano anterior
+  if (!(+AN.cfg.icmsSaldoIni > 0)) delete AN.cfg.icmsSaldoIni;   // v7.96.0: em branco = zero, e a chave não ocupa espaço
   // v7.35.0 · período de apuração do Lucro Real e saldos de prejuízo (podem não existir em telas antigas)
   if (AN.cfg.arredondaPorTributo !== true) delete AN.cfg.arredondaPorTributo;   // v7.62.0: ausente ≠ false
   if (!(+AN.cfg.rbaa > 0)) delete AN.cfg.rbaa;                       // v7.70.0: em branco = não informada
@@ -6227,7 +6259,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.95.2';
+const APP_VERSAO = '7.96.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -6835,7 +6867,8 @@ function rfCargaAtual() {
   }
   const isLR = regime==='Lucro Real';
   const pis = soma(M=>isLR?M.lr.pis:M.lp.pis), cof = soma(M=>isLR?M.lr.cofins:M.lp.cofins);
-  const icms = soma(M=>M.icmsPagar), ipi = soma(M=>M.ipiPagar), iss = soma(M=>M.iss);
+  // v7.96.0 · carga de consumo = ICMS efetivamente RECOLHIDO (conta gráfica), nunca o líquido negativo
+  const icms = soma(M=>(M.icmsRecolher != null ? M.icmsRecolher : Math.max(0, M.icmsPagar||0))), ipi = soma(M=>M.ipiPagar), iss = soma(M=>M.iss);
   return { regime, consumo: pis+cof+icms+ipi+iss, pis, cof, icms, ipi, iss };
 }
 
@@ -11792,7 +11825,20 @@ function rlConferencia(){
           ? `(${fmtR(P.baseAdicPer)} − ${fmtR(P.limAdicPer)}) × 10% — base do período de apuração`
           : `parcela da base do período acima do limite × 10%`, fmtR(P.adicional))]:[]),
       CF.lin('CSLL','bases próprias de comércio e serviços × 9%', fmtR(P.csll)),
-      CF.lin('ICMS', `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`, fmtR(P.icms)),
+      // v7.96.0 · o ICMS é conta gráfica: crédito maior que o débito não é tributo negativo, é saldo
+      // credor transportado. A memória demonstra as parcelas, como já fazia com PIS/COFINS e IPI.
+      ...(((M.icmsSaldoAnt||0) > 0.005) ? [CF.lin('(−) Saldo credor de ICMS do mês anterior',
+        'crédito que excedeu o débito e foi transportado (LC 87/96, arts. 24 e 25)', fmtR(M.icmsSaldoAnt||0))] : []),
+      CF.lin('ICMS a recolher',
+        ((M.icmsSaldoFim||0) > 0.005)
+          ? `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`
+            + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : '')
+            + ` = <b>negativo</b>, logo nada a recolher (conta gráfica do ICMS)`
+          : `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`
+            + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : ''),
+        fmtR(P.icms)),
+      ...(((M.icmsSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de ICMS a transportar',
+        'abate o débito do mês seguinte — não reduz a carga deste mês', fmtR(M.icmsSaldoFim||0))] : []),
       // v7.69.0 (parecer do Teste 8, achado 13) · o IPI compunha o total sem linha própria: num
       // papel de trabalho, tributo que entra no total sem aparecer não é auditável.
       // v7.80.0 · o IPI é conta gráfica: quando o crédito supera o débito, não há tributo
@@ -11839,7 +11885,19 @@ function rlConferencia(){
       CF.lin('COFINS', `${fmtR(LR.basePC||0)} × 7,60% + financeiras ${fmtR(_fin)} × 4,00%`, fmtR(LR.cofins)),
       CF.lin('Lucro do mês (base IRPJ/CSLL)', `receita ${fmtR(M.receita)} + financeiras ${fmtR(_fin)} − custos ${fmtR(M.custos)} − folha ${fmtR(M.folhaTotal)} − despesas ${fmtR(M.despTotal)} − INSS patronal ${fmtR(M.inssPatr)} − PIS/COFINS ${fmtR(LR.pis+LR.cofins)} − ICMS ${fmtR(M.icmsPagar)} − IPI ${fmtR(M.ipiPagar)} − ISS ${fmtR(M.iss)}`, fmtR(LR.baseIRCS)),
       ...lrLinhasConfMes(m, LR, R),
-      CF.lin('ICMS', `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`, fmtR(LR.icms)),
+      // v7.96.0 · mesma conta gráfica do ICMS no Lucro Real (o lucro acima usou o LÍQUIDO; a guia usa o a recolher)
+      ...(((M.icmsSaldoAnt||0) > 0.005) ? [CF.lin('(−) Saldo credor de ICMS do mês anterior',
+        'crédito transportado do mês anterior (LC 87/96, arts. 24 e 25)', fmtR(M.icmsSaldoAnt||0))] : []),
+      CF.lin('ICMS a recolher',
+        ((M.icmsSaldoFim||0) > 0.005)
+          ? `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`
+            + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : '')
+            + ` = <b>negativo</b>, nada a recolher`
+          : `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`
+            + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : ''),
+        fmtR(LR.icms)),
+      ...(((M.icmsSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de ICMS a transportar',
+        'abate o débito do mês seguinte — não reduz a carga deste mês', fmtR(M.icmsSaldoFim||0))] : []),
       // v7.69.0 · mesma razão do Lucro Presumido: o IPI passa a ter linha própria
       // v7.80.0 · mesma conta gráfica no Lucro Real
       ...(((M.ipiSaldoAnt||0) > 0.005) ? [CF.lin('(−) Saldo credor de IPI do mês anterior',
@@ -13384,7 +13442,9 @@ function rlRegimes(rot, n) {
     ${ln('&nbsp;&nbsp;↳ CSLL', fmt(P.baseAdic)+' × 9%'
         + (Math.abs((+cfg.lpBaseComCsll||.12)-(+cfg.lpBaseCom||0))>1e-9 ? ' — presunção própria de CSLL no comércio: '+pc(+cfg.lpBaseComCsll||.12) : ''), P.csll)}
     ${P.iss>0.005?ln('ISS','serviços sem retenção × '+pc(+cfg.iss||0), P.iss):''}
-    ${P.icms>0.005?ln('ICMS','débito − crédito do ano', P.icms):''}
+    ${P.icms>0.005?ln('ICMS a recolher','conta gráfica: débito − crédito − saldo credor transportado, mês a mês, nunca negativo (LC 87/96, arts. 24 e 25)', P.icms):''}
+    ${(T.icmsSaldoIni||0)>0.005?ln('&nbsp;&nbsp;↳ saldo credor de ICMS em 1º/jan','informado na Configuração — abate o débito dos primeiros meses', T.icmsSaldoIni):''}
+    ${(T.icmsSaldoFim||0)>0.005?ln('&nbsp;&nbsp;↳ saldo credor de ICMS em 31/12','crédito que excedeu o débito no ano — transporta para o ano seguinte, não reduz a carga', T.icmsSaldoFim):''}
     ${P.ipi>0.005?ln('IPI','débito − crédito do ano', P.ipi):''}
     ${ln('<b>INSS patronal — CPP</b>', 'contribuição da empresa; a do segurado é retida do próprio salário e não entra no custo do regime', P.inss, true)}
     ${_temSal?ln('&nbsp;&nbsp;↳ sobre salários', 'base '+fmt(_salAno+_sal13)+(_sal13>0.005?' (inclui 13º '+fmt(_sal13)+')':'')
@@ -13421,7 +13481,7 @@ function rlRegimes(rot, n) {
     ${ln('&nbsp;&nbsp;(−) Despesas', 'soma das rubricas de despesa lançadas', -_despAno)}
     ${ln('&nbsp;&nbsp;(−) INSS patronal', 'a CPP é despesa dedutível', -LRt.inss)}
     ${ln('&nbsp;&nbsp;(−) PIS e COFINS', fmt(LRt.pis)+' + '+fmt(LRt.cofins)+' — apurados acima', -(LRt.pis+LRt.cofins))}
-    ${LRt.icms>0.005?ln('&nbsp;&nbsp;(−) ICMS','débito − crédito', -LRt.icms):''}
+    ${Math.abs(sM(x=>x.icmsPagar||0))>0.005?ln('&nbsp;&nbsp;(−) ICMS líquido','débito − crédito do ano — o crédito das entradas reduz o custo (ICMS a recuperar), por isso o lucro usa o LÍQUIDO e não o recolhido (v7.96.0)', -sM(x=>x.icmsPagar||0)):''}
     ${LRt.ipi>0.005?ln('&nbsp;&nbsp;(−) IPI','débito − crédito', -LRt.ipi):''}
     ${LRt.iss>0.005?ln('&nbsp;&nbsp;(−) ISS', 'serviços sem retenção × '+pc(+cfg.iss||0), -LRt.iss):''}
     ${ln('<b>= Lucro real (base IRPJ/CSLL)</b>','soma algébrica das linhas acima', LRt.baseIRCS, true)}
@@ -13433,7 +13493,8 @@ function rlRegimes(rot, n) {
         ? 'ANUAL — base de 31/12; prejuízo de anos anteriores compensa até 30% (Lei 9.065/95, art. 15)'
         : 'TRIMESTRAL — cada trimestre fecha sozinho; prejuízo compensa até 30% da base do trimestre seguinte', null)}
     ${LRt.iss>0.005?ln('ISS','serviços sem retenção × '+pc(+cfg.iss||0), LRt.iss):''}
-    ${LRt.icms>0.005?ln('ICMS','débito − crédito do ano', LRt.icms):''}
+    ${LRt.icms>0.005?ln('ICMS a recolher','conta gráfica: débito − crédito − saldo credor transportado, mês a mês, nunca negativo', LRt.icms):''}
+    ${(T.icmsSaldoFim||0)>0.005?ln('&nbsp;&nbsp;↳ saldo credor de ICMS em 31/12','transporta para o ano seguinte — não reduz a carga', T.icmsSaldoFim):''}
     ${LRt.ipi>0.005?ln('IPI','débito − crédito do ano', LRt.ipi):''}
     ${ln('<b>INSS patronal — CPP</b>', 'mesma base e mesmos percentuais do Lucro Presumido', LRt.inss, true)}
     ${_temSal?ln('&nbsp;&nbsp;↳ sobre salários', 'base '+fmt(_salAno+_sal13)+' × '+pcx(_pctSal)
@@ -13555,7 +13616,8 @@ function rlRegistros(rot, n) {
   h += bloco('Despesas', [ linhaT('Administrativas', D.despesas.adm), linhaT('Com vendas', D.despesas.vendas), linhaT('Fiscais e tributárias', D.despesas.fiscais),
     linhaT('Financeiras', D.despesas.financeiras), linhaT('Outras', D.despesas.outras),
     ...CRED_LR.map(([k,rot,base])=>linhaT(rot+' ('+base+')', D.despesas[k])) ]);
-  h += bloco('Impostos apurados', [ linhaT('ICMS a pagar', M.map(x=>x.icmsPagar)), linhaT('IPI a pagar', M.map(x=>x.ipiPagar)), linhaT('ISS', M.map(x=>x.iss)), linhaT('DAS', M.map(x=>x.das)) ]);
+  h += bloco('Impostos apurados', [ linhaT('ICMS a recolher', M.map(x=>x.icmsRecolher != null ? x.icmsRecolher : Math.max(0, x.icmsPagar||0))),
+    ...(M.some(x=>(x.icmsSaldoFim||0)>0.005) ? [linhaT('Saldo credor de ICMS a transportar', M.map(x=>x.icmsSaldoFim||0))] : []), linhaT('IPI a pagar', M.map(x=>x.ipiPagar)), linhaT('ISS', M.map(x=>x.iss)), linhaT('DAS', M.map(x=>x.das)) ]);
   h += `<div class="card"><h3>Receita × carga por período</h3><canvas id="ch-det"></canvas></div>`;
   $id('rl-corpo').innerHTML = h || '<div class="card placeholder"><h2>Sem registros</h2></div>';
   const rec = agrupar(M.map(x=>x.receita), n);
@@ -13606,7 +13668,7 @@ function rlReforma() {
     if (regime==='Simples Nacional'||regime==='MEI') return { das: M.reduce((s,x)=>s+x.das,0), consumo:null, regime };
     const isLR = regime==='Lucro Real';
     return { regime, pis:M.reduce((s,x)=>s+(isLR?x.lr.pis:x.lp.pis),0), cof:M.reduce((s,x)=>s+(isLR?x.lr.cofins:x.lp.cofins),0),
-      icms:M.reduce((s,x)=>s+x.icmsPagar,0), ipi:M.reduce((s,x)=>s+x.ipiPagar,0), iss:M.reduce((s,x)=>s+x.iss,0),
+      icms:M.reduce((s,x)=>s+(x.icmsRecolher != null ? x.icmsRecolher : Math.max(0, x.icmsPagar||0)),0), ipi:M.reduce((s,x)=>s+x.ipiPagar,0), iss:M.reduce((s,x)=>s+x.iss,0),   // v7.96.0 · recolhido, não o líquido
       get consumo(){ return this.pis+this.cof+this.icms+this.ipi+this.iss; } }; })();
   // v7.45.0 (item 6) · FIM DA FÓRMULA PARALELA: este relatório recalculava débito e crédito por
   // conta própria (sem a dedução do ISS e sem o crédito automático) e podia divergir da aba, da

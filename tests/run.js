@@ -5255,7 +5255,54 @@ console.log('\n■ Integridade da interface');
     chk('5av · 2027: débito × k (45.865,80 → 91.731,60) E crédito × k (24.867,00 → 49.734,00) — antes o crédito ficava em 24.867,00', Math.abs(o.debR - 45865.80) < 0.02 && Math.abs(o.debP - 91731.60) < 0.02 && Math.abs(o.credR - 24867.00) < 0.02 && Math.abs(o.credP - 49734.00) < 0.02 && Math.abs(o.liqP - 41997.60) < 0.02);
     chk('5av · sem composição o comportamento não muda: NID = (compras + despesas creditáveis) já projetados (540.000,00)', Math.abs(o.nidSem - 540000) < 0.01);
     chk('5av · ano completo (k = 1) devolve a reforma original, sem cópia — nenhum documento se move', o.mesmo === true && Math.abs(o.origReal - 270000) < 0.01);
-    chk('5av · v7.95.2 · badge, changelog e lacre 8ab9c16a intocado', /APP_VERSAO = '7\.95\.[2-9]'/.test(html) && /<b>v7\.95\.2<\/b><\/td><td>18\/09\/2026/.test(html) && /LACRE_HASH = '8ab9c16a'/.test(html) && /r\.comp\._projetadoK = k/.test(html));
+    chk('5av · v7.95.2 · badge, changelog e lacre 8ab9c16a intocado', /APP_VERSAO = '7\.9[5-9]\.\d+'/.test(html) && /<b>v7\.95\.2<\/b><\/td><td>18\/09\/2026/.test(html) && /LACRE_HASH = '8ab9c16a'/.test(html) && /r\.comp\._projetadoK = k/.test(html));
+  }
+
+  // ═══ 5aw · v7.96.0 — conta gráfica do ICMS: saldo credor não abate os outros tributos ═══
+  {
+    const rec = { a1_semst: Array(12).fill(100000) };          // débito 100.000 × 17% = 17.000/mês
+    const A = mk(rec, 1200000); A.compras.semst = [300000,0,0,0,0,0,0,0,0,0,0,0];   // crédito jan 36.000 > débito
+    const rA = g.calcular(A, clone(AD), {...FD}), m0 = rA.meses[0], m1 = rA.meses[1], m2 = rA.meses[2];
+    chk('5aw · jan: crédito 36.000 > débito 17.000 → ICMS a recolher ZERO (não −19.000) e saldo credor 19.000',
+      m0.lp.icms === 0 && m0.lr.icms === 0 && Math.abs(m0.icmsPagar + 19000) < 0.01 && Math.abs(m0.icmsSaldoFim - 19000) < 0.01,
+      'recolher=' + m0.lp.icms + ' saldo=' + m0.icmsSaldoFim.toFixed(2));
+    chk('5aw · fev: saldo 19.000 abate o débito 17.000 → nada a recolher, saldo 2.000',
+      Math.abs(m1.icmsSaldoAnt - 19000) < 0.01 && m1.lp.icms === 0 && Math.abs(m1.icmsSaldoFim - 2000) < 0.01);
+    chk('5aw · mar: saldo 2.000 consumido → recolhe 15.000 e saldo zera',
+      Math.abs(m2.icmsSaldoAnt - 2000) < 0.01 && Math.abs(m2.lp.icms - 15000) < 0.01 && m2.icmsSaldoFim === 0);
+    chk('5aw · o ICMS zero de janeiro NÃO reduz os demais tributos: total do LP = soma das parcelas com ICMS 0',
+      Math.abs(m0.lp.total - (m0.lp.pis+m0.lp.cofins+m0.lp.csll+m0.lp.irpj+m0.lp.adicional+m0.lp.inssPatr+0+m0.lp.ipi+m0.lp.iss)) < 0.005
+      && Math.abs(m0.lr.total - (m0.lr.pis+m0.lr.cofins+m0.lr.csll+m0.lr.irpj+m0.lr.adicional+m0.lr.inssPatr+0+m0.lr.ipi+m0.lr.iss)) < 0.005);
+    chk('5aw · nenhum mês do LP/LR tem ICMS negativo', rA.meses.every(M => M.lp.icms >= 0 && M.lr.icms >= 0));
+    // saldo que sobra em dezembro não some nem vira desconto: fica como saldo em 31/12
+    const D = mk(rec, 1200000); D.compras.semst = [0,0,0,0,0,0,0,0,0,0,0,300000];
+    const rD = g.calcular(D, clone(AD), {...FD});
+    chk('5aw · crédito em dezembro: ICMS do ano = 11 × 17.000 = 187.000 (antes saía 168.000, abatido pelo negativo) e saldo 19.000 em 31/12',
+      Math.abs(rD.totais.icmsRecolhido - 187000) < 0.01 && Math.abs(rD.totais.icmsSaldoFim - 19000) < 0.01 && Math.abs(rD.totais.icmsLiquido - 168000) < 0.01
+      && Math.abs(rD.meses.reduce((s,M)=>s+M.lp.icms,0) - 187000) < 0.01, 'recolhido=' + rD.totais.icmsRecolhido.toFixed(2));
+    // a base do Lucro Real segue com o LÍQUIDO (o crédito reduz o custo — ICMS a recuperar)
+    const B = clone(A); B.icms = { cred: Array(12).fill(null), deb: Array(12).fill(null) }; B.icms.cred[0] = 0;
+    const rB = g.calcular(B, clone(AD), {...FD});
+    chk('5aw · base do Lucro Real usa o ICMS líquido: com crédito de 36.000 a base de janeiro é 36.000 maior que sem crédito',
+      Math.abs((m0.lr.baseIRCS - rB.meses[0].lr.baseIRCS) - 36000) < 0.01 && /- lr_pis - lr_cof - icmsPagar - ipiPagar - iss;/.test(html),
+      'Δbase=' + (m0.lr.baseIRCS - rB.meses[0].lr.baseIRCS).toFixed(2));
+    // saldo credor trazido do ano anterior (Configuração)
+    const C = mk(rec, 1200000); C.cfg.icmsSaldoIni = 5000;
+    const rC = g.calcular(C, clone(AD), {...FD});
+    chk('5aw · cfg.icmsSaldoIni 5.000 abate o débito de janeiro (17.000 → 12.000) e some em fevereiro',
+      Math.abs(rC.meses[0].icmsSaldoAnt - 5000) < 0.01 && Math.abs(rC.meses[0].lp.icms - 12000) < 0.01 && rC.meses[0].icmsSaldoFim === 0
+      && Math.abs(rC.meses[1].lp.icms - 17000) < 0.01 && Math.abs(rC.totais.icmsSaldoIni - 5000) < 0.01);
+    chk('5aw · sem o campo, nada muda: icmsSaldoIni ausente = zero e a chave não é gravada em branco',
+      rA.totais.icmsSaldoIni === 0 && /if \(!\(\+AN\.cfg\.icmsSaldoIni > 0\)\) delete AN\.cfg\.icmsSaldoIni;/.test(html) && /id="cf-icmssaldo"/.test(html) && /icmsSaldoIni: vNum\('cf-icmssaldo'/.test(html));
+    chk('5aw · memória mensal demonstra a conta gráfica (saldo anterior, a recolher, saldo a transportar) no LP e no LR',
+      (html.match(/Saldo credor de ICMS a transportar/g)||[]).length >= 3 && /conta gráfica do ICMS/.test(html) && /\(−\) Saldo credor de ICMS do mês anterior/.test(html));
+    chk('5aw · carga de consumo da Reforma e registros do relatório leem o RECOLHIDO, não o líquido',
+      /const icms = soma\(M=>\(M\.icmsRecolher != null \? M\.icmsRecolher : Math\.max\(0, M\.icmsPagar\|\|0\)\)\)/.test(html) && /linhaT\('ICMS a recolher'/.test(html));
+    chk('5aw · aba ICMS·IPI: líquido, saldo anterior, a recolher e saldo a transportar', /ICMS líquido do mês \(débito − crédito\)/.test(html) && /ICMS a recolher \(LP e LR\)/.test(html));
+    chk('5aw · ICMS do mês impedido do Simples não muda (zero no mês de saldo credor, v7.94.0)', /const impIcms = _impedido \? Math\.max\(0, icmsPagar\) : 0;/.test(html));
+    { const l = vm.runInContext('lacreRodar()', ctx);
+      chk('5aw · lacre 8ab9c16a INTOCADO — nenhum caso selado tem mês com crédito > débito', l.ok === true && l.hash === '8ab9c16a' && /LACRE_HASH = '8ab9c16a'/.test(html)); }
+    chk('5aw · v7.96.0 · badge e changelog', /APP_VERSAO = '7\.9[6-9]\.\d+'/.test(html) && /<b>v7\.96\.0<\/b><\/td><td>07\/10\/2026/.test(html));
   }
 
   // ═══ 5au · v7.95.1 — caso 4 do lacre, INSS em três componentes, rateio da CPP do Anexo IV ═══
@@ -5265,7 +5312,7 @@ console.log('\n■ Integridade da interface');
     const r4 = g.calcular(clone(casos[3].inp), clone(AD), {...FD});
     chk('5au · caso 4 · março: RBT12 zero → 1ª faixa, 15,50% nominal do Anexo V (5.711,54); abril proporcionalizado 221.091,90 (2ª faixa)', r4.meses[2].rbt12Zero === true && r4.meses[2].faixa === 1 && Math.abs(r4.meses[2].das - 5711.54) < 0.02 && Math.abs(r4.meses[3].rbt12 - 221091.90) < 0.02);
     chk('5au · caso 4 · despesas creditáveis 81.000,00 entram como NID (crédito zero no base, integral no superior)', Math.abs(r4.totais.despCred - 81000) < 0.01 && (()=>{ r4._inp = clone(casos[3].inp); const C = vm.runInContext('calcCenariosReforma', ctx)(r4, null); const l = (C.linhas||C.REF).find(x=>x.ano===2033); return l.cred === 0 && l.sens.sup.cred > 0; })());
-    chk('5au · v7.95.1 · badge, changelog e lacre RE-SELADO ba7dcb90 → 8ab9c16a (casos 1-3 idênticos: LR 1.169.013,17 · 358.284,98 · 2.515.758,93)', /APP_VERSAO = '7\.95\.[1-9]'/.test(html) && /<b>v7\.95\.1<\/b><\/td><td>18\/09\/2026/.test(html) && (()=>{ const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '8ab9c16a' && l.resumo.length === 4 && Math.abs(l.resumo[0].lr - 1169013.17) < 0.01 && Math.abs(l.resumo[1].lr - 358284.98) < 0.01 && Math.abs(l.resumo[2].lr - 2515758.93) < 0.01; })());
+    chk('5au · v7.95.1 · badge, changelog e lacre RE-SELADO ba7dcb90 → 8ab9c16a (casos 1-3 idênticos: LR 1.169.013,17 · 358.284,98 · 2.515.758,93)', /APP_VERSAO = '7\.9[5-9]\.\d+'/.test(html) && /<b>v7\.95\.1<\/b><\/td><td>18\/09\/2026/.test(html) && (()=>{ const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '8ab9c16a' && l.resumo.length === 4 && Math.abs(l.resumo[0].lr - 1169013.17) < 0.01 && Math.abs(l.resumo[1].lr - 358284.98) < 0.01 && Math.abs(l.resumo[2].lr - 2515758.93) < 0.01; })());
     chk('5au · memória: INSS patronal em três componentes (CPP + RAT/FAP + terceiros) e pró-labore sem RAT/terceiros; CPP do Anexo IV com o rateio declarado', /× \(CPP \$\{CF\.pc\(_fp\.patronalSalarios\)\} \+ RAT\/FAP/.test(html) && /art\. 22, III\)/.test(html) && /rateio da folha pela receita é PREMISSA declarada/.test(html));
   }
 
@@ -5291,7 +5338,7 @@ console.log('\n■ Integridade da interface');
     chk('5at · A5 · memória anual imprime a linha "(info) Crédito que o cliente B2B deixa de tomar" fora do ranking', /\(info\) Crédito que o cliente B2B deixa de tomar no "por dentro"/.test(html) && /fora do ranking/.test(html));
     // A3 · procedência
     chk('5at · A3 · procedência: quadro de alíquotas distingue lei × estimativa/projeção e declara o teto de 26,5% do art. 130 do ADCT', /Procedência \(v7\.95\.0\)/.test(html) && /teto de 26,5%/.test(html) && /art\. 130 do ADCT/.test(html));
-    chk('5at · v7.95.0 · badge, changelog e lacre RE-SELADO 22197ef1 → ba7dcb90 (regime atual intocado: LR caso 1 1.169.013,17)', /APP_VERSAO = '7\.95\.[0-9]'/.test(html) && /<b>v7\.95\.0<\/b><\/td><td>18\/09\/2026/.test(html) && /LACRE RE-SELADO <code>22197ef1<\/code> → <code>ba7dcb90<\/code>/.test(html) && /LACRE RE-SELADO <code>ba7dcb90<\/code> → <code>8ab9c16a<\/code>/.test(html) && (()=>{ const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '8ab9c16a' && Math.abs(l.resumo[0].lr - 1169013.17) < 0.01; })());
+    chk('5at · v7.95.0 · badge, changelog e lacre RE-SELADO 22197ef1 → ba7dcb90 (regime atual intocado: LR caso 1 1.169.013,17)', /APP_VERSAO = '7\.9[5-9]\.\d+'/.test(html) && /<b>v7\.95\.0<\/b><\/td><td>18\/09\/2026/.test(html) && /LACRE RE-SELADO <code>22197ef1<\/code> → <code>ba7dcb90<\/code>/.test(html) && /LACRE RE-SELADO <code>ba7dcb90<\/code> → <code>8ab9c16a<\/code>/.test(html) && (()=>{ const l = vm.runInContext('lacreRodar()', ctx); return l.ok === true && l.hash === '8ab9c16a' && Math.abs(l.resumo[0].lr - 1169013.17) < 0.01; })());
   }
 
   // ═══ 5as · v7.94.4 — RBT12 zero com receita = 1ª faixa, alíquota nominal (Sonne e Red Global, extratos reais) ═══
@@ -5363,7 +5410,8 @@ console.log('\n■ Integridade da interface');
     // saldo credor: zero no mês, nunca negativo no Simples
     const i3 = base(); i3.icms.deb[0] = 1000; i3.icms.cred[0] = 5000;
     const M3 = calc(i3).meses[0];
-    chk('5ao · crédito > débito: ICMS por fora do Simples é zero (não negativo)', M3.impIcms === 0 && M3.lp.icms < 0);
+    // v7.96.0 · no LP/LR o excesso virou saldo credor (conta gráfica): lp.icms é zero, não negativo; o líquido segue em icmsPagar
+    chk('5ao · crédito > débito: ICMS por fora do Simples é zero (não negativo); no LP/LR vira saldo credor (v7.96.0)', M3.impIcms === 0 && M3.lp.icms === 0 && M3.icmsPagar < 0 && Math.abs(M3.icmsSaldoFim - 4000) < 0.01, 'saldo=' + M3.icmsSaldoFim);
     // ISS por fora = mesma conta do LP/LR
     const i4 = base(); i4.cfg.iss = .05; i4.receitas.a3_retiss[0] = 10000;
     const M4 = calc(i4).meses[0];
