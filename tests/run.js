@@ -5258,6 +5258,55 @@ console.log('\n■ Integridade da interface');
     chk('5av · v7.95.2 · badge, changelog e lacre 8ab9c16a intocado', /APP_VERSAO = '7\.9[5-9]\.\d+'/.test(html) && /<b>v7\.95\.2<\/b><\/td><td>18\/09\/2026/.test(html) && /LACRE_HASH = '8ab9c16a'/.test(html) && /r\.comp\._projetadoK = k/.test(html));
   }
 
+  // ═══ 5ax · v7.97.0 — compra de MEI/Simples não gera crédito de ICMS ═══
+  {
+    const rec = { a1_semst: Array(12).fill(100000) };          // débito 17.000/mês
+    const A = mk(rec, 1200000); A.compras.semst = Array(12).fill(50000);                      // crédito cheio: 6.000/mês
+    const rA = g.calcular(A, clone(AD), {...FD});
+    const B = clone(A); B.compras.simplesMei = Array(12).fill(20000);                          // 20.000 de MEI/Simples
+    const rB = g.calcular(B, clone(AD), {...FD}), b0 = rB.meses[0];
+    chk('5ax · 50.000 de compras sem ST com 20.000 de MEI/Simples: crédito 30.000 × 12% = 3.600 (antes 6.000)',
+      Math.abs(rA.meses[0].icmsCred - 6000) < 0.01 && Math.abs(b0.icmsCred - 3600) < 0.01 && Math.abs(b0.credIcmsBase - 30000) < 0.01 && Math.abs(b0.comprasSimplesMei - 20000) < 0.01,
+      'cred=' + b0.icmsCred.toFixed(2));
+    chk('5ax · o ICMS a recolher sobe na mesma medida (17.000 − 3.600 = 13.400) no LP e no LR',
+      Math.abs(b0.lp.icms - 13400) < 0.01 && Math.abs(b0.lr.icms - 13400) < 0.01 && Math.abs(rB.totais.comprasSimplesMei - 240000) < 0.01);
+    chk('5ax · Lei 14.592: o ICMS "das aquisições" exclui a parcela de MEI/Simples — (50.000 − 20.000) × 12% = 3.600 (antes 6.000)',
+      Math.abs(rA.meses[0].icmsComprasPC - 6000) < 0.01 && Math.abs(b0.icmsComprasPC - 3600) < 0.01);
+    // crédito informado nas NF de optantes (art. 23, § 1º)
+    const Cc = clone(B); Cc.icms = { cred: Array(12).fill(null), deb: Array(12).fill(null), credSimples: Array(12).fill(null) }; Cc.icms.credSimples[0] = 500;
+    const rC = g.calcular(Cc, clone(AD), {...FD});
+    chk('5ax · crédito informado por optante (500) soma ao crédito (3.600 + 500 = 4.100) e à exclusão da Lei 14.592',
+      Math.abs(rC.meses[0].icmsCred - 4100) < 0.01 && Math.abs(rC.meses[0].credSimplesInf - 500) < 0.01 && Math.abs(rC.meses[0].icmsComprasPC - 4100) < 0.01 && Math.abs(rC.meses[1].icmsCred - 3600) < 0.01);
+    // parcela maior que a base: limitada (crédito zero), nunca negativa
+    const Dd = clone(A); Dd.compras.simplesMei = Array(12).fill(80000);
+    const rD = g.calcular(Dd, clone(AD), {...FD});
+    chk('5ax · MEI/Simples (80.000) maior que as compras sem ST (50.000): parcela limitada à base, crédito ZERO e não negativo',
+      rD.meses[0].icmsCred === 0 && Math.abs(rD.meses[0].comprasSimplesMei - 50000) < 0.01 && rD.meses[0].credIcmsBase === 0 && /Compras de fornecedores MEI\/Simples maiores que as compras sem ST/.test(html));
+    // monofásicas também compõem a base
+    const Ee = mk(rec, 1200000); Ee.compras.mono = Array(12).fill(10000); Ee.compras.simplesMei = Array(12).fill(10000);
+    const rE = g.calcular(Ee, clone(AD), {...FD});
+    chk('5ax · compras monofásicas entram na base: 10.000 mono todas de MEI/Simples → crédito zero', rE.meses[0].icmsCred === 0 && Math.abs(rE.meses[0].comprasSimplesMei - 10000) < 0.01);
+    // override manual continua vencendo
+    const Ff = clone(B); Ff.icms = { cred: Array(12).fill(null), deb: Array(12).fill(null) }; Ff.icms.cred[0] = 1234.56;
+    const rF = g.calcular(Ff, clone(AD), {...FD});
+    chk('5ax · crédito informado manualmente na aba ICMS·IPI prevalece sobre a regra (1.234,56)', Math.abs(rF.meses[0].icmsCred - 1234.56) < 0.001);
+    chk('5ax · sem os campos nada muda: análise antiga (sem simplesMei/credSimples) dá o mesmo crédito de antes',
+      Math.abs(rA.meses[0].icmsCred - 6000) < 0.01 && rA.meses[0].comprasSimplesMei === 0 && rA.meses[0].credSimplesInf === 0 && rA.totais.comprasSimplesMei === 0);
+    chk('5ax · anNovo traz compras.simplesMei (zeros) e icms.credSimples (nulos)', (()=>{ const n = g.anNovo('1', 2026); return Array.isArray(n.compras.simplesMei) && n.compras.simplesMei.every(v=>v===0) && Array.isArray(n.icms.credSimples) && n.icms.credSimples.every(v=>v===null); })());
+    chk('5ax · grade: linha "De fornecedores MEI / Simples" na aba Compras e "Crédito de ICMS informado nas NF de optantes" na ICMS·IPI',
+      /\['compras\.simplesMei','De fornecedores MEI \/ Simples/.test(html) && /\['icms\.credSimples','Crédito de ICMS informado nas NF de optantes do Simples \(nota a nota\)','nul'\]/.test(html));
+    chk('5ax · quadro apurado: compras sem ST, parcela MEI/Simples, base do crédito e botão de preenchimento pelos fornecedores',
+      /\(−\) De fornecedores MEI \/ Simples — sem crédito/.test(html) && /Base do crédito de ICMS/.test(html) && /onclick="anSimplesMeiPreencher\(\)"/.test(html) && /async function anSimplesMeiPreencher\(\)/.test(html));
+    chk('5ax · preenchimento: só CFOPs de compras sem ST/monofásicas da triagem, rateio proporcional e limitado à base, origem R e lote na auditoria',
+      /if \(d === 'compras\.semst' \|\| d === 'compras\.mono'\) total \+= \+v\|\|0;/.test(html) && /Math\.min\(base\[m\], Math\.round\(total\*base\[m\]\/baseTot\*100\)\/100\)/.test(html)
+      && /anOrigemMarcar\('compras\.simplesMei', meses, 'R'\)/.test(html) && /AUD_LOTE = 'compras de MEI\/Simples pela classificação dos fornecedores/.test(html));
+    chk('5ax · memória mensal e anual declaram a exclusão (LC 123, art. 23) no crédito e na Lei 14.592',
+      /excluídos \$\{fmtR\(M\.comprasSimplesMei\|\|0\)\} de fornecedores MEI\/Simples, que não destacam ICMS \(LC 123\/2006, art\. 23\)/.test(html) && /− MEI\/Simples \$\{fmtR\(M\.comprasSimplesMei\)\} \(sem ICMS na aquisição, LC 123, art\. 23\)/.test(html) && /sem as compras de MEI\/Simples \('\+fmt\(T\.comprasSimplesMei\)/.test(html));
+    { const l = vm.runInContext('lacreRodar()', ctx);
+      chk('5ax · lacre 8ab9c16a INTOCADO — os casos selados não têm compras de MEI/Simples', l.ok === true && l.hash === '8ab9c16a' && /LACRE_HASH = '8ab9c16a'/.test(html)); }
+    chk('5ax · v7.97.0 · badge e changelog', /APP_VERSAO = '7\.9[7-9]\.\d+'/.test(html) && /<b>v7\.97\.0<\/b><\/td><td>07\/10\/2026/.test(html));
+  }
+
   // ═══ 5aw · v7.96.0 — conta gráfica do ICMS: saldo credor não abate os outros tributos ═══
   {
     const rec = { a1_semst: Array(12).fill(100000) };          // débito 100.000 × 17% = 17.000/mês

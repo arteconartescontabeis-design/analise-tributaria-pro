@@ -797,6 +797,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.97.0</b></td><td>07/10/2026</td><td><b>🔴 ICMS: compra de MEI e de optante do Simples não gera crédito. O crédito do Presumido e do Real era estimado sobre TODAS as compras sem ST (× % ICMS de compras), como se todo fornecedor destacasse ICMS. A optante do Simples não destaca (LC 123/2006, art. 23, caput) e o MEI nunca transfere crédito; a optante só transfere o que INFORMA na NF-e (art. 23, § 1º — CSOSN 101/201, mercadoria para revenda ou industrialização, limitado ao ICMS devido por ela). Lacre <code>8ab9c16a</code> INTOCADO (sem os campos novos, nada muda).</b> <b>(1) Campo novo na aba Compras</b> — <code>compras.simplesMei</code>, "De fornecedores MEI / Simples (dentro das compras sem ST)": parcela das compras sem ST + monofásicas vinda de optantes. Sai da base do crédito de ICMS e da exclusão da Lei 14.592/2023 (não há ICMS "incidente na aquisição" para excluir do crédito de PIS/COFINS no Real). Nunca excede a base (o Verificar avisa). <b>(2) Crédito informado por optante</b> — <code>icms.credSimples</code>, nota a nota, na aba ICMS·IPI: o que a optante destacou na NF-e, somado ao crédito. Em branco = zero. <b>(3) Preenchimento pelos fornecedores</b> — botão 🏷️ na aba ICMS·IPI lê a classificação já gravada (triagem de compras por CFOP ou Totais de entrada) e rateia o total de MEI + Simples proporcionalmente às compras sem ST lançadas, com trilha de origem R e evento na auditoria. <b>(4) Onde aparece:</b> quadro apurado (compras sem ST, parcela MEI/Simples, base do crédito, crédito informado), memória mensal do LP e do LR (inclusive a linha da Lei 14.592), memória anual e <code>T.comprasSimplesMei / credSimplesInf</code>. O valor de crédito informado manualmente (aba ICMS·IPI) continua prevalecendo sobre tudo. Suíte: bloco 5ax.</td></tr>
                     <tr><td><b>v7.96.0</b></td><td>07/10/2026</td><td><b>🔴 ICMS: saldo credor não é tributo negativo. Quando o crédito das compras superava o débito das vendas, o ICMS do mês saía NEGATIVO em lp.icms/lr.icms e entrava assim no total do Presumido e do Real — abatendo IRPJ, CSLL, PIS e COFINS, como se o Fisco devolvesse a diferença no mês. Lacre <code>8ab9c16a</code> INTOCADO (nenhum caso selado tem mês com crédito maior que o débito).</b> <b>(1) Conta gráfica do ICMS</b> (LC 87/96, arts. 24 e 25), na mesma estrutura do PIS/COFINS (v7.20.0) e do IPI (v7.80.0): débito − crédito − saldo anterior = <b>a recolher</b>, nunca negativo; o que exceder vira <b>saldo credor a transportar</b> e abate o ICMS dos meses seguintes. <code>icmsPagar</code> segue sendo o líquido do mês e continua formando o lucro do Real (o crédito é ICMS a recuperar: reduz o custo da mercadoria mesmo quando vira saldo) — só o desembolso muda. <b>(2) Saldo credor em 1º/jan</b>: campo novo na Configuração (<code>cfg.icmsSaldoIni</code>) para o saldo trazido de 31/12 do ano anterior; em branco = zero, e análise antiga segue byte a byte igual. <b>(3) Onde aparece:</b> aba ICMS·IPI (líquido, saldo anterior, a recolher, saldo a transportar), memória mensal do LP e do LR, memória anual (saldo em 1º/jan e em 31/12), registros do relatório, carga de consumo da Reforma e <code>T.icmsLiquido / icmsRecolhido / icmsSaldoIni / icmsSaldoFim</code>. O ICMS do mês impedido do Simples (<code>impIcms</code>) não muda: zero no mês de saldo credor, como decidido na v7.94.0. Suíte: bloco 5aw.</td></tr>
                     <tr><td><b>v7.95.2</b></td><td>18/09/2026</td><td><b>🔴 REFORMA: o crédito de IBS/CBS não era projetado. Com o ano incompleto, o parecer, a conferência e o relatório Reforma escalavam a receita (débito) para o ano cheio, mas o crédito ficava no valor do período lançado. Lacre <code>8ab9c16a</code> INTOCADO.</b> <b>(1) Causa.</b> Desde a v7.91.0 o crédito vem da <b>composição dos fornecedores</b> (<code>comp.final</code>), não das contrapartes; a projeção (<code>rfProjetar</code>, fator k) escalava receita, compras, contrapartes e parcelas com benefício, mas não a composição — e <code>rfContraEfetivo</code> sobrescreve as contrapartes pelos valores da composição, sem o k. Efeito medido em sandbox (6 meses importados, composição 100% regime regular, k = 2): débito 2027 45.865,80 → 91.731,60 (certo), crédito 24.867,00 → 24.867,00 (errado; correto 49.734,00), líquido 66.864,60 em vez de 41.997,60; híbrido e regime regular carregavam a mesma distorção. Análise sem composição (não identificado puro) não era afetada, porque ali a base do crédito já vinha projetada dos totais do motor. <b>(2) Correção.</b> A composição passa a ser projetada junto: total, parcela não classificada e valores por grupo (final e automático) e o valor de cada fornecedor são multiplicados por k; percentuais, status, confirmações e trilha não mudam. O limite inferior da sensibilidade (só confirmados) e o superior acompanham. <b>(3) Fora do lacre.</b> A projeção monta a análise antes de <code>calcular()</code> e os quatro casos-gabarito têm doze meses; nenhuma regra de apuração muda. Aba Reforma da tela segue sobre o realizado (é o editor). Suíte: bloco 5av (crédito × k, percentuais intactos, sem composição igual ao anterior, ano completo intocado).</td></tr>
                     <tr><td><b>v7.95.1</b></td><td>18/09/2026</td><td><b>🔒 Pacote de instalação única (v7.94.4 + v7.95.0 + este fecho): CASO 4 no lacre, INSS patronal em três componentes e o rateio da CPP do Anexo IV declarado. LACRE RE-SELADO <code>ba7dcb90</code> → <code>8ab9c16a</code> — casos 1, 2 e 3 idênticos ao centavo; só ENTRA o caso 4.</b> <b>(1) Caso 4 — Empresa nova (RBT12 zero, Anexo V, despesas creditáveis).</b> Início de atividade em fev/2026, receita de serviço sujeita ao Fator R a partir de março, folha pequena, despesas administrativas, aluguel de PJ e energia lançadas, sem composição de fornecedores. Cobre o que os casos 1-3 não cobriam: março com RBT12p zero → 1ª faixa com alíquota nominal do Anexo V (15,50% → DAS 5.711,54, o caso Sonne da v7.94.4); abril proporcionalizado (36.848,65 ÷ 1 × 12 = 221.091,90, 2ª faixa); despesas creditáveis (81.000,00) como NÃO IDENTIFICADAS — zero no cenário-base, integrais no limite superior (v7.95.0). Selados: DAS, LP e LR mensais, totais e os três cenários da Reforma de 2026 a 2033. <b>(2) INSS patronal demonstrado em três componentes</b> (achado 4 da auditoria de 17/09): a memória do Presumido e do Real passa a imprimir CPP + RAT/FAP + terceiros separados, com o pró-labore sem RAT e sem terceiros (Lei 8.212/91, art. 22, III) — os percentuais já eram parametrizáveis por empresa (RAT básico × FAP e terceiros), o que faltava era a conta à vista. <b>(3) CPP do Anexo IV — rateio declarado</b> (achado 3): a linha passa a dizer que a base é a FOLHA (INSS patronal do mês) e que a participação da receita do Anexo IV é o critério de rateio para empresa com mais de um anexo — premissa declarada, porque a folha própria do Anexo IV não é segregada. Nenhum número muda em (2) e (3). Suíte: bloco 5au.</td></tr>
@@ -3268,7 +3269,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   const KEXP = ['a1_exp','a2_exp','a3_exp','a5r_exp'];
   for (const k of [...K,...KEXP,'a1_red_pct','a1_mono_pct','a2_red_pct','fin']) R[k] = arr12(inp.receitas[k]);
   const F = {}; for (const k of ['prolabore','salarios','baseFgts','prov13','provFerias']) F[k] = arr12(inp.folha[k]);
-  const C = {}; for (const k of ['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred']) C[k] = arr12(inp.compras[k]);
+  // v7.97.0 · `simplesMei` = parcela das compras sem ST (semst + mono) adquirida de fornecedores MEI/Simples — sem crédito de ICMS
+  const C = {}; for (const k of ['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred','simplesMei']) C[k] = arr12(inp.compras[k]);
   // v7.42.3: as rubricas de crédito do art. 3º das Leis 10.637/2002 e 10.833/2003 passam a ter
   // linha PRÓPRIA, para que a origem de cada crédito apareça na memória em vez de virar um balde.
   // `credLR` continua existindo (compatibilidade com análises antigas) como "outros créditos".
@@ -3802,7 +3804,17 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // prestação, Convênio ICMS 106/96 e regimes estaduais equivalentes), em substituição ao
     // aproveitamento dos créditos vinculados às prestações. Zero = não aplica, como até aqui.
     const credPresTransp = (+cfg.transpCredPres > 0 ? +cfg.transpCredPres : 0) * (R.comtransp[m]*icmsVTransp);
-    const icmsCred = inp.icms?.cred?.[m] != null ? +inp.icms.cred[m] : (C.semst[m]+C.mono[m])*cfg.icmsC + credPresTransp;
+    // ══ v7.97.0 · COMPRA DE MEI/SIMPLES NÃO GERA CRÉDITO DE ICMS ════════════════════════════════
+    // O crédito era estimado sobre TODAS as compras sem ST, como se todo fornecedor destacasse ICMS.
+    // Fornecedor optante do Simples não destaca (LC 123/2006, art. 23, caput) e o MEI nunca gera
+    // crédito; a optante só transfere crédito quando o informa na NF-e (art. 23, § 1º — CSOSN
+    // 101/201, mercadoria para revenda/industrialização), limitado ao ICMS devido por ela. Regra:
+    //   base do crédito = compras sem ST − parcela de MEI/Simples (compras.simplesMei)
+    //   + crédito informado nas NF de optantes (icms.credSimples, nota a nota; em branco = zero).
+    // A parcela não pode exceder a base (clamp — o Verificar avisa). Sem os campos, nada muda.
+    const _cSimples = Math.min(C.semst[m]+C.mono[m], Math.max(0, C.simplesMei[m]||0));
+    const _credSimplesInf = inp.icms?.credSimples?.[m] != null ? Math.max(0, +inp.icms.credSimples[m]) : 0;
+    const icmsCred = inp.icms?.cred?.[m] != null ? +inp.icms.cred[m] : (C.semst[m]+C.mono[m]-_cSimples)*cfg.icmsC + _credSimplesInf + credPresTransp;
     // v7.48.0 · o transporte intermunicipal/interestadual e a comunicação são fato gerador de ICMS:
     // até aqui a base do DÉBITO só tinha mercadoria e a transportadora simulada no Presumido/Real
     // saía com ICMS ZERO. O bloco com retenção (comtransp_st) fica de fora — quem recolhe é o
@@ -3901,7 +3913,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // o mesmo usado no crédito de ICMS; a conferência de cálculos expõe a parcela).
     // v7.89.0 · Lei 14.592/2023 NOTA A NOTA: ICMS das aquisições para revenda informado vence a estimativa
     const _l14Inf = inp.icms?.lei14592?.[m] != null;
-    const icmsComprasPC = _l14Inf ? +inp.icms.lei14592[m] : (C.semst[m]+C.comst[m])*cfg.icmsC;
+    // v7.97.0 · a mesma regra do crédito: a compra de MEI/Simples não traz ICMS "incidente na aquisição"
+    // (só o que a optante informar na NF), logo não há o que excluir da base do crédito de PIS/COFINS.
+    const icmsComprasPC = _l14Inf ? +inp.icms.lei14592[m] : (C.semst[m]+C.comst[m]-Math.min(C.semst[m]+C.comst[m], _cSimples))*cfg.icmsC + _credSimplesInf;
     const basePisCofLR = R.a1_semst[m]+R.a1_red[m]+R.a1_comst[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_comst[m]
       + R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]+R.a4_retiss[m]
       + (fatorR<.28 ? R.a5r[m] : 0) + (fatorR>=.28 ? R.a5r[m] : 0)
@@ -3957,7 +3971,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         blocosExp: KEXP.filter(k => (R[k][m]||0) > 0).map(k => ({ k, receita: R[k][m], efetiva: efb[k]||0 })),
         anexos: _axUsadosMes,
         folha: { salarios: F.salarios[m]||0, prolabore: F.prolabore[m]||0, baseFgts: F.baseFgts[m]||0 },
-        compras: { semst: C.semst[m]||0, comst: C.comst[m]||0, mono: C.mono[m]||0, comstMono: C.comstMono[m]||0 },
+        compras: { semst: C.semst[m]||0, comst: C.comst[m]||0, mono: C.mono[m]||0, comstMono: C.comstMono[m]||0, simplesMei: C.simplesMei[m]||0 },
         despesas: { adm: D.adm[m]||0, vendas: D.vendas[m]||0, fiscais: D.fiscais[m]||0,
                     financeiras: D.financeiras[m]||0, outras: D.outras[m]||0, credLR: (D.credLR||[])[m]||0 },
         financeiras: R.fin[m]||0,
@@ -3969,6 +3983,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, credPresTransp, icmsVTransp, issRetLPLR, ipiPagar, iss, custos, despTotal, icmsDestacadoPC, icmsComprasPC,
       // v7.96.0 · conta gráfica do ICMS: `icmsPagar` é o líquido do mês; `icmsRecolher` é o que vai na guia
       icmsRecolher, icmsSaldoAnt: _icmsSaldoAnt, icmsSaldoFim: saldoCredorICMS,
+      // v7.97.0 · compras de MEI/Simples fora da base do crédito e crédito informado nas NF de optantes (art. 23, § 1º)
+      comprasSimplesMei: _cSimples, credSimplesInf: _credSimplesInf, credIcmsBase: C.semst[m]+C.mono[m]-_cSimples,
       tema69Informado: _t69Inf, lei14592Informado: _l14Inf,   // v7.89.0 · origem do valor (nota a nota × estimativa)
       // v7.23.0: ISS retido deixa de ser RECOMPOSTO no total (recolhido na fonte pelo tomador,
       // LC 123, art. 21, §4º — não é desembolso em guia da empresa); campo mantido como informativo.
@@ -4069,6 +4085,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // v7.96.0 · conta gráfica do ICMS no ano: líquido (débito − crédito), recolhido e saldo em 31/12
     icmsLiquido: S(out.meses.map(x=>x.icmsPagar)), icmsRecolhido: S(out.meses.map(x=>x.icmsRecolher)),
     icmsSaldoIni: out.icmsSaldoIni || 0, icmsSaldoFim: saldoCredorICMS,
+    comprasSimplesMei: S(out.meses.map(x=>x.comprasSimplesMei||0)), credSimplesInf: S(out.meses.map(x=>x.credSimplesInf||0)),   // v7.97.0
   };
   // ══ v7.88.0 (P1-01) · LUCRO REAL SEM CMV/ESTOQUES = SIMULAÇÃO INCOMPLETA ═══════════════════
   // Com receita de comércio/indústria e NENHUM custo de mercadoria lançado (baixa de estoque nas
@@ -4623,8 +4640,9 @@ function anNovo(cnpj, ano) {
     receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a4_retiss','a5r','fin','comtransp','comtransp_st','a1_exp','a2_exp','a3_exp','a5r_exp'].map(k=>[k,z12()])),
     folha: Object.fromEntries(['prolabore','salarios','baseFgts','prov13','provFerias'].map(k=>[k,z12()])),
     folha13: { prolabore13:0, salarios13:0, baseFgts13:0 },
-    compras: Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred'].map(k=>[k,z12()])),
-    icms: { cred:Array(12).fill(null), deb:Array(12).fill(null), tema69:Array(12).fill(null), lei14592:Array(12).fill(null) },   // v7.89.0 · nota a nota
+    compras: Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred','simplesMei'].map(k=>[k,z12()])),   // v7.97.0 · simplesMei
+    icms: { cred:Array(12).fill(null), deb:Array(12).fill(null), tema69:Array(12).fill(null), lei14592:Array(12).fill(null),
+            credSimples:Array(12).fill(null) },   // v7.89.0 · nota a nota · v7.97.0 · crédito informado por optante (art. 23, § 1º)
     ipi:  { cred:Array(12).fill(null), deb:Array(12).fill(null) },
     despesas: Object.fromEntries([...DESP_KEYS, ...CRED_LR_KEYS].map(k=>[k,z12()])),
     origem: {},                                            // v7.28.0: trilha de origem por campo×mês
@@ -4664,6 +4682,8 @@ const AN_SECOES = [
     ['compras.mono','Sem ST e monofásica'], ['compras.baixaMono','Baixa dos custos — monofásica'],
     ['compras.comst','Com ST'], ['compras.baixaComst','Baixa dos custos — com ST'],
     ['compras.comstMono','Com ST e monofásica'], ['compras.baixaComstMono','Baixa — com ST e monofásica'],
+    ['Fornecedores MEI / Simples Nacional — parcela das compras sem ST acima (sem ST + monofásica) adquirida de optantes: não gera crédito de ICMS (LC 123/2006, art. 23). O botão da aba ICMS·IPI preenche pela classificação dos fornecedores.'],
+    ['compras.simplesMei','De fornecedores MEI / Simples (dentro das compras sem ST)'],
     ['IPI'], ['compras.baseIpiCred','Base p/ crédito de IPI'],
   ]},
   { id:'impostos', nome:'🧾 ICMS · IPI', linhas:[
@@ -4671,6 +4691,8 @@ const AN_SECOES = [
     ['icms.cred','Crédito de ICMS (substituir) — igual ao quadro acima','nul'], ['icms.deb','Débito de ICMS (substituir) — igual ao quadro acima','nul'],
     ['PIS/COFINS no Presumido e no Real — nota a nota (v7.89.0). Em branco, o app estima: (revenda sem ST + com redução) × % ICMS de vendas; compras p/ revenda × % ICMS de compras'],
     ['icms.tema69','ICMS destacado nas saídas — Tema 69 (nota a nota)','nul'], ['icms.lei14592','ICMS nas aquisições p/ revenda — Lei 14.592/2023 (nota a nota)','nul'],
+    ['Crédito transferido por fornecedor do Simples (v7.97.0) — só o que a optante INFORMOU na NF-e (CSOSN 101/201, LC 123/2006, art. 23, § 1º). Em branco = zero. O MEI nunca transfere crédito.'],
+    ['icms.credSimples','Crédito de ICMS informado nas NF de optantes do Simples (nota a nota)','nul'],
     ['IPI — preencha só para substituir o valor apurado'],
     ['ipi.cred','Crédito de IPI (substituir)','nul'], ['ipi.deb','Débito de IPI (substituir)','nul'],
   ]},
@@ -5243,13 +5265,18 @@ function anApuradoImpostos(){
       <b>Débito e crédito são editáveis aqui mesmo:</b> o que você digitar (destacado em azul) passa a valer no Lucro Presumido, no Lucro Real e, se a empresa estiver impedida, no ICMS fora do Simples; apague a célula para voltar ao automático.
       ${_impAno ? '<b>Empresa impedida de recolher ICMS/ISS no DAS</b> em pelo menos um mês: o "ICMS fora do Simples" abaixo é o mesmo "a pagar" do LP/LR (zero quando o crédito supera o débito).' : 'No <b>Simples Nacional</b> o ICMS é recolhido dentro do DAS — o valor a pagar abaixo vale para o Lucro Presumido e o Lucro Real.'}
       ${_nInf ? `<span class="badge info">${_nInf} célula(s) informada(s) manualmente</span> <button class="btn" type="button" style="padding:2px 8px;font-size:11px" onclick="anIcmsRestaurar()">Restaurar automático</button>` : ''}
+      <button class="btn" type="button" style="padding:2px 8px;font-size:11px" onclick="anSimplesMeiPreencher()" title="Lê a classificação dos fornecedores (consulta de CNPJ / triagem de compras gravadas para esta empresa) e preenche, mês a mês, a parcela das compras sem ST que veio de MEI e optantes do Simples — que não gera crédito de ICMS (LC 123/2006, art. 23).">🏷️ Preencher compras de MEI/Simples pelos fornecedores</button>
       ${semAliq ? '<b style="color:#943126">Os percentuais de ICMS estão zerados na Configuração: sem eles não há o que apurar.</b>' : ''}</div>
     <div style="overflow-x:auto;margin-top:8px"><table class="gtable">
       <thead><tr><th></th>${MESES.map(m=>`<th class="num">${m}</th>`).join('')}<th class="num">Ano</th></tr></thead>
       <tbody>
         ${lin('Base de débito (vendas)', M=>M.icmsDeb && +c.icmsV ? M.icmsDeb/+c.icmsV : 0, 'Receitas de revenda e indústria sem ST')}
         ${ed('Débito de ICMS', 'icms.deb', M=>M.icmsDeb, 'Saídas tributadas × % ICMS de vendas — ou o valor informado')}
-        ${ed('Crédito de ICMS', 'icms.cred', M=>M.icmsCred, 'Compras sem ST × % ICMS de compras — ou o valor informado')}
+        ${lin('Compras sem ST (sem ST + monofásicas)', M=>(M.ins&&M.ins.compras ? (M.ins.compras.semst||0)+(M.ins.compras.mono||0) : 0), 'Aquisições para revenda lançadas na aba Compras')}
+        ${R.meses.some(M=>(M.comprasSimplesMei||0) > 0.005) ? lin('(−) De fornecedores MEI / Simples — sem crédito', M=>M.comprasSimplesMei, 'LC 123/2006, art. 23: a optante não destaca ICMS; o MEI nunca gera crédito') : ''}
+        ${lin('Base do crédito de ICMS', M=>(M.credIcmsBase != null ? M.credIcmsBase : (M.ins&&M.ins.compras ? (M.ins.compras.semst||0)+(M.ins.compras.mono||0) : 0)), 'Compras sem ST menos a parcela de MEI/Simples')}
+        ${R.meses.some(M=>(M.credSimplesInf||0) > 0.005) ? lin('(+) Crédito informado nas NF de optantes', M=>M.credSimplesInf, 'Art. 23, § 1º, da LC 123/2006 — o que a optante destacou na NF-e (CSOSN 101/201)') : ''}
+        ${ed('Crédito de ICMS', 'icms.cred', M=>M.icmsCred, 'Base do crédito × % ICMS de compras + crédito informado por optantes + crédito presumido do transporte — ou o valor informado')}
         ${lin('ICMS líquido do mês (débito − crédito)', M=>M.icmsPagar, 'Negativo = o crédito do mês superou o débito; vira saldo credor, não tributo negativo')}
         ${R.meses.some(M=>(M.icmsSaldoAnt||0) > 0.005) ? lin('(−) Saldo credor de ICMS do mês anterior', M=>M.icmsSaldoAnt, 'Crédito transportado — abate o débito deste mês (LC 87/96, arts. 24 e 25)') : ''}
         ${lin('ICMS a recolher (LP e LR)', M=>M.icmsRecolher != null ? M.icmsRecolher : Math.max(0, M.icmsPagar||0), 'Débito − crédito − saldo anterior; nunca negativo (conta gráfica, v7.96.0)')}
@@ -5269,6 +5296,52 @@ function anIcmsRestaurar(){
   if (!confirm('Apagar todos os valores de débito/crédito de ICMS e IPI informados manualmente e voltar ao cálculo automático?')) return;
   for (const path of ['icms.deb','icms.cred','ipi.deb','ipi.cred']){ const {o,k} = anPath(AN, path); if (o[k]) for (let m=0;m<12;m++){ const _de = o[k][m]; o[k][m] = null; audCelula(path, m, (_de == null ? null : +_de), null, 'restaurado', { origemDe:((AN.origem||{})[path]||[])[m]||null }); } }   // v7.94.3
   AN_SUJO = true; anRecalcular(); anRenderGrid();
+}
+// ═══ v7.97.0 · COMPRAS DE MEI/SIMPLES PELA CLASSIFICAÇÃO DOS FORNECEDORES ═══════════════════════
+// Lê a consulta de fornecedores mais recente gravada para a empresa (atp_fornec: triagem de compras
+// por documento, ou "Totais de entrada (ICMS)") e preenche compras.simplesMei mês a mês, rateando o
+// total de MEI + Simples proporcionalmente às compras sem ST já lançadas (nunca acima delas).
+// Só mercadoria para revenda sem ST entra: na triagem, os CFOPs que caem em compras.semst/mono;
+// nos Totais, o arquivo cujo destino é sem ST ou monofásico. Serviços tomados ficam de fora.
+async function anSimplesMeiPreencher(){
+  if (!AN || !AN.cnpj){ toast('Abra a análise de uma empresa primeiro.'); return; }
+  if (anTravada()){ toast('Análise FECHADA 🔒 — reabra (🔓) para preencher.'); return; }
+  let rs = [];
+  try { rs = await supa('GET','atp_fornec',{ params:{ cnpj:'eq.'+limparCNPJ(AN.cnpj), order:'consultado_em.desc', limit:'40', select:'*' } }) || []; }
+  catch(e){ toast('Não foi possível ler os fornecedores gravados: ' + (e && e.message || e)); return; }
+  const porTipo = {};
+  for (const r of rs){ const t = (r.dados && r.dados.tipo) || 'servico'; if (!porTipo[t]) porTipo[t] = r; }
+  if (porTipo.compra && porTipo.revenda){ if (porTipo.compra.consultado_em > porTipo.revenda.consultado_em) porTipo.revenda = null; else porTipo.compra = null; }
+  const mapa = cfopMapLer(AN.cnpj);
+  let total = 0, fonte = '', n = 0;
+  if (porTipo.compra){
+    for (const i of (porTipo.compra.dados.itens||[])){
+      if (i.classe !== 'simples' && i.classe !== 'mei') continue;
+      n++;
+      const cf = i.cfops || {};
+      if (!Object.keys(cf).length){ total += +i.valor||0; continue; }          // sem CFOP: vale o total do item
+      for (const [c,v] of Object.entries(cf)){ const d = cfopDestino(c, mapa); if (d === 'compras.semst' || d === 'compras.mono') total += +v||0; }
+    }
+    fonte = 'triagem de compras (analítico) de ' + new Date(porTipo.compra.consultado_em).toLocaleDateString('pt-BR');
+  } else if (porTipo.revenda){
+    const d = porTipo.revenda.dados || {}, g = d.stats && d.stats.grupos, dest = d.destino || 'semst';
+    if (g && (dest === 'semst' || dest === 'mono')){ total = (+(g.mei && g.mei.v)||0) + (+(g.simples && g.simples.v)||0); n = (+(g.mei && g.mei.q)||0) + (+(g.simples && g.simples.q)||0); }
+    fonte = 'Totais de entrada (ICMS) de ' + new Date(porTipo.revenda.consultado_em).toLocaleDateString('pt-BR');
+  } else { toast('Nenhuma consulta de fornecedores de COMPRA gravada para esta empresa. Importe o relatório de fornecedores (Consulta CNPJ › Fornecedores) e classifique os CNPJs.'); return; }
+  total = Math.round(total*100)/100;
+  const base = Array.from({length:12},(_,m)=>(+((AN.compras.semst||[])[m])||0)+(+((AN.compras.mono||[])[m])||0));
+  const baseTot = base.reduce((a,b)=>a+b,0);
+  if (!(baseTot > 0)){ toast('Lance primeiro as compras sem ST na aba Compras — a parcela de MEI/Simples é rateada proporcionalmente a elas.'); return; }
+  if (!(total > 0)){ toast('Fornecedores classificados (' + fonte + '): nenhuma compra sem ST de MEI/Simples.'); return; }
+  if ((AN.compras.simplesMei||[]).some(v=>+v>0) && !await dlgSimNao('Substituir os valores?',
+      'A linha "De fornecedores MEI / Simples" já tem valores.\n\nSubstituir pelo rateio da classificação dos fornecedores (' + fmtR(total) + ', ' + n + ' fornecedor(es), ' + fonte + ')?', 'Sim, substituir', 'Não')) return;
+  if (!Array.isArray(AN.compras.simplesMei)) AN.compras.simplesMei = Array(12).fill(0);
+  const meses = [];
+  for (let m=0;m<12;m++){ const v = Math.min(base[m], Math.round(total*base[m]/baseTot*100)/100); AN.compras.simplesMei[m] = v; if (v > 0) meses.push(m); }
+  anOrigemMarcar('compras.simplesMei', meses, 'R');
+  AUD_LOTE = 'compras de MEI/Simples pela classificação dos fornecedores — ' + fonte;
+  toast(fmtR(total) + ' de compras de MEI/Simples (' + n + ' fornecedor(es)) rateados em ' + meses.length + ' mês(es), proporcionalmente às compras sem ST' + (total > baseTot + 0.005 ? ' — limitados às compras lançadas' : '') + ' ✓');
+  anAplicado();
 }
 const num = s => { s = String(s??'').trim(); if (!s) return 0;
   s = s.replace(/[R$\s]/g,'');
@@ -5385,6 +5458,12 @@ function anVerificar(){
     add('distorce','Receita de serviços sem folha lançada: o Fator R fica em 0% e os serviços caem no Anexo V.','analise:folha');
   if (merc > 0 && !compras)
     add('distorce','Há revenda sem nenhuma compra lançada — o Lucro Real fica sem custo e o lucro sai inflado.','analise:compras');
+  // v7.97.0 · a parcela de MEI/Simples é SUBCONJUNTO das compras sem ST — maior que a base, o motor limita e avisa
+  { const _exc = MESES.filter((_,m)=>(+((C.simplesMei||[])[m])||0) > (+((C.semst||[])[m])||0)+(+((C.mono||[])[m])||0)+0.005);
+    if (_exc.length) add('distorce',`Compras de fornecedores MEI/Simples maiores que as compras sem ST em ${_exc.join(', ')} — a parcela foi limitada à base do crédito; confira a aba Compras.`,'analise:compras');
+    const _semstTot = (C.semst||[]).reduce((s,v)=>s+(+v||0),0) + (C.mono||[]).reduce((s,v)=>s+(+v||0),0);
+    if (_semstTot > 0 && !((C.simplesMei||[]).some(v=>+v>0)) && (AN._res && AN._res.meses.some(M=>M.icmsCred>0)))
+      add('observe','Nenhuma compra marcada como de fornecedor MEI/Simples: todo o crédito de ICMS foi estimado como se os fornecedores destacassem ICMS. Use o botão da aba ICMS·IPI para preencher pela classificação dos fornecedores.','analise:impostos'); }
   if (!desp && receita > 0)
     add('distorce','Nenhuma despesa lançada — o Lucro Real considera a receita quase inteira como lucro.','analise:despesas');
 
@@ -6259,7 +6338,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.96.0';
+const APP_VERSAO = '7.97.0';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -11787,6 +11866,12 @@ function rlConferencia(){
     const _comprasLR = M.ins ? (M.ins.compras.semst + M.ins.compras.comst)
                              : ((+((Dm.compras.semst||[])[m])||0) + (+((Dm.compras.comst||[])[m])||0));
     const _credLRm = M.ins ? M.ins.despesas.credLR : (+((Dm.despesas.credLR||[])[m])||0);
+    // v7.97.0 · o crédito de ICMS exclui as compras de MEI/Simples e soma o que a optante informou na NF
+    const _credDet = ((M.comprasSimplesMei||0) > 0.005 || (M.credSimplesInf||0) > 0.005)
+      ? ` <span class="hint">(crédito sobre ${fmtR(M.credIcmsBase||0)} de compras sem ST — excluídos ${fmtR(M.comprasSimplesMei||0)} de fornecedores MEI/Simples, que não destacam ICMS (LC 123/2006, art. 23)`
+        + ((M.credSimplesInf||0) > 0.005 ? `; + ${fmtR(M.credSimplesInf)} de crédito informado nas NF de optantes (art. 23, § 1º)` : '')
+        + ((M.credPresTransp||0) > 0.005 ? `; + crédito presumido do transporte ${fmtR(M.credPresTransp)}` : '') + ')</span>'
+      : '';
     const LPl = [
       CF.lin('Base PIS/COFINS (bruta)', `receita ${fmtR(M.receita)} − revenda monofásica ${fmtR(_monoEx)} − exportação ${fmtR(M.recExp||0)}`, fmtR(P.basePCbruta||0)),
       CF.lin('(−) ICMS destacado — Tema 69', M.tema69Informado ? '<b>nota a nota</b> — vICMS das NF-e do mês (XML) ou valor informado na aba ICMS·IPI (STF, RE 574.706)' : `<b>estimativa</b>: (revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706) — importe os XMLs de saída para o valor nota a nota`, fmtR(M.icmsDestacadoPC||0)),
@@ -11831,10 +11916,10 @@ function rlConferencia(){
         'crédito que excedeu o débito e foi transportado (LC 87/96, arts. 24 e 25)', fmtR(M.icmsSaldoAnt||0))] : []),
       CF.lin('ICMS a recolher',
         ((M.icmsSaldoFim||0) > 0.005)
-          ? `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`
+          ? `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}${_credDet}`
             + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : '')
             + ` = <b>negativo</b>, logo nada a recolher (conta gráfica do ICMS)`
-          : `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`
+          : `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}${_credDet}`
             + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : ''),
         fmtR(P.icms)),
       ...(((M.icmsSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de ICMS a transportar',
@@ -11865,7 +11950,7 @@ function rlConferencia(){
       // refizesse 83.274,20 + 8.361,12 − 11.978,08 na tela chegava a outro número. Não há dupla
       // contagem — o valor já está embutido na linha bruta, que deduz as compras LÍQUIDAS do ICMS.
       // Agora é informativa e diz onde já foi considerada.
-      ...((M.icmsComprasPC||0)>0.005?[CF.lin('ICMS das aquisições fora do crédito — Lei 14.592/2023', (M.lei14592Informado ? '<b>nota a nota</b> — valor informado na aba ICMS·IPI' : `<b>estimativa</b>: compras p/ revenda ${fmtR(_comprasLR)} × ${CF.pc(+D.cfg.icmsC||0)}`) + ` — <i>já refletido na linha acima</i>, que deduz as compras líquidas do ICMS`, '<i>' + fmtR(M.icmsComprasPC||0) + '</i>')]:[]),
+      ...((M.icmsComprasPC||0)>0.005?[CF.lin('ICMS das aquisições fora do crédito — Lei 14.592/2023', (M.lei14592Informado ? '<b>nota a nota</b> — valor informado na aba ICMS·IPI' : `<b>estimativa</b>: compras p/ revenda ${fmtR(_comprasLR)}${(M.comprasSimplesMei||0) > 0.005 ? ` − MEI/Simples ${fmtR(M.comprasSimplesMei)} (sem ICMS na aquisição, LC 123, art. 23)` : ''} × ${CF.pc(+D.cfg.icmsC||0)}${(M.credSimplesInf||0) > 0.005 ? ` + crédito informado por optantes ${fmtR(M.credSimplesInf)}` : ''}`) + ` — <i>já refletido na linha acima</i>, que deduz as compras líquidas do ICMS`, '<i>' + fmtR(M.icmsComprasPC||0) + '</i>')]:[]),
       CF.lin('(−) ICMS destacado — Tema 69', M.tema69Informado ? '<b>nota a nota</b> — vICMS das NF-e do mês (XML) ou valor informado na aba ICMS·IPI (STF, RE 574.706)' : `<b>estimativa</b>: (revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706)`, fmtR(M.icmsDestacadoPC||0)),
       // v7.63.0 (auditoria A09) · quando os créditos superam os débitos, a base tributável é ZERO e
       // o excesso vira saldo credor transportado ao mês seguinte — o motor sempre fez isso, mas a
@@ -11890,10 +11975,10 @@ function rlConferencia(){
         'crédito transportado do mês anterior (LC 87/96, arts. 24 e 25)', fmtR(M.icmsSaldoAnt||0))] : []),
       CF.lin('ICMS a recolher',
         ((M.icmsSaldoFim||0) > 0.005)
-          ? `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`
+          ? `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}${_credDet}`
             + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : '')
             + ` = <b>negativo</b>, nada a recolher`
-          : `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`
+          : `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}${_credDet}`
             + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : ''),
         fmtR(LR.icms)),
       ...(((M.icmsSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de ICMS a transportar',
@@ -13463,7 +13548,7 @@ function rlRegimes(rot, n) {
     ${ln('(−) ICMS destacado — Tema 69','também no não cumulativo (STF, RE 574.706)', icmsDest)}
     ${ln('<b>Base de DÉBITO</b>', fmt(baseDeb)+' − '+fmt(icmsDest), baseDeb-icmsDest, true)}
     ${ln('Compras (revenda + com ST)','aquisições que geram crédito', compras)}
-    ${ln('(−) ICMS das compras', 'compras × '+pc(+cfg.icmsC||0), icmsCompPC)}
+    ${ln('(−) ICMS das compras', 'compras × '+pc(+cfg.icmsC||0) + ((T.comprasSimplesMei||0)>0.005 ? ' — sem as compras de MEI/Simples ('+fmt(T.comprasSimplesMei)+'), que não trazem ICMS na aquisição (LC 123, art. 23)' : '') + ((T.credSimplesInf||0)>0.005 ? ' + crédito informado por optantes '+fmt(T.credSimplesInf) : ''), icmsCompPC)}
     ${credIt.map(x=>ln('(+) '+x.rot, x.base+' — rubrica própria, mapeada na importação do balancete', x.v)).join('')}
     ${credDesp>0.005?ln('(+) Despesas com crédito eleito', 'percentuais de creditabilidade configurados: '+(rotCR||'—'), credDesp):''}
     ${ln('<b>Base de CRÉDITO</b>', fmt(compras)+' − '+fmt(icmsCompPC)+(credLR>0.005?' + '+fmt(credLR)+' (rubricas do art. 3º)':'')+(credDesp>0.005?' + '+fmt(credDesp):''), baseCred, true)}
