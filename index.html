@@ -748,6 +748,12 @@ ul.ap-lista li{margin-bottom:7px}
           <div><label>Regime atual <span class="hint" style="font-weight:400">— MEI e Simples vêm da consulta; Presumido/Real são definidos por você</span></label>
             <select id="emp-regime"><option>A definir</option><option>Simples Nacional</option><option>Lucro Presumido</option><option>Lucro Real</option><option>MEI</option></select></div>
         </div>
+        <!-- v7.99.1 · cadastro único (fase 1): data de abertura e CNAE ficam NA FICHA; a análise anual lê daqui -->
+        <div style="display:grid;grid-template-columns:180px 1fr 220px;gap:14px;margin-top:12px">
+          <div><label>Data de abertura <span class="hint" style="font-weight:400">— Receita</span></label><input id="emp-abertura" type="date" title="Data de início de atividade na Receita Federal. A análise anual usa esta data como início de atividade (limite do Simples, RBT12 e LC 224 proporcionais) quando não tiver a sua própria."></div>
+          <div><label>CNAE principal <span class="hint" style="font-weight:400">— código e descrição, pela Receita</span></label><input id="emp-cnae" placeholder="0000-0/00 — descrição"></div>
+          <div><label>Simples / MEI <span class="hint" style="font-weight:400">— pela Receita</span></label><div id="emp-receita-info" class="hint" style="padding:7px 0;min-height:18px">—</div></div>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:14px;margin-top:12px">
           <div><label>UF / Município</label><input id="emp-ufmun" placeholder="SC / Palhoça"></div>
           <div><label>Atividade principal <span class="hint" style="font-weight:400">— item da LC 116; usado para estimar as reduções da Reforma quando não há notas</span></label>
@@ -761,7 +767,7 @@ ul.ap-lista li{margin-bottom:7px}
         </div>
       </div>
       <div class="card" style="overflow-x:auto"><table>
-        <thead><tr><th>CNPJ</th><th>Razão Social</th><th>Regime</th><th>UF/Mun.</th><th>Obs.</th><th></th></tr></thead>
+        <thead><tr><th>CNPJ</th><th>Razão Social</th><th>Regime</th><th>Abertura</th><th>UF/Mun.</th><th>Obs.</th><th></th></tr></thead>
         <tbody id="emp-tbody"></tbody></table></div>
       <div id="emp-forn-resumo"></div>
     </div>
@@ -797,6 +803,7 @@ ul.ap-lista li{margin-bottom:7px}
       <div class="card" >
         <h3>Versões do sistema</h3>
         <table id="tbl-versoes" style="margin-top:8px"><thead><tr><th style="width:90px">Versão</th><th style="width:120px">Data</th><th>Novidades</th></tr></thead><tbody>
+                    <tr><td><b>v7.99.1</b></td><td>08/10/2026</td><td><b>📇 Cadastro único da empresa (fase 1): data de abertura, CNAE e situação no Simples/MEI passam a morar NA FICHA, e a análise anual lê a data de abertura de lá. Lacre <code>0a257d66</code> INTOCADO.</b> <b>(1) O problema</b>: o início de atividade era digitado dentro de cada análise anual (só mês/ano), não passava de um ano para o outro, a importação do PGDAS-D o sobrescrevia em silêncio — e a consulta de CNPJ recebia a data de abertura da Receita e a descartava. <b>(2) Ficha da empresa</b> (<code>sql/setup_v7991.sql</code>: colunas <code>data_abertura</code>, <code>cnae_codigo</code>, <code>data_exclusao_simples</code>, <code>data_opcao_simei</code>, <code>data_exclusao_simei</code>, <code>natureza_juridica</code>, <code>receita_consultada_em</code>): "Preencher pela Receita" traz data de abertura, CNAE (código — descrição) e a situação no Simples/MEI com datas; a data de abertura é editável; a lista de empresas ganha a coluna Abertura. <b>(3) A análise lê a ficha</b>: análise nova (troca de empresa, ano novo herdando configuração, empresa adotada na importação) sem início próprio recebe a data de abertura da ficha quando ela é do ano-base ou do anterior (<code>cfg.inicioOrigem = 'E'</code>, selo "E · ficha da empresa" na Configuração); análise existente ganha o botão "Usar a data de abertura da ficha" (evento <i>ficha</i> na trilha). O que já está na análise (digitado ou PGDAS-D) prevalece; editar à mão derruba o selo. Com isso o limite do Simples, o RBT12 e a LC 224 proporcionais passam a partir da data da Receita. <b>(4) Verificar</b>: acusa início da análise diferente da abertura da ficha, ficha com abertura e análise sem início, e ficha sem data. Fases 2 (regime por ano) e 3 (Imobiliária e Classificação lendo a ficha) ficam para depois. Suíte: bloco 5ba.</td></tr>
                     <tr><td><b>v7.99.0</b></td><td>07/10/2026</td><td><b>⚖️ LC 224/2025 — acréscimo de 10% nos percentuais de presunção do Lucro Presumido sobre a receita bruta acima de R$ 5 milhões no ano (R$ 1,25 milhão por trimestre). LACRE RE-SELADO <code>8ab9c16a</code> → <code>0a257d66</code>: casos 1 (2025), 2 e 4 (abaixo do limite) idênticos ao centavo; caso 3 (2026, R$ 7,97 mi) LP 1.720.823,72 → 1.733.585,77 (IRPJ +5.550,37, adicional +3.700,25, CSLL +3.511,44); LR, DAS e Reforma "dentro/híbrido" intactos.</b> <b>(1) A regra</b> (art. 4º da LC 224/2025; IN RFB 2.305/2025, alterada pela IN 2.306/2026): o acréscimo é <b>relativo</b> — 8% → 8,8%, 16% → 17,6%, 32% → 35,2%; CSLL 12% → 13,2% e 32% → 35,2% — e incide só sobre a parcela da receita bruta (de atividades, inclusive exportação; sem financeiras) que ultrapassa o limite. Vigência: IRPJ desde 1º/01/2026 e CSLL desde 1º/04/2026 (noventena). <b>(2) Como o motor aplica</b>: por trimestre, limite de R$ 1,25 mi <b>acumulado</b> no ano (o que sobra de um trimestre compensa nos seguintes; o 4º fecha a conta anual — a variação do excedente acumulado pode ser negativa e devolve acréscimo cobrado antes); acréscimo na base = excedente × 10% × presunção média ponderada do trimestre (equivale ao rateio proporcional por atividade); entra no 3º mês do trimestre, antes do adicional (que também sobe). Empresa que começou no ano tem o limite proporcional aos trimestres de atividade (início de atividade da Configuração). <b>(3) Chave na Configuração</b> — "LC 224/2025 — presunção +10%": <i>Aplicar</i> (padrão) ou <i>Não aplicar (liminar / decisão judicial)</i>; herdada entre anos como parâmetro da empresa (<code>cfg.lc224 === false</code>). As ADIs 7920, 7936, 7944 e 7982 estão pendentes no STF. <b>(4) Onde aparece</b>: memória mensal (linha da base do IRPJ e da CSLL com excedente, limite acumulado, presunção média e fonte), memória anual, premissas (parâmetro próprio), Verificar (aviso quando aplicada ou desligada), regra de texto para a IA do parecer e <code>res.lc224 / T.lc224</code> (trimestre a trimestre). Ano-base anterior a 2026 não muda. Suíte: bloco 5az.</td></tr>
                     <tr><td><b>v7.98.0</b></td><td>07/10/2026</td><td><b>✍️ ISS, PIS e COFINS passam a aceitar valor informado, e toda substituição de valor apurado exige MOTIVO. Até aqui só ICMS e IPI podiam ser substituídos (aba ICMS·IPI); ISS, PIS e COFINS eram sempre fórmula × alíquota. Lacre <code>8ab9c16a</code> INTOCADO.</b> <b>(1) Campos novos</b> — <code>trib.iss</code>, <code>trib.pisLP</code>, <code>trib.cofinsLP</code>, <code>trib.pisLR</code>, <code>trib.cofinsLR</code> (null = automático), editáveis no quadro apurado da aba ICMS·IPI. PIS/COFINS são separados por regime porque o Presumido é cumulativo (0,65%/3%) e o Real não cumulativo (1,65%/7,6%). O ISS informado vale no LP, no LR e no mês impedido do Simples; o PIS/COFINS do Real informado entra na base do lucro (despesa dedutível), antes do IRPJ/CSLL. <b>(2) Motivo obrigatório</b> — ao substituir um valor apurado (ICMS, IPI, ISS, PIS, COFINS) o app pede o motivo (mínimo 5 caracteres); sem ele a alteração não é aplicada. O motivo fica no evento da trilha de alterações (<code>auditoria[].motivo</code>) com usuário, data e hora, junto do valor apurado que valia (<code>deAuto</code>) e do valor novo. Apagar a célula (volta ao automático) e "Restaurar automático" não pedem motivo — a ação é autoexplicativa e também fica registrada. <b>(3) Onde aparece</b> — memória mensal do LP e do LR: a parcela sai como <i>valor informado manualmente — apurado pelo motor R$ X · motivo · quem · quando</i>; memória anual: aviso com a contagem de células substituídas; Trilha de alterações: coluna Ação mostra o motivo; dica da célula: idem. "Restaurar automático" passa a limpar também ISS/PIS/COFINS. Suíte: bloco 5ay.</td></tr>
                     <tr><td><b>v7.97.0</b></td><td>07/10/2026</td><td><b>🔴 ICMS: compra de MEI e de optante do Simples não gera crédito. O crédito do Presumido e do Real era estimado sobre TODAS as compras sem ST (× % ICMS de compras), como se todo fornecedor destacasse ICMS. A optante do Simples não destaca (LC 123/2006, art. 23, caput) e o MEI nunca transfere crédito; a optante só transfere o que INFORMA na NF-e (art. 23, § 1º — CSOSN 101/201, mercadoria para revenda ou industrialização, limitado ao ICMS devido por ela). Lacre <code>8ab9c16a</code> INTOCADO (sem os campos novos, nada muda).</b> <b>(1) Campo novo na aba Compras</b> — <code>compras.simplesMei</code>, "De fornecedores MEI / Simples (dentro das compras sem ST)": parcela das compras sem ST + monofásicas vinda de optantes. Sai da base do crédito de ICMS e da exclusão da Lei 14.592/2023 (não há ICMS "incidente na aquisição" para excluir do crédito de PIS/COFINS no Real). Nunca excede a base (o Verificar avisa). <b>(2) Crédito informado por optante</b> — <code>icms.credSimples</code>, nota a nota, na aba ICMS·IPI: o que a optante destacou na NF-e, somado ao crédito. Em branco = zero. <b>(3) Preenchimento pelos fornecedores</b> — botão 🏷️ na aba ICMS·IPI lê a classificação já gravada (triagem de compras por CFOP ou Totais de entrada) e rateia o total de MEI + Simples proporcionalmente às compras sem ST lançadas, com trilha de origem R e evento na auditoria. <b>(4) Onde aparece:</b> quadro apurado (compras sem ST, parcela MEI/Simples, base do crédito, crédito informado), memória mensal do LP e do LR (inclusive a linha da Lei 14.592), memória anual e <code>T.comprasSimplesMei / credSimplesInf</code>. O valor de crédito informado manualmente (aba ICMS·IPI) continua prevalecendo sobre tudo. Suíte: bloco 5ax.</td></tr>
@@ -1527,6 +1534,10 @@ async function consultarUmDireto(cnpj) {
         data_opcao_simples: d.data_opcao_pelo_simples || null,
         uf: d.uf || '', municipio: d.municipio || '',
         cnae: d.cnae_fiscal_descricao || '', porte: d.porte || '',
+        // v7.99.1 · cadastro único: o que a Receita devolve e a ficha da empresa passa a guardar
+        data_abertura: d.data_inicio_atividade || null, cnae_codigo: d.cnae_fiscal != null ? String(d.cnae_fiscal) : '',
+        data_exclusao_simples: d.data_exclusao_do_simples || null, data_opcao_simei: d.data_opcao_pelo_mei || null,
+        data_exclusao_simei: d.data_exclusao_do_mei || null, natureza_juridica: d.natureza_juridica || '',
         fonte: 'minhareceita', erro: null
       };
     }
@@ -1543,6 +1554,9 @@ async function consultarUmDireto(cnpj) {
         data_opcao_simples: d.data_opcao_pelo_simples || null,
         uf: d.uf || '', municipio: d.municipio || '',
         cnae: d.cnae_fiscal_descricao || '', porte: d.porte || '',
+        data_abertura: d.data_inicio_atividade || null, cnae_codigo: d.cnae_fiscal != null ? String(d.cnae_fiscal) : '',   // v7.99.1
+        data_exclusao_simples: d.data_exclusao_do_simples || null, data_opcao_simei: d.data_opcao_pelo_mei || null,
+        data_exclusao_simei: d.data_exclusao_do_mei || null, natureza_juridica: d.natureza_juridica || '',
         fonte: 'brasilapi', erro: null
       };
     }
@@ -4673,6 +4687,13 @@ const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov'
 const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = v => (v==null||isNaN(v)) ? '—' : v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtR = v => 'R$ ' + fmt(v);
+// v7.99.0 · frase da LC 224/2025 para a IA do parecer (regrasDeTexto) — só números do próprio resultado.
+// Mora no bloco "helpers" porque o bloco "parecerIA" (copiado pela Simulação de Incorporação) a chama.
+function lc224Regra(lc){
+  return 'LC 224/2025 (art. 4º; IN RFB 2.305/2025 e 2.306/2026): a parcela da receita bruta acima de R$ 1,25 milhão por trimestre (R$ 5 milhões no ano, acumulado) tem os percentuais de presunção do IRPJ e da CSLL do Lucro Presumido acrescidos em 10% (ex.: 32% → 35,2%; 8% → 8,8%; CSLL 12% → 13,2%); IRPJ desde jan/2026 e CSLL desde abr/2026. Nesta análise o acréscimo foi de '
+    + fmtR((+lc.irpj||0) + (+lc.csll||0)) + ' em IRPJ e CSLL do Presumido no ano (sem contar o adicional) sobre um excedente de ' + fmtR(+lc.excIR||0)
+    + '. Cite a regra ao explicar a carga do Presumido, sem recalcular, e não a apresente como definitiva: as ADIs 7920, 7936, 7944 e 7982 estão pendentes no STF.';
+}
 // v7.39.1: percentual no padrão do documento — vírgula decimal, como o resto dos números
 const fmtP = (v, d=1) => (v==null||isNaN(v)) ? '—' : (+v).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
 // v7.36.0 · POLÍTICA DE ARREDONDAMENTO: o cálculo corre em precisão plena (alíquotas efetivas
@@ -4803,7 +4824,8 @@ function anOrigemMarcar(path, meses, cod){
 const AUD_MAX = 500, AUD_ALERTA = 2000;          // acima de AUD_MAX os lotes antigos são compactados
 const AUD_IMPORT = 'PXBMFRL';                    // origens que vêm de arquivo
 const AUD_ROT = { digitado:'digitado', apagado:'apagado — volta ao automático', repetido:'repetido de janeiro (⇉)',
-  importado:'importado', restaurado:'restaurado ao automático', config:'Configuração', reforma:'aba Reforma' };
+  importado:'importado', restaurado:'restaurado ao automático', config:'Configuração', reforma:'aba Reforma',
+  ficha:'da ficha da empresa (data de abertura na Receita)' };   // v7.99.1
 const AUD_CFG_PADRAO = new Set(['cfg.travaNoDas','cfg.projJanela','cfg.anoRefParecer','cfg.lpBaseComCsll','cfg.lpBaseServCsll','cfg.transpPresuncao','cfg.icmsTranspV','cfg.transpCredPres','cfg.fap','cfg.ratBasico']);   // preenchidas pela própria tela com o padrão
 const AUD_RES = { 'icms.deb':'icmsDeb', 'icms.cred':'icmsCred', 'ipi.deb':'ipiDeb', 'ipi.cred':'ipiCred',
   'trib.iss':'issAuto', 'trib.pisLP':'pisLPAuto', 'trib.cofinsLP':'cofinsLPAuto', 'trib.pisLR':'pisLRAuto', 'trib.cofinsLR':'cofinsLRAuto' };   // estimativa do motor por célula (v7.98.0: trib)
@@ -5279,7 +5301,7 @@ function anRenderGrid() {
   </div>
   <div class="hint" style="margin-top:6px">Início de atividade (data de abertura na Receita):
     <input type="month" style="width:150px;display:inline-block" id="cf-inicio" value="${esc(c.inicioAtividade||'')}" onchange="anSetInicioAtividade(this.value)">
-    <span id="cf-inicio-ext">${iniPorExtenso(c.inicioAtividade)}</span>${c.inicioOrigem==='P'?` <span class="badge ok" title="lida do PGDAS-D de ${esc(c.inicioPA||'')}">P · PGDAS-D ${esc(c.inicioPA||'')}</span>`:''}
+    <span id="cf-inicio-ext">${iniPorExtenso(c.inicioAtividade)}</span>${c.inicioOrigem==='P'?` <span class="badge ok" title="lida do PGDAS-D de ${esc(c.inicioPA||'')}">P · PGDAS-D ${esc(c.inicioPA||'')}</span>`:''}${c.inicioOrigem==='E'?` <span class="badge ok" title="data de abertura da ficha da empresa (Receita Federal) — v7.99.1">E · ficha da empresa</span>`:''}${anInicioFichaBotaoHtml(c)}
     — com <b>menos de 12 meses</b> de atividade o RBT12 é <b>proporcionalizado</b> (Res. CGSN 140/2018, art. 22, §§ 2º e 3º): a média mensal é anualizada. Em branco, o app usa a soma dos 12 meses anteriores.</div>
   <div id="cf-inicio-aviso">${iniAvisoInvalido(c, AN&&AN.ano)}${anAvisoInicioAtividade(c)}</div>
   <div style="overflow-x:auto;margin-top:8px"><table class="gtable"><thead><tr><th></th>${MESES.map(m=>`<th class="num">${m} (ant.)</th>`).join('')}</tr></thead><tbody>
@@ -5592,6 +5614,13 @@ function anVerificar(){
   }
   if (Object.keys(c.folhaPerc||{}).length)
     add('observe','Esta empresa usa percentuais de folha próprios, diferentes do padrão do aplicativo.','config');
+  // v7.99.1 · cadastro único: início de atividade da análise × data de abertura da ficha da empresa
+  { const _e = EMPRESAS.find(x=>x.cnpj===AN.cnpj), _ab = String((_e && _e.data_abertura)||'').slice(0,7), _ini = String(c.inicioAtividade||'').trim().slice(0,7);
+    if (_ab && _ini && _ini !== _ab && +_ab.slice(0,4) >= +AN.ano - 1)
+      add('distorce', `Início de atividade da análise (${_ini}${c.inicioOrigem==='P' ? ', lido do PGDAS-D' : ''}) difere da data de abertura na ficha da empresa (${empDataBR((_e||{}).data_abertura)}) — confira qual está certo: o limite do Simples, o RBT12 e a LC 224 proporcionais dependem dele.`, 'config');
+    if (_ab && !_ini && +_ab.slice(0,4) >= +AN.ano - 1)
+      add('distorce', `A ficha da empresa diz que ela abriu em ${empDataBR((_e||{}).data_abertura)}, mas a análise está sem início de atividade — o limite do Simples e o RBT12 saem sem proporcionalização. Abra a Configuração para a análise ler a ficha.`, 'config');
+    if (_e && !_ab) add('observe', 'A ficha da empresa não tem a data de abertura — em Empresas › Editar › "Preencher pela Receita" ela vem da Receita Federal e passa a alimentar as análises.', 'config'); }
   // v7.99.0 · LC 224/2025 aplicada ou desligada — o parecer tem de declarar
   { const _lc = AN._res && AN._res.lc224;
     if (_lc && _lc.desligado && +AN.ano >= 2026) add('observe','LC 224/2025 NÃO aplicada por opção da empresa (liminar / decisão judicial): o Presumido sai sem o acréscimo de 10% na presunção acima de R$ 1,25 mi/trimestre. Confirme a vigência da decisão.','config');
@@ -6090,7 +6119,7 @@ function anAplicarConfig(silencioso) {
   if (!(+AN.cfg.rbaOutros > 0)) delete AN.cfg.rbaOutros;             // v7.87.0
   // v7.87.0 · valor digitado à mão substitui a marca de origem do PGDAS-D
   if (_cfgAntes.rbaaOrigem === 'P' && ((+AN.cfg.rbaa||0) !== (+_cfgAntes.rbaa||0) || (+AN.cfg.rbaaExp||0) !== (+_cfgAntes.rbaaExp||0))) { delete AN.cfg.rbaaOrigem; delete AN.cfg.rbaaPA; }   // v7.89.0 · compara com o retrato
-  if (_cfgAntes.inicioOrigem === 'P' && String(AN.cfg.inicioAtividade||'') !== String(_cfgAntes.inicioAtividade||'')) { delete AN.cfg.inicioOrigem; delete AN.cfg.inicioPA; }   // v7.89.0
+  if ((_cfgAntes.inicioOrigem === 'P' || _cfgAntes.inicioOrigem === 'E') && String(AN.cfg.inicioAtividade||'') !== String(_cfgAntes.inicioAtividade||'')) { delete AN.cfg.inicioOrigem; delete AN.cfg.inicioPA; }   // v7.89.0 · v7.99.1: E = ficha
   if (!(+AN.cfg.ratBasico > 0)) delete AN.cfg.ratBasico;             // v7.64.0: em branco não grava
   if (!(+AN.cfg.fap > 0)) delete AN.cfg.fap;
   if (AN.cfg.frComposicao === 'legal') delete AN.cfg.frComposicao;   // o padrão não ocupa espaço
@@ -6353,6 +6382,7 @@ async function anTrocarEmpresa() {
   try {
     const rows = await supa('GET','atp_analises',{ params:{ select:'*', cnpj:`eq.${cnpj}`, ano:`eq.${ano}`, limit:'1' } });
     AN = anNormalizar(rows.length ? rows[0].dados : null, cnpj, ano);
+    if (!rows.length) anInicioDaFicha(AN);   // v7.99.1 · análise nova: início de atividade pela data de abertura da ficha
     if (!rows.length) await cfgHerdar(AN, cnpj, ano);   // v7.49.0: ano novo nasce com as alíquotas da empresa
     AN.cnpj = cnpj; AN.ano = ano;
     AN._verEm = rows.length ? (rows[0].atualizado_em || null) : null;   // marca da versão lida
@@ -6374,12 +6404,6 @@ async function anTrocarEmpresa() {
 // e tudo era redigitado na virada. Agora o ano novo HERDA os parâmetros do ano mais recente da
 // mesma empresa e declara de onde vieram; alterar um ano específico segue sendo manual, e a
 // alteração NÃO volta para trás (parecer já emitido não pode mudar sozinho — trava da v7.26.0).
-// v7.99.0 · frase da LC 224/2025 para a IA do parecer (regrasDeTexto) — só números do próprio resultado
-function lc224Regra(lc){
-  return 'LC 224/2025 (art. 4º; IN RFB 2.305/2025 e 2.306/2026): a parcela da receita bruta acima de R$ 1,25 milhão por trimestre (R$ 5 milhões no ano, acumulado) tem os percentuais de presunção do IRPJ e da CSLL do Lucro Presumido acrescidos em 10% (ex.: 32% → 35,2%; 8% → 8,8%; CSLL 12% → 13,2%); IRPJ desde jan/2026 e CSLL desde abr/2026. Nesta análise o acréscimo foi de '
-    + fmtR((+lc.irpj||0) + (+lc.csll||0)) + ' em IRPJ e CSLL do Presumido no ano (sem contar o adicional) sobre um excedente de ' + fmtR(+lc.excIR||0)
-    + '. Cite a regra ao explicar a carga do Presumido, sem recalcular, e não a apresente como definitiva: as ADIs 7920, 7936, 7944 e 7982 estão pendentes no STF.';
-}
 const CFG_HERDA = ['iss','icmsV','icmsC','ipiV','ipiC','icmsTranspV','transpCredPres','lpBaseServ',
   'lpBaseCom','lpBaseServCsll','lpBaseComCsll','transpPresuncao','folhaPerc','adicionalIR','sublimite',
   'travaNoDas','lrPeriodo','projJanela','anoRefParecer','credLRpct',
@@ -6395,8 +6419,9 @@ async function cfgHerdar(an, cnpj, ano){
     for (const k of CFG_HERDA) if (de[k] !== undefined && de[k] !== null)
       an.cfg[k] = (k === 'folhaPerc') ? JSON.parse(JSON.stringify(de[k])) : de[k];
     an._cfgHerdadaDe = rows[0].ano;
+    anInicioDaFicha(an);   // v7.99.1 · ano novo sem início próprio: data de abertura da ficha da empresa
     return rows[0].ano;
-  } catch(e){ console.error('cfgHerdar:', e); return null; }
+  } catch(e){ console.error('cfgHerdar:', e); try { anInicioDaFicha(an); } catch(_){/* silêncio proposital (A10): a ficha é complemento — sem ela a análise nova segue em branco */} return null; }
 }
 function anMudou(){ anTrocarEmpresa(); }
 // ═══ v7.12: histórico de versões — as 3 últimas por empresa/ano, com autoria ═══
@@ -6457,7 +6482,7 @@ async function anHistRestaurar(id){
   toast(ok === false ? 'Restaurada na tela, mas a gravação falhou.' : 'Versão restaurada e gravada ✓');
 }
 // ═══ v7.26.0: TRAVA DE ANÁLISES FECHADAS — snapshot congelado + comparação pós-atualização ═══
-const APP_VERSAO = '7.99.0';
+const APP_VERSAO = '7.99.1';
 function anTravada(){ return !!(AN && AN._status==='fechada'); }
 function anSnapshotCalc(){
   const T = AN?._res?.totais || {};
@@ -6743,13 +6768,61 @@ function empRender() {
   $id('emp-tbody').innerHTML = rows.length ? rows.map(e=>`<tr>
     <td style="white-space:nowrap">${fmtCNPJ(e.cnpj)}</td><td>${esc(e.razao_social)||''}</td>
     <td>${e.regime && e.regime!=='A definir' ? esc(e.regime) : '<span class="badge info">A definir</span>'}</td>
+    <td style="white-space:nowrap">${e.data_abertura ? esc(empDataBR(e.data_abertura)) : '<span class="hint" title="Clique em Editar › Preencher pela Receita">—</span>'}</td>
     <td>${e.uf?e.uf+' / '+(e.municipio||''):'—'}</td><td>${e.obs||''}</td>
     <td style="white-space:nowrap"><button class="btn" onclick="empEditar('${e.cnpj}')">Editar</button>
     <button class="btn" onclick="empAnalisar('${e.cnpj}')">Analisar</button>
     <button class="btn" title="Configuração da empresa (alíquotas, presunções, RBT12)" onclick="empConfig('${e.cnpj}')">⚙️</button>
     <button class="btn" title="Resumo estatístico de cliente e fornecedor" onclick="fornResumo('${e.cnpj}')">📊</button>
     <button class="btn" style="color:var(--danger)" onclick="empExcluir('${e.cnpj}')">Excluir</button></td></tr>`).join('')
-  : '<tr><td colspan="6" class="hint" style="text-align:center;padding:20px">Nenhuma empresa. Cadastre manualmente ou use a Consulta CNPJ.</td></tr>';
+  : '<tr><td colspan="7" class="hint" style="text-align:center;padding:20px">Nenhuma empresa. Cadastre manualmente ou use a Consulta CNPJ.</td></tr>';
+}
+// ═══ v7.99.1 · CADASTRO ÚNICO (fase 1) ═══════════════════════════════════════════════════════════
+// Data de abertura, CNAE e opção pelo Simples/MEI com datas moram NA FICHA DA EMPRESA. A consulta à
+// Receita preenche (e guarda em EMP_RECEITA até o Salvar); a análise anual lê a data de abertura daqui.
+let EMP_RECEITA = null;                                   // última consulta à Receita feita no formulário
+const empDataBR = iso => { const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : String(iso||''); };
+function empReceitaInfoHtml(e){
+  if (!e) return '—';
+  const p = [];
+  if (e.simei) p.push('<span class="badge warn">MEI</span>' + (e.data_opcao_simei ? ' desde ' + empDataBR(e.data_opcao_simei) : ''));
+  else if (e.simples) p.push('<span class="badge warn">Simples Nacional</span>' + (e.data_opcao_simples ? ' desde ' + empDataBR(e.data_opcao_simples) : ''));
+  else if (e.fonte || e.data_abertura) p.push('<span class="badge ok">Não optante</span>' + (e.data_exclusao_simples ? ' (excluída do Simples em ' + empDataBR(e.data_exclusao_simples) + ')' : ''));
+  if (e.situacao) p.push(esc(e.situacao));
+  if (e.porte) p.push(esc(e.porte));
+  return p.length ? p.join(' · ') : '—';
+}
+// início de atividade da análise vem da FICHA quando a análise não tem o seu (digitado ou PGDAS-D prevalecem).
+// Só vale quando a abertura é do ano-base ou do anterior — antes disso são 13 meses ou mais (sem proporcionalização).
+function anInicioDaFicha(an){
+  if (!an || !an.cnpj || !an.cfg) return false;
+  if (String(an.cfg.inicioAtividade||'').trim()) return false;
+  const e = (EMPRESAS||[]).find(x => x.cnpj === an.cnpj);
+  const m = String((e && e.data_abertura) || '').match(/^(\d{4})-(\d{2})/);
+  if (!m) return false;
+  const ano = +an.ano, aAno = +m[1];
+  if (!(aAno === ano || aAno === ano - 1)) return false;
+  an.cfg.inicioAtividade = m[1] + '-' + m[2]; an.cfg.inicioOrigem = 'E'; delete an.cfg.inicioPA;
+  return true;
+}
+// botão da Configuração: análise sem início próprio + ficha com abertura no ano-base/anterior → oferece aplicar
+function anInicioFichaBotaoHtml(c){
+  try {
+    if (!AN || String((c||{}).inicioAtividade||'').trim()) return '';
+    const e = (EMPRESAS||[]).find(x => x.cnpj === AN.cnpj), ab = String((e && e.data_abertura)||'');
+    if (!/^\d{4}-\d{2}/.test(ab)) return '';
+    const aAno = +ab.slice(0,4); if (!(aAno === +AN.ano || aAno === +AN.ano - 1)) return '';
+    return ` <button class="btn" type="button" style="padding:2px 8px;font-size:11px" onclick="anInicioDaFichaAplicar()" title="A ficha da empresa (Receita Federal) diz que ela abriu em ${esc(empDataBR(ab))}. Clique para a análise usar essa data como início de atividade — limite do Simples, RBT12 e LC 224 proporcionais.">📇 Usar a data de abertura da ficha (${esc(empDataBR(ab))})</button>`;
+  } catch(_){ return ''; /* silêncio proposital (A10): botão auxiliar — falha aqui não pode derrubar a Configuração */ }
+}
+function anInicioDaFichaAplicar(){
+  if (!AN) return;
+  if (anTravada()){ toast('Análise FECHADA 🔒 — reabra (🔓) para alterar.'); return; }
+  const de = String(AN.cfg.inicioAtividade||'');
+  if (!anInicioDaFicha(AN)){ toast('A ficha da empresa não tem data de abertura no ano-base ou no anterior.'); return; }
+  audCelula('cfg.inicioAtividade', null, de || null, AN.cfg.inicioAtividade, 'ficha', { origemPara:'E' });
+  AN_SUJO = true; anRecalcular(); if (typeof anRenderConfig === 'function') anRenderConfig();
+  toast('Início de atividade ' + iniPorExtenso(AN.cfg.inicioAtividade) + ' lido da ficha da empresa ✓');
 }
 function empConfig(cnpj){ empGlobalSet(cnpj, EMP_GLOBAL.ano || +($id('g-ano')?.value) || new Date().getFullYear()); go('config'); }
 function dlLc116Montar(){
@@ -6760,7 +6833,8 @@ function dlLc116Montar(){
   dl.dataset.pronto = '1';
 }
 const empItemLC = v => { const m = String(v||'').match(/^\s*(\d{1,2}\.\d{2})/); return m ? m[1] : null; };
-function empNova(){ EMP_EDIT=null; ['emp-cnpj','emp-razao','emp-ufmun','emp-obs','emp-atividade'].forEach(i=>$id(i).value='');
+function empNova(){ EMP_EDIT=null; EMP_RECEITA=null; ['emp-cnpj','emp-razao','emp-ufmun','emp-obs','emp-atividade','emp-abertura','emp-cnae'].forEach(i=>{ const el=$id(i); if (el) el.value=''; });
+  if ($id('emp-receita-info')) $id('emp-receita-info').innerHTML = '—';   // v7.99.1
   $id('emp-regime').value='A definir';
   $id('emp-form-titulo').textContent='Nova empresa'; $id('emp-form-card').style.display='block'; }
 function empEditar(cnpj){ const e = EMPRESAS.find(x=>x.cnpj===cnpj); if(!e) return;
@@ -6768,6 +6842,11 @@ function empEditar(cnpj){ const e = EMPRESAS.find(x=>x.cnpj===cnpj); if(!e) retu
   { const N = MAPA_CLASSTRIB.lcN||{}; $id('emp-atividade').value = e.atividade_lc ? `${e.atividade_lc} — ${(N[e.atividade_lc]||'').replace(/\s+$/,'')}` : ''; }
   $id('emp-regime').value = e.regime || (e.simples ? 'Simples Nacional' : 'A definir');
   $id('emp-ufmun').value=e.uf?`${e.uf} / ${e.municipio||''}`:''; $id('emp-obs').value=e.obs||'';
+  // v7.99.1 · ficha única: abertura, CNAE e situação no Simples/MEI
+  EMP_RECEITA = null;
+  if ($id('emp-abertura')) $id('emp-abertura').value = String(e.data_abertura||'').slice(0,10);
+  if ($id('emp-cnae')) $id('emp-cnae').value = [e.cnae_codigo, e.cnae].filter(Boolean).join(' — ');
+  if ($id('emp-receita-info')) $id('emp-receita-info').innerHTML = empReceitaInfoHtml(e);
   $id('emp-form-titulo').textContent='Editar empresa'; $id('emp-form-card').style.display='block'; }
 async function empSalvar() {
   const cnpj = limparCNPJ($id('emp-cnpj').value);
@@ -6777,15 +6856,29 @@ async function empSalvar() {
   const atividade_lc = empItemLC($id('emp-atividade')?.value);
   const base = { cnpj, razao_social:$id('emp-razao').value.trim(), simples: regime==='Simples Nacional',
     regime, uf:uf||null, municipio:municipio||null, obs:$id('emp-obs').value.trim()||null, analise:true, escritorio_id: APP.escritorioId };
+  // v7.99.1 · ficha única: data de abertura (editável) e CNAE; o que veio da Receita nesta sessão também é gravado
+  const _ab = ($id('emp-abertura')?.value||'').trim();
+  const _cnaeTx = ($id('emp-cnae')?.value||'').trim(), _cnaeM = _cnaeTx.match(/^\s*([\d][\d.\-\/]{2,12})\s*(?:—|-)?\s*(.*)$/);
+  const ficha = { data_abertura: /^\d{4}-\d{2}-\d{2}$/.test(_ab) ? _ab : null,
+    cnae_codigo: _cnaeM ? _cnaeM[1] : (_cnaeTx && !/\s/.test(_cnaeTx) ? _cnaeTx : null), cnae: _cnaeM ? (_cnaeM[2]||null) : (_cnaeTx || null) };
+  if (EMP_RECEITA && limparCNPJ(EMP_RECEITA.cnpj||'') === cnpj){
+    for (const k of ['situacao','simei','data_opcao_simples','data_exclusao_simples','data_opcao_simei','data_exclusao_simei','natureza_juridica','porte','fonte'])
+      if (EMP_RECEITA[k] !== undefined && EMP_RECEITA[k] !== '') ficha[k] = EMP_RECEITA[k];
+    if (EMP_RECEITA.simples !== undefined && regime !== 'Lucro Presumido' && regime !== 'Lucro Real') ficha.simples = EMP_RECEITA.simples === true;
+    ficha.receita_consultada_em = new Date().toISOString();
+  }
   const salvar = async corpo => { await supa('POST','atp_empresas?on_conflict=cnpj',{ body:[corpo] }); };
   try {
-    try { await salvar({ ...base, atividade_lc }); }
+    try { await salvar({ ...base, ...ficha, atividade_lc }); }
     catch(e){
-      // coluna ainda não existe no banco (setup_v716.sql não rodado) — grava o resto e avisa
-      if (/atividade_lc/i.test(e.message||'')) { await salvar(base);
+      // coluna ainda não existe no banco — grava o resto e avisa qual setup rodar
+      if (/data_abertura|cnae_codigo|data_exclusao|data_opcao_simei|natureza_juridica|receita_consultada_em/i.test(e.message||'')) { await salvar({ ...base, atividade_lc });
+        toast('Empresa salva. Data de abertura/CNAE não foram gravados — rode o sql/setup_v7991.sql no Supabase.'); }
+      else if (/atividade_lc/i.test(e.message||'')) { await salvar(base);
         toast('Empresa salva. A atividade não foi gravada — rode o setup_v716.sql no Supabase.'); }
       else throw e;
     }
+    EMP_RECEITA = null;
     toast('Empresa salva.');
     $id('emp-form-card').style.display='none'; empCarregar(); carregarDashboard();
   } catch(e){ toast('Erro: '+e.message); }
@@ -6798,6 +6891,12 @@ async function empConsultarReceita() {
   if (r.erro) { toast(r.erro); return; }
   $id('emp-razao').value = r.razao_social;
   $id('emp-ufmun').value = r.uf ? `${r.uf} / ${r.municipio}` : '';
+  // v7.99.1 · ficha única: abertura, CNAE (código — descrição) e situação no Simples/MEI, guardados até o Salvar
+  EMP_RECEITA = { ...r, cnpj };
+  if ($id('emp-abertura') && r.data_abertura) $id('emp-abertura').value = String(r.data_abertura).slice(0,10);
+  if ($id('emp-cnae') && (r.cnae_codigo || r.cnae)) $id('emp-cnae').value = [r.cnae_codigo, r.cnae].filter(Boolean).join(' — ');
+  if ($id('emp-receita-info')) $id('emp-receita-info').innerHTML = empReceitaInfoHtml(r);
+  if (r.doCache && !r.data_abertura && $id('emp-receita-info')) $id('emp-receita-info').innerHTML += ' <span class="hint">(consulta em cache sem a data de abertura — ela entra na próxima consulta à Receita, em até 30 dias)</span>';
   // a consulta resolve MEI e Simples; Presumido x Real não é dado público
   const atual = $id('emp-regime').value;
   if (r.simei) { $id('emp-regime').value = 'MEI'; }
@@ -8238,7 +8337,7 @@ async function garantirEmpresa(cnpjBruto, nome, regime) {
   // adota a empresa na análise corrente
   if (!AN) AN = anNovo(cnpj, +$id('an-ano').value);
   if (!AN.cnpj) AN.cnpj = cnpj;
-  if (AN.cnpj === cnpj) { anPreencherEmpresas(); $id('an-empresa').value = cnpj; }
+  if (AN.cnpj === cnpj) { anPreencherEmpresas(); $id('an-empresa').value = cnpj; try { anInicioDaFicha(AN); } catch(_){/* silêncio proposital (A10): a importação não depende da ficha */} }   // v7.99.1
   return cnpj;
 }
 

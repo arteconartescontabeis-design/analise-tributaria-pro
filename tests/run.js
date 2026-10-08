@@ -5258,6 +5258,34 @@ console.log('\n■ Integridade da interface');
     chk('5av · v7.95.2 · badge, changelog e lacre 8ab9c16a intocado', /APP_VERSAO = '7\.9[5-9]\.\d+'/.test(html) && /<b>v7\.95\.2<\/b><\/td><td>18\/09\/2026/.test(html) && /LACRE_HASH = '0a257d66'/.test(html) && /r\.comp\._projetadoK = k/.test(html));
   }
 
+  // ═══ 5ba · v7.99.1 — cadastro único (fase 1): data de abertura e CNAE na ficha da empresa ═══
+  {
+    const r = c => vm.runInContext(c, ctx);
+    chk('5ba · consulta à Receita guarda data de abertura, código do CNAE e datas do Simples/MEI (nas duas fontes)',
+      (html.match(/data_abertura: d\.data_inicio_atividade \|\| null, cnae_codigo: d\.cnae_fiscal != null \? String\(d\.cnae_fiscal\) : ''/g)||[]).length === 2
+      && (html.match(/data_exclusao_simples: d\.data_exclusao_do_simples \|\| null, data_opcao_simei: d\.data_opcao_pelo_mei \|\| null/g)||[]).length === 2);
+    chk('5ba · ficha da empresa: campos de abertura, CNAE e situação Simples/MEI; Salvar grava data_abertura/cnae_codigo e o que veio da Receita; coluna Abertura na lista',
+      /id="emp-abertura" type="date"/.test(html) && /id="emp-cnae"/.test(html) && /id="emp-receita-info"/.test(html) && /const ficha = \{ data_abertura:/.test(html) && /receita_consultada_em = new Date\(\)\.toISOString\(\)/.test(html) && /<th>Abertura<\/th>/.test(html) && /sql\/setup_v7991\.sql/.test(html));
+    chk('5ba · sql/setup_v7991.sql existe e cria as colunas (idempotente)', fs.existsSync(path.join(RAIZ,'sql','setup_v7991.sql')) && /add column if not exists data_abertura\s+date/.test(fs.readFileSync(path.join(RAIZ,'sql','setup_v7991.sql'),'utf8')));
+    r(`EMPRESAS = [{ cnpj:'55555555000155', razao_social:'Nova Ltda', data_abertura:'2026-02-15' }, { cnpj:'66666666000166', razao_social:'Antiga Ltda', data_abertura:'2010-05-01' }];`);
+    chk('5ba · análise 2026 sem início + ficha aberta em 15/02/2026 → inicioAtividade 2026-02 com origem E',
+      r(`(()=>{ const a = anNovo('55555555000155', 2026); const ok = anInicioDaFicha(a); return ok && a.cfg.inicioAtividade === '2026-02' && a.cfg.inicioOrigem === 'E'; })()`));
+    chk('5ba · análise 2027 (ano seguinte) também lê 2026-02 (menos de 13 meses); 2028 não (vazio = 13 meses ou mais)',
+      r(`(()=>{ const a = anNovo('55555555000155', 2027); const b = anNovo('55555555000155', 2028); return anInicioDaFicha(a) && a.cfg.inicioAtividade === '2026-02' && !anInicioDaFicha(b) && b.cfg.inicioAtividade === ''; })()`));
+    chk('5ba · empresa aberta em 2010: nada muda; início já informado (digitado ou PGDAS-D) prevalece sobre a ficha',
+      r(`(()=>{ const a = anNovo('66666666000166', 2026); const b = anNovo('55555555000155', 2026); b.cfg.inicioAtividade = '2026-05'; b.cfg.inicioOrigem = 'P'; return !anInicioDaFicha(a) && a.cfg.inicioAtividade === '' && !anInicioDaFicha(b) && b.cfg.inicioAtividade === '2026-05' && b.cfg.inicioOrigem === 'P'; })()`));
+    chk('5ba · LC 224 e RBT12 proporcionais enxergam a abertura da ficha: 2026-02 → 1º trimestre de atividade = 0 e fevereiro é o 1º mês de atividade',
+      r(`(()=>{ const a = anNovo('55555555000155', 2026); anInicioDaFicha(a); a.cfg.iss=.05; a.receitas.a3_semret = Array(12).fill(100000); const res = calcular(a, JSON.parse(JSON.stringify(ANEXOS_DEFAULT)), {...FOLHA_PERC_DEFAULT}); return res.lc224.inicioTrimestre === 0 && res.meses[1].mesAtividade === 1; })()`));
+    chk('5ba · ano novo (cfgHerdar), empresa adotada na importação (garantirEmpresa) e análise nova na troca de empresa leem a ficha; Configuração mostra selo E e botão para aplicar',
+      /anInicioDaFicha\(an\);   \/\/ v7\.99\.1 · ano novo sem início próprio/.test(html) && /try \{ anInicioDaFicha\(AN\); \} catch\(_\)\{\/\* silêncio proposital/.test(html) && /if \(!rows\.length\) anInicioDaFicha\(AN\);/.test(html)
+      && /E · ficha da empresa<\/span>/.test(html) && /function anInicioDaFichaAplicar\(\)/.test(html) && /ficha:'da ficha da empresa/.test(html));
+    chk('5ba · Verificar acusa divergência entre o início da análise e a abertura da ficha, e ficha sem data', /difere da data de abertura na ficha da empresa/.test(html) && /mas a análise está sem início de atividade/.test(html) && /A ficha da empresa não tem a data de abertura/.test(html));
+    chk('5ba · editar o início à mão derruba o selo E (como já fazia com o P)', /\(_cfgAntes\.inicioOrigem === 'P' \|\| _cfgAntes\.inicioOrigem === 'E'\)/.test(html));
+    { const l = vm.runInContext('lacreRodar()', ctx);
+      chk('5ba · lacre 0a257d66 íntegro (nada muda no motor)', l.ok === true && l.hash === '0a257d66'); }
+    chk('5ba · v7.99.1 · badge e changelog', /APP_VERSAO = '(7\.99\.[1-9]|8\.\d+\.\d+)'/.test(html) && /<b>v7\.99\.1<\/b><\/td><td>08\/10\/2026/.test(html));
+  }
+
   // ═══ 5az · v7.99.0 — LC 224/2025: acréscimo de 10% na presunção acima de R$ 1,25 mi/trimestre ═══
   {
     const serv = { a3_semret: Array(12).fill(500000) };            // 1,5 mi por trimestre → excedente 250 mil
