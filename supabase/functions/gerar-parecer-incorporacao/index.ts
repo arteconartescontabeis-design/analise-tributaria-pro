@@ -1,4 +1,15 @@
-// ═══ Simulação de Incorporação — Edge Function "gerar-parecer-incorporacao" (v1.3.0) ═══
+// ═══ Simulação de Incorporação — Edge Function "gerar-parecer-incorporacao" (v1.4.1) ═══
+// v1.4.1 (08/10/2026): credencial em cascata (gateway próprio → gateway do ATP → chave direta). Publicada no slot CERTO:
+//   a v1.4.0 estava publicada em "gerar-parecer-imobiliario" (slot da Imobiliária) e este slot seguia na v1.3.0.
+// v1.4.0 (27/09/2026): IA Central — ver bloco abaixo. Nada mais mudou em relação à v1.3.0.
+// ═══ IA CENTRAL (27/09/2026) ═══
+//   Não fala mais direto com a Anthropic: chama o ia-gateway do projeto Departamento Pessoal
+//   com o token PRÓPRIO da Simulação de Incorporação (secret IA_GATEWAY_TOKEN_INCORPORACAO).
+//   O consumo aparece no Portal → Consumo de IA em cartão separado ("Simulação de Incorporação
+//   — pareceres"), identificado pelo e-mail de quem gerou, e respeita os limites desse cartão
+//   (Sonnet 4.6, 8.000 tokens, mensal/diário e total da Artecon). Recusa do gateway chega em "erro", em português.
+//   Prompt, modelo, max_tokens, travas, validações e resposta NÃO mudaram — o app segue igual.
+//   O secret ANTHROPIC_API_KEY deste projeto deixa de ser usado por esta função.
 // v1.3.0 (13/09/2026): parecer remodelado para incorporação — além das 8 chaves da v1.0, a IA
 // devolve 11 chaves novas (executivo, ranking, antesDepois, carga, regimes, reformaDecisao,
 // conclTrib, conclFin, conclPatr, conclReforma, conclGlobal) a partir do bloco "decisao" do payload
@@ -11,7 +22,7 @@
 // payload máximo; max_tokens 8000 com detecção de corte; reparo tolerante do JSON.
 // A IA NUNCA calcula: recebe os números do motor (isoladas, soma, consolidada, deltas,
 // abatimentos, alertas) e devolve só os TEXTOS do parecer de incorporação.
-// Secrets usados: ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY.
+// Secrets usados: IA_GATEWAY_TOKEN_INCORPORACAO (v. acima), SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY.
 
 const MAX_PAYLOAD = 120_000;             // ~120 KB — o payload real do app tem ~5-15 KB
 const JANELA_MS = 60_000, MAX_POR_JANELA = 6;
@@ -50,11 +61,21 @@ const CORS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const GATEWAY_URL = Deno.env.get("IA_GATEWAY_URL") ||
+  "https://fbxelwhdiisfmnwrerbl.supabase.co/functions/v1/ia-gateway";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!apiKey) return json({ erro: "Secret ANTHROPIC_API_KEY não configurado no Supabase." }, 500);
+    // IA Central: token próprio da Incorporação no ia-gateway (cartão separado no Portal)
+    // v1.4.1 (08/10/2026): credencial em cascata — token próprio da Incorporação no ia-gateway; na falta dele, o token
+    // do Análise Tributária; na falta dos dois, a chave direta da Anthropic (caminho da v1.3.0). Assim a publicação
+    // não depende de um secret que ainda não exista no projeto.
+    const tokGw = ((Deno.env.get("IA_GATEWAY_TOKEN_INCORPORACAO") || "").trim()) || ((Deno.env.get("IA_GATEWAY_TOKEN") || "").trim());
+    const viaGateway = tokGw.startsWith("iagw_");
+    const apiKey = viaGateway ? tokGw : (Deno.env.get("ANTHROPIC_API_KEY") || "").trim();
+    if (!apiKey) return json({ erro: "Falta o secret IA_GATEWAY_TOKEN_INCORPORACAO (token da Simulação de Incorporação gerado no Portal → Consumo de IA) — ou, na falta dele, IA_GATEWAY_TOKEN / ANTHROPIC_API_KEY." }, 500);
+    const URL_IA = viaGateway ? GATEWAY_URL : "https://api.anthropic.com/v1/messages";
 
     const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
     const anon = Deno.env.get("SUPABASE_ANON_KEY") || "";
@@ -62,7 +83,9 @@ Deno.serve(async (req) => {
     if (!token || token === anon) return json({ erro: "Faça login no app para gerar o parecer." }, 401);
     const auth = await fetch(supaUrl + "/auth/v1/user", { headers: { apikey: anon, authorization: "Bearer " + token } });
     if (!auth.ok) return json({ erro: "Sessão inválida ou expirada — entre novamente no app." }, 401);
-    const usuario = ((await auth.json())?.id as string) || token.slice(-24);
+    const perfilAuth = await auth.json();
+    const usuario = (perfilAuth?.id as string) || token.slice(-24);
+    const emailIa = String(perfilAuth?.email || usuario).slice(0, 120);   // aparece em "Quem" no Portal
     if (!rateLimitOk(usuario) || !(await rateLimitDb(supaUrl, usuario)))
       return json({ erro: "Muitas gerações em sequência — aguarde um minuto e tente de novo." }, 429);
 
@@ -100,10 +123,10 @@ REGRAS ABSOLUTAS:
 6. Responda APENAS com JSON válido, sem markdown, sem crase, sem texto fora do JSON.
 
 7. Nunca escreva "economia negativa": quando o valor for desfavorável diga "acréscimo tributário". Nunca dê nota, score, ranking ou percentual que não esteja no JSON.
-8. Nunca escreva "recomendado": use a classificação de decisao.classificacao5.classificacao. Patrimônio e endividamento NÃO foram avaliados (o sistema não recebe balanço): trate como limitação em toda conclusão, e se decisao.incompleta for true diga "ANÁLISE INCOMPLETA" na conclusão global.
+8. Patrimônio e endividamento NÃO foram avaliados (o sistema não recebe balanço): trate como limitação em toda conclusão, e se decisao.incompleta for true diga "ANÁLISE INCOMPLETA" na conclusão global.
 
-Formato exato da resposta (22 chaves, todas obrigatórias):
-{"textos":{"intro":"...","empresas":"...","premissas":"...","leitura":"...","reforma":"...","parecer1":"...","parecer2":"...","recomendacao":"...","executivo":"...","ranking":"...","antesDepois":"...","carga":"...","regimes":"...","reformaDecisao":"...","conclTrib":"...","conclFin":"...","conclPatr":"...","conclReforma":"...","conclGlobal":"...","objetivo":"...","conclSoc":"...","recomendacaoCond":"..."}}
+Formato exato da resposta (19 chaves, todas obrigatórias):
+{"textos":{"intro":"...","empresas":"...","premissas":"...","leitura":"...","reforma":"...","parecer1":"...","parecer2":"...","recomendacao":"...","executivo":"...","ranking":"...","antesDepois":"...","carga":"...","regimes":"...","reformaDecisao":"...","conclTrib":"...","conclFin":"...","conclPatr":"...","conclReforma":"...","conclGlobal":"..."}}
 
 Conteúdo de cada campo (1 parágrafo cada; os 11 últimos usam o bloco "decisao" do JSON):
 - intro: o que é a simulação (incorporação de ${p.incorporadas.map((e: any) => String(e.nome)).join(", ")} por ${String(p.incorporadora.nome)}, ano-base ${p.ano}), por que a carga não é linear (progressividade do Simples, adicional de IRPJ, Reforma) e o que o documento compara.
@@ -123,18 +146,20 @@ Conteúdo de cada campo (1 parágrafo cada; os 11 últimos usam o bloco "decisao
 - conclFin: conclusão financeira em 1 a 2 frases (resultado após tributos e margem no Lucro Real, se houver; senão diga que não há base para conclusão financeira).
 - conclPatr: conclusão patrimonial em 1 frase: não avaliada, o sistema não recebe balanço (ativo, passivo, patrimônio líquido, dívidas); sem ela a recomendação não é definitiva.
 - conclReforma: conclusão sobre a Reforma em 1 a 2 frases (acumulado da transição e estabilidade do sinal).
-- objetivo (v1.5.0): objetivo e escopo do parecer em 1 parágrafo — o que se compara (separadas × soma × consolidada, três regimes, Reforma 2027–2033, sentido inverso quando há duas empresas) e o que fica FORA (balanço, dívidas, caixa, contratos, funcionários, societário) por ausência de dados.
-- conclSoc (v1.5.0): conclusão societária em 1 a 2 frases: "Não avaliada por ausência de dados suficientes." seguida do que deve ser levantado (sucessão de direitos e obrigações — CC art. 1.116, CTN art. 132 —, contratos, licenças, funcionários, imóveis, marcas), usando decisao.classificacao5.dadosPendentes.
-- recomendacaoCond (v1.5.0): recomendação final CONDICIONADA em 2 a 3 frases, no modelo "Com base exclusivamente nos dados tributários disponíveis, o cenário mais favorável é X. A conclusão é <decisao.classificacao5.classificacao> e depende da validação patrimonial, financeira, societária, jurídica e da conferência dos dados utilizados." Se a classificação for DESFAVORÁVEL ou NEUTRO, diga isso com o acréscimo/neutralidade; se ANÁLISE INCOMPLETA, diga que não há base para recomendar. Nunca use a palavra "recomendado".
 - conclGlobal: UMA frase: cenário recomendado no que o sistema mede (tributos e Reforma), com score e classificação, e a ressalva de patrimônio/endividamento não avaliados (ou "STATUS: ANÁLISE INCOMPLETA" se decisao.incompleta for true).${blocoAb}${blocoAl}${blocoRegras}`;
 
     const user = "Dados da simulação (calculados pelo motor do sistema):\n" + JSON.stringify(p, null, 1);
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
+    const r = await fetch(URL_IA, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+      headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01", ...(viaGateway ? { "x-ia-usuario": emailIa } : {}) },
       body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 8000, system, messages: [{ role: "user", content: user }] }),
     });
-    if (!r.ok) { const t = await r.text(); return json({ erro: "API Anthropic " + r.status + ": " + t.slice(0, 300) }, 502); }
+    if (!r.ok) {
+      const t = await r.text();
+      let motivo = ""; try { motivo = String(JSON.parse(t)?.error?.message || ""); } catch { /* não-JSON */ }
+      // recusa da IA Central (limite, token, crédito) chega em português; o resto segue como antes
+      return json({ erro: motivo || ("IA Central " + r.status + ": " + t.slice(0, 300)) }, r.status === 429 || r.status === 403 ? r.status : 502);
+    }
     const data = await r.json();
     if (data?.stop_reason === "max_tokens")
       return json({ erro: "A IA precisou de mais espaço do que o limite desta função permite. O parecer sai com os textos padrão." }, 502);
@@ -162,8 +187,7 @@ Conteúdo de cada campo (1 parágrafo cada; os 11 últimos usam o bloco "decisao
     if (!obj) return json({ erro: "A IA não devolveu JSON válido e não foi possível reparar. Detalhe: " + limpo.slice(0, 160) }, 502);
     if (!obj?.textos) return json({ erro: "Resposta sem o campo textos." }, 502);
     for (const k of ["intro","empresas","premissas","leitura","reforma","parecer1","parecer2","recomendacao",
-                     "executivo","ranking","antesDepois","carga","regimes","reformaDecisao","conclTrib","conclFin","conclPatr","conclReforma","conclGlobal",
-                     "objetivo","conclSoc","recomendacaoCond"])   // v1.5.0: 3 chaves novas
+                     "executivo","ranking","antesDepois","carga","regimes","reformaDecisao","conclTrib","conclFin","conclPatr","conclReforma","conclGlobal"])
       if (typeof obj.textos[k] !== "string") obj.textos[k] = "";
     return json(obj, 200);
   } catch (e) {

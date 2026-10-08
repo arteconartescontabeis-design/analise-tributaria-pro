@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simulação de Incorporação — Artecon</title>
-<!-- GERADO por tools/build_incorporacao.js a partir do index.html v7.94.3 (lacre 22197ef1) em 2026-09-16T01:20:21.141Z. NÃO EDITE À MÃO: edite src/ e rode o build. -->
+<!-- GERADO por tools/build_incorporacao.js a partir do index.html v7.99.1 (lacre 0a257d66) em 2026-10-08T01:29:06.657Z. NÃO EDITE À MÃO: edite src/ e rode o build. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -908,6 +908,7 @@ const arr12 = a => Array.from({length:12},(_,i)=>+((a||[])[i])||0);
 // ("despesa com crédito no LR"), cada item creditável tem rubrica própria: o balancete é mapeado
 // conta a conta e a memória mostra de onde veio cada centavo de crédito.
 const DESP_KEYS = ['adm','vendas','fiscais','financeiras','outras'];
+const DESP_CRED_KEYS = ['adm','vendas','outras','credInsumos','credEnergia','credAlugueisPJ','credArrendamento','credFretesVenda','credBenfeitorias'];   // v7.95.0 (A1)
 const CRED_LR = [
   ['credInsumos',     'Insumos aplicados na produção/serviço',            'art. 3º, II'],
   ['credEnergia',     'Energia elétrica e térmica',                       'art. 3º, III / IX'],
@@ -942,7 +943,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   const KEXP = ['a1_exp','a2_exp','a3_exp','a5r_exp'];
   for (const k of [...K,...KEXP,'a1_red_pct','a1_mono_pct','a2_red_pct','fin']) R[k] = arr12(inp.receitas[k]);
   const F = {}; for (const k of ['prolabore','salarios','baseFgts','prov13','provFerias']) F[k] = arr12(inp.folha[k]);
-  const C = {}; for (const k of ['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred']) C[k] = arr12(inp.compras[k]);
+  // v7.97.0 · `simplesMei` = parcela das compras sem ST (semst + mono) adquirida de fornecedores MEI/Simples — sem crédito de ICMS
+  const C = {}; for (const k of ['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred','simplesMei']) C[k] = arr12(inp.compras[k]);
   // v7.42.3: as rubricas de crédito do art. 3º das Leis 10.637/2002 e 10.833/2003 passam a ter
   // linha PRÓPRIA, para que a origem de cada crédito apareça na memória em vez de virar um balde.
   // `credLR` continua existindo (compatibilidade com análises antigas) como "outros créditos".
@@ -965,6 +967,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
   let saldoCredorPC = 0;
   // v7.80.0 (auditoria do Teste 16, achado 3) · conta gráfica do IPI, como a de PIS/COFINS
   let saldoCredorIPI = 0;
+  // v7.96.0 · conta gráfica do ICMS. O saldo credor de 31/12 do ano anterior é parâmetro do ANO
+  // (cfg.icmsSaldoIni, Configuração) — ausente = zero, e análise antiga segue byte a byte igual.
+  let saldoCredorICMS = Math.max(0, +(cfg.icmsSaldoIni) || 0);
+  out.icmsSaldoIni = saldoCredorICMS;
 
   const REPX = repEfetiva(anexos);   // v7.1: repartição efetiva acompanha os parâmetros editados
   const rbt12Cfg = S(cfg.rbt12Lanc), folha12Cfg = S(cfg.folha12Lanc);
@@ -1135,9 +1141,17 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // A regra aplicada é a do PRIMEIRO MÊS DE ATIVIDADE (Res. CGSN 140/2018, art. 22, § 2º):
     // receita do próprio mês × 12 — a mesma que o aplicativo já usa quando a data de início está
     // preenchida. É PRESUNÇÃO, não dado: o mês é marcado, a tela avisa e a memória declara.
-    let _rbtPresum = false, _rbtPresumExp = false;
-    if (rbt12 <= 0 && totalRec(m) > 0){ rbt12 = totalRec(m)*12; _rbtPresum = true; }
-    if (rbt12Exp <= 0 && totalExp(m) > 0){ rbt12Exp = totalExp(m)*12; _rbtPresumExp = true; }
+    // ══ v7.94.4 · RBT12 ZERO COM RECEITA = 1ª FAIXA, ALÍQUOTA NOMINAL ═══════════════════════
+    // A v7.63.0 presumia receita do mês × 12 (regra do 1º mês de atividade) sempre que o RBT12
+    // saía zero. Dois extratos reais derrubaram a presunção (Sonne mar/2026: RBT12 zero, DAS
+    // declarado = 15,50% nominal do Anexo V; Red Global mar/2026: 2º mês de atividade, RBT12p
+    // declarada 0,00, DAS = 6,00% nominal do Anexo III): o PGDAS-D enquadra na 1ª FAIXA e aplica
+    // a alíquota NOMINAL — na 1ª faixa a parcela a deduzir é zero, então (RBT12 × alíq − 0) ÷ RBT12
+    // é simplesmente a alíquota, sem indeterminação. O 1º mês de atividade continua com
+    // receita × 12 pela regra própria da v7.52.0 (inicioAtividade preenchido). O mês é marcado
+    // (rbt12Zero) para a tela, a memória e o Verificar declararem a regra.
+    const _rbtZero = rbt12 <= 0 && totalRec(m) > 0, _rbtZeroExp = rbt12Exp <= 0 && totalExp(m) > 0;
+    if (_rbtZero) rbt12 = 0; if (_rbtZeroExp) rbt12Exp = 0;
     // v7.56.5 · o numerador da memória é CAPTURADO AQUI, junto com o rbt12 que ele produziu.
     // Antes ele era recalculado lá embaixo, no push do mês — depois de `totalPrev.push(recInt)` —
     // e portanto já incluía a receita do mês apurado: em jan/2026 o Kleyton exibia 140.610,46
@@ -1162,13 +1176,15 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       ? (_nAnt===0 ? folhaMesFR(m)*12 : (S(cfg.folha12Lanc.slice(_janIni)) + S(folhaPrev))/_nAnt*12)
       : (m===0 ? folha12Cfg : S(cfg.folha12Lanc.slice(m)) + S(folhaPrev)))
       + (_prop && _nAnt===0 ? 0 : _cppAcum);
-    const fatorR = (rbt12 + rbt12Exp) > 0 ? folha12m / (rbt12 + rbt12Exp) : 0;
+    // v7.94.4 · RBT12r zero: FS12 > 0 → fator r = 28% (Anexo III); FS12 = 0 → 0 (Anexo V, como o
+    // PGDAS-D da Sonne declarou em mar/2026 com folha e receita anteriores ambas zero).
+    const fatorR = (rbt12 + rbt12Exp) > 0 ? folha12m / (rbt12 + rbt12Exp) : (folha12m > 0 ? 0.28 : 0);
     const _frCppParcial = !_frLegado && _mesesHist > 0 && folha12m > 0;
     out.fatorRMensal.push(fatorR);
     if (m===0) out.fatorR = fatorR;
     const fx = faixaDe(rbt12);
     const fxE = faixaDe(rbt12Exp);
-    const efE = A => rbt12Exp>0 ? (rbt12Exp*A.aliq[fxE] - A.ded[fxE])/rbt12Exp : 0;
+    const efE = A => rbt12Exp>0 ? (rbt12Exp*A.aliq[fxE] - A.ded[fxE])/rbt12Exp : A.aliq[0];   // v7.94.4 · RBT12 zero → nominal da 1ª faixa
 
     // ══ v7.72.0 · ART. 24 · PARCELA DA RECEITA QUE EXCEDE O LIMITE ═══════════════════════════
     // Ultrapassado o limite do Simples no ano, a parcela EXCEDENTE não segue subindo de alíquota
@@ -1191,7 +1207,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const _fxLim = faixaDe(_limSN);
     const efTeto = A => _limSN>0 ? (_limSN*A.aliq[_fxLim] - A.ded[_fxLim])/_limSN : 0;
     const ef = A => {
-      const _real = rbt12>0 ? (rbt12*A.aliq[fx] - A.ded[fx])/rbt12 : 0;
+      const _real = rbt12>0 ? (rbt12*A.aliq[fx] - A.ded[fx])/rbt12 : A.aliq[0];   // v7.94.4 · RBT12 zero → 1ª faixa, alíquota nominal (PD = 0)
       return _rExc > 0 ? _real*(1-_rExc) + efTeto(A)*_rExc : _real;
     };
     const A1=anexos.I, A2=anexos.II, A3=anexos.III, A4=anexos.IV, A5=anexos.V;
@@ -1423,7 +1439,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
 
     // v7.1 (A2): retenções sofridas são custo tributário do prestador — recompostas no total do Simples.
     // ISS retido pela alíquota efetiva do Simples (LC 123, art. 21, §4º); acima do sublimite, pela trava.
-    const _pIssRet = (rbt12 > subLim && (cfg.sublimite||'auto') !== 'off')
+    // v7.94.4 · no mês IMPEDIDO o ISS está fora do Simples (LC 123, art. 20, § 1º): o tomador retém
+    // pela alíquota do Município, não pela parcela/trava do Simples (achado Guincho 24h, 17/09/2026).
+    const _pIssRet = _impedido ? (+cfg.iss||0) : (rbt12 > subLim && (cfg.sublimite||'auto') !== 'off')
       ? Math.min(((rbt12*anexos.III.aliq[4]-anexos.III.ded[4])/rbt12)*((anexos.III.iss&&anexos.III.iss[4]!=null)?anexos.III.iss[4]:.335), .05)   // v7.36.0: RBT12 efetivo
       // v7.71.0 · abaixo do sublimite o teto de 5% também vale (art. 18, § 16): o que o tomador
       // retém é o ISS devido, e ele nunca passa de 5% do preço do serviço.
@@ -1432,7 +1450,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // Até aqui só o Anexo III tinha retenção, então a parcela do III servia para tudo; a do Anexo IV
     // tem alíquota efetiva e percentual de ISS próprios, então a do III daria outro valor.
     // LC 123, art. 21, §4º — o teto de 5% da trava vale igual.
-    const _pIssRet4 = (rbt12 > subLim && (cfg.sublimite||'auto') !== 'off')
+    const _pIssRet4 = _impedido ? (+cfg.iss||0) : (rbt12 > subLim && (cfg.sublimite||'auto') !== 'off')
       ? Math.min(((rbt12*anexos.IV.aliq[4]-anexos.IV.ded[4])/rbt12)*((anexos.IV.iss&&anexos.IV.iss[4]!=null)?anexos.IV.iss[4]:.40), .05)
       : Math.min(e4*((anexos.IV.iss&&anexos.IV.iss[fx]!=null)?anexos.IV.iss[fx]:0), .05);   // v7.71.0
     const issRetido = (R.a3_retiss[m] + R.a3_retissinss[m]) * _pIssRet + R.a4_retiss[m] * _pIssRet4;
@@ -1460,13 +1478,36 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // prestação, Convênio ICMS 106/96 e regimes estaduais equivalentes), em substituição ao
     // aproveitamento dos créditos vinculados às prestações. Zero = não aplica, como até aqui.
     const credPresTransp = (+cfg.transpCredPres > 0 ? +cfg.transpCredPres : 0) * (R.comtransp[m]*icmsVTransp);
-    const icmsCred = inp.icms?.cred?.[m] != null ? +inp.icms.cred[m] : (C.semst[m]+C.mono[m])*cfg.icmsC + credPresTransp;
+    // ══ v7.97.0 · COMPRA DE MEI/SIMPLES NÃO GERA CRÉDITO DE ICMS ════════════════════════════════
+    // O crédito era estimado sobre TODAS as compras sem ST, como se todo fornecedor destacasse ICMS.
+    // Fornecedor optante do Simples não destaca (LC 123/2006, art. 23, caput) e o MEI nunca gera
+    // crédito; a optante só transfere crédito quando o informa na NF-e (art. 23, § 1º — CSOSN
+    // 101/201, mercadoria para revenda/industrialização), limitado ao ICMS devido por ela. Regra:
+    //   base do crédito = compras sem ST − parcela de MEI/Simples (compras.simplesMei)
+    //   + crédito informado nas NF de optantes (icms.credSimples, nota a nota; em branco = zero).
+    // A parcela não pode exceder a base (clamp — o Verificar avisa). Sem os campos, nada muda.
+    const _cSimples = Math.min(C.semst[m]+C.mono[m], Math.max(0, C.simplesMei[m]||0));
+    const _credSimplesInf = inp.icms?.credSimples?.[m] != null ? Math.max(0, +inp.icms.credSimples[m]) : 0;
+    const icmsCred = inp.icms?.cred?.[m] != null ? +inp.icms.cred[m] : (C.semst[m]+C.mono[m]-_cSimples)*cfg.icmsC + _credSimplesInf + credPresTransp;
     // v7.48.0 · o transporte intermunicipal/interestadual e a comunicação são fato gerador de ICMS:
     // até aqui a base do DÉBITO só tinha mercadoria e a transportadora simulada no Presumido/Real
     // saía com ICMS ZERO. O bloco com retenção (comtransp_st) fica de fora — quem recolhe é o
     // substituto. O crédito (compras sem ST) já vinha certo e não muda. Override manual continua vencendo.
     const icmsDeb  = inp.icms?.deb?.[m]  != null ? +inp.icms.deb[m]  : (R.a1_semst[m]+R.a1_red[m]+R.a1_mono[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_mono[m])*cfg.icmsV + R.comtransp[m]*icmsVTransp;
     const icmsPagar = icmsDeb - icmsCred;
+    // ══ v7.96.0 · ICMS NEGATIVO NÃO É TRIBUTO, É SALDO CREDOR ═══════════════════════════════
+    // `icmsPagar` (débito − crédito) ia direto para lp.icms/lr.icms e, quando o crédito superava o
+    // débito, o NEGATIVO entrava no total do regime e ABATIA IRPJ, CSLL, PIS e COFINS — como se o
+    // Fisco devolvesse a diferença no mês. O ICMS é conta gráfica (LC 87/96, arts. 24 e 25): o que
+    // exceder é saldo credor, transportado para abater o débito dos meses seguintes. Mesma
+    // estrutura do PIS/COFINS (v7.20.0) e do IPI (v7.80.0): saldo anterior, valor a recolher
+    // (nunca negativo) e saldo a transportar. `icmsPagar` continua sendo o LÍQUIDO do mês, porque
+    // é ele que reduz o lucro do Real (o crédito das entradas é ICMS a recuperar, ativo — reduz o
+    // custo da mercadoria mesmo quando vira saldo credor); só o "a recolher" muda.
+    const _icmsSaldoAnt = saldoCredorICMS;
+    const _icmsLiq = icmsPagar - _icmsSaldoAnt;
+    const icmsRecolher = Math.max(0, _icmsLiq);
+    saldoCredorICMS = Math.max(0, -_icmsLiq);
     const ipiCred = inp.ipi?.cred?.[m] != null ? +inp.ipi.cred[m] : C.baseIpiCred[m]*cfg.ipiC;
     // v7.66.0 (parecer do Teste 6, achado 3.3; e do Teste 5) · O IPI INCIDE NA SAÍDA DO
     // ESTABELECIMENTO INDUSTRIAL OU EQUIPARADO (CTN, art. 46, II; RIPI, art. 35) — não na revenda
@@ -1503,7 +1544,18 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // de exportação (a3_exp, a5r_exp), de modo que o ISS do Presumido e do Real JÁ não incidia sobre
     // serviço exportado — a não incidência da LC 116/2003, art. 2º, I, já estava atendida nos três
     // regimes. A hipótese levantada no relatório era falsa; fica o teste travando o comportamento.
-    const iss = (serv - R.a3_retiss[m] - R.a3_retissinss[m] - R.a4_retiss[m])*cfg.iss;
+    // ══ v7.98.0 · ISS, PIS E COFINS INFORMADOS MANUALMENTE ══════════════════════════════════════
+    // Até aqui só ICMS e IPI aceitavam valor informado (aba ICMS·IPI). ISS, PIS e COFINS eram sempre
+    // fórmula × alíquota — sem como refletir uma apuração real que a fórmula não alcança (base de
+    // cálculo própria do município, receita com alíquota diferenciada, crédito extemporâneo). O valor
+    // informado em inp.trib.<campo>[m] SUBSTITUI o apurado (null = automático); o apurado continua
+    // calculado e viaja no resultado (*Auto) para a memória declarar o que foi substituído. A
+    // substituição exige MOTIVO (anSet → trilha de alterações) e entra ANTES da base do Lucro Real,
+    // porque PIS, COFINS e ISS são despesa dedutível — o lucro tem de refletir o valor que vale.
+    const _tribInf = k => (inp.trib && inp.trib[k] && inp.trib[k][m] != null) ? Math.max(0, +inp.trib[k][m]) : null;
+    const issAuto = (serv - R.a3_retiss[m] - R.a3_retissinss[m] - R.a4_retiss[m])*cfg.iss;
+    const _issInf = _tribInf('iss');
+    const iss = _issInf != null ? _issInf : issAuto;
 
     // ── LUCRO PRESUMIDO ──
     // v7.1 (A3): revenda monofásica tem alíquota zero de PIS/COFINS também no cumulativo —
@@ -1523,8 +1575,10 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
                           : (R.a1_semst[m]+R.a1_red[m]+R.a2_semst[m]+R.a2_red[m])*cfg.icmsV
                           + R.comtransp[m]*icmsVTransp;
     const _baseLPliq = Math.max(0, basePisCofLP - icmsDestacadoPC);   // exclusão nunca negativa a base
-    const lp_pis = _baseLPliq*.0065;
-    const lp_cof = _baseLPliq*.03;
+    const lp_pisAuto = _baseLPliq*.0065, lp_cofAuto = _baseLPliq*.03;
+    const _pisLPInf = _tribInf('pisLP'), _cofLPInf = _tribInf('cofinsLP');   // v7.98.0 · informado vence
+    const lp_pis = _pisLPInf != null ? _pisLPInf : lp_pisAuto;
+    const lp_cof = _cofLPInf != null ? _cofLPInf : lp_cofAuto;
     const servIR = serv + R.a3_exp[m] + R.a5r_exp[m];        // v7.55.3: a5r_exp entrava no Simples e
                                                             // ficava FORA daqui — exportação é imune a
                                                             // PIS/COFINS/ICMS/ISS,
@@ -1546,7 +1600,9 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     // o mesmo usado no crédito de ICMS; a conferência de cálculos expõe a parcela).
     // v7.89.0 · Lei 14.592/2023 NOTA A NOTA: ICMS das aquisições para revenda informado vence a estimativa
     const _l14Inf = inp.icms?.lei14592?.[m] != null;
-    const icmsComprasPC = _l14Inf ? +inp.icms.lei14592[m] : (C.semst[m]+C.comst[m])*cfg.icmsC;
+    // v7.97.0 · a mesma regra do crédito: a compra de MEI/Simples não traz ICMS "incidente na aquisição"
+    // (só o que a optante informar na NF), logo não há o que excluir da base do crédito de PIS/COFINS.
+    const icmsComprasPC = _l14Inf ? +inp.icms.lei14592[m] : (C.semst[m]+C.comst[m]-Math.min(C.semst[m]+C.comst[m], _cSimples))*cfg.icmsC + _credSimplesInf;
     const basePisCofLR = R.a1_semst[m]+R.a1_red[m]+R.a1_comst[m]+R.a2_semst[m]+R.a2_red[m]+R.a2_comst[m]
       + R.a3_semret[m]+R.a3_retiss[m]+R.a3_retissinss[m]+R.a4[m]+R.a4_retiss[m]
       + (fatorR<.28 ? R.a5r[m] : 0) + (fatorR>=.28 ? R.a5r[m] : 0)
@@ -1557,8 +1613,13 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     const _liq0 = basePisCofLR - icmsDestacadoPC - _saldoAnt;
     const _baseLRliq = Math.max(0, _liq0);
     saldoCredorPC = Math.max(0, -_liq0);
-    const lr_pis = _baseLRliq*.0165 + R.fin[m]*.0065;
-    const lr_cof = _baseLRliq*.076  + R.fin[m]*.04;
+    const lr_pisAuto = _baseLRliq*.0165 + R.fin[m]*.0065, lr_cofAuto = _baseLRliq*.076  + R.fin[m]*.04;
+    const _pisLRInf = _tribInf('pisLR'), _cofLRInf = _tribInf('cofinsLR');   // v7.98.0 · informado vence (antes da base do lucro)
+    const lr_pis = _pisLRInf != null ? _pisLRInf : lr_pisAuto;
+    const lr_cof = _cofLRInf != null ? _cofLRInf : lr_cofAuto;
+    // v7.96.0 · a base do Real continua com o ICMS LÍQUIDO (débito − crédito), não com o "a recolher":
+    // o débito reduz a receita e o crédito sai do custo da mercadoria (ICMS a recuperar) — a conta
+    // gráfica muda o desembolso, não o lucro. Ver nota em `icmsRecolher`.
     const baseIRCS = receita + R.fin[m] - custos - folhaTotal - despTotal - inssPatr - lr_pis - lr_cof - icmsPagar - ipiPagar - iss;
     const lr_csll = baseIRCS>0 ? baseIRCS*.09 : 0;
     const lr_irpj = baseIRCS>0 ? baseIRCS*.15 : 0;
@@ -1579,7 +1640,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       impedido: _impedido, impIcms, impIss,
       // v7.52.0 · rastro da proporcionalização, para a memória imprimir a conta e não só o resultado
       rbt12Prop: _prop, mesAtividade: _iniAbs===null ? null : _nAnt+1, nAntProp: _prop ? _nAnt : null,
-      rbt12Presumido: _rbtPresum, rbt12PresumidoExp: _rbtPresumExp,   // v7.63.0 (A01)
+      rbt12Zero: _rbtZero, rbt12ZeroExp: _rbtZeroExp,   // v7.94.4 (antes rbt12Presumido, v7.63.0)
       excLimite: _rExc, excLimiteValor: _rExc>0 ? _recMes*_rExc : 0,   // v7.72.0 (art. 24, II)
       excSublimite: _rExcSub, excSublimiteValor: _rExcSub>0 ? _recMes*_rExcSub : 0,  // v7.73.0 (art. 24, I)
       // v7.80.0 · conta gráfica do IPI, para a memória demonstrar em vez de remontar
@@ -1599,7 +1660,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         blocosExp: KEXP.filter(k => (R[k][m]||0) > 0).map(k => ({ k, receita: R[k][m], efetiva: efb[k]||0 })),
         anexos: _axUsadosMes,
         folha: { salarios: F.salarios[m]||0, prolabore: F.prolabore[m]||0, baseFgts: F.baseFgts[m]||0 },
-        compras: { semst: C.semst[m]||0, comst: C.comst[m]||0, mono: C.mono[m]||0, comstMono: C.comstMono[m]||0 },
+        compras: { semst: C.semst[m]||0, comst: C.comst[m]||0, mono: C.mono[m]||0, comstMono: C.comstMono[m]||0, simplesMei: C.simplesMei[m]||0 },
         despesas: { adm: D.adm[m]||0, vendas: D.vendas[m]||0, fiscais: D.fiscais[m]||0,
                     financeiras: D.financeiras[m]||0, outras: D.outras[m]||0, credLR: (D.credLR||[])[m]||0 },
         financeiras: R.fin[m]||0,
@@ -1609,6 +1670,13 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
       somaAntProp: _somaAntProp,
       dasExp, faixaExp: fxE+1, faixa: fx+1, receita, das, efb, fatorR, subIcms, subIss, dasPisCof, dasIcmsIss, dasAx, trv190, dasTrib: dt, recCom, recServ, recTransp,
       fgts, inssPatr, folhaTotal, icmsCred, icmsDeb, icmsPagar, credPresTransp, icmsVTransp, issRetLPLR, ipiPagar, iss, custos, despTotal, icmsDestacadoPC, icmsComprasPC,
+      // v7.96.0 · conta gráfica do ICMS: `icmsPagar` é o líquido do mês; `icmsRecolher` é o que vai na guia
+      icmsRecolher, icmsSaldoAnt: _icmsSaldoAnt, icmsSaldoFim: saldoCredorICMS,
+      // v7.97.0 · compras de MEI/Simples fora da base do crédito e crédito informado nas NF de optantes (art. 23, § 1º)
+      comprasSimplesMei: _cSimples, credSimplesInf: _credSimplesInf, credIcmsBase: C.semst[m]+C.mono[m]-_cSimples,
+      // v7.98.0 · apurado pelo motor × informado manualmente (ISS, PIS e COFINS)
+      issAuto, pisLPAuto: lp_pisAuto, cofinsLPAuto: lp_cofAuto, pisLRAuto: lr_pisAuto, cofinsLRAuto: lr_cofAuto,
+      tribInformado: { iss: _issInf != null, pisLP: _pisLPInf != null, cofinsLP: _cofLPInf != null, pisLR: _pisLRInf != null, cofinsLR: _cofLRInf != null },
       tema69Informado: _t69Inf, lei14592Informado: _l14Inf,   // v7.89.0 · origem do valor (nota a nota × estimativa)
       // v7.23.0: ISS retido deixa de ser RECOMPOSTO no total (recolhido na fonte pelo tomador,
       // LC 123, art. 21, §4º — não é desembolso em guia da empresa); campo mantido como informativo.
@@ -1633,8 +1701,8 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         total: das + subIcms + subIss + cppRetida + impIcms + impIss
              + (cfg.issRetidoNaCarga === true ? issRetLPLR : 0)
              + ((receita>0 && (R.a4[m]+R.a4_retiss[m])>0) ? inssPatr*((R.a4[m]+R.a4_retiss[m])/receita) : 0) },   // v7.18.0: sem FGTS · v7.23.0: ISS retido fora por padrão
-      lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
-            baseAdic: base32+base8, basePC:_baseLPliq, basePCbruta:basePisCofLP,
+      lp: { pis:lp_pis, cofins:lp_cof, csll:lp_csll, irpj:lp_irpj, adicional:0, inssPatr, icms:icmsRecolher, ipi:ipiPagar, iss, fgts,
+            baseAdic: base32+base8, baseCsll: baseCsllServ+base12, basePC:_baseLPliq, basePCbruta:basePisCofLP,   // v7.99.0 · baseCsll para a LC 224
       // v7.75.0 (parecer do Teste 12, achado 7) · OS COMPONENTES DA BASE PRESUMIDA VIAJAM COM O
       // RESULTADO. A memória remontava a base a partir de recCom/recServ, que agrupam de outro
       // modo: o transporte de cargas presume 8% no cálculo e aparecia dentro de "serviços × 32%"
@@ -1645,7 +1713,7 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
                   transp: transpIR, transpModo: String(cfg.transpPresuncao||'cargas'),
                   fin: R.fin[m], expCom: R.a1_exp[m]+R.a2_exp[m], expServ: R.a3_exp[m]+R.a5r_exp[m],
                   base32, base8 } },
-      lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsPagar, ipi:ipiPagar, iss, fgts,
+      lr: { pis:lr_pis, cofins:lr_cof, csll:lr_csll, irpj:lr_irpj, adicional:0, inssPatr, icms:icmsRecolher, ipi:ipiPagar, iss, fgts,
             baseIRCS, basePC:_baseLRliq, basePCbruta:basePisCofLR, credCsll: baseIRCS<0 ? baseIRCS*.09 : 0, credIrpj: baseIRCS<0 ? baseIRCS*.15 : 0,
             credDesp: credDespMes(m), saldoCredorAnt: _saldoAnt, saldoCredorFim: saldoCredorPC,
             credItens: Object.fromEntries(CRED_LR_KEYS.map(k=>[k, D[k][m]])) },
@@ -1660,6 +1728,52 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
         + (_M && _M.simples ? (+_M.simples.cppRetida||0) + (+_M.simples.inssPatrForaDAS||0) : 0))); }
   }
 
+  // ══ v7.99.0 · LC 224/2025, art. 4º — ACRÉSCIMO DE 10% NOS PERCENTUAIS DE PRESUNÇÃO ══════════════
+  // A parcela da receita bruta que ultrapassa R$ 5 milhões no ano-calendário tem os percentuais de
+  // presunção do IRPJ e da CSLL acrescidos em 10% (relativo: 8% → 8,8%, 16% → 17,6%, 32% → 35,2%;
+  // CSLL 12% → 13,2%, 32% → 35,2%). Regulamentação: IN RFB 2.305/2025, alterada pela IN 2.306/2026 —
+  // o limite anual se distribui em R$ 1,25 milhão por trimestre, ACUMULADO no ano (o que sobrar de um
+  // trimestre compensa nos seguintes; o 4º fecha a conta anual), e o acréscimo é proporcional à
+  // receita de cada atividade. Vigência: IRPJ desde 1º/01/2026; CSLL desde 1º/04/2026 (noventena).
+  // Empresa que começou no ano tem o limite proporcional aos trimestres de atividade.
+  // IMPLEMENTAÇÃO: por trimestre, excedente = (receita acumulada − limite acumulado)+, e o acréscimo
+  // do trimestre é a VARIAÇÃO desse excedente (pode ser negativa: é o ajuste do que foi cobrado a
+  // mais em trimestre anterior, dentro do próprio ano). O acréscimo na base = excedente × 10% ×
+  // presunção MÉDIA PONDERADA do trimestre (base de presunção ÷ receita), que equivale ao rateio por
+  // atividade. Entra no 3º mês do trimestre, ANTES do adicional (que também sobe), e só no Presumido.
+  // Receita bruta = receita de atividades (inclui exportação), sem financeiras (DL 1.598/77, art. 12).
+  // cfg.lc224 === false desliga (liminar — ADIs 7920, 7936, 7944 e 7982 pendentes no STF); ano < 2026 não aplica.
+  {
+    const _anoBase = +(inp.ano || cfg.ano) || 0;
+    const _aplica = cfg.lc224 !== false && _anoBase >= 2026;
+    const LC224_LIM_TRI = 1250000;
+    const _q0 = (_iniAbs !== null && _iniAbs >= 0) ? Math.floor(_iniAbs/3) : 0;   // 1º trimestre de atividade no ano
+    const _q0IR = _q0, _q0CS = Math.max(_q0, _anoBase === 2026 ? 1 : 0);          // CSLL só a partir de abr/2026
+    let _excAcIR = 0, _excAcCS = 0, _recAcIR = 0, _recAcCS = 0;
+    out.lc224 = { aplica: _aplica, ano: _anoBase, limiteTrimestre: LC224_LIM_TRI, inicioTrimestre: _q0, desligado: cfg.lc224 === false,
+                  trimestres: [], excIR: 0, excCS: 0, addBaseIR: 0, addBaseCS: 0, irpj: 0, csll: 0 };
+    for (let t=0; t<4; t++){
+      const ms = out.meses.slice(t*3, t*3+3), M3 = ms[ms.length-1];
+      const rec = S(ms.map(x => x.lp.baseComp ? (x.lp.baseComp.serv + x.lp.baseComp.com) : 0));
+      const baseIR = S(ms.map(x => x.lp.baseAdic - (x.lp.baseComp ? x.lp.baseComp.fin : 0)));
+      const baseCS = S(ms.map(x => (x.lp.baseCsll||0) - (x.lp.baseComp ? x.lp.baseComp.fin : 0)));
+      const pesoIR = rec > 0 ? baseIR/rec : 0, pesoCS = rec > 0 ? baseCS/rec : 0;   // presunção média ponderada
+      let excIR = 0, excCS = 0, limIR = 0, limCS = 0;
+      const aIR = _aplica && t >= _q0IR, aCS = _aplica && t >= _q0CS;
+      if (aIR){ _recAcIR += rec; limIR = LC224_LIM_TRI*(t - _q0IR + 1); const ea = Math.max(0, _recAcIR - limIR); excIR = ea - _excAcIR; _excAcIR = ea; }
+      if (aCS){ _recAcCS += rec; limCS = LC224_LIM_TRI*(t - _q0CS + 1); const ea = Math.max(0, _recAcCS - limCS); excCS = ea - _excAcCS; _excAcCS = ea; }
+      const addIR = excIR*0.10*pesoIR, addCS = excCS*0.10*pesoCS;
+      const reg = { t, rec, aplicaIR: aIR, aplicaCS: aCS, recAcumIR: _recAcIR, limAcumIR: limIR, excIR, pesoIR, addBaseIR: addIR, irpj: addIR*.15,
+                    recAcumCS: _recAcCS, limAcumCS: limCS, excCS, pesoCS, addBaseCS: addCS, csll: addCS*.09 };
+      out.lc224.trimestres.push(reg);
+      if (Math.abs(addIR) > 1e-9 || Math.abs(addCS) > 1e-9){
+        M3.lp.baseAdic += addIR; M3.lp.irpj += addIR*.15; M3.lp.csll += addCS*.09;
+        M3.lp.lc224 = reg;
+        out.lc224.excIR += excIR; out.lc224.excCS += excCS; out.lc224.addBaseIR += addIR; out.lc224.addBaseCS += addCS;
+        out.lc224.irpj += addIR*.15; out.lc224.csll += addCS*.09;
+      }
+    }
+  }
   // Adicional de IRPJ do PRESUMIDO (modo: off | mensal | trimestral)
   // v7.35.0: o Lucro Real saiu daqui — passou a ter período de apuração próprio (ver lrApurar).
   const modo = cfg.adicionalIR || 'off';
@@ -1698,8 +1812,19 @@ function calcular(inp, anexos = ANEXOS_DEFAULT, fp = FOLHA_PERC_DEFAULT) {
     issRetido: S(out.meses.map(x=>x.simples.issRetido||0)), cppRetida: S(out.meses.map(x=>x.simples.cppRetida||0)),
     cppForaDAS: S(out.meses.map(x=>x.simples.inssPatrForaDAS||0)),
     comprasRevenda: S(out.meses.map((_,i)=>C.semst[i]+C.mono[i]+C.comst[i]+C.comstMono[i])),
+    // v7.95.0 (A1) · DESPESAS CREDITÁVEIS DE IBS/CBS: aquisições de bens e serviços lançadas como despesa
+    // (LC 214/2025, arts. 47-57 — não cumulatividade ampla, salvo uso e consumo pessoal, art. 57). Entram
+    // no total que a composição de fornecedores classifica; sem composição, ficam NÃO IDENTIFICADAS
+    // (zero no cenário-base, integral só no limite superior). Fora: fiscais, financeiras, vale-transporte,
+    // devoluções, depreciação e "outros créditos" do LR (não são aquisição).
+    despCred: S(out.meses.map((_,i)=>DESP_CRED_KEYS.reduce((t,k)=>t+(+((D[k]||[])[i])||0),0))),
     dasTrib: ['pis','cofins','irpj','csll','cpp','icms','iss','ipi'].reduce((o,t)=>(o[t]=S(out.meses.map(x=>x.dasTrib?x.dasTrib[t]:0)),o),{}),
     dedIssRetido: cfg.dedIssRetido === true,   // v7.69.0 · a opção viaja com o resultado
+    // v7.96.0 · conta gráfica do ICMS no ano: líquido (débito − crédito), recolhido e saldo em 31/12
+    icmsLiquido: S(out.meses.map(x=>x.icmsPagar)), icmsRecolhido: S(out.meses.map(x=>x.icmsRecolher)),
+    icmsSaldoIni: out.icmsSaldoIni || 0, icmsSaldoFim: saldoCredorICMS,
+    comprasSimplesMei: S(out.meses.map(x=>x.comprasSimplesMei||0)), credSimplesInf: S(out.meses.map(x=>x.credSimplesInf||0)),   // v7.97.0
+    lc224: out.lc224 || null,   // v7.99.0 · acréscimo da LC 224/2025 no ano (trimestre a trimestre)
   };
   // ══ v7.88.0 (P1-01) · LUCRO REAL SEM CMV/ESTOQUES = SIMULAÇÃO INCOMPLETA ═══════════════════
   // Com receita de comércio/indústria e NENHUM custo de mercadoria lançado (baixa de estoque nas
@@ -1861,6 +1986,24 @@ function rfProjetar(reforma, k){
   for (const mapa of ['benefRec','benefCred'])
     if (r[mapa] && typeof r[mapa] === 'object')
       for (const c of Object.keys(r[mapa])) if (+r[mapa][c] > 0) r[mapa][c] = r2(+r[mapa][c]*k);
+  // ── v7.95.2 · A COMPOSIÇÃO DOS FORNECEDORES TAMBÉM É PROJETADA ────────────────────────────
+  // Desde a v7.91.0 o crédito de IBS/CBS não sai mais das contrapartes: rfContraEfetivo lê os
+  // VALORES da composição (comp.final.g[*].v) e sobrescreve o contra. Escalar só o contra, como
+  // esta função fazia, deixava o crédito congelado no período lançado enquanto o débito subia
+  // para o ano cheio — em 6 meses com k = 2, débito × 2 e crédito × 1, líquido superestimado.
+  // Agora total, naoClass e valores por grupo (final e auto) e o valor de cada fornecedor são
+  // multiplicados por k; os percentuais (pct, presumidoPct) e a trilha ficam como estão.
+  if (r.comp && typeof r.comp === 'object'){
+    for (const bloco of ['final','auto']){
+      const c = r.comp[bloco]; if (!c || typeof c !== 'object') continue;
+      if (+c.total > 0) c.total = r2(+c.total*k);
+      if (+c.naoClass > 0) c.naoClass = r2(+c.naoClass*k);
+      if (c.g && typeof c.g === 'object')
+        for (const grp of Object.keys(c.g)) if (c.g[grp] && +c.g[grp].v > 0) c.g[grp].v = r2(+c.g[grp].v*k);
+    }
+    if (Array.isArray(r.comp.forn)) for (const f of r.comp.forn) if (f && +f.valor > 0) f.valor = r2(+f.valor*k);
+    r.comp._projetadoK = k;     // marca de leitura: a composição impressa é a projetada
+  }
   return r;                     // credSimplesPct e demais percentuais ficam intocados, de propósito
 }
 
@@ -2030,6 +2173,13 @@ const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov'
 const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = v => (v==null||isNaN(v)) ? '—' : v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtR = v => 'R$ ' + fmt(v);
+// v7.99.0 · frase da LC 224/2025 para a IA do parecer (regrasDeTexto) — só números do próprio resultado.
+// Mora no bloco "helpers" porque o bloco "parecerIA" (copiado pela Simulação de Incorporação) a chama.
+function lc224Regra(lc){
+  return 'LC 224/2025 (art. 4º; IN RFB 2.305/2025 e 2.306/2026): a parcela da receita bruta acima de R$ 1,25 milhão por trimestre (R$ 5 milhões no ano, acumulado) tem os percentuais de presunção do IRPJ e da CSLL do Lucro Presumido acrescidos em 10% (ex.: 32% → 35,2%; 8% → 8,8%; CSLL 12% → 13,2%); IRPJ desde jan/2026 e CSLL desde abr/2026. Nesta análise o acréscimo foi de '
+    + fmtR((+lc.irpj||0) + (+lc.csll||0)) + ' em IRPJ e CSLL do Presumido no ano (sem contar o adicional) sobre um excedente de ' + fmtR(+lc.excIR||0)
+    + '. Cite a regra ao explicar a carga do Presumido, sem recalcular, e não a apresente como definitiva: as ADIs 7920, 7936, 7944 e 7982 estão pendentes no STF.';
+}
 // v7.39.1: percentual no padrão do documento — vírgula decimal, como o resto dos números
 const fmtP = (v, d=1) => (v==null||isNaN(v)) ? '—' : (+v).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
 // v7.36.0 · POLÍTICA DE ARREDONDAMENTO: o cálculo corre em precisão plena (alíquotas efetivas
@@ -2064,9 +2214,13 @@ function anNovo(cnpj, ano) {
     receitas: Object.fromEntries(['a1_semst','a1_red','a1_red_pct','a1_mono','a1_mono_pct','a1_comst','a1_comst_mono','a2_semst','a2_red','a2_red_pct','a2_mono','a2_comst','a2_comst_mono','a3_semret','a3_retiss','a3_retissinss','a4','a4_retiss','a5r','fin','comtransp','comtransp_st','a1_exp','a2_exp','a3_exp','a5r_exp'].map(k=>[k,z12()])),
     folha: Object.fromEntries(['prolabore','salarios','baseFgts','prov13','provFerias'].map(k=>[k,z12()])),
     folha13: { prolabore13:0, salarios13:0, baseFgts13:0 },
-    compras: Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred'].map(k=>[k,z12()])),
-    icms: { cred:Array(12).fill(null), deb:Array(12).fill(null), tema69:Array(12).fill(null), lei14592:Array(12).fill(null) },   // v7.89.0 · nota a nota
+    compras: Object.fromEntries(['semst','baixaSemst','mono','baixaMono','comst','baixaComst','comstMono','baixaComstMono','baseIpiCred','simplesMei'].map(k=>[k,z12()])),   // v7.97.0 · simplesMei
+    icms: { cred:Array(12).fill(null), deb:Array(12).fill(null), tema69:Array(12).fill(null), lei14592:Array(12).fill(null),
+            credSimples:Array(12).fill(null) },   // v7.89.0 · nota a nota · v7.97.0 · crédito informado por optante (art. 23, § 1º)
     ipi:  { cred:Array(12).fill(null), deb:Array(12).fill(null) },
+    // v7.98.0 · valores INFORMADOS de ISS, PIS e COFINS (null = automático). PIS/COFINS separados por regime:
+    // no Presumido são cumulativos (0,65% / 3%), no Real não cumulativos (1,65% / 7,6%) — um valor não serve ao outro.
+    trib: { iss:Array(12).fill(null), pisLP:Array(12).fill(null), cofinsLP:Array(12).fill(null), pisLR:Array(12).fill(null), cofinsLR:Array(12).fill(null) },
     despesas: Object.fromEntries([...DESP_KEYS, ...CRED_LR_KEYS].map(k=>[k,z12()])),
     origem: {},                                            // v7.28.0: trilha de origem por campo×mês
     auditoria: [] };                                       // v7.94.3: trilha de alterações (quem/quando/de → para)
@@ -2093,7 +2247,7 @@ function anNormalizar(d, cnpj, ano){
   out.folha13 = { ...base.folha13, ...(d.folha13||{}) };
   out.origem = (d.origem && typeof d.origem === 'object' && !Array.isArray(d.origem)) ? d.origem : {};   // v7.28.0
   out.auditoria = Array.isArray(d.auditoria) ? d.auditoria : [];                                          // v7.94.3
-  for (const sec of ['icms','ipi']){                       // aqui null significa "automático" — não virar zero
+  for (const sec of ['icms','ipi','trib']){                // aqui null significa "automático" — não virar zero (v7.98.0: trib)
     out[sec] = { ...base[sec], ...(d[sec]||{}) };
     for (const k of Object.keys(out[sec])){
       const v = out[sec][k];
@@ -2384,9 +2538,23 @@ function notaConciliacao(itens){
 const AUD_MAX = 500, AUD_ALERTA = 2000;          // acima de AUD_MAX os lotes antigos são compactados
 const AUD_IMPORT = 'PXBMFRL';                    // origens que vêm de arquivo
 const AUD_ROT = { digitado:'digitado', apagado:'apagado — volta ao automático', repetido:'repetido de janeiro (⇉)',
-  importado:'importado', restaurado:'restaurado ao automático', config:'Configuração', reforma:'aba Reforma' };
+  importado:'importado', restaurado:'restaurado ao automático', config:'Configuração', reforma:'aba Reforma',
+  ficha:'da ficha da empresa (data de abertura na Receita)' };   // v7.99.1
 const AUD_CFG_PADRAO = new Set(['cfg.travaNoDas','cfg.projJanela','cfg.anoRefParecer','cfg.lpBaseComCsll','cfg.lpBaseServCsll','cfg.transpPresuncao','cfg.icmsTranspV','cfg.transpCredPres','cfg.fap','cfg.ratBasico']);   // preenchidas pela própria tela com o padrão
-const AUD_RES = { 'icms.deb':'icmsDeb', 'icms.cred':'icmsCred', 'ipi.deb':'ipiDeb', 'ipi.cred':'ipiCred' };   // estimativa do motor por célula
+const AUD_RES = { 'icms.deb':'icmsDeb', 'icms.cred':'icmsCred', 'ipi.deb':'ipiDeb', 'ipi.cred':'ipiCred',
+  'trib.iss':'issAuto', 'trib.pisLP':'pisLPAuto', 'trib.cofinsLP':'cofinsLPAuto', 'trib.pisLR':'pisLRAuto', 'trib.cofinsLR':'cofinsLRAuto' };   // estimativa do motor por célula (v7.98.0: trib)
+// v7.98.0 · substituir um valor APURADO exige motivo — fica na trilha com usuário, data e hora
+const AN_OVERRIDE_MOTIVO = new Set(['icms.deb','icms.cred','ipi.deb','ipi.cred','trib.iss','trib.pisLP','trib.cofinsLP','trib.pisLR','trib.cofinsLR']);
+const AN_OVERRIDE_PATHS = [...AN_OVERRIDE_MOTIVO];
+function anMotivoPedir(rotulo, de, para){
+  const pedir = (typeof prompt === 'function') ? prompt : null;
+  if (!pedir) return null;
+  const r = pedir('Motivo da alteração manual — ' + rotulo + '\n' + (de == null ? 'valor apurado pelo motor' : 'de ' + fmt(de)) + ' → ' + fmt(para)
+    + '\n\nObrigatório (mínimo 5 caracteres). Fica registrado na trilha de alterações, com usuário, data e hora.', '');
+  if (r == null) return null;
+  const mtv = String(r).trim();
+  return mtv.length >= 5 ? mtv.slice(0, 300) : null;
+}
 let AUD_FOTO = null;                              // retrato dos dados no último ponto de sincronização
 let AUD_LOTE = null;                              // rótulo do lote de importação em curso (opcional)
 function audLista(an){ an = an || AN; if (!an) return []; if (!Array.isArray(an.auditoria)) an.auditoria = []; return an.auditoria; }
@@ -2401,7 +2569,7 @@ function audIgual(a, b){
 function audMapa(an){
   const M = {}, OG = {};
   if (!an) return { M, OG };
-  for (const sec of ['receitas','folha','compras','despesas','icms','ipi'])
+  for (const sec of ['receitas','folha','compras','despesas','icms','ipi','trib'])
     for (const [k, arr] of Object.entries(an[sec]||{})) if (Array.isArray(arr))
       for (let m=0;m<12;m++){ const v = arr[m]; M[sec+'.'+k+'|'+m] = (v == null ? null : +v); }
   for (const [k, v] of Object.entries(an.folha13||{})) M['folha13.'+k+'|'] = +v||0;
@@ -2497,13 +2665,20 @@ function audRotulo(campo){
     inicioAtividade:'Início de atividade', lpBaseServ:'Presunção serviços (LP)', lpBaseCom:'Presunção comércio (LP)', lpBaseServCsll:'Presunção serviços CSLL', lpBaseComCsll:'Presunção comércio CSLL', adicionalIR:'Adicional de IRPJ',
     sublimite:'Sublimite', sublimiteValor:'Sublimite (valor próprio)', lrPeriodo:'Período do Lucro Real', lrPrejIrpj:'Prejuízo fiscal inicial', lrPrejCsll:'Base negativa CSLL inicial', projJanela:'Janela da projeção', anoRefParecer:'Ano de referência do parecer',
     credLRpct:'% creditável no LR', folhaPerc:'Percentuais de folha', ratBasico:'RAT básico', fap:'FAP', travaNoDas:'Trava na guia', arredondaPorTributo:'Arredondar por tributo', frComposicao:'Composição do Fator R', dedIssRetido:'Deduz ISS retido', issRetidoNaCarga:'ISS retido na carga',
-    transpPresuncao:'Presunção transporte', icmsTranspV:'ICMS transporte %', transpCredPres:'Crédito presumido transporte', sem13Pago:'Sem pagamento de 13º' };
+    transpPresuncao:'Presunção transporte', icmsTranspV:'ICMS transporte %', transpCredPres:'Crédito presumido transporte', sem13Pago:'Sem pagamento de 13º',
+    icmsSaldoIni:'Saldo credor de ICMS em 1º/jan', lc224:'LC 224/2025 — presunção +10% (aplicar?)' };
   if (sec === 'cfg') return CFG[k] || ('Configuração · ' + k);
   if (sec === 'folha13') return ({ prolabore13:'Pró-labore 13º', salarios13:'Proventos 13º', baseFgts13:'Base FGTS 13º' })[k] || k;
   if (sec === 'reforma') return ({ receita:'Reforma · receita anual tributável', baseIS:'Reforma · base do Imposto Seletivo', credSimplesPct:'Reforma · % crédito s/ compras do Simples' })[k] || ('Reforma · ' + k);
   if (sec === 'icms') return ({ deb:'Débito de ICMS', cred:'Crédito de ICMS', tema69:'ICMS destacado (Tema 69)', lei14592:'ICMS compras (Lei 14.592)' })[k] || campo;
   if (sec === 'ipi') return ({ deb:'Débito de IPI', cred:'Crédito de IPI' })[k] || campo;
+  if (sec === 'trib') return ({ iss:'ISS (valor informado)', pisLP:'PIS — Lucro Presumido (valor informado)', cofinsLP:'COFINS — Lucro Presumido (valor informado)', pisLR:'PIS — Lucro Real (valor informado)', cofinsLR:'COFINS — Lucro Real (valor informado)' })[k] || campo;   // v7.98.0
   return campo;
+}
+// v7.98.0 · último evento com motivo de uma célula (para a memória declarar POR QUE o valor foi substituído)
+function audMotivoCelula(an, campo, mes){
+  const L = audLista(an); for (let i = L.length-1; i >= 0; i--){ const e = L[i]; if (e.campo === campo && (e.mes == null ? '' : e.mes) === (mes == null ? '' : mes) && e.acao !== 'importado') return e; }
+  return null;
 }
 function audFmtVal(campo, v, ev, lado){
   if (v == null || v === '') { const est = ev && lado === 'de' ? ev.deAuto : null; return AUD_RES[campo] ? (est != null ? 'estimativa ' + fmt(est) : 'estimativa') : '—'; }
@@ -2519,7 +2694,7 @@ function audFrase(ev, campo){
   campo = campo || ev.campo;
   const quem = ev.por ? ' por ' + ev.por : '';
   if (ev.acao === 'importado') return `${AUD_ROT.importado} (${ev.lote||'lote'})${quem} em ${audQuando(ev.em)} — de ${audFmtVal(campo, ev.de, ev, 'de')} para ${audFmtVal(campo, ev.para, ev, 'para')}`;
-  return `${AUD_ROT[ev.acao]||ev.acao}${quem} em ${audQuando(ev.em)} — de ${audFmtVal(campo, ev.de, ev, 'de')} para ${audFmtVal(campo, ev.para, ev, 'para')}`;
+  return `${AUD_ROT[ev.acao]||ev.acao}${quem} em ${audQuando(ev.em)} — de ${audFmtVal(campo, ev.de, ev, 'de')} para ${audFmtVal(campo, ev.para, ev, 'para')}${ev.motivo ? ' · motivo: ' + esc(ev.motivo) : ''}`;
 }
 // resumo: quantas manuais, quantas manuais SOBRE valor importado, quantas importações
 function audResumo(an){
@@ -2544,7 +2719,7 @@ function audQuadroHtml(an){
       return `<tr style="background:#f4f8fb"><td>${audQuando(e.em)}</td><td>${esc(e.por||'—')}</td><td colspan="2"><b>Importação · ${esc(e.lote||'')}</b> — ${e.n||0} célula(s)</td><td colspan="2" style="font-size:10.5px">${det}</td><td>arquivo</td></tr>`;
     }
     const sobre = e.origemDe && AUD_IMPORT.includes(e.origemDe);
-    return `<tr${sobre?' style="background:#fef6e7"':''}><td>${audQuando(e.em)}</td><td>${esc(e.por||'—')}</td><td>${esc(audRotulo(e.campo))}</td><td class="num">${mesTx(e.mes)}</td><td class="num">${audFmtVal(e.campo, e.de, e, 'de')}</td><td class="num"><b>${audFmtVal(e.campo, e.para, e, 'para')}</b></td><td>${AUD_ROT[e.acao]||e.acao}${sobre ? ' <b>sobre ' + ORIGEM_ROT[e.origemDe][0] + '</b>' : ''}</td></tr>`;
+    return `<tr${sobre?' style="background:#fef6e7"':''}><td>${audQuando(e.em)}</td><td>${esc(e.por||'—')}</td><td>${esc(audRotulo(e.campo))}</td><td class="num">${mesTx(e.mes)}</td><td class="num">${audFmtVal(e.campo, e.de, e, 'de')}</td><td class="num"><b>${audFmtVal(e.campo, e.para, e, 'para')}</b></td><td>${AUD_ROT[e.acao]||e.acao}${sobre ? ' <b>sobre ' + ORIGEM_ROT[e.origemDe][0] + '</b>' : ''}${e.motivo ? '<br><span class="hint">motivo: ' + esc(e.motivo) + '</span>' : ''}</td></tr>`;
   }).join('');
   return `<div style="margin-top:10px"><b style="font-size:12px">Trilha de alterações</b>
     <div class="hint">${r.manuais} alteração(ões) manual(is)${r.sobreImportado ? `, <b>${r.sobreImportado} sobre valor importado</b>` : ''} · ${r.lotes} importação(ões) (${r.celulasImportadas} célula(s))${r.total > AUD_ALERTA ? ' · <b style="color:#943126">trilha muito extensa — considere fechar o exercício</b>' : ''}. Cada linha registra quem alterou, quando, o valor anterior e o novo; linhas em âmbar são alterações manuais sobre dado importado.</div>
@@ -2601,7 +2776,7 @@ function compAutoDe(rows, total, contraInformado){
 }
 // estado completo guardado em RF.comp (viaja na análise, gravado no banco)
 function compMontar(RF, T){
-  const total = +(T && T.comprasRevenda) || 0;
+  const total = (+(T && T.comprasRevenda) || 0) + (+(T && T.despCred) || 0);   // v7.95.0 (A1) · compras + despesas creditáveis
   const { comp: auto, forn } = compAutoDe(RF._fornRows, total, RF.contra);
   const prev = RF.comp && typeof RF.comp === 'object' ? RF.comp : null;
   if (prev && !RF._compEditAntes) { prev.modo = null; prev._valInvalido = null; }   // v7.92.2 · veio do banco ou a edição já terminou: sem estado residual
@@ -2720,8 +2895,9 @@ function rfContraEfetivo(rf, T){
   // crédito integral (Artecon(8), P0/P1; LC 214/2025, art. 47). Entram como NÃO IDENTIFICADAS:
   // zero no cenário-base, integral só no limite superior da sensibilidade — e o parecer avisa.
   let semPerfil = false;
-  if (!((contra.compras_lrlp||0) > 0) && !((contra.compras_simples||0) > 0) && (T?.comprasRevenda||0) > 0){
-    contra.compras_nid = T.comprasRevenda; semPerfil = true;
+  const _aquis = (+T?.comprasRevenda||0) + (+T?.despCred||0);   // v7.95.0 (A1) · compras + despesas creditáveis
+  if (!((contra.compras_lrlp||0) > 0) && !((contra.compras_simples||0) > 0) && _aquis > 0){
+    contra.compras_nid = _aquis; semPerfil = true;
   }
   return { contra, proxy:false, semPerfil, comp:null };
 }
@@ -3000,6 +3176,22 @@ function calcCenariosReforma(res, reforma) {
     const S = _rProx ? snBloco(_rProx) : S0;
     const TS = S.T;
     const P = p190(a, S);
+    // ══ v7.95.0 (A2) · BASE DO HÍBRIDO: dedução do ICMS/ISS que está DE FATO na operação ═════════
+    // No híbrido o ICMS e o ISS continuam DENTRO do DAS (Res. 190, art. 22-A só retira CBS/IBS), então
+    // o que incide na operação — e sai da base pelo art. 12, § 2º, V, da LC 214 — é a parcela da
+    // partilha do ano (já com o remanescente e a trava), não o ISS/ICMS do regime regular usados até
+    // a v7.94.x. O regular segue deduzindo lpIss + icmsDeb. Medido nos gabaritos: caso 1 (comércio)
+    // híbrido 2027 +26.014,65; caso 3 +95.039,83; caso 2 (serviço, ISS 2%) −1.376,88.
+    const _dedHib = P ? P.icmsIss : 0;
+    const LHib = P ? rfLinhaBase(rfx, a, _dedHib) : L;
+    const LHibInf = P ? rfLinhaBase(Object.assign({}, rfx, { contra: _csen.inf }), a, _dedHib) : LInf;
+    const LHibSup = P ? rfLinhaBase(Object.assign({}, rfx, { contra: _csen.sup }), a, _dedHib) : LSup;
+    // v7.95.0 (A5) · crédito que o cliente B2B deixa de tomar no "por dentro" (LC 214, art. 47, § 9º):
+    // receita B2B × (alíquota do ano − percentual de CBS/IBS embutido no DAS). Linha INFORMATIVA, fora
+    // do ranking; só existe quando a aba traz a composição de clientes (vendas a PJ).
+    const _b2b = (+rfx.contra.vendas_simples||0) + (+rfx.contra.vendas_lrlp||0);
+    const _pctDas = (P && _recIntBase > 0.005) ? (P.cbs + P.ibs) / _recIntBase : 0;
+    const b2bCredPerdido = (a >= 2027 && _b2b > 0.005) ? _b2b * Math.max(0, L.alq - _pctDas) : null;
     // v7.17.0 · art. 22-A (Res. 190): híbrido = DAS (com a trava do ano) − parcelas de CBS/IBS da partilha.
     // ≤2026 permanece a regra atual (tudo dentro).
     const dasHib = P ? (P.dasMaisTrava - P.cbs - P.ibs)
@@ -3022,7 +3214,7 @@ function calcCenariosReforma(res, reforma) {
                  + (P ? P.trava - (TS.sublimite||0) : 0);
     // v7.90.0 (Artecon(8), P0-01) · as parcelas EXATAS que formam o total viajam na linha; a memória
     // imprime daqui, nunca de um total paralelo, e o fechamento é conferido a cada emissão.
-    const hibParcelas = { dasHib, cppRetida: +TS.cppRetida||0, cppForaDAS: +TS.cppForaDAS||0, icmsIssFora: impForaAno, ibsCbsFora: L.liquido, is: L.is };
+    const hibParcelas = { dasHib, cppRetida: +TS.cppRetida||0, cppForaDAS: +TS.cppForaDAS||0, icmsIssFora: impForaAno, ibsCbsFora: LHib.liquido, is: L.is };   // v7.95.0 (A2)
     const hib = hibParcelas.dasHib + hibParcelas.cppRetida + hibParcelas.cppForaDAS + hibParcelas.icmsIssFora + hibParcelas.ibsCbsFora + hibParcelas.is;   // v7.18.0: sem FGTS · v7.23.0: sem ISS retido
     const hibSoma = Object.values(hibParcelas).reduce((x,y)=>x+y,0);
     const hibConfere = Math.abs(hib - hibSoma) <= 0.02;
@@ -3044,10 +3236,12 @@ function calcCenariosReforma(res, reforma) {
     return { ano:a, alq:L.alq, deb:L.deb, cred:L.cred, liquido:L.liquido, is:L.is, anoTeste:L.anoTeste, ded:L.ded, dedIss, dedIcms, dasHib, hib, regular, regLP, regLR, p190:P, regNome: regular===regLP?'Presumido':'Real',
              dentro, impForaAno, impForaBase: S.impForaDAS, ibsForaImp, baseImpedida: S.baseImpedida,   // v7.88.0
              hibParcelas, hibSoma, hibConfere,   // v7.90.0
+             hibBase: { ded: LHib.ded, deb: LHib.deb, cred: LHib.cred, liquido: LHib.liquido, dedRegular: L.ded },   // v7.95.0 (A2)
+             b2bCredPerdido, b2bReceita: _b2b, pctCbsIbsDas: _pctDas,   // v7.95.0 (A5)
              // v7.91.0 · sensibilidade: o que muda entre os cenários é só o IBS/CBS líquido (crédito)
-             sens: { inf: { cred: LInf.cred, liquido: LInf.liquido, hib: hib - L.liquido + LInf.liquido, regLP: regLP - L.liquido + LInf.liquido, regLR: regLR - L.liquido + LInf.liquido },
+             sens: { inf: { cred: LInf.cred, liquido: LInf.liquido, hib: hib - LHib.liquido + LHibInf.liquido, regLP: regLP - L.liquido + LInf.liquido, regLR: regLR - L.liquido + LInf.liquido },
                      base: { cred: L.cred, liquido: L.liquido, hib, regLP, regLR },
-                     sup: { cred: LSup.cred, liquido: LSup.liquido, hib: hib - L.liquido + LSup.liquido, regLP: regLP - L.liquido + LSup.liquido, regLR: regLR - L.liquido + LSup.liquido } },
+                     sup: { cred: LSup.cred, liquido: LSup.liquido, hib: hib - LHib.liquido + LHibSup.liquido, regLP: regLP - L.liquido + LSup.liquido, regLR: regLR - L.liquido + LSup.liquido } },
              dentroInelegivel: _dentroInelegivel, dentroMotivo: _dentroMotivo, lrIncompleto,
              estadoSeguinte: a > _anoBase ? { recalculado: !!_rProx, rbaaUsada: _rProx ? _recIntBase : null,
                sublimite: _subProx(a), impedidoJan: S.impedidoJan, nImpedidos: S.nImpedidos } : null,
@@ -3760,7 +3954,7 @@ function rlConfEntrada(){
                    : a<2033 ? 'projeção (escada do IBS)'
                    : 'referência projetada (CGIBS 14/2026)';
         return `<tr><td class="rot">${a}</td><td>CBS ${(q.cbs||0).toFixed(2)}% · IBS ${((q.ibse||0)+(q.ibsm||0)).toFixed(2)}%</td><td class="hint" style="font-size:10px">${grau}</td></tr>`;}).join('')}
-      <tr><td colspan="3" class="hint">Percentuais de natureza <b>estimativa</b>, adotados para fins de simulação (Parâmetros › Reforma). As alíquotas de referência definitivas serão fixadas pelo Senado a partir do cálculo do TCU — atualizar quando publicadas.</td></tr></tbody></table></div></div>
+      <tr><td colspan="3" class="hint">Procedência (v7.95.0): 2026 e o IBS de 0,1% de 2027-28 são <b>lei</b> (ADCT, arts. 125-127; LC 214, art. 348); a CBS de 2027 em diante e o IBS de 2029 em diante são <b>estimativa/projeção</b> (Parâmetros › Reforma). A referência combinada de 2033 (27,91%) supera o <b>teto de 26,5%</b> do art. 130 do ADCT, avaliado em 2031 — mantida por conservadorismo, declarada. As alíquotas definitivas serão fixadas pelo Senado a partir do cálculo do TCU — atualizar quando publicadas.</td></tr></tbody></table></div></div>
     ${grade('Receitas por bloco (R$/mês)', recLinhas)}
     ${grade('Folha (R$/mês)', [linha('Pró-labore', F.prolabore, 0, 'folha.prolabore'), linha('Salários', F.salarios, 0, 'folha.salarios'), linha('Base FGTS', F.baseFgts, 0, 'folha.baseFgts'), linha('Provisão 13º', F.prov13, 0, 'folha.prov13'), linha('Provisão férias', F.provFerias, 0, 'folha.provFerias')])}
     ${grade('Compras (R$/mês)', [linha('Revenda sem ST', C.semst, 0, 'compras.semst'), linha('Revenda com ST', C.comst, 0, 'compras.comst'), linha('Monofásicas', C.mono, 0, 'compras.mono'), linha('ST + Mono', C.comstMono, 0, 'compras.comstMono'), linha('Baixa estoque s/ ST (CMV)', C.baixaSemst, 0, 'compras.baixaSemst'), linha('Baixa c/ ST', C.baixaComst, 0, 'compras.baixaComst'), linha('Baixa mono', C.baixaMono, 0, 'compras.baixaMono'), linha('Base IPI crédito', C.baseIpiCred, 0, 'compras.baseIpiCred')])}
@@ -3894,13 +4088,23 @@ function rlConferencia(){
         if (_dp != null) { const _dif = M.rbt12 - _dp;
           L.push(CF.lin('RBT12p declarada no PGDAS-D', Math.abs(_dif) < 0.02 ? 'confere com o motor ao centavo' : `motor ${fmtR(M.rbt12)} − declarada ${fmtR(_dp)} = ${fmtR(_dif)}${Math.abs(_dif)>0.02?' — <b>divergência</b>: confira a data de abertura e os meses anteriores lançados':''}`, fmtR(_dp))); } }
     } else {
+      { const _dr = D._pgdas && Array.isArray(D._pgdas.rbt12Decl) ? D._pgdas.rbt12Decl[m] : null;   // v7.94.4 · régua da RBT12 declarada
+        if (_dr != null) { const _dif = M.rbt12 - _dr;
+          L.push(CF.lin('RBT12 declarada no PGDAS-D', Math.abs(_dif) < 0.02 ? 'confere com o motor ao centavo'
+            : `motor ${fmtR(M.rbt12)} − declarada ${fmtR(_dr)} = ${fmtR(_dif)} — <b>divergência</b>: confira os 12 meses anteriores lançados`, fmtR(_dr))); } }
       L.push(CF.lin('RBT12 (mercado interno)', (m === 0 && +(D.cfg||{}).rbt12Direto > 0)
         ? `RBT12 direto informado (mercado interno) — prevalece sobre os 12 meses lançados${(function(){ const f = rbt12Formacao(D.cfg); return f.duplo ? ' (que somam '+fmtR(f.s12)+')' : ''; })()}`
         : M.mesAtividade!=null && M.mesAtividade>12
         ? '12 meses anteriores (13º mês de atividade em diante — acabou a proporcionalização)'
         : '12 meses anteriores lançados + meses já decorridos do ano', fmtR(M.rbt12)));
     }
-    L.push(CF.lin('Faixa', `RBT12 ${fmtR(M.rbt12)} → faixa da tabela`, M.faixa + 'ª'));
+    { const _id = D._pgdas && Array.isArray(D._pgdas.impedidoDecl) ? D._pgdas.impedidoDecl[m] : null;   // v7.94.4
+      if (_id != null) L.push(CF.lin('Impedimento declarado no PGDAS-D', (!!_id === !!M.impedido)
+        ? `extrato: "Impedido de recolher ICMS/ISS no DAS: ${_id?'Sim':'Não'}" — confere com o motor`
+        : `extrato diz <b>${_id?'Sim':'Não'}</b> e o motor apurou <b>${M.impedido?'impedido':'não impedido'}</b> — <b>divergência</b>: confira a RBAA na Configuração`, _id?'Sim':'Não')); }
+    L.push(CF.lin('Faixa', M.rbt12Zero
+      ? `RBT12 <b>zero</b> com receita no mês → 1ª faixa, <b>alíquota nominal</b> (parcela a deduzir zero — mesma apuração do PGDAS-D; v7.94.4)`
+      : `RBT12 ${fmtR(M.rbt12)} → faixa da tabela`, M.faixa + 'ª'));
     // v7.72.0 (art. 24) · a partição do mês precisa aparecer: sem ela o leitor não chega à
     // alíquota usada, porque ela não é nem a do RBT12 real nem a do teto — é a mistura das duas.
     if ((M.excSublimite||0) > 0 && (M.subIcms||0)+(M.subIss||0) > 0.005){
@@ -4010,9 +4214,10 @@ function rlConferencia(){
     // afirmar "Anexo I · 7,3000% · dedução R$ 5.940,00" ao lado de um DAS calculado pelo Anexo IV.
     for (const ax of _axUsados){
       const AX = A[ax]; if (!AX) continue;
-      const efA = M.rbt12 > 0 ? (M.rbt12*AX.aliq[fx] - AX.ded[fx])/M.rbt12 : 0;
-      L.push(CF.lin(`Alíquota efetiva (Anexo ${ax})`,
-        `(${fmtR(M.rbt12)} × ${CF.pc(AX.aliq[fx])} − ${fmtR(AX.ded[fx])}) ÷ ${fmtR(M.rbt12)}`, CF.pc(efA)));
+      const efA = M.rbt12 > 0 ? (M.rbt12*AX.aliq[fx] - AX.ded[fx])/M.rbt12 : AX.aliq[0];   // v7.94.4
+      L.push(CF.lin(`Alíquota efetiva (Anexo ${ax})`, M.rbt12 > 0
+        ? `(${fmtR(M.rbt12)} × ${CF.pc(AX.aliq[fx])} − ${fmtR(AX.ded[fx])}) ÷ ${fmtR(M.rbt12)}`
+        : `RBT12 zero → alíquota nominal da 1ª faixa ${CF.pc(AX.aliq[0])} (parcela a deduzir R$ 0,00)`, CF.pc(efA)));
     }
     for (const k of blocos)
       { const _b = M.ins && M.ins.blocos.find(x=>x.k===k);
@@ -4039,9 +4244,12 @@ function rlConferencia(){
              .reduce((s,k) => s + (+T[k]||0), 0))));
     const S = M.simples;
     if (S.sublimite) L.push(CF.lin('Trava do sublimite','ICMS/ISS da 5ª faixa, RBT12 acima de R$ 3,6 mi (Res. CGSN 140, art. 24)', fmtR(S.sublimite)));
-    if (S.issRetido) L.push(CF.lin('ISS retido','recolhido na fonte pelo tomador e recomposto (LC 123, art. 21, § 4º)', fmtR(S.issRetido)));
+    if (S.issRetido) L.push(CF.lin('ISS retido', M.impedido
+      ? `retido pelo tomador pela alíquota municipal ${CF.pc(Dm.cfg.iss||0)} — mês impedido, ISS fora do Simples (LC 123, art. 20, § 1º; v7.94.4)`
+      : 'recolhido na fonte pelo tomador e recomposto (LC 123, art. 21, § 4º)', fmtR(S.issRetido)));
     if (S.cppRetida) L.push(CF.lin('INSS retido (recomposto)','LC 123, art. 21, § 4º', fmtR(S.cppRetida)));
-    if (S.inssPatrForaDAS) L.push(CF.lin('CPP do Anexo IV','devida fora da guia', fmtR(S.inssPatrForaDAS)));
+    if (S.inssPatrForaDAS) { const _r4 = (((Dm.receitas.a4||[])[m]||0)+((Dm.receitas.a4_retiss||[])[m]||0))/(M.receita||1);   // v7.95.1
+      L.push(CF.lin('CPP do Anexo IV', `devida fora da guia (LC 123, art. 13, VI; Lei 8.212/91, art. 22) — base é a FOLHA: INSS patronal do mês ${fmtR(M.inssPatr||0)} × participação da receita do Anexo IV na receita do mês (${CF.pc(_r4)}). O rateio da folha pela receita é PREMISSA declarada para empresa com mais de um anexo — a folha própria do Anexo IV não é segregada`, fmtR(S.inssPatrForaDAS))); }
     // v7.94.0 · as duas parcelas entravam no total sem linha própria — tributo que soma sem aparecer não é auditável
     if (M.impedido) {
       const _ori = (Dm.icms && Dm.icms.deb && Dm.icms.deb[m] != null) || (Dm.icms && Dm.icms.cred && Dm.icms.cred[m] != null) ? 'aba ICMS·IPI (informado)' : 'estimativa pelas alíquotas da empresa';
@@ -4082,12 +4290,29 @@ function rlConferencia(){
     const _comprasLR = M.ins ? (M.ins.compras.semst + M.ins.compras.comst)
                              : ((+((Dm.compras.semst||[])[m])||0) + (+((Dm.compras.comst||[])[m])||0));
     const _credLRm = M.ins ? M.ins.despesas.credLR : (+((Dm.despesas.credLR||[])[m])||0);
+    // v7.97.0 · o crédito de ICMS exclui as compras de MEI/Simples e soma o que a optante informou na NF
+    const _credDet = ((M.comprasSimplesMei||0) > 0.005 || (M.credSimplesInf||0) > 0.005)
+      ? ` <span class="hint">(crédito sobre ${fmtR(M.credIcmsBase||0)} de compras sem ST — excluídos ${fmtR(M.comprasSimplesMei||0)} de fornecedores MEI/Simples, que não destacam ICMS (LC 123/2006, art. 23)`
+        + ((M.credSimplesInf||0) > 0.005 ? `; + ${fmtR(M.credSimplesInf)} de crédito informado nas NF de optantes (art. 23, § 1º)` : '')
+        + ((M.credPresTransp||0) > 0.005 ? `; + crédito presumido do transporte ${fmtR(M.credPresTransp)}` : '') + ')</span>'
+      : '';
+    // v7.98.0 · parcela substituída por valor informado: a memória diz o que valia, quem mudou e por quê
+    const _ti = M.tribInformado || {};
+    const _infTx = (k, auto) => { const ev = audMotivoCelula(D, 'trib.' + k, m);
+      return `<b>valor informado manualmente</b> — apurado pelo motor ${fmtR(auto||0)}`
+        + (ev && ev.motivo ? ` · motivo: ${esc(ev.motivo)}` : '') + (ev && ev.por ? ` · ${esc(ev.por)} em ${audQuando(ev.em)}` : ''); };
+    // v7.99.0 · LC 224/2025: o 3º mês do trimestre carrega o acréscimo de 10% na presunção sobre o excedente acumulado
+    const _lc = P.lc224 || null;
+    const _lc224Tx = (qual) => { if (!_lc) return '';
+      const add = qual === 'IR' ? _lc.addBaseIR : _lc.addBaseCS, exc = qual === 'IR' ? _lc.excIR : _lc.excCS, peso = qual === 'IR' ? _lc.pesoIR : _lc.pesoCS, lim = qual === 'IR' ? _lc.limAcumIR : _lc.limAcumCS, rac = qual === 'IR' ? _lc.recAcumIR : _lc.recAcumCS;
+      if (!(Math.abs(add) > 0.005)) return '';
+      return ` ${add > 0 ? '+' : '−'} <b>acréscimo LC 224/2025</b> ${fmtR(Math.abs(add))} <span class="hint">(${exc < 0 ? 'ajuste: ' : ''}excedente ${exc < 0 ? '−' : ''}${fmtR(Math.abs(exc))} da receita acumulada ${fmtR(rac)} sobre o limite acumulado ${fmtR(lim)} × 10% × presunção média ${CF.pc(peso)} — LC 224/2025, art. 4º; IN RFB 2.305/2025 e 2.306/2026; ${qual === 'IR' ? 'IRPJ desde jan/2026' : 'CSLL desde abr/2026'})</span>`; };
     const LPl = [
       CF.lin('Base PIS/COFINS (bruta)', `receita ${fmtR(M.receita)} − revenda monofásica ${fmtR(_monoEx)} − exportação ${fmtR(M.recExp||0)}`, fmtR(P.basePCbruta||0)),
       CF.lin('(−) ICMS destacado — Tema 69', M.tema69Informado ? '<b>nota a nota</b> — vICMS das NF-e do mês (XML) ou valor informado na aba ICMS·IPI (STF, RE 574.706)' : `<b>estimativa</b>: (revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706) — importe os XMLs de saída para o valor nota a nota`, fmtR(M.icmsDestacadoPC||0)),
       CF.lin('Base PIS/COFINS (final)', `${fmtR(P.basePCbruta||0)} − ${fmtR(M.icmsDestacadoPC||0)}`, fmtR(P.basePC||0)),
-      CF.lin('PIS', `${fmtR(P.basePC||0)} × 0,65%`, fmtR(P.pis)),
-      CF.lin('COFINS', `${fmtR(P.basePC||0)} × 3,00%`, fmtR(P.cofins)),
+      CF.lin('PIS', _ti.pisLP ? _infTx('pisLP', M.pisLPAuto) : `${fmtR(P.basePC||0)} × 0,65%`, fmtR(P.pis)),
+      CF.lin('COFINS', _ti.cofinsLP ? _infTx('cofinsLP', M.cofinsLPAuto) : `${fmtR(P.basePC||0)} × 3,00%`, fmtR(P.cofins)),
       CF.lin('Base IRPJ', (() => {
         // v7.75.0 · o texto passa a usar os componentes que o MOTOR usou, na mesma agregação
         const _b = P.baseComp;
@@ -4112,15 +4337,28 @@ function rlConferencia(){
           `transporte de <b>passageiros</b> ${fmtR(_b.transp)} × 16% <span class="hint">(Lei 9.249/95, art. 15, § 1º, II, "a" — parcela à parte, com presunção própria)</span>`);
         if (_b.fin > 0.005) _p.push(`receitas financeiras ${fmtR(_b.fin)} <b>integrais</b> (Lei 9.430/96, art. 25, II)`);
         return _p.join(' + ');
-      })(), fmtR(P.baseAdic||0)),
+      })() + _lc224Tx('IR'), fmtR(P.baseAdic||0)),
       CF.lin('IRPJ', `${fmtR(P.baseAdic||0)} × 15%`, fmtR(P.irpj)),
       ...(P.adicional>0.005?[CF.lin('Adicional de IRPJ',
         // v7.51.0 (item G) · a linha do LR já imprimia os valores; esta dizia só a regra.
         (P.baseAdicPer!=null && P.limAdicPer!=null)
           ? `(${fmtR(P.baseAdicPer)} − ${fmtR(P.limAdicPer)}) × 10% — base do período de apuração`
           : `parcela da base do período acima do limite × 10%`, fmtR(P.adicional))]:[]),
-      CF.lin('CSLL','bases próprias de comércio e serviços × 9%', fmtR(P.csll)),
-      CF.lin('ICMS', `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`, fmtR(P.icms)),
+      CF.lin('CSLL', 'bases próprias de comércio e serviços × 9%' + (_lc && Math.abs(_lc.addBaseCS) > 0.005 ? ` <span class="hint">(base ${fmtR((P.baseCsll||0) + _lc.addBaseCS)})</span>` : '') + _lc224Tx('CS'), fmtR(P.csll)),
+      // v7.96.0 · o ICMS é conta gráfica: crédito maior que o débito não é tributo negativo, é saldo
+      // credor transportado. A memória demonstra as parcelas, como já fazia com PIS/COFINS e IPI.
+      ...(((M.icmsSaldoAnt||0) > 0.005) ? [CF.lin('(−) Saldo credor de ICMS do mês anterior',
+        'crédito que excedeu o débito e foi transportado (LC 87/96, arts. 24 e 25)', fmtR(M.icmsSaldoAnt||0))] : []),
+      CF.lin('ICMS a recolher',
+        ((M.icmsSaldoFim||0) > 0.005)
+          ? `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}${_credDet}`
+            + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : '')
+            + ` = <b>negativo</b>, logo nada a recolher (conta gráfica do ICMS)`
+          : `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}${_credDet}`
+            + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : ''),
+        fmtR(P.icms)),
+      ...(((M.icmsSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de ICMS a transportar',
+        'abate o débito do mês seguinte — não reduz a carga deste mês', fmtR(M.icmsSaldoFim||0))] : []),
       // v7.69.0 (parecer do Teste 8, achado 13) · o IPI compunha o total sem linha própria: num
       // papel de trabalho, tributo que entra no total sem aparecer não é auditável.
       // v7.80.0 · o IPI é conta gráfica: quando o crédito supera o débito, não há tributo
@@ -4137,8 +4375,8 @@ function rlConferencia(){
         fmtR(P.ipi||0)),
       ...(((M.ipiSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de IPI a transportar',
         'abate o débito do mês seguinte — não reduz a carga deste mês', fmtR(M.ipiSaldoFim||0))] : []),
-      CF.lin('ISS', `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(P.iss)),
-      CF.lin('INSS patronal', `salários ${fmtR(_sal)} × ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)} + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)}${m===11?' + 13º':''}`, fmtR(P.inssPatr)),
+      CF.lin('ISS', _ti.iss ? _infTx('iss', M.issAuto) : `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(P.iss)),
+      CF.lin('INSS patronal', `salários ${fmtR(_sal)} × (CPP ${CF.pc(_fp.patronalSalarios)} + RAT/FAP ${CF.pc(_fp.rat)} + terceiros ${CF.pc(_fp.terceiros)} = ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)}) + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)} (sem RAT e terceiros — Lei 8.212/91, art. 22, III)${m===11?' + 13º':''} · percentuais da empresa ou padrão de fábrica (v7.95.1)`, fmtR(P.inssPatr)),
       CF.lin('<b>Total do Lucro Presumido</b>','soma das parcelas acima (FGTS não considerado)', fmtR(P.total)),
     ];
     const LRl = [
@@ -4147,7 +4385,7 @@ function rlConferencia(){
       // refizesse 83.274,20 + 8.361,12 − 11.978,08 na tela chegava a outro número. Não há dupla
       // contagem — o valor já está embutido na linha bruta, que deduz as compras LÍQUIDAS do ICMS.
       // Agora é informativa e diz onde já foi considerada.
-      ...((M.icmsComprasPC||0)>0.005?[CF.lin('ICMS das aquisições fora do crédito — Lei 14.592/2023', (M.lei14592Informado ? '<b>nota a nota</b> — valor informado na aba ICMS·IPI' : `<b>estimativa</b>: compras p/ revenda ${fmtR(_comprasLR)} × ${CF.pc(+D.cfg.icmsC||0)}`) + ` — <i>já refletido na linha acima</i>, que deduz as compras líquidas do ICMS`, '<i>' + fmtR(M.icmsComprasPC||0) + '</i>')]:[]),
+      ...((M.icmsComprasPC||0)>0.005?[CF.lin('ICMS das aquisições fora do crédito — Lei 14.592/2023', (M.lei14592Informado ? '<b>nota a nota</b> — valor informado na aba ICMS·IPI' : `<b>estimativa</b>: compras p/ revenda ${fmtR(_comprasLR)}${(M.comprasSimplesMei||0) > 0.005 ? ` − MEI/Simples ${fmtR(M.comprasSimplesMei)} (sem ICMS na aquisição, LC 123, art. 23)` : ''} × ${CF.pc(+D.cfg.icmsC||0)}${(M.credSimplesInf||0) > 0.005 ? ` + crédito informado por optantes ${fmtR(M.credSimplesInf)}` : ''}`) + ` — <i>já refletido na linha acima</i>, que deduz as compras líquidas do ICMS`, '<i>' + fmtR(M.icmsComprasPC||0) + '</i>')]:[]),
       CF.lin('(−) ICMS destacado — Tema 69', M.tema69Informado ? '<b>nota a nota</b> — vICMS das NF-e do mês (XML) ou valor informado na aba ICMS·IPI (STF, RE 574.706)' : `<b>estimativa</b>: (revenda sem ST + com redução) × ${CF.pc(+D.cfg.icmsV||0)} (STF, RE 574.706)`, fmtR(M.icmsDestacadoPC||0)),
       // v7.63.0 (auditoria A09) · quando os créditos superam os débitos, a base tributável é ZERO e
       // o excesso vira saldo credor transportado ao mês seguinte — o motor sempre fez isso, mas a
@@ -4163,11 +4401,23 @@ function rlConferencia(){
       ...(((LR.saldoCredorFim||0) > 0.005) ? [CF.lin('Saldo credor a transportar',
         'excesso de crédito sobre a base — reduz a base do mês seguinte, não gera tributo negativo',
         fmtR(LR.saldoCredorFim||0))] : []),
-      CF.lin('PIS', `${fmtR(LR.basePC||0)} × 1,65% + financeiras ${fmtR(_fin)} × 0,65%`, fmtR(LR.pis)),
-      CF.lin('COFINS', `${fmtR(LR.basePC||0)} × 7,60% + financeiras ${fmtR(_fin)} × 4,00%`, fmtR(LR.cofins)),
+      CF.lin('PIS', _ti.pisLR ? _infTx('pisLR', M.pisLRAuto) : `${fmtR(LR.basePC||0)} × 1,65% + financeiras ${fmtR(_fin)} × 0,65%`, fmtR(LR.pis)),
+      CF.lin('COFINS', _ti.cofinsLR ? _infTx('cofinsLR', M.cofinsLRAuto) : `${fmtR(LR.basePC||0)} × 7,60% + financeiras ${fmtR(_fin)} × 4,00%`, fmtR(LR.cofins)),
       CF.lin('Lucro do mês (base IRPJ/CSLL)', `receita ${fmtR(M.receita)} + financeiras ${fmtR(_fin)} − custos ${fmtR(M.custos)} − folha ${fmtR(M.folhaTotal)} − despesas ${fmtR(M.despTotal)} − INSS patronal ${fmtR(M.inssPatr)} − PIS/COFINS ${fmtR(LR.pis+LR.cofins)} − ICMS ${fmtR(M.icmsPagar)} − IPI ${fmtR(M.ipiPagar)} − ISS ${fmtR(M.iss)}`, fmtR(LR.baseIRCS)),
       ...lrLinhasConfMes(m, LR, R),
-      CF.lin('ICMS', `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}`, fmtR(LR.icms)),
+      // v7.96.0 · mesma conta gráfica do ICMS no Lucro Real (o lucro acima usou o LÍQUIDO; a guia usa o a recolher)
+      ...(((M.icmsSaldoAnt||0) > 0.005) ? [CF.lin('(−) Saldo credor de ICMS do mês anterior',
+        'crédito transportado do mês anterior (LC 87/96, arts. 24 e 25)', fmtR(M.icmsSaldoAnt||0))] : []),
+      CF.lin('ICMS a recolher',
+        ((M.icmsSaldoFim||0) > 0.005)
+          ? `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}${_credDet}`
+            + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : '')
+            + ` = <b>negativo</b>, nada a recolher`
+          : `débito ${fmtR(M.icmsDeb)} − crédito ${fmtR(M.icmsCred)}${_credDet}`
+            + ((M.icmsSaldoAnt||0) > 0.005 ? ` − saldo anterior ${fmtR(M.icmsSaldoAnt||0)}` : ''),
+        fmtR(LR.icms)),
+      ...(((M.icmsSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de ICMS a transportar',
+        'abate o débito do mês seguinte — não reduz a carga deste mês', fmtR(M.icmsSaldoFim||0))] : []),
       // v7.69.0 · mesma razão do Lucro Presumido: o IPI passa a ter linha própria
       // v7.80.0 · mesma conta gráfica no Lucro Real
       ...(((M.ipiSaldoAnt||0) > 0.005) ? [CF.lin('(−) Saldo credor de IPI do mês anterior',
@@ -4180,8 +4430,8 @@ function rlConferencia(){
         fmtR(LR.ipi||0)),
       ...(((M.ipiSaldoFim||0) > 0.005) ? [CF.lin('Saldo credor de IPI a transportar',
         'abate o débito do mês seguinte', fmtR(M.ipiSaldoFim||0))] : []),
-      CF.lin('ISS', `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(LR.iss)),
-      CF.lin('INSS patronal', `salários ${fmtR(_sal)} × ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)} + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)}${m===11?' + 13º':''}`, fmtR(LR.inssPatr)),
+      CF.lin('ISS', _ti.iss ? _infTx('iss', M.issAuto) : `serviços ${fmtR(M.recServ||0)} × ${CF.pc(+D.cfg.iss||0)}`, fmtR(LR.iss)),
+      CF.lin('INSS patronal', `salários ${fmtR(_sal)} × (CPP ${CF.pc(_fp.patronalSalarios)} + RAT/FAP ${CF.pc(_fp.rat)} + terceiros ${CF.pc(_fp.terceiros)} = ${CF.pc(_fp.patronalSalarios+_fp.rat+_fp.terceiros)}) + pró-labore ${fmtR(_pro)} × ${CF.pc(_fp.patronalProLabore)} (sem RAT e terceiros — Lei 8.212/91, art. 22, III)${m===11?' + 13º':''} · percentuais da empresa ou padrão de fábrica (v7.95.1)`, fmtR(LR.inssPatr)),
       CF.lin('<b>Total do Lucro Real</b>','soma das parcelas acima (FGTS não considerado)', fmtR(LR.total)),
     ];
     // ── v7.51.0 (item F) · CUSTO ZERO COM COMPRAS LANÇADAS ──────────────────────────────────
@@ -4426,7 +4676,7 @@ function rlConfRefMemAno(C, L, R){
   const proc = L.ano <= 2026 ? 'ano-teste fixado em lei — CBS 0,9% e IBS 0,1% (LC 214/2025; ADCT art. 127), com recolhimento compensado'
     : L.ano <= 2028 ? 'IBS de 0,1% fixado em lei (ADCT art. 127); CBS por estimativa oficial — referência menos 0,1 p.p. (LC 214, art. 347)'
     : L.ano <= 2032 ? 'projeção — escada do IBS subindo em degraus de 10% ao ano, ICMS/ISS caindo na mesma medida'
-    : 'referência projetada pela metodologia da Res. CGIBS nº 14/2026; a definitiva virá do cálculo do TCU homologado pelo Senado';
+    : 'referência projetada pela metodologia da Res. CGIBS nº 14/2026; a definitiva virá do cálculo do TCU homologado pelo Senado' + ((alqPc||0) > 26.5 ? ' — <b>acima do teto de referência de 26,5% do art. 130 do ADCT</b> (avaliação em 2031): mantida por conservadorismo, decisão declarada (v7.95.0)' : '');
   // ── débito
   const recBenef = RF_REDUCOES.reduce((s,[k]) => s + (rfx.benefRec?.[k]||0), 0);
   const baseCheia = Math.max(0, (rfx.receita||0) - recBenef);
@@ -4511,12 +4761,15 @@ function rlConfRefMemAno(C, L, R){
       lcen.push(CF.lin('(+) CPP retida pelo tomador', 'parcela 2 — do exercício ' + L.ano + (L.estadoSeguinte && L.estadoSeguinte.recalculado ? ' (motor recalculado)' : ''), fmtR(HP.cppRetida)));
       lcen.push(CF.lin('(+) CPP fora do DAS (Anexo IV)', 'parcela 3', fmtR(HP.cppForaDAS)));
       lcen.push(CF.lin('(+) ICMS/ISS do período de impedimento', 'parcela 4 — por fora × ' + pcs(rII*100) + ' remanescente (estimativa)' + (L.ano >= 2033 && (L.impForaBase||0) > 0.005 ? ' — extinto em ' + L.ano : ''), fmtR(HP.icmsIssFora)));
-      lcen.push(CF.lin('(+) IBS/CBS líquido por fora', 'parcela 5', fmtR(HP.ibsCbsFora)));
+      lcen.push(CF.lin('(+) IBS/CBS líquido por fora', 'parcela 5' + (L.hibBase ? ` — base própria do híbrido: dedução do ICMS/ISS <b>da partilha do DAS</b> ${fmtR(L.hibBase.ded)} (o regular deduz ${fmtR(L.hibBase.dedRegular)}) → débito ${fmtR(L.hibBase.deb)} − crédito ${fmtR(L.hibBase.cred)} (LC 214, art. 12, § 2º, V; v7.95.0)` : ''), fmtR(HP.ibsCbsFora)));
       lcen.push(CF.lin('(+) Imposto Seletivo', 'parcela 6', fmtR(HP.is)));
       lcen.push(CF.lin('<b>Cenário híbrido</b>', 'soma das parcelas 1 a 6 = ' + fmtR(_soma) + (_ok ? ' · <b style="color:#1e8449">✓ fecha ao centavo</b>' : ' · <b style="color:#943126">✗ NÃO FECHA — diferença ' + fmtR(L.hib - _soma) + ' (MEM-01)</b>'), fmtR(L.hib))); }
   } else {
     lcen.push(CF.lin('Cenário híbrido', L.ano <= 2026 ? 'até 2026 tudo permanece dentro do DAS — o art. 22-A ainda não se aplica' : '—', fmtR(L.hib)));
   }
+  if (L.ano >= 2027) lcen.push(CF.lin('(info) Crédito que o cliente B2B deixa de tomar no "por dentro"', L.b2bCredPerdido != null
+    ? `receita B2B ${fmtR(L.b2bReceita)} × (alíquota ${pcs((L.alq||0)*100)} − CBS/IBS embutidos no DAS ${pcs((L.pctCbsIbsDas||0)*100)}) — custo comercial não tributário do cenário por dentro (LC 214, art. 47, § 9º); fora do ranking`
+    : 'composição de clientes (vendas a PJ) não informada na aba Reforma — sem esse dado o custo comercial do "por dentro" não é medido', L.b2bCredPerdido != null ? fmtR(L.b2bCredPerdido) : '—'));
   return '<div style="border:1px solid #d5dbdb;border-left:4px solid #1a5276;border-radius:8px;padding:10px 14px;margin:14px 0;page-break-inside:avoid">'
     + '<div style="font-weight:700;color:#1a5276;font-size:15px">' + L.ano + (L.anoTeste ? ' <span class="hint" style="font-weight:400">— ano-teste</span>' : '') + '</div>'
     + '<div class="hint" style="margin:2px 0 4px">CBS ' + pcs(cbsA) + ' · IBS estadual ' + pcs(ibseA) + ' · IBS municipal ' + pcs(ibsmA)
@@ -4825,8 +5078,8 @@ function rlConfDivergencias(){
         : 'o FS12 soma remunerações, pró-labore, 13º, FGTS e a <b>contribuição patronal previdenciária efetivamente recolhida</b> (Res. CGSN 140/2018, art. 26, § 1º). Em optante do Simples a CPP está <b>dentro do DAS</b>, e é a parcela apurada pelo próprio motor que entra — nunca um percentual presumido sobre a folha, que produziria valor que ninguém recolheu. Nos meses vindos do histórico da aba RBT12 a CPP <b>não é conhecida</b> e não é estimada: enquanto houver meses de histórico na janela, o Fator R sai <b>subestimado</b>, e isso fica declarado em vez de inventado.'}</li>
       <li><b>RBT12 de exportação (v7.64.0):</b> o mercado externo tem RBT12, faixa e limite próprios (LC 123/2006, art. 3º, § 14). Havendo exportação lançada sem histórico externo informado, vale a mesma presunção do mercado interno — receita do mês × 12 — e ela é <b>declarada mês a mês</b>, não silenciosa.</li>
       <li><b>RAT ajustado (v7.64.0):</b> o percentual usado é o RAT <b>já multiplicado pelo FAP</b>. Informados o RAT básico (1%, 2% ou 3%) e o FAP (0,5 a 2,0) na Configuração, o percentual passa a ser derivado e a memória mostra a conta; sem eles, vale o percentual único gravado.</li>
-      <li><b>RBT12 presumida (v7.63.0):</b> ${(RL?.res?.meses||[]).some(M=>M.rbt12Presumido)
-        ? 'em pelo menos um mês deste ano a RBT12 apurada era <b>zero</b> e havia receita lançada. Como alíquota efetiva com RBT12 zero é indeterminada — e apurar <b>DAS zero</b> com receita não é resultado defensável —, o aplicativo aplicou a regra do <b>primeiro mês de atividade</b> (Res. CGSN 140/2018, art. 22, § 2º): receita do próprio mês × 12. É <b>presunção</b>, não dado: lance os 12 meses anteriores na aba RBT12, ou informe a data de início de atividade, e o número passa a sair do dado real.'
+      <li><b>RBT12 zero com receita (v7.94.4):</b> ${(RL?.res?.meses||[]).some(M=>M.rbt12Zero)
+        ? 'em pelo menos um mês deste ano a RBT12 apurada era <b>zero</b> e havia receita lançada. O aplicativo enquadra na <b>1ª faixa e aplica a alíquota nominal</b> do anexo (parcela a deduzir zero) — a mesma apuração do PGDAS-D. Até a v7.94.3 presumia-se receita × 12; a regra foi corrigida contra extratos reais.'
         : 'não se aplica a esta análise — todos os meses com receita têm RBT12 apurada a partir de dado lançado.'}</li>
       <li><b>Arredondamento do DAS (v7.62.0):</b> ${(RL?.dados?.cfg||{}).arredondaPorTributo
         ? 'esta empresa está configurada para arredondar <b>tributo a tributo</b>, como o PGDAS-D: cada parcela é arredondada e depois somada. É o que faz o DAS calculado reproduzir o declarado ao centavo. A referência desta empresa passa a ser a <b>guia</b>.'
@@ -5098,6 +5351,9 @@ function rlRegimes(rot, n) {
     const baseCred = compras - icmsCompPC + credLR + credDesp;
     const baseDeb  = LRt.basePCb + baseCred;                  // receitas tributadas, antes do crédito
     const saldoFim = (M[11] && M[11].lr && M[11].lr.saldoCredorFim) || 0;
+    // v7.98.0 · células de ISS/PIS/COFINS substituídas por valor informado no ano
+    const _nTribInf = M.reduce((n,x)=>n + Object.values(x.tribInformado||{}).filter(Boolean).length, 0);
+    const _lnTribInf = (regime) => _nTribInf ? ln('⚠️ Valores informados manualmente', `${_nTribInf} célula(s) de ISS/PIS/COFINS substituída(s) por valor informado na aba ICMS·IPI (${regime}) — motivo, usuário e data na Trilha de alterações (Conferência › bloco 0); a memória mensal marca cada parcela`, null) : '';
     const clamp = M.filter(x => (x.lr.saldoCredorFim||0) > 0.005);
     const CRPCcfg = Object.assign({adm:0,vendas:0,fiscais:0,financeiras:0,outras:0}, cfg.credLRpct||{});
     // v7.43.0 · o percentual do INSS patronal era IMPRESSO FIXO como 28,96% nesta memória, enquanto
@@ -5127,14 +5383,20 @@ function rlRegimes(rot, n) {
     ${ln('Base PIS/COFINS (final)', fmt(P.basePCb)+' − '+fmt(icmsDest), P.basePC, true)}
     ${ln('PIS', fmt(P.basePC)+' × 0,65%', P.pis)}
     ${ln('COFINS', fmt(P.basePC)+' × 3,00%', P.cofins)}
-    ${ln('<b>Base de presunção — IRPJ e CSLL</b>', 'comércio '+fmt(recCom)+' × '+pc(+cfg.lpBaseCom||0)+' + serviços '+fmt(recServ)+' × '+pc(+cfg.lpBaseServ||0), P.baseAdic, true)}
+    ${ln('<b>Base de presunção — IRPJ e CSLL</b>', 'comércio '+fmt(recCom)+' × '+pc(+cfg.lpBaseCom||0)+' + serviços '+fmt(recServ)+' × '+pc(+cfg.lpBaseServ||0)
+        + ((T.lc224 && Math.abs(T.lc224.addBaseIR) > 0.005) ? ' + <b>acréscimo LC 224/2025</b> '+fmt(T.lc224.addBaseIR)+' (10% da presunção sobre a receita acima de R$ 1,25 mi/trimestre, acumulado no ano — excedente '+fmt(T.lc224.excIR)+')' : ''), P.baseAdic, true)}
+    ${(T.lc224 && T.lc224.aplica && !(Math.abs(T.lc224.addBaseIR) > 0.005)) ? ln('&nbsp;&nbsp;↳ LC 224/2025', 'receita bruta dentro de R$ 1,25 mi por trimestre (acumulado) — sem acréscimo na presunção', null) : ''}
+    ${(T.lc224 && T.lc224.desligado) ? ln('&nbsp;&nbsp;↳ LC 224/2025', '<b>NÃO aplicada por opção da empresa</b> (liminar / decisão judicial informada na Configuração)', null) : ''}
     ${ln('&nbsp;&nbsp;↳ IRPJ', fmt(P.baseAdic)+' × 15%', P.irpj)}
     ${ln('&nbsp;&nbsp;↳ Adicional de IRPJ', 'parcela da base que excede R$ '+fmt(_limAdic)+' '+_perAdic+' × 10%'
         + (P.adic<=0.005 ? ' — base '+_perAdic+' abaixo do limite, sem adicional' : ''), P.adic)}
     ${ln('&nbsp;&nbsp;↳ CSLL', fmt(P.baseAdic)+' × 9%'
-        + (Math.abs((+cfg.lpBaseComCsll||.12)-(+cfg.lpBaseCom||0))>1e-9 ? ' — presunção própria de CSLL no comércio: '+pc(+cfg.lpBaseComCsll||.12) : ''), P.csll)}
+        + (Math.abs((+cfg.lpBaseComCsll||.12)-(+cfg.lpBaseCom||0))>1e-9 ? ' — presunção própria de CSLL no comércio: '+pc(+cfg.lpBaseComCsll||.12) : '')
+        + ((T.lc224 && Math.abs(T.lc224.addBaseCS) > 0.005) ? ' — inclui acréscimo LC 224/2025 na base da CSLL: '+fmt(T.lc224.addBaseCS)+' (CSLL desde abr/2026; excedente '+fmt(T.lc224.excCS)+')' : ''), P.csll)}
     ${P.iss>0.005?ln('ISS','serviços sem retenção × '+pc(+cfg.iss||0), P.iss):''}
-    ${P.icms>0.005?ln('ICMS','débito − crédito do ano', P.icms):''}
+    ${P.icms>0.005?ln('ICMS a recolher','conta gráfica: débito − crédito − saldo credor transportado, mês a mês, nunca negativo (LC 87/96, arts. 24 e 25)', P.icms):''}
+    ${(T.icmsSaldoIni||0)>0.005?ln('&nbsp;&nbsp;↳ saldo credor de ICMS em 1º/jan','informado na Configuração — abate o débito dos primeiros meses', T.icmsSaldoIni):''}
+    ${(T.icmsSaldoFim||0)>0.005?ln('&nbsp;&nbsp;↳ saldo credor de ICMS em 31/12','crédito que excedeu o débito no ano — transporta para o ano seguinte, não reduz a carga', T.icmsSaldoFim):''}
     ${P.ipi>0.005?ln('IPI','débito − crédito do ano', P.ipi):''}
     ${ln('<b>INSS patronal — CPP</b>', 'contribuição da empresa; a do segurado é retida do próprio salário e não entra no custo do regime', P.inss, true)}
     ${_temSal?ln('&nbsp;&nbsp;↳ sobre salários', 'base '+fmt(_salAno+_sal13)+(_sal13>0.005?' (inclui 13º '+fmt(_sal13)+')':'')
@@ -5144,6 +5406,7 @@ function rlRegimes(rot, n) {
         +' × '+pcx(_FP.patronalProLabore)+' — contribuinte individual: sem RAT e sem Terceiros (art. 22, III, da Lei 8.212/91)',
         (_proAno+_pro13)*_FP.patronalProLabore)}
     ${!_temSal?ln('&nbsp;&nbsp;↳ observação','não há salários lançados — todo o INSS patronal vem do pró-labore, e os percentuais de RAT e Terceiros não afetam este cálculo', null):''}
+    ${_lnTribInf('vale no LP e no LR')}
     ${ln('<b>TOTAL — Lucro Presumido</b>','soma das parcelas acima (FGTS não considerado)', T.lp, true)}
     </tbody></table></div><div class="hint" style="margin-top:6px">${NOTA_SOMA}</div></div>
 
@@ -5153,7 +5416,7 @@ function rlRegimes(rot, n) {
     ${ln('(−) ICMS destacado — Tema 69','também no não cumulativo (STF, RE 574.706)', icmsDest)}
     ${ln('<b>Base de DÉBITO</b>', fmt(baseDeb)+' − '+fmt(icmsDest), baseDeb-icmsDest, true)}
     ${ln('Compras (revenda + com ST)','aquisições que geram crédito', compras)}
-    ${ln('(−) ICMS das compras', 'compras × '+pc(+cfg.icmsC||0), icmsCompPC)}
+    ${ln('(−) ICMS das compras', 'compras × '+pc(+cfg.icmsC||0) + ((T.comprasSimplesMei||0)>0.005 ? ' — sem as compras de MEI/Simples ('+fmt(T.comprasSimplesMei)+'), que não trazem ICMS na aquisição (LC 123, art. 23)' : '') + ((T.credSimplesInf||0)>0.005 ? ' + crédito informado por optantes '+fmt(T.credSimplesInf) : ''), icmsCompPC)}
     ${credIt.map(x=>ln('(+) '+x.rot, x.base+' — rubrica própria, mapeada na importação do balancete', x.v)).join('')}
     ${credDesp>0.005?ln('(+) Despesas com crédito eleito', 'percentuais de creditabilidade configurados: '+(rotCR||'—'), credDesp):''}
     ${ln('<b>Base de CRÉDITO</b>', fmt(compras)+' − '+fmt(icmsCompPC)+(credLR>0.005?' + '+fmt(credLR)+' (rubricas do art. 3º)':'')+(credDesp>0.005?' + '+fmt(credDesp):''), baseCred, true)}
@@ -5171,7 +5434,7 @@ function rlRegimes(rot, n) {
     ${ln('&nbsp;&nbsp;(−) Despesas', 'soma das rubricas de despesa lançadas', -_despAno)}
     ${ln('&nbsp;&nbsp;(−) INSS patronal', 'a CPP é despesa dedutível', -LRt.inss)}
     ${ln('&nbsp;&nbsp;(−) PIS e COFINS', fmt(LRt.pis)+' + '+fmt(LRt.cofins)+' — apurados acima', -(LRt.pis+LRt.cofins))}
-    ${LRt.icms>0.005?ln('&nbsp;&nbsp;(−) ICMS','débito − crédito', -LRt.icms):''}
+    ${Math.abs(sM(x=>x.icmsPagar||0))>0.005?ln('&nbsp;&nbsp;(−) ICMS líquido','débito − crédito do ano — o crédito das entradas reduz o custo (ICMS a recuperar), por isso o lucro usa o LÍQUIDO e não o recolhido (v7.96.0)', -sM(x=>x.icmsPagar||0)):''}
     ${LRt.ipi>0.005?ln('&nbsp;&nbsp;(−) IPI','débito − crédito', -LRt.ipi):''}
     ${LRt.iss>0.005?ln('&nbsp;&nbsp;(−) ISS', 'serviços sem retenção × '+pc(+cfg.iss||0), -LRt.iss):''}
     ${ln('<b>= Lucro real (base IRPJ/CSLL)</b>','soma algébrica das linhas acima', LRt.baseIRCS, true)}
@@ -5183,7 +5446,8 @@ function rlRegimes(rot, n) {
         ? 'ANUAL — base de 31/12; prejuízo de anos anteriores compensa até 30% (Lei 9.065/95, art. 15)'
         : 'TRIMESTRAL — cada trimestre fecha sozinho; prejuízo compensa até 30% da base do trimestre seguinte', null)}
     ${LRt.iss>0.005?ln('ISS','serviços sem retenção × '+pc(+cfg.iss||0), LRt.iss):''}
-    ${LRt.icms>0.005?ln('ICMS','débito − crédito do ano', LRt.icms):''}
+    ${LRt.icms>0.005?ln('ICMS a recolher','conta gráfica: débito − crédito − saldo credor transportado, mês a mês, nunca negativo', LRt.icms):''}
+    ${(T.icmsSaldoFim||0)>0.005?ln('&nbsp;&nbsp;↳ saldo credor de ICMS em 31/12','transporta para o ano seguinte — não reduz a carga', T.icmsSaldoFim):''}
     ${LRt.ipi>0.005?ln('IPI','débito − crédito do ano', LRt.ipi):''}
     ${ln('<b>INSS patronal — CPP</b>', 'mesma base e mesmos percentuais do Lucro Presumido', LRt.inss, true)}
     ${_temSal?ln('&nbsp;&nbsp;↳ sobre salários', 'base '+fmt(_salAno+_sal13)+' × '+pcx(_pctSal)
@@ -5325,7 +5589,7 @@ function rlReforma() {
     if (regime==='Simples Nacional'||regime==='MEI') return { das: M.reduce((s,x)=>s+x.das,0), consumo:null, regime };
     const isLR = regime==='Lucro Real';
     return { regime, pis:M.reduce((s,x)=>s+(isLR?x.lr.pis:x.lp.pis),0), cof:M.reduce((s,x)=>s+(isLR?x.lr.cofins:x.lp.cofins),0),
-      icms:M.reduce((s,x)=>s+x.icmsPagar,0), ipi:M.reduce((s,x)=>s+x.ipiPagar,0), iss:M.reduce((s,x)=>s+x.iss,0),
+      icms:M.reduce((s,x)=>s+(x.icmsRecolher != null ? x.icmsRecolher : Math.max(0, x.icmsPagar||0)),0), ipi:M.reduce((s,x)=>s+x.ipiPagar,0), iss:M.reduce((s,x)=>s+x.iss,0),   // v7.96.0 · recolhido, não o líquido
       get consumo(){ return this.pis+this.cof+this.icms+this.ipi+this.iss; } }; })();
   // v7.45.0 (item 6) · FIM DA FÓRMULA PARALELA: este relatório recalculava débito e crédito por
   // conta própria (sem a dedução do ISS e sem o crédito automático) e podia divergir da aba, da
@@ -6621,6 +6885,9 @@ async function parecerIA(){
         'Ao citar o RBT12, dizer se é realizado ou projetado, conforme os campos rbt12MaxBase e rbt12MaxProjetadoBase.',
         'A base do IBS/CBS NÃO é a receita cheia: ISS e ICMS destacado saem dela (campo baseIbsCbs). Nunca descreva o débito como receita × alíquota.',
         'Nunca afirme que não há crédito de IBS/CBS quando creditoSobreCompras.creditoTotalNoAnoDeReferencia for maior que zero.',
+        // v7.99.0 · LC 224/2025 — a IA precisa saber por que o Presumido subiu (ou por que não subiu)
+        ...((RL.res && RL.res.lc224 && RL.res.lc224.aplica && Math.abs(RL.res.lc224.addBaseIR) > 0.005) ? [lc224Regra(RL.res.lc224)]
+           : ((RL.res && RL.res.lc224 && RL.res.lc224.desligado) ? ['LC 224/2025 NÃO aplicada nesta análise por opção da empresa (liminar / decisão judicial): o Lucro Presumido está SEM o acréscimo de 10% na presunção acima de R$ 1,25 milhão por trimestre — mencione essa ressalva ao tratar do Presumido e não a apresente como regra geral.'] : [])),
         // v7.56.0
         'Se inicioAtividade existir, o teto e o sublimite do ano NÃO são R$ 4,8 mi e R$ 3,6 mi: use os proporcionais informados e diga que são proporcionais aos meses de atividade.',
         'Se inicioAtividade.rbt12Proporcionalizada for verdadeiro, o RBT12 citado é uma MÉDIA ANUALIZADA, não a soma do faturado — a empresa pode cair em faixa acima do que efetivamente faturou, e isso deve ser explicado.',
@@ -7250,7 +7517,8 @@ function rlRegistros(rot, n) {
   h += bloco('Despesas', [ linhaT('Administrativas', D.despesas.adm), linhaT('Com vendas', D.despesas.vendas), linhaT('Fiscais e tributárias', D.despesas.fiscais),
     linhaT('Financeiras', D.despesas.financeiras), linhaT('Outras', D.despesas.outras),
     ...CRED_LR.map(([k,rot,base])=>linhaT(rot+' ('+base+')', D.despesas[k])) ]);
-  h += bloco('Impostos apurados', [ linhaT('ICMS a pagar', M.map(x=>x.icmsPagar)), linhaT('IPI a pagar', M.map(x=>x.ipiPagar)), linhaT('ISS', M.map(x=>x.iss)), linhaT('DAS', M.map(x=>x.das)) ]);
+  h += bloco('Impostos apurados', [ linhaT('ICMS a recolher', M.map(x=>x.icmsRecolher != null ? x.icmsRecolher : Math.max(0, x.icmsPagar||0))),
+    ...(M.some(x=>(x.icmsSaldoFim||0)>0.005) ? [linhaT('Saldo credor de ICMS a transportar', M.map(x=>x.icmsSaldoFim||0))] : []), linhaT('IPI a pagar', M.map(x=>x.ipiPagar)), linhaT('ISS', M.map(x=>x.iss)), linhaT('DAS', M.map(x=>x.das)) ]);
   h += `<div class="card"><h3>Receita × carga por período</h3><canvas id="ch-det"></canvas></div>`;
   $id('rl-corpo').innerHTML = h || '<div class="card placeholder"><h2>Sem registros</h2></div>';
   const rec = agrupar(M.map(x=>x.receita), n);
@@ -7276,8 +7544,11 @@ const LACRE_CASOS = [
   // limite no 9º (os dois partidos pelo art. 24), fica impedido nos 4 últimos, exercita o teto
   // de 5% do ISS na 5ª faixa, os cinco anexos, os quatro blocos de exportação, ST, monofásico,
   // redução de ICMS, transporte, IPI, 13º pago e o Fator R dos DOIS lados dos 28%.
-  { nome:'Caso 3 — Estresse (art. 24, teto de ISS, exportação, impedimento, Fator R)', inp: {"cnpj": "33333333000399", "ano": 2026, "cfg": {"iss": 0.05, "icmsV": 0.17, "icmsC": 0.12, "ipiV": 0.075, "ipiC": 0.05, "rbt12Direto": 0, "rbt12Lanc": [292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500], "rbt12ExpLanc": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "folha12Lanc": [105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000], "lpBaseServ": 0.32, "lpBaseCom": 0.08, "lpBaseServCsll": 0, "lpBaseComCsll": 0.12, "transpPresuncao": "cargas", "icmsTranspV": 0, "transpCredPres": 0, "folhaPerc": {}, "adicionalIR": "trimestral", "sublimite": "auto", "lrPeriodo": "trimestral", "lrPrejIrpj": 0, "lrPrejCsll": 0, "inicioAtividade": ""}, "receitas": {"a1_semst": [280000, 300000, 320000, 340000, 360000, 380000, 400000, 420000, 440000, 460000, 480000, 520000], "a1_red": [15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000], "a1_red_pct": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3], "a1_mono": [20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000], "a1_mono_pct": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a1_comst": [30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000], "a1_comst_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_semst": [40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000], "a2_red": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_red_pct": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_comst": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_comst_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a3_semret": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "a3_retiss": [16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200], "a3_retissinss": [10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800], "a4": [12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000], "a4_retiss": [12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600], "a5r": [35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000], "fin": [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500], "comtransp": [18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000], "comtransp_st": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a1_exp": [14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000], "a2_exp": [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000], "a3_exp": [8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000], "a5r_exp": [6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000]}, "folha": {"prolabore": [14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000], "salarios": [78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000], "baseFgts": [78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000], "prov13": [3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750], "provFerias": [5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000]}, "folha13": {"prolabore13": 14000, "salarios13": 78000, "baseFgts13": 78000}, "compras": {"semst": [150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000], "baixaSemst": [140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000], "mono": [15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000], "baixaMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "comst": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "baixaComst": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "comstMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "baixaComstMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "baseIpiCred": [20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000]}, "icms": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "ipi": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "despesas": {"adm": [38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000], "vendas": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "fiscais": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "financeiras": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "outras": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credInsumos": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credEnergia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credAlugueisPJ": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credArrendamento": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credDepreciacao": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credBenfeitorias": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credFretesVenda": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credValeTransp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credDevolucoes": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credLR": [9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000]}, "origem": {}} }];
-const LACRE_HASH = '22197ef1';   // v7.94.0 — RE-SELADO: ICMS/ISS do período impedido pela mesma conta gráfica do Presumido/Real (aba ICMS·IPI prevalece) e partilha sem ICMS/ISS no mês impedido; casos 1 e 2 intactos, caso 3 muda. Anterior: 453f7b32 (v7.91.0). // v7.48.0 — RE-SELADO: o ICMS destacado passou a sair da base do IBS/CBS (LC 214, art. 12, §2º, V) e o transporte passou a gerar débito de ICMS no LP/LR. Anterior: e1a25234 (v7.45.0); antes fa39eefb (v7.35.0)
+  { nome:'Caso 3 — Estresse (art. 24, teto de ISS, exportação, impedimento, Fator R)', inp: {"cnpj": "33333333000399", "ano": 2026, "cfg": {"iss": 0.05, "icmsV": 0.17, "icmsC": 0.12, "ipiV": 0.075, "ipiC": 0.05, "rbt12Direto": 0, "rbt12Lanc": [292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500, 292500], "rbt12ExpLanc": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "folha12Lanc": [105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000, 105000], "lpBaseServ": 0.32, "lpBaseCom": 0.08, "lpBaseServCsll": 0, "lpBaseComCsll": 0.12, "transpPresuncao": "cargas", "icmsTranspV": 0, "transpCredPres": 0, "folhaPerc": {}, "adicionalIR": "trimestral", "sublimite": "auto", "lrPeriodo": "trimestral", "lrPrejIrpj": 0, "lrPrejCsll": 0, "inicioAtividade": ""}, "receitas": {"a1_semst": [280000, 300000, 320000, 340000, 360000, 380000, 400000, 420000, 440000, 460000, 480000, 520000], "a1_red": [15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000], "a1_red_pct": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3], "a1_mono": [20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000], "a1_mono_pct": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a1_comst": [30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 30000], "a1_comst_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_semst": [40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000], "a2_red": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_red_pct": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_comst": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a2_comst_mono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a3_semret": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "a3_retiss": [16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200, 16200], "a3_retissinss": [10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800, 10800], "a4": [12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000], "a4_retiss": [12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600, 12600], "a5r": [35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000], "fin": [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500], "comtransp": [18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000, 18000], "comtransp_st": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "a1_exp": [14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000], "a2_exp": [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000], "a3_exp": [8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000], "a5r_exp": [6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000]}, "folha": {"prolabore": [14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000, 14000], "salarios": [78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000], "baseFgts": [78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000, 78000], "prov13": [3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750, 3750], "provFerias": [5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000]}, "folha13": {"prolabore13": 14000, "salarios13": 78000, "baseFgts13": 78000}, "compras": {"semst": [150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000, 150000], "baixaSemst": [140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000, 140000], "mono": [15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000], "baixaMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "comst": [25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000, 25000], "baixaComst": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "comstMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "baixaComstMono": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "baseIpiCred": [20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000]}, "icms": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "ipi": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "despesas": {"adm": [38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000, 38000], "vendas": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "fiscais": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "financeiras": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "outras": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credInsumos": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credEnergia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credAlugueisPJ": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credArrendamento": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credDepreciacao": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credBenfeitorias": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credFretesVenda": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credValeTransp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credDevolucoes": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "credLR": [9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000]}, "origem": {}} },
+  // v7.95.1 · Caso 4 — Empresa nova (início fev/2026): março com RBT12p zero → 1ª faixa nominal (v7.94.4), Anexo V pelo Fator R,
+  // despesas creditáveis (aluguel PJ, energia, administrativas) sem composição → NID (v7.95.0). Cobre o que os casos 1-3 não cobriam.
+  { nome:'Caso 4 — Empresa nova (RBT12 zero, Anexo V, despesas creditáveis)', inp: {"cnpj": "44444444000199", "ano": 2026, "cfg": {"iss": 0.05, "icmsV": 0, "icmsC": 0, "ipiV": 0, "ipiC": 0, "rbt12Direto": 0, "rbt12Lanc": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "rbt12ExpLanc": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "folha12Lanc": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "lpBaseServ": 0.32, "lpBaseCom": 0.08, "lpBaseServCsll": 0, "lpBaseComCsll": 0.12, "transpPresuncao": "cargas", "icmsTranspV": 0, "transpCredPres": 0, "folhaPerc": {}, "adicionalIR": "trimestral", "sublimite": "auto", "lrPeriodo": "trimestral", "lrPrejIrpj": 0, "lrPrejCsll": 0, "inicioAtividade": "2026-02"}, "receitas": {"a5r": [0, 0, 36848.65, 30515.5, 31904.89, 32513.52, 34000, 34000, 34000, 34000, 34000, 34000]}, "folha": {"prolabore": [0, 0, 1600, 1600, 1600, 1600, 1600, 1600, 1600, 1600, 1600, 1600], "salarios": [0, 0, 1436.09, 1436.09, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08], "baseFgts": [0, 0, 1436.09, 1436.09, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08, 1436.08], "prov13": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "provFerias": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "folha13": {"prolabore13": 0, "salarios13": 0, "baseFgts13": 0}, "compras": {}, "icms": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "ipi": {"cred": [null, null, null, null, null, null, null, null, null, null, null, null], "deb": [null, null, null, null, null, null, null, null, null, null, null, null]}, "despesas": {"adm": [0, 0, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000], "vendas": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "fiscais": [0, 0, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300], "financeiras": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "outras": [0, 0, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200], "credAlugueisPJ": [0, 0, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500], "credEnergia": [0, 0, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400]}, "origem": {}} }];
+const LACRE_HASH = '0a257d66';   // v7.99.0 — RE-SELADO: LC 224/2025, art. 4º — acréscimo de 10% na presunção do IRPJ/CSLL do Presumido sobre a receita acima de R$ 1,25 mi/trimestre (acumulado no ano; IRPJ desde jan/2026, CSLL desde abr/2026; IN RFB 2.305/2025 e 2.306/2026). Casos 1 (2025), 2 e 4 (abaixo do limite) idênticos ao centavo; caso 3 (2026, 7,97 mi) LP 1.720.823,72 → 1.733.585,77 (IRPJ +5.550,37, adicional +3.700,25, CSLL +3.511,44); LR, DAS e Reforma "dentro/híbrido" intactos. Anterior: 8ab9c16a (v7.95.1). // v7.95.1 — RE-SELADO: entra o CASO 4 (empresa nova, RBT12 zero, Anexo V, despesas creditáveis); casos 1-3 idênticos ao centavo. Anterior: ba7dcb90 (v7.95.0). // v7.95.0 — RE-SELADO: base própria do híbrido (dedução do ICMS/ISS da partilha) e despesas creditáveis na composição; casos 1, 2 e 3 mudam no híbrido 2027-2032 e no limite superior. Anterior: 22197ef1 (v7.94.0). // v7.94.0 — RE-SELADO: ICMS/ISS do período impedido pela mesma conta gráfica do Presumido/Real (aba ICMS·IPI prevalece) e partilha sem ICMS/ISS no mês impedido; casos 1 e 2 intactos, caso 3 muda. Anterior: 453f7b32 (v7.91.0). // v7.48.0 — RE-SELADO: o ICMS destacado passou a sair da base do IBS/CBS (LC 214, art. 12, §2º, V) e o transporte passou a gerar débito de ICMS no LP/LR. Anterior: e1a25234 (v7.45.0); antes fa39eefb (v7.35.0)
 function lacreHash(str){ let h = 0x811c9dc5;
   for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   return h.toString(16).padStart(8,'0'); }
