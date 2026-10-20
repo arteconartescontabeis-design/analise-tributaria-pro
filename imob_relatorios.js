@@ -8,7 +8,7 @@
  * ==========================================================================*/
 (function (raiz) {
   'use strict';
-  var VERSAO = '1.1.0';   // 1.1.0: explicações simples, tabela de anos e relatório simplificado
+  var VERSAO = '1.2.0';   // 1.2.0 (v1.6.6): conferência do documento emitido contra o cálculo (reanálise P1) · 1.1.0: explicações simples, tabela de anos e relatório simplificado
 
   function r2(x) { return Math.round((+x + Number.EPSILON) * 100) / 100; }
   function r4(x) { return Math.round((+x + Number.EPSILON) * 10000) / 10000; }
@@ -183,6 +183,8 @@
     return (marca ? '<div class="marca">' + marca.img(44) + '<div class="marca-txt">' + esc(p.escritorio || marca.nome) + '</div></div>' : '') +
       '<h1>' + esc(titulo) + '</h1><div class="sub">' + esc(subtitulo || '') +
       (emp.nome ? ' · <b>' + esc(emp.nome) + '</b>' + (emp.cnpj ? ' · CNPJ ' + esc(emp.cnpj) : '') : '') +
+      // v1.6.6 (reanálise P1): a data do fato gerador aparece no cabeçalho de TODO documento (técnico e memória não a exibiam)
+      (p.entrada && p.entrada.data_fato_gerador ? ' · fato gerador em <b>' + esc(dataBR(p.entrada.data_fato_gerador)) + '</b>' : '') +
       ' · emitido em ' + esc(agora()) + ' · ' + esc(p.escritorio || 'Artecon Artes Contábeis') + '</div>';
   }
   var CAT_TXT = { LEGAL: 'fixada em lei', ADMINISTRATIVA: 'ato administrativo', PREMISSA: 'premissa', ESTIMATIVA: 'estimativa', PROJECAO: 'projeção', SIMULACAO: 'simulação do usuário', INFORMADO: 'informado' };
@@ -428,7 +430,51 @@
     return '\ufeff' + linhas.join('\r\n');
   }
 
-  var API = { VERSAO: VERSAO, money: money, pct: pct, esc: esc, dataBR: dataBR,
+  /* =========================================================================
+     CONFERÊNCIA DO DOCUMENTO EMITIDO — reanálise P1 (v1.6.6)
+     Todo relatório é conferido contra o pacote do cálculo que o gerou:
+     (a) cada valor monetário/percentual do TEXTO precisa ter origem no pacote
+         (resultado, memória, etapas, anos, premissas, comparativo) — número
+         sem origem reprova, como na guarda do parecer com IA;
+     (b) os números centrais e a data do fato gerador precisam estar presentes;
+     (c) o carimbo devolvido registra a conferência, o snapshot e os
+         identificadores (motor · ruleset · lacre · app) no próprio documento.
+     Gráficos (SVG) e CSS são apresentação dos mesmos dados e ficam fora da
+     varredura de texto. Função pura: recebe html + pacote, não toca o DOM.
+     ========================================================================= */
+  var RE_NUM_BR = /\d{1,3}(?:\.\d{3})+,\d{2,4}(?!\d)|\d+,\d{2,4}(?!\d)/g;
+  function coletarNumeros(x, saco, prof) {
+    if (x == null || prof > 7) return saco;
+    if (typeof x === 'number') { if (isFinite(x)) saco[r2(x).toFixed(2)] = true; return saco; }
+    if (typeof x === 'string') {
+      (x.match(RE_NUM_BR) || []).forEach(function (t) { var v = parseFloat(t.replace(/\./g, '').replace(',', '.')); if (isFinite(v)) saco[v.toFixed(2)] = true; });
+      return saco;
+    }
+    if (typeof x === 'object') { for (var k in x) if (Object.prototype.hasOwnProperty.call(x, k)) coletarNumeros(x[k], saco, prof + 1); }
+    return saco;
+  }
+  function conferirRelatorio(html, p) {
+    html = String(html || '');
+    var autorizados = coletarNumeros(p, { '0.00': true }, 0);
+    var corpo = html.replace(/<svg[\s\S]*?<\/svg>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ');
+    var tokens = corpo.match(RE_NUM_BR) || [], estranhos = [];
+    tokens.forEach(function (t) {
+      var v = parseFloat(t.replace(/\./g, '').replace(',', '.'));
+      if (isFinite(v) && !autorizados[v.toFixed(2)] && estranhos.indexOf(t) < 0) estranhos.push(t);
+    });
+    var res = p.res || {}, e = p.entrada || {}, ausentes = [];
+    function exige(rotulo, trecho) { if (trecho && trecho !== '—' && html.indexOf(trecho) < 0) ausentes.push(rotulo + ': ' + trecho); }
+    exige('total a recolher', money(res.total));
+    if (res.base != null) exige('base de cálculo', money(res.base));
+    exige('valor da operação', money(e.valor_operacao));
+    exige('data do fato gerador', dataBR(e.data_fato_gerador));
+    var carimbo = '<div class="rod">Conferência automática do documento: ' + tokens.length + ' valor(es) conferidos contra o cálculo de origem' +
+      (p.snapshot_hash ? ' · snapshot <code>' + esc(p.snapshot_hash) + '</code>' : '') +
+      ' · motor ' + esc(p.motor || '') + ' · ruleset <code>' + esc(p.ruleset || '') + '</code> · lacre <code>' + esc(p.lacre || '') + '</code> · app v' + esc(p.app_versao || '') + '</div>';
+    return { ok: !estranhos.length && !ausentes.length, verificados: tokens.length, nao_autorizados: estranhos, ausentes: ausentes, carimbo: carimbo };
+  }
+
+  var API = { VERSAO: VERSAO, money: money, pct: pct, esc: esc, dataBR: dataBR, conferirRelatorio: conferirRelatorio,
               resultadoVenda: resultadoVenda, resultadoLocacao: resultadoLocacao, resultadoPermuta: resultadoPermuta,
               coerencia: coerencia, anosHTML: anosHTML, montarSimplificado: montarSimplificado, montarExecutivo: montarExecutivo, montarTecnico: montarTecnico, montarMemoria: montarMemoria,
               normalizarSimulacao: normalizarSimulacao, filtrarHistorico: filtrarHistorico, compararSimulacoes: compararSimulacoes,

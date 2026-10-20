@@ -1,6 +1,14 @@
 # Pendências — Análise Tributária Pro
 
-Registro do que ficou para depois, com o motivo. Atualizado em 20/10/2026 (Imobiliária v1.6.5).
+Registro do que ficou para depois, com o motivo. Atualizado em 20/10/2026 (Imobiliária v1.6.6).
+
+## Resolvido em 20/10/2026 — 3ª rodada (Imobiliária v1.6.6; motor 1.4.0 e lacre cd2c7359 inalterados)
+
+| Item | O que foi feito |
+|---|---|
+| Reanálise — P1 (validar relatórios contra o cenário calculado) | Todo relatório emitido (simplificado, executivo, técnico, memória) passa por conferência automática antes de abrir: cada valor monetário/percentual do texto precisa ter origem no pacote do cálculo (número sem origem REPROVA e o documento não sai, como na guarda do parecer); total, base, valor da operação e data do fato gerador precisam estar presentes; documento aprovado ganha carimbo com nº de valores conferidos, hash do snapshot e identificadores (motor · ruleset · lacre · app) — inclusive no simplificado, que não os exibia |
+| Achado da própria conferência | Relatórios técnico e memória não exibiam a data do fato gerador — agora ela está no cabeçalho de todos os documentos |
+| Reanálise — P1 (regressão automática por ano) | Locação e permuta ganharam casos de 2027 e 2029 na suíte do motor (valores X-LOC e X-PERM da reanálise) e a igualdade cálculo individual = projeção é verificada também nessas operações. Suítes: run_imob_v160 119/119 · run_imob_ui 69/69 |
 
 ## Resolvido em 20/10/2026 — 2ª rodada (Imobiliária v1.6.5; motor 1.4.0 e lacre cd2c7359 inalterados)
 

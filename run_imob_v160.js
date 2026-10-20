@@ -162,6 +162,20 @@ var f04 = M.calcular({ operacao: 'venda', data_fato_gerador: '2033-06-15', valor
 ok(f04.total === 0 && f04.redutor_ajuste_usado === 300000 && f04.redutor_ajuste_saldo === 100000, 'F04 redutor maior que a venda: utilizado = 300.000 (min), remanescente 100.000, imposto zero');
 var auF06 = M.auditar(B.CASOS['V02 venda à vista com redutor'], M.calcular(B.CASOS['V02 venda à vista com redutor'], CTX), CTX);
 ok(auF06.achados.every(function (a) { return !/prompt/i.test(a.fonte || ''); }), 'F06 nenhuma fonte de achado cita "prompt" — A07 aponta política metodológica versionada');
+// v1.6.6 — reanálise P1: regressão por ano também em LOCAÇÃO e PERMUTA (valores conferidos na reanálise de 20/10/2026)
+function locAno(data) { return M.calcular({ operacao: 'locacao', data_fato_gerador: data, valor_operacao: 5000, locacao: { finalidade: 'residencial', meses: 1, valor_mensal: 5000, encargos_locatario: { prova_pagamento: true, tributos_emolumentos: 180, condominio: 850, foro_taxa_ocupacao: 0 } }, imovel: { id: 'p1l', tipo: 'residencial_novo' } }, CTXsem); }
+var l27 = locAno('2027-01-01'), l29 = locAno('2029-01-01');
+ok(l27.ibs === 1.01 && l27.cbs === 92.10 && l27.total === 93.11, 'P1 locação base 3.370 em 2027: IBS 1,01 · CBS 92,10 · total 93,11 (X-LOC-2027 da reanálise)');
+ok(l29.ibs === 18.91 && l29.cbs === 93.11 && l29.total === 112.02, 'P1 locação base 3.370 em 2029: IBS 18,91 · CBS 93,11 · total 112,02 (X-LOC-2029 da reanálise)');
+function permAno(data) { return M.calcular({ operacao: 'permuta', data_fato_gerador: data, valor_operacao: 1000000, permuta: { contraparte: 'nao_contribuinte', torna: 200000, torna_paga_por: 'nao_contribuinte', redutor_ajuste_dado: 400000, valor_imovel_recebido: 800000 } }, CTXsem); }
+var x27 = permAno('2027-01-01'), x29 = permAno('2029-01-01');
+ok(x27.ibs === 100 && x27.cbs === 9110 && x27.total === 9210, 'P1 permuta torna 200.000 em 2027: IBS 100 · CBS 9.110 · total 9.210 (X-PERM-2027 da reanálise)');
+ok(x29.ibs === 1870 && x29.cbs === 9210 && x29.total === 11080, 'P1 permuta torna 200.000 em 2029: IBS 1.870 · CBS 9.210 · total 11.080 (X-PERM-2029 da reanálise)');
+var ctxPrjP1 = Object.assign({}, CTXsem, { transicao: M.transicaoPadrao(CTXsem) });
+var prjLoc = M.projetarTransicao({ operacao: 'locacao', data_fato_gerador: '2033-06-15', valor_operacao: 5000, locacao: { finalidade: 'residencial', meses: 1, valor_mensal: 5000, encargos_locatario: { prova_pagamento: true, tributos_emolumentos: 180, condominio: 850, foro_taxa_ocupacao: 0 } }, imovel: { id: 'p1l', tipo: 'residencial_novo' } }, ctxPrjP1);
+ok([2027, 2029].every(function (a) { return prjLoc.anos.filter(function (x) { return x.ano === a; })[0].total === locAno(a + '-01-01').total; }), 'P1 locação: cálculo individual = projeção nos anos de transição (mesma escada)');
+var prjPerm = M.projetarTransicao({ operacao: 'permuta', data_fato_gerador: '2033-06-15', valor_operacao: 1000000, permuta: { contraparte: 'nao_contribuinte', torna: 200000, torna_paga_por: 'nao_contribuinte', redutor_ajuste_dado: 400000, valor_imovel_recebido: 800000 } }, ctxPrjP1);
+ok([2027, 2029].every(function (a) { return prjPerm.anos.filter(function (x) { return x.ano === a; })[0].total === permAno(a + '-01-01').total; }), 'P1 permuta: cálculo individual = projeção nos anos de transição (mesma escada)');
 // Lacre
 var lv = M.lacreVerificar();
 ok(lv.integro === true, 'LACRE motor 1.4.0 íntegro (' + lv.hash_atual + ' = ' + lv.hash_homologado + ')');

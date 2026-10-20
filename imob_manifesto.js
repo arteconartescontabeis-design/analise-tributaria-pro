@@ -9,7 +9,7 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.6.5',
+    versao: '1.6.6',
     data: '20/10/2026',
     cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
@@ -21,6 +21,13 @@
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.6.6', data: '20/10/2026', texto:
+        'Reanálise P1 — validação dos relatórios contra o cálculo (motor 1.4.0 e lacre cd2c7359 INALTERADOS). '
+        + 'Todo relatório emitido (resumo para o cliente, executivo, técnico e memória) passa por conferência automática antes de abrir: cada valor monetário ou percentual do texto precisa ter origem no pacote do cálculo '
+        + '(resultado, memória, etapas, anos, premissas, comparativo), e o total, a base, o valor da operação e a data do fato gerador precisam estar presentes — número sem origem REPROVA e o documento não sai, '
+        + 'na mesma linha da guarda anti-alucinação do parecer. O documento aprovado ganha carimbo de conferência com o número de valores verificados, o hash do snapshot do cálculo e os identificadores '
+        + '(motor · ruleset · lacre · app), inclusive no resumo simplificado, que não os exibia. '
+        + 'Regressão por ano ampliada: locação e permuta ganham casos de 2027 e 2029 na suíte do motor, iguais aos cenários X-LOC e X-PERM da reanálise, e a igualdade cálculo individual = projeção é verificada também nessas operações.' },
       { versao: '1.6.5', data: '20/10/2026', texto:
         'Fecho das recomendações da REANÁLISE de 20/10/2026 sobre a v1.6.4 (motor 1.4.0 e lacre cd2c7359 INALTERADOS — nenhuma fórmula mudou). '
         + 'F02-R: manter um redutor de ajuste diferente do indicado pelo imóvel vira CENÁRIO MANUAL — o motivo é registrado ao lado do campo (ciência expressa) e acompanha o resultado, a memória, as ressalvas dos relatórios e a auditoria; '

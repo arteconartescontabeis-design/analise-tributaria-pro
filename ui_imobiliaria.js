@@ -1158,6 +1158,8 @@ function pacoteRelatorio(op){
     var dv = rajDivergencia(op);
     if (dv.divergente) { p.ressalvas.push(rajRessalvaManual(dv)); p.redutor_manual = dv; }
   }
+  // v1.6.6 (reanálise P1): o documento emitido referencia o snapshot do cálculo que o gerou
+  try { p.snapshot_hash = M.montarSnapshot(e, res, ctx, { request_id: 'relatorio-' + (e.data_fato_gerador || ''), empresa_id: 'relatorio' }).hash_snapshot; } catch (errSn) {}
   return p;
 }
 function imobRelatorio(tipo, op){ acao(function(){
@@ -1166,6 +1168,15 @@ function imobRelatorio(tipo, op){ acao(function(){
   if (p.erro) { alvo.innerHTML = imobBloqueio(p.erro); return; }
   if (!p.coerencia.ok) { alvo.insertAdjacentHTML('afterbegin', '<div class="card"><div class="aviso err"><b>Relat&oacute;rio n&atilde;o emitido:</b> a confer&ecirc;ncia matem&aacute;tica apontou diverg&ecirc;ncia entre mem&oacute;ria e resultado.</div></div>'); return; }
   var html = tipo === 'executivo' ? RL.montarExecutivo(p) : tipo === 'tecnico' ? RL.montarTecnico(p) : tipo === 'simplificado' ? RL.montarSimplificado(p) : RL.montarMemoria(p);
+  // v1.6.6 (reanálise P1): o documento só sai depois de conferido contra o cálculo que o gerou
+  var conf = RL.conferirRelatorio(html, p);
+  if (!conf.ok) {
+    alvo.insertAdjacentHTML('afterbegin', '<div class="card"><div class="aviso err"><b>Relat&oacute;rio n&atilde;o emitido:</b> a confer&ecirc;ncia contra o c&aacute;lculo reprovou o documento.' +
+      (conf.nao_autorizados.length ? '<div class="mini">Valor(es) sem origem no c&aacute;lculo: ' + conf.nao_autorizados.map(esc).join(' · ') + '</div>' : '') +
+      (conf.ausentes.length ? '<div class="mini">Ausente(s) no documento: ' + conf.ausentes.map(esc).join(' · ') + '</div>' : '') + '</div></div>');
+    return;
+  }
+  html = html.replace('</body>', conf.carimbo + '</body>');
   var w = window.open('', '_blank');
   if (!w) { alvo.insertAdjacentHTML('afterbegin', '<div class="card"><div class="aviso">O navegador bloqueou a janela do relat&oacute;rio. Permita pop-ups para este site e tente de novo.</div></div>'); return; }
   w.document.open(); w.document.write(html); w.document.close();

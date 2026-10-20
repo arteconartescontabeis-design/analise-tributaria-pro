@@ -49,8 +49,8 @@ t('E2', 'todo onclick da marcação aponta para função exportada', 'imob_pagin
   var falt = Object.keys(f).filter(function (k) { return typeof w[k] !== 'function'; });
   return falt.length ? { ok: false, obtido: falt } : true;
 });
-t('E3', 'lacre do motor íntegro e versão do módulo 1.6.5 visível', 'lacreVerificar + ModulosInfo', 'cd2c7359 / 1.6.5', function () {
-  var v = M.lacreVerificar(); return v.integro && v.hash_atual === 'cd2c7359' && M.MOTOR_IMOB_VERSAO === '1.4.0' && w.ModulosInfo.imobiliario.versao === '1.6.5' && w.ModulosInfo.imobiliario.changelog[0].versao === '1.6.5' && w.ModulosInfo.imobiliario.motor.lacre === 'cd2c7359' ? true : { ok: false, obtido: v };
+t('E3', 'lacre do motor íntegro e versão do módulo 1.6.6 visível', 'lacreVerificar + ModulosInfo', 'cd2c7359 / 1.6.6', function () {
+  var v = M.lacreVerificar(); return v.integro && v.hash_atual === 'cd2c7359' && M.MOTOR_IMOB_VERSAO === '1.4.0' && w.ModulosInfo.imobiliario.versao === '1.6.6' && w.ModulosInfo.imobiliario.changelog[0].versao === '1.6.6' && w.ModulosInfo.imobiliario.motor.lacre === 'cd2c7359' ? true : { ok: false, obtido: v };
 });
 t('E4', '14 abas e página injetada; nav lateral marca ativo', 'abrirAba', 'aba on = venda', function () {
   w.abrirAba('venda'); var on = d.querySelectorAll('#imob-tabs .tab.on');
@@ -459,7 +459,7 @@ t('V12', 'Layout 1.6.3: telas do módulo na barra lateral dentro de .nav, brand 
   }
   try { w.ImobLayout.aplicar({ menuLateral: true }); } catch (e) { return { ok: false, obtido: e.message }; }
   var tabs = d.querySelector('.sidebar .nav #imob-tabs'), brand = d.querySelector('.sidebar .brand'), badge = $('imob-badge-versao');
-  return tabs && tabs.querySelectorAll('.tab').length >= 14 && brand && /Análise Imobiliária Pro/.test(brand.textContent) && brand.querySelector('small') && badge && /v1\.6\.5/.test(badge.textContent) && /Vers/.test(d.querySelector('.nav-item[data-p="modulo"]').textContent) ? true : { ok: false, obtido: [!!tabs, brand && brand.textContent, badge && badge.textContent] };
+  return tabs && tabs.querySelectorAll('.tab').length >= 14 && brand && /Análise Imobiliária Pro/.test(brand.textContent) && brand.querySelector('small') && badge && /v1\.6\.6/.test(badge.textContent) && /Vers/.test(d.querySelector('.nav-item[data-p="modulo"]').textContent) ? true : { ok: false, obtido: [!!tabs, brand && brand.textContent, badge && badge.textContent] };
 });
 
 t('R3', 'Reanálise obs. 3: faixa da base da locação mostra a sequência completa e VERDADEIRA', 'locação 5.000; encargos 1.030 comprovados; residencial', 'Base 3.370,00 = Receita 5.000,00 − Deduções 1.030,00 − Redutor social 600,00', function () {
@@ -481,6 +481,30 @@ t('R5', 'Reanálise obs. 5: texto não numérico em campo monetário recebe mens
   var vz = w.ImobValidacao.validarVenda({ valor: '', redutor: 0, creditos: 0, data: '2033-06-15', tipo: 'residencial_novo', pagamentos: '' });
   var m1 = (va.erros[0] || {}).msg || '', m2 = (vz.erros[0] || {}).msg || '';
   return !va.ok && m1.indexOf('não é um número válido') >= 0 && m1.indexOf('"abc"') >= 0 && !vz.ok && m2.indexOf('é obrigatório') >= 0 ? true : { ok: false, obtido: [m1, m2] };
+});
+
+t('P1a', 'Reanálise P1: os 4 relatórios da venda saem conferidos contra o cálculo, com carimbo, snapshot e lacre', 'simplificado · executivo · técnico · memória', 'carimbo "Conferência automática" + snapshot + cd2c7359 + total 55.820,00 em todos', function () {
+  w.abrirAba('venda'); set('v-val', 900000); set('v-raj', 400000); set('v-cre', 0); set('v-tipo', 'residencial_novo'); set('v-data', '2033-06-15'); set('v-pag', ''); w.calcVenda();
+  var falta = [];
+  ['simplificado', 'executivo', 'tecnico', 'memoria'].forEach(function (k) {
+    w.imobRelatorio(k, 'venda');
+    var h = w.__ultimaJanela ? w.__ultimaJanela.document.documentElement.outerHTML : '';
+    if (!(h.indexOf('Conferência automática do documento') > 0 && h.indexOf('snapshot') > 0 && h.indexOf('cd2c7359') > 0 && h.indexOf('55.820,00') > 0)) falta.push(k + ': ' + h.slice(0, 80));
+  });
+  return falta.length ? { ok: false, obtido: falta } : true;
+});
+t('P1b', 'Reanálise P1: conferência também nos relatórios de locação e permuta', 'tecnico(locacao) + simplificado(permuta)', 'carimbo nos dois documentos', function () {
+  w.imobRelatorio('tecnico', 'locacao'); var h1 = w.__ultimaJanela ? w.__ultimaJanela.document.documentElement.outerHTML : '';
+  w.imobRelatorio('simplificado', 'permuta'); var h2 = w.__ultimaJanela ? w.__ultimaJanela.document.documentElement.outerHTML : '';
+  return h1.indexOf('Conferência automática do documento') > 0 && h2.indexOf('Conferência automática do documento') > 0 ? true : { ok: false, obtido: [h1.slice(0, 80), h2.slice(0, 80)] };
+});
+t('P1c', 'Reanálise P1: número sem origem no cálculo REPROVA o documento; falta dos números centrais reprova', 'conferirRelatorio com html adulterado e vazio', 'ok=false listando 99.999,99; ausentes lista total/base/valor/data', function () {
+  var p = w.__imobUI.pacoteRelatorio('venda');
+  var html = w.ImobRelatorios.montarExecutivo(p);
+  var c1 = w.ImobRelatorios.conferirRelatorio(html, p);
+  var c2 = w.ImobRelatorios.conferirRelatorio(html.replace('</body>', '<p>valor estimado de mercado: 99.999,99</p></body>'), p);
+  var c3 = w.ImobRelatorios.conferirRelatorio('<html><body>documento vazio</body></html>', p);
+  return c1.ok && c1.verificados > 20 && !c2.ok && c2.nao_autorizados.indexOf('99.999,99') >= 0 && !c3.ok && c3.ausentes.length >= 4 ? true : { ok: false, obtido: [c1.ok, c1.verificados, c2.nao_autorizados, c3.ausentes] };
 });
 
 /* ===== resultado ================================================================= */
