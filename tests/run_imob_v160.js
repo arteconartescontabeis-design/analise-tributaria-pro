@@ -146,9 +146,25 @@ ok(pac.bloco_13_limitacoes_e_premissas.some(function (x) { return /NÃO fixados 
 ok(/bloco_05b_percentuais/.test(M.promptParecer(pac)) && /PROIBIDO chamar de "alíquota legal"/.test(M.promptParecer(pac)), 'PAC prompt proíbe chamar de legal o que não é');
 ok(M.REGRAS['IMOB-BASE-001'].data_consulta === '2026-08-20' && M.REGRAS['IMOB-TRA-001'].data_consulta === '2026-09-18' && M.REGRAS['IMOB-LP-001'].data_consulta === '2026-08-22', 'CAT data de consulta por regra (Passo 0 / relidas hoje / fonte secundária)');
 ok(M.REGRAS['IMOB-LP-001'].conferida_em_fonte_primaria === false && M.REGRAS['IMOB-BASE-001'].conferida_em_fonte_primaria === true, 'CAT marca as regras nunca relidas no texto da norma');
+// v1.6.4 — auditoria externa de 20/10/2026 (F01, F04, F06)
+var CTXsem = { aliquotas: CTX.aliquotas, parametros: CTX.parametros, indices: CTX.indices };   // sem escada: o motor usa transicaoPadrao
+function vendaAno(data) { return M.calcular({ operacao: 'venda', data_fato_gerador: data, valor_operacao: 900000, imovel: { id: 'f01', tipo: 'residencial_novo' }, redutor_ajuste_saldo: 400000 }, CTXsem); }
+var f01 = { 2027: vendaAno('2027-01-01'), 2029: vendaAno('2029-01-01'), 2033: vendaAno('2033-06-15') };
+ok(f01[2027].total === 18420 && f01[2029].total === 22160 && f01[2033].total === 55820, 'F01 a data escolhe a alíquota: 2027=18.420, 2029=22.160, 2033=55.820 (valores da rodada da auditoria)');
+var ctxPrj = Object.assign({}, CTXsem, { transicao: M.transicaoPadrao(CTXsem) });
+var prjF01 = M.projetarTransicao({ operacao: 'venda', data_fato_gerador: '2033-06-15', valor_operacao: 900000, imovel: { id: 'f01', tipo: 'residencial_novo' }, redutor_ajuste_saldo: 400000 }, ctxPrj);
+ok([2027, 2029, 2033].every(function (a) { return prjF01.anos.filter(function (x) { return x.ano === a; })[0].total === f01[a].total; }), 'F01 cálculo individual = projeção, ano a ano (mesma escada, mesma função)');
+var f01leg = M.calcular({ operacao: 'venda', data_fato_gerador: '2029-01-01', valor_operacao: 900000, imovel: { id: 'f01', tipo: 'residencial_novo' }, redutor_ajuste_saldo: 400000 }, CTX);
+ok(f01leg.total === 22160, 'F01 ctx.transicao fornecida pelo chamador (escada legada) também é respeitada no cálculo individual');
+ok(vendaAno('2025-12-31').status === 'BLOQUEADO' && vendaAno('2025-12-31').bloqueios[0].codigo === 'E017', 'F01 fato gerador anterior a 2026 é BLOQUEADO (E017), não calculado com alíquota cheia');
+ok(vendaAno('2027-01-01').percentuais.filter(function (p) { return p.nome === 'ibs_padrao'; })[0].valor === 0.1, 'F01 percentuais do resultado trazem o padrão DO ANO (IBS 0,10% em 2027), com categoria');
+var f04 = M.calcular({ operacao: 'venda', data_fato_gerador: '2033-06-15', valor_operacao: 300000, imovel: { id: 'f04', tipo: 'residencial_novo' }, redutor_ajuste_saldo: 400000 }, CTX);
+ok(f04.total === 0 && f04.redutor_ajuste_usado === 300000 && f04.redutor_ajuste_saldo === 100000, 'F04 redutor maior que a venda: utilizado = 300.000 (min), remanescente 100.000, imposto zero');
+var auF06 = M.auditar(B.CASOS['V02 venda à vista com redutor'], M.calcular(B.CASOS['V02 venda à vista com redutor'], CTX), CTX);
+ok(auF06.achados.every(function (a) { return !/prompt/i.test(a.fonte || ''); }), 'F06 nenhuma fonte de achado cita "prompt" — A07 aponta política metodológica versionada');
 // Lacre
 var lv = M.lacreVerificar();
-ok(lv.integro === true, 'LACRE motor 1.3.0 íntegro (' + lv.hash_atual + ' = ' + lv.hash_homologado + ')');
+ok(lv.integro === true, 'LACRE motor 1.4.0 íntegro (' + lv.hash_atual + ' = ' + lv.hash_homologado + ')');
 
 console.log('\n' + log.join('\n'));
 console.log('\n=== run_imob_v160: ' + (total - falhas) + '/' + total + ' OK, ' + falhas + ' falha(s) — motor ' + M.MOTOR_IMOB_VERSAO + ' · ruleset ' + M.RULESET_VERSAO + ' · lacre ' + lv.hash_atual);

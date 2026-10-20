@@ -35,6 +35,27 @@ function ligarMoney(){
   });
 }
 function txt(id){ return (($(id)||{}).value || '').trim(); }
+/* v1.6.4 (auditoria F05): nome acessível programático — associa cada <label> da
+   marcação ao campo que o segue no mesmo bloco quando não há "for", e liga a
+   ajuda do campo via aria-describedby. Leitores de tela passam a anunciar a
+   finalidade dos campos financeiros (ex.: v-val, v-raj). */
+var ROTULO_SEQ = 0;
+function ligarRotulos(){
+  document.querySelectorAll('#page-imobiliaria label').forEach(function(lb){
+    if (lb.htmlFor) return;
+    var alvo = null, el = lb.nextElementSibling;
+    while (el && !alvo) { if (/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) alvo = el; else el = el.nextElementSibling; }
+    if (!alvo && lb.parentElement) alvo = lb.parentElement.querySelector('input,select,textarea');
+    if (!alvo) return;
+    if (!alvo.id) alvo.id = 'imob-campo-' + (++ROTULO_SEQ);
+    lb.htmlFor = alvo.id;
+    var ajuda = alvo.nextElementSibling;
+    if (ajuda && ajuda.classList && ajuda.classList.contains('ajuda-campo')) {
+      if (!ajuda.id) ajuda.id = alvo.id + '-ajuda';
+      alvo.setAttribute('aria-describedby', ajuda.id);
+    }
+  });
+}
 var money = RL.money, pct = RL.pct, esc = RL.esc;
 function hojeISO(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function versaoApp(){ return (window.ModulosInfo && ModulosInfo.imobiliario && ModulosInfo.imobiliario.versao) || '?'; }
@@ -84,6 +105,7 @@ function abrirAba(k){
     if (k === 'memoria') imobMemoriaAba();
     if (k === 'cadastro') imobCadastroTipo();
     if (k === 'opcional' || k === 'venda' || k === 'locacao' || k === 'permuta' || k === 'comparativo') ligarMoney();
+    if (k === 'venda' || k === 'permuta' || k === 'comparativo') avisarRajDivergente(k);   // v1.6.4 — F02
   });
 }
 function ligarAbas(){
@@ -150,7 +172,10 @@ function imobMemoria(res, operacao){
     if (ehAlq) {
       // v1.3.0: linha de alíquota mostra PERCENTUAIS, nunca R$ 0,00
       valorCel = '<div>IBS <b>' + pct(l.ibs_reduzida,4) + '</b></div><div>CBS <b>' + pct(l.cbs_reduzida,4) + '</b></div>';
-      entradaTxt = 'IBS padr&atilde;o ' + pct(ex.ibs_padrao,2) + ' · CBS padr&atilde;o ' + pct(ex.cbs_padrao,2) + ' · redu&ccedil;&atilde;o ' + ex.reducao_pct + '%' +
+      // v1.6.4 (auditoria F01): os padrões exibidos são os do PRÓPRIO cálculo (escada do ano, quando houver)
+      var pIbs = l.entrada && typeof l.entrada.ibs_padrao === 'number' ? l.entrada.ibs_padrao : ex.ibs_padrao;
+      var pCbs = l.entrada && typeof l.entrada.cbs_padrao === 'number' ? l.entrada.cbs_padrao : ex.cbs_padrao;
+      entradaTxt = 'IBS padr&atilde;o ' + pct(pIbs,2) + ' · CBS padr&atilde;o ' + pct(pCbs,2) + ' · redu&ccedil;&atilde;o ' + ex.reducao_pct + '%' +
         (ex.editadas.length && ex.reducao_pct !== l.ibs_reduzida ? '' : '') +
         (PR.alteradas(PREM).some(function(p){ return /reducao|padrao/.test(p.chave); }) ? ' <span class="badge b-edit">premissa editada — original: ' + pct(PR.CATALOGO.ibs_padrao.valor,2) + ' / ' + pct(PR.CATALOGO.cbs_padrao.valor,2) + ' com ' + (operacao === 'locacao' ? 70 : 50) + '%</span>' : '') +
         ' · ' + catBadge(l.categoria || (l.classificacao === 'LEGAL' ? 'LEGAL' : 'ESTIMATIVA')) + ' · redu&ccedil;&atilde;o ' + catBadge('LEGAL');
@@ -330,15 +355,38 @@ function pintaFluxo(){
   var alvo = $('fluxo-out'); if (!alvo) return;
   var raj = rajEscolhido();
   alvo.innerHTML = '<div class="card"><h2>Passo 3 &mdash; O que voc&ecirc; quer calcular com este im&oacute;vel?</h2>' +
-    '<div class="mini">Redutor de ajuste que ser&aacute; usado: <b>' + money(raj.valor) + '</b> (' + esc(raj.rotulo) + '). Os dados do im&oacute;vel j&aacute; v&atilde;o preenchidos; ao calcular, os relat&oacute;rios ficam dispon&iacute;veis.</div>' +
+    '<div class="mini">Redutor de ajuste ' + (raj.sugestao ? 'sugerido' : 'que ser&aacute; usado') + ': <b>' + money(raj.valor) + '</b> (' + esc(raj.rotulo) + '). Ao abrir pelos cart&otilde;es abaixo, este valor &eacute; aplicado ao formul&aacute;rio; navegando pelo menu lateral, confira o campo <b>Saldo do redutor de ajuste</b> &mdash; qualquer diverg&ecirc;ncia &eacute; apontada ao lado do campo.</div>' +
     '<div class="fluxo">' + FLUXO_OPS.filter(function(o){ return o.op !== 'pf' || (PESSOA.tipo === 'PF'); }).map(function(o){ return '<div class="op" onclick="imobEscolherOperacao(\'' + o.op + '\')"><div class="ic">' + o.ic + '</div><b>' + o.t + '</b><div class="d">' + o.d + '</div></div>'; }).join('') + '</div></div>';
 }
 function rajEscolhido(){
   if (!RAJ || !RAJ.opcoes) return { valor: n('v-raj'), rotulo: 'informado' };
   if (RAJ_ESCOLHA !== null && RAJ.opcoes[RAJ_ESCOLHA] && RAJ.opcoes[RAJ_ESCOLHA].valor != null) return RAJ.opcoes[RAJ_ESCOLHA];
+  // v1.6.4 (auditoria F02): sem escolha gravada do art. 375, a maior opção é SUGESTÃO, nunca decisão.
   var disp = RAJ.opcoes.filter(function(o){ return o.valor != null; }).sort(function(a,b){ return b.valor - a.valor; });
-  return disp[0] ? { valor: disp[0].valor, rotulo: disp[0].rotulo + ' (maior opção disponível)' } : { valor: 0, rotulo: 'nenhuma opção disponível' };
+  return disp[0] ? { valor: disp[0].valor, rotulo: disp[0].rotulo + ' (maior opção disponível — sugestão; a escolha do art. 375 é do contribuinte)', sugestao: true } : { valor: 0, rotulo: 'nenhuma opção disponível' };
 }
+/* v1.6.4 (auditoria F02): por QUALQUER caminho de navegação, o redutor anunciado
+   no assistente e o aplicado no formulário têm de coincidir — ou a divergência
+   aparece ao lado do campo, com a origem e um botão para usar o valor do imóvel.
+   Nada é sobrescrito sem confirmação: o valor digitado permanece até o clique. */
+var RAJ_CAMPO = { venda: 'v-raj', permuta: 'x-raj', comparativo: 'c-raj' };
+function avisarRajDivergente(op){
+  var id = RAJ_CAMPO[op], el = id && $(id); if (!el) return;
+  var alvo = $(id + '-orig');
+  if (!alvo) { alvo = document.createElement('div'); alvo.id = id + '-orig'; alvo.className = 'mini'; el.parentElement.appendChild(alvo); }
+  if (!RAJ || !RAJ.opcoes) { alvo.innerHTML = ''; return; }
+  var raj = rajEscolhido();
+  if (raj.valor == null || n(id) === raj.valor) { alvo.innerHTML = raj.valor != null && n(id) === raj.valor ? 'Origem: ' + esc(raj.rotulo) : ''; return; }
+  alvo.innerHTML = '<div class="aviso" style="margin-top:6px"><b>Diverge do im&oacute;vel do Passo 2:</b> o campo est&aacute; com ' + money(n(id)) +
+    ', mas o im&oacute;vel indica <b>' + money(raj.valor) + '</b> (' + esc(raj.rotulo) + '). ' +
+    '<button class="btn" style="padding:3px 8px" onclick="imobUsarRajImovel(\'' + op + '\')">Usar ' + money(raj.valor) + ' do im&oacute;vel</button></div>';
+}
+function imobUsarRajImovel(op){ acao(function(){
+  var id = RAJ_CAMPO[op], raj = rajEscolhido();
+  if (!id || !$(id) || raj.valor == null) return;
+  $(id).value = raj.valor; fmtMoneyInput($(id));
+  avisarRajDivergente(op);
+}); }
 function imobEscolherOperacao(op){ acao(function(){
   var raj = rajEscolhido(), tipo = txt('i-tipo');
   if (op === 'venda') { $('v-raj').value = raj.valor; $('v-tipo').value = tipo; if (!(n('v-val') > 0)) $('v-val').value = nOuNulo('i-ref') || nOuNulo('i-aq') || 0; }
@@ -683,7 +731,7 @@ function calcComp(){ acao(function(){
   var cargaA = receita > 0 ? totA / receita * 100 : 0, cargaR = receita > 0 ? totR / receita * 100 : 0;
   var cmpMotor = opV ? M.comparativoAtualXReforma({ atual: dadosLP, reforma: opV }, c) : null;
   var h = imobGrau(rV || rL || { confianca: { nivel: 'MEDIA' } }, 'venda') +
-    '<div class="card"><h2>Comparativo lado a lado</h2><table><thead><tr><th>Item</th><th class="num">Regime atual (Lucro Presumido)</th><th class="num">Regime espec&iacute;fico (IBS/CBS)</th><th class="num">Diferen&ccedil;a</th></tr></thead><tbody>' +
+    '<div class="card"><h2>Comparativo lado a lado</h2><div class="mini">O lado da Reforma usa o <b>cen&aacute;rio de refer&ecirc;ncia (2033)</b>; o imposto de cada ano da transi&ccedil;&atilde;o est&aacute; na tabela Ano a ano abaixo &mdash; a mesma escada usada no c&aacute;lculo individual por data.</div><table><thead><tr><th>Item</th><th class="num">Regime atual (Lucro Presumido)</th><th class="num">Regime espec&iacute;fico (IBS/CBS) &mdash; refer&ecirc;ncia 2033</th><th class="num">Diferen&ccedil;a</th></tr></thead><tbody>' +
     linhas.map(function(l){ return '<tr' + (l[3] ? ' class="grp"' : '') + '><td>' + l[0] + '</td><td class="num">' + money(l[1]) + '</td><td class="num">' + money(l[2]) + '</td><td class="num"><b>' + money(l[2] - l[1]) + '</b></td></tr>'; }).join('') +
     '<tr><td>Carga efetiva (substitu&iacute;veis ÷ receita)</td><td class="num">' + pct(cargaA,4) + '</td><td class="num">' + pct(cargaR,4) + '</td><td class="num"><b>' + pct(cargaR - cargaA,4) + '</b></td></tr></tbody></table>' +
     '<div class="' + (totR > totA ? 'aviso' : 'aviso ok') + '" style="margin-top:12px">Varia&ccedil;&atilde;o nos tributos substitu&iacute;veis: <b>' + money(Math.abs(totR - totA)) + '</b> (' + pct(totA > 0 ? Math.abs(totR - totA) / totA * 100 : 0, 2) + ') ' + (totR > totA ? 'a MAIS' : 'a MENOS') + ' no regime espec&iacute;fico.</div>' +
@@ -995,8 +1043,15 @@ function imobPremissaRestaurar(chave){
 /* ---------- auditoria, memória navegável, snapshot e relatórios ---------- */
 var SEVCOR = { impeditivo:'b-err', alto:'b-err', medio:'b-warn', baixo:'b-info' };
 function rodarAuditoria(){ acao(function(){
-  var e = entradaVenda(), ctx = ctxPara('venda'), res = M.calcular(e, ctx);
-  if (res.status === 'BLOQUEADO') { $('au-out').innerHTML = imobBloqueio(res); return; }
+  /* v1.6.4 (auditoria F03): o pacote da auditoria e do parecer s&oacute; se monta sobre
+     um c&aacute;lculo REALIZADO nesta sess&atilde;o — nunca sobre os valores de exemplo do
+     formul&aacute;rio, que antes apareciam como resultado auditado. */
+  var u = ULTIMO.venda;
+  if (!u || !u.res || u.res.status !== 'CALCULADO') {
+    $('au-out').innerHTML = '<div class="card"><h2>Resultado da auditoria</h2><div class="info"><b>Ainda n&atilde;o h&aacute; c&aacute;lculo de Venda nesta sess&atilde;o.</b> A auditoria e o pacote do parecer s&atilde;o montados sobre um c&aacute;lculo realizado e identificado, nunca sobre dados de exemplo. Preencha a aba <b>Venda</b>, clique em <b>Calcular</b> e volte aqui.</div>' + imobSelo() + '</div>';
+    return;
+  }
+  var e = u.e, ctx = u.ctx, res = u.res;
   var au = M.auditar(e, res, ctx);
   var h = '<div class="card"><h2>Resultado da auditoria</h2><div class="tot" style="font-size:22px">Confian&ccedil;a <span class="n-' + au.nivel_confianca + '">' + au.nivel_confianca + '</span></div>' +
     '<div class="' + (au.permite_conclusao_definitiva ? 'info' : 'aviso') + '" style="margin-top:10px">' + esc(au.mensagem) + '</div>' +
@@ -1015,7 +1070,7 @@ function rodarAuditoria(){ acao(function(){
       pac.bloco_06_memoria_de_calculo.map(function(l){ return '<tr><td>' + esc(l.descricao) + '</td><td><span class="badge b-info">' + esc(l.origem) + '</span></td></tr>'; }).join('') + '</tbody></table></div>' +
     (pac.bloco_13_limitacoes_e_premissas.length ? '<div style="margin-top:12px"><label>Limita&ccedil;&otilde;es e premissas</label>' + pac.bloco_13_limitacoes_e_premissas.map(function(x){ return '<div class="aviso">' + esc(x) + '</div>'; }).join('') + '</div>' : '') +
     '<div class="toolbar" style="margin-top:12px"><button class="btn" onclick="verPrompt()">Ver o prompt travado</button><button class="btn" onclick="testarGuarda()">Testar a guarda anti-alucina&ccedil;&atilde;o</button><button class="btn pri" onclick="imobGerarParecer()">Gerar parecer com IA</button></div><div id="prompt-out"></div></div>';
-  var sn = M.montarSnapshot(e, res, ctx, { request_id: 'previa-' + txt('v-data'), empresa_id: 'previa' });
+  var sn = M.montarSnapshot(e, res, ctx, { request_id: 'previa-' + (e.data_fato_gerador || ''), empresa_id: 'previa' });
   var rep = M.reprocessar(sn);
   h += '<div class="card"><h2>Snapshot forense</h2><table><tbody><tr><td>Hash do snapshot</td><td class="num"><code>' + esc(sn.hash_snapshot) + '</code></td></tr>' +
     '<tr><td>Motor / ruleset</td><td class="num">' + esc(sn.corpo.versoes.motor) + ' &middot; ' + esc(sn.corpo.versoes.ruleset) + '</td></tr><tr><td>Lacre do motor</td><td class="num"><code>' + esc(sn.corpo.versoes.lacre_imob) + '</code></td></tr>' +
@@ -1028,7 +1083,11 @@ function pacoteRelatorio(op){
   var u = ULTIMO[op], opCtx = op === 'locacao' ? 'locacao' : 'venda';
   var e, ctx, res, etapas, anos;
   if (u) { e = u.e; ctx = u.ctx; res = u.res; etapas = u.etapas; anos = u.anos; }
-  else { e = entradaVenda(); ctx = ctxPara('venda'); res = M.calcular(e, ctx); }
+  else {
+    // v1.6.4 (auditoria F03): relatório sem cálculo na sessão não usa os dados de exemplo do formulário
+    return { erro: { status: 'BLOQUEADO', mensagem: 'Nenhum cálculo de ' + op + ' nesta sessão — calcule a operação antes de gerar o relatório.',
+                     bloqueios: [{ codigo: 'F03', msg: 'Nenhum cálculo de ' + op + ' nesta sessão — calcule a operação antes de gerar o relatório.' }] } };
+  }
   if (res.status === 'BLOQUEADO') return { erro: res };
   var ex = PR.explicar(PREM, opCtx);
   if (!etapas) etapas = RL.resultadoVenda(res, e, ex);
@@ -1101,6 +1160,7 @@ function imobGerarParecer(){
   window.imobSalvarCadastro = imobSalvarCadastro; window.imobLimparCadastro = imobLimparCadastro; window.imobCadastroTipo = imobCadastroTipo;
   window.imobEscolherOperacao = imobEscolherOperacao; window.imobMemoriaAba = imobMemoriaAba;
   window.imobPremissaAplicar = imobPremissaAplicar; window.imobPremissaRestaurar = imobPremissaRestaurar;
+  window.imobUsarRajImovel = imobUsarRajImovel;   // v1.6.4 — F02
   window.__imobUI = { PREM: function(){ return PREM; }, ctxPara: ctxPara, entradaVenda: entradaVenda, entradaLocacao: entradaLocacao, registrarSimulacao: registrarSimulacao, parseNum: parseNum, pessoa: function(){ return PESSOA; }, sims: function(){ carregarSims(); return SIMS; } };
 
   /* v1.4.1 — a casca chama ao (re)carregar o escritório; e ao sair, para nada da sessão anterior sobrar */
@@ -1129,6 +1189,7 @@ function imobGerarParecer(){
       try { pintaOpc(); } catch (e) { console.warn('[imob] opcionais:', e); }
       try { atualizarDatasInventario(); } catch (e) { console.warn('[imob] inventário:', e); }
       try { ligarMoney(); } catch (e) { console.warn('[imob] money:', e); }
+      try { ligarRotulos(); } catch (e) { console.warn('[imob] rótulos:', e); }   // v1.6.4 — F05
       try { calcRaj(); } catch (e) { console.warn('[imob] redutor:', e); }
     }
   };

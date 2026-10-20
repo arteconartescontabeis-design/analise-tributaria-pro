@@ -1,6 +1,20 @@
 # Pendências — Análise Tributária Pro
 
-Registro do que ficou para depois, com o motivo. Atualizado em 08/10/2026 (entrega v7.96.0 → v7.99.1).
+Registro do que ficou para depois, com o motivo. Atualizado em 20/10/2026 (Imobiliária v1.6.4).
+
+## Resolvido em 20/10/2026 (Imobiliária v1.6.4, motor 1.4.0, lacre cd2c7359)
+
+| Item | O que foi feito |
+|---|---|
+| Auditoria externa de 20/10/2026 — F01 (P0) | A data do fato gerador escolhe a alíquota do cálculo individual (venda, locação, permuta) com a MESMA escada da projeção; datas antes de 2026 bloqueiam (E017); comparativo identifica o lado da Reforma como referência 2033 |
+| Auditoria — F02 | Redutor anunciado no assistente é sugestão rotulada; divergência campo × imóvel aparece ao lado do campo com origem e botão de confirmação |
+| Auditoria — F03 | Auditoria, parecer e relatórios exigem cálculo realizado na sessão; sem cálculo, estado vazio (nunca pacote com os exemplos do formulário) |
+| Auditoria — F04 | Etapa 2 do resultado mostra o redutor UTILIZADO (min) com disponível/remanescente; todas as igualdades exibidas são verdadeiras, inclusive com base zero |
+| Auditoria — F05 | Nome acessível programático em todos os campos (label for + aria-describedby) |
+| Auditoria — F06 | Fonte do achado A07 passou a ser política metodológica versionada (ruleset) + Res. CGIBS 14/2026, não mais "Seção 6 do prompt" |
+| Pendência 6 (teste E3 defasado) | Suíte run_imob_ui promovida para tests/ (a versão 1.6.3 estava só na raiz), expectativas atualizadas (v1.6.4 / motor 1.4.0 / lacre cd2c7359); casca do host injetada nos testes E1/V12 porque imobiliaria.html virou aviso de endereço. Suítes: run_imob_v160 113/113 · run_imob_ui 60/60 |
+
+Atenção: o app publicado vive no repositório `tributario-fiscal` (este repositório foi arquivado em 16/10/2026 como aviso de endereço). As correções da v1.6.4 precisam ser copiadas para lá — ver INSTALACAO_v1.6.4.md.
 
 ## Resolvido nesta entrega (07–08/10/2026)
 
@@ -33,8 +47,7 @@ A função nova respeita o contrato de `parecerImobIA.js` (blocos, números auto
 - **Imobiliária** (`motorImob.js`, `calcLucroPresumido`): motor próprio, sem ano-base — não aplica o acréscimo de 10%. Avaliar se o módulo precisa (venda de imóvel por empresa do Presumido acima de R$ 1,25 mi/trimestre é plausível).
 - **Incorporação** (`src/incorporacao_app_6.js`): usa o motor copiado (já com a LC 224), mas remonta a base da CSLL para exibição por conta própria (linhas ~96-103) — conferir se o quadro bate com o motor quando houver acréscimo.
 
-### 6. Teste E3 da Imobiliária
-`tests/run_imob_ui.js` → 51/52: o teste E3 espera a versão **1.6.2** visível na tela e o módulo está em 1.6.3. Falha anterior a esta entrega; corrigir a expectativa do teste.
+### 6. Teste E3 da Imobiliária — RESOLVIDO em 20/10/2026 (ver tabela acima)
 
 ### 7. Projeção da Reforma e LC 224
 `calcCenariosReforma` projeta 2026–2033 usando o IRPJ/CSLL do **ano-base** (`lpResto`), sem recalcular ano a ano. Com a LC 224 isso é consistente (o acréscimo do ano-base entra em todos os anos), mas uma empresa que cruze o limite só em anos futuros não terá o acréscimo projetado. Documentado; decidir se vale projetar.

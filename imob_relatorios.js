@@ -35,14 +35,23 @@
     var socDisp = r2((lSoc.entrada || {}).valor_atualizado || 0);
     var credInf = r2((lCre.entrada || {}).creditos_informados || 0), credUsado = r2(res.creditos || 0);
     var bruto = r2(res.debito != null ? res.debito : (res.ibs || 0) + (res.cbs || 0));
+    // v1.6.4 (auditoria F01): os percentuais exibidos são os do PRÓPRIO cálculo
+    // (escada do ano, quando houver), não os da premissa de referência.
+    var lAlq = (res.linhas || []).filter(function (x) { return x.ibs_reduzida != null; })[0] || {};
+    var ibsFinal = lAlq.ibs_reduzida != null ? lAlq.ibs_reduzida : expl.ibs_final;
+    var cbsFinal = lAlq.cbs_reduzida != null ? lAlq.cbs_reduzida : expl.cbs_final;
+    var ibsPadrao = lAlq.entrada && typeof lAlq.entrada.ibs_padrao === 'number' ? lAlq.entrada.ibs_padrao : expl.ibs_padrao;
+    var cbsPadrao = lAlq.entrada && typeof lAlq.entrada.cbs_padrao === 'number' ? lAlq.entrada.cbs_padrao : expl.cbs_padrao;
     var etapas = [
       { n: 1, rotulo: 'Valor total da operação', valor: r2(valor), formula: 'valor informado', destaque: true },
-      { n: 2, rotulo: 'Redutor de ajuste disponível', valor: rajDisp, formula: 'saldo do imóvel (art. 375); utilizado: min(saldo; valor) = ' + money(rajUsado),
-        extra: 'utilizado ' + money(rajUsado) + ' · remanescente ' + money(res.redutor_ajuste_saldo || 0) },
+      // v1.6.4 (auditoria F04): o valor da etapa é o redutor UTILIZADO (min),
+      // para que a igualdade da base exibida seja matematicamente verdadeira.
+      { n: 2, rotulo: 'Redutor de ajuste utilizado', valor: rajUsado, formula: 'min(saldo disponível ' + money(rajDisp) + '; valor da operação)',
+        extra: 'disponível ' + money(rajDisp) + ' · remanescente ' + money(res.redutor_ajuste_saldo || 0) },
       { n: 3, rotulo: 'Redutor social', valor: socUsado, formula: socDisp ? 'min(' + money(socDisp) + ' atualizado; base após redutor de ajuste)' : 'não aplicável ao tipo do imóvel (art. 259, §1º) ou já utilizado' },
       { n: 4, rotulo: 'Base de cálculo (antes dos créditos)', valor: r2(res.base), formula: money(valor) + ' − ' + money(rajUsado) + ' − ' + money(socUsado), destaque: true },
-      { n: 5, rotulo: 'IBS calculado', valor: r2(res.ibs), formula: money(res.base) + ' × ' + pct(expl.ibs_final, 4) + ' (' + pct(expl.ibs_padrao, 2) + ' − ' + expl.reducao_pct + '%)' },
-      { n: 6, rotulo: 'CBS calculada', valor: r2(res.cbs), formula: money(res.base) + ' × ' + pct(expl.cbs_final, 4) + ' (' + pct(expl.cbs_padrao, 2) + ' − ' + expl.reducao_pct + '%)' },
+      { n: 5, rotulo: 'IBS calculado', valor: r2(res.ibs), formula: money(res.base) + ' × ' + pct(ibsFinal, 4) + ' (' + pct(ibsPadrao, 2) + ' − ' + expl.reducao_pct + '%)' },
+      { n: 6, rotulo: 'CBS calculada', valor: r2(res.cbs), formula: money(res.base) + ' × ' + pct(cbsFinal, 4) + ' (' + pct(cbsPadrao, 2) + ' − ' + expl.reducao_pct + '%)' },
       { n: 7, rotulo: 'Créditos de IBS/CBS informados', valor: credInf, formula: 'valor informado pelo usuário' },
       { n: 8, rotulo: 'Créditos efetivamente aproveitados', valor: credUsado, formula: 'min(' + money(credInf) + '; débito ' + money(bruto) + ')' },
       { n: 9, rotulo: 'Saldo de créditos não utilizado', valor: r2(credInf - credUsado), formula: money(credInf) + ' − ' + money(credUsado) + ' (transporta para períodos seguintes, art. 53)' },
@@ -62,13 +71,19 @@
     var exc = r2(-(lExc.valor || 0)), soc = r2(res.redutor_social_usado || 0);
     var bruto = r2(res.debito != null ? res.debito : 0);
     var carga = res.aliquota_efetiva_sobre_operacao;
+    // v1.6.4 (auditoria F01): percentuais do próprio cálculo (escada do ano, quando houver)
+    var lAlq = (res.linhas || []).filter(function (x) { return x.ibs_reduzida != null; })[0] || {};
+    var ibsFinal = lAlq.ibs_reduzida != null ? lAlq.ibs_reduzida : expl.ibs_final;
+    var cbsFinal = lAlq.cbs_reduzida != null ? lAlq.cbs_reduzida : expl.cbs_final;
+    var ibsPadrao = lAlq.entrada && typeof lAlq.entrada.ibs_padrao === 'number' ? lAlq.entrada.ibs_padrao : expl.ibs_padrao;
+    var cbsPadrao = lAlq.entrada && typeof lAlq.entrada.cbs_padrao === 'number' ? lAlq.entrada.cbs_padrao : expl.cbs_padrao;
     return [
       { n: 1, rotulo: 'Receita bruta do período', valor: r2(e.valor_operacao), formula: money(loc.valor_mensal || e.valor_operacao / meses) + ' × ' + meses + ' mês(es)' + (loc.dias_no_mes ? ' · ' + loc.dias_no_mes + ' dias no mês' : ''), destaque: true },
       { n: 2, rotulo: 'Deduções — encargos do locatário (art. 364, §§ 3º e 4º)', valor: exc, formula: exc ? 'tributos + condomínio + foro, com prova de pagamento' : 'nenhuma dedução (sem prova de pagamento ou sem encargos)' },
       { n: 3, rotulo: 'Redutor social da locação residencial', valor: soc, formula: soc ? 'R$ 600 × fator × meses × proporção do período × fração residencial' : 'não aplicável (finalidade não residencial)' },
       { n: 4, rotulo: 'Base de cálculo', valor: r2(res.base), formula: money(e.valor_operacao) + ' − ' + money(exc) + ' − ' + money(soc), destaque: true },
-      { n: 5, rotulo: 'IBS', valor: r2(res.ibs), formula: money(res.base) + ' × ' + pct(expl.ibs_final, 4) + ' (' + pct(expl.ibs_padrao, 2) + ' − ' + expl.reducao_pct + '%)' },
-      { n: 6, rotulo: 'CBS', valor: r2(res.cbs), formula: money(res.base) + ' × ' + pct(expl.cbs_final, 4) + ' (' + pct(expl.cbs_padrao, 2) + ' − ' + expl.reducao_pct + '%)' },
+      { n: 5, rotulo: 'IBS', valor: r2(res.ibs), formula: money(res.base) + ' × ' + pct(ibsFinal, 4) + ' (' + pct(ibsPadrao, 2) + ' − ' + expl.reducao_pct + '%)' },
+      { n: 6, rotulo: 'CBS', valor: r2(res.cbs), formula: money(res.base) + ' × ' + pct(cbsFinal, 4) + ' (' + pct(cbsPadrao, 2) + ' − ' + expl.reducao_pct + '%)' },
       { n: 7, rotulo: 'Créditos aproveitados', valor: r2(res.creditos || 0), formula: 'min(créditos informados; ' + money(bruto) + ')' },
       { n: 8, rotulo: 'Total a recolher no período', valor: r2(res.total), formula: money(bruto) + ' − ' + money(res.creditos || 0), destaque: true, principal: true },
       { n: 9, rotulo: 'Carga efetiva mensal', valor: null, texto: pct(carga, 4), formula: 'total ÷ receita bruta × 100 (por mês: ' + money(res.total / meses) + ')', destaque: true },
@@ -83,6 +98,10 @@
     var torna = r2((e.permuta || {}).torna || 0);
     var permuta = r2(Math.min(dado, rec));
     var uni = dados.unidades > 0 ? dados.unidades : null;
+    // v1.6.4 (auditoria F01): percentuais do próprio cálculo (escada do ano, quando houver)
+    var lAlqP = (res.linhas || []).filter(function (x) { return x.ibs_reduzida != null; })[0] || {};
+    var ibsFinalP = lAlqP.ibs_reduzida != null ? lAlqP.ibs_reduzida : expl.ibs_final;
+    var cbsFinalP = lAlqP.cbs_reduzida != null ? lAlqP.cbs_reduzida : expl.cbs_final;
     var et = [
       { n: 1, rotulo: 'Valor do imóvel dado', valor: dado, formula: 'valor informado' },
       { n: 2, rotulo: 'Valor do imóvel recebido', valor: rec, formula: dados.valor_recebido ? 'valor informado' : 'não informado — considerado igual ao dado' },
@@ -90,8 +109,8 @@
       { n: 4, rotulo: 'Parcela considerada permuta imobiliária (não incidência)', valor: permuta, formula: 'min(dado; recebido) — art. 360, §3º, I', destaque: true },
       { n: 5, rotulo: 'Parcela considerada torna', valor: torna, formula: (e.permuta || {}).torna_paga_por === 'contribuinte' ? 'torna PAGA pelo contribuinte' : (e.permuta || {}).torna_paga_por === 'nao_contribuinte' ? 'torna RECEBIDA (paga pelo não contribuinte)' : 'sem torna' },
       { n: 6, rotulo: 'Parcela tributável (base de cálculo)', valor: r2(res.base), formula: 'só a torna é tributada, com redução de 50%', destaque: true },
-      { n: 7, rotulo: 'IBS', valor: r2(res.ibs), formula: money(res.base) + ' × ' + pct(expl.ibs_final, 4) },
-      { n: 8, rotulo: 'CBS', valor: r2(res.cbs), formula: money(res.base) + ' × ' + pct(expl.cbs_final, 4) },
+      { n: 7, rotulo: 'IBS', valor: r2(res.ibs), formula: money(res.base) + ' × ' + pct(ibsFinalP, 4) },
+      { n: 8, rotulo: 'CBS', valor: r2(res.cbs), formula: money(res.base) + ' × ' + pct(cbsFinalP, 4) },
       { n: 9, rotulo: 'Total da operação (IBS + CBS)', valor: r2(res.total), formula: money(res.ibs) + ' + ' + money(res.cbs), destaque: true, principal: true },
       { n: 10, rotulo: 'Redutor de ajuste do imóvel recebido', valor: res.redutor_ajuste_recebido, formula: res.redutor_ajuste_recebido == null ? 'não apurado (ver notas)' : 'art. 360, §§ 7º e 8º' }
     ];
@@ -119,8 +138,14 @@
       c('total bruto − créditos = total líquido', Math.abs(r2((res.debito || 0) - (res.creditos || 0)) - res.total) <= tol, res.total, r2((res.debito || 0) - (res.creditos || 0)));
     }
     if (lAlq && expl) {
-      c('alíquota IBS demonstrada = alíquota usada no cálculo', Math.abs(lAlq.ibs_reduzida - expl.ibs_final) <= 0.00011, expl.ibs_final, lAlq.ibs_reduzida);
-      c('alíquota CBS demonstrada = alíquota usada no cálculo', Math.abs(lAlq.cbs_reduzida - expl.cbs_final) <= 0.00011, expl.cbs_final, lAlq.cbs_reduzida);
+      // v1.6.4 (auditoria F01): quando o motor aplicou a escada do ano, a alíquota
+      // "usada" é a do catálogo de percentuais do resultado, não a da premissa.
+      var pf = {};
+      (res.percentuais || []).forEach(function (p) { if (p && p.aplicada !== false && p.valor != null) pf[p.nome] = p.valor; });
+      var alvoIbs = pf.ibs_final != null ? pf.ibs_final : expl.ibs_final;
+      var alvoCbs = pf.cbs_final != null ? pf.cbs_final : expl.cbs_final;
+      c('alíquota IBS demonstrada = alíquota usada no cálculo', Math.abs(lAlq.ibs_reduzida - alvoIbs) <= 0.00011, alvoIbs, lAlq.ibs_reduzida);
+      c('alíquota CBS demonstrada = alíquota usada no cálculo', Math.abs(lAlq.cbs_reduzida - alvoCbs) <= 0.00011, alvoCbs, lAlq.cbs_reduzida);
       if (!res.ano_teste_2026 && res.ibs != null) {
         c('base × alíquota IBS = IBS', Math.abs(r2(res.base * lAlq.ibs_reduzida / 100) - res.ibs) <= tol, res.ibs, r2(res.base * lAlq.ibs_reduzida / 100));
         c('base × alíquota CBS = CBS', Math.abs(r2(res.base * lAlq.cbs_reduzida / 100) - res.cbs) <= tol, res.cbs, r2(res.base * lAlq.cbs_reduzida / 100));

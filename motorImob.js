@@ -20,7 +20,7 @@
 (function (raiz) {
   'use strict';
 
-  var MOTOR_IMOB_VERSAO = '1.3.1';
+  var MOTOR_IMOB_VERSAO = '1.4.0';
   var CONTRATO_VERSAO   = 'calc-imob-1';
   var RULESET_VERSAO    = 'imob-2026.09.18';
 
@@ -261,6 +261,9 @@
       else if (!listaPg.every(function (v) { return typeof v === 'number' && isFinite(v) && v >= 0; })) b.push({ codigo: 'E015', msg: 'Lista de pagamentos contém valor não numérico ou negativo — nenhuma parcela foi rateada.' });
     }
     if (e.operacao === 'locacao' && e.locacao && e.locacao.justificativa_classificacao !== undefined && typeof e.locacao.justificativa_classificacao !== 'string') b.push({ codigo: 'E016', msg: 'A justificativa da classificação precisa ser texto.' });
+    // v1.4.0 (auditoria F01): período anterior ao regime específico é BLOQUEADO, não calculado com alíquota cheia.
+    if (e.data_fato_gerador && /^\d{4}-\d{2}-\d{2}$/.test(e.data_fato_gerador) && parseInt(e.data_fato_gerador.slice(0, 4), 10) < 2026)
+      b.push({ codigo: 'E017', msg: 'Fato gerador anterior a 1º/01/2026 — antes do início do regime específico de IBS/CBS (LC 214/2025, arts. 343 a 348). Para fatos anteriores, use o comparativo com o regime atual (PIS/COFINS/ISS).' });
     return b;
   }
 
@@ -1071,6 +1074,49 @@
     for (var y in t) if (t.hasOwnProperty(y)) t[y].classificacao = (t[y].categoria_ibs === 'LEGAL' && t[y].categoria_cbs === 'LEGAL') ? 'LEGAL' : 'ESTIMADA';
     return t;
   }
+  /* v1.4.0 (auditoria F01): categoria do IBS/CBS de um ano da escada — regra
+     ÚNICA para a projeção e para o cálculo individual, com escada de categorias
+     explícitas ou legada (só ibs/cbs): a categoria vem da REGRA do ano, não do
+     rótulo recebido. */
+  function categoriasDoAno(a, al, ctx) {
+    var catI, catC;
+    if (al.categoria_ibs || al.categoria_cbs) { catI = normCategoria(al.categoria_ibs); catC = normCategoria(al.categoria_cbs); }
+    else {
+      var catRef = normCategoria(ctx.aliquotas.classificacao);
+      if (a === 2026) { catI = al.ibs === 0.1 ? 'LEGAL' : catRef; catC = al.cbs === 0.9 ? 'LEGAL' : catRef; }
+      else if (a <= 2028) { catI = al.ibs === 0.1 ? 'LEGAL' : catRef; catC = catRef; }
+      else if (a <= 2032) { catI = 'PROJECAO'; catC = catRef; }
+      else { catI = catRef; catC = catRef; }
+    }
+    // a linha só é LEGAL se IBS e CBS forem LEGAL — nunca "por atacado" (P0)
+    return { categoria_ibs: catI, categoria_cbs: catC,
+             classificacao: (catI === 'LEGAL' && catC === 'LEGAL') ? 'LEGAL' : 'ESTIMADA' };
+  }
+
+  /* v1.4.0 (auditoria F01): a DATA do fato gerador escolhe a alíquota do cálculo
+     individual. 2026 segue o ano-teste (ajuste2026); 2027-2032 usam a MESMA
+     escada da projeção (ctx.transicao quando o chamador a fornece; senão
+     transicaoPadrao); 2033 em diante usa a referência, com a qual a escada
+     coincide. RET, loteamento e contratos antigos têm percentual fixo próprio e
+     não passam por aqui. Com isso, cálculo individual, projeção e relatórios
+     devolvem o MESMO valor para o mesmo ano e os mesmos dados. */
+  function ctxDoFatoGerador(e, ctx) {
+    if (!e || !ctx || !ctx.aliquotas || ['venda', 'locacao', 'permuta'].indexOf(e.operacao) < 0) return ctx;
+    var a = ano(e.data_fato_gerador);
+    if (!(a >= 2027 && a <= 2032)) return ctx;
+    var tr = (ctx.transicao && typeof ctx.transicao === 'object') ? ctx.transicao : transicaoPadrao(ctx);
+    var al = tr && (tr[a] || tr[String(a)]);
+    if (!al || typeof al.ibs !== 'number' || typeof al.cbs !== 'number') return ctx;
+    var cat = categoriasDoAno(a, al, ctx);
+    var c = {}; for (var k in ctx) if (ctx.hasOwnProperty(k)) c[k] = ctx[k];
+    c.aliquotas = { ibs: al.ibs, cbs: al.cbs, classificacao: cat.classificacao,
+                    fonte: al.fonte || al.fonte_ibs || (ctx.aliquotas.fonte ? 'escada de transição derivada de: ' + ctx.aliquotas.fonte : 'escada de transição (IMOB-TRA-001)'),
+                    vigencia: 'escada de transição — ano ' + a + ' (IMOB-TRA-001)' };
+    c.aliquotas_referencia = ctx.aliquotas;
+    c.aliquotas_do_ano = { ano: a, categoria_ibs: cat.categoria_ibs, categoria_cbs: cat.categoria_cbs };
+    return c;
+  }
+
   function projetarTransicao(entrada, ctx) {
     ctx = ctx || {};
     var tr = ctx.transicao;
@@ -1085,18 +1131,9 @@
       var e = JSON.parse(JSON.stringify(entrada));
       e.data_fato_gerador = a + '-06-30';
       var c = JSON.parse(JSON.stringify(ctx));
-      var catI, catC;
-      if (al.categoria_ibs || al.categoria_cbs) { catI = normCategoria(al.categoria_ibs); catC = normCategoria(al.categoria_cbs); }
-      else {
-        // escada legada (só ibs/cbs, talvez com "classificacao" na linha): a categoria vem da REGRA do ano, não do rótulo recebido
-        var catRef = normCategoria(ctx.aliquotas.classificacao);
-        if (a === 2026) { catI = al.ibs === 0.1 ? 'LEGAL' : catRef; catC = al.cbs === 0.9 ? 'LEGAL' : catRef; }
-        else if (a <= 2028) { catI = al.ibs === 0.1 ? 'LEGAL' : catRef; catC = catRef; }
-        else if (a <= 2032) { catI = 'PROJECAO'; catC = catRef; }
-        else { catI = catRef; catC = catRef; }
-      }
-      // a linha só é LEGAL se IBS e CBS forem LEGAL — nunca "por atacado" (P0)
-      var clsLinha = (catI === 'LEGAL' && catC === 'LEGAL') ? 'LEGAL' : 'ESTIMADA';
+      var cat = categoriasDoAno(a, al, ctx);
+      var catI = cat.categoria_ibs, catC = cat.categoria_cbs;
+      var clsLinha = cat.classificacao;
       c.aliquotas = { ibs: al.ibs, cbs: al.cbs, classificacao: clsLinha,
                       fonte: al.fonte || al.fonte_ibs || 'motor genérico do ATP' };
       var r = calcular(e, c);
@@ -1980,7 +2017,7 @@
     if (ctx.aliquotas) {
       if (ctx.aliquotas.classificacao !== 'LEGAL')
         add('A07', 'medio', 'Alíquota não é legal',
-          'Alíquota classificada como ' + ctx.aliquotas.classificacao + '. Enquanto a alíquota de referência não for fixada em norma, não cabe conclusão definitiva sobre carga tributária.', 'Seção 6 do prompt');
+          'Alíquota classificada como ' + ctx.aliquotas.classificacao + '. Enquanto a alíquota de referência não for fixada em norma, não cabe conclusão definitiva sobre carga tributária.', 'Política metodológica do módulo imobiliário (ruleset ' + RULESET_VERSAO + ') · Res. CGIBS 14/2026 (estimativa não vinculante)');
       if (ctx.aliquotas.vigencia_fim && ctx.aliquotas.vigencia_fim < (e.data_fato_gerador || hoje))
         add('A08', 'alto', 'Alíquota vencida para a data do fato gerador',
           'A alíquota informada tem vigência até ' + ctx.aliquotas.vigencia_fim + '.', null);
@@ -2352,6 +2389,9 @@
                mensagem: 'Cálculo bloqueado por dado insuficiente ou inconsistente — nenhuma estimativa foi produzida.',
                carimbo: carimbo };
     }
+    // v1.4.0 (auditoria F01): a data do fato gerador escolhe a alíquota — mesma
+    // escada do caminho da projeção, então os dois caminhos coincidem por ano.
+    ctx = ctxDoFatoGerador(entrada, ctx);
     var res;
     if (entrada.operacao === 'venda') res = calcVenda(entrada, ctx);
     else if (entrada.operacao === 'locacao') res = calcLocacao(entrada, ctx);
@@ -2369,6 +2409,7 @@
     res.bloqueios = [];
     res.confianca = nivelConfianca(entrada, ctx, res);
     res.percentuais = percentuaisDoResultado(entrada, ctx, res);   // v1.3.0 — P0
+    res.aliquotas_do_ano = ctx.aliquotas_do_ano || null;           // v1.4.0 — F01: rastreia a origem anual da alíquota
     res.carga_efetiva_pct = entrada.valor_operacao > 0 ? r4(res.total / entrada.valor_operacao * 100) : 0;
     res.carimbo = carimbo;
     return res;
@@ -2411,7 +2452,12 @@
     { operacao: 'locacao', data_fato_gerador: '2033-06-15', valor_operacao: 6000, locacao: { finalidade: 'residencial', meses: 2, prazo_dias: 60,
         classificacao_operacao: 'locacao_residencial', justificativa_classificacao: 'contrato por prazo indeterminado, período inicial de 60 dias' } },
     { operacao: 'permuta', data_fato_gerador: '2033-06-15', valor_operacao: 1000000,
-      permuta: { contraparte: 'nao_contribuinte', torna: 300000, torna_paga_por: 'contribuinte', redutor_ajuste_dado: 400000, torna_pagamentos: [100000, 100000, 100000] } }
+      permuta: { contraparte: 'nao_contribuinte', torna: 300000, torna_paga_por: 'contribuinte', redutor_ajuste_dado: 400000, torna_pagamentos: [100000, 100000, 100000] } },
+    // v1.4.0 (auditoria F01) — a data escolhe a alíquota: anos de transição no cálculo individual
+    { operacao: 'venda', data_fato_gerador: '2029-06-15', valor_operacao: 900000,
+      imovel: { id: 'L13', tipo: 'residencial_novo' }, redutor_ajuste_saldo: 400000 },
+    { operacao: 'locacao', data_fato_gerador: '2027-06-15', valor_operacao: 5000,
+      locacao: { finalidade: 'residencial', meses: 1 } }
   ];
 
   function fnv1a(str) {
@@ -2467,7 +2513,7 @@
   }
   // Selo homologado desta versão do motor. Alterar qualquer fórmula muda este
   // valor e OBRIGA re-selar + registrar no changelog (a suíte quebra antes).
-  var LACRE_IMOB_HASH = '338c914d';   // v1.3.0 (18/09/2026) — anterior: c287341e (1.2.0)
+  var LACRE_IMOB_HASH = 'cd2c7359';   // v1.4.0 (20/10/2026) — anterior: 338c914d (1.3.0/1.3.1)
   function lacreVerificar() {
     var atual = lacreCalcular();
     return { hash_atual: atual, hash_homologado: LACRE_IMOB_HASH,

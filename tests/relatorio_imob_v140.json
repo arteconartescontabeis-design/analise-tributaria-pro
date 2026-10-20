@@ -1,7 +1,7 @@
 {
- "versao": "1.4.0",
- "quando": "2026-09-14T20:03:33.427Z",
- "total": 41,
+ "versao": "1.6.4",
+ "quando": "2026-10-20T15:21:50.955Z",
+ "total": 43,
  "falhas": 0,
  "testes": [
   {
@@ -16,9 +16,9 @@
   },
   {
    "n": "E3",
-   "teste": "lacre do motor íntegro e versão do módulo 1.4.0 visível",
+   "teste": "lacre do motor íntegro e versão do módulo 1.6.4 visível",
    "dados": "lacreVerificar + ModulosInfo",
-   "esperado": "c287341e / 1.4.0",
+   "esperado": "cd2c7359 / 1.6.4",
    "obtido": true,
    "divergencia": null,
    "correcao": null,
@@ -29,6 +29,26 @@
    "teste": "14 abas e página injetada; nav lateral marca ativo",
    "dados": "abrirAba",
    "esperado": "aba on = venda",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "F3",
+   "teste": "Auditoria sem cálculo na sessão mostra estado vazio, nunca pacote com os exemplos do formulário",
+   "dados": "abrirAba(auditoria) antes do 1º Calcular",
+   "esperado": "aviso \"Ainda não há cálculo de Venda\" nas duas telas; sem Pacote do parecer",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "F3b",
+   "teste": "Relatório sem cálculo na sessão não usa os dados de exemplo",
+   "dados": "imobRelatorio antes do 1º Calcular",
+   "esperado": "bloqueio com orientação",
    "obtido": true,
    "divergencia": null,
    "correcao": null,

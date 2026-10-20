@@ -9,18 +9,27 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.6.3',
-    data: '19/09/2026',
+    versao: '1.6.4',
+    data: '20/10/2026',
     cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
-    motor: { nome: 'motorImob', versao: '1.3.1', contrato: 'calc-imob-1',
-             ruleset: 'imob-2026.09.18', lacre: '338c914d', lacre_anterior: 'c287341e', regras: 29, homologadas: 27,
+    motor: { nome: 'motorImob', versao: '1.4.0', contrato: 'calc-imob-1',
+             ruleset: 'imob-2026.09.18', lacre: 'cd2c7359', lacre_anterior: '338c914d', regras: 29, homologadas: 27,
              nota: 'IMOB-TRA-001 reclassificada como proje\u00e7\u00e3o e IMOB-LR-001 segue em staging: regra baseada em premissa, estimativa ou proje\u00e7\u00e3o n\u00e3o \u00e9 homologada.' },
     base_legal: { dispositivos: 97, fontes: ['Decreto 12.955/2026', 'Resolu\u00e7\u00e3o CGIBS 6/2026',
                                              'LC 214/2025 at\u00e9 a LC 227/2026'] },
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.6.4', data: '20/10/2026', texto:
+        'Correções da auditoria externa de 20/10/2026 (achados F01 a F06). MOTOR 1.4.0, novo lacre cd2c7359 (anterior 338c914d) — fórmulas mudaram de propósito. '
+        + 'F01 (P0): a DATA do fato gerador escolhe a alíquota do cálculo individual de venda, locação e permuta — 2026 segue o ano-teste, 2027-2032 usam a MESMA escada de transição da projeção e 2033 usa a referência; '
+        + 'cálculo individual, projeção e relatórios devolvem o mesmo valor para o mesmo ano; fato gerador anterior a 2026 é BLOQUEADO (E017); o comparativo identifica o lado da Reforma como cenário de referência 2033. '
+        + 'F02: o redutor anunciado no assistente é sugestão rotulada (a escolha do art. 375 é do contribuinte) e qualquer divergência entre o campo e o imóvel do Passo 2 aparece ao lado do campo, com origem e botão de confirmação — nada é sobrescrito em silêncio. '
+        + 'F03: Auditoria e parecer exigem cálculo REALIZADO na sessão; sem cálculo, as telas e os relatórios informam estado vazio em vez de montar pacote com os valores de exemplo do formulário. '
+        + 'F04: a etapa 2 do resultado passa a exibir o redutor UTILIZADO (min) com o disponível e o remanescente ao lado — todas as igualdades exibidas são verdadeiras, inclusive com base zero. '
+        + 'F05: todo campo ganha nome acessível programático (label for + aria-describedby na ajuda). '
+        + 'F06: o achado A07 cita política metodológica versionada (ruleset) e a Res. CGIBS 14/2026, não mais "Seção 6 do prompt". Suítes atualizadas com os casos da auditoria (anos de transição, redutor maior que a venda, estado vazio da auditoria).' },
       { versao: '1.6.3', data: '19/09/2026', texto:
         'Layout igual ao do An\u00e1lise Tribut\u00e1ria Pro: marca da barra lateral no mesmo formato ("An\u00e1lise Imobili\u00e1ria Pro / ARTECON"), telas do m\u00f3dulo como itens de primeiro n\u00edvel com o mesmo desenho dos itens do ATP (sem recuo, 14px), '
         + 'item "Vers\u00f5es" no lugar de "Sobre o m\u00f3dulo", t\u00edtulo da p\u00e1gina com o badge de vers\u00e3o \u00e0 direita como no dashboard do ATP. Motor, c\u00e1lculo, regras e relat\u00f3rios intocados (lacre 338c914d).' },
