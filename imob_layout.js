@@ -131,7 +131,9 @@
 
     var grau = filhos.filter(function (c) { return c.classList.contains('grau'); })[0] || null;
     var rel = cards.filter(function (c) { return /^Relat/i.test(tx(c.querySelector('h2'))); })[0] || null;
-    var seq = cards[0].querySelector('.seq');
+    // v1.6.5: a sequência de etapas pode não estar no PRIMEIRO card (ex.: aviso de cenário manual antes dela)
+    var seqCard = cards.filter(function (c) { return c.querySelector('.seq'); })[0] || cards[0];
+    var seq = seqCard.querySelector('.seq');
     var ets = seq ? Array.prototype.slice.call(seq.querySelectorAll('.et')) : [];
 
     var res = document.createElement('div'); res.className = 'res';
@@ -140,14 +142,29 @@
     var hero = document.createElement('div'); hero.className = 'res-hero';
     var total = acha(ets, /a recolher|l[ií]quido/i) || (ets.length ? ets[ets.length - 1] : null);
     var comps = [acha(ets, /^IBS/i), acha(ets, /^CBS/i), acha(ets, /carga efetiva/i), acha(ets, /créditos efetivamente/i)].filter(Boolean);
-    var base = acha(ets, /base de cálculo/i), valor = acha(ets, /valor total|valor da opera/i), raj = acha(ets, /redutor de ajuste/i), rsoc = acha(ets, /redutor social/i);
+    /* v1.6.5 (reanálise, obs. 3 e 4): a faixa da base só mostra uma igualdade que FECHA.
+       Locação ganha a sequência completa (receita − deduções − redutor social) e o
+       redutor TRANSFERIDO da permuta deixa de aparecer como se fosse dedução da base. */
+    var base = acha(ets, /base de cálculo/i), valor = acha(ets, /valor total|valor da opera|receita bruta/i), raj = acha(ets, /redutor de ajuste/i), rsoc = acha(ets, /redutor social/i), ded = acha(ets, /^dedu/i);
+    var rotCurto = function (e) { return tx(e.querySelector('.r')).split(' — ')[0].split(' (')[0].trim(); };
+    var hBase = '';
+    if (base) {
+      var rajTransf = raj && /recebido|transferid/i.test(tx(raj.querySelector('.r')));
+      var termos = [ded, rajTransf ? null : raj, rsoc].filter(Boolean);
+      var soma = termos.reduce(function (a, e) { return a + num(val(e)); }, 0);
+      var fecha = valor && Math.abs(num(val(valor)) - soma - num(val(base))) <= 0.011;
+      hBase = '<div class="h-base">' + esc(rotCurto(base)) + ' <b>' + esc(val(base)) + '</b>';
+      if (fecha) hBase += ' = ' + esc(rotCurto(valor)) + ' <b>' + esc(val(valor)) + '</b>' + termos.map(function (e) { return ' − ' + esc(rotCurto(e)) + ' <b>' + esc(val(e)) + '</b>'; }).join('');
+      if (rajTransf) hBase += ' · ' + esc(rotCurto(raj)) + ' <b>' + esc(val(raj)) + '</b> (transferido — não é dedução desta base)';
+      hBase += '</div>';
+    }
     var grauTit = grau ? grau.querySelector('.titulo') : null;
     if (total) {
       hero.innerHTML =
         '<div><div class="h-rot">' + esc(tx(total.querySelector('.r'))) + '</div><div class="h-num">' + esc(val(total)) + '</div>' +
           (grauTit ? '<div class="h-grau">' + grauTit.innerHTML + '</div>' : '') + '</div>' +
         '<div class="h-comp">' + comps.map(function (e) { return '<div><div class="r">' + esc(tx(e.querySelector('.r'))) + '</div><div class="v">' + esc(val(e)) + '</div></div>'; }).join('') + '</div>' +
-        (base ? '<div class="h-base">Base de cálculo <b>' + esc(val(base)) + '</b>' + (valor ? ' = valor da operação <b>' + esc(val(valor)) + '</b>' : '') + (raj ? ' − redutor de ajuste <b>' + esc(val(raj)) + '</b>' : '') + (rsoc ? ' − redutor social <b>' + esc(val(rsoc)) + '</b>' : '') + '</div>' : '');
+        hBase;
     } else {
       // sem sequência de etapas (inventário, comparativo): os totais do primeiro cartão viram o cabeçalho
       var g4 = cards[0].querySelector('.grid');
@@ -295,5 +312,5 @@
     menuLateralDesfazer();
     pg.classList.remove('l2'); LIGADO = false; return true;
   }
-  raiz.ImobLayout = { VERSAO: '1.6.3', aplicar: aplicar, desfazer: desfazer, ligado: function () { return LIGADO; } };
+  raiz.ImobLayout = { VERSAO: '1.6.5', aplicar: aplicar, desfazer: desfazer, ligado: function () { return LIGADO; } };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

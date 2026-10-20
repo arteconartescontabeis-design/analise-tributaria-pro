@@ -9,7 +9,7 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.6.4',
+    versao: '1.6.5',
     data: '20/10/2026',
     cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
@@ -21,6 +21,13 @@
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.6.5', data: '20/10/2026', texto:
+        'Fecho das recomendações da REANÁLISE de 20/10/2026 sobre a v1.6.4 (motor 1.4.0 e lacre cd2c7359 INALTERADOS — nenhuma fórmula mudou). '
+        + 'F02-R: manter um redutor de ajuste diferente do indicado pelo imóvel vira CENÁRIO MANUAL — o motivo é registrado ao lado do campo (ciência expressa) e acompanha o resultado, a memória, as ressalvas dos relatórios e a auditoria; '
+        + 'parecer com IA e Finalizar e gravar são bloqueados enquanto a divergência material estiver sem confirmação; usar o valor do imóvel desfaz a divergência e preserva a origem. '
+        + 'Resumo da locação: a faixa da base passou a mostrar a sequência completa e verdadeira (receita − deduções − redutor social), em vez de subtrair o redutor social de uma base que já o descontava. '
+        + 'Resumo da permuta: o redutor de ajuste TRANSFERIDO ao imóvel recebido deixou de aparecer como dedução da base (rotulado "transferido — não é dedução desta base"); a faixa só exibe igualdades que fecham. '
+        + 'Campo monetário com texto (ex.: "abc") recebe mensagem de FORMATO ("não é um número válido"), não mais a de campo vazio. Suítes com os casos novos da reanálise.' },
       { versao: '1.6.4', data: '20/10/2026', texto:
         'Correções da auditoria externa de 20/10/2026 (achados F01 a F06). MOTOR 1.4.0, novo lacre cd2c7359 (anterior 338c914d) — fórmulas mudaram de propósito. '
         + 'F01 (P0): a DATA do fato gerador escolhe a alíquota do cálculo individual de venda, locação e permuta — 2026 segue o ano-teste, 2027-2032 usam a MESMA escada de transição da projeção e 2033 usa a referência; '

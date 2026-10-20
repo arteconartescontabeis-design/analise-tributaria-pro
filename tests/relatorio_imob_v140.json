@@ -1,7 +1,7 @@
 {
- "versao": "1.6.4",
- "quando": "2026-10-20T15:21:50.955Z",
- "total": 43,
+ "versao": "1.6.5",
+ "quando": "2026-10-20T20:27:01.683Z",
+ "total": 66,
  "falhas": 0,
  "testes": [
   {
@@ -16,9 +16,9 @@
   },
   {
    "n": "E3",
-   "teste": "lacre do motor íntegro e versão do módulo 1.6.4 visível",
+   "teste": "lacre do motor íntegro e versão do módulo 1.6.5 visível",
    "dados": "lacreVerificar + ModulosInfo",
-   "esperado": "cd2c7359 / 1.6.4",
+   "esperado": "cd2c7359 / 1.6.5",
    "obtido": true,
    "divergencia": null,
    "correcao": null,
@@ -429,6 +429,236 @@
    "teste": "toda classe realmente renderizada tem CSS no módulo ou no índice",
    "dados": "DOM após os testes",
    "esperado": "nenhuma classe órfã",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V1",
+   "teste": "Tabela 2026-2033: 2027 mostra IBS 0,10% legal e CBS estimada, nunca \"fixada em lei\" por atacado",
+   "dados": "venda 900.000 → aba Ano a ano",
+   "esperado": "IBS 0,10% + badges por tributo",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V2",
+   "teste": "Memória mostra os percentuais com categoria, fonte, vigência e versão",
+   "dados": "após venda",
+   "esperado": "tabela \"Percentuais usados neste cálculo\"",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V3",
+   "teste": "Locação ≤ 90 dias: sem classificação o formulário barra (l-cls); classificada e justificada calcula e registra na memória",
+   "dados": "l-prz 60",
+   "esperado": "erro l-cls → CALCULADO",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V4",
+   "teste": "Comparativo sem confirmar objeto social/natureza não aplica Lucro Presumido",
+   "dados": "c-obj vazio",
+   "esperado": "LP02/LP03 na tela",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V5",
+   "teste": "Permuta com torna parcelada: 3 parcelas somam o total",
+   "dados": "x-tparc 100000;100000;100000",
+   "esperado": "Σ = total",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V6",
+   "teste": "Regras e fontes: catálogo com link oficial, data de consulta e alerta de alteração posterior",
+   "dados": "pintaRegras",
+   "esperado": "[oficial] + consulta em 2026-09-18",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V7",
+   "teste": "Relatório técnico traz aviso de simulação técnica, legenda dos valores e percentuais aplicados",
+   "dados": "imobRelatorio tecnico venda",
+   "esperado": "Simulação técnica + Percentuais aplicados",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V8",
+   "teste": "Formulário da locação: prazo curto residencial sem classificação → erro no campo l-cls, antes do motor",
+   "dados": "l-prz 30",
+   "esperado": "erro em l-cls",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V9",
+   "teste": "Formulário da permuta: parcelas da torna com texto ou soma errada → erro em x-tparc",
+   "dados": "x-tparc",
+   "esperado": "erro em x-tparc",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V10",
+   "teste": "Formulário do comparativo: venda sem objeto social/natureza confirmados → erros em c-obj e c-nat",
+   "dados": "c-obj vazio",
+   "esperado": "erros",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V11",
+   "teste": "Regras e fontes: regras de Lucro Presumido marcadas como fonte secundária, com a data própria",
+   "dados": "pintaRegras",
+   "esperado": "badge fonte secundária",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "F1",
+   "teste": "F01: o ano do fato gerador muda o cálculo individual como muda a projeção",
+   "dados": "venda 900.000; RAJ 400.000; res. novo; 2029",
+   "esperado": "total 22.160 no resultado E na linha 2029 da tabela Ano a ano",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "F1b",
+   "teste": "F01: data anterior a 2026 é bloqueada pelo motor (E017)",
+   "dados": "venda em 2025-12-31",
+   "esperado": "BLOQUEADO, sem resultado numérico",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "F4",
+   "teste": "F04: redutor maior que a venda — resumo mostra o UTILIZADO e a igualdade é verdadeira",
+   "dados": "venda 300.000; RAJ 400.000; 2033",
+   "esperado": "etapa 2 = 300.000 utilizado; base 0 = 300.000 − 300.000 − 0",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "F5",
+   "teste": "F05: campos financeiros têm nome acessível programático (label for + aria-describedby)",
+   "dados": "v-val / v-raj",
+   "esperado": "label[for] presente e ajuda ligada",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "F2",
+   "teste": "F02: divergência entre o campo e o redutor do imóvel aparece ao lado do campo, com confirmação",
+   "dados": "v-raj 250.000 × imóvel 480.000",
+   "esperado": "aviso com origem + botão aplica 480.000; nada sobrescrito em silêncio",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "F2r",
+   "teste": "F02-R: divergência sem ciência → cenário manual NÃO confirmado: aviso no resultado, ressalva no pacote, parecer e auditoria avisam",
+   "dados": "v-raj 400.000 × imóvel 480.000, sem motivo",
+   "esperado": "aviso; ressalva; imobGerarParecer bloqueia",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "F2r2",
+   "teste": "F02-R: registrar o motivo confirma o cenário manual — presente no resultado, na memória, nas ressalvas e na simulação; parecer liberado",
+   "dados": "motivo + \"Manter como cenário manual\"",
+   "esperado": "confirmação ao lado do campo; etapa 2 com o motivo; ressalva com a decisão",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "F2r3",
+   "teste": "F02-R: usar o valor do imóvel desfaz a divergência e preserva a origem",
+   "dados": "imobUsarRajImovel(venda)",
+   "esperado": "campo 480.000; \"Origem:\" ao lado; divergente = false",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "V12",
+   "teste": "Layout 1.6.3: telas do módulo na barra lateral dentro de .nav, brand no formato do ATP, badge de versão no título",
+   "dados": "ImobLayout.aplicar",
+   "esperado": "tabs em .sidebar .nav + badge",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "R3",
+   "teste": "Reanálise obs. 3: faixa da base da locação mostra a sequência completa e VERDADEIRA",
+   "dados": "locação 5.000; encargos 1.030 comprovados; residencial",
+   "esperado": "Base 3.370,00 = Receita 5.000,00 − Deduções 1.030,00 − Redutor social 600,00",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "R4",
+   "teste": "Reanálise obs. 4: faixa da base da permuta distingue o redutor TRANSFERIDO (não aparece como dedução)",
+   "dados": "dado 1.000.000; recebido 800.000; torna recebida 200.000",
+   "esperado": "Parcela tributável 200.000,00 · redutor transferido 400.000,00; nenhuma subtração falsa",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "R5",
+   "teste": "Reanálise obs. 5: texto não numérico em campo monetário recebe mensagem de FORMATO, vazio segue obrigatório",
+   "dados": "validarVenda valor \"abc\" × valor \"\"",
+   "esperado": "\"não é um número válido\" × \"é obrigatório\"",
    "obtido": true,
    "divergencia": null,
    "correcao": null,

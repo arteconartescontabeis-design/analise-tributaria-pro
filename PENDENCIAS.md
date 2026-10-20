@@ -1,6 +1,20 @@
 # Pendências — Análise Tributária Pro
 
-Registro do que ficou para depois, com o motivo. Atualizado em 20/10/2026 (Imobiliária v1.6.4).
+Registro do que ficou para depois, com o motivo. Atualizado em 20/10/2026 (Imobiliária v1.6.5).
+
+## Resolvido em 20/10/2026 — 2ª rodada (Imobiliária v1.6.5; motor 1.4.0 e lacre cd2c7359 inalterados)
+
+Fecho das recomendações acionáveis da REANÁLISE externa de 20/10/2026 sobre a v1.6.4 (5 achados corrigidos, 1 mitigado, 49 cenários, nenhuma inconsistência aritmética nova).
+
+| Item | O que foi feito |
+|---|---|
+| Reanálise — F02-R (P2, pendência residual) | Manter redutor divergente do imóvel virou CENÁRIO MANUAL: motivo registrado ao lado do campo (ciência expressa), presente no resultado, na memória (etapa 2), nas ressalvas dos relatórios, na auditoria e na simulação gravada; parecer com IA e Finalizar e gravar bloqueiam enquanto a divergência estiver sem confirmação; "Usar o valor do imóvel" desfaz a divergência e preserva a origem |
+| Reanálise — obs. 3 (resumo da locação) | Faixa da base no cabeçalho mostra a sequência completa e verdadeira (receita − deduções − redutor social), em vez de subtrair o redutor social de uma base que já o descontava |
+| Reanálise — obs. 4 (resumo da permuta) | Redutor TRANSFERIDO ao imóvel recebido deixou de aparecer como dedução da base — rotulado "transferido — não é dedução desta base"; a faixa só exibe igualdades que fecham |
+| Reanálise — obs. 5 (texto em campo monetário) | "abc" em campo obrigatório recebe mensagem de FORMATO ("não é um número válido"), não mais a de campo vazio |
+| Relatório da suíte de UI gravado no meio da execução | `relatorio_imob_v140.json` passou a ser gravado no FIM (antes não contava os testes V1-V12, F e R). Suítes: run_imob_v160 113/113 · run_imob_ui 66/66 |
+
+Permanecem em aberto (reanálise, fora do alcance desta rodada): validação dos relatórios contra o snapshot (P1, parcialmente coberta pela coerência), política metodológica localizável externamente, acessibilidade completa (teclado, leitor de tela, contraste, zoom), persistência/recuperação/backend e o mérito jurídico das premissas — ver seções 7 e 9 da reanálise.
 
 ## Resolvido em 20/10/2026 (Imobiliária v1.6.4, motor 1.4.0, lacre cd2c7359)
 

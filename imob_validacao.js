@@ -8,7 +8,7 @@
  * ==========================================================================*/
 (function (raiz) {
   'use strict';
-  var VERSAO = '1.1.0';   // 1.1.0: aceita valores formatados em R$
+  var VERSAO = '1.2.0';   // 1.2.0 (v1.6.5): texto não numérico em campo obrigatório ganha mensagem de FORMATO, não de ausência · 1.1.0: aceita valores formatados em R$
 
   function num(v) {
     if (v === '' || v == null) return null;
@@ -34,7 +34,9 @@
   }
   function obrigatorio(erros, campo, rotulo, v, como) {
     var x = num(v);
-    if (x === null || isNaN(x)) { erros.push(E(campo, rotulo + ' é obrigatório. ' + (como || 'Preencha o campo para calcular.'))); return null; }
+    // v1.6.5 (reanálise, obs. 5): texto preenchido mas não numérico é erro de FORMATO, não de ausência
+    if (x !== null && isNaN(x)) { erros.push(E(campo, rotulo + ': "' + String(v).trim().slice(0, 30) + '" não é um número válido. Informe apenas números, com vírgula para os centavos (ex.: 900.000,00).')); return null; }
+    if (x === null) { erros.push(E(campo, rotulo + ' é obrigatório. ' + (como || 'Preencha o campo para calcular.'))); return null; }
     return x;
   }
   function data(erros, campo, rotulo, s, obrig) {
