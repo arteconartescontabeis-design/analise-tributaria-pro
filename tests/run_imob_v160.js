@@ -176,9 +176,20 @@ var prjLoc = M.projetarTransicao({ operacao: 'locacao', data_fato_gerador: '2033
 ok([2027, 2029].every(function (a) { return prjLoc.anos.filter(function (x) { return x.ano === a; })[0].total === locAno(a + '-01-01').total; }), 'P1 locação: cálculo individual = projeção nos anos de transição (mesma escada)');
 var prjPerm = M.projetarTransicao({ operacao: 'permuta', data_fato_gerador: '2033-06-15', valor_operacao: 1000000, permuta: { contraparte: 'nao_contribuinte', torna: 200000, torna_paga_por: 'nao_contribuinte', redutor_ajuste_dado: 400000, valor_imovel_recebido: 800000 } }, ctxPrjP1);
 ok([2027, 2029].every(function (a) { return prjPerm.anos.filter(function (x) { return x.ano === a; })[0].total === permAno(a + '-01-01').total; }), 'P1 permuta: cálculo individual = projeção nos anos de transição (mesma escada)');
+// v1.6.7 — reanálise P2: casos extremos e reconciliações fixados em suíte (o auditor os exercitou manualmente)
+var ext = M.calcular({ operacao: 'venda', data_fato_gerador: '2033-06-15', valor_operacao: 1e12, imovel: { id: 'p2', tipo: 'comercial' } }, CTXsem);
+ok(ext.ibs === 93500000000 && ext.cbs === 46050000000 && ext.total === 139550000000, 'P2 extremo R$ 1 trilhão comercial sem redutor: IBS 93,5 bi · CBS 46,05 bi · total 139,55 bi (V07 da reanálise)');
+var cent = M.calcular({ operacao: 'venda', data_fato_gerador: '2033-06-15', valor_operacao: 0.03, imovel: { id: 'p2', tipo: 'comercial' }, pagamentos: [0.01, 0.01, 0.01] }, CTXsem);
+ok(cent.total === 0 && Math.abs(cent.parcelas.reduce(function (a, p) { return a + p.total; }, 0) - cent.debito) <= 0.011, 'P2 extremo R$ 0,03 em 3 parcelas de R$ 0,01: total arredondado zero e parcelas reconciliam com o débito (V08)');
+var recp = M.calcular({ operacao: 'venda', data_fato_gerador: '2033-06-15', valor_operacao: 100.01, imovel: { id: 'p2', tipo: 'comercial' }, pagamentos: [33.33, 33.33, 33.35] }, CTXsem);
+ok(Math.abs(recp.parcelas.reduce(function (a, p) { return a + p.total; }, 0) - recp.debito) <= 0.011, 'P2 parcelas 33,33 + 33,33 + 33,35: a soma dos tributos por parcela fecha com o débito (A01 da reanálise)');
+var credx = M.calcular({ operacao: 'venda', data_fato_gerador: '2033-06-15', valor_operacao: 900000, imovel: { id: 'p2', tipo: 'residencial_novo' }, redutor_ajuste_saldo: 400000, creditos: 100000 }, CTXsem);
+ok(credx.creditos === credx.debito && credx.total === 0, 'P2 créditos maiores que o débito: aproveitado = débito, líquido zero, saldo transportável (V03 da reanálise)');
+var teto = M.calcular({ operacao: 'venda', data_fato_gerador: '2033-06-15', valor_operacao: 1e13, imovel: { id: 'p2', tipo: 'comercial' } }, CTXsem);
+ok(teto.status === 'CALCULADO' && r2(teto.total) === teto.total, 'P2 teto documentado de R$ 10 trilhões: o motor mantém precisão de centavo no limite (política PM-IMOB)');
 // Lacre
 var lv = M.lacreVerificar();
-ok(lv.integro === true, 'LACRE motor 1.4.0 íntegro (' + lv.hash_atual + ' = ' + lv.hash_homologado + ')');
+ok(lv.integro === true, 'LACRE motor 1.4.1 íntegro (' + lv.hash_atual + ' = ' + lv.hash_homologado + ')');
 
 console.log('\n' + log.join('\n'));
 console.log('\n=== run_imob_v160: ' + (total - falhas) + '/' + total + ' OK, ' + falhas + ' falha(s) — motor ' + M.MOTOR_IMOB_VERSAO + ' · ruleset ' + M.RULESET_VERSAO + ' · lacre ' + lv.hash_atual);

@@ -9,11 +9,11 @@
   raiz.ModulosInfo.imobiliario = {
     chave: 'imobiliario',
     rotulo: 'An\u00e1lise Imobili\u00e1ria Pro',
-    versao: '1.6.6',
+    versao: '1.6.7',
     data: '20/10/2026',
     cadastro_ampliado_no_banco: false,   // true só depois de rodar sql/setup_imob_v130.sql
     aba: 'page-imobiliaria',
-    motor: { nome: 'motorImob', versao: '1.4.0', contrato: 'calc-imob-1',
+    motor: { nome: 'motorImob', versao: '1.4.1', contrato: 'calc-imob-1',
              ruleset: 'imob-2026.09.18', lacre: 'cd2c7359', lacre_anterior: '338c914d', regras: 29, homologadas: 27,
              nota: 'IMOB-TRA-001 reclassificada como proje\u00e7\u00e3o e IMOB-LR-001 segue em staging: regra baseada em premissa, estimativa ou proje\u00e7\u00e3o n\u00e3o \u00e9 homologada.' },
     base_legal: { dispositivos: 97, fontes: ['Decreto 12.955/2026', 'Resolu\u00e7\u00e3o CGIBS 6/2026',
@@ -21,6 +21,12 @@
     estado: 'piloto controlado',
     ressalva: 'Al\u00edquota de refer\u00eancia \u00e9 estimativa n\u00e3o vinculante da Resolu\u00e7\u00e3o CGIBS 14/2026.',
     changelog: [
+      { versao: '1.6.7', data: '20/10/2026', texto:
+        'Reanálise P2 — política metodológica publicada e limites documentados (lacre cd2c7359 INALTERADO; motor 1.4.0 → 1.4.1 apenas pelo texto da fonte do A07 — nenhuma fórmula mudou). '
+        + 'Documento PM-IMOB 1.0.0 (politica-metodologica.html) publicado junto ao app: categorias LEGAL/ESTIMATIVA/PROJEÇÃO e a regra de ouro, fontes e datas de consulta, catálogo versionado (ruleset), '
+        + 'escada 2026-2033, guardas de integridade, limites operacionais e processo de revisão. O achado A07, a aba Regras e o rodapé de todos os relatórios passam a apontar o documento. '
+        + 'Limite operacional documentado: R$ 10 trilhões por valor de entrada — acima disso o formulário bloqueia com mensagem própria (imob_validacao 1.3.0); R$ 1 trilhão segue aceito como na reanálise. '
+        + 'Casos extremos da reanálise fixados na suíte do motor: R$ 1 trilhão (V07), R$ 0,03 em 3 parcelas (V08), reconciliação de parcelas 33,33/33,33/33,35 com o débito (A01), créditos maiores que o débito (V03) e o teto de R$ 10 trilhões com precisão de centavo.' },
       { versao: '1.6.6', data: '20/10/2026', texto:
         'Reanálise P1 — validação dos relatórios contra o cálculo (motor 1.4.0 e lacre cd2c7359 INALTERADOS). '
         + 'Todo relatório emitido (resumo para o cliente, executivo, técnico e memória) passa por conferência automática antes de abrir: cada valor monetário ou percentual do texto precisa ter origem no pacote do cálculo '

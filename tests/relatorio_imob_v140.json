@@ -1,7 +1,7 @@
 {
- "versao": "1.6.6",
- "quando": "2026-10-20T22:38:27.716Z",
- "total": 69,
+ "versao": "1.6.7",
+ "quando": "2026-10-20T22:56:40.885Z",
+ "total": 71,
  "falhas": 0,
  "testes": [
   {
@@ -16,9 +16,9 @@
   },
   {
    "n": "E3",
-   "teste": "lacre do motor íntegro e versão do módulo 1.6.6 visível",
+   "teste": "lacre do motor íntegro e versão do módulo 1.6.7 visível",
    "dados": "lacreVerificar + ModulosInfo",
-   "esperado": "cd2c7359 / 1.6.6",
+   "esperado": "cd2c7359 / 1.6.7",
    "obtido": true,
    "divergencia": null,
    "correcao": null,
@@ -689,6 +689,26 @@
    "teste": "Reanálise P1: número sem origem no cálculo REPROVA o documento; falta dos números centrais reprova",
    "dados": "conferirRelatorio com html adulterado e vazio",
    "esperado": "ok=false listando 99.999,99; ausentes lista total/base/valor/data",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "R6",
+   "teste": "Reanálise P2: limite documentado de R$ 10 trilhões no formulário (1 trilhão segue aceito)",
+   "dados": "validarVenda 1e12 e 1e13 ok × 2e13 bloqueia",
+   "esperado": "mensagem cita o limite e a política PM-IMOB",
+   "obtido": true,
+   "divergencia": null,
+   "correcao": null,
+   "status": "OK"
+  },
+  {
+   "n": "R7",
+   "teste": "Reanálise P2: política metodológica localizável — link na aba Regras, fonte do A07 e rodapé dos relatórios",
+   "dados": "politica-metodologica.html referenciada",
+   "esperado": "link + A07 + rodapé citam o documento",
    "obtido": true,
    "divergencia": null,
    "correcao": null,

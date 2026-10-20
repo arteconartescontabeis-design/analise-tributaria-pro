@@ -8,7 +8,7 @@
  * ==========================================================================*/
 (function (raiz) {
   'use strict';
-  var VERSAO = '1.2.0';   // 1.2.0 (v1.6.5): texto não numérico em campo obrigatório ganha mensagem de FORMATO, não de ausência · 1.1.0: aceita valores formatados em R$
+  var VERSAO = '1.3.0';   // 1.3.0 (v1.6.7): limite documentado de R$ 10 trilhões por valor (política PM-IMOB) · 1.2.0 (v1.6.5): texto não numérico ganha mensagem de FORMATO · 1.1.0: aceita valores formatados em R$
 
   function num(v) {
     if (v === '' || v == null) return null;
@@ -25,19 +25,27 @@
   function E(campo, msg) { return { campo: campo, msg: msg }; }
   function saida(erros, avisos) { return { ok: erros.length === 0, erros: erros, avisos: avisos || [] }; }
 
+  // v1.6.7 (reanálise P2): limite operacional documentado — acima de R$ 10 trilhões a precisão
+  // de centavo do cálculo em ponto flutuante deixa de ser garantida (política metodológica PM-IMOB).
+  var LIMITE_VALOR = 1e13;
+  function limite(erros, campo, rotulo, x) {
+    if (typeof x === 'number' && isFinite(x) && x > LIMITE_VALOR)
+      erros.push(E(campo, rotulo + ' está acima do limite documentado de R$ 10 trilhões (política metodológica PM-IMOB, Limites operacionais). Acima dele a precisão de centavo não é garantida.'));
+    return x;
+  }
   function negativo(erros, campo, rotulo, v) {
     var x = num(v);
     if (x === null) return null;
     if (isNaN(x)) { erros.push(E(campo, rotulo + ': informe apenas números (use ponto ou vírgula para decimais).')); return NaN; }
     if (x < 0) erros.push(E(campo, rotulo + ' não pode ser negativo. Informe zero ou um valor positivo.'));
-    return x;
+    return limite(erros, campo, rotulo, x);
   }
   function obrigatorio(erros, campo, rotulo, v, como) {
     var x = num(v);
     // v1.6.5 (reanálise, obs. 5): texto preenchido mas não numérico é erro de FORMATO, não de ausência
     if (x !== null && isNaN(x)) { erros.push(E(campo, rotulo + ': "' + String(v).trim().slice(0, 30) + '" não é um número válido. Informe apenas números, com vírgula para os centavos (ex.: 900.000,00).')); return null; }
     if (x === null) { erros.push(E(campo, rotulo + ' é obrigatório. ' + (como || 'Preencha o campo para calcular.'))); return null; }
-    return x;
+    return limite(erros, campo, rotulo, x);
   }
   function data(erros, campo, rotulo, s, obrig) {
     if (!s) { if (obrig) erros.push(E(campo, rotulo + ' é obrigatória. Informe no formato dia/mês/ano.')); return null; }

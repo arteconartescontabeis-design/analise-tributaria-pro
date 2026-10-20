@@ -225,7 +225,9 @@
   function envelope(titulo, corpo) {
     return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>' + esc(titulo) + '</title><style>' + CSS + '</style></head><body>' + corpo +
       '<div class="rod">Documento gerado pelo Análise Imobiliária Pro (Artecon). A alíquota de referência de IBS/CBS é estimativa não vinculante (Res. CGIBS 14/2026). ' +
-      'IRPJ e CSLL permanecem devidos e não estão incluídos nos valores de IBS/CBS. Este documento não substitui o parecer assinado pelo responsável técnico.</div></body></html>';
+      'IRPJ e CSLL permanecem devidos e não estão incluídos nos valores de IBS/CBS. Este documento não substitui o parecer assinado pelo responsável técnico. ' +
+      // v1.6.7 (reanálise P2): a metodologia citada é um documento versionado e localizável
+      'Metodologia: Política Metodológica PM-IMOB (politica-metodologica.html, publicada junto ao aplicativo).</div></body></html>';
   }
 
 

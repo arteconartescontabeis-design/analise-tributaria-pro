@@ -20,7 +20,7 @@
 (function (raiz) {
   'use strict';
 
-  var MOTOR_IMOB_VERSAO = '1.4.0';
+  var MOTOR_IMOB_VERSAO = '1.4.1';   // 1.4.1 (v1.6.7): A07 aponta o DOCUMENTO da política metodológica — nenhuma fórmula mudou, lacre cd2c7359 inalterado
   var CONTRATO_VERSAO   = 'calc-imob-1';
   var RULESET_VERSAO    = 'imob-2026.09.18';
 
@@ -2017,7 +2017,7 @@
     if (ctx.aliquotas) {
       if (ctx.aliquotas.classificacao !== 'LEGAL')
         add('A07', 'medio', 'Alíquota não é legal',
-          'Alíquota classificada como ' + ctx.aliquotas.classificacao + '. Enquanto a alíquota de referência não for fixada em norma, não cabe conclusão definitiva sobre carga tributária.', 'Política metodológica do módulo imobiliário (ruleset ' + RULESET_VERSAO + ') · Res. CGIBS 14/2026 (estimativa não vinculante)');
+          'Alíquota classificada como ' + ctx.aliquotas.classificacao + '. Enquanto a alíquota de referência não for fixada em norma, não cabe conclusão definitiva sobre carga tributária.', 'Política metodológica do módulo imobiliário PM-IMOB (documento versionado: politica-metodologica.html · ruleset ' + RULESET_VERSAO + ') · Res. CGIBS 14/2026 (estimativa não vinculante)');
       if (ctx.aliquotas.vigencia_fim && ctx.aliquotas.vigencia_fim < (e.data_fato_gerador || hoje))
         add('A08', 'alto', 'Alíquota vencida para a data do fato gerador',
           'A alíquota informada tem vigência até ' + ctx.aliquotas.vigencia_fim + '.', null);

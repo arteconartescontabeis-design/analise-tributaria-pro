@@ -1,6 +1,13 @@
 # Pendências — Análise Tributária Pro
 
-Registro do que ficou para depois, com o motivo. Atualizado em 20/10/2026 (Imobiliária v1.6.6).
+Registro do que ficou para depois, com o motivo. Atualizado em 20/10/2026 (Imobiliária v1.6.7).
+
+## Resolvido em 20/10/2026 — 4ª rodada (Imobiliária v1.6.7; lacre cd2c7359 inalterado, motor 1.4.1 só pelo texto da fonte do A07)
+
+| Item | O que foi feito |
+|---|---|
+| Reanálise — P2 (política metodológica validada) | Documento PM-IMOB 1.0.0 publicado junto ao app (politica-metodologica.html): categorias e regra de ouro, fontes e datas de consulta, ruleset versionado, escada 2026-2033, guardas de integridade, limites operacionais e processo de revisão. A07, aba Regras e rodapé de todos os relatórios apontam o documento — nenhuma referência de implementação funciona como fundamento jurídico |
+| Reanálise — P2 (entradas extremas e arredondamentos) | Limite documentado de R$ 10 trilhões por valor com mensagem própria (imob_validacao 1.3.0; R$ 1 trilhão segue aceito como na reanálise); casos extremos fixados na suíte do motor: V07 (1 trilhão), V08 (R$ 0,03 em 3 parcelas), A01 (reconciliação de parcelas com o débito), V03 (créditos > débito) e o teto de 10 trilhões. Suítes: run_imob_v160 124/124 · run_imob_ui 71/71 |
 
 ## Resolvido em 20/10/2026 — 3ª rodada (Imobiliária v1.6.6; motor 1.4.0 e lacre cd2c7359 inalterados)
 

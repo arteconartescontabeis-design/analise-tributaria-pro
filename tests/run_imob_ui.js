@@ -49,8 +49,8 @@ t('E2', 'todo onclick da marcação aponta para função exportada', 'imob_pagin
   var falt = Object.keys(f).filter(function (k) { return typeof w[k] !== 'function'; });
   return falt.length ? { ok: false, obtido: falt } : true;
 });
-t('E3', 'lacre do motor íntegro e versão do módulo 1.6.6 visível', 'lacreVerificar + ModulosInfo', 'cd2c7359 / 1.6.6', function () {
-  var v = M.lacreVerificar(); return v.integro && v.hash_atual === 'cd2c7359' && M.MOTOR_IMOB_VERSAO === '1.4.0' && w.ModulosInfo.imobiliario.versao === '1.6.6' && w.ModulosInfo.imobiliario.changelog[0].versao === '1.6.6' && w.ModulosInfo.imobiliario.motor.lacre === 'cd2c7359' ? true : { ok: false, obtido: v };
+t('E3', 'lacre do motor íntegro e versão do módulo 1.6.7 visível', 'lacreVerificar + ModulosInfo', 'cd2c7359 / 1.6.7', function () {
+  var v = M.lacreVerificar(); return v.integro && v.hash_atual === 'cd2c7359' && M.MOTOR_IMOB_VERSAO === '1.4.1' && w.ModulosInfo.imobiliario.versao === '1.6.7' && w.ModulosInfo.imobiliario.changelog[0].versao === '1.6.7' && w.ModulosInfo.imobiliario.motor.lacre === 'cd2c7359' ? true : { ok: false, obtido: v };
 });
 t('E4', '14 abas e página injetada; nav lateral marca ativo', 'abrirAba', 'aba on = venda', function () {
   w.abrirAba('venda'); var on = d.querySelectorAll('#imob-tabs .tab.on');
@@ -459,7 +459,7 @@ t('V12', 'Layout 1.6.3: telas do módulo na barra lateral dentro de .nav, brand 
   }
   try { w.ImobLayout.aplicar({ menuLateral: true }); } catch (e) { return { ok: false, obtido: e.message }; }
   var tabs = d.querySelector('.sidebar .nav #imob-tabs'), brand = d.querySelector('.sidebar .brand'), badge = $('imob-badge-versao');
-  return tabs && tabs.querySelectorAll('.tab').length >= 14 && brand && /Análise Imobiliária Pro/.test(brand.textContent) && brand.querySelector('small') && badge && /v1\.6\.6/.test(badge.textContent) && /Vers/.test(d.querySelector('.nav-item[data-p="modulo"]').textContent) ? true : { ok: false, obtido: [!!tabs, brand && brand.textContent, badge && badge.textContent] };
+  return tabs && tabs.querySelectorAll('.tab').length >= 14 && brand && /Análise Imobiliária Pro/.test(brand.textContent) && brand.querySelector('small') && badge && /v1\.6\.7/.test(badge.textContent) && /Vers/.test(d.querySelector('.nav-item[data-p="modulo"]').textContent) ? true : { ok: false, obtido: [!!tabs, brand && brand.textContent, badge && badge.textContent] };
 });
 
 t('R3', 'Reanálise obs. 3: faixa da base da locação mostra a sequência completa e VERDADEIRA', 'locação 5.000; encargos 1.030 comprovados; residencial', 'Base 3.370,00 = Receita 5.000,00 − Deduções 1.030,00 − Redutor social 600,00', function () {
@@ -505,6 +505,25 @@ t('P1c', 'Reanálise P1: número sem origem no cálculo REPROVA o documento; fal
   var c2 = w.ImobRelatorios.conferirRelatorio(html.replace('</body>', '<p>valor estimado de mercado: 99.999,99</p></body>'), p);
   var c3 = w.ImobRelatorios.conferirRelatorio('<html><body>documento vazio</body></html>', p);
   return c1.ok && c1.verificados > 20 && !c2.ok && c2.nao_autorizados.indexOf('99.999,99') >= 0 && !c3.ok && c3.ausentes.length >= 4 ? true : { ok: false, obtido: [c1.ok, c1.verificados, c2.nao_autorizados, c3.ausentes] };
+});
+
+t('R6', 'Reanálise P2: limite documentado de R$ 10 trilhões no formulário (1 trilhão segue aceito)', 'validarVenda 1e12 e 1e13 ok × 2e13 bloqueia', 'mensagem cita o limite e a política PM-IMOB', function () {
+  var base = { redutor: 0, creditos: 0, data: '2033-06-15', tipo: 'comercial', pagamentos: '' };
+  var tri1 = w.ImobValidacao.validarVenda(Object.assign({ valor: '1000000000000' }, base));
+  var tri10 = w.ImobValidacao.validarVenda(Object.assign({ valor: '10000000000000' }, base));
+  var tri20 = w.ImobValidacao.validarVenda(Object.assign({ valor: '20000000000000' }, base));
+  var m = ((tri20.erros || [])[0] || {}).msg || '';
+  return tri1.ok && tri10.ok && !tri20.ok && m.indexOf('limite documentado de R$ 10 trilhões') >= 0 && m.indexOf('PM-IMOB') >= 0 ? true : { ok: false, obtido: [tri1.ok, tri10.ok, m] };
+});
+t('R7', 'Reanálise P2: política metodológica localizável — link na aba Regras, fonte do A07 e rodapé dos relatórios', 'politica-metodologica.html referenciada', 'link + A07 + rodapé citam o documento', function () {
+  w.abrirAba('regras');
+  var a = $('link-pm-imob'), temLink = a && /politica-metodologica\.html$/.test(a.getAttribute('href')) && /PM-IMOB/.test(a.textContent);
+  w.abrirAba('auditoria');
+  var a07 = texto('au-out').indexOf('politica-metodologica.html') >= 0;
+  w.abrirAba('venda'); w.imobRelatorio('executivo', 'venda');
+  var h = w.__ultimaJanela ? w.__ultimaJanela.document.documentElement.outerHTML : '';
+  var rodape = h.indexOf('Política Metodológica PM-IMOB') > 0 && h.indexOf('politica-metodologica.html') > 0;
+  return temLink && a07 && rodape ? true : { ok: false, obtido: [!!temLink, a07, rodape] };
 });
 
 /* ===== resultado ================================================================= */

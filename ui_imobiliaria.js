@@ -659,7 +659,8 @@ var IMPACTO = {
 };
 function pintaRegras(){
   var R = M.REGRAS, info = (window.ModulosInfo || {}).imobiliario || {};
-  var h = '<div class="mini" style="margin-bottom:10px">Ruleset <b>' + esc(M.RULESET_VERSAO) + '</b> · motor ' + esc(M.MOTOR_IMOB_VERSAO) + ' · &uacute;ltima atualiza&ccedil;&atilde;o do m&oacute;dulo <b>' + esc(info.data || '—') + '</b> · lacre <code>' + esc(M.LACRE_IMOB_HASH) + '</code></div>' +
+  var h = '<div class="mini" style="margin-bottom:10px">Ruleset <b>' + esc(M.RULESET_VERSAO) + '</b> · motor ' + esc(M.MOTOR_IMOB_VERSAO) + ' · &uacute;ltima atualiza&ccedil;&atilde;o do m&oacute;dulo <b>' + esc(info.data || '—') + '</b> · lacre <code>' + esc(M.LACRE_IMOB_HASH) + '</code>' +
+    ' · <a href="politica-metodologica.html" target="_blank" rel="noopener" id="link-pm-imob">Pol&iacute;tica metodol&oacute;gica (PM-IMOB, documento versionado)</a></div>' +   // v1.6.7 — reanálise P2
     '<div class="ajuda">Cat&aacute;logo audit&aacute;vel (v1.6.0): cada regra traz c&oacute;digo, vers&atilde;o, f&oacute;rmula, fundamento com link oficial e data de consulta, vig&ecirc;ncia, status, premissas, depend&ecirc;ncias e impacto. Status poss&iacute;veis: homologada, legal, administrativa, premissa, indicativa, proje&ccedil;&atilde;o, staging, bloqueada &mdash; regra baseada em premissa, estimativa ou proje&ccedil;&atilde;o nunca &eacute; "homologada".</div>' +
     '<table><thead><tr><th>Regra</th><th>Descri&ccedil;&atilde;o e f&oacute;rmula</th><th>Fundamento oficial</th><th>Vig&ecirc;ncia</th><th>Status</th><th>Impacto no c&aacute;lculo</th></tr></thead><tbody>';
   ASSUNTOS.forEach(function(a){
